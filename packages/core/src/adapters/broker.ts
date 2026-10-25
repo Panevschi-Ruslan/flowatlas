@@ -1,3 +1,4 @@
+import type { DescriptionCondition } from './conditions.js';
 import type { NameLocator } from './locator.js';
 import type { FlowatlasConfig } from '../config.js';
 import type { PackageJson } from './manifest.js';
@@ -41,6 +42,12 @@ export type AddressPart =
        * expression matches is the name as written.
        */
       readonly forms?: readonly string[];
+      /**
+       * An element of a list that writes nothing here is no element at all,
+       * rather than an address nobody could read: a condition a transaction
+       * checks names a table under a kind of entry that writes nothing (P55).
+       */
+      readonly unwrittenIsNone?: boolean;
     };
 
 /** A call shape that publishes a message. */
@@ -89,8 +96,24 @@ export interface CallPattern {
    * of its own, and one per element where the address walks a list. A message
    * sent as `JSON.stringify(value)` is read as the value, because that is what
    * the receiver parses back out.
+   *
+   * An empty list says the call sends no message its receivers are handed: a
+   * write to a bucket, whose readers are handed the service's own notice of it
+   * rather than what was written, has nothing to compare and nothing to report.
    */
   payload?: readonly NameLocator[];
+  /**
+   * Values of the call recorded on its publisher as they are written, by the
+   * name a reader further on asks for them by: the `Key` of an object written,
+   * which a notification on the bucket filters on (P52). Not part of the address.
+   */
+  recorded?: Readonly<Record<string, readonly NameLocator[]>>;
+  /**
+   * Why the call is a publish only by somebody it hands something to - a URL
+   * signed for a browser to write with (P52). Recorded on the publisher, and
+   * every edge out of it is a guess for that reason.
+   */
+  guessed?: string;
   /** Index of the argument holding the payload, when there is one. */
   payloadArg?: number;
   /**
@@ -148,6 +171,29 @@ export interface CallPattern {
    * than a channel of that name (P24).
    */
   starts?: StartedEntry;
+  /**
+   * A publish only where some deployment declares the channel it lands on: a
+   * write to a table is a message to the readers of its stream, and to nobody
+   * when the table has none, so the linker keeps it only on a declared channel
+   * (`CHANNEL_DECLARED_META`; P51).
+   */
+  whereDeclared?: boolean;
+  /**
+   * The call sends many messages in one round trip (P89): `meta.batch` on the
+   * producer, so a loop around nothing else is read as the chunking around a
+   * batch rather than an N+1.
+   */
+  batch?: boolean;
+  /**
+   * The call sends to one recipient and has no batch form (P89): a chat
+   * message, a mail. `meta.perItem` on the producer, so a loop of them is
+   * per item on purpose: a note, not a likely N+1.
+   */
+  perItem?: boolean;
+  /** Values the call must write for the pattern to apply (P121). */
+  where?: readonly DescriptionCondition[];
+  /** The rule a compiled pattern came from, `pattern:<id>`, recorded on what it draws (P121). */
+  describedBy?: string;
 }
 
 /**

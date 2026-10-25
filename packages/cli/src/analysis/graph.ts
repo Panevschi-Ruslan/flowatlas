@@ -1,6 +1,6 @@
 import type { Confidence, GraphEdge } from '@flowatlas/core';
-import { CONFIDENCE_RANK, NODE_TYPES } from '@flowatlas/core';
-import type { GraphDb } from '@flowatlas/linker';
+import { NODE_TYPES } from '@flowatlas/core';
+import { weakest, type GraphDb } from '@flowatlas/linker';
 
 /** As much of a node as an analysis needs; the rest is fetched by id. */
 export interface AnalysisNode {
@@ -44,11 +44,8 @@ export interface AnalysisGraph {
 
 export const byId = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
-/** Ranked by how much it can be trusted, so a walk can take the weakest hop. */
-export const weakest = (levels: readonly Confidence[]): Confidence =>
-  levels.length === 0
-    ? 'static'
-    : levels.reduce((worst, level) => (CONFIDENCE_RANK[level] < CONFIDENCE_RANK[worst] ? level : worst));
+/** Ranked by how much it can be trusted: moved to the linker beside the rule evaluator (P114). */
+export { weakest };
 
 const sortEdges = (edges: AnalysisEdge[]): AnalysisEdge[] =>
   edges.sort((a, b) => byId(a.to, b.to) || byId(a.from, b.from) || byId(a.type, b.type));
@@ -158,24 +155,5 @@ export const loadGraph = (db: GraphDb, options: LoadOptions): AnalysisGraph => {
   return buildGraph(nodes, edges);
 };
 
-/**
- * Which class each method belongs to.
- *
- * A method id is its class id plus `.name`, and nothing else in the grammar
- * ends that way, so the owner is recoverable without another table. Needed
- * because the graph has no edge from a class to its own methods: a guard is
- * reached as a class and reads its settings inside a method.
- */
-export const methodsByOwner = (db: GraphDb): Map<string, string[]> => {
-  const owners = new Map<string, string[]>();
-  for (const method of db.nodesByType('method')) {
-    const cut = method.id.lastIndexOf('.');
-    if (cut <= 0) continue;
-    const owner = method.id.slice(0, cut);
-    const list = owners.get(owner);
-    if (list === undefined) owners.set(owner, [method.id]);
-    else list.push(method.id);
-  }
-  for (const list of owners.values()) list.sort(byId);
-  return owners;
-};
+/** Which class each method belongs to: moved to the linker beside the dead analysis (P95). */
+export { methodsByOwner } from '@flowatlas/linker';

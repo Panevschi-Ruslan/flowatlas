@@ -35,6 +35,13 @@ export const ROW = Object.freeze({
   node: 0, repo: 1, file: 2, line: 3, reason: 4, level: 5, sites: 6, message: 7, hint: 8,
 });
 
+/**
+ * The service a row is in: its position in the services, or its name where no
+ * node is in that service (a repository that read nothing), '' for none (P133).
+ */
+export const serviceOfRow = (repos, row) =>
+  typeof row[ROW.repo] === 'string' ? row[ROW.repo] : row[ROW.repo] >= 0 ? repos[row[ROW.repo]] : '';
+
 const pushTo = (map, key, value) => {
   const list = map.get(key);
   if (list === undefined) map.set(key, [value]);
@@ -42,6 +49,48 @@ const pushTo = (map, key, value) => {
 };
 
 const fileKey = (repo, file) => repo + ':' + file;
+
+/**
+ * A failure as a few words, for the search list: as steps.js's `failSay`,
+ * which the page's other readers use - `409 ConflictException`, `500? Error`,
+ * the exception alone, or a helper with what it can give, `toHttpError (401 |
+ * 403 | 423)` (P90).
+ */
+export const failSaid = (fail) => {
+  if (fail.v === 'helper' && fail.s === undefined) {
+    const statuses = [...new Set((fail.ch || []).filter((c) => c.s !== undefined).map((c) => c.s))].sort((a, b) => a - b);
+    const said = statuses.map((s) => s + ((fail.ch || []).every((c) => c.s !== s || c.a) ? '?' : ''));
+    return said.length ? fail.x + ' (' + said.join(' | ') + ')' : fail.fam === 'auth' ? fail.x + ' (refuses who is asking)' : fail.x;
+  }
+  return fail.s === undefined ? fail.x : fail.s + (fail.a ? '? ' : ' ') + fail.x;
+};
+
+/** A packed word: a position in `list`, or the word itself where listing it would not pay (P84). */
+export const wordIn = (list, word) => (typeof word === 'number' ? list[word] : word);
+
+/**
+ * Each way in's failures by position, each record of the pack expanded once and
+ * shared (P84). A word is a position in its list, or the word itself.
+ */
+export const failsByEntry = (data) => {
+  const out = new Map();
+  if (!data.fails) return out;
+  const { fails: all = [], exceptions: xs, failSources: ss, files } = data.dicts;
+  // A negated status is an assumed one (P87); -1 is none. After the source
+  // comes the id of a place the graph does not draw, then what a throw through
+  // a helper adds (P90): the one is a string, the other an object.
+  const status = (s) => ({ ...(s === -1 ? {} : { s: Math.abs(s) }), ...(s < -1 ? { a: 1 } : {}) });
+  const one = all.map(([s, x, at, f, l, src, ...rest]) => {
+    const id = rest.find((item) => typeof item === 'string');
+    const more = rest.find((item) => typeof item === 'object' && item !== null) || {};
+    return Object.freeze({ ...status(s), x: wordIn(xs, x), at,
+      ...(id === undefined ? {} : { id }), ...(f < 0 ? {} : { f: files[f] }), ...(l < 0 ? {} : { l }), src: wordIn(ss, src),
+      ...(more.via ? { v: more.via } : {}), ...(more.ch ? { ch: more.ch.map(([cs, cx]) => Object.freeze({ ...status(cs), x: cx })) } : {}),
+      ...(more.fam ? { fam: more.fam } : {}), ...(more.dc === undefined ? {} : { dc: more.dc }) });
+  });
+  for (const [entry, list] of Object.entries(data.fails)) out.set(Number(entry), list.map((r) => one[r]));
+  return out;
+};
 
 /**
  * Adjacency, built once.
@@ -65,7 +114,7 @@ export const createModel = (data) => {
     if (row[ROW.node] >= 0) pushTo(rowsOn, row[ROW.node], r);
     if (row[ROW.file] >= 0) pushTo(rowsInFile, fileKey(row[ROW.repo], row[ROW.file]), r);
   });
-  return { data, nodes, edges, outgoing, incoming, rowsOn, rowsInFile, haystack: null, owners: null, faces: null };
+  return { data, nodes, edges, outgoing, incoming, rowsOn, rowsInFile, fails: failsByEntry(data), haystack: null, owners: null, faces: null };
 };
 
 /** Nothing hidden. */
@@ -784,6 +833,163 @@ export const search = (model, query, limit = 40) => {
   }
   found.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
   return { total: found.length, hits: found.slice(0, limit).map((hit) => hit[2]) };
+};
+
+/* ── One search over everything (P73) ── */
+
+/** The first node whose face names each type, so a type found opens somewhere. */
+const typeUsers = (model) => {
+  const { refs, faces } = shapesOf(model);
+  const typesOfRef = refs.map(([, spans]) => {
+    const out = [];
+    for (let k = 2; k < spans.length; k += 3) if (spans[k] >= 0) out.push(spans[k]);
+    return out;
+  });
+  const first = new Map();
+  for (const face of faces) {
+    const flat = face[FACE.params];
+    const used = [face[FACE.returns]];
+    for (let k = 1; k < flat.length; k += 3) used.push(flat[k]);
+    for (const r of used) {
+      for (const t of r >= 0 ? typesOfRef[r] || [] : []) if (!first.has(t)) first.set(t, face[FACE.node]);
+    }
+  }
+  return first;
+};
+
+const nodesOfType = (model, wanted) => {
+  const { types, repos } = model.data.dicts;
+  const out = [];
+  model.nodes.forEach((node, i) => {
+    if (types[node[FIELD.type]] === wanted) out.push({ label: node[FIELD.label], sub: repos[node[FIELD.repo]], node: i });
+  });
+  return out;
+};
+
+/**
+ * What one search box looks through, as a strategy per group: each says what
+ * its items are called and lists them as `{ label, sub, node }`, `node` being
+ * the position a hit opens, or -1 when there is none to open. A gap carries its
+ * `reason` too, which the page opens Not joined on and says in words (`say`,
+ * handed in by `findEverything`); the code itself is still found.
+ */
+export const FIND_GROUPS = Object.freeze({
+  routes: Object.freeze({ say: 'Routes and ways in', items: (model) => nodesOfType(model, 'entry') }),
+  channels: Object.freeze({ say: 'Channels', items: (model) => nodesOfType(model, 'channel') }),
+  tables: Object.freeze({ say: 'Tables', items: (model) => nodesOfType(model, 'table') }),
+  types: Object.freeze({
+    say: 'Types',
+    items: (model) => {
+      const users = typeUsers(model);
+      return shapesOf(model).types.map(([name, kind, declaredIn], t) => ({
+        label: name, sub: kind + (declaredIn ? ' · ' + declaredIn.replace('#', ': ') : ''), node: users.get(t) ?? -1,
+      }));
+    },
+  }),
+  gaps: Object.freeze({
+    say: 'Gaps',
+    items: (model, say) => {
+      const { reasons, files } = model.data.dicts;
+      return (model.data.rows || []).map((row) => {
+        const reason = reasons[row[ROW.reason]];
+        const sub = say(reason) + (row[ROW.file] >= 0 && files[row[ROW.file]] ? ' · ' + files[row[ROW.file]] + (row[ROW.line] ? ':' + row[ROW.line] : '') : '');
+        return { label: String(row[ROW.message]), sub, node: row[ROW.node], reason, hay: `${row[ROW.message]} ${sub} ${reason}` };
+      });
+    },
+  }),
+  fails: Object.freeze({
+    say: 'Fails with',
+    // One item per exception and way in: the exception and its status are the
+    // name, the way in it fails is what opens (P68).
+    items: (model) => {
+      const { repos } = model.data.dicts;
+      const out = [];
+      for (const [entry, fails] of model.fails) {
+        const node = model.nodes[entry];
+        if (!node) continue;
+        const seen = new Set();
+        for (const fail of fails) {
+          const label = failSaid(fail);
+          if (seen.has(label)) continue;
+          seen.add(label);
+          // Found by the exception and status only, not by the way in's path.
+          out.push({ label, sub: node[FIELD.label] + ' · ' + repos[node[FIELD.repo]], node: entry, hay: label });
+        }
+      }
+      return out;
+    },
+  }),
+  classes: Object.freeze({
+    say: 'Classes',
+    items: (model) => {
+      const { types, repos } = model.data.dicts;
+      const found = new Map();
+      model.nodes.forEach((node, i) => {
+        const type = types[node[FIELD.type]];
+        const label = node[FIELD.label];
+        const dot = label.indexOf('.');
+        const name = type === 'provider' || type === 'ui_component' ? label
+          : (type === 'method' || type === 'function') && dot > 0 ? label.slice(0, dot) : '';
+        if (name === '') return;
+        const key = repos[node[FIELD.repo]] + ' ' + name;
+        const had = found.get(key);
+        // The class itself, when it is a node, opens rather than its first method.
+        if (!had || (type !== 'method' && type !== 'function' && had.member)) {
+          found.set(key, { label: name, sub: repos[node[FIELD.repo]], node: i, member: type === 'method' || type === 'function' });
+        }
+      });
+      return [...found.values()].map(({ label, sub, node }) => ({ label, sub, node }));
+    },
+  }),
+});
+
+/** A node found by `search`, as the one search lists it: its service, kind and file. */
+const nodeHit = (model, i) => {
+  const { types, kinds, repos, files } = model.data.dicts;
+  const node = model.nodes[i];
+  const file = node[FIELD.file] >= 0 && files[node[FIELD.file]] ? files[node[FIELD.file]].split('/').pop() : '';
+  return {
+    label: node[FIELD.label],
+    sub: [repos[node[FIELD.repo]], kinds[node[FIELD.kind]] || types[node[FIELD.type]],
+      file ? file + (node[FIELD.line] ? ':' + node[FIELD.line] : '') : ''].filter(Boolean).join(' · '),
+    node: i,
+  };
+};
+
+/**
+ * Every route, channel, table, type, gap, failure and class whose name or note holds
+ * every word typed, a group at a time: a name that starts with the words
+ * first, shorter names before longer; then every node `search` finds, ranked
+ * the way it ranks them (P101: the Graph tab's own search box went, so what it
+ * found is a group here). Each group carries its total, so the list can say
+ * how many it did not show.
+ *
+ * `say` words a gap's reason; the index is built on the first call, with the
+ * words that call was handed.
+ */
+export const findEverything = (model, query, limit = 8, say = (reason) => reason) => {
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (terms.length === 0) return [];
+  if (!model.findIndex) {
+    model.findIndex = Object.entries(FIND_GROUPS).map(([key, group]) => ({
+      key, say: group.say,
+      items: group.items(model, say).map((item) => ({ ...item, hay: (item.hay ?? item.label + ' ' + item.sub).toLowerCase() })),
+    }));
+  }
+  const text = terms.join(' ');
+  const groups = model.findIndex.map(({ key, say: title, items }) => {
+    const hits = items
+      .filter((item) => terms.every((term) => item.hay.includes(term)))
+      .map((item) => [item.label.toLowerCase().startsWith(text) ? 0 : 1, item.label.length, item]);
+    hits.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    return {
+      key, say: title, total: hits.length,
+      hits: hits.slice(0, limit).map(([, , { label, sub, node, reason }]) => (reason === undefined ? { label, sub, node } : { label, sub, node, reason })),
+    };
+  });
+  const nodes = search(model, query, limit);
+  groups.push({ key: 'nodes', say: 'Nodes', total: nodes.total, hits: nodes.hits.map((i) => nodeHit(model, i)) });
+  return groups.filter((group) => group.total > 0);
 };
 
 /**

@@ -89,6 +89,8 @@ describe('the build cache file', () => {
   it('names the version, the schema, the extractor and the configuration that disagree', () => {
     const table: Array<[string, Partial<BuildCache>, string]> = [
       ['version', { cacheVersion: CACHE_VERSION + 1 }, 'version'],
+      // A version-4 cache did not record what stood in (P83).
+      ['version 4', { cacheVersion: 4 }, 'version'],
       ['schema', { schemaVersion: 99 }, 'schema'],
       ['flowatlas', { flowatlasVersion: '0.3.0' }, 'extractor'],
       ['extractor', { extractors: { '@flowatlas/extractor-nestjs': '0.3.0' } }, 'extractor'],

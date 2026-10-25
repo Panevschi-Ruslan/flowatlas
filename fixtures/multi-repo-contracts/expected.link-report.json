@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:50.586Z",
+  "builtAt": "2026-10-17T03:00:31.423Z",
   "configHash": "b09bbca5b4ca",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 4,
       "unresolved": 0,
-      "durationMs": 715,
+      "durationMs": 0,
       "packages": {
         "name": "contracts-billing",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 38,
       "types": 23,
       "unresolved": 3,
-      "durationMs": 953,
+      "durationMs": 0,
       "packages": {
         "name": "contracts-gateway",
         "runtime": [
@@ -59,7 +59,7 @@
       "edges": 43,
       "types": 17,
       "unresolved": 1,
-      "durationMs": 746,
+      "durationMs": 0,
       "packages": {
         "name": "contracts-orders",
         "runtime": [
@@ -82,7 +82,7 @@
       "edges": 5,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 591,
+      "durationMs": 0,
       "packages": {
         "name": "contracts-web",
         "runtime": [
@@ -132,8 +132,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 83,
       "reason": "route-unguarded",
-      "message": "POST /orders/drafts/store has no guard in front of it and reaches Draft.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "POST /orders/drafts/store has no guard in front of it and reaches drafts.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/drafts/store"
     },
     {
@@ -141,8 +141,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 89,
       "reason": "route-unguarded",
-      "message": "POST /orders/drafts/tag has no guard in front of it and reaches Draft.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "POST /orders/drafts/tag has no guard in front of it and reaches drafts.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/drafts/tag"
     },
     {
@@ -150,8 +150,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 109,
       "reason": "route-unguarded",
-      "message": "POST /orders/drafts/batch has no guard in front of it and reaches Draft.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "POST /orders/drafts/batch has no guard in front of it and reaches drafts.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/drafts/batch"
     }
   ],
@@ -159,6 +159,10 @@
     "nodes": 120,
     "edges": 111,
     "types": 44,
-    "unresolved": 7
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 3,
+    "unresolved": 4
   }
 }

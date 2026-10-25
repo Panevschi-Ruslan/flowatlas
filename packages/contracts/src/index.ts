@@ -7,6 +7,8 @@
  */
 export { boundaries, namesAShape } from './boundary.js';
 export type { Exchange } from './boundary.js';
+export { envelopeOf, readThrough } from './envelope.js';
+export type { Reading } from './envelope.js';
 export { bySeverity, checkContracts, errorsOf } from './check.js';
 export { compareTypes, diffRefs, diffTypes, hasWireAnnotation } from './compare.js';
 export type { CompareOptions, CompareResult } from './compare.js';
@@ -54,6 +56,18 @@ export type {
   UncheckedEdge,
   UncheckedReason,
 } from './types.js';
+export { compareTraffic, TRAFFIC_KINDS, TRAFFIC_MIN_SAMPLES, TRAFFIC_UNCHECKED, trafficPaths, trafficReport } from './traffic.js';
+export type {
+  TrafficReport,
+  TrafficAgainst,
+  TrafficComparison,
+  TrafficDiff,
+  TrafficKind,
+  TrafficOptions,
+  TrafficSide,
+  TrafficUnchecked,
+  TrafficUncheckedReason,
+} from './traffic.js';
 export { uncheckedNote } from './unchecked.js';
 export type { UncheckedNote } from './unchecked.js';
 export {

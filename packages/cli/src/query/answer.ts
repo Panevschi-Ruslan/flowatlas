@@ -2,6 +2,7 @@ import type { GraphDb } from '@flowatlas/linker';
 import type { FlowNode, SourceRoots } from '@flowatlas/mcp';
 import { querySettings, type Format, type QueryOptions, type QuerySettings } from '../options.js';
 import { getRenderer } from '../render/index.js';
+import type { RenderOptions } from '../render/types.js';
 import { repoPalette } from '../render/color.js';
 import { collectSource, collectTypes } from './detail.js';
 
@@ -50,10 +51,14 @@ export interface Answer {
   truncated?: string;
   /** Said on stderr, so a pipe still gets clean data. */
   notes?: readonly string[];
+  /** What a sequence reads beside the tree: the edge site of a row and why the walk stops at one (P116). */
+  siteOf?: RenderOptions['siteOf'];
+  stopOf?: RenderOptions['stopOf'];
+  sequenceDetail?: RenderOptions['sequenceDetail'];
 }
 
 /** Formats that carry no code, whatever level was asked for. */
-const CODELESS = new Set(['mermaid']);
+const CODELESS = new Set(['mermaid', 'sequence']);
 
 /**
  * Draws an answer at the level and in the format that were asked for.
@@ -89,6 +94,9 @@ export const present = (
     ...(answer.footer === undefined ? {} : { footer: answer.footer }),
     ...(answer.extra === undefined ? {} : { extra: answer.extra }),
     ...(answer.truncated === undefined ? {} : { truncated: answer.truncated }),
+    ...(answer.siteOf === undefined ? {} : { siteOf: answer.siteOf }),
+    ...(answer.stopOf === undefined ? {} : { stopOf: answer.stopOf }),
+    ...(answer.sequenceDetail === undefined ? {} : { sequenceDetail: answer.sequenceDetail }),
   });
 
   for (const note of notes) io.err(`${note}\n`);

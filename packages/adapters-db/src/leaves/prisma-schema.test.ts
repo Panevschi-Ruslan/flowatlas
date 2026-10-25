@@ -1,6 +1,6 @@
 import { Project } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { isGeneratedPrismaClient, parsePrismaSchema, prismaTableOf } from './prisma-schema.js';
+import { besidePath, isGeneratedPrismaClient, parsePrismaSchema, prismaTableOf } from './prisma-schema.js';
 
 const SCHEMA = `
 generator client {
@@ -52,5 +52,14 @@ describe('what a Prisma schema states', () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const file = project.createSourceFile('/repo/src/db.ts', 'export {};');
     expect(prismaTableOf(file, 'user')).toBeUndefined();
+  });
+});
+
+describe('a path beside a file, in the compiler spelling (P199)', () => {
+  it('joins with forward slashes and adds no drive to a path that has none', () => {
+    expect(besidePath('/repo/src', './generated/client')).toBe('/repo/src/generated/client');
+    expect(besidePath('/repo/prisma', '../src/generated')).toBe('/repo/src/generated');
+    expect(besidePath('C:/work/shop/src', './db')).toBe('C:/work/shop/src/db');
+    expect(besidePath('C:\\work\\shop\\prisma', '..\\generated')).toBe('C:/work/shop/generated');
   });
 });

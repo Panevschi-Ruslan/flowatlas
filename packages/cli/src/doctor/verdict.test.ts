@@ -5,9 +5,9 @@ import { openGraphDb, writeGraphDb, type GraphDb, type LinkReport, type ServiceR
 import { SCHEMA_VERSION, SENDS_META, type GraphNode, type ProjectGraph, type Unresolved } from '@flowatlas/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { snapshotOf, type Baseline } from './baseline.js';
-import { renderDoctorGithub, renderDoctorText } from './render.js';
+import { renderDoctorGithub, renderDoctorJson, renderDoctorText } from './render.js';
 import { runDoctor } from './run.js';
-import { BASELINE_FORMAT_VERSION } from './schema.js';
+import { BASELINE_FORMAT_VERSION, doctorReportSchema } from './schema.js';
 
 // A real database, because `runDoctor` asks it questions. Which graph it holds
 // matters only in that it must be one the check can report on — a graph whose
@@ -140,7 +140,7 @@ const graphWith = (options: {
     routes: { total: 0, called: 0, uncalled: [], duplicated: [] },
     types: { total: 0, sharedPackage: 0 },
     unresolved: [],
-    totals: { nodes: nodes.length, edges: edges.length, types: 0, unresolved: 0 },
+    totals: { nodes: nodes.length, edges: edges.length, types: 0, missed: 0, sites: 0, notes: 0, findings: 0, unresolved: 0 },
   };
   const path = join(directory, `${options.name}.db`);
   writeGraphDb(project, report, path);
@@ -549,5 +549,60 @@ describe('what a row is printed as', () => {
   it('is printed the same way in the report a workflow annotates', () => {
     const report = reportWith();
     expect(renderDoctorGithub(report)).toContain(renderDoctorText(report));
+  });
+});
+
+/**
+ * Gaps, notes and findings counted apart (P81): the heading says the build
+ * line's three figures, findings get a line of their own naming what each is,
+ * and the JSON carries the counts beside `rows` and `sites`.
+ */
+describe('what doctor says about notes and findings', () => {
+  const rows = [
+    row(),
+    row({ reason: 'call-dynamic-receiver', level: 'info', sites: 9, file: 'src/receivers.ts' }),
+    row({ reason: 'base-url-from-files', level: 'info', sites: 2, file: 'src/clients.ts' }),
+    row({ reason: 'query-in-loop', level: 'info', sites: 1, file: 'src/loop.ts' }),
+    row({ reason: 'route-unguarded', file: 'src/routes.ts' }),
+  ];
+  const report = (): ReturnType<typeof runDoctor> =>
+    runDoctor({ db: dbOf(), unresolved: rows }, { contracts: false, baseline: { status: 'missing', note: 'no baseline' } });
+
+  it('counts each kind apart, and keeps an actionable finding in what --strict compares', () => {
+    const { unresolved } = report();
+    expect(unresolved).toMatchObject({ total: 2, rows: 2, sites: 10, notes: 1, findings: 2, info: { rows: 1, sites: 9 } });
+    expect(Object.fromEntries(unresolved.byReason.map((group) => [group.reason, group.kind]))).toEqual({
+      'dynamic-http-url': 'gap',
+      'route-unguarded': 'finding',
+      'call-dynamic-receiver': 'gap',
+      'base-url-from-files': 'note',
+      'query-in-loop': 'finding',
+    });
+  });
+
+  it('says the three figures, and the findings by what they are, never as nothing to join', () => {
+    const text = renderDoctorText(report());
+    expect(text).toContain('unresolved: 2 to act on · missed: 2 over 10 sites · notes: 1 · findings: 2');
+    expect(text).toContain('  2 findings: 1 likely N+1, 1 route with no guard');
+    expect(text).toContain('  query-in-loop (finding): 1 row');
+    expect(text).toContain('  base-url-from-files (note): 1 row over 2 places');
+    expect(text).not.toContain('nothing to join');
+  });
+
+  it('writes the counts into the JSON a script reads', () => {
+    const parsed = doctorReportSchema.parse(JSON.parse(renderDoctorJson(report())));
+    expect(parsed.unresolved).toMatchObject({ notes: 1, findings: 2 });
+    expect(parsed.unresolved.byReason.find((group) => group.reason === 'query-in-loop')?.kind).toBe('finding');
+  });
+
+  it('gives the verdict a baseline accepted before kinds existed gave', () => {
+    // The baseline's total is the actionable sites, findings included, as it
+    // always was: the finding that is actionable here is in both.
+    const accepted = runDoctor(
+      { db: dbOf(), unresolved: rows },
+      { contracts: false, strict: true, baseline: { baseline: baselineOf(rows) } },
+    );
+    expect(accepted.baseline.status).toBe('ok');
+    expect(accepted.baseline.total).toEqual({ baseline: 2, current: 2, delta: 0 });
   });
 });

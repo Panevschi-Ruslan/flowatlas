@@ -49,6 +49,9 @@ export const openDbFromOptions = (options: DbOptions): GraphDb => {
   return opened.db;
 };
 
+/** Where the database a query reads is, whether or not it exists yet. */
+export const dbPathFor = (options: DbOptions): string => handleFor(options).path;
+
 /**
  * Where each service's sources live, for the levels that quote code.
  *

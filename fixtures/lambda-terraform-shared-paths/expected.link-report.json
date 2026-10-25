@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-16T23:28:20.478Z",
+  "configHash": "21ec3b97440d",
+  "services": [
+    {
+      "name": "branch",
+      "repo": "./branch",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 22,
+      "edges": 14,
+      "types": 4,
+      "unresolved": 0,
+      "durationMs": 515,
+      "packages": {
+        "name": "library-branch",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 14,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 532,
+      "packages": {
+        "name": "library-branch-kiosk",
+        "runtime": [],
+        "dev": [
+          "@flowatlas/markers",
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 6,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 2,
+    "external": 0,
+    "dynamic": 1
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 3,
+    "uncalled": [
+      "entry:branch:http:GET:/health@api:library-public-lb",
+      "entry:branch:http:GET:/health@api:library-staff-lb@listener:HTTP:80",
+      "entry:branch:http:GET:/health@api:library-staff-lb@listener:HTTPS:443",
+      "entry:branch:http:GET:/hours@api:aws_apigatewayv2_api.lab_hours"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "kiosk",
+      "file": "src/kiosk/hours-board.ts",
+      "line": 12,
+      "reason": "route-api-guessed",
+      "level": "info",
+      "message": "GET /hours is served by aws_apigatewayv2_api.desk_hours, aws_apigatewayv2_api.lab_hours; aws_apigatewayv2_api.desk_hours is taken because the call's base URL is read from DESK_HOURS_URL",
+      "hint": "Only the name of the setting chose the API. Annotate the call with @CallsService where that is wrong.",
+      "symbol": "http_out:kiosk#src/kiosk/hours-board.ts:12:28"
+    },
+    {
+      "service": "kiosk",
+      "file": "src/kiosk/hours-board.ts",
+      "line": 19,
+      "reason": "ambiguous-route-api",
+      "message": "2 APIs in branch serve GET /hours: aws_apigatewayv2_api.desk_hours, aws_apigatewayv2_api.lab_hours",
+      "hint": "Which one the call reaches is the base URL it is given. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.",
+      "symbol": "http_out:kiosk#src/kiosk/hours-board.ts:19:28"
+    },
+    {
+      "service": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 10,
+      "reason": "route-api-guessed",
+      "level": "info",
+      "message": "GET /status is served by library-events-api, library-loans-api; library-loans-api is taken because the call's base URL is read from LOANS_API_URL",
+      "hint": "Only the name of the setting chose the API. Annotate the call with @CallsService where that is wrong.",
+      "symbol": "http_out:kiosk#src/kiosk/status-board.ts:10:23"
+    },
+    {
+      "service": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 11,
+      "reason": "route-api-guessed",
+      "level": "info",
+      "message": "GET /status is served by library-events-api, library-loans-api; library-events-api is taken because the call's base URL is read from EVENTS_API_URL",
+      "hint": "Only the name of the setting chose the API. Annotate the call with @CallsService where that is wrong.",
+      "symbol": "http_out:kiosk#src/kiosk/status-board.ts:11:24"
+    },
+    {
+      "service": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 12,
+      "reason": "ambiguous-route",
+      "message": "more than one route in branch answers GET /health",
+      "hint": "Candidates: entry:branch:http:GET:/health@api:library-staff-lb@listener:HTTP:80, entry:branch:http:GET:/health@api:library-staff-lb@listener:HTTPS:443. Make the path more specific, or annotate the call with @CallsService.",
+      "symbol": "http_out:kiosk#src/kiosk/status-board.ts:12:23"
+    },
+    {
+      "service": "kiosk",
+      "file": "src/kiosk/status-board.ts",
+      "line": 14,
+      "reason": "ambiguous-route-api",
+      "message": "2 APIs in branch serve GET /status: library-events-api, library-loans-api",
+      "hint": "Which one the call reaches is the base URL it is given. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.",
+      "symbol": "http_out:kiosk#src/kiosk/status-board.ts:14:24"
+    }
+  ],
+  "totals": {
+    "nodes": 39,
+    "edges": 31,
+    "types": 6,
+    "missed": 4,
+    "sites": 4,
+    "notes": 3,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

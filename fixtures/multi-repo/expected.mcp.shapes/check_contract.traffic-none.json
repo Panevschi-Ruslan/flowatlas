@@ -1,0 +1,5 @@
+{
+  "entry": "entry:orders:http:POST:/orders",
+  "note": "no body shapes of this entry: flowatlas observe --shapes reads them from a HAR or @nestjs/observe batches",
+  "callers": 0
+}

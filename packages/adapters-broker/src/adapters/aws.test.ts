@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { eventChannel, queueChannel, topicChannel } from '@flowatlas/aws';
+import { bucketChannel, changesChannel, eventChannel, queueChannel, topicChannel } from '@flowatlas/aws';
 import { parseConfig, type CallPattern } from '@flowatlas/core';
 import { Node, Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -39,12 +39,35 @@ export declare class SFNClient { constructor(config: object); send(command: unkn
   '@aws-sdk/client-lambda': `
 export declare class InvokeCommand { constructor(input: { FunctionName?: string; InvocationType?: string; Payload?: Uint8Array }); }
 export declare class LambdaClient { constructor(config: object); send(command: unknown): Promise<unknown>; }`,
+  '@aws-sdk/client-s3': `
+export declare class PutObjectCommand { constructor(input: { Bucket?: string; Key?: string; Body?: string }); }
+export declare class DeleteObjectsCommand { constructor(input: { Bucket?: string; Delete: { Objects: { Key?: string }[] } }); }
+export declare class GetObjectCommand { constructor(input: { Bucket?: string; Key?: string }); }
+export declare class S3Client { constructor(config: object); send(command: unknown): Promise<unknown>; }`,
+  '@aws-sdk/lib-storage': `
+export declare class Upload { constructor(options: { client: unknown; params: { Bucket?: string; Key?: string; Body?: string } }); done(): Promise<unknown>; }`,
+  '@aws-sdk/s3-request-presigner': `
+export declare function getSignedUrl(client: unknown, command: unknown, options?: object): Promise<string>;`,
+  '@aws-sdk/client-dynamodb': `
+export declare class PutItemCommand { constructor(input: { TableName?: string; Item?: object }); }
+export declare class GetItemCommand { constructor(input: { TableName?: string; Key?: object }); }
+export declare class BatchWriteItemCommand { constructor(input: { RequestItems: Record<string, object[]> }); }
+export declare class TransactWriteItemsCommand { constructor(input: { TransactItems: { ConditionCheck?: { TableName: string }; Put?: { TableName: string }; Update?: { TableName: string }; Delete?: { TableName: string } }[] }); }
+export declare class DynamoDBClient { constructor(config: object); send(command: unknown): Promise<unknown>; }`,
+  '@aws-sdk/lib-dynamodb': `
+export declare class PutCommand { constructor(input: { TableName?: string; Item?: object }); }
+export declare class DynamoDBDocumentClient { static from(client: unknown): DynamoDBDocumentClient; send(command: unknown): Promise<unknown>; }`,
+  '@aws-sdk/client-kinesis': `
+export declare class PutRecordCommand { constructor(input: { StreamName?: string; StreamARN?: string; Data?: Uint8Array; PartitionKey: string }); }
+export declare class KinesisClient { constructor(config: object); send(command: unknown): Promise<unknown>; }`,
   'aws-sdk': `
 declare class Request<T> { promise(): Promise<T>; }
+export declare class S3 { upload(input: { Bucket: string; Key: string; Body?: string }): Request<unknown>; }
 export declare class SQS { sendMessage(input: { QueueUrl: string; MessageBody: string }): Request<unknown>; }
 export declare class SNS { publish(input: { TopicArn?: string; Message: string }): Request<unknown>; }
 export declare class StepFunctions { startExecution(input: { stateMachineArn: string; input?: string }): Request<unknown>; }
-declare const AWS: { SQS: typeof SQS; SNS: typeof SNS; StepFunctions: typeof StepFunctions };
+export declare namespace DynamoDB { class DocumentClient { update(input: { TableName: string; Key: object }): Request<unknown>; } }
+declare const AWS: { SQS: typeof SQS; SNS: typeof SNS; StepFunctions: typeof StepFunctions; DynamoDB: typeof DynamoDB };
 export default AWS;`,
 };
 
@@ -67,10 +90,13 @@ const project = (installed: boolean, source: string): SourceFile => {
 
 interface Read {
   readonly adapter: string;
+  readonly kind?: string;
+  readonly recorded?: string[];
   readonly evidence: ReceiverEvidence;
   readonly names: string[];
   readonly payloads: (string | undefined)[];
   readonly starts?: CallPattern['starts'];
+  readonly whereDeclared?: boolean;
 }
 
 /** What the descriptions read at the one call to `method`: the pattern the pass would take, and its addresses. */
@@ -96,12 +122,18 @@ const readCall = (file: SourceFile, method: string, specs: readonly BrokerSpec[]
         parseConfig({}),
         call.getText(),
       );
+      const key = pattern.recorded?.['Key'];
+      const recorded = key === undefined ? undefined : readAddress(call, [{ at: key }], undefined, {}, parseConfig({}), '');
       return {
         adapter: spec.name,
+        ...(key === undefined ? {} : { kind: pattern.kind }),
+        ...(recorded === undefined ? {} : { recorded: recorded.flatMap((element) => (isResolved(element.resolution) ? [...element.resolution.names] : [])) }),
         evidence,
         names: elements.flatMap((element) => (isResolved(element.resolution) ? [...element.resolution.names] : [])),
         payloads: elements.map((element) => element.payload?.getText()),
         ...(pattern.starts === undefined ? {} : { starts: pattern.starts }),
+        ...(pattern.whereDeclared === undefined ? {} : { whereDeclared: pattern.whereDeclared }),
+        ...(pattern.batch === undefined ? {} : { batch: pattern.batch }),
       };
     }
   }
@@ -126,6 +158,8 @@ events.send(command);`,
       evidence: 'checked',
       names: [eventChannel(undefined, 'library.holds', 'HoldPlaced'), eventChannel('library', 'library.holds', 'HoldQueued')],
       payloads: ['hold', undefined],
+      // Many events in one round trip (P89).
+      batch: true,
     });
   });
 
@@ -137,6 +171,7 @@ const sqs = new SQSClient({});
 sqs.send(new SendMessageCommand({ QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/111122223333/returns', MessageBody: JSON.stringify({ itemId: 'a' }) }));`,
     );
     expect(readCall(file, 'send')).toMatchObject({ adapter: 'aws-sqs', names: [queueChannel('returns')] });
+    expect(readCall(file, 'send')).not.toHaveProperty('batch');
   });
 
   it('reads a batch to one queue as one address carrying the first entry', () => {
@@ -147,7 +182,7 @@ declare const a: { itemId: string };
 const sqs = new SQSClient({});
 sqs.send(new SendMessageBatchCommand({ QueueUrl: 'https://sqs.eu-west-1.amazonaws.com/111122223333/returns', Entries: [{ Id: '1', MessageBody: JSON.stringify(a) }] }));`,
     );
-    expect(readCall(file, 'send')).toMatchObject({ names: [queueChannel('returns')], payloads: ['a'] });
+    expect(readCall(file, 'send')).toMatchObject({ names: [queueChannel('returns')], payloads: ['a'], batch: true });
   });
 
   it('reads a topic by the name inside its ARN', () => {
@@ -445,6 +480,170 @@ new SFNClient({}).send(new SendTaskSuccessCommand({ taskToken: token, output: '{
 new SFNClient({}).send(new DescribeExecutionCommand({ executionArn: 'x' }));`,
     );
     expect(readCall(described, 'send')).toBeUndefined();
+  });
+});
+
+describe('a write to a bucket (P52)', () => {
+  it('reads PutObject as the event it fires on the bucket, with the key it writes and no message', () => {
+    const file = project(
+      true,
+      `import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+declare const isbn: string;
+const s3 = new S3Client({});
+s3.send(new PutObjectCommand({ Bucket: 'arn:aws:s3:::library-covers', Key: \`incoming/\${isbn}.png\`, Body: 'x' }));`,
+    );
+    expect(readCall(file, 'send')).toMatchObject({
+      adapter: 'aws-s3',
+      kind: 's3:ObjectCreated:Put',
+      names: [bucketChannel('library-covers')],
+      recorded: ['incoming/*.png'],
+      payloads: [undefined],
+    });
+  });
+
+  it('reads every key a DeleteObjects removes, and nothing at a read', () => {
+    const file = project(
+      true,
+      `import { DeleteObjectsCommand, GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+const s3 = new S3Client({});
+s3.send(new DeleteObjectsCommand({ Bucket: 'library-covers', Delete: { Objects: [{ Key: 'a.png' }, { Key: 'b.png' }] } }));`,
+    );
+    expect(readCall(file, 'send')).toMatchObject({ kind: 's3:ObjectRemoved:Delete', names: [bucketChannel('library-covers')], recorded: ['a.png', 'b.png'] });
+    const read = project(
+      true,
+      `import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+new S3Client({}).send(new GetObjectCommand({ Bucket: 'library-covers', Key: 'a.png' }));`,
+    );
+    expect(readCall(read, 'send')).toBeUndefined();
+  });
+
+  it("reads version 2's upload, and lib-storage's Upload where it is made, as either kind of creation", () => {
+    const v2 = project(
+      true,
+      `import AWS from 'aws-sdk';
+const s3 = new AWS.S3();
+s3.upload({ Bucket: 'library-covers', Key: 'covers/a.png' }).promise();`,
+    );
+    expect(readCall(v2, 'upload')).toMatchObject({ kind: 's3:ObjectCreated:*', names: [bucketChannel('library-covers')], recorded: ['covers/a.png'] });
+    const storage = project(
+      true,
+      `import { Upload } from '@aws-sdk/lib-storage';
+const upload = new Upload({ client: {}, params: { Bucket: process.env.COVERS_BUCKET, Key: 'thumbnails/a.png' } });
+upload.done();`,
+    );
+    const call = storage.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'upload.done') as CallExpression;
+    const pattern = awsBrokerAdapters.flatMap((spec) => spec.producerPatterns).find((each) => each.method === 'done') as CallPattern;
+    expect(receiverEvidence((call.getExpression() as never as { getExpression(): Node }).getExpression(), pattern)).toBe('checked');
+    const [element] = readAddress(call, pattern.address ?? [], undefined, {}, parseConfig({}), '');
+    expect(element?.awaiting).toEqual(['s3', expect.objectContaining({ environment: 'COVERS_BUCKET' })]);
+  });
+
+  it('reads a URL signed for a PutObjectCommand as a guess, the browser being what writes', () => {
+    const file = project(
+      true,
+      `import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+getSignedUrl(new S3Client({}), new PutObjectCommand({ Bucket: 'library-covers', Key: 'incoming/a.png' }));`,
+    );
+    const call = file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'getSignedUrl') as CallExpression;
+    const pattern = awsBrokerAdapters.flatMap((spec) => spec.producerPatterns).find((each) => each.method === 'getSignedUrl') as CallPattern;
+    expect(pattern).toMatchObject({ calledAs: 'function', module: '@aws-sdk/s3-request-presigner', guessed: 'presigned', payload: [] });
+    expect(appliesAt(call, pattern)).toBe(true);
+    const [element] = readAddress(call, pattern.address ?? [], undefined, {}, parseConfig({}), '');
+    expect(element?.resolution).toMatchObject({ names: [bucketChannel('library-covers')] });
+  });
+});
+
+describe('a write to a table or a record put on a stream (P51)', () => {
+  it('reads a table by its name or its ARN, as a write only where its stream is declared', () => {
+    const file = project(
+      true,
+      `import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+declare const order: { orderId: { S: string } };
+new DynamoDBClient({}).send(new PutItemCommand({ TableName: 'arn:aws:dynamodb:eu-west-1:111122223333:table/shop-orders', Item: order }));`,
+    );
+    expect(readCall(file, 'send')).toEqual({
+      adapter: 'aws-dynamodb',
+      evidence: 'checked',
+      names: [changesChannel('table', 'shop-orders')],
+      payloads: ['order'],
+      whereDeclared: true,
+    });
+  });
+
+  it('reads a batch by the table each of its keys names, written or computed', () => {
+    const file = project(
+      true,
+      `import { BatchWriteItemCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
+const CARTS = 'shop-carts';
+new DynamoDBClient({}).send(new BatchWriteItemCommand({ RequestItems: { 'shop-orders': [], [CARTS]: [] } }));`,
+    );
+    expect(readCall(file, 'send')?.names).toEqual([changesChannel('table', 'shop-orders'), changesChannel('table', 'shop-carts')]);
+  });
+
+  it('reads a key written as a bare word or a shorthand property as the table it names (P55)', () => {
+    const file = project(
+      true,
+      `import { BatchWriteItemCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
+const audit: object[] = [];
+new DynamoDBClient({}).send(new BatchWriteItemCommand({ RequestItems: { orders: [], audit } }));`,
+    );
+    expect(readCall(file, 'send')?.names).toEqual([changesChannel('table', 'orders'), changesChannel('table', 'audit')]);
+  });
+
+  it('reads no table and no row for a condition a transaction checks (P55)', () => {
+    const file = project(
+      true,
+      `import { DynamoDBClient, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb';
+new DynamoDBClient({}).send(new TransactWriteItemsCommand({ TransactItems: [{ ConditionCheck: { TableName: 'shop-carts' } }, { Put: { TableName: 'shop-orders' } }] }));`,
+    );
+    expect(readCall(file, 'send')).toMatchObject({ names: [changesChannel('table', 'shop-orders')] });
+    expect(readCall(file, 'send')?.payloads).toHaveLength(1);
+  });
+
+  it('reads a transaction by the table each entry names under the kind of write it is', () => {
+    const file = project(
+      true,
+      `import { DynamoDBClient, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb';
+new DynamoDBClient({}).send(new TransactWriteItemsCommand({ TransactItems: [{ Put: { TableName: 'shop-orders' } }, { Delete: { TableName: 'shop-carts' } }] }));`,
+    );
+    expect(readCall(file, 'send')?.names).toEqual([changesChannel('table', 'shop-orders'), changesChannel('table', 'shop-carts')]);
+  });
+
+  it('reads the document client of lib-dynamodb and of version 2', () => {
+    const v3 = project(
+      true,
+      `import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+DynamoDBDocumentClient.from({}).send(new PutCommand({ TableName: 'shop-orders', Item: {} }));`,
+    );
+    expect(readCall(v3, 'send')).toMatchObject({ adapter: 'aws-dynamodb-document', names: [changesChannel('table', 'shop-orders')] });
+    const v2 = project(
+      true,
+      `import AWS from 'aws-sdk';
+new AWS.DynamoDB.DocumentClient().update({ TableName: 'shop-orders', Key: {} }).promise();`,
+    );
+    expect(readCall(v2, 'update')).toMatchObject({ adapter: 'aws-dynamodb-document', evidence: 'checked', names: [changesChannel('table', 'shop-orders')] });
+  });
+
+  it('reads nothing at a read', () => {
+    const file = project(
+      true,
+      `import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';
+new DynamoDBClient({}).send(new GetItemCommand({ TableName: 'shop-orders', Key: {} }));`,
+    );
+    expect(readCall(file, 'send')).toBeUndefined();
+  });
+
+  it('reads a Kinesis stream by its name or by its ARN, always a publish', () => {
+    const file = project(
+      true,
+      `import { KinesisClient, PutRecordCommand } from '@aws-sdk/client-kinesis';
+declare const data: Uint8Array;
+new KinesisClient({}).send(new PutRecordCommand({ StreamARN: 'arn:aws:kinesis:eu-west-1:111122223333:stream/shop-clicks', PartitionKey: 'a', Data: data }));`,
+    );
+    const read = readCall(file, 'send');
+    expect(read).toMatchObject({ adapter: 'aws-kinesis', names: [changesChannel('stream', 'shop-clicks')], payloads: ['data'] });
+    expect(read?.whereDeclared).toBeUndefined();
   });
 });
 

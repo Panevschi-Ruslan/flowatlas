@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T03:49:36.315Z",
+  "configHash": "65af9ca97546",
+  "services": [
+    {
+      "name": "media",
+      "repo": "./media",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 33,
+      "edges": 31,
+      "types": 5,
+      "unresolved": 4,
+      "durationMs": 502,
+      "packages": {
+        "name": "lending-library-media",
+        "runtime": [
+          "@aws-sdk/client-s3",
+          "@aws-sdk/lib-storage",
+          "@aws-sdk/s3-request-presigner"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 4,
+    "noConsumers": [
+      "channel:eventbridge/default/aws.s3/Object Deleted"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:media:http:POST:/covers/:param",
+      "entry:media:http:POST:/covers/:param/url"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "media",
+      "file": "src/uploads/make-thumbnail.ts",
+      "line": 21,
+      "reason": "s3-write-matches-nothing",
+      "level": "info",
+      "message": "the call at src/uploads/make-thumbnail.ts:21 is s3:ObjectRemoved:Delete on s3/library-cover-uploads, and none of its 2 notification(s) takes it",
+      "hint": "Each notification takes some events and, where it filters, keys with a given start and end. Nothing to fix if the write is meant to notify nobody.",
+      "symbol": "producer:media#src/uploads/make-thumbnail.ts:21:11",
+      "meta": {
+        "notifications": [
+          "notification index-thumbnail",
+          "notification make-thumbnail"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 33,
+    "edges": 35,
+    "types": 5,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 2,
+    "unresolved": 0
+  }
+}

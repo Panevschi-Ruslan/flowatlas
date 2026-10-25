@@ -1,12 +1,18 @@
 import {
   Node,
+  SyntaxKind,
   VariableDeclarationKind,
   type CallExpression,
+  type ClassDeclaration,
   type Decorator,
   type NewExpression,
   type Node as TsNode,
   type ObjectLiteralExpression,
 } from 'ts-morph';
+import { classMembersOf } from '../di/class-members.js';
+import { functionOf, methodNamedOn } from '../di/member-call.js';
+import { evaluateExpression } from '../static-value.js';
+import { returnedExpression } from '../trace.js';
 
 /**
  * Where a library writes the name of the thing a call is addressed to.
@@ -63,7 +69,7 @@ export type NameLocator =
    *
    * The other way a class per name states the name once: not by handing it to
    * `super(...)` but by setting a field the base reads,
-   * `protected readonly collectionName = 'menuItems'`. The class itself first,
+   * `protected readonly collectionName = 'products'`. The class itself first,
    * then each class it extends, so a name stated on an intermediate base is
    * found as readily as one on the leaf (R165).
    */
@@ -118,7 +124,18 @@ export type NameLocator =
    * one such call: anything else reaches nothing, which a reader reports as a
    * name it could not read rather than guessing at (R171).
    */
-  | { kind: 'origin-call-argument'; call: string; path: readonly string[]; index?: number };
+  | { kind: 'origin-call-argument'; call: string; path: readonly string[]; index?: number }
+  /**
+   * A path inside what the receiver was constructed with.
+   *
+   * A helper built for one operation and then run - `new Upload({ client,
+   * params: { Bucket, Key } }).done()` - is told where it acts when it is made,
+   * and the call that acts says nothing. Followed through `const` bindings,
+   * as a command a statement earlier is; a receiver made any other way reaches
+   * nothing here (P52). `index` is the constructor's argument the path starts
+   * in, the first by default.
+   */
+  | { kind: 'receiver-constructed-path'; class: string; path: readonly string[]; index?: number };
 
 /**
  * What one locator found at one element of the address.
@@ -133,7 +150,17 @@ export type NameLocator =
  * nothing is written there, which a description may fill with what the library
  * does when it is left out.
  */
-export type LocatedSlot = { readonly expression: TsNode; readonly reached: boolean } | undefined;
+export type LocatedSlot =
+  | {
+      readonly expression: TsNode;
+      readonly reached: boolean;
+      /**
+       * A key written as a bare word, `{ orders: [...] }` or `{ orders }`: it
+       * names itself, as text, and is no expression of anything (P55).
+       */
+      readonly key?: string;
+    }
+  | undefined;
 
 /**
  * Whether a method name is one of the library's own operations.
@@ -211,14 +238,21 @@ const chainTop = (call: CallExpression): TsNode => {
 const chainCalls = (call: CallExpression): CallExpression[] => {
   const calls: CallExpression[] = [];
   let current: TsNode = chainTop(call);
+  // One helper per chain: what a helper hands out is read, and a helper that
+  // hands out another helper's answer is further than this follows (P88).
+  let stepped = false;
   for (let depth = 0; depth < MOST_LINKS; depth += 1) {
     if (Node.isCallExpression(current)) {
       calls.push(current);
-      current = current.getExpression();
+      const handed: TsNode | undefined = stepped ? undefined : helperAnswer(current);
+      stepped ||= handed !== undefined;
+      current = handed ?? current.getExpression();
       continue;
     }
     if (Node.isPropertyAccessExpression(current)) {
-      current = current.getExpression();
+      const handed: TsNode | undefined = stepped ? undefined : getterAnswer(current);
+      stepped ||= handed !== undefined;
+      current = handed ?? current.getExpression();
       continue;
     }
     // A link kept in a constant is still a link of the chain:
@@ -234,6 +268,84 @@ const chainCalls = (call: CallExpression): CallExpression[] => {
     return calls;
   }
   return calls;
+};
+
+/** The class a node is written in, and each class it extends, nearest first. */
+const classesAround = (node: TsNode): ClassDeclaration[] => {
+  const chain: ClassDeclaration[] = [];
+  let current = node.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+  while (current !== undefined && chain.length < 8) {
+    chain.push(current);
+    current = current.getBaseClass();
+  }
+  return chain;
+};
+
+/** Whether an expression mentions any of a function's parameters. */
+const mentionsParameter = (expression: TsNode, parameters: readonly TsNode[]): boolean =>
+  parameters.length > 0 &&
+  [expression, ...expression.getDescendantsOfKind(SyntaxKind.Identifier)].some((node) => {
+    const declaration = node.getSymbol()?.getDeclarations()[0];
+    return declaration !== undefined && parameters.includes(declaration);
+  });
+
+/**
+ * What a same-class helper called as a link of a chain hands out: the one
+ * expression `this.coll()` returns, so that `this.coll().find()` is read as
+ * `this.db.collection(COMMENTS).find()` is (P88).
+ *
+ * A helper with no arguments is `returnedExpression`'s case. One handed only
+ * constants is read too, when what it returns mentions none of its
+ * parameters: then the arguments cannot change the answer. A helper that
+ * builds its answer from a parameter - `coll(name)` - is a table chosen by its
+ * caller, and nothing is handed out.
+ */
+const helperAnswer = (link: CallExpression): TsNode | undefined => {
+  const callee = link.getExpression();
+  if (!Node.isPropertyAccessExpression(callee) || !Node.isThisExpression(callee.getExpression())) {
+    return undefined;
+  }
+  const written = link.getArguments();
+  if (written.length === 0) return returnedExpression(link) ?? undefined;
+  if (!written.every((argument) => evaluateExpression(argument).resolved)) return undefined;
+  for (const owner of classesAround(link)) {
+    const method = methodNamedOn(owner, callee.getName());
+    const fn = method === undefined ? undefined : functionOf(method);
+    if (fn === undefined) continue;
+    const body = fn.getBody();
+    if (body === undefined) continue;
+    const answer = Node.isBlock(body) ? soleReturn(body) : body;
+    if (answer === undefined) return undefined;
+    return mentionsParameter(answer, fn.getParameters()) ? undefined : answer;
+  }
+  return undefined;
+};
+
+/** The expression a body returns when its only statement is that return. */
+const soleReturn = (body: TsNode): TsNode | undefined => {
+  if (!Node.isBlock(body)) return undefined;
+  const [only, ...rest] = body.getStatements();
+  if (only === undefined || rest.length > 0 || !Node.isReturnStatement(only)) return undefined;
+  return only.getExpression();
+};
+
+/**
+ * What a getter of the same class read as a link of a chain hands out:
+ * `this.collection.find()` over `get collection() { return
+ * this.db.collection(COMMENTS) }` (P88). Only a getter whose body is that one
+ * return; a field is a value somebody else may assign.
+ */
+const getterAnswer = (link: TsNode): TsNode | undefined => {
+  if (!Node.isPropertyAccessExpression(link) || !Node.isThisExpression(link.getExpression())) {
+    return undefined;
+  }
+  for (const owner of classesAround(link)) {
+    const getter = classMembersOf(owner).getAccessor(link.getName());
+    if (getter === undefined) continue;
+    const body = getter.getBody();
+    return body === undefined ? undefined : soleReturn(body);
+  }
+  return undefined;
 };
 
 /** What a name was bound to, when it is an unannotated `const` bound once. */
@@ -379,7 +491,7 @@ const classPropertyValue = (
   let current = declaration;
   for (let depth = 0; depth < 8; depth += 1) {
     if (current === undefined || !Node.isClassDeclaration(current)) return undefined;
-    const initialiser = current.getProperty(key)?.getInitializer();
+    const initialiser = classMembersOf(current).property(key)?.getInitializer();
     if (initialiser !== undefined) return initialiser;
     current = current.getBaseClass();
   }
@@ -398,6 +510,13 @@ const decoratorArgument = (
 
 /** One step of a path that stands for every element of an array. */
 export const EVERY_ELEMENT = '*';
+
+/**
+ * One step of a path that stands for every key of a record, as the key is
+ * written: a record keyed by what it addresses - a batch keyed by the table
+ * each list of writes goes to - names its addresses in its keys (P51).
+ */
+export const EVERY_KEY = '[key]';
 
 const stopped = (expression: TsNode): LocatedSlot => ({ expression, reached: false });
 
@@ -487,6 +606,24 @@ const writtenProperty = (record: ObjectLiteralExpression, key: string): LocatedS
   return undefined;
 };
 
+/**
+ * A key of a record as an expression: what a computed key computes, or the
+ * key itself where it is a string. A key written as a bare word - or a
+ * shorthand property, whose key is the name it copies - names itself, and is
+ * handed over as that text (P55). A spread is whatever it spreads, and stops.
+ */
+const writtenKey = (property: TsNode): LocatedSlot => {
+  if (Node.isShorthandPropertyAssignment(property)) {
+    const name = property.getNameNode();
+    return { expression: name, reached: true, key: name.getText() };
+  }
+  if (!Node.isPropertyAssignment(property)) return stopped(property);
+  const name = property.getNameNode();
+  if (Node.isComputedPropertyName(name)) return { expression: name.getExpression(), reached: true };
+  if (Node.isIdentifier(name)) return { expression: name, reached: true, key: name.getText() };
+  return Node.isStringLiteral(name) || Node.isNoSubstitutionTemplateLiteral(name) ? { expression: name, reached: true } : stopped(name);
+};
+
 /** One step into what a slot holds. */
 const stepInto = (expression: TsNode, step: string): LocatedSlot[] => {
   const value = writtenValue(expression);
@@ -499,13 +636,15 @@ const stepInto = (expression: TsNode, step: string): LocatedSlot[] => {
       );
   }
   if (!Node.isObjectLiteralExpression(value)) return [stopped(expression)];
+  if (step === EVERY_KEY) return value.getProperties().map(writtenKey);
   return [writtenProperty(value, step)];
 };
 
 /**
  * Every place a path of properties reaches from one expression, in order.
  *
- * One slot per element wherever the path says `*`, so the result is as long as
+ * One slot per element wherever the path says `*`, and per key where it says
+ * `[key]`, so the result is as long as
  * the lists it went through. A slot that stopped stays where it stopped for the
  * rest of the path, and an absent key stays absent: both are answers about that
  * element, and dropping them would shift every later element onto the wrong
@@ -784,6 +923,14 @@ const resolvers: LocatorResolvers = {
     if (instance === undefined) return [];
     if (!Node.isNewExpression(instance)) return [stopped(instance)];
     const input = instance.getArguments()[locator.index ?? 0];
+    return input === undefined ? [undefined] : walkPath(input, locator.path);
+  },
+  'receiver-constructed-path': (site, locator) => {
+    const receiver = receiverOf(site);
+    if (receiver === undefined) return [];
+    const made = writtenValue(receiver);
+    if (!Node.isNewExpression(made) || constructedName(made) !== locator.class) return [stopped(receiver)];
+    const input = made.getArguments()[locator.index ?? 0];
     return input === undefined ? [undefined] : walkPath(input, locator.path);
   },
   'origin-call-argument': (site, locator) => {

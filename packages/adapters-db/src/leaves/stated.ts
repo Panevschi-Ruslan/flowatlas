@@ -1,5 +1,6 @@
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
+  classMembersOf,
   declarationOf,
   packageOfSpecifier,
   readPackageJson,
@@ -18,6 +19,8 @@ import {
   type SourceFile,
 } from 'ts-morph';
 import { generatedModules } from '../descriptors/index.js';
+// A relative specifier is joined in the compiler's spelling (P199): see besidePath.
+import { besidePath } from './prisma-schema.js';
 
 /**
  * What the source says a receiver's type is, when the checker will not say.
@@ -261,7 +264,7 @@ const writtenMember = (
     }
     return undefined;
   }
-  if (Node.isClassDeclaration(declaration)) return declaration.getProperty(key);
+  if (Node.isClassDeclaration(declaration)) return classMembersOf(declaration).property(key);
   return undefined;
 };
 
@@ -443,7 +446,7 @@ const referenced = (reference: ModuleReference, hops: number): Step => {
         : workspaceEntry(specifier, from);
   if (local !== undefined) return exported(local, name, hops + 1);
   if (pkg !== undefined) return { package: pkg, site: from };
-  const target = resolve(dirname(from.getFilePath()), specifier);
+  const target = besidePath(dirname(from.getFilePath()), specifier);
   const generator = generatedModules.find((entry) => entry.generates(from, target));
   return generator === undefined ? null : { package: generator.package, site: from };
 };
@@ -586,7 +589,7 @@ const exportOfImported = (from: SourceFile, specifier: string, name: string): Ts
       specifier,
       resolved:
         packageOfSpecifier(specifier) === undefined
-          ? moduleAt(from.getProject(), resolve(dirname(from.getFilePath()), specifier))
+          ? moduleAt(from.getProject(), besidePath(dirname(from.getFilePath()), specifier))
           : undefined,
       name,
     },

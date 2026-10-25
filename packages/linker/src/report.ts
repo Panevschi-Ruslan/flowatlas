@@ -90,13 +90,61 @@ export interface LinkReport {
     uncalled: string[];
     /** Routes more than one handler claims; the framework answers with one. */
     duplicated: string[];
+    /**
+     * Uncalled routes a request could still reach, by route id, with the
+     * requests (P91): each one's address was read in part and what was read
+     * matches the route. Never an edge. Absent when there are none, and from
+     * a report written before 0.6.0.
+     */
+    nearMissed?: Record<string, string[]>;
   };
   types: {
     total: number;
     /** Types merged because they come from a package the services share. */
     sharedPackage: number;
   };
-  /** Raised while joining, as opposed to while reading one repository. */
+  /**
+   * Rows raised while joining, as opposed to while reading one repository: a
+   * subset of the project's `unresolved`, every kind included.
+   */
   unresolved: Unresolved[];
-  totals: { nodes: number; edges: number; types: number; unresolved: number };
+  totals: LinkTotals;
 }
+
+/**
+ * The project in figures, counted by `countsOf` (core, P81).
+ *
+ * `missed`, `notes` and `findings` are rows of the whole project's list, by
+ * kind; `sites` is the places the missed rows stand for. A report written
+ * before 0.6.0 carries only `unresolved`, so a reader of a stored report asks
+ * `missedOf(totals)` rather than reading `missed` itself.
+ */
+export interface LinkTotals {
+  nodes: number;
+  edges: number;
+  types: number;
+  /** Gap rows that say something was not read. */
+  missed: number;
+  /** Places the missed rows stand for, folding included. */
+  sites: number;
+  /** Rows saying how a join or a reading was made, with nothing missed. */
+  notes: number;
+  /** Rows saying something about the code itself. */
+  findings: number;
+  /**
+   * Equal to `missed`.
+   *
+   * @deprecated since 0.6.0: read `missed`. Written for one more version so a
+   * page or a script reading a stored report keeps working.
+   */
+  unresolved: number;
+}
+
+/**
+ * What was missed, from a report however old.
+ *
+ * A database built by 0.5.x holds totals with `unresolved` alone, which then
+ * meant every row not at level `nothing`; it is the nearest figure there is.
+ */
+export const missedOf = (totals: { missed?: number; unresolved?: number }): number =>
+  totals.missed ?? totals.unresolved ?? 0;

@@ -1,5 +1,5 @@
 import type { EntryAdapter, EntryHandler, EntryKind, EntryNode, ExtractContext } from '@flowatlas/core';
-import { hasAnyDependency, makeEntryId, resolveTypeOrigin } from '@flowatlas/core';
+import { hasAnyDependency, makeEntryId, resolveTypeOrigin, startLineOf } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { resolveTriggerArg } from './nestjs-telegraf/triggers.js';
@@ -131,7 +131,7 @@ const siteOf = (call: CallExpression, ctx: ExtractContext): Site | null => {
     handler: behind ?? inline ?? enclosingHandler(call, ctx),
     viaRegistration: behind === undefined && inline === undefined,
     ...(inline === undefined ? {} : { inline: true }),
-    line: call.getStartLineNumber(),
+    line: startLineOf(call),
     text: (implied === undefined ? (args[0]?.getText() ?? '') : name).slice(0, 80),
     ...(owner === undefined ? {} : { updateClass: owner.getName() ?? '<anonymous>' }),
   };
@@ -219,7 +219,7 @@ const reportUnreadable = (ctx: ExtractContext, call: CallExpression): boolean =>
 
   ctx.builder.addUnresolved({
     file: fileOfNode(call, ctx),
-    line: call.getStartLineNumber(),
+    line: startLineOf(call),
     reason: 'dynamic-bot-trigger',
     hint: DYNAMIC_HINT,
     symbol: call.getArguments()[0]?.getText().slice(0, 60) ?? registration.name,

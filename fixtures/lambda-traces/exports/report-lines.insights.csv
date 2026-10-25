@@ -1,0 +1,23 @@
+@timestamp,@message,@log,@logStream
+2025-10-16 08:29:59.998,"START RequestId: planted-req-0001 Version: $LATEST
+",111122223333:/aws/lambda/checkout,2025/10/16/[$LATEST]planted0stream08
+2025-10-16 08:30:00.060,"2025-10-16T08:30:00.060Z	planted-req-0001	INFO	charging planted-customer, card planted-card-4242
+",111122223333:/aws/lambda/checkout,2025/10/16/[$LATEST]planted0stream08
+2025-10-16 08:30:00.180,"REPORT RequestId: planted-req-0001	Duration: 180.00 ms	Billed Duration: 181 ms	Memory Size: 512 MB	Max Memory Used: 91 MB	
+XRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2	SegmentId: planted-seg-0001	Sampled: true	
+",111122223333:/aws/lambda/checkout,2025/10/16/[$LATEST]planted0stream08
+2025-10-16 08:30:00.290,"REPORT RequestId: planted-req-0002	Duration: 200.00 ms	Billed Duration: 201 ms	Memory Size: 512 MB	Max Memory Used: 92 MB	
+XRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2	SegmentId: planted-seg-0002	Sampled: true	
+",111122223333:/aws/lambda/reserve-stock,2025/10/16/[$LATEST]planted0stream013
+2025-10-16 08:30:00.590,"REPORT RequestId: planted-req-0003	Duration: 270.00 ms	Billed Duration: 271 ms	Memory Size: 512 MB	Max Memory Used: 93 MB	Status: error	Error Type: Runtime.Unknown	
+XRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2	SegmentId: planted-seg-0003	Sampled: true	
+",111122223333:/aws/lambda/charge-card,2025/10/16/[$LATEST]planted0stream011
+2025-10-16 08:30:01.400,"REPORT RequestId: planted-req-0004	Duration: 400.00 ms	Billed Duration: 401 ms	Memory Size: 512 MB	Max Memory Used: 94 MB	
+XRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2	SegmentId: planted-seg-0004	Sampled: true	
+",111122223333:/aws/lambda/ship-order,2025/10/16/[$LATEST]planted0stream010
+2025-10-16 08:30:01.370,"REPORT RequestId: planted-req-0005	Duration: 320.00 ms	Billed Duration: 321 ms	Memory Size: 512 MB	Max Memory Used: 95 MB	
+XRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2	SegmentId: planted-seg-0005	Sampled: true	
+",111122223333:/shop/functions,2025/10/16/print-label[$LATEST]planted0stream05
+2025-10-16 08:30:01.520,"REPORT RequestId: planted-req-0006	Duration: 20.00 ms	Billed Duration: 21 ms	Memory Size: 512 MB	Max Memory Used: 96 MB	Init Duration: 312.77 ms	
+XRAY TraceId: 1-68f0ad08-a1b2c3d4e5f6a7b8c9d0e1f2	SegmentId: planted-seg-0006	Sampled: true	
+",111122223333:/aws/lambda/index-orders,2025/10/16/[$LATEST]planted0stream012

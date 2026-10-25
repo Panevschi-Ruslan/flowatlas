@@ -1,0 +1,35 @@
+The dependencies of gateway and orders are not installed, and 1 type could not be resolved: this is a partial read. What a table is called is usually declared in a package, and a package that is not installed cannot be read. Installing them and building again recovers what a package declares — never what a package generates, which is absent either way.
+
+unresolved: total=3 (skipped) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 3 to act on · missed: 6 over 8 sites · notes: 0 · findings: 2
+  5 missed places static reading cannot see, folded into 3 rows
+  2 findings: 1 stream nothing writes to, 1 rule nothing published matches
+  Probably missing: a repository for "payments" — 5 kinds of evidence, 8 places
+    PAYMENTS_URL is used by gateway (2 requests) and no service claims it
+    @acme/payments-client is imported by orders and is not installed
+    channel payment.requested is published by orders and nobody here consumes it
+    events from acme.payments* are taken by jobs (1 rule) and nothing here publishes one
+    stream kinesis/payments is read by jobs and nothing here writes to it
+    traffic came from payments, which no configured service is: 2 methods and 2 routes, 8 spans in 1h
+    ./payments-api looks like it (package @acme/payments-api, its directory name, a compose service built from it): flowatlas link ./fixtures/missing-repo/payments-api --config fixtures/missing-repo/flowatlas.config.json
+  unknown-base-url-env: 2 rows
+    Add PAYMENTS_URL to services[].baseUrlEnv of whichever service answers it.
+      gateway/src/checkout.controller.ts:12  no service declares PAYMENTS_URL
+      gateway/src/checkout.controller.ts:21  no service declares PAYMENTS_URL
+  type-unresolved: 1 row
+    The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.
+      orders/src/orders.service.ts:18  any
+  seen-not-in-code (info): 2 rows over 4 places
+    Traffic reached this and no reader drew it: a route registered at run time, a service not in the configuration, or a reader gap. Look for it in the map (the MCP tool cant_follow names the call for each), add the service to the configuration if it is missing, and a later build that reads it makes the row go away. Nothing is drawn from it: a blind spot is a question, not an edge.
+      payments  traffic in payments reached 2 methods no reader drew, 4 spans in 1h: ChargesController.charge (3), ChargesController.refund (1)
+      payments  traffic in payments reached 2 routes no reader drew, 4 spans in 1h: POST /charges (3), POST /refunds (1)
+  call-dynamic-receiver (info): 1 row
+    The receiver has no single class type; inject a class to make the edge visible.
+      orders/src/orders.service.ts:17  OrdersService.confirm -> this.payments.authorize
+  stream-no-writer (finding): 1 row
+    Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.
+      jobs/infra/main.tf:46  kinesis/payments is read by a function and nothing in the configured services writes to it
+  subscription-matches-nothing (finding): 1 row
+    A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.
+      jobs/infra/main.tf:68  rule acme-payment-captured takes events by a pattern that no publisher in the configured services matches

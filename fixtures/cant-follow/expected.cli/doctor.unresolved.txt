@@ -1,0 +1,69 @@
+can't follow: 21 places over 10 rows, by cause
+
+  module-not-installed: 12 places  2 services
+    Install the repository's dependencies so the package resolves, or describe it in a shape file (flowatlas shapes --suggest); until then nothing typed by it can be followed.
+    rows: call-dynamic-receiver, di-type-unresolved, type-unresolved
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause module-not-installed
+    module-not-installed:@shopkit/mailer: 7 places
+      storefront/src/notify/notify.service.ts:19  NotifyService.confirm -> this.mail.attach
+      storefront/src/notify/notify.service.ts:20  NotifyService.confirm -> this.mail.deliver
+      storefront/src/notify/notify.service.ts:16  Receipt
+    module-not-installed:@shopkit/ledger: 4 places
+      payments/src/charges/charges.controller.ts:10  LedgerEntry
+      payments/src/charges/charges.service.ts:8  LedgerEntry
+      payments/src/charges/charges.service.ts:9  ChargesService.create -> this.ledger.reserve
+    module-not-installed:@shopkit/queue: 1 place
+      storefront/src/jobs/reminder.job.ts:6  ReminderJob.constructor[0]
+
+  import-unresolved: 2 places  storefront
+    The import resolves to no file: check the path, or the tsconfig paths and baseUrl it relies on.
+    rows: call-dynamic-receiver
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause import-unresolved
+    import-unresolved:../legacy/templates: 1 place
+      storefront/src/notify/notify.service.ts:17  NotifyService.confirm -> this.templates.render
+    import-unresolved:@storefront/audit: 1 place
+      storefront/src/notify/notify.service.ts:18  NotifyService.confirm -> this.audit.record
+
+  interface-type: 2 places  storefront
+    Typed by an interface or a type with no class behind it; type it as the class, or inject one.
+    rows: call-dynamic-receiver
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause interface-type
+      storefront/src/jobs/reminder.job.ts:11  ReminderJob.start -> registry.on
+      storefront/src/pricing/pricing.service.ts:13  PricingService.quote -> this.rules.apply
+
+  any-typed: 1 place  storefront
+    Declared as any; give it a class type to make the call visible.
+    rows: call-dynamic-receiver
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause any-typed
+      storefront/src/jobs/reminder.job.ts:12  ReminderJob.start -> this.legacy.flush
+
+  callback-param: 1 place  storefront
+    A callback's parameter the called function's signature does not type; annotate it, or type the function it is passed to.
+    rows: call-dynamic-receiver
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause callback-param
+      storefront/src/jobs/reminder.job.ts:11  ReminderJob.start -> job.ack
+
+  dynamic-member: 1 place  storefront
+    The method is chosen at run time, as obj[key](); there is nothing static to follow.
+    rows: call-dynamic-receiver
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause dynamic-member
+      storefront/src/orders/orders.service.ts:19  OrdersService.place -> this.steps[sku]
+
+  re-export-missing: 1 place  storefront
+    The module resolves but exports no such name; the index that should re-export it is missing the line.
+    rows: call-dynamic-receiver
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause re-export-missing
+      storefront/src/pricing/pricing.service.ts:14  PricingService.quote -> this.tax.add
+
+  untyped-parameter: 1 place  storefront
+    A parameter with no type and no default; annotate it with the class it holds.
+    rows: call-dynamic-receiver
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause untyped-parameter
+      storefront/src/jobs/reminder.job.ts:16  ReminderJob.handle -> payload.complete
+
+by package:
+  @shopkit/mailer          7  module-not-installed 7
+  @shopkit/ledger          4  module-not-installed 4
+  ../legacy/templates      1  import-unresolved 1
+  @shopkit/queue           1  module-not-installed 1
+  @storefront/audit        1  import-unresolved 1

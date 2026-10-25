@@ -1,0 +1,564 @@
+{
+  "observedFormatVersion": 3,
+  "spans": 17,
+  "privacy": {
+    "kept": [
+      "traceId",
+      "spanId",
+      "parentId",
+      "service",
+      "kind",
+      "method",
+      "route",
+      "path",
+      "destination",
+      "symbol",
+      "collection",
+      "rpc",
+      "at",
+      "status",
+      "durationMs",
+      "error",
+      "faas",
+      "trigger",
+      "invokes",
+      "workflow",
+      "state",
+      "tables",
+      "awsOp",
+      "transport",
+      "peerService",
+      "thirdParty",
+      "sampleable",
+      "peerName"
+    ],
+    "dropped": [
+      "request and response headers",
+      "cookies",
+      "query strings and fragments",
+      "hosts and ports",
+      "values in a path (masked as :value)",
+      "request and response bodies",
+      "database statements and queries",
+      "end-user attributes",
+      "span names",
+      "span events and exception text",
+      "status messages",
+      "every attribute not on the kept list",
+      "@nestjs/observe user, request, tags, logs, objectives, runtime and custom data",
+      "cloud account ids and regions (an ARN or a queue URL is cut to the name inside it)",
+      "parameters of a cloud SDK call (keys, items, message bodies, workflow input)",
+      "workflow step names the map does not declare",
+      "HAR cookies, authorization and every other request and response header",
+      "HAR request bodies (postData) and response content",
+      "HAR pages, initiators, timings, server addresses and connections",
+      "the origin of a browser call (compared with the base URLs, then dropped)",
+      "the path of a call to a third party (kept by host only)"
+    ],
+    "droppedAttributes": 0,
+    "samples": {
+      "kept": true,
+      "perEntry": 3,
+      "spansPerSample": 200
+    },
+    "bodies": "not read"
+  },
+  "window": {
+    "from": "2025-10-16T08:00:00.000Z",
+    "to": "2025-10-16T09:00:00.000Z"
+  },
+  "sources": [
+    {
+      "sha256": "122af6eeecf92a1bc1fc19ffe218062686fbfee034edcd91487b58796c4afe10",
+      "format": "otlp",
+      "spans": 17,
+      "readAt": "2025-10-16T09:00:00.000Z"
+    }
+  ],
+  "joins": {},
+  "entries": {
+    "entry:gateway:http:POST:/checkout/:param/pay": {
+      "hits": 4,
+      "lastSeen": "2025-10-16T08:14:00.000Z",
+      "firstSeen": "2025-10-16T08:11:00.000Z",
+      "p50": 40,
+      "p95": 40,
+      "max": 40,
+      "statuses": {
+        "201": 4
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:gateway:http:POST:/checkout/:param/refund": {
+      "hits": 2,
+      "lastSeen": "2025-10-16T08:16:00.000Z",
+      "firstSeen": "2025-10-16T08:15:00.000Z",
+      "p50": 40,
+      "p95": 40,
+      "max": 40,
+      "statuses": {
+        "201": 2
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "entry:orders:http:POST:/orders/:param/confirm": {
+      "hits": 1,
+      "lastSeen": "2025-10-16T08:17:00.000Z",
+      "firstSeen": "2025-10-16T08:17:00.000Z",
+      "p50": 40,
+      "p95": 40,
+      "max": 40,
+      "statuses": {
+        "200": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    }
+  },
+  "symbols": {
+    "http_out:gateway#src/checkout.controller.ts:12:26": {
+      "hits": 6,
+      "lastSeen": "2025-10-16T08:20:00.002Z",
+      "firstSeen": "2025-10-16T08:11:00.002Z",
+      "p50": 28,
+      "p95": 28,
+      "max": 28,
+      "statuses": {
+        "201": 6
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    "http_out:gateway#src/checkout.controller.ts:21:26": {
+      "hits": 2,
+      "lastSeen": "2025-10-16T08:16:00.002Z",
+      "firstSeen": "2025-10-16T08:15:00.002Z",
+      "p50": 28,
+      "p95": 28,
+      "max": 28,
+      "statuses": {
+        "201": 2
+      },
+      "errors": 0,
+      "errorRate": 0
+    }
+  },
+  "channels": {},
+  "unmatched": [
+    {
+      "service": "gateway",
+      "kind": "peer",
+      "name": "payments-api",
+      "count": 6,
+      "lastSeen": "2025-10-16T08:16:00.002Z",
+      "firstSeen": "2025-10-16T08:11:00.002Z",
+      "p50": 28,
+      "p95": 28,
+      "max": 28,
+      "statuses": {
+        "201": 6
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    {
+      "service": "gateway",
+      "kind": "client",
+      "name": "POST /orders/:value/confirm",
+      "count": 1,
+      "lastSeen": "2025-10-16T08:18:00.002Z",
+      "firstSeen": "2025-10-16T08:18:00.002Z",
+      "p50": 28,
+      "p95": 28,
+      "max": 28,
+      "statuses": {
+        "200": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    {
+      "service": "gateway",
+      "kind": "peer",
+      "name": ":value",
+      "count": 1,
+      "lastSeen": "2025-10-16T08:20:00.002Z",
+      "firstSeen": "2025-10-16T08:20:00.002Z",
+      "p50": 28,
+      "p95": 28,
+      "max": 28,
+      "statuses": {
+        "201": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    {
+      "service": "orders",
+      "kind": "client",
+      "name": "POST /authorizations",
+      "count": 1,
+      "lastSeen": "2025-10-16T08:17:00.002Z",
+      "firstSeen": "2025-10-16T08:17:00.002Z",
+      "p50": 28,
+      "p95": 28,
+      "max": 28,
+      "statuses": {
+        "201": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    },
+    {
+      "service": "orders",
+      "kind": "peer",
+      "name": "payments",
+      "count": 1,
+      "lastSeen": "2025-10-16T08:17:00.002Z",
+      "firstSeen": "2025-10-16T08:17:00.002Z",
+      "p50": 28,
+      "p95": 28,
+      "max": 28,
+      "statuses": {
+        "201": 1
+      },
+      "errors": 0,
+      "errorRate": 0
+    }
+  ],
+  "ambiguous": [],
+  "samples": {
+    "entry:gateway:http:POST:/checkout/:param/pay": {
+      "slow": [
+        {
+          "traceId": "c7000000000000000000000000000004",
+          "at": "2025-10-16T08:14:00.000Z",
+          "ms": 40,
+          "status": 201,
+          "spans": 2,
+          "tree": {
+            "id": "entry:gateway:http:POST:/checkout/:param/pay",
+            "label": "POST /checkout/:id/pay",
+            "service": "gateway",
+            "kind": "server",
+            "ms": 40,
+            "status": 201,
+            "children": [
+              {
+                "id": "http_out:gateway#src/checkout.controller.ts:12:26",
+                "label": "POST /charges",
+                "service": "gateway",
+                "kind": "client",
+                "start": 2,
+                "ms": 28,
+                "status": 201
+              }
+            ]
+          }
+        },
+        {
+          "traceId": "c7000000000000000000000000000003",
+          "at": "2025-10-16T08:13:00.000Z",
+          "ms": 40,
+          "status": 201,
+          "spans": 2,
+          "tree": {
+            "id": "entry:gateway:http:POST:/checkout/:param/pay",
+            "label": "POST /checkout/:id/pay",
+            "service": "gateway",
+            "kind": "server",
+            "ms": 40,
+            "status": 201,
+            "children": [
+              {
+                "id": "http_out:gateway#src/checkout.controller.ts:12:26",
+                "label": "POST /charges",
+                "service": "gateway",
+                "kind": "client",
+                "start": 2,
+                "ms": 28,
+                "status": 201
+              }
+            ]
+          }
+        },
+        {
+          "traceId": "c7000000000000000000000000000002",
+          "at": "2025-10-16T08:12:00.000Z",
+          "ms": 40,
+          "status": 201,
+          "spans": 2,
+          "tree": {
+            "id": "entry:gateway:http:POST:/checkout/:param/pay",
+            "label": "POST /checkout/:id/pay",
+            "service": "gateway",
+            "kind": "server",
+            "ms": 40,
+            "status": 201,
+            "children": [
+              {
+                "id": "http_out:gateway#src/checkout.controller.ts:12:26",
+                "label": "POST /charges",
+                "service": "gateway",
+                "kind": "client",
+                "start": 2,
+                "ms": 28,
+                "status": 201
+              }
+            ]
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:gateway:http:POST:/checkout/:param/refund": {
+      "slow": [
+        {
+          "traceId": "c7000000000000000000000000000006",
+          "at": "2025-10-16T08:16:00.000Z",
+          "ms": 40,
+          "status": 201,
+          "spans": 2,
+          "tree": {
+            "id": "entry:gateway:http:POST:/checkout/:param/refund",
+            "label": "POST /checkout/:id/refund",
+            "service": "gateway",
+            "kind": "server",
+            "ms": 40,
+            "status": 201,
+            "children": [
+              {
+                "id": "http_out:gateway#src/checkout.controller.ts:21:26",
+                "label": "POST /refunds",
+                "service": "gateway",
+                "kind": "client",
+                "start": 2,
+                "ms": 28,
+                "status": 201
+              }
+            ]
+          }
+        },
+        {
+          "traceId": "c7000000000000000000000000000005",
+          "at": "2025-10-16T08:15:00.000Z",
+          "ms": 40,
+          "status": 201,
+          "spans": 2,
+          "tree": {
+            "id": "entry:gateway:http:POST:/checkout/:param/refund",
+            "label": "POST /checkout/:id/refund",
+            "service": "gateway",
+            "kind": "server",
+            "ms": 40,
+            "status": 201,
+            "children": [
+              {
+                "id": "http_out:gateway#src/checkout.controller.ts:21:26",
+                "label": "POST /refunds",
+                "service": "gateway",
+                "kind": "client",
+                "start": 2,
+                "ms": 28,
+                "status": 201
+              }
+            ]
+          }
+        }
+      ],
+      "failing": []
+    },
+    "entry:orders:http:POST:/orders/:param/confirm": {
+      "slow": [
+        {
+          "traceId": "c7000000000000000000000000000007",
+          "at": "2025-10-16T08:17:00.000Z",
+          "ms": 40,
+          "status": 200,
+          "spans": 2,
+          "tree": {
+            "id": "entry:orders:http:POST:/orders/:param/confirm",
+            "label": "POST /orders/:id/confirm",
+            "service": "orders",
+            "kind": "server",
+            "ms": 40,
+            "status": 200,
+            "children": [
+              {
+                "label": "POST /authorizations",
+                "service": "orders",
+                "kind": "client",
+                "start": 2,
+                "ms": 28,
+                "status": 201
+              }
+            ]
+          }
+        }
+      ],
+      "failing": []
+    }
+  },
+  "buckets": [
+    {
+      "hour": "2025-10-16T08:00:00.000Z",
+      "spans": 17,
+      "joins": {},
+      "entries": {
+        "entry:gateway:http:POST:/checkout/:param/pay": {
+          "count": 4,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:11:00.000Z",
+          "lastSeen": "2025-10-16T08:14:00.000Z",
+          "statuses": {
+            "201": 4
+          },
+          "hist": {
+            "43": 4
+          },
+          "max": 40
+        },
+        "entry:gateway:http:POST:/checkout/:param/refund": {
+          "count": 2,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:15:00.000Z",
+          "lastSeen": "2025-10-16T08:16:00.000Z",
+          "statuses": {
+            "201": 2
+          },
+          "hist": {
+            "43": 2
+          },
+          "max": 40
+        },
+        "entry:orders:http:POST:/orders/:param/confirm": {
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:17:00.000Z",
+          "lastSeen": "2025-10-16T08:17:00.000Z",
+          "statuses": {
+            "200": 1
+          },
+          "hist": {
+            "43": 1
+          },
+          "max": 40
+        }
+      },
+      "symbols": {
+        "http_out:gateway#src/checkout.controller.ts:12:26": {
+          "count": 6,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:11:00.002Z",
+          "lastSeen": "2025-10-16T08:20:00.002Z",
+          "statuses": {
+            "201": 6
+          },
+          "hist": {
+            "38": 6
+          },
+          "max": 28
+        },
+        "http_out:gateway#src/checkout.controller.ts:21:26": {
+          "count": 2,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:15:00.002Z",
+          "lastSeen": "2025-10-16T08:16:00.002Z",
+          "statuses": {
+            "201": 2
+          },
+          "hist": {
+            "38": 2
+          },
+          "max": 28
+        }
+      },
+      "channels": {},
+      "unmatched": [
+        {
+          "service": "gateway",
+          "kind": "peer",
+          "name": "payments-api",
+          "count": 6,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:11:00.002Z",
+          "lastSeen": "2025-10-16T08:16:00.002Z",
+          "statuses": {
+            "201": 6
+          },
+          "hist": {
+            "38": 6
+          },
+          "max": 28
+        },
+        {
+          "service": "gateway",
+          "kind": "client",
+          "name": "POST /orders/:value/confirm",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:18:00.002Z",
+          "lastSeen": "2025-10-16T08:18:00.002Z",
+          "statuses": {
+            "200": 1
+          },
+          "hist": {
+            "38": 1
+          },
+          "max": 28
+        },
+        {
+          "service": "gateway",
+          "kind": "peer",
+          "name": ":value",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:20:00.002Z",
+          "lastSeen": "2025-10-16T08:20:00.002Z",
+          "statuses": {
+            "201": 1
+          },
+          "hist": {
+            "38": 1
+          },
+          "max": 28
+        },
+        {
+          "service": "orders",
+          "kind": "client",
+          "name": "POST /authorizations",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:17:00.002Z",
+          "lastSeen": "2025-10-16T08:17:00.002Z",
+          "statuses": {
+            "201": 1
+          },
+          "hist": {
+            "38": 1
+          },
+          "max": 28
+        },
+        {
+          "service": "orders",
+          "kind": "peer",
+          "name": "payments",
+          "count": 1,
+          "errors": 0,
+          "firstSeen": "2025-10-16T08:17:00.002Z",
+          "lastSeen": "2025-10-16T08:17:00.002Z",
+          "statuses": {
+            "201": 1
+          },
+          "hist": {
+            "38": 1
+          },
+          "max": 28
+        }
+      ],
+      "ambiguous": []
+    }
+  ]
+}

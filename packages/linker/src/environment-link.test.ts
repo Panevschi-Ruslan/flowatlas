@@ -6,6 +6,7 @@ import {
   type EnvironmentValue,
   type GraphEdge,
   type GraphNode,
+  type RepoSettings,
   type Unresolved,
 } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
@@ -212,5 +213,73 @@ describe('completeFromEnvironment', () => {
     expect(nodes.get(starter.id)?.label).toBe('start lending-loan-approval');
     expect([...nodes.values()].filter((node) => node.type === 'channel')).toEqual([]);
     expect([...edges.values()].find((each) => each.to === starter.id)?.confidence).toBe('static');
+  });
+});
+
+/** What a repository's own files write a variable down as, where no deployment sets it (P77). */
+describe('completing an address from the repository’s own files', () => {
+  const settings = (value: string): Record<string, RepoSettings> => ({
+    returns: { values: { RETURNS_QUEUE_URL: [{ value, file: '.env.example' }] }, namedOnly: {}, hosts: [] },
+  });
+
+  const withFiles = (functions: GraphNode[], files: Record<string, RepoSettings>) => {
+    const nodes = new Map<string, GraphNode>(
+      [...functions, helper, producer].map((node) => [node.id, structuredClone(node)]),
+    );
+    const list = [
+      ...functions.map((each) => edge(each.id, helper.id, 'calls')),
+      edge(helper.id, producer.id, 'calls', 'heuristic'),
+    ];
+    const edges = new Map(list.map((each) => [edgeKey(each), each]));
+    const rows: Unresolved[] = [{ service: 'returns', file: 'src/lib/queue.ts', line: 9, reason: 'channel-from-environment', meta: { variable: 'RETURNS_QUEUE_URL' } }];
+    const found = completeFromEnvironment(nodes, edges, rows, files);
+    return { nodes, edges: [...edges.values()], rows, found };
+  };
+
+  it('reads the variable a function is not deployed with from the files, as a guess, and says so', () => {
+    const { edges, rows, found } = withFiles(
+      [fn('library-bulk-return', { BATCH_SIZE: { written: '"25"', value: '25' } })],
+      settings('http://localhost:4566/000000000000/library-returns'),
+    );
+    expect(rows).toEqual([]);
+    expect(edges.find((each) => each.type === 'emits')).toMatchObject({
+      to: 'channel:sqs/library-returns',
+      confidence: 'heuristic',
+      meta: { via: 'environment', variables: [], fromFiles: { RETURNS_QUEUE_URL: '.env.example' }, functions: ['library-bulk-return'] },
+    });
+    expect(found).toEqual([
+      expect.objectContaining({
+        reason: 'environment-from-files',
+        level: 'info',
+        meta: { function: 'entry:returns:invoke:library-bulk-return', variable: 'RETURNS_QUEUE_URL', file: '.env.example' },
+      }),
+    ]);
+  });
+
+  it('completes an address nothing deployed runs, from the files alone', () => {
+    const { edges, rows, found } = withFiles([], settings('arn:partition:sqs:eu-north-1:000000000000:library-returns'));
+    expect(rows).toEqual([]);
+    expect(edges.find((each) => each.type === 'emits')?.to).toBe('channel:sqs/library-returns');
+    expect(found.map((row) => row.reason)).toEqual(['environment-from-files']);
+  });
+
+  it('leaves the row where the files disagree, or say nothing', () => {
+    const disagree: Record<string, RepoSettings> = {
+      returns: {
+        values: {
+          RETURNS_QUEUE_URL: [
+            { value: 'http://localhost:4566/000000000000/library-returns', file: '.env.example' },
+            { value: 'http://localhost:4566/000000000000/other-returns', file: 'docker-compose.yml' },
+          ],
+        },
+        namedOnly: {},
+        hosts: [],
+      },
+    };
+    const deployed = withFiles([fn('library-bulk-return', {})], disagree);
+    expect(deployed.found.map((row) => row.reason)).toEqual(['environment-not-set']);
+    const alone = withFiles([], disagree);
+    expect(alone.rows.map((row) => row.reason)).toEqual(['channel-from-environment']);
+    expect(alone.edges.filter((each) => each.type === 'emits')).toEqual([]);
   });
 });

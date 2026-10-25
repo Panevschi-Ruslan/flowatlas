@@ -15,6 +15,22 @@
  */
 import { wasRead, type GraphNode, type Unresolved } from '@flowatlas/core';
 import { UNCHECKED_HINTS } from '@flowatlas/contracts';
+import { canonicalReason, coversEveryUnread } from '@flowatlas/linker';
+
+/**
+ * Whether an annotation answered a row, and what is said once one has, live in
+ * the linker since P80, so the MCP server demotes the same rows doctor does.
+ * Re-exported here for the callers that always found them here.
+ */
+export {
+  ANSWERED_HINT,
+  answeredByMarker,
+  canonicalReason,
+  coversEveryUnread,
+  MARKER_ANSWERS,
+  requestsAround,
+  type MarkerGraph,
+} from '@flowatlas/linker';
 
 /** What the joined graph knows about the row that reading one repository did not. */
 export interface HintContext {
@@ -45,33 +61,6 @@ const named = (row: Unresolved): string => row.symbol ?? 'the call';
 /** A row with nothing of any one place on it, for asking a template the general question. */
 const ANONYMOUS = { reason: '', file: '', line: 0 } as unknown as Unresolved;
 
-/**
- * Reasons that have been renamed, spelled both ways.
- *
- * A `reason` in this tool is not an internal string. It is user-visible
- * configuration surface: a project writes it in `doctor.ignoreReasons` to
- * silence a row, and a committed baseline can carry it. So renaming one is a
- * breaking change wearing the clothes of a rename, and this is what keeps it
- * from being one - the old spelling goes on working wherever somebody has
- * already written it, and nobody edits a configuration to keep an answer they
- * already chose.
- *
- * Forward only, deliberately. The question this answers is "somebody wrote the
- * old name, what did they mean", and it is asked of files a project committed
- * before the rename. Nothing asks the reverse, because no file older than the
- * rename can contain the new name.
- *
- * `openapi-document-age` is the first entry. It was the reason for the age of a
- * declared service's document, named when an OpenAPI document was the only kind
- * there was; there are two kinds now, so the kind goes in the message and the
- * reason names the question (R127).
- */
-const RENAMED: ReadonlyMap<string, string> = new Map([
-  ['openapi-document-age', 'document-age'],
-]);
-
-/** What a reason is called now, given whatever spelling somebody wrote. */
-export const canonicalReason = (reason: string): string => RENAMED.get(reason) ?? reason;
 
 /**
  * Every spelling of every reason a project asked for, for a list it wrote itself.
@@ -194,188 +183,6 @@ const flowatlasCalls = (context: HintContext): string | undefined => {
   );
 };
 
-/** As much of the graph as deciding "was this annotated?" needs to ask. */
-export interface MarkerGraph {
-  edgesFrom(id: string, types?: readonly string[]): ReadonlyArray<{ to: string; confidence: string }>;
-  edgesTo(id: string, types?: readonly string[]): ReadonlyArray<{ from: string; confidence: string }>;
-  node?(id: string): GraphNode | undefined;
-}
-
-/** The routes one request reaches, which is empty exactly when it was not joined. */
-const routesOf = (id: string, graph: MarkerGraph): string[] =>
-  graph.edgesFrom(id, ['hits']).map((edge) => edge.to);
-
-/**
- * Every request written in one method, as the graph holds them.
- *
- * An annotation counts only where it says something no request in the method
- * already said. A method with one readable request, one `@flowatlas-calls`
- * naming the route that request already reaches, and one request nobody could
- * read used to come to `1 >= 1`, and the unreadable row was demoted on the
- * strength of an annotation that was about the other call (R43). A redundant
- * annotation is what `marker-callsservice-shadowed` exists to catch, and the
- * demotion now asks the same question that check asks: are the routes this
- * annotation names ones the source already reaches on its own?
- */
-const requestsIn = (
-  owner: string,
-  graph: MarkerGraph,
-): { asserted: number; unread: number } => {
-  /** The routes each annotation's own request reaches. */
-  const annotations: string[][] = [];
-  /** Every route a request read from the source reaches, annotation or not. */
-  const read = new Set<string>();
-  let unread = 0;
-  for (const edge of graph.edgesFrom(owner, ['calls'])) {
-    const call = graph.node?.(edge.to);
-    if (call === undefined || call.type !== 'ui_api_call') continue;
-    const routes = routesOf(call.id, graph);
-    // An annotation that named a route nothing serves has not answered
-    // anything: the reader still has something to fix, and the marker checks
-    // say what. Only one that reached a route counts.
-    if (call.meta?.['via'] === 'marker') {
-      if (routes.length > 0) annotations.push(routes);
-      continue;
-    }
-    if (routes.length === 0) unread += 1;
-    else for (const route of routes) read.add(route);
-  }
-  const asserted = annotations.filter(
-    (routes) => !routes.every((route) => read.has(route)),
-  ).length;
-  return { asserted, unread };
-};
-
-/**
- * How a method's requests stand, for a row about one of them.
- *
- * Exported because the row's sentence needs the same two numbers the demotion
- * does: a method with two unreadable requests and one annotation keeps both
- * rows, and has to be told why (R39).
- */
-/**
- * Whether a method's annotations can account for every request it could not read.
- *
- * One predicate, because two things ask it: the sentence a row carries and
- * whether the row counts as work. Written twice they drift, and the drift is a
- * row saying "nothing to do here" while still being counted among the things
- * to do — the exact fault R36 and R37 were raised about.
- */
-export const coversEveryUnread = (found: { asserted: number; unread: number }): boolean =>
-  found.asserted > 0 && found.asserted >= found.unread;
-
-export const requestsAround = (
-  callId: string,
-  graph: MarkerGraph,
-): { asserted: number; unread: number } | undefined => {
-  const owner = graph.edgesTo(callId, ['calls'])[0]?.from;
-  return owner === undefined ? undefined : requestsIn(owner, graph);
-};
-
-/** What the graph looks like once the annotation a row asks for has worked. */
-type AnswerTest = (id: string, graph: MarkerGraph) => boolean;
-
-const asserted = (edge: { confidence: string }): boolean => edge.confidence === 'marker';
-
-/**
- * The annotation draws its edge from the annotated symbol itself.
- *
- * `@CallsService` on a method that makes a request: the call it names becomes
- * an `http_calls` edge out of that very node.
- */
-const drawsFrom =
-  (...types: string[]): AnswerTest =>
-  (id, graph) =>
-    graph.edgesFrom(id, types).some(asserted);
-
-/**
- * The annotation draws a publish or a subscribe, which is two edges rather than
- * one.
- *
- * `@Emits` gives the method a producer to call and the producer a channel to
- * emit on; `@Consumes` gives the channel a consumer and the consumer a method
- * to hand to. Looking only for an `emits` edge out of the method finds nothing,
- * which is why a row an annotation had plainly answered kept asking for the
- * annotation (R37).
- */
-/**
- * The annotation draws a request of its own, beside the one that was not read.
- *
- * `@flowatlas-calls` does not repair the call it is written above: it adds a
- * second `ui_api_call` that joins, and the unreadable one stays exactly as it
- * was. So the row's own node can never carry the edge, and looking there left
- * a reader who had done what the hint asked still being asked (R39).
- *
- * Answered only where the annotation can be about nothing else: a method whose
- * annotations — the ones that say something no readable request in the method
- * already says — are at least as many as its unreadable requests. One of each is
- * the ordinary shape and the only one the project this is developed against
- * has. Two unreadable requests and one annotation is ambiguous, and silencing
- * both rows would hide a real gap behind an annotation that was never about
- * it — which is the fault this release exists to stop, not one to add.
- */
-const annotatedBeside: AnswerTest = (id, graph) => {
-  const found = requestsAround(id, graph);
-  return found !== undefined && coversEveryUnread(found);
-};
-
-const publishesOrConsumes: AnswerTest = (id, graph) =>
-  graph
-    .edgesFrom(id, ['calls'])
-    .filter(asserted)
-    .some((edge) => graph.edgesFrom(edge.to, ['emits']).some(asserted)) ||
-  graph
-    .edgesTo(id, ['handles'])
-    .filter(asserted)
-    .some((edge) => graph.edgesTo(edge.from, ['consumes']).some(asserted));
-
-/**
- * How to tell that the annotation a row asks for was written, and worked.
- *
- * A row is raised while one repository is being read, when nothing yet knows
- * whether an annotation somewhere answers it. Where one does, the edge is in
- * the joined graph with `confidence: marker` on it, and the row is a record of
- * what could not be read rather than something left to do (R36).
- *
- * Keyed by reason and valued by the shape to look for, so adding an annotation
- * means adding a line here rather than a branch anywhere. The shapes are named
- * because they are not all the same: some annotations draw one edge and some
- * draw a pair, and pretending otherwise is what R37 was raised about.
- */
-export const MARKER_ANSWERS: Readonly<Record<string, AnswerTest>> = Object.freeze({
-  // @CallsService, and its JSDoc twin @flowatlas-calls
-  'dynamic-http-url': drawsFrom('http_calls'),
-  'api-path-dynamic': annotatedBeside,
-  'api-method-dynamic': annotatedBeside,
-  // @Emits / @Consumes
-  'channel-from-config': publishesOrConsumes,
-  'channel-from-environment': publishesOrConsumes,
-  'channel-dynamic': publishesOrConsumes,
-  'channel-const-unresolved': publishesOrConsumes,
-  // @FlowEntry
-  'dynamic-bot-trigger': drawsFrom('triggers', 'handles'),
-});
-
-/**
- * Whether an annotation has already answered this row.
- *
- * Takes the graph reader rather than a database, so the question can be asked
- * of anything that can list edges — and so nothing here has to know what a
- * database is.
- */
-export const answeredByMarker = (
-  reason: string,
-  nodeId: string | undefined,
-  graph: MarkerGraph,
-): boolean => {
-  const test = entryOf(MARKER_ANSWERS, reason);
-  if (test === undefined || nodeId === undefined) return false;
-  return test(nodeId, graph);
-};
-
-/** What is said instead of "annotate this", once an annotation has been read. */
-export const ANSWERED_HINT =
-  'An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here.';
 
 /**
  * Hints that only the joined graph can write, which therefore beat the row's own.
@@ -389,7 +196,9 @@ export const SHARPENERS: Readonly<Record<string, (row: Unresolved, context: Hint
   Object.freeze({
     'dynamic-http-url': (_row, context) => callsService(context),
     'api-path-dynamic': (_row, context) => flowatlasCalls(context),
-    'api-method-dynamic': (_row, context) => flowatlasCalls(context),
+    // A request between services whose verb a caller hands in (P91) keeps the
+    // hint its reader wrote, which names the annotation a server takes.
+    'api-method-dynamic': (_row, context) => (context.node?.type === 'http_out' ? undefined : flowatlasCalls(context)),
   });
 
 /**
@@ -403,6 +212,30 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // Reading (core/project.ts)
   'file-not-parsed': () =>
     'The parser could not read this file, so nothing in it is in the graph — no node, no edge, and no row but this one. Fix the syntax, or keep the file out of the globs the reader is given.',
+
+  // What stands in for a package that is not installed (core/stand-ins.ts, P78)
+  'package-from-repo': () =>
+    'The package is not installed, and its types were read from its source in a repository this project reads. Nothing to do; the source may not be the version that runs, and installing the dependencies reads the installed copy instead (packageSources: false reads nothing in its place).',
+  'package-source-ambiguous': () =>
+    'Two directories of the project carry this package name, so neither is read in place of the missing install. Rename one in its package.json, leave one out of the configuration, or install the dependencies.',
+  'package-version-differs': () =>
+    'The source read in place of the package is not a version this service asks for, so its types may not be the ones it runs. Install the dependencies to read the version asked for.',
+  'shape-file-unread': () =>
+    "A file listed under shapes was not read: it is not there, does not parse, or declares no module. Fix the path or the glob, or the file: it holds `declare module '<package>' { ... }` blocks.",
+  'shape-file-unmatched': () =>
+    'A shape file declares a package that is not read from it here: nothing imports it, it is installed, or its source is read instead. Nothing to do while that holds; remove the block when it is no longer needed.',
+
+  // The project's own extraction patterns (core/patterns, P121)
+  'pattern-file-unread': () =>
+    'A file listed under patterns was not read: it is not there, is not YAML, or is not a list of rules. Fix the path or the glob, or the file; flowatlas patterns test reads it the way the build does.',
+  'pattern-not-expressible': () =>
+    'A rule of a pattern file is not read: the part the row names cannot be said as a place in the call, so nothing of the rule is. Change that part, or describe the call under adapters in flowatlas.config.json; flowatlas patterns test shows the same refusal.',
+  'pattern-ambiguous': () =>
+    'Two rules of the pattern files match this call, so neither is read. Narrow one - its receiver type, a literal the call writes - or remove one; flowatlas patterns explain shows how far each matched.',
+  'pattern-shadowed': () =>
+    'A rule matches a call a written description already reads, and the written one wins. Nothing to do if the call is read right; otherwise check the rule\'s on.receiverType, or remove it.',
+  'pattern-unmatched': () =>
+    'A rule matches nothing in the services it applies to. Check its on.receiverType or function and its pattern against a call (flowatlas patterns explain <file:line>), or remove it.',
 
   // The build itself (cli/commands/build.ts)
   'service-read-nothing': () =>
@@ -438,11 +271,17 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Import a module class, or X.forRoot(...); a computed import cannot be followed.',
   'module-controllers-unread': () =>
     'List the controller classes in the module, or a name that leads to an array of them in this repository. A spread of an array built elsewhere reads as no controllers at all, and which application serves an address is read from the module that declares its controller.',
+  'module-providers-unread': () =>
+    'List the providers in the module, or a name that leads to an array of them in this repository. A guard registered as APP_GUARD among providers that cannot be read is in front of every route, and the route audit cannot see it.',
   'global-wrapper-dynamic': (row) =>
     `${named(row)} is not registered with a class from this repository, so what it wraps cannot be read.`,
   'middleware-route-dynamic': () => 'Use a literal path or a controller class in forRoutes.',
   'bootstrap-not-found': () =>
     'Set services[].bootstrap in flowatlas.config.json, or pass --bootstrap, so globals can be read.',
+  'fails-filter-unread': () =>
+    'An exception filter in front of these routes hands the response a status this cannot read: a helper\'s answer, a lookup, a value built at run time. The statuses of what it catches are listed as assumed. Set the status in the filter itself, as a number or read off the exception (exception.status, exception.getStatus()), and the routes behind it say what they really answer.',
+  'fails-interceptor-unread': () =>
+    'An interceptor around these routes handles their errors in a way this cannot read: a catchError(...) whose callback calls a helper or is a method, a try/catch around next.handle(), a promise .catch(), an installed interceptor. What the routes fail with is listed as assumed. Map an error in catchError(...) with throwError(() => new SomeException()), a throw, a rethrow (throwError(() => err)) or a value (of(...)), branching on instanceof, and the routes behind it say what they really answer.',
   'application-root-unread': () =>
     'Hand the factory call the root module class itself. An address is only an address within one application, so an application nobody can name shares an address space with every other one in this service, and where two of them serve one path the file that loses it contributes no node at all.',
 
@@ -542,7 +381,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'unknown-db-operation': () =>
     'The query names a table, but its text does not open with a verb that says whether it reads or writes (SELECT, WITH … SELECT, INSERT INTO, UPDATE, DELETE FROM or TRUNCATE, as the very first word): a leading comment hides the verb, and EXPLAIN is not one of them. Start the string with its verb, with any comment after it; a statement that neither reads nor writes, such as EXPLAIN, can be left as it is. The operation comes from that verb, not from the descriptor, so the descriptor needs no change.',
   'db-receiver-name-only': () =>
-    'Name the base class under adapters.db.localBaseClasses in flowatlas.config.json if this is a data layer of your own.',
+    'Name the base class under adapters.db.localBaseClasses in flowatlas.config.json if this is a data layer of your own. A call the graph already draws as a static call into a repository method of this repository is not listed: its queries are read where they are written.',
   'test-directory-skipped': () =>
     'If the directory holds code the application runs, name it under readTestDirectories in the service entry in flowatlas.config.json.',
   'db-handover-unstated': () =>
@@ -554,7 +393,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'sql-parse-failed': () =>
     'The query is not a literal, so the tables it touches cannot be read. Use a literal, or annotate the call.',
   'dynamic-table-name': () =>
-    'The table this touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call.',
+    'The table this touches is not a literal, a constant, or a schema declared in this repository, so it cannot be read. Name it directly, or annotate the call. Read already without configuration: a field each class sets for a base whose queries use it (this.collectionName), a helper of the class that hands out the collection (this.coll()), and an entity class handed to a manager (manager.find(Rating)).',
   'db-call-at-module-level': () =>
     'The query runs when the module is imported, so there is no function or method to record it under. Move it into one to make it visible.',
 
@@ -633,6 +472,12 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'What a rule, a subscription, a mapping or a pipe hands its messages to is not read. A target of a kind nothing here follows - a container task, an e-mail address, an API destination - is said once at info and needs nothing; a function, workflow, queue, topic or bus whose name the files do not settle needs one.',
   'subscription-forward-unread': () =>
     'Something that is not a rule on a bus - a schedule, a queue, a pipe - puts what it takes on a bus, and which events those are is not named, so no channel on that bus is drawn. A rule that takes its events by name or by a pattern carries them on. Nothing to fix unless that bus has subscribers you expect to see.',
+  'bucket-notification-unread': () =>
+    'A notification of a bucket is not read: the bucket it is of, a target block the files do not settle (a dynamic block over what is known only once deployed), its events or a key filter. Write it so the files settle it - a literal, or a reference to the bucket, function, queue or topic the configuration declares.',
+  's3-write-matches-nothing': () =>
+    'A write to a bucket fires an event that none of the bucket\'s notifications takes, by its events or by the start and end of the key. Nothing to fix if the write is meant to notify nobody; otherwise the notification\'s events or filters are not the ones meant.',
+  'query-in-loop': () =>
+    'A loop runs a query, cache call, HTTP call or publish once per item - directly, or through a function it calls - so a list of n items costs n round trips (likely N+1), listed by how many ways in reach it. Read every item in one call before the loop, or batch the calls; nothing to fix if the list is known to stay small. Loops bounded on purpose are set aside and counted in `flowatlas stats`: chunks, pages, cursors, retries, literal lists, loops around nothing but batch calls, migrations. A loop whose every query is a conditional write or a send to one recipient is a note. Name a chunking helper under callShape.boundedCalls, a guarded write under callShape.conditionalWrites, and a one-recipient host under callShape.perItemHosts.',
   'event-pattern-unread': () =>
     'A rule\'s event pattern is not read, so the rule is on no channel. Write it as JSON, a heredoc or jsonencode of what the files settle.',
   'api-body-unread': () =>
@@ -651,6 +496,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Two services deploy a function under one name, so which one answers is not known. One of the two declarations is stale, or two environments need telling apart with services[].infra.vars.',
   'unknown-base-url-env': () =>
     'Add the settings key to services[].baseUrlEnv of exactly one service, so the address names a service.',
+  'service-binding-unknown': () =>
+    "A worker's request goes through a binding, and either no wrangler file of the worker declares it under services, or the worker it is bound to is not a configured service by name or alias. Add the worker's name to services[].aliases of the service it is.",
   'target-route-not-found': () =>
     "The target service serves no such route. Check its controllers for a rename, or annotate the call with @CallsService.",
   'route-mount-assumed-empty': () =>
@@ -659,8 +506,28 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'More than one route in the target service answers this. Make the path more specific, or annotate the call with @CallsService.',
   'ambiguous-route-application': () =>
     'Two applications inside one service serve this address, and each of them really does answer it. Nothing is wrong with the route: which one a request from outside reaches is decided by how they are deployed, and no source says. The row names both rather than guessing one.',
+  'ambiguous-route-api': () =>
+    'Two APIs or load balancers of one deployment serve this address, each in front of a function of its own, and the name of the setting the call reads its base URL from names neither. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.',
+  'base-url-from-files': () =>
+    'No service claims the setting a request\'s base address is read from, and the value a file gives it names one: an example environment file, a container\'s environment, a deployment\'s variables, or the code\'s own fallback. Only the address is kept, and the join is marked heuristic unless the value is the one a function running the request is deployed with. Add the setting to services[].baseUrlEnv to say so outright; settingFiles.read: false turns the reading off.',
+  'base-url-from-name': () =>
+    'No service claims the setting a request\'s base address is read from and nothing read gives it a value, and the setting is named after exactly one service (CATALOG_URL for catalog), which was taken. The join is marked heuristic. Add the setting to services[].baseUrlEnv of the service it really is.',
+  'route-api-guessed': () =>
+    'Several APIs or load balancers serve this address; the one whose name shares the most words with the setting the base URL is read from was taken, and the join is marked heuristic. Annotate the call with @CallsService where that is wrong.',
+  'rule-matches-nothing': () =>
+    'A side of an architecture rule names a service, tag, table, channel or route this graph does not hold, so the rule was not checked: a typo is never a pass. Correct the selector under rules[] in flowatlas.config.json (flowatlas rules --list says how many nodes each side selects).',
+  'rule-invalid': () =>
+    'An architecture rule does not match its schema: two shapes, none, an unknown key or a name that is not kebab-case. The configuration is refused until it is corrected; the message names the rule and the field.',
+  'rule-over-partial-read': () =>
+    'An architecture rule names a service the build read in part (skipped, or with packages not installed), so a crossing it makes may be missing from the answer. Install its dependencies and rebuild for a full answer.',
   'route-unguarded': () =>
-    'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes.',
+    'Nothing in front of this route can refuse a request, and it reaches stored data. Add a guard, or mark it public with a decorator under doctor.publicDecorators or a pattern under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".',
+  'route-checked-in-body': () =>
+    'No guard is in front of this route, and its own code throws a 401 or a 403, so it checks who is asking in the body. The exception may be built by a helper that chooses it at run time (throw toHttpError(result)): then the statuses listed are what the helper\'s table can give, or, where the table cannot be read, the test before the throw is of what a check of who is asking answered. Nothing is missing if that check runs before the data is read, which this cannot tell. A guard makes the check visible to every reader; /** @flowatlas-auth <how> */ says it in words.',
+  'route-public-declared': () =>
+    'The handler or its controller says the route is open on purpose, with /** @flowatlas-public <why> */, so nothing is missing; the reason is listed so the decision can be reviewed. Check that it still holds.',
+  'marker-reason-missing': () =>
+    'A /** @flowatlas-public */ marker gives no reason. The route is taken as public all the same; write why after the marker so whoever reviews it can check the decision still holds.',
   'route-guard-skipped': () =>
     'A decorator named under doctor.skipGuardDecorators switches the guard off for this route, so nothing is missing — the decision is written in the source. Check that it still holds. A handler that checks the request in its own body can say so with /** @flowatlas-auth <how> */.',
   'route-shadowed': () =>
@@ -670,9 +537,9 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'ambiguous-route-target': () =>
     'Set services[].apiTarget on the frontend to say which service its settings key names.',
   'marker-service-unknown': () =>
-    '@CallsService names a service that is not configured. Add it to services[] in flowatlas.config.json, or correct the annotation.',
+    '@CallsService or @flowatlas-calls names a service that is not configured. Add it to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.',
   'marker-route-not-found': () =>
-    '@CallsService points at a route the named service does not serve. Check its controllers, or correct the annotation.',
+    '@CallsService or @flowatlas-calls points at a route the named service does not serve. Check its controllers, or correct the annotation.',
   'procedure-not-found': () =>
     'No procedure of that path is declared by the caller\'s own service or by any service its apiTarget names. Check the tree for a rename; if another service declares it, name that service in apiTarget.',
   'procedure-ambiguous': () =>
@@ -688,6 +555,18 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // what keeps the old spelling working in a configuration that silenced it.
   'document-age': () =>
     'Nothing here can check a document against the running service, so how recently the document was updated is the only evidence there is that it is still true. Fetch the current one from whoever owns the service if it is behind.',
+
+  // What traffic answered beside what the code declares (doctor/runtime.ts, P106).
+  // Asked of the observed file at doctor time, never stored in the graph.
+  'failure-seen-undeclared': () =>
+    'Real traffic got this status from the way in and no failure read off its code says it can: an unhandled throw, a constraint nobody mapped, a framework answer. Read a failing request (the MCP tool trace_for) and map the exception to the status it should answer, or declare it, and the route says what it really fails with.',
+  'failure-declared-unseen': () =>
+    'The code says the way in can fail with this and no request in the observed window answered it: an error path nothing exercised, or one that cannot happen any more. Traffic differs per environment and per week, so it is a question for a test, not proof the path is dead.',
+
+  // What traffic reached and no reader drew (doctor/traffic.ts, P110): the
+  // spans observe matched to nothing, one row per service and kind.
+  'seen-not-in-code': () =>
+    'Traffic reached this and no reader drew it: a route registered at run time, a service not in the configuration, or a reader gap. Look for it in the map (the MCP tool cant_follow names the call for each), add the service to the configuration if it is missing, and a later build that reads it makes the row go away. Nothing is drawn from it: a blind spot is a question, not an edge.',
 
   // Workflows written down as state machine definitions (stepfunctions)
   'workflow-definition-unreadable': () =>
@@ -718,10 +597,20 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // Values a deployment gives the code it runs, and filters on channels (linker)
   'environment-not-set': () =>
     'Code sends to the value of an environment variable, and a function that runs it is not deployed with that variable, so where it sends from that function is not known. Set the variable in the function\'s environment, or correct the name the code reads.',
+  'environment-from-files': () =>
+    'Code sends to the value of an environment variable that no function running it is deployed with, and a file at the top of the repository writes it down once: an example environment file, a container\'s environment, a deployment\'s variables. That value was used, and the edge is marked heuristic. Set the variable where the function is deployed to say so outright.',
   'environment-value-unread': () =>
     'Code sends to the value of an environment variable, and the value a function is deployed with is not read. Where the variable files disagree, choose the environment under services[].infra.vars; otherwise give the value something the files settle.',
+  'stream-filter-not-matched': () =>
+    'A mapping from a stream hands its function only the records its filter lets through, and the filter is recorded on the edge, not evaluated: every write onto the stream is drawn as reaching the function. Nothing to fix.',
+  'stream-no-writer': () =>
+    'A function reads a table\'s stream or a stream, and nothing the configured services write lands on it. The writer may be in a repository the configuration does not name, or outside any. Nothing to fix if it is.',
   'subscription-matches-nothing': () =>
     'A rule takes events by a pattern that nothing the configured services publish matches. A rule for events from outside - another account, a partner, the platform itself - is a way in, not a fault. Nothing to fix if that is what it is.',
+  'invoker-not-read': () =>
+    'A permission lets a service run the function, and what that service runs it on is not read. The function is still a way in of its own, so nothing reaching it in the graph does not mean nothing runs it. Nothing to fix.',
+  'iot-action-not-read': () =>
+    'An IoT rule hands its messages to a service this reading does not follow - a delivery stream, a log group, an HTTP endpoint, another topic. Its other actions are drawn; nothing past this one is. Nothing to fix.',
 
   // Boundaries nothing could be compared on (contracts)
   ...Object.fromEntries(
@@ -799,3 +688,83 @@ export const hintFor = (row: Unresolved, context: HintContext = {}): string => {
 
 /** Whether the catalogue knows this reason at all. */
 export const isKnownReason = (reason: string): boolean => entryOf(HINTS, reason) !== undefined;
+
+/** Single-character edits between two words: insertions, deletions, substitutions. */
+const editsBetween = (a: string, b: string): number => {
+  let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i++) {
+    const current = [i];
+    for (let j = 1; j <= b.length; j++) {
+      const swap = (previous[j - 1] as number) + (a[i - 1] === b[j - 1] ? 0 : 1);
+      current.push(Math.min((previous[j] as number) + 1, (current[j - 1] as number) + 1, swap));
+    }
+    previous = current;
+  }
+  return previous[b.length] as number;
+};
+
+/**
+ * The reasons somebody probably meant by one nobody registered (P141): the
+ * ones that contain it, or that it contains, then the ones a few edits away,
+ * closest first. At most `limit`; none when nothing is close.
+ */
+export const nearestReasons = (text: string, known: readonly string[] = KNOWN_REASONS, limit = 5): string[] => {
+  const wanted = text.toLowerCase();
+  const near = Math.max(2, Math.floor(wanted.length / 3));
+  return known
+    .map((reason) => {
+      const contains = reason.includes(wanted) || wanted.includes(reason);
+      return { reason, score: contains ? 0 : editsBetween(wanted, reason) };
+    })
+    .filter((entry) => entry.score <= near)
+    .sort((a, b) => a.score - b.score || (a.reason < b.reason ? -1 : a.reason > b.reason ? 1 : 0))
+    .slice(0, limit)
+    .map((entry) => entry.reason);
+};
+
+/**
+ * What one finding is, in a few words, one and many (P81).
+ *
+ * A finding is something about the code a reviewer acts on, and a line saying
+ * "2 findings" says nothing about which; doctor's findings line names each by
+ * these. Keyed by the reasons `ROW_KINDS` classes as findings, and a test holds
+ * the two lists together. A finding with no entry is named by its reason.
+ */
+export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many: string]>> = Object.freeze({
+  'query-in-loop': ['likely N+1', 'likely N+1s'],
+  'route-unguarded': ['route with no guard', 'routes with no guard'],
+  'marker-reason-missing': ['public marker with no reason', 'public markers with no reason'],
+  'route-shadowed': ['route a worker answers first', 'routes a worker answers first'],
+  'route-claimed-twice': ['route claimed twice', 'routes claimed twice'],
+  'route-file-not-served': ['route file served at no address', 'route files served at no address'],
+  'wizard-step-conflict': ['wizard step numbered twice', 'wizard steps numbered twice'],
+  'workflow-name-duplicate': ['workflow defined twice', 'workflows defined twice'],
+  'workflow-definition-invalid': ['workflow definition the service refuses', 'workflow definitions the service refuses'],
+  'orphan-scene-decorator': ['scene handler outside a scene', 'scene handlers outside a scene'],
+  'orphan-update-decorator': ['bot handler outside an update class', 'bot handlers outside an update class'],
+  'procedure-call-mismatch': ['procedure called as the wrong kind', 'procedures called as the wrong kind'],
+  's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],
+  'stream-no-writer': ['stream nothing writes to', 'streams nothing writes to'],
+  'subscription-matches-nothing': ['rule nothing published matches', 'rules nothing published matches'],
+  'failure-seen-undeclared': ['status seen that the code does not declare', 'statuses seen that the code does not declare'],
+});
+
+/** One finding reason and its count, in words: `1 likely N+1`, `2 routes with no guard`. */
+export const findingLabel = (reason: string, count: number): string => {
+  const label = entryOf(FINDING_LABELS, reason);
+  if (label === undefined) return `${count} ${reason}`;
+  return `${count} ${count === 1 ? label[0] : label[1]}`;
+};
+
+/**
+ * Groups of findings said as one list, most rows first, then by reason: a
+ * reason split across two levels is said once, with both counts added.
+ */
+export const findingsSaid = (groups: ReadonlyArray<{ reason: string; count: number }>): string => {
+  const byReason = new Map<string, number>();
+  for (const group of groups) byReason.set(group.reason, (byReason.get(group.reason) ?? 0) + group.count);
+  return [...byReason]
+    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+    .map(([reason, count]) => findingLabel(reason, count))
+    .join(', ');
+};

@@ -1,0 +1,306 @@
+{
+  "rows": [
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:35",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:40",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/refund",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:65",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/resume",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:71",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/ship",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:60",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/charge",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:50",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/pay",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:45",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.cancel",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:35",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 21
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.charge",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:50",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 21
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.invoice",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:40",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 21
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.pay",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:45",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 21
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.refund",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:65",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 21
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.resume",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:71",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 21
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "gateway#src/orders/orders.controller.ts:OrdersController.ship",
+      "type": "method",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:60",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 21
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "channel:order.archived",
+      "type": "channel",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:61",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 1,
+        "most": 3
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "type": "entry",
+      "kind": "event",
+      "service": "billing",
+      "loc": "src/invoices/invoices.consumer.ts:28",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 1,
+        "of": 1,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "entry:orders:http:GET:/a/:param",
+      "type": "entry",
+      "kind": "http",
+      "service": "orders",
+      "loc": "src/aliases/current-aliases.controller.ts:11",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 2,
+        "of": 4,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/latest",
+      "type": "entry",
+      "kind": "http",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:19",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 2,
+        "of": 4,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/:param/archive",
+      "type": "entry",
+      "kind": "http",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:42",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 2,
+        "of": 4,
+        "most": 2
+      },
+      "confidence": "weak"
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.archive",
+      "type": "method",
+      "service": "orders",
+      "loc": "src/orders/orders.service.ts:59",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 3,
+        "most": 2
+      },
+      "confidence": "weak"
+    }
+  ],
+  "window": {
+    "from": "2025-10-16T07:00:00.000Z",
+    "to": "2025-10-16T09:00:00.000Z",
+    "label": "2h"
+  },
+  "total": 35,
+  "truncated": "15 more rows; ask with a larger limit",
+  "next": [
+    "dead({id: \"entry:gateway:http:POST:/orders/:param/cancel\"})",
+    "get_flow({entry: \"entry:gateway:http:POST:/orders/:param/cancel\"})"
+  ]
+}

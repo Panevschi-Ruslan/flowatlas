@@ -8,12 +8,15 @@
  */
 import { resolve } from 'node:path';
 import type { ContractFinding } from '@flowatlas/contracts';
-import { NODE_TYPES } from '@flowatlas/core';
+import { describeAcceptedProblem, NODE_TYPES } from '@flowatlas/core';
 import { isInstalled, partialReadNotice, type ReadRepo } from '../partial-read.js';
 import { moreRows, renderTable, section } from '../format/table.js';
 import type { MarkerIssue } from './markers.js';
 import type { DoctorReport, DoctorRow } from './schema.js';
+import { findingsSaid } from './hints.js';
+import { sayMissing, type MissingSayOptions } from './missing.js';
 import { noWayInSentence } from './ways-in.js';
+import { confirmedLine } from './traffic.js';
 
 /** `… 12 more rows; the whole list is in <file>` — never a silent cut (I9). */
 const more = (dropped: number | undefined, file?: string): string[] =>
@@ -29,7 +32,7 @@ const more = (dropped: number | undefined, file?: string): string[] =>
  * list actually is.
  */
 export const summaryLine = (report: DoctorReport): string => {
-  const { unresolved, markers, desync, contracts, baseline, verdict } = report;
+  const { unresolved, markers, desync, contracts, rules, baseline, verdict } = report;
   const against =
     baseline.status === 'ok' || baseline.status === 'grew'
       ? `baseline ${baseline.total.baseline}, ${baseline.total.delta >= 0 ? '+' : ''}${baseline.total.delta}`
@@ -39,6 +42,7 @@ export const summaryLine = (report: DoctorReport): string => {
     `markers: errors=${markers.errors} warnings=${markers.warnings} · ` +
     `desync=${desync.rows.length + (desync.truncated ?? 0)} · ` +
     `contracts: errors=${contracts.errorCount} ignored=${contracts.ignored} · ` +
+    `rules: errors=${rules.errors} new=${rules.new} · ` +
     `exit=${verdict.exitCode}`
   );
 };
@@ -54,12 +58,14 @@ const at = (file: string, line: number): string => `${file}:${line === 0 ? '?' :
  * where the configuration says each repository is, the two join into a path
  * that is. Without that, the service name and the path stay as they were.
  */
-const where = (
+export const where = (
   service: string,
   file: string,
   line: number,
   repoDirs: ReadonlyMap<string, string>,
 ): string => {
+  // A row about traffic names no file (P110): its service is where it is.
+  if (file === '') return service === '' ? '(no file)' : service;
   const dir = repoDirs.get(service);
   if (dir !== undefined) return at(`${dir}/${file}`, line);
   return `${service === '' ? '' : `${service} `}${at(file, line)}`;
@@ -74,7 +80,7 @@ const NO_REPOS: ReadonlyMap<string, string> = new Map();
  * written over four lines would otherwise put four lines into a list whose
  * shape is what makes it scannable.
  */
-const oneLine = (text: string, width = 100): string => {
+export const oneLine = (text: string, width = 100): string => {
   const flat = text.replace(/\s+/g, ' ').trim();
   return flat.length > width ? `${flat.slice(0, width - 1)}…` : flat;
 };
@@ -124,6 +130,8 @@ const isNodeId = (symbol: string): boolean => TYPED_ID.test(symbol) || SYMBOL_ID
  * than it should; the id stays in `doctor.json` and in the baseline key.
  */
 const shownAs = (row: DoctorRow, reason: string): string | undefined => {
+  // A row with no file is said by its message, which is all it has to point with.
+  if (row.file === '') return oneLine(row.message, Infinity);
   if (row.symbol === null) return undefined;
   if (isNodeId(row.symbol) && row.message !== reason) return oneLine(row.message, Infinity);
   return oneLine(row.symbol);
@@ -136,13 +144,43 @@ const LEVEL_TAG = {
   nothing: ' (nothing to join)',
 } as const;
 
+/**
+ * What a group of one kind is marked with (P81). Said instead of the level: a
+ * note or a finding is not a limit of reading, which is what `(info)` means.
+ */
+const KIND_TAG = {
+  gap: '',
+  note: ' (note)',
+  finding: ' (finding)',
+} as const;
+
+const plural = (count: number, one: string, many = `${one}s`): string => `${count} ${count === 1 ? one : many}`;
+
+/** How many groups the report's head names before pointing at `doctor --missing` for the rest. */
+const MISSING_SAID = 3;
+
+/**
+ * The repositories probably missing (P122), where the evidence is worth
+ * saying: an address or a deployment nobody answers, two kinds that agree, or
+ * a directory that looks like it. A lone package or channel waits for
+ * `doctor --missing`, which lists every group with every place.
+ */
+const missingLines = (report: DoctorReport, options: MissingSayOptions): string[] => {
+  const said = (report.unresolved.missingRepos ?? []).filter((entry) => !entry.weak);
+  const lines = said.slice(0, MISSING_SAID).flatMap((entry) => sayMissing(entry, { ...options, indent: '  ' }));
+  if (said.length > MISSING_SAID) lines.push(`  … ${said.length - MISSING_SAID} more: flowatlas doctor --missing`);
+  return lines;
+};
+
 const unresolvedSection = (
   report: DoctorReport,
   repoDirs: ReadonlyMap<string, string>,
   file?: string,
+  missing: MissingSayOptions = {},
 ): string[] => {
   const { unresolved } = report;
   if (unresolved.status === 'skipped') return [];
+  const probably = missingLines(report, missing);
   // In the words the build summary uses, and only where it says something: a
   // project whose every body was read has no gap to size.
   const { found, read } = unresolved.waysIn;
@@ -150,14 +188,35 @@ const unresolvedSection = (
     read === found
       ? []
       : [`  ways in: ${found} found, ${read} with a handler that was read, ${found - read} without`];
-  if (unresolved.byReason.length === 0) return ['unresolved: none', ...ways];
+  const acceptedLine =
+    unresolved.accepted === undefined
+      ? []
+      : unresolved.accepted.problem !== undefined
+        ? [`  warning: ${describeAcceptedProblem(unresolved.accepted.problem)}; every gap is counted as new`]
+        : [
+            `  ${unresolved.accepted.rows} accepted gap${unresolved.accepted.rows === 1 ? '' : 's'} left out (accepted.json; flowatlas accept --list)`,
+          ];
+  if (unresolved.byReason.length === 0) return ['unresolved: none', ...probably, ...ways, ...acceptedLine];
 
+  // The build summary's three figures (P81), after the one `--strict` compares:
+  // what was missed, how joins were made, and what the code does.
+  const { rows, sites, notes, findings, info } = unresolved;
   const lines: string[] = [
-    `unresolved: ${unresolved.total} to act on over ${unresolved.rows} row${unresolved.rows === 1 ? '' : 's'}` +
-      (unresolved.info.rows === 0
-        ? ''
-        : `, and ${unresolved.info.sites} place${unresolved.info.sites === 1 ? '' : 's'} static reading cannot see, folded into ${unresolved.info.rows}`),
+    `unresolved: ${unresolved.total} to act on · missed: ${rows}${sites === rows ? '' : ` over ${sites} sites`}` +
+      ` · notes: ${notes} · findings: ${findings}`,
+    ...(info.rows === 0
+      ? []
+      : [`  ${plural(info.sites, 'missed place')} static reading cannot see, folded into ${plural(info.rows, 'row')}`]),
+    // Its own line, with what each is: these are what a reviewer acts on, and a
+    // count alone says nothing about which.
+    ...(findings === 0
+      ? []
+      : [`  ${plural(findings, 'finding')}: ${findingsSaid(unresolved.byReason.filter((group) => group.kind === 'finding'))}`]),
+    // Before the rows (P122): the one fix that may close several of them.
+    ...probably,
     ...ways,
+    ...acceptedLine,
+    ...[confirmedLine(report.traffic)].flatMap((line) => (line === undefined ? [] : [`  ${line}`])),
   ];
   // Said on a line of its own, in the words the build summary uses: these are
   // sites where nothing joins, not sites where something was missed.
@@ -167,7 +226,7 @@ const unresolvedSection = (
     );
   }
   for (const group of unresolved.byReason) {
-    const tag = LEVEL_TAG[group.level] || (group.excluded ? ' (not counted)' : '');
+    const tag = KIND_TAG[group.kind] || LEVEL_TAG[group.level] || (group.excluded ? ' (not counted)' : '');
     const folded = group.sites === group.count ? '' : ` over ${group.sites} places`;
     lines.push(
       `  ${group.reason}${tag}: ${group.count} row${group.count === 1 ? '' : 's'}${folded}`,
@@ -176,7 +235,8 @@ const unresolvedSection = (
     for (const row of group.rows) {
       const place = where(row.service, row.file, row.line, repoDirs);
       const what = shownAs(row, group.reason);
-      lines.push(`      ${place}${what === undefined ? '' : `  ${what}`}`);
+      const ways = row.waysIn === undefined ? '' : `  (${row.waysIn} way${row.waysIn === 1 ? '' : 's'} in)`;
+      lines.push(`      ${place}${what === undefined ? '' : `  ${what}`}${ways}`);
       // The heading says what the kind means; this says what this place is.
       // Marked, because an unmarked sentence between two sites is read as
       // belonging to the one below it (R35), and indentation alone was not
@@ -262,6 +322,33 @@ const contractSection = (report: DoctorReport, file?: string): string[] => {
       ]),
     ),
     ...more(contracts.truncated, file),
+  ];
+};
+
+/** Where a rule violation crosses, as a terminal can open it. */
+const rulePlace = (violation: { at?: { service: string; file: string; line?: number } }, repoDirs: ReadonlyMap<string, string>): string =>
+  violation.at === undefined ? 'no place in a file' : where(violation.at.service, violation.at.file, violation.at.line ?? 0, repoDirs);
+
+/**
+ * The architecture rules (P114): each violation nothing excused, marked new
+ * when the baseline does not hold it, with where it crosses and the rule's note.
+ */
+const rulesSection = (report: DoctorReport, repoDirs: ReadonlyMap<string, string>, file?: string): string[] => {
+  const { rules } = report;
+  if (rules.status === 'skipped') return [];
+  const counts = `${rules.errors} error${rules.errors === 1 ? '' : 's'}, ${rules.warnings} warning${rules.warnings === 1 ? '' : 's'}, ${rules.infos} info`;
+  const tail = `${rules.new} new · ${rules.excused} excused${rules.heuristic === 0 ? '' : ` · ${rules.heuristic} along a guessed edge`}`;
+  const heading = `rules: ${rules.configured} configured · ${counts} · ${tail}`;
+  if (rules.violations.length === 0 && rules.unchecked.length === 0 && rules.notes.length === 0) return [heading];
+  return [
+    heading,
+    ...rules.unchecked.map((item) => `  ${item.new ? 'new  ' : ''}${item.rule} (${item.severity}): ${item.message} (${item.reason})`),
+    ...rules.notes.map((item) => `  ${item.rule}: ${item.message} (${item.reason})`),
+    ...rules.violations.flatMap((item) => [
+      `  ${item.new ? 'new  ' : ''}${item.rule} (${item.severity}${item.heuristic ? ', a guess' : ''}): ${item.message}`,
+      `    at ${rulePlace(item, repoDirs)}${item.note === undefined ? '' : `  · why: ${item.note}`}`,
+    ]),
+    ...more(rules.truncated, file),
   ];
 };
 
@@ -375,15 +462,31 @@ const headOf = (
   return said.flatMap((paragraph) => [paragraph, '']);
 };
 
-export const renderDoctorText = (
-  report: DoctorReport,
-  options: { file?: string; repoDirs?: ReadonlyMap<string, string>; rootDir?: string } = {},
-): string => {
+export interface DoctorTextOptions {
+  file?: string;
+  repoDirs?: ReadonlyMap<string, string>;
+  rootDir?: string;
+  /** The configuration file, for the `flowatlas link` command a missing repository is added with (P122). */
+  configPath?: string;
+  /** Where the command runs, which that command's path is written relative to. */
+  cwd?: string;
+}
+
+/** What a missing repository's lines need to write a command that works from here. */
+export const missingSayOf = (options: DoctorTextOptions): MissingSayOptions => ({
+  ...(options.rootDir === undefined ? {} : { configDir: options.rootDir }),
+  ...(options.configPath === undefined ? {} : { configPath: options.configPath }),
+  ...(options.cwd === undefined ? {} : { cwd: options.cwd }),
+  placeSaid: (place) => where(place.service ?? '', place.file ?? '', place.line ?? 0, options.repoDirs ?? NO_REPOS),
+});
+
+export const renderDoctorText = (report: DoctorReport, options: DoctorTextOptions = {}): string => {
   const blocks = [
-    unresolvedSection(report, options.repoDirs ?? NO_REPOS, options.file),
+    unresolvedSection(report, options.repoDirs ?? NO_REPOS, options.file, missingSayOf(options)),
     markerSection(report, options.file),
     desyncSection(report, options.file),
     contractSection(report, options.file),
+    rulesSection(report, options.repoDirs ?? NO_REPOS, options.file),
     baselineSection(report),
   ].filter((block) => block.length > 0);
 
@@ -440,10 +543,12 @@ export interface GithubOptions {
    * in (R173).
    */
   serviceAt?: (service: string) => { file: string; line: number } | undefined;
+  /** The configuration file, relative to the checkout: where a probably missing repository is noted (P122). */
+  configAt?: { file: string; line: number };
 }
 
 const annotation = (
-  level: 'error' | 'warning',
+  level: 'error' | 'warning' | 'notice',
   place: { file: string; line: number } | undefined,
   title: string,
   message: string,
@@ -485,6 +590,31 @@ export const renderDoctorGithub = (report: DoctorReport, options: GithubOptions 
     lines.push(
       annotation('warning', options.serviceAt?.(service.service), `${service.service}: no way in`, `${noWayInSentence(service)}.`),
     );
+  }
+  // A repository probably missing is a notice at the configuration (P122): a
+  // guess, said as one, which the configuration is where to act on.
+  for (const entry of (report.unresolved.missingRepos ?? []).filter((each) => !each.weak)) {
+    const [first, ...others] = entry.candidates;
+    const where =
+      first === undefined
+        ? 'Nothing next to the configured repositories looks like it.'
+        : others.length === 0
+          ? `${first.path} looks like it: flowatlas link ${first.path}`
+          : `${entry.candidates.map((candidate) => candidate.path).join(', ')} look like it; link the one it is.`;
+    lines.push(
+      annotation(
+        'notice',
+        options.configAt,
+        `Probably missing: a repository for ${entry.token}`,
+        `${entry.signals.map((signal) => signal.says).join('; ')}. ${where}`,
+      ),
+    );
+  }
+  // A file of accepted gaps that could not be read decides no exit either, and
+  // is said before the rows it would have hidden (P80).
+  const problem = report.unresolved.accepted?.problem;
+  if (problem !== undefined) {
+    lines.push(annotation('warning', undefined, 'accepted.json cannot be read', `${describeAcceptedProblem(problem)}.`));
   }
   for (const issue of report.markers.issues) {
     lines.push(
@@ -528,6 +658,22 @@ export const renderDoctorGithub = (report: DoctorReport, options: GithubOptions 
         finding.message,
       ),
     );
+  }
+  // A rule violation at the crossing hop, where the fix goes (P114): an error
+  // only when it is new and fails a strict run, a warning otherwise.
+  for (const item of report.rules.violations) {
+    const fails = item.new && item.severity === 'error';
+    lines.push(
+      annotation(
+        fails ? 'error' : 'warning',
+        item.at === undefined ? undefined : at(item.at.file, item.at.line ?? 0, item.at.service),
+        `rule ${item.rule}`,
+        `${item.message}.${item.note === undefined ? '' : ` ${item.note}`}`,
+      ),
+    );
+  }
+  for (const item of report.rules.unchecked) {
+    lines.push(annotation(item.new && item.severity === 'error' ? 'error' : 'warning', undefined, `rule ${item.rule}: ${item.reason}`, item.message));
   }
   if (report.baseline.status === 'grew') {
     lines.push(

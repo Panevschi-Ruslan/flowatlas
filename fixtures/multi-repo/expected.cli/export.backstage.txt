@@ -1,0 +1,4 @@
+backstage: 4 components, 4 APIs, 2 resources in 10 files -> <out> (register catalog-locations.yaml)
+owner not given for 1 service, written as unknown: web (services[].catalog.owner)
+lifecycle not given for 1 service, written as unknown: web (services[].catalog.lifecycle)
+nothing in the project publishes invoice.requested: billing consumes it from no API

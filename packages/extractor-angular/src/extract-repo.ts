@@ -2,15 +2,22 @@ import type { Project } from 'ts-morph';
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  builtInShapesFor,
   countSources,
   createProject,
   GraphBuilder,
   parseConfig,
   readResolvedPackageJson,
   recordApplications,
+  closeStandIns,
   reportSkippedTestDirectories,
+  reportPatterns,
+  readPatterns,
+  reportStandIns,
   reportUnreadableSources,
   silentLogger,
+  standInsFor,
+  type StandInsOfBuild,
   suppliedWith,
   type ExtractContext,
   type FlowatlasConfig,
@@ -34,6 +41,7 @@ import { socketsPass } from './passes/sockets.js';
 import { ssePass } from './passes/sse.js';
 import { templatesPass } from './passes/templates.js';
 import type { AngularExtractorPass } from './passes/types.js';
+import { ANGULAR_SHAPES } from './shapes/index.js';
 
 export interface ExtractRepoOptions {
   /** Absolute path to the repository root. */
@@ -42,6 +50,20 @@ export interface ExtractRepoOptions {
   repo: string;
   service?: ServiceConfig;
   config?: FlowatlasConfig;
+  /**
+   * The directory of the configuration the service is read under, which the
+   * stand-ins of P78 resolve against: the shape files it lists and the
+   * repositories whose source may stand in for a package. Without it neither
+   * is read.
+   */
+  configDir?: string;
+  /**
+   * The stand-ins the build worked out once for every repository (P82), read
+   * instead of indexing the package sources and parsing the shape files again.
+   * Without it, or when it does not answer for this service, they are worked
+   * out here.
+   */
+  standInsOfBuild?: StandInsOfBuild;
   /** Adapters to use. Without a frontend adapter nothing is read. */
   registry?: AdapterRegistry;
   tsconfig?: string;
@@ -72,12 +94,22 @@ export const ANGULAR_SOURCE_ROOTS: Readonly<Pick<SourceRootOptions, 'companions'
 export const openProject = (options: ExtractRepoOptions): Project => {
   const service = options.service ?? defaultService(options.repo, options.rootDir);
   const tsconfig = options.tsconfig ?? service.tsconfig;
+  const standIns = standInsFor({
+    config: options.config,
+    service,
+    configDir: options.configDir,
+    ...(options.standInsOfBuild === undefined ? {} : { given: options.standInsOfBuild }),
+  });
   return createProject({
     rootDir: options.rootDir,
+    // Read only where the package itself does not resolve, and not at all where
+    // the configuration says so (`builtInShapes: false`).
+    ...(builtInShapesFor(options.config, service) ? { shapes: ANGULAR_SHAPES } : {}),
     ...(tsconfig === undefined ? {} : { tsconfig }),
     ...(service.readTestDirectories === undefined
       ? {}
       : { readTestDirectories: service.readTestDirectories }),
+    ...(standIns === undefined ? {} : { standIns }),
   });
 };
 
@@ -189,8 +221,11 @@ const defaultService = (repo: string, rootDir: string): ServiceConfig => ({
 export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGraph> => {
   const { rootDir, repo } = options;
   const logger = options.logger ?? silentLogger;
-  const config = options.config ?? parseConfig({});
   const service = options.service ?? defaultService(repo, rootDir);
+  // The project's own extraction patterns, compiled into the descriptions
+  // every reader below already reads (P121).
+  const patterns = readPatterns({ config: options.config ?? parseConfig({}), service, configDir: options.configDir });
+  const config = patterns.config;
 
   const project = options.project ?? openProject(options);
   // The manifest that answers what this repository can import, which on a
@@ -232,6 +267,8 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // does the count of them the repository node carries.
   reportUnreadableSources(base);
   reportSkippedTestDirectories(base);
+  reportStandIns(base);
+  reportPatterns(base, patterns);
 
   // Every adapter goes through the registry, this one included: a repository no
   // frontend adapter recognises is read by none of them.
@@ -245,6 +282,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     });
   }
 
+  closeStandIns(base);
   return builder.build();
 };
 

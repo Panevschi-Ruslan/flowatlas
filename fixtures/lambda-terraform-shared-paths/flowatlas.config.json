@@ -1,0 +1,7 @@
+{
+  "services": [
+    { "name": "branch", "repo": "./branch", "type": "lambda", "baseUrlEnv": ["LOANS_API_URL", "EVENTS_API_URL", "BRANCH_URL", "STAFF_LB_URL", "DESK_HOURS_URL"] },
+    { "name": "kiosk", "repo": "./kiosk", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}

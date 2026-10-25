@@ -1,0 +1,10 @@
+can't follow: 3 places over 3 rows, by cause (cause seen-not-in-code)
+
+  seen-not-in-code: 3 places  3 services
+    Traffic reached this and no reader drew it: a route registered at run time, a service not in the configuration, or a reader gap. Look for it with the call beside it; a later build that reads it makes the row go away.
+    billing db: 2 spans, last 2025-10-16T08:06:00.000Z: invoices (2)
+      next: search({query: "invoices"})
+    gateway http: 1 span, last 2025-10-16T07:33:25.000Z: GET /metrics (1)
+      next: list_entries({service: "gateway"})
+    orders messaging: 1 span, last 2025-10-16T07:33:23.002Z: order.audited (1)
+      next: search({query: "order.audited"})

@@ -1,6 +1,7 @@
 import { renameSync, rmSync } from 'node:fs';
 import Database from 'better-sqlite3';
 import {
+  rowClassOf,
   SCHEMA_VERSION,
   type GraphEdge,
   type GraphNode,
@@ -10,7 +11,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import type { LinkReport } from '../report.js';
-import { SCHEMA_SQL } from './schema.js';
+import { GRAPH_DB_FORMAT_VERSION, SCHEMA_SQL } from './schema.js';
 
 /** A channel or a third party belongs to the project, not to any one service. */
 const serviceOf = (node: GraphNode): string | null =>
@@ -33,7 +34,7 @@ const statementsOf = (db: Database.Database) => ({
     'INSERT INTO types (id, name, kind, repo, declared_in, structural_hash, fields, members, meta) VALUES (?,?,?,?,?,?,?,?,?)',
   ),
   row: db.prepare(
-    'INSERT INTO unresolved (service, file, line, reason, level, sites, message, hint, node_id) VALUES (?,?,?,?,?,?,?,?,?)',
+    'INSERT INTO unresolved (service, file, line, reason, level, sites, message, hint, node_id, meta, kind, risk) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
   ),
 });
 
@@ -83,6 +84,8 @@ const insertType = (statements: Statements, id: string, entry: TypeEntry): void 
 };
 
 const insertRow = (statements: Statements, item: Unresolved, service?: string): void => {
+  // Decided once, by the one place that decides it, and read back by every reader (P208).
+  const { kind, risk } = rowClassOf(item);
   statements.row.run(
     item.service ?? service ?? null,
     item.file,
@@ -96,6 +99,9 @@ const insertRow = (statements: Statements, item: Unresolved, service?: string): 
     // one. Anchoring it lets a reader ask what is wrong with a node rather than
     // reading the whole list.
     item.symbol ?? null,
+    JSON.stringify(item.meta ?? {}),
+    kind,
+    risk ?? null,
   );
 };
 
@@ -107,9 +113,19 @@ const insertRow = (statements: Statements, item: Unresolved, service?: string): 
  * up immediately would fail a rebuild for a race that lasts milliseconds.
  */
 const renameOver = (from: string, to: string, attempts = 20): void => {
+  whenFree(() => renameSync(from, to), attempts);
+};
+
+/**
+ * Runs a change to a file, waiting briefly while another process holds it.
+ * Removing the old database before the rename is such a change too (P199): on
+ * Windows it failed at once on a reader's handle, before the rename's own
+ * wait was ever reached.
+ */
+const whenFree = (change: () => void, attempts = 20): void => {
   for (let attempt = 1; ; attempt += 1) {
     try {
-      renameSync(from, to);
+      change();
       return;
     } catch (cause) {
       const code = (cause as NodeJS.ErrnoException).code;
@@ -151,6 +167,7 @@ export const writeGraphDb = (
 
     db.transaction(() => {
       meta.run('schema_version', String(SCHEMA_VERSION));
+      meta.run('db_format_version', String(GRAPH_DB_FORMAT_VERSION));
       meta.run('built_at', project.builtAt);
       meta.run('config_hash', report.configHash);
       meta.run('flowatlas_version', options.flowatlasVersion ?? '0.0.0');
@@ -167,8 +184,8 @@ export const writeGraphDb = (
   }
 
   for (const suffix of ['-wal', '-shm']) rmSync(`${temporary}${suffix}`, { force: true });
-  rmSync(dbPath, { force: true });
-  for (const suffix of ['-wal', '-shm']) rmSync(`${dbPath}${suffix}`, { force: true });
+  whenFree(() => rmSync(dbPath, { force: true }));
+  for (const suffix of ['-wal', '-shm']) whenFree(() => rmSync(`${dbPath}${suffix}`, { force: true }));
   renameOver(temporary, dbPath);
 };
 

@@ -1,0 +1,13 @@
+{
+  "error": "no channel named \"channel:order.create\"",
+  "suggestions": [
+    {
+      "id": "channel:order.created",
+      "type": "channel",
+      "label": "order.created"
+    }
+  ],
+  "next": [
+    "who_emits({channel: \"channel:order.created\"})"
+  ]
+}

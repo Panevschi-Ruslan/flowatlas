@@ -25,7 +25,7 @@ const bin = join(root, 'packages', 'cli', 'bin', 'flowatlas.js');
  * A configuration with nothing in it, for reading one fixture repository.
  *
  * `extract` looks for a configuration upward from where it is run, and would
- * find this repository's own, which points at five repositories on one person's
+ * find this repository's own, which points at repositories on one person's
  * machine and configures a data-layer base class and a broker for them. Nothing
  * depends on that today, which is exactly why it is worth cutting: a fixture
  * that quietly needed somebody's private configuration would read differently
@@ -43,7 +43,8 @@ const failures = [];
 for (const dir of fixtureDirs()) {
   const { kind, steps } = layoutOf(dir);
   done[kind] += 1;
-  for (const { args, writes, mayDecline = false } of steps) {
+  for (const { args, writes, mayDecline = false, when } of steps) {
+    if (when !== undefined && !when(dir)) continue;
     // Last run's answer is not this run's: see `steps` in fixture-layout.mjs.
     for (const file of writes) rmSync(join(outputDir(dir), file), { force: true });
     try {

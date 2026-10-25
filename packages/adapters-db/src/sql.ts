@@ -138,3 +138,26 @@ export const sqlTables = (sql: string): string[] => {
   }
   return found;
 };
+
+/**
+ * A statement that handles many rows in one round trip (P89): a list handed
+ * in with `IN (`, `ANY(` or `UNNEST(`, or an insert of several rows at once.
+ * A loop around one is the chunking around a batch, not an N+1.
+ */
+const BATCH_SHAPES: readonly RegExp[] = [
+  /\bin\s*\(/i,
+  /\bany\s*\(/i,
+  /\bunnest\s*\(/i,
+  /\bvalues\s*\([^()]*\)\s*,\s*\(/i,
+];
+
+export const sqlIsBatch = (sql: string): boolean => BATCH_SHAPES.some((shape) => shape.test(sql));
+
+/**
+ * An update that changes a row only in the state it expects (P89): its
+ * `WHERE` tests a column besides the one that picks the row, or it hands the
+ * row back with `RETURNING` to say whether it moved. A compare-and-set has no
+ * batch form, so running one per item is per item on purpose.
+ */
+export const sqlIsConditional = (sql: string): boolean =>
+  /^\s*update\b/i.test(sql) && (/\bwhere\b[\s\S]*\band\s+[\w."]+\s*(?:=|<>|!=|\bis\b|\bin\b)/i.test(sql) || /\breturning\b/i.test(sql));

@@ -46,14 +46,14 @@ export class OrdersService {
   }
 
   // Nothing but the name suggests data access here.
-  // Expected: no query node at all, one db-receiver-name-only row.
+  // Expected: no node, no row: a static edge into OrdersRepository.find (P88).
   listLocally(): Order[] {
     return this.localRepo.find();
   }
 
   // A job queue behind a name that ends in `Repository`. The name is the only
   // evidence, and a name is not evidence.
-  // Expected: no query node at all, one db-receiver-name-only row.
+  // Expected: no node, no row: a static edge into JobBus.enqueue (P88).
   schedule(): void {
     this.jobRepository.enqueue('rebuild');
   }

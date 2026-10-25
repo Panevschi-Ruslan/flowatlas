@@ -1,3 +1,6 @@
+import type { Node as TsNode } from 'ts-morph';
+import { Node } from 'ts-morph';
+
 /**
  * What a marker was given, read the same way wherever it is read.
  *
@@ -127,3 +130,61 @@ export const namesGivenTo = (marker: RecordedMarker): MarkerNames => {
 
   return { names, refused };
 };
+
+/**
+ * `/** @flowatlas-calls catalog GET /items *\/` - the JSDoc twin of
+ * `@CallsService('catalog', 'GET /items')`, for code that takes no decorator:
+ * a function, a worker's handler (P91). The service is written first, then a
+ * verb and a path. A browser method may leave the service out,
+ * `@flowatlas-calls GET /items`, and the request is then wherever its other
+ * settings say (P127). Read on one line: a tag whose words run onto the next
+ * line would take the next line's first word as its path.
+ */
+const JSDOC_CALLS = /@flowatlas-calls[ \t]+(\S+)[ \t]+(\S+)(?:[ \t]+(\S+))?/g;
+
+const VERBS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'ALL']);
+
+/** One `@flowatlas-calls` tag as written: a verb and a path, and the service when it names one. */
+export interface JsDocCall {
+  service?: string;
+  method: string;
+  path: string;
+}
+
+/**
+ * Every `@flowatlas-calls` tag in a piece of documentation.
+ *
+ * The verb decides which form a tag is: in first place it is `METHOD /path`,
+ * in second place `<service> METHOD /path`. A tag with no verb in either place
+ * names no request and is not read: `catalog items` was once a request with
+ * the verb `CATALOG` (P127).
+ */
+export const jsDocCallsIn = (docs: string): JsDocCall[] => {
+  const calls: JsDocCall[] = [];
+  for (const match of docs.matchAll(JSDOC_CALLS)) {
+    const [, first, second, third] = match as unknown as [string, string, string, string | undefined];
+    if (VERBS.has(first.toUpperCase())) calls.push({ method: first.toUpperCase(), path: second });
+    else if (third !== undefined && VERBS.has(second.toUpperCase())) {
+      calls.push({ service: first, method: second.toUpperCase(), path: third });
+    }
+  }
+  return calls;
+};
+
+/** The documentation comments written above a node, or above the statement declaring it. */
+export const docsAbove = (node: TsNode): string => {
+  const holder = Node.isVariableDeclaration(node) ? node.getVariableStatement() : node;
+  if (holder === undefined || !Node.isJSDocable(holder)) return '';
+  return holder
+    .getJsDocs()
+    .map((doc) => doc.getInnerText())
+    .join('\n');
+};
+
+/** Every `@flowatlas-calls <service> <METHOD> <path>` above a method or function, as the marker it stands for. */
+export const jsDocCallsMarkers = (node: TsNode): RecordedMarker[] =>
+  jsDocCallsIn(docsAbove(node)).flatMap(({ service, method, path }) =>
+    // A server request with no service named has nowhere the tag could send
+    // it: a server's address is read from its settings, not inferred.
+    service === undefined ? [] : [{ name: 'CallsService', args: [service, `${method} ${path}`] }],
+  );

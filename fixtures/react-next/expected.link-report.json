@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:46.884Z",
+  "builtAt": "2026-10-16T23:29:32.293Z",
   "configHash": "fe6ade849f35",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 50,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 550,
+      "durationMs": 539,
       "packages": {
         "name": "react-next-shop",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 14,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 523,
+      "durationMs": 511,
       "packages": {
         "name": "react-next-web",
         "runtime": [
@@ -90,6 +90,10 @@
     "nodes": 58,
     "edges": 67,
     "types": 4,
+    "missed": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 4
   }
 }

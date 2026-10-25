@@ -2,11 +2,14 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createContractChecker, type ContractFinding } from '@flowatlas/contracts';
-import { loadConfig } from '@flowatlas/core';
+import { compareTraffic, createContractChecker, type ContractFinding, type TrafficComparison } from '@flowatlas/contracts';
+import { loadConfig, type EntryShapes, type GraphEdge, type LoadedConfig } from '@flowatlas/core';
+import { testPatternText } from '../patterns/test.js';
 import type { GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
+import { KNOWN_REASONS, kindHint } from '../doctor/hints.js';
 import { ownBin } from '../own-path.js';
+import { VERSION } from '../version.js';
 
 export const MCP_FILE = '.mcp.json';
 
@@ -152,12 +155,64 @@ export const contractsHook = (
 };
 
 /**
+ * A route's traffic shapes against its code, for `check_contract` and
+ * `get_flow` (P113): the server does not depend on the contracts package, so
+ * it is handed this, as it is the contract checker.
+ */
+export const trafficHook =
+  (open: () => GraphDb | undefined) =>
+  (input: { entry: string; shapes: EntryShapes; caller?: GraphEdge }): TrafficComparison | undefined => {
+    const db = open();
+    return db === undefined
+      ? undefined
+      : compareTraffic(input.entry, input.shapes, db, input.caller === undefined ? {} : { caller: input.caller });
+  };
+
+/**
+ * What `doctor` says about every reason it knows, for the server's
+ * `flowatlas://reasons` (P96 D4): the server does not depend on the CLI, so the
+ * catalogue is handed in, as the contracts checker is.
+ */
+export const reasonCatalog = (): Array<{ reason: string; hint?: string }> =>
+  KNOWN_REASONS.map((reason) => {
+    const hint = kindHint(reason);
+    return hint === undefined ? { reason } : { reason, hint };
+  });
+
+/**
  * Serves the graph to an editor over stdin and stdout, or registers itself.
  *
  * Registration only for the serving half: the server lives in its own package
  * and is loaded when the command runs, so nothing about it is paid for by the
  * other commands.
  */
+
+/**
+ * The pattern tester `test_pattern` runs (P121): rules as YAML, read beside the
+ * configuration's own descriptions, and a service's program when one is named.
+ */
+const patternTesterFor = (config: string | undefined) => async (input: { yaml: string; code?: string; service?: string }) => {
+  let loaded: LoadedConfig | undefined;
+  try {
+    loaded = loadConfig(config ?? process.cwd(), { checkRepos: false });
+  } catch {
+    loaded = undefined;
+  }
+  const service = input.service === undefined ? undefined : loaded?.config.services.find((each) => each.name === input.service);
+  if (input.service !== undefined && (loaded === undefined || service === undefined)) {
+    return { rules: [], error: `no service named ${JSON.stringify(input.service)}` };
+  }
+  return testPatternText(
+    input,
+    loaded === undefined
+      ? undefined
+      : {
+          config: loaded.config,
+          ...(service === undefined ? {} : { service: { service, repoDir: loaded.repoDir(service), configDir: loaded.rootDir } }),
+        },
+  );
+};
+
 export const registerMcp = (program: Command): void => {
   program
     .command('mcp')
@@ -167,6 +222,7 @@ export const registerMcp = (program: Command): void => {
     .option('--install', `write ${MCP_FILE} into every repository of the project`)
     .option('--repo <name>', 'with --install, only this service')
     .option('--dry-run', 'with --install, say what would change and write nothing')
+    .option('--all-tools', 'list every tool, not only those the project can answer')
     .action(
       async (options: {
         config?: string;
@@ -174,6 +230,7 @@ export const registerMcp = (program: Command): void => {
         install?: boolean;
         repo?: string;
         dryRun?: boolean;
+        allTools?: boolean;
       }) => {
         if (options.install === true) {
           installMcp({
@@ -185,6 +242,8 @@ export const registerMcp = (program: Command): void => {
         }
 
         const { DbHandle, startStdioServer } = await import('@flowatlas/mcp');
+        // Loaded here, not at the top: the finder reaches `init`, which reaches this file.
+        const { missingCandidatesFor } = await import('../doctor/missing.js');
         const where = {
           ...(options.config === undefined ? {} : { configPath: options.config }),
           ...(options.db === undefined ? {} : { dbPath: options.db }),
@@ -197,10 +256,21 @@ export const registerMcp = (program: Command): void => {
         const handle = new DbHandle(where);
         await startStdioServer({
           ...where,
+          // What `initialize` answers as serverInfo.version: the command a user
+          // installed, not the private package the server is compiled from (P86 D3).
+          version: VERSION,
+          reasonCatalog: reasonCatalog(),
           contractChecker: contractsHook(() => {
             const opened = handle.open();
             return 'error' in opened ? undefined : opened.db;
           }),
+          trafficChecker: trafficHook(() => {
+            const opened = handle.open();
+            return 'error' in opened ? undefined : opened.db;
+          }),
+          patternTester: patternTesterFor(options.config),
+          ...missingCandidatesFor(options.config),
+          ...(options.allTools === true ? { allTools: true } : {}),
         });
       },
     );

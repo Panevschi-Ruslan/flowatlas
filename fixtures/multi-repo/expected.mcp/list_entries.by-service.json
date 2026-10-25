@@ -41,5 +41,10 @@
       "kind": "http"
     }
   ],
-  "total": 5
+  "total": 5,
+  "next": [
+    "get_flow({entry: \"entry:orders:http:GET:/a/:param\"})",
+    "describe_for_prompt({id: \"entry:orders:http:GET:/a/:param\"})",
+    "impact({symbol: \"entry:orders:http:GET:/a/:param\"})"
+  ]
 }

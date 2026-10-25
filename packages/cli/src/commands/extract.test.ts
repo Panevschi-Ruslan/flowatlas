@@ -637,7 +637,7 @@ describe('data access', () => {
     const cached = leafOf('nest-typeorm', 'db_query').find((node) =>
       String(node.meta?.['receiver']).includes('orderCache'),
     );
-    expect(cached?.meta?.['table']).toBe('Order');
+    expect(cached?.meta?.['table']).toBe('orders'); // `@Entity('orders')` names the table (P88 D1)
     expect(cached?.meta?.['source']).toBe('type-arg');
   });
 
@@ -696,10 +696,16 @@ describe('data access', () => {
     expect(graph.nodes.filter((node) => node.type === 'table')).toHaveLength(0);
   });
 
-  /** A name is not evidence, so it produces the row and no node (R83). */
-  it('says when a name was all it had to go on, and draws nothing for it', () => {
+  /**
+   * A name is not evidence, so it produces no node (R83). Both calls here are
+   * drawn as static edges into the classes' own methods, which explain them, so
+   * neither is a row either: each is counted instead (P88).
+   */
+  it('draws nothing for a name, and counts the calls an edge explains', () => {
     const graph = load('nest-unknown-orm');
-    expect(graph.unresolved.filter((row) => row.reason === 'db-receiver-name-only')).toHaveLength(2);
+    expect(graph.unresolved.filter((row) => row.reason === 'db-receiver-name-only')).toHaveLength(0);
+    const stats = graph.nodes.find((node) => node.type === 'repo')?.meta?.['stats'] as Record<string, unknown>;
+    expect(stats['receiversExplainedByEdge']).toBe(2);
     const guessed = graph.nodes.filter(
       (node) => node.type === 'db_query' && node.meta?.['package'] === null,
     );

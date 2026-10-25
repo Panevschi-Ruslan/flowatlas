@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-redis-pubsub",
-  "generatedAt": "2026-10-07T18:29:38.754Z",
+  "generatedAt": "2026-10-17T03:50:34.981Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-pubsub#src/cache/cache-publisher.service.ts:19:12",
@@ -725,7 +725,13 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/cache/cache-publisher.service.ts",
-      "line": 34
+      "line": 34,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 33
+        }
+      }
     },
     {
       "from": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.publishTo",
@@ -945,6 +951,32 @@
     }
   },
   "unresolved": [
+    {
+      "file": "src/cache/cache-publisher.service.ts",
+      "line": 33,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 publish once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "nest-redis-pubsub#src/cache/cache-publisher.service.ts:CachePublisherService.invalidateAll",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 33
+        },
+        "reaches": [
+          {
+            "id": "producer:nest-redis-pubsub#src/cache/cache-publisher.service.ts:34:9",
+            "type": "producer",
+            "words": "publish"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 0,
+        "entries": []
+      }
+    },
     {
       "file": "src/cache/cache-publisher.service.ts",
       "line": 50,

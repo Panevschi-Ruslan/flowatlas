@@ -1,4 +1,4 @@
-import { callSitesOf as callSitesOfFunction, wasRead, type NamedFunction } from '@flowatlas/core';
+import { callSitesOf as callSitesOfFunction, evaluateExpression, wasRead, type NamedFunction } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -27,6 +27,11 @@ export interface ReadRequest {
   depth: number;
   /** `name` of the function the network is actually reached in, when not this one. */
   through?: string;
+  /**
+   * The calls the address was followed out through, innermost first (P91):
+   * what else a wrapper is handed - its verb - is read along the same calls.
+   */
+  calls: readonly CallExpression[];
 }
 
 /** How many wrappers deep a request is followed before it is left where it is written. */
@@ -94,7 +99,15 @@ const bindingsAt = (fn: NamedFunction, call: CallExpression): Bindings => {
   const args = call.getArguments();
   parametersOf(fn).forEach((parameter, index) => {
     const argument = args[index];
-    if (argument !== undefined) values.set(parameter, argument);
+    if (argument !== undefined) {
+      values.set(parameter, argument);
+      return;
+    }
+    // Nothing passed: the parameter holds its default, `url(suffix = '')`
+    // called as `url()` (P91). Only a constant default is taken; one that
+    // reads anything else is a hole, as any unread value is.
+    const fallback = parameter.getInitializer();
+    if (fallback !== undefined && evaluateExpression(fallback).resolved) values.set(parameter, fallback);
   });
   return { values };
 };
@@ -119,7 +132,7 @@ const outermostValues = (bindings: Bindings): TsNode[] =>
   bindings.under === undefined ? [...bindings.values.values()] : outermostValues(bindings.under);
 
 /** The indexed function a call is written inside, when this repository declares it. */
-const enclosingIndexed = (
+export const enclosingIndexed = (
   ctx: ReactExtractContext,
   call: TsNode,
 ): IndexedFunction | undefined => {
@@ -165,6 +178,7 @@ export const requestsOf = (
     depth: number,
     seen: ReadonlySet<string>,
     callSite: TsNode,
+    chain: readonly CallExpression[],
   ): ReadRequest[] => {
     const here = analyzeApiUrl(urlArg, {
       sharedPackages,
@@ -175,6 +189,7 @@ export const requestsOf = (
       address: here,
       depth,
       ...(depth === 0 ? {} : { through: owner.name }),
+      calls: chain,
     };
     if (isRead(here)) return [inPlace];
     if (depth >= FORWARD_DEPTH) return [inPlace];
@@ -202,6 +217,7 @@ export const requestsOf = (
         depth + 1,
         new Set([...seen, caller.id]),
         call,
+        [...chain, call],
       );
       for (const request of found) {
         if (isRead(request.address)) out.push(request);
@@ -212,5 +228,5 @@ export const requestsOf = (
     return out;
   };
 
-  return outward(owner, undefined, 0, new Set([owner.id]), site.call);
+  return outward(owner, undefined, 0, new Set([owner.id]), site.call, []);
 };

@@ -1,0 +1,123 @@
+{
+  "rows": [
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:35",
+      "window": "1h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 20
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:40",
+      "window": "1h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 20
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/refund",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:65",
+      "window": "1h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 20
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/resume",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:71",
+      "window": "1h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 20
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/ship",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:60",
+      "window": "1h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 20
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/charge",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:50",
+      "window": "1h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 20
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/pay",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:45",
+      "window": "1h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 20
+      },
+      "confidence": "strong"
+    }
+  ],
+  "window": {
+    "since": "1h",
+    "from": "2025-10-16T08:00:00.000Z",
+    "to": "2025-10-16T09:00:00.000Z",
+    "label": "1h"
+  },
+  "total": 7,
+  "notes": [
+    "nothing from orders in the window"
+  ],
+  "next": [
+    "dead({id: \"entry:gateway:http:POST:/orders/:param/cancel\"})",
+    "get_flow({entry: \"entry:gateway:http:POST:/orders/:param/cancel\"})"
+  ]
+}

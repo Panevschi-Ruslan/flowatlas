@@ -1,0 +1,20 @@
+{
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "nestjs"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -19,13 +19,23 @@ import {
  * - a queue is `sqs/<queue name>`;
  * - a topic is `sns/<topic name>`;
  * - an event is `eventbridge/<bus>/<source>/<detail type>`, and the bus an
- *   entry leaves out is the one the service calls `default`, written out.
+ *   entry leaves out is the one the service calls `default`, written out;
+ * - the changes written to a table are `dynamodb/<table name>`, and the records
+ *   put on a Kinesis stream are `kinesis/<stream name>` (P51);
+ * - the objects of a bucket are `s3/<bucket name>` (P52).
  *
  * Names are the deployed names, never a URL or an ARN: those are read through
  * `DEPLOYED_FORMS` to the name inside them, which is what a deployment names the
  * same resource by.
  */
-export const AWS_SERVICE_PREFIX = { sqs: 'sqs', sns: 'sns', eventbridge: 'eventbridge' } as const;
+export const AWS_SERVICE_PREFIX = {
+  sqs: 'sqs',
+  sns: 'sns',
+  eventbridge: 'eventbridge',
+  dynamodb: 'dynamodb',
+  kinesis: 'kinesis',
+  s3: 's3',
+} as const;
 
 /** The bus an event goes to when its entry names none. */
 export const DEFAULT_EVENT_BUS = 'default';
@@ -34,8 +44,34 @@ export const queueChannel = (name: string): string => [AWS_SERVICE_PREFIX.sqs, n
 
 export const topicChannel = (name: string): string => [AWS_SERVICE_PREFIX.sns, name].join(ADDRESS_SEPARATOR);
 
+export const bucketChannel = (name: string): string => [AWS_SERVICE_PREFIX.s3, name].join(ADDRESS_SEPARATOR);
+
 export const eventChannel = (bus: string | undefined, source: string, detailType: string): string =>
   [AWS_SERVICE_PREFIX.eventbridge, bus ?? DEFAULT_EVENT_BUS, source, detailType].join(ADDRESS_SEPARATOR);
+
+/** What a stream read in order carries: the changes to a table, or the records of a stream. */
+export type ChangesOf = 'table' | 'stream';
+
+export const CHANGES_PREFIX: { readonly [K in ChangesOf]: string } = {
+  table: AWS_SERVICE_PREFIX.dynamodb,
+  stream: AWS_SERVICE_PREFIX.kinesis,
+};
+
+/**
+ * The channel a write to a table or a record put on a stream lands on, and the
+ * one a mapping from that table's stream or that stream reads: one name for
+ * both ends, so a writer and the function the stream runs meet on one node.
+ */
+export const changesChannel = (of: ChangesOf, name: string): string => [CHANGES_PREFIX[of], name].join(ADDRESS_SEPARATOR);
+
+/**
+ * How a stream's channel is read: its adapter, and what a write onto it is
+ * recorded as. A stream hands every record to every reader, so it is a topic.
+ */
+export const CHANGES_CHANNELS: Readonly<Record<ChangesOf, { adapter: string; channelKind: ChannelKind; kind: string }>> = {
+  table: { adapter: 'aws-dynamodb', channelKind: 'topic', kind: 'write' },
+  stream: { adapter: 'aws-kinesis', channelKind: 'topic', kind: 'record' },
+};
 
 /**
  * The two fields of an event its channel is named by, as an event pattern

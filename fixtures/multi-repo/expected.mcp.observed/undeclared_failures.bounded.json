@@ -1,0 +1,38 @@
+{
+  "routes": [
+    {
+      "entry": "entry:billing:http:POST:/invoices",
+      "label": "POST /invoices",
+      "service": "billing",
+      "hits": 22,
+      "undeclared": [
+        {
+          "status": 500,
+          "count": 1,
+          "share": 0.0455
+        }
+      ],
+      "declaredNeverSeen": [
+        {
+          "status": 409,
+          "exception": "ConflictException",
+          "at": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
+          "loc": "src/invoices/invoices.service.ts:31"
+        }
+      ],
+      "next": [
+        "trace_for({entry: \"entry:billing:http:POST:/invoices\"})",
+        "get_source({symbol: \"billing#src/invoices/invoices.controller.ts:InvoicesController.create\"})"
+      ]
+    }
+  ],
+  "window": {
+    "from": "2025-10-16T07:00:00.000Z",
+    "to": "2025-10-16T09:00:00.000Z"
+  },
+  "total": 1,
+  "next": [
+    "get_flow({entry: \"entry:billing:http:POST:/invoices\"})",
+    "describe_for_prompt({id: \"entry:billing:http:POST:/invoices\"})"
+  ]
+}

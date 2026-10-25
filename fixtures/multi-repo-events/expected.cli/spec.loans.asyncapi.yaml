@@ -1,0 +1,68 @@
+asyncapi: 3.0.0
+info:
+  title: loans
+  version: unversioned
+  description: The channels loans publishes to and consumes from, as flowatlas read them from the code. Nothing here was run.
+channels:
+  eventbridge_library_library.loans_LoanCreated:
+    address: eventbridge/library/library.loans/LoanCreated
+    messages:
+      send.eventbridge_library_library.loans_LoanCreated:
+        $ref: "#/components/messages/send.eventbridge_library_library.loans_LoanCreated"
+    x-flowatlas-channel-kind: topic
+  eventbridge_library_library.loans_LoanReturned:
+    address: eventbridge/library/library.loans/LoanReturned
+    messages:
+      send.eventbridge_library_library.loans_LoanReturned:
+        $ref: "#/components/messages/send.eventbridge_library_library.loans_LoanReturned"
+    x-flowatlas-channel-kind: topic
+operations:
+  send.eventbridge_library_library.loans_LoanCreated:
+    action: send
+    channel:
+      $ref: "#/channels/eventbridge_library_library.loans_LoanCreated"
+    messages:
+      - $ref: "#/channels/eventbridge_library_library.loans_LoanCreated/messages/send.eventbridge_library_library.loans_LoanCreated"
+    summary: handler
+    x-flowatlas-source: src/create-loan.ts:11
+    x-flowatlas-confidence: static
+    x-flowatlas-consumers:
+      platform-events: 1
+      routing: 1
+  send.eventbridge_library_library.loans_LoanReturned:
+    action: send
+    channel:
+      $ref: "#/channels/eventbridge_library_library.loans_LoanReturned"
+    messages:
+      - $ref: "#/channels/eventbridge_library_library.loans_LoanReturned/messages/send.eventbridge_library_library.loans_LoanReturned"
+    summary: handler
+    x-flowatlas-source: src/return-loan.ts:8
+    x-flowatlas-confidence: static
+    x-flowatlas-consumers:
+      platform-events: 1
+      routing: 1
+components:
+  messages:
+    send.eventbridge_library_library.loans_LoanCreated:
+      name: send.eventbridge_library_library.loans_LoanCreated
+      payload:
+        $ref: "#/components/schemas/Loan"
+    send.eventbridge_library_library.loans_LoanReturned:
+      name: send.eventbridge_library_library.loans_LoanReturned
+      payload:
+        $ref: "#/components/schemas/Loan"
+  schemas:
+    Loan:
+      type: object
+      properties:
+        loanId:
+          type: string
+        borrowerId:
+          type: string
+        itemId:
+          type: string
+      required:
+        - loanId
+        - borrowerId
+        - itemId
+      x-flowatlas-type: type:loans#Loan

@@ -1,0 +1,16 @@
+{
+  "services": [
+    {
+      "name": "billing",
+      "uri": "flowatlas://services/billing"
+    },
+    {
+      "name": "gateway",
+      "uri": "flowatlas://services/gateway"
+    },
+    {
+      "name": "orders",
+      "uri": "flowatlas://services/orders"
+    }
+  ]
+}

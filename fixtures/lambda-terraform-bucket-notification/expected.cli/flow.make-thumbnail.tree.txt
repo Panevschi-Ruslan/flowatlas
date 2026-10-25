@@ -1,0 +1,21 @@
+@  library-make-thumbnail                                                 media/infra/main.tf:78
+  -> handler                                                              media/src/uploads/make-thumbnail.ts:11
+    $  UPLOADS_BUCKET                                                     media/src/uploads/make-thumbnail.ts:17
+    ~  s3:ObjectCreated:* s3/library-cover-uploads                        media/src/uploads/make-thumbnail.ts:19
+      ~  s3/library-cover-uploads                                         infra/notifications.tf:3
+        ~  notification index-thumbnail                                   media/infra/notifications.tf:3
+          ~  message sqs/library-thumbnails                               media/infra/notifications.tf:3
+            ~  sqs/library-thumbnails                                     infra/notifications.tf:22
+              ~  mapping aws_lambda_event_source_mapping.index_thumbnail  media/infra/notifications.tf:22
+                @  library-index-thumbnail                                media/infra/main.tf:91
+    ~  s3:ObjectCreated:Copy s3/library-cover-archive                     media/src/uploads/make-thumbnail.ts:20
+      ~  s3/library-cover-archive                                         infra/notifications.tf:28
+        ~  notification aws_s3_bucket_notification.archive.eventbridge["Object Created"]  media/infra/notifications.tf:28
+          ~  event eventbridge/default/aws.s3/Object Created              media/infra/notifications.tf:28
+            ~  eventbridge/default/aws.s3/Object Created                  infra/notifications.tf:44
+              ~  rule library-cover-archived                              media/infra/notifications.tf:44
+                @  library-record-archived                                media/infra/main.tf:100
+    ~  s3:ObjectRemoved:Delete s3/library-cover-uploads                   media/src/uploads/make-thumbnail.ts:21
+      (again) s3/library-cover-uploads ~heuristic
+... truncated: 2 more nodes (raise --depth)
+unresolved on this path: 2

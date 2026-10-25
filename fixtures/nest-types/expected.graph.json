@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-types",
-  "generatedAt": "2026-10-07T14:34:35.821Z",
+  "generatedAt": "2026-10-16T15:12:10.524Z",
   "nodes": [
     {
       "id": "entry:nest-types:http:GET:/catalog/categories",
@@ -687,7 +687,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 64
+          }
+        ]
       }
     },
     {
@@ -1808,7 +1814,11 @@
       "line": 58,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "LegacyOrder"
+      "symbol": "LegacyOrder",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@acme/legacy-orders"
+      }
     },
     {
       "file": "src/types/deep.ts",

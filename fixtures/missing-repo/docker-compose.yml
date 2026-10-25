@@ -1,0 +1,17 @@
+# The bookshop as a developer starts it: three containers built from the
+# repositories beside this file, and a database. Only two of the repositories
+# are in the configuration; the container `payments` is built from the third.
+services:
+  gateway:
+    build: ./gateway
+    ports:
+      - "3000:3000"
+  orders:
+    build: ./orders
+  payments:
+    build:
+      context: ./payments-api
+    ports:
+      - "4000:4000"
+  db:
+    image: postgres:16

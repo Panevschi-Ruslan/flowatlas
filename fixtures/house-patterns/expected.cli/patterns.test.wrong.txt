@@ -1,0 +1,8 @@
+FAIL  shop-bus-emit (publish)  variants/wrong-expectation.yml:3  0/1 tests
+  FAIL  bus.emit({ topic: 'book.added', data: book })
+        expect channel: book.removed
+        drew   producer on channel:book.added
+        holes  $BUS = bus; $CHANNEL = 'book.added'; $PAYLOAD = book
+        why    wanted channel book.removed; drew book.added
+
+1 rule(s), 0 refused; 1 test(s), 1 failed

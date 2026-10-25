@@ -736,8 +736,8 @@ describe('a declared type as permission, and a literal as act', () => {
 /**
  * What a stripped field costs, which is not the same for all of them (R30).
  *
- * Seventy-nine rows on one real project, every one of them true and one of
- * them a bug that had been in production unnoticed. Two things the graph knows
+ * Many rows on one real project, every one of them true, and among them a
+ * bug that had been in production unnoticed. Two things the graph knows
  * tell the kinds apart, and neither is the spelling of the name.
  */
 describe('a stripped field, by what it can lose', () => {

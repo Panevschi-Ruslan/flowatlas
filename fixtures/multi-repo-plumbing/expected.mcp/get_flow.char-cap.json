@@ -1,0 +1,165 @@
+{
+  "root": {
+    "node": {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "label": "POST /orders/:param/invoice",
+      "loc": "src/orders/orders.controller.ts:33",
+      "service": "gateway",
+      "kind": "http"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "gateway#src/orders/orders.controller.ts:OrdersController.invoice",
+          "type": "method",
+          "label": "OrdersController.invoice",
+          "loc": "src/orders/orders.controller.ts:33"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static",
+          "params": [
+            "string",
+            "{amount:number}"
+          ],
+          "returns": "type:axios#AxiosResponse<unknown>"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "gateway#src/common/app-logger.ts:AppLogger.log",
+              "type": "method",
+              "label": "AppLogger.log",
+              "loc": "src/common/app-logger.ts:12"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "string",
+                "string"
+              ],
+              "returns": "void"
+            },
+            "children": []
+          },
+          {
+            "node": {
+              "id": "gateway#src/common/metrics.ts:Metrics.count",
+              "type": "method",
+              "label": "Metrics.count",
+              "loc": "src/common/metrics.ts:12"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "string"
+              ],
+              "returns": "void"
+            },
+            "children": []
+          },
+          {
+            "node": {
+              "id": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+              "type": "method",
+              "label": "BillingClient.requestInvoice",
+              "loc": "src/clients/billing.client.ts:18"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "string",
+                "number"
+              ],
+              "returns": "type:axios#AxiosResponse<unknown>"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "gateway#src/common/app-logger.ts:AppLogger.log",
+                  "ref": true,
+                  "seenAt": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "string",
+                    "string"
+                  ],
+                  "returns": "void"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "gateway#src/common/metrics.ts:Metrics.count",
+                  "ref": true,
+                  "seenAt": "gateway#src/orders/orders.controller.ts:OrdersController.invoice"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static",
+                  "params": [
+                    "string"
+                  ],
+                  "returns": "void"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "config_key:gateway#BILLING_URL",
+                  "type": "config_key",
+                  "label": "BILLING_URL",
+                  "loc": "src/clients/billing.client.ts:21"
+                },
+                "edge": {
+                  "type": "reads_config",
+                  "confidence": "static"
+                },
+                "children": []
+              },
+              {
+                "node": {
+                  "id": "http_out:gateway#src/clients/billing.client.ts:21:12",
+                  "type": "http_out",
+                  "label": "POST /invoices",
+                  "loc": "src/clients/billing.client.ts:21"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "truncated": "21 more nodes past about 3000 characters; raise maxChars or ask get_flow on a child id",
+  "stoppedBy": [
+    "maxChars"
+  ],
+  "crossingsLeft": [
+    {
+      "from": "http_out:gateway#src/clients/billing.client.ts:21:12",
+      "to": "entry:billing:http:POST:/invoices",
+      "type": "http_calls",
+      "service": "billing"
+    }
+  ],
+  "next": [
+    "describe_for_prompt({id: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
+    "get_flow({entry: \"entry:billing:http:POST:/invoices\"})",
+    "impact({symbol: \"entry:gateway:http:POST:/orders/:param/invoice\"})",
+    "get_source({symbol: \"gateway#src/orders/orders.controller.ts:OrdersController.invoice\"})"
+  ]
+}

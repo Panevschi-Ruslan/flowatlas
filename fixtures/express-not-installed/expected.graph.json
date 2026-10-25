@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "express-not-installed",
-  "generatedAt": "2026-10-08T09:12:32.355Z",
+  "generatedAt": "2026-10-16T15:10:43.683Z",
   "nodes": [
     {
       "id": "entry:express-not-installed:http:GET:/admin",
@@ -360,14 +360,22 @@
       "line": 9,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "Request"
+      "symbol": "Request",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      }
     },
     {
       "file": "src/admin.ts",
       "line": 9,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "Response"
+      "symbol": "Response",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      }
     },
     {
       "file": "src/admin.ts",
@@ -376,6 +384,43 @@
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "sendHtml -> res.send",
+      "meta": {
+        "causes": [
+          {
+            "cause": "module-not-installed",
+            "package": "express",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/admin.ts",
+                "line": 10,
+                "symbol": "sendHtml -> res.send"
+              },
+              {
+                "file": "src/videos.controller.ts",
+                "line": 5,
+                "symbol": "listVideos -> res.json"
+              },
+              {
+                "file": "src/videos.controller.ts",
+                "line": 9,
+                "symbol": "getVideo -> res.json"
+              }
+            ]
+          },
+          {
+            "cause": "callback-param",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 24,
+                "symbol": "GET /health@23 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
       "sites": 4
     },
     {
@@ -383,35 +428,55 @@
       "line": 4,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "Request"
+      "symbol": "Request",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      }
     },
     {
       "file": "src/videos.controller.ts",
       "line": 4,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "Response"
+      "symbol": "Response",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      }
     },
     {
       "file": "src/videos.controller.ts",
       "line": 8,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "Request"
+      "symbol": "Request",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      }
     },
     {
       "file": "src/videos.controller.ts",
       "line": 8,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "Response"
+      "symbol": "Response",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      }
     },
     {
       "file": "src/videos.controller.ts",
       "line": 9,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "any"
+      "symbol": "any",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "express"
+      }
     }
   ]
 }

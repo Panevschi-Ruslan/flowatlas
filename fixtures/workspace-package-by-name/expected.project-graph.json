@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:35:09.870Z",
+  "builtAt": "2026-10-16T23:29:54.979Z",
   "services": [
     {
       "name": "api",
@@ -168,7 +168,9 @@
           "filesRead": 7,
           "filesUnreadable": 0,
           "classes": 5,
-          "skippedExternalCalls": {}
+          "skippedExternalCalls": {
+            "@acme/ledger": 1
+          }
         },
         "bootstrap": "src/main.ts",
         "adapters": {
@@ -236,11 +238,17 @@
   "unresolved": [
     {
       "file": "src/stock/stock.controller.ts",
-      "line": 18,
-      "reason": "call-dynamic-receiver",
+      "line": 8,
+      "reason": "package-from-repo",
       "level": "info",
-      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
-      "symbol": "StockController.available -> this.ledger.record",
+      "message": "@acme/ledger is not installed here; its types are read from its source in ../packages/ledger, a directory beside the configuration",
+      "hint": "Nothing to do. The source may not be the version this service runs: an installed copy is read instead once the dependencies are installed, and packageSources: false reads nothing in its place.",
+      "symbol": "@acme/ledger",
+      "meta": {
+        "cause": "package-from-repo",
+        "package": "@acme/ledger",
+        "from": "../packages/ledger"
+      },
       "service": "api"
     }
   ]

@@ -1,0 +1,9 @@
+{
+  "error": "no rule named \"only-orders-write-orders\"",
+  "suggestions": [
+    "only-orders-writes-orders"
+  ],
+  "next": [
+    "check_rules({rule: \"only-orders-writes-orders\"})"
+  ]
+}

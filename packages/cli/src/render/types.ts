@@ -1,4 +1,5 @@
 import type { DetailLevel, TypeEntry } from '@flowatlas/core';
+import type { SequenceDetail, SequenceSite } from '@flowatlas/linker';
 import type { FlowNode } from '@flowatlas/mcp';
 import type { Format } from '../options.js';
 import type { RepoPalette } from './color.js';
@@ -33,6 +34,15 @@ export interface RenderOptions {
   types?: Record<string, TypeEntry>;
   /** Source by node id; only at L3, and only for the formats that show code. */
   source?: Record<string, SourceBlock>;
+  /**
+   * What the graph edge behind a row says about where and how it runs, and
+   * why the walk cannot see past a row: what a sequence reads that a row does
+   * not carry (P116). Formats that draw a tree ignore both.
+   */
+  siteOf?: (row: FlowNode) => SequenceSite | undefined;
+  stopOf?: (row: FlowNode) => string | undefined;
+  /** Participants per service or per class, for the sequence format. */
+  sequenceDetail?: SequenceDetail;
 }
 
 /**

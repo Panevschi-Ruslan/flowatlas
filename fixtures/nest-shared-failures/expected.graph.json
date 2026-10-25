@@ -1,0 +1,2892 @@
+{
+  "schemaVersion": 6,
+  "repo": "nest-shared-failures",
+  "generatedAt": "2026-10-17T01:51:43.332Z",
+  "nodes": [
+    {
+      "id": "entry:nest-shared-failures:http:DELETE:/billing/:param",
+      "type": "entry",
+      "label": "DELETE /billing/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 42,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/billing/:param",
+        "rawPath": "/billing/:id",
+        "controller": "BillingController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:DELETE:/catalog/:param",
+      "type": "entry",
+      "label": "DELETE /catalog/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 42,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/catalog/:param",
+        "rawPath": "/catalog/:id",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:DELETE:/orders/:param",
+      "type": "entry",
+      "label": "DELETE /orders/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 42,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:GET:/billing/:param",
+      "type": "entry",
+      "label": "GET /billing/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/billing/:param",
+        "rawPath": "/billing/:id",
+        "controller": "BillingController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:GET:/catalog/:param",
+      "type": "entry",
+      "label": "GET /catalog/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalog/:param",
+        "rawPath": "/catalog/:id",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:PATCH:/billing/:param",
+      "type": "entry",
+      "label": "PATCH /billing/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/billing/:param",
+        "rawPath": "/billing/:id",
+        "controller": "BillingController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:PATCH:/catalog/:param",
+      "type": "entry",
+      "label": "PATCH /catalog/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/catalog/:param",
+        "rawPath": "/catalog/:id",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:PATCH:/orders/:param",
+      "type": "entry",
+      "label": "PATCH /orders/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:POST:/billing",
+      "type": "entry",
+      "label": "POST /billing",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/billing",
+        "rawPath": "/billing",
+        "controller": "BillingController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:POST:/billing/:param/copy",
+      "type": "entry",
+      "label": "POST /billing/:param/copy",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/billing/:param/copy",
+        "rawPath": "/billing/:id/copy",
+        "controller": "BillingController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:POST:/catalog",
+      "type": "entry",
+      "label": "POST /catalog",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/catalog",
+        "rawPath": "/catalog",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:POST:/catalog/:param/copy",
+      "type": "entry",
+      "label": "POST /catalog/:param/copy",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/catalog/:param/copy",
+        "rawPath": "/catalog/:id/copy",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:POST:/orders/:param/copy",
+      "type": "entry",
+      "label": "POST /orders/:param/copy",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/copy",
+        "rawPath": "/orders/:id/copy",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 404,
+            "exception": "NotFoundException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+            "file": "src/shared/shop.service.ts",
+            "line": 16,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:PUT:/billing/:param",
+      "type": "entry",
+      "label": "PUT /billing/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/billing/:param",
+        "rawPath": "/billing/:id",
+        "controller": "BillingController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:PUT:/catalog/:param",
+      "type": "entry",
+      "label": "PUT /catalog/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/catalog/:param",
+        "rawPath": "/catalog/:id",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-shared-failures:http:PUT:/orders/:param",
+      "type": "entry",
+      "label": "PUT /orders/:param",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+              "name": "ApiKeyGuard",
+              "layer": "guard",
+              "where": "global",
+              "via": "APP_GUARD in AppModule",
+              "file": "src/app.module.ts",
+              "line": 12
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 401,
+            "exception": "UnauthorizedException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+            "file": "src/shared/api-key.guard.ts",
+            "line": 9,
+            "source": "throw"
+          },
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+            "file": "src/app.module.ts",
+            "line": 12,
+            "source": "guard"
+          },
+          {
+            "status": 409,
+            "exception": "ConflictException",
+            "at": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+            "file": "src/shared/shop.service.ts",
+            "line": 22,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe",
+      "type": "pipe",
+      "label": "ValidationPipe",
+      "repo": "nest-shared-failures",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "pipe",
+      "label": "ValidationPipe({\"whitelist\":true})",
+      "repo": "nest-shared-failures",
+      "file": "node_modules/@nestjs/common",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/common",
+        "external": true,
+        "factoryArgs": [
+          {
+            "whitelist": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-shared-failures",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController",
+          "BillingController",
+          "CatalogController"
+        ],
+        "providers": [
+          "ShopService",
+          "APP_GUARD"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/billing/billing.controller.ts:BillingController",
+      "type": "provider",
+      "label": "BillingController",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.copy",
+      "type": "method",
+      "label": "BillingController.copy",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "copying invoice {id}",
+            "at": 37
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.create",
+      "type": "method",
+      "label": "BillingController.create",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "Record"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "creating invoice {id}",
+            "at": 19
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.findOne",
+      "type": "method",
+      "label": "BillingController.findOne",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "reading invoice {id}",
+            "at": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.remove",
+      "type": "method",
+      "label": "BillingController.remove",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "removing invoice {id}",
+            "at": 44
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.replace",
+      "type": "method",
+      "label": "BillingController.replace",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "Record"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "replacing invoice {id}",
+            "at": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.touch",
+      "type": "method",
+      "label": "BillingController.touch",
+      "repo": "nest-shared-failures",
+      "file": "src/billing/billing.controller.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "touching invoice {id}",
+            "at": 31
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController",
+      "type": "provider",
+      "label": "CatalogController",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.copy",
+      "type": "method",
+      "label": "CatalogController.copy",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "copying product {id}",
+            "at": 37
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.create",
+      "type": "method",
+      "label": "CatalogController.create",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "Record"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "creating product {id}",
+            "at": 19
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.findOne",
+      "type": "method",
+      "label": "CatalogController.findOne",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "reading product {id}",
+            "at": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.remove",
+      "type": "method",
+      "label": "CatalogController.remove",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "removing product {id}",
+            "at": 44
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.replace",
+      "type": "method",
+      "label": "CatalogController.replace",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "Record"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "replacing product {id}",
+            "at": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.touch",
+      "type": "method",
+      "label": "CatalogController.touch",
+      "repo": "nest-shared-failures",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "touching product {id}",
+            "at": 31
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.copy",
+      "type": "method",
+      "label": "OrdersController.copy",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "copying order {id}",
+            "at": 37
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "method",
+      "label": "OrdersController.create",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "Record"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "creating order {id}",
+            "at": 19
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "reading order {id}",
+            "at": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "method",
+      "label": "OrdersController.remove",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "removing order {id}",
+            "at": 44
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.replace",
+      "type": "method",
+      "label": "OrdersController.replace",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "type": "Record"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "replacing order {id}",
+            "at": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.touch",
+      "type": "method",
+      "label": "OrdersController.touch",
+      "repo": "nest-shared-failures",
+      "file": "src/orders/orders.controller.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "touching order {id}",
+            "at": 31
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guard",
+      "label": "ApiKeyGuard",
+      "repo": "nest-shared-failures",
+      "file": "src/shared/api-key.guard.ts",
+      "line": 4,
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard.canActivate",
+      "type": "method",
+      "label": "ApiKeyGuard.canActivate",
+      "repo": "nest-shared-failures",
+      "file": "src/shared/api-key.guard.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/shared/shop.service.ts:ShopService",
+      "type": "provider",
+      "label": "ShopService",
+      "repo": "nest-shared-failures",
+      "file": "src/shared/shop.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+      "type": "method",
+      "label": "ShopService.find",
+      "repo": "nest-shared-failures",
+      "file": "src/shared/shop.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        }
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/shared/shop.service.ts:ShopService.load",
+      "type": "method",
+      "label": "ShopService.load",
+      "repo": "nest-shared-failures",
+      "file": "src/shared/shop.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Record"
+        }
+      }
+    },
+    {
+      "id": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "method",
+      "label": "ShopService.save",
+      "repo": "nest-shared-failures",
+      "file": "src/shared/shop.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "record",
+              "type": "Record"
+            }
+          ],
+          "returns": "Record"
+        }
+      }
+    },
+    {
+      "id": "repo:nest-shared-failures",
+      "type": "repo",
+      "label": "nest-shared-failures",
+      "repo": "nest-shared-failures",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 6,
+          "skippedExternalCalls": {
+            "@nestjs/common": 20
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-shared-failures:http:DELETE:/billing/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:DELETE:/billing/:param",
+      "to": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 42,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:DELETE:/billing/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:DELETE:/catalog/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:DELETE:/catalog/:param",
+      "to": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 42,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:DELETE:/catalog/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:DELETE:/orders/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:DELETE:/orders/:param",
+      "to": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 42,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:DELETE:/orders/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:GET:/billing/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:GET:/billing/:param",
+      "to": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:GET:/billing/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:GET:/catalog/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:GET:/catalog/:param",
+      "to": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:GET:/catalog/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:GET:/orders/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:GET:/orders/:param",
+      "to": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:GET:/orders/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PATCH:/billing/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PATCH:/billing/:param",
+      "to": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.touch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 29,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PATCH:/billing/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PATCH:/catalog/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PATCH:/catalog/:param",
+      "to": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.touch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 29,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PATCH:/catalog/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PATCH:/orders/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PATCH:/orders/:param",
+      "to": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.touch",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 29,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PATCH:/orders/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/billing",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/billing",
+      "to": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 17,
+      "params": [
+        "Record"
+      ],
+      "returns": "Record",
+      "meta": {
+        "body": "Record"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/billing",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/billing/:param/copy",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/billing/:param/copy",
+      "to": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.copy",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 35,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/billing/:param/copy",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/catalog",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/catalog",
+      "to": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 17,
+      "params": [
+        "Record"
+      ],
+      "returns": "Record",
+      "meta": {
+        "body": "Record"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/catalog",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/catalog/:param/copy",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/catalog/:param/copy",
+      "to": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.copy",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 35,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/catalog/:param/copy",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/orders",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/orders",
+      "to": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 17,
+      "params": [
+        "Record"
+      ],
+      "returns": "Record",
+      "meta": {
+        "body": "Record"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/orders",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/orders/:param/copy",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/orders/:param/copy",
+      "to": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.copy",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 35,
+      "params": [
+        "string"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:POST:/orders/:param/copy",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PUT:/billing/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PUT:/billing/:param",
+      "to": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.replace",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 23,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}",
+        "body": "Record"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PUT:/billing/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PUT:/catalog/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PUT:/catalog/:param",
+      "to": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.replace",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 23,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}",
+        "body": "Record"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PUT:/catalog/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PUT:/orders/:param",
+      "to": "nest-shared-failures#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "pipe",
+        "source": "bootstrap"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PUT:/orders/:param",
+      "to": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.replace",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 23,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record",
+      "meta": {
+        "params": "{id:string}",
+        "body": "Record"
+      }
+    },
+    {
+      "from": "entry:nest-shared-failures:http:PUT:/orders/:param",
+      "to": "nest-shared-failures#src/shared/api-key.guard.ts:ApiKeyGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "guard",
+        "source": "APP_GUARD"
+      }
+    },
+    {
+      "from": "nest-shared-failures#src/billing/billing.controller.ts:BillingController",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.copy",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 38,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.copy",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 39,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.create",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 20,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.findOne",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 14,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.remove",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.load",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 45,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.replace",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 26,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/billing/billing.controller.ts:BillingController.touch",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.load",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/billing/billing.controller.ts",
+      "line": 32,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.copy",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 38,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.copy",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 39,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.create",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 20,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.findOne",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 14,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.remove",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.load",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 45,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.replace",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 26,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/catalog/catalog.controller.ts:CatalogController.touch",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.load",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/catalog.controller.ts",
+      "line": 32,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.copy",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 38,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.copy",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 39,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.create",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 20,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.findOne",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 14,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.remove",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.load",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 45,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.replace",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 26,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/orders/orders.controller.ts:OrdersController.touch",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.load",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/orders.controller.ts",
+      "line": 32,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/shared/shop.service.ts:ShopService.load",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.find",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/shared/shop.service.ts",
+      "line": 28,
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "Record"
+    },
+    {
+      "from": "nest-shared-failures#src/shared/shop.service.ts:ShopService.load",
+      "to": "nest-shared-failures#src/shared/shop.service.ts:ShopService.save",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/shared/shop.service.ts",
+      "line": 29,
+      "params": [
+        "string",
+        "Record"
+      ],
+      "returns": "Record"
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#ExecutionContext": {
+      "name": "ExecutionContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "87dd582cc69bf62e",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    }
+  },
+  "unresolved": []
+}

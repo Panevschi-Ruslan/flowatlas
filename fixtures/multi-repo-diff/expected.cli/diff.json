@@ -1,0 +1,1034 @@
+{
+  "diffFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "base": {
+    "ref": "HEAD~1",
+    "services": {
+      "gateway": {
+        "sha": null,
+        "ref": null,
+        "cached": false,
+        "nodeModules": "present"
+      },
+      "orders": {
+        "sha": "08ad86efe439c66896162966e7218c8dcbda4381",
+        "ref": "HEAD~1",
+        "cached": true,
+        "nodeModules": "present"
+      },
+      "billing": {
+        "sha": "392089da2c76ca67e4638d8e7d78b498c2392080",
+        "ref": "HEAD~1",
+        "cached": true,
+        "nodeModules": "present"
+      }
+    }
+  },
+  "head": {
+    "ref": null,
+    "services": {
+      "gateway": {
+        "sha": null,
+        "ref": null,
+        "cached": false,
+        "nodeModules": "present"
+      },
+      "orders": {
+        "sha": null,
+        "ref": null,
+        "cached": false,
+        "nodeModules": "present"
+      },
+      "billing": {
+        "sha": null,
+        "ref": null,
+        "cached": false,
+        "nodeModules": "present"
+      }
+    }
+  },
+  "nodes": {
+    "added": [
+      "billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer",
+      "billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+      "channel:order.gift-wrapped",
+      "consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+      "entry:billing:event:order.gift-wrapped",
+      "entry:orders:http:GET:/shipments/:param/status",
+      "producer:orders#src/orders/orders.service.ts:23:5"
+    ],
+    "removed": [
+      "entry:orders:http:GET:/shipments/:param",
+      "orders#src/orders/orders.service.ts:OrdersService.legacy"
+    ],
+    "changed": [
+      {
+        "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+        "service": "billing",
+        "label": "InvoicesConsumer.onOrderCreated",
+        "fields": [
+          "meta.markers"
+        ]
+      },
+      {
+        "id": "orders#src/shipments/shipments.service.ts:ShipmentsService.track",
+        "service": "orders",
+        "label": "ShipmentsService.track",
+        "fields": [
+          "meta.signature"
+        ]
+      },
+      {
+        "id": "repo:billing",
+        "service": "billing",
+        "label": "billing",
+        "fields": [
+          "meta.stats"
+        ]
+      }
+    ],
+    "moved": [
+      "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer",
+      "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "entry:billing:event:order.created",
+      "entry:orders:http:GET:/orders/:param",
+      "entry:orders:http:POST:/orders",
+      "orders#src/orders/orders.controller.ts:OrdersController",
+      "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "orders#src/orders/orders.service.ts:OrdersService.findOne",
+      "orders#src/shipments/shipments.controller.ts:ShipmentsController",
+      "orders#src/shipments/shipments.controller.ts:ShipmentsController.track",
+      "orders#src/shipments/shipments.service.ts:ShipmentsService"
+    ]
+  },
+  "edges": {
+    "added": [
+      {
+        "from": "channel:order.gift-wrapped",
+        "to": "consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+        "type": "consumes"
+      },
+      {
+        "from": "consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+        "to": "billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+        "type": "handles"
+      },
+      {
+        "from": "entry:billing:event:order.gift-wrapped",
+        "to": "billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+        "type": "handles"
+      },
+      {
+        "from": "entry:orders:http:GET:/shipments/:param/status",
+        "to": "orders#src/shipments/shipments.controller.ts:ShipmentsController.track",
+        "type": "handles"
+      },
+      {
+        "from": "orders#src/orders/orders.service.ts:OrdersService.create",
+        "to": "producer:orders#src/orders/orders.service.ts:23:5",
+        "type": "calls"
+      },
+      {
+        "from": "producer:orders#src/orders/orders.service.ts:23:5",
+        "to": "channel:order.gift-wrapped",
+        "type": "emits"
+      }
+    ],
+    "removed": [
+      {
+        "from": "entry:orders:http:GET:/shipments/:param",
+        "to": "orders#src/shipments/shipments.controller.ts:ShipmentsController.track",
+        "type": "handles"
+      },
+      {
+        "from": "http_out:gateway#src/clients/orders.client.ts:26:12",
+        "to": "entry:orders:http:GET:/shipments/:param",
+        "type": "http_calls"
+      },
+      {
+        "from": "orders#src/orders/orders.service.ts:OrdersService.legacy",
+        "to": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+        "type": "calls"
+      }
+    ],
+    "changed": [
+      {
+        "key": "orders#src/shipments/shipments.controller.ts:ShipmentsController.track|calls|orders#src/shipments/shipments.service.ts:ShipmentsService.track",
+        "from": "orders#src/shipments/shipments.controller.ts:ShipmentsController.track",
+        "to": "orders#src/shipments/shipments.service.ts:ShipmentsService.track",
+        "type": "calls",
+        "fields": [
+          "params"
+        ]
+      }
+    ]
+  },
+  "types": {
+    "added": [
+      "type:billing#GiftWrappedEvent",
+      "type:orders#OrderGiftWrappedEvent"
+    ],
+    "removed": [],
+    "changed": [
+      {
+        "id": "type:orders#CreateOrderDto",
+        "name": "CreateOrderDto",
+        "baseHash": "d941f4073a98dfac",
+        "headHash": "c26e9d594a9401c5",
+        "fieldDiff": [
+          {
+            "field": "channel",
+            "change": "added",
+            "optional": false,
+            "base": null,
+            "head": "string",
+            "rule": null,
+            "message": "head declares `channel` as `string` and requires it; base did not send it"
+          }
+        ]
+      }
+    ]
+  },
+  "counts": {
+    "base": {
+      "nodes": 46,
+      "edges": 33,
+      "types": 11,
+      "unresolved": {
+        "rows": 6,
+        "sites": 6
+      }
+    },
+    "head": {
+      "nodes": 51,
+      "edges": 36,
+      "types": 13,
+      "unresolved": {
+        "rows": 8,
+        "sites": 8
+      }
+    }
+  },
+  "unresolved": {
+    "added": [
+      {
+        "id": "gap:gateway|src/clients/orders.client.ts|target-route-not-found",
+        "kind": "gap",
+        "service": "gateway",
+        "file": "src/clients/orders.client.ts",
+        "line": 26,
+        "reason": "target-route-not-found",
+        "node": "http_out:gateway#src/clients/orders.client.ts:26:12",
+        "sites": 1
+      },
+      {
+        "id": "gap:orders|src/shipments/shipments.service.ts|call-dynamic-receiver",
+        "kind": "gap",
+        "service": "orders",
+        "file": "src/shipments/shipments.service.ts",
+        "line": 21,
+        "reason": "call-dynamic-receiver",
+        "node": "orders#src/shipments/shipments.service.ts:ShipmentsService.track",
+        "sites": 1
+      }
+    ],
+    "removed": []
+  },
+  "joins": {
+    "lost": [
+      {
+        "kind": "target-gone",
+        "caller": "http_out:gateway#src/clients/orders.client.ts:26:12",
+        "target": "entry:orders:http:GET:/shipments/:param",
+        "edge": "http_calls",
+        "service": "gateway",
+        "targetService": "orders",
+        "now": "target-route-not-found",
+        "targetRemoved": true
+      }
+    ]
+  },
+  "impact": [
+    {
+      "node": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+      "service": "billing",
+      "label": "InvoicesConsumer.onOrderCreated",
+      "side": "head",
+      "entries": [
+        {
+          "id": "entry:billing:event:order.created",
+          "service": "billing",
+          "kind": "event",
+          "type": "entry",
+          "label": "event order.created",
+          "file": "src/invoices/invoices.consumer.ts",
+          "line": 17,
+          "depth": 1,
+          "confidence": "static"
+        },
+        {
+          "id": "entry:orders:http:POST:/orders",
+          "service": "orders",
+          "kind": "http",
+          "type": "entry",
+          "label": "POST /orders",
+          "file": "src/orders/orders.controller.ts",
+          "line": 23,
+          "depth": 6,
+          "confidence": "static"
+        },
+        {
+          "id": "entry:gateway:http:POST:/orders",
+          "service": "gateway",
+          "kind": "http",
+          "type": "entry",
+          "label": "POST /orders",
+          "file": "src/orders/gateway.controller.ts",
+          "line": 11,
+          "depth": 10,
+          "confidence": "static"
+        }
+      ],
+      "counts": {
+        "billing:event": 1,
+        "gateway:http": 1,
+        "orders:http": 1
+      },
+      "truncated": 0,
+      "services": [
+        "billing",
+        "gateway",
+        "orders"
+      ],
+      "servicesWithoutEntry": [],
+      "reached": 11,
+      "partial": false
+    },
+    {
+      "node": "orders#src/shipments/shipments.service.ts:ShipmentsService.track",
+      "service": "orders",
+      "label": "ShipmentsService.track",
+      "side": "head",
+      "entries": [
+        {
+          "id": "entry:orders:http:GET:/shipments/:param/status",
+          "service": "orders",
+          "kind": "http",
+          "type": "entry",
+          "label": "GET /shipments/:param/status",
+          "file": "src/shipments/shipments.controller.ts",
+          "line": 17,
+          "depth": 2,
+          "confidence": "static"
+        }
+      ],
+      "counts": {
+        "orders:http": 1
+      },
+      "truncated": 0,
+      "services": [
+        "orders"
+      ],
+      "servicesWithoutEntry": [],
+      "reached": 2,
+      "partial": false
+    },
+    {
+      "node": "repo:billing",
+      "service": "billing",
+      "label": "billing",
+      "side": "head",
+      "entries": [],
+      "counts": {},
+      "truncated": 0,
+      "services": [
+        "billing"
+      ],
+      "servicesWithoutEntry": [],
+      "reached": 0,
+      "partial": false
+    },
+    {
+      "node": "entry:orders:http:GET:/shipments/:param",
+      "service": "orders",
+      "label": "GET /shipments/:param",
+      "side": "base",
+      "entries": [
+        {
+          "id": "entry:gateway:http:GET:/orders/:param/shipment",
+          "service": "gateway",
+          "kind": "http",
+          "type": "entry",
+          "label": "GET /orders/:param/shipment",
+          "file": "src/orders/gateway.controller.ts",
+          "line": 17,
+          "depth": 4,
+          "confidence": "static"
+        }
+      ],
+      "counts": {
+        "gateway:http": 1
+      },
+      "truncated": 0,
+      "services": [
+        "gateway",
+        "orders"
+      ],
+      "servicesWithoutEntry": [],
+      "reached": 4,
+      "partial": false
+    },
+    {
+      "node": "orders#src/orders/orders.service.ts:OrdersService.legacy",
+      "service": "orders",
+      "label": "OrdersService.legacy",
+      "side": "base",
+      "entries": [],
+      "counts": {},
+      "truncated": 0,
+      "services": [
+        "orders"
+      ],
+      "servicesWithoutEntry": [],
+      "reached": 0,
+      "partial": false
+    }
+  ],
+  "flows": [
+    {
+      "entry": "entry:gateway:http:POST:/orders",
+      "label": "POST /orders",
+      "service": "gateway",
+      "side": "both",
+      "reaches": 1,
+      "participants": [
+        {
+          "id": "caller",
+          "label": "client",
+          "kind": "caller"
+        },
+        {
+          "id": "gateway",
+          "label": "gateway",
+          "kind": "service",
+          "service": "gateway"
+        },
+        {
+          "id": "orders",
+          "label": "orders",
+          "kind": "service",
+          "service": "orders"
+        },
+        {
+          "id": "channel:order.created",
+          "label": "order.created (topic)",
+          "kind": "channel"
+        },
+        {
+          "id": "billing",
+          "label": "billing",
+          "kind": "service",
+          "service": "billing"
+        },
+        {
+          "id": "channel:order.gift-wrapped",
+          "label": "order.gift-wrapped (topic)",
+          "kind": "channel"
+        }
+      ],
+      "steps": [
+        {
+          "kind": "enters",
+          "from": "caller",
+          "to": "gateway",
+          "label": "POST /orders",
+          "confidence": "static",
+          "file": "src/orders/gateway.controller.ts",
+          "line": 11,
+          "params": [
+            "type:gateway#CreateOrderDto"
+          ],
+          "returns": "type:gateway#OrderDto",
+          "status": "same"
+        },
+        {
+          "kind": "http_calls",
+          "from": "gateway",
+          "to": "orders",
+          "label": "POST /orders",
+          "confidence": "static",
+          "file": "src/clients/orders.client.ts",
+          "line": 21,
+          "params": [
+            "type:gateway#CreateOrderDto"
+          ],
+          "returns": "type:gateway#OrderDto",
+          "takes": [
+            "type:orders#CreateOrderDto"
+          ],
+          "status": "changed",
+          "note": "body: +channel (required)"
+        },
+        {
+          "kind": "emits",
+          "from": "orders",
+          "to": "channel:order.created",
+          "label": "order.created",
+          "confidence": "static",
+          "file": "src/orders/orders.service.ts",
+          "line": 20,
+          "params": [
+            "type:orders#OrderCreatedEvent"
+          ],
+          "status": "same"
+        },
+        {
+          "kind": "consumes",
+          "from": "channel:order.created",
+          "to": "billing",
+          "label": "order.created",
+          "confidence": "static",
+          "file": "src/invoices/invoices.consumer.ts",
+          "line": 17,
+          "takes": [
+            "type:billing#OrderCreatedEvent"
+          ],
+          "status": "same"
+        },
+        {
+          "kind": "emits",
+          "from": "orders",
+          "to": "channel:order.gift-wrapped",
+          "label": "order.gift-wrapped",
+          "confidence": "static",
+          "file": "src/orders/orders.service.ts",
+          "line": 23,
+          "params": [
+            "type:orders#OrderGiftWrappedEvent"
+          ],
+          "status": "added"
+        },
+        {
+          "kind": "consumes",
+          "from": "channel:order.gift-wrapped",
+          "to": "billing",
+          "label": "order.gift-wrapped",
+          "confidence": "static",
+          "file": "src/invoices/gift-wrap.consumer.ts",
+          "line": 15,
+          "takes": [
+            "type:billing#GiftWrappedEvent"
+          ],
+          "status": "added"
+        }
+      ],
+      "counts": {
+        "same": 3,
+        "added": 2,
+        "removed": 0,
+        "changed": 1
+      }
+    },
+    {
+      "entry": "entry:gateway:http:GET:/orders/:param/shipment",
+      "label": "GET /orders/:param/shipment",
+      "service": "gateway",
+      "side": "both",
+      "reaches": 1,
+      "participants": [
+        {
+          "id": "caller",
+          "label": "client",
+          "kind": "caller"
+        },
+        {
+          "id": "gateway",
+          "label": "gateway",
+          "kind": "service",
+          "service": "gateway"
+        },
+        {
+          "id": "orders",
+          "label": "orders",
+          "kind": "service",
+          "service": "orders"
+        }
+      ],
+      "steps": [
+        {
+          "kind": "enters",
+          "from": "caller",
+          "to": "gateway",
+          "label": "GET /orders/:param/shipment",
+          "confidence": "static",
+          "file": "src/orders/gateway.controller.ts",
+          "line": 17,
+          "params": [
+            "string"
+          ],
+          "returns": "void",
+          "status": "same"
+        },
+        {
+          "kind": "http_calls",
+          "from": "gateway",
+          "to": "orders",
+          "label": "GET /shipments/:param",
+          "confidence": "static",
+          "file": "src/clients/orders.client.ts",
+          "line": 26,
+          "returns": "type:gateway#ShipmentDto",
+          "takes": [
+            "string"
+          ],
+          "status": "removed"
+        },
+        {
+          "kind": "stop",
+          "from": "gateway",
+          "to": "gateway",
+          "label": "target-route-not-found",
+          "confidence": "static",
+          "file": "src/clients/orders.client.ts",
+          "line": 26,
+          "status": "added"
+        }
+      ],
+      "counts": {
+        "same": 1,
+        "added": 1,
+        "removed": 1,
+        "changed": 0
+      }
+    },
+    {
+      "entry": "entry:orders:http:POST:/orders",
+      "label": "POST /orders",
+      "service": "orders",
+      "side": "both",
+      "reaches": 1,
+      "participants": [
+        {
+          "id": "caller",
+          "label": "client",
+          "kind": "caller"
+        },
+        {
+          "id": "orders",
+          "label": "orders",
+          "kind": "service",
+          "service": "orders"
+        },
+        {
+          "id": "channel:order.created",
+          "label": "order.created (topic)",
+          "kind": "channel"
+        },
+        {
+          "id": "billing",
+          "label": "billing",
+          "kind": "service",
+          "service": "billing"
+        },
+        {
+          "id": "channel:order.gift-wrapped",
+          "label": "order.gift-wrapped (topic)",
+          "kind": "channel"
+        }
+      ],
+      "steps": [
+        {
+          "kind": "enters",
+          "from": "caller",
+          "to": "orders",
+          "label": "POST /orders",
+          "confidence": "static",
+          "file": "src/orders/orders.controller.ts",
+          "line": 23,
+          "params": [
+            "type:orders#CreateOrderDto"
+          ],
+          "returns": "type:orders#OrderDto",
+          "status": "changed",
+          "note": "body: +channel (required)"
+        },
+        {
+          "kind": "emits",
+          "from": "orders",
+          "to": "channel:order.created",
+          "label": "order.created",
+          "confidence": "static",
+          "file": "src/orders/orders.service.ts",
+          "line": 20,
+          "params": [
+            "type:orders#OrderCreatedEvent"
+          ],
+          "status": "same"
+        },
+        {
+          "kind": "consumes",
+          "from": "channel:order.created",
+          "to": "billing",
+          "label": "order.created",
+          "confidence": "static",
+          "file": "src/invoices/invoices.consumer.ts",
+          "line": 17,
+          "takes": [
+            "type:billing#OrderCreatedEvent"
+          ],
+          "status": "same"
+        },
+        {
+          "kind": "emits",
+          "from": "orders",
+          "to": "channel:order.gift-wrapped",
+          "label": "order.gift-wrapped",
+          "confidence": "static",
+          "file": "src/orders/orders.service.ts",
+          "line": 23,
+          "params": [
+            "type:orders#OrderGiftWrappedEvent"
+          ],
+          "status": "added"
+        },
+        {
+          "kind": "consumes",
+          "from": "channel:order.gift-wrapped",
+          "to": "billing",
+          "label": "order.gift-wrapped",
+          "confidence": "static",
+          "file": "src/invoices/gift-wrap.consumer.ts",
+          "line": 15,
+          "takes": [
+            "type:billing#GiftWrappedEvent"
+          ],
+          "status": "added"
+        }
+      ],
+      "counts": {
+        "same": 2,
+        "added": 2,
+        "removed": 0,
+        "changed": 1
+      }
+    },
+    {
+      "entry": "entry:billing:event:order.gift-wrapped",
+      "label": "event order.gift-wrapped",
+      "service": "billing",
+      "side": "head",
+      "reaches": 1,
+      "participants": [
+        {
+          "id": "caller",
+          "label": "broker",
+          "kind": "caller"
+        },
+        {
+          "id": "billing",
+          "label": "billing",
+          "kind": "service",
+          "service": "billing"
+        }
+      ],
+      "steps": [
+        {
+          "kind": "enters",
+          "from": "caller",
+          "to": "billing",
+          "label": "event order.gift-wrapped",
+          "confidence": "static",
+          "file": "src/invoices/gift-wrap.consumer.ts",
+          "line": 15,
+          "params": [
+            "type:billing#GiftWrappedEvent"
+          ],
+          "returns": "void",
+          "status": "added"
+        }
+      ],
+      "counts": {
+        "same": 0,
+        "added": 1,
+        "removed": 0,
+        "changed": 0
+      }
+    },
+    {
+      "entry": "entry:orders:http:GET:/shipments/:param",
+      "label": "GET /shipments/:param",
+      "service": "orders",
+      "side": "base",
+      "reaches": 1,
+      "participants": [
+        {
+          "id": "caller",
+          "label": "client",
+          "kind": "caller"
+        },
+        {
+          "id": "orders",
+          "label": "orders",
+          "kind": "service",
+          "service": "orders"
+        }
+      ],
+      "steps": [
+        {
+          "kind": "enters",
+          "from": "caller",
+          "to": "orders",
+          "label": "GET /shipments/:param",
+          "confidence": "static",
+          "file": "src/shipments/shipments.controller.ts",
+          "line": 16,
+          "params": [
+            "string"
+          ],
+          "returns": "type:orders#ShipmentDto",
+          "status": "removed"
+        }
+      ],
+      "counts": {
+        "same": 0,
+        "added": 0,
+        "removed": 1,
+        "changed": 0
+      }
+    },
+    {
+      "entry": "entry:orders:http:GET:/shipments/:param/status",
+      "label": "GET /shipments/:param/status",
+      "service": "orders",
+      "side": "head",
+      "reaches": 1,
+      "participants": [
+        {
+          "id": "caller",
+          "label": "client",
+          "kind": "caller"
+        },
+        {
+          "id": "orders",
+          "label": "orders",
+          "kind": "service",
+          "service": "orders"
+        }
+      ],
+      "steps": [
+        {
+          "kind": "enters",
+          "from": "caller",
+          "to": "orders",
+          "label": "GET /shipments/:param/status",
+          "confidence": "static",
+          "file": "src/shipments/shipments.controller.ts",
+          "line": 17,
+          "params": [
+            "string"
+          ],
+          "returns": "type:orders#ShipmentDto",
+          "status": "added"
+        }
+      ],
+      "counts": {
+        "same": 0,
+        "added": 1,
+        "removed": 0,
+        "changed": 0
+      }
+    },
+    {
+      "entry": "entry:billing:event:order.created",
+      "label": "event order.created",
+      "service": "billing",
+      "side": "both",
+      "reaches": 1,
+      "participants": [
+        {
+          "id": "caller",
+          "label": "broker",
+          "kind": "caller"
+        },
+        {
+          "id": "billing",
+          "label": "billing",
+          "kind": "service",
+          "service": "billing"
+        }
+      ],
+      "steps": [
+        {
+          "kind": "enters",
+          "from": "caller",
+          "to": "billing",
+          "label": "event order.created",
+          "confidence": "static",
+          "file": "src/invoices/invoices.consumer.ts",
+          "line": 17,
+          "params": [
+            "type:billing#OrderCreatedEvent"
+          ],
+          "returns": "void",
+          "status": "same"
+        }
+      ],
+      "counts": {
+        "same": 1,
+        "added": 0,
+        "removed": 0,
+        "changed": 0
+      }
+    }
+  ],
+  "contracts": {
+    "new": [
+      {
+        "severity": "error",
+        "kind": "missing_required",
+        "edge": {
+          "from": "http_out:gateway#src/clients/orders.client.ts:21:12",
+          "to": "entry:orders:http:POST:/orders",
+          "type": "http_calls"
+        },
+        "edgeKey": "http_out:gateway#src/clients/orders.client.ts:21:12|http_calls|entry:orders:http:POST:/orders",
+        "direction": "request",
+        "sender": {
+          "service": "gateway",
+          "typeId": "type:gateway#CreateOrderDto",
+          "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.create"
+        },
+        "receiver": {
+          "service": "orders",
+          "typeId": "type:orders#CreateOrderDto",
+          "symbol": "orders#src/orders/orders.controller.ts:OrdersController.create"
+        },
+        "typeId": "type:orders#CreateOrderDto",
+        "field": "channel",
+        "expected": "string",
+        "actual": null,
+        "rule": null,
+        "message": "receiver orders requires `channel: string`; sender gateway does not send it",
+        "ignored": false,
+        "ignoredBy": null
+      }
+    ],
+    "fixed": [],
+    "preexisting": [],
+    "ignored": [
+      {
+        "severity": "info",
+        "kind": "extra_field",
+        "edge": {
+          "from": "producer:orders#src/orders/orders.service.ts:20:5",
+          "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+          "type": "emits"
+        },
+        "edgeKey": "producer:orders#src/orders/orders.service.ts:20:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+        "direction": "payload",
+        "sender": {
+          "service": "orders",
+          "typeId": "type:orders#OrderCreatedEvent",
+          "symbol": "orders#src/orders/orders.service.ts:OrdersService.create"
+        },
+        "receiver": {
+          "service": "billing",
+          "typeId": "type:billing#OrderCreatedEvent",
+          "symbol": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+        },
+        "typeId": "type:billing#OrderCreatedEvent",
+        "field": "customerId",
+        "expected": null,
+        "actual": "string",
+        "rule": null,
+        "message": "sender orders sends `customerId: string`; receiver billing declares no such field",
+        "ignored": true,
+        "ignoredBy": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+      },
+      {
+        "severity": "error",
+        "kind": "missing_required",
+        "edge": {
+          "from": "producer:orders#src/orders/orders.service.ts:20:5",
+          "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+          "type": "emits"
+        },
+        "edgeKey": "producer:orders#src/orders/orders.service.ts:20:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+        "direction": "payload",
+        "sender": {
+          "service": "orders",
+          "typeId": "type:orders#OrderCreatedEvent",
+          "symbol": "orders#src/orders/orders.service.ts:OrdersService.create"
+        },
+        "receiver": {
+          "service": "billing",
+          "typeId": "type:billing#OrderCreatedEvent",
+          "symbol": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+        },
+        "typeId": "type:billing#OrderCreatedEvent",
+        "field": "customerRef",
+        "expected": "string",
+        "actual": null,
+        "rule": null,
+        "message": "receiver billing requires `customerRef: string`; sender orders does not send it",
+        "ignored": true,
+        "ignoredBy": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+      }
+    ]
+  },
+  "rules": {
+    "new": [
+      {
+        "rule": "billing-stays-out-of-gift-wrapping",
+        "shape": "forbid",
+        "severity": "error",
+        "note": "gift wrapping is fulfilment, which orders does",
+        "key": "rule|billing-stays-out-of-gift-wrapping|consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped|channel:order.gift-wrapped",
+        "from": "consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+        "to": "channel:order.gift-wrapped",
+        "fromService": "billing",
+        "toService": null,
+        "via": "consumes",
+        "path": [
+          {
+            "from": "channel:order.gift-wrapped",
+            "to": "consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+            "type": "consumes",
+            "confidence": "static"
+          }
+        ],
+        "at": {
+          "service": "billing",
+          "file": "src/invoices/gift-wrap.consumer.ts",
+          "line": 15
+        },
+        "confidence": "static",
+        "message": "billing GiftWrapConsumer.onGiftWrapped consumes channel order.gift-wrapped",
+        "heuristic": false,
+        "partial": [
+          "billing"
+        ]
+      }
+    ],
+    "fixed": [],
+    "existing": [],
+    "excused": []
+  },
+  "spec": null,
+  "warnings": [
+    {
+      "reason": "ref-not-found",
+      "service": "gateway",
+      "message": "gateway: ref HEAD~1 not found, so it was read as it stands and assumed unchanged",
+      "hint": "Pass --service, or use a ref that exists in every repository."
+    }
+  ],
+  "timing": {
+    "baseMs": 0,
+    "headMs": 0,
+    "diffMs": 0,
+    "totalMs": 0
+  }
+}

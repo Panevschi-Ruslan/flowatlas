@@ -1,4 +1,4 @@
-import type { BrokerAdapter, NameLocator } from '@flowatlas/core';
+import type { BrokerAdapter, DescriptionCondition, NameLocator } from '@flowatlas/core';
 
 export interface ConsumerPattern {
   /** Decorator that marks the method as receiving. */
@@ -51,6 +51,10 @@ export interface ConsumerPattern {
    */
   payloadPath?: readonly string[];
   kind: string;
+  /** Values the call or decorator must write for the pattern to apply (P121). */
+  where?: readonly DescriptionCondition[];
+  /** The rule a compiled pattern came from, `pattern:<id>`, recorded on what it draws (P121). */
+  describedBy?: string;
 }
 
 /**
@@ -102,6 +106,10 @@ export interface SubscriberPattern {
   receiverType?: string | string[];
   receiverPackages?: string[];
   kind: string;
+  /** Values the call or decorator must write for the pattern to apply (P121). */
+  where?: readonly DescriptionCondition[];
+  /** The rule a compiled pattern came from, `pattern:<id>`, recorded on what it draws (P121). */
+  describedBy?: string;
 }
 
 /**

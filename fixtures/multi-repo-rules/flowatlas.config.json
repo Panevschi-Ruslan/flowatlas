@@ -1,0 +1,132 @@
+{
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "tags": [
+        "edge"
+      ]
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "baseUrlEnv": [
+        "ORDERS_URL"
+      ],
+      "tags": [
+        "domain"
+      ]
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "baseUrlEnv": [
+        "BILLING_URL"
+      ],
+      "tags": [
+        "domain"
+      ]
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "apiBaseEnv": [
+        "apiUrl",
+        "ordersUrl"
+      ],
+      "apiTarget": {
+        "apiUrl": "gateway",
+        "ordersUrl": "orders"
+      },
+      "tags": [
+        "frontend"
+      ]
+    }
+  ],
+  "sharedPackages": [
+    "@fx/contracts"
+  ],
+  "output": ".flowatlas",
+  "rules": [
+    {
+      "name": "frontends-reach-only-edge",
+      "note": "the browser talks to the gateway, never to a domain service",
+      "tags": {
+        "source": "frontend",
+        "mayReach": [
+          "edge"
+        ]
+      }
+    },
+    {
+      "name": "only-orders-writes-orders",
+      "note": "orders owns its table; everyone else asks orders",
+      "only": {
+        "from": {
+          "service": "orders"
+        },
+        "to": {
+          "table": "orders"
+        },
+        "op": "write"
+      }
+    },
+    {
+      "name": "only-billing-consumes-order-events",
+      "note": "order events are billing's to act on",
+      "only": {
+        "from": {
+          "service": "billing"
+        },
+        "to": {
+          "channel": "order.*"
+        },
+        "via": [
+          "consumes"
+        ]
+      }
+    },
+    {
+      "name": "only-gateway-reaches-billing",
+      "note": "billing is asked through the gateway, never by another service",
+      "only": {
+        "from": {
+          "service": "gateway"
+        },
+        "to": {
+          "service": "billing"
+        },
+        "reach": "transitive"
+      }
+    },
+    {
+      "name": "order-created-keeps-a-consumer",
+      "note": "an order nobody invoices is lost money",
+      "reachable": {
+        "from": {
+          "channel": "order.created"
+        },
+        "to": {
+          "service": "billing"
+        },
+        "must": true
+      }
+    },
+    {
+      "name": "typo-rule",
+      "note": "names a service that does not exist, so it is never a pass",
+      "forbid": {
+        "from": {
+          "service": "web"
+        },
+        "to": {
+          "service": "biling"
+        }
+      }
+    }
+  ]
+}

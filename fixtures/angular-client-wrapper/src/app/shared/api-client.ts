@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
 export type QueryParams = Record<string, string | number | undefined>;
 
 export interface RequestOpts {
-  sessionData?: string;
+  sessionToken?: string;
   params?: QueryParams;
 }
 
@@ -46,6 +46,6 @@ export class ApiClient {
   }
 
   private httpOpts(opts?: RequestOpts): { headers?: Record<string, string> } {
-    return opts?.sessionData ? { headers: { 'X-Session-Data': opts.sessionData } } : {};
+    return opts?.sessionToken ? { headers: { 'X-Session-Token': opts.sessionToken } } : {};
   }
 }

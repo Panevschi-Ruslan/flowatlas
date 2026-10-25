@@ -5,6 +5,7 @@ import {
   findDecorators,
   hasAnyDependency,
   makeEntryId,
+  startLineOf,
 } from '@flowatlas/core';
 import { fileOfNode, handlerOf, repoClasses } from './shared.js';
 
@@ -42,7 +43,7 @@ export const nestjsScheduleAdapter: EntryAdapter = {
             if (expression === undefined || !expression.resolved) {
               ctx.builder.addUnresolved({
                 file,
-                line: method.getStartLineNumber(),
+                line: startLineOf(method),
                 reason: 'decorator-arg-dynamic',
                 hint: 'Use a literal cron expression or a member of the framework enum.',
                 symbol: `${owner}.${method.getName()}`,
@@ -52,8 +53,11 @@ export const nestjsScheduleAdapter: EntryAdapter = {
             }
             meta['expression'] = expression.value;
             if (options?.resolved === true && typeof options.value === 'object' && options.value !== null) {
-              const jobName = (options.value as { name?: unknown }).name;
+              const { name: jobName, timeZone, utcOffset } = options.value as Record<string, unknown>;
               if (typeof jobName === 'string') meta['name'] = jobName;
+              // When the schedule fires is the expression read in this zone.
+              if (typeof timeZone === 'string') meta['timeZone'] = timeZone;
+              if (typeof utcOffset === 'string' || typeof utcOffset === 'number') meta['utcOffset'] = utcOffset;
             }
           } else {
             // Both accept an optional leading name: (ms) or (name, ms).
@@ -62,7 +66,7 @@ export const nestjsScheduleAdapter: EntryAdapter = {
             if (numeric === undefined || !numeric.resolved) {
               ctx.builder.addUnresolved({
                 file,
-                line: method.getStartLineNumber(),
+                line: startLineOf(method),
                 reason: 'decorator-arg-dynamic',
                 hint: `Give @${name} a literal number of milliseconds.`,
                 symbol: `${owner}.${method.getName()}`,
@@ -82,7 +86,7 @@ export const nestjsScheduleAdapter: EntryAdapter = {
             key,
             handler: handlerOf(method, ctx),
             file,
-            line: method.getStartLineNumber(),
+            line: startLineOf(method),
             meta: { ...meta, trigger: name },
           });
         }

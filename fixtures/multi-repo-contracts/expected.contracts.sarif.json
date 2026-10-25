@@ -1,0 +1,1911 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "flowatlas",
+          "version": "0.6.0",
+          "semanticVersion": "0.6.0",
+          "informationUri": "https://panevschi-ruslan.github.io/flowatlas/",
+          "rules": [
+            {
+              "id": "extra_field",
+              "name": "extra_field",
+              "shortDescription": {
+                "text": "field the sender sends and the receiver does not declare"
+              },
+              "help": {
+                "text": "Declare the field on the receiver, or stop sending it; a receiver that strips unknown fields never sees it.",
+                "markdown": "Declare the field on the receiver, or stop sending it; a receiver that strips unknown fields never sees it."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "missing_required",
+              "name": "missing_required",
+              "shortDescription": {
+                "text": "field the receiver requires and the sender does not send"
+              },
+              "help": {
+                "text": "Send the field, or make it optional on the receiver. `flowatlas contracts --edge <key>` shows the boundary.",
+                "markdown": "Send the field, or make it optional on the receiver. `flowatlas contracts --edge <key>` shows the boundary."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "optionality_mismatch",
+              "name": "optionality_mismatch",
+              "shortDescription": {
+                "text": "field one side says is optional and the other requires"
+              },
+              "help": {
+                "text": "Make the two declarations agree on whether the field can be left out.",
+                "markdown": "Make the two declarations agree on whether the field can be left out."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "type_mismatch",
+              "name": "type_mismatch",
+              "shortDescription": {
+                "text": "field sent as a type the receiver does not expect"
+              },
+              "help": {
+                "text": "Send the type the receiver declares, or change the declaration on the receiving side.",
+                "markdown": "Send the type the receiver declares, or change the declaration on the receiving side."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            }
+          ]
+        }
+      },
+      "automationDetails": {
+        "id": "flowatlas/contracts/"
+      },
+      "originalUriBaseIds": {
+        "%SRCROOT%": {
+          "description": {
+            "text": "The directory flowatlas.config.json is in."
+          }
+        },
+        "billing": {
+          "uri": "billing/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "gateway": {
+          "uri": "gateway/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "orders": {
+          "uri": "orders/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "web": {
+          "uri": "web/",
+          "uriBaseId": "%SRCROOT%"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "billing → orders: receiver orders requires `includeItems: boolean`; sender billing does not send it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/orders.rpc.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/rpc/orders.rpc.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "edee371a273c863edc3a5e9950f1f7b9",
+            "primaryLocationLineHash": "edee371a273c863e:1"
+          },
+          "properties": {
+            "service": "billing",
+            "direction": "payload",
+            "edge": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+            "field": "includeItems"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: receiver orders requires `channel: string`; sender gateway does not send it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d4d77ed4f7bbf3dc884e5669d7d7a08f",
+            "primaryLocationLineHash": "d4d77ed4f7bbf3dc:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+            "field": "channel"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: receiver orders requires `channel: string`; sender gateway does not send it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 98
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 68
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "cffc9e6ed95c223641a3176d4d26b499",
+            "primaryLocationLineHash": "cffc9e6ed95c2236:1"
+          },
+          "suppressions": [
+            {
+              "kind": "inSource",
+              "justification": "excused by @ContractIgnore on gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+            }
+          ],
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
+            "field": "channel"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: receiver orders requires `reference: string`; sender gateway does not send it; the sender declares it as holding nothing, and nothing is ever written ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/wire.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 22
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/wire/wire.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "92c1414e82f571170b3741c6708acda1",
+            "primaryLocationLineHash": "92c1414e82f57117:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+            "field": "reference"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `delivery` as `Delivery`; receiver orders declares it `'post'`; 'courier' is not among the values the receiver accepts ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/wire.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 22
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/wire/wire.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "a22b37e5113b819c4a167ad1e1e0181d",
+            "primaryLocationLineHash": "a22b37e5113b819c:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+            "field": "delivery"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `placedAt` as `string`; receiver orders declares it `number` ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/wire.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 22
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/wire/wire.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "0d6c142661c5a0013c063c22df8f79e0",
+            "primaryLocationLineHash": "0d6c142661c5a001:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/wire.client.ts:23:12|http_calls|entry:orders:http:POST:/wire/broken",
+            "field": "placedAt"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `label` as `number`; receiver orders declares it `string` ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/wire.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/deep/deep.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d5dbfdd7d873b6d49b8a286218ae3aa2",
+            "primaryLocationLineHash": "d5dbfdd7d873b6d4:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/wire.client.ts:28:12|http_calls|entry:orders:http:POST:/deep",
+            "field": "label"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `next.next.next` as `DeepL3`; receiver orders declares it `DeepL3`; their shapes differ below the depth this run compared; raise --depth to see which field ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/wire.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 27
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/deep/deep.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "5461dd70138315c9e677d5c94182e7fa",
+            "primaryLocationLineHash": "5461dd70138315c9:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/wire.client.ts:28:12|http_calls|entry:orders:http:POST:/deep",
+            "field": "next.next.next"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: receiver orders requires `id: string`; sender gateway does not send it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/wire.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 32
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/deep/deep.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "b001dee28857962ccb0c05a1c789925c",
+            "primaryLocationLineHash": "b001dee28857962c:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/wire.client.ts:33:12|http_calls|entry:orders:http:POST:/deep/categories",
+            "field": "id"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "orders → gateway: sender orders sends `total` as `number`; receiver gateway declares it `string` ([receiver gateway](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 24
+                }
+              },
+              "message": {
+                "text": "receiver gateway"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "ead2aa443b6d2ea4912f38404f170a72",
+            "primaryLocationLineHash": "ead2aa443b6d2ea4:1"
+          },
+          "properties": {
+            "service": "orders",
+            "direction": "response",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+            "field": "total"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "orders → web: sender orders sends `total` as `number`; receiver web declares it `string` ([receiver web](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "web/src/app/orders-api.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 20
+                }
+              },
+              "message": {
+                "text": "receiver web"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "7e7ec5ac426256edda16f4b3609c4921",
+            "primaryLocationLineHash": "7e7ec5ac426256ed:1"
+          },
+          "properties": {
+            "service": "orders",
+            "direction": "response",
+            "edge": "ui_api_call:web#src/app/orders-api.service.ts:21:12|hits|entry:orders:http:POST:/orders",
+            "field": "total"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "orders → gateway: sender orders sends `total` as `number`; receiver gateway declares it `string` ([receiver gateway](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 19
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 29
+                }
+              },
+              "message": {
+                "text": "receiver gateway"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "f31e92b8f4d30076f039dd4979c79893",
+            "primaryLocationLineHash": "f31e92b8f4d30076:1"
+          },
+          "properties": {
+            "service": "orders",
+            "direction": "response",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:30:12|http_calls|entry:orders:http:GET:/orders/:param",
+            "field": "total"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "orders → gateway: receiver gateway requires `title: string`; sender orders does not send it; it is on 1 of the 2 shapes this may answer with, and not on LockedDraftDto ([receiver gateway](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 62
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 86
+                }
+              },
+              "message": {
+                "text": "receiver gateway"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "e95824907c0ae661c8058e59bc33dd05",
+            "primaryLocationLineHash": "e95824907c0ae661:1"
+          },
+          "properties": {
+            "service": "orders",
+            "direction": "response",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
+            "field": "title"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "orders → gateway: sender orders sends `total` as `number`; receiver gateway declares it `string` ([receiver gateway](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 68
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 98
+                }
+              },
+              "message": {
+                "text": "receiver gateway"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "ca48447ffd5710c1fcafd2af5dab3101",
+            "primaryLocationLineHash": "ca48447ffd5710c1:1"
+          },
+          "suppressions": [
+            {
+              "kind": "inSource",
+              "justification": "excused by @ContractIgnore on gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+            }
+          ],
+          "properties": {
+            "service": "orders",
+            "direction": "response",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
+            "field": "total"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "orders → billing: receiver billing requires `customerId: string`; sender orders does not send it ([receiver billing](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 63
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/invoices.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              },
+              "message": {
+                "text": "receiver billing"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "c81d1e66c62e78ad01128d6b615ce2d2",
+            "primaryLocationLineHash": "c81d1e66c62e78ad:1"
+          },
+          "properties": {
+            "service": "orders",
+            "direction": "payload",
+            "edge": "producer:orders#src/orders/orders.service.ts:69:5|emits|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+            "field": "customerId"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "orders → billing: receiver billing requires `status: string`; sender orders does not send it ([receiver billing](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/rpc/orders.rpc.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/orders.rpc.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              },
+              "message": {
+                "text": "receiver billing"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d2759ea8e384c5cb185d174f4fd5ac40",
+            "primaryLocationLineHash": "d2759ea8e384c5cb:1"
+          },
+          "properties": {
+            "service": "orders",
+            "direction": "response",
+            "edge": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+            "field": "status"
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "web → orders: receiver orders requires `shipTo.postcode: string`; sender web does not send it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "web/src/app/orders-api.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 20
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "484f2862b6307f1b97e9b90190dc9fd7",
+            "primaryLocationLineHash": "484f2862b6307f1b:1"
+          },
+          "properties": {
+            "service": "web",
+            "direction": "request",
+            "edge": "ui_api_call:web#src/app/orders-api.service.ts:21:12|hits|entry:orders:http:POST:/orders",
+            "field": "shipTo.postcode"
+          }
+        },
+        {
+          "ruleId": "optionality_mismatch",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "gateway → orders: `note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "e7f9a2cc078bf2ee82e5091e25bbb630",
+            "primaryLocationLineHash": "e7f9a2cc078bf2ee:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+            "field": "note"
+          }
+        },
+        {
+          "ruleId": "optionality_mismatch",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "gateway → orders: `note` may be left out by sender gateway and is required by receiver orders; the sender marks it optional by question ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 98
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 68
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "15cca05c61e72218a26078bec1eeb693",
+            "primaryLocationLineHash": "15cca05c61e72218:1"
+          },
+          "suppressions": [
+            {
+              "kind": "inSource",
+              "justification": "excused by @ContractIgnore on gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+            }
+          ],
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
+            "field": "note"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 109
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 83
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "893f48d6aa4b1a42d4110a7e2b5f92f9",
+            "primaryLocationLineHash": "893f48d6aa4b1a42:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:110:12|http_calls|entry:orders:http:POST:/orders/drafts/store",
+            "field": "note",
+            "impact": "stored"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `colour: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 121
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 89
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "e7b271cd96490c485668c85178fd4e45",
+            "primaryLocationLineHash": "e7b271cd96490c48:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:122:12|http_calls|entry:orders:http:POST:/orders/drafts/tag",
+            "field": "colour",
+            "impact": "unknown"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "gateway → orders: the type sender gateway declares permits `\\[\\].note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 148
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 109
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "b4f99b645e9b0b57966c35271ecf217c",
+            "primaryLocationLineHash": "b4f99b645e9b0b57:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:149:12|http_calls|entry:orders:http:POST:/orders/drafts/batch",
+            "field": "[].note",
+            "impact": "stored"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 3,
+          "level": "warning",
+          "message": {
+            "text": "gateway → orders: `counts` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/wire.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/wire/wire.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "66871bd7277db40c5f601dd24025b620",
+            "primaryLocationLineHash": "66871bd7277db40c:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+            "field": "counts"
+          }
+        },
+        {
+          "ruleId": "type_mismatch",
+          "ruleIndex": 3,
+          "level": "warning",
+          "message": {
+            "text": "gateway → orders: `tags` is a Set or a Map; JSON carries neither, so what receiver orders reads is whatever a replacer wrote by hand ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/wire.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/wire/wire.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "62dab65269f566f5822e7b204fd7fdf2",
+            "primaryLocationLineHash": "62dab65269f566f5:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+            "field": "tags"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "billing → orders: sender billing sends `includeRefunds: boolean`; receiver orders declares no such field ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/orders.rpc.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/rpc/orders.rpc.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "44216fcf674678cf08f1729064b1fc15",
+            "primaryLocationLineHash": "44216fcf674678cf:1"
+          },
+          "properties": {
+            "service": "billing",
+            "direction": "payload",
+            "edge": "producer:billing#src/invoices/orders.rpc.client.ts:15:12|emits|consumer:orders#src/rpc/orders.rpc.controller.ts:OrdersRpcController.get",
+            "field": "includeRefunds"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "gateway → orders: the type sender gateway declares permits `debugId: string`; receiver orders declares no such field ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 24
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "f8446acd7eefbda8366b949f71d4a5e6",
+            "primaryLocationLineHash": "f8446acd7eefbda8:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:25:12|http_calls|entry:orders:http:POST:/orders",
+            "field": "debugId"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "gateway → orders: the type sender gateway declares permits `archived: boolean`; receiver orders declares no such field ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 63
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 49
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "5a0dd95752b179a196246149b145a53f",
+            "primaryLocationLineHash": "5a0dd95752b179a1:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:64:12|http_calls|entry:orders:http:POST:/orders/drafts",
+            "field": "archived"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "gateway → orders: the type sender gateway declares permits `owner: string`; receiver orders declares no such field ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 63
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 49
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "eb281778ee53dd9e21af4248c583facf",
+            "primaryLocationLineHash": "eb281778ee53dd9e:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:64:12|http_calls|entry:orders:http:POST:/orders/drafts",
+            "field": "owner"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `archived: boolean`; receiver orders declares no such field ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 73
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 49
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "793ca6aa479aabd5f88e72e911e53b4c",
+            "primaryLocationLineHash": "793ca6aa479aabd5:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+            "field": "archived"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `extra: number`; receiver orders declares no such field ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 73
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 49
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "08365835cf65b608443c769b915a9f6a",
+            "primaryLocationLineHash": "08365835cf65b608:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+            "field": "extra"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `owner: string`; receiver orders declares no such field ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 73
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 49
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "a1bf788e32a0d1504f56b6678100d8a5",
+            "primaryLocationLineHash": "a1bf788e32a0d150:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:74:12|http_calls|entry:orders:http:POST:/orders/drafts",
+            "field": "owner"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "gateway → orders: the type sender gateway declares permits `debugId: string`; receiver orders declares no such field ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 98
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 68
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "f586873c8f85273bf4573a78c4e1ab67",
+            "primaryLocationLineHash": "f586873c8f85273b:1"
+          },
+          "suppressions": [
+            {
+              "kind": "inSource",
+              "justification": "excused by @ContractIgnore on gateway#src/clients/orders.client.ts:OrdersClient.legacy"
+            }
+          ],
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:100:12|http_calls|entry:orders:http:POST:/orders/legacy",
+            "field": "debugId"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "gateway → orders: sender gateway sends `note: string`; receiver orders declares no such field; the receiver does not declare it, so its whitelisting validation pipe removes it before the handler reads it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 133
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 95
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "f600664a82815fe5ac41086d5b7f3b26",
+            "primaryLocationLineHash": "f600664a82815fe5:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:134:12|http_calls|entry:orders:http:POST:/orders/drafts/preview",
+            "field": "note",
+            "impact": "none"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "gateway → orders: the type sender gateway declares permits `internalNote: string`; receiver orders declares no such field; the receiver excludes it, so what arrives is thrown away ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/wire.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/wire/wire.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "6eea57dcc2332783f9d8fee3310e1bbf",
+            "primaryLocationLineHash": "6eea57dcc2332783:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/wire.client.ts:18:12|http_calls|entry:orders:http:POST:/wire",
+            "field": "internalNote"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "gateway → orders: the type sender gateway declares permits `code: string`; receiver orders declares no such field ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/wire.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 32
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/deep/deep.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "7b5876c76347311f171e744e1b5ea9e7",
+            "primaryLocationLineHash": "7b5876c76347311f:1"
+          },
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/wire.client.ts:33:12|http_calls|entry:orders:http:POST:/deep/categories",
+            "field": "code"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "orders → gateway: sender orders sends `draft: type:orders#CreateDraftDto`; receiver gateway declares no such field; on LockedDraftDto, one of the 2 shapes this may answer with ([receiver gateway](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 62
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 86
+                }
+              },
+              "message": {
+                "text": "receiver gateway"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "ef6f98eb346eac49a00f109513a98ea7",
+            "primaryLocationLineHash": "ef6f98eb346eac49:1"
+          },
+          "properties": {
+            "service": "orders",
+            "direction": "response",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
+            "field": "draft"
+          }
+        },
+        {
+          "ruleId": "extra_field",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "orders → gateway: sender orders sends `lockedBy: string`; receiver gateway declares no such field; on LockedDraftDto, one of the 2 shapes this may answer with ([receiver gateway](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 62
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 86
+                }
+              },
+              "message": {
+                "text": "receiver gateway"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "b7c10d225dde8c4d766fa99e2eea2465",
+            "primaryLocationLineHash": "b7c10d225dde8c4d:1"
+          },
+          "properties": {
+            "service": "orders",
+            "direction": "response",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:87:12|http_calls|entry:orders:http:GET:/orders/drafts/:param",
+            "field": "lockedBy"
+          }
+        }
+      ]
+    }
+  ]
+}

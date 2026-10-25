@@ -55,5 +55,6 @@ done
 mkdir -p "$DEMO/.bin"
 ln -sf "$ROOT/packages/cli/bin/flowatlas.js" "$DEMO/.bin/flowatlas"
 ln -sf "$ROOT/scripts/demo/mcp-call.sh" "$DEMO/.bin/mcp-call"
+ln -sf "$ROOT/scripts/demo/show.sh" "$DEMO/.bin/show"
 
 echo "$DEMO"

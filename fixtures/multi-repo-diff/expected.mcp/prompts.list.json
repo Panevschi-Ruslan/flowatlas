@@ -1,0 +1,40 @@
+{
+  "prompts": [
+    {
+      "name": "before-rename",
+      "title": "Before a rename",
+      "description": "The calls to make before renaming a symbol, route, channel or type: who calls it, what reaches it, the crossings it is on.",
+      "arguments": [
+        {
+          "name": "symbol",
+          "description": "an id, a name, or a route said aloud, e.g. \"POST /orders\"",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "pr-review",
+      "title": "Review a branch",
+      "description": "Review the branch from the last flowatlas diff: the verdict, its reasons, and the calls that check them.",
+      "arguments": [
+        {
+          "name": "base",
+          "description": "the ref it merges into, e.g. main",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "trace-route",
+      "title": "Trace a route",
+      "description": "Trace a way in end to end: its flow, each crossing checked, what the reading could not follow.",
+      "arguments": [
+        {
+          "name": "route",
+          "description": "a way in, e.g. \"POST /orders\" or an entry id",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

@@ -285,6 +285,42 @@ describe('annotations', () => {
     expect(callsOf(graph)[0]?.meta?.['via']).toBe('literal');
   });
 
+  it('reads the service an annotation names before its verb (P127)', () => {
+    const graph = extract(`
+  /** @flowatlas-calls catalog GET /items */
+  a(path: string): Observable<unknown> { return this.http.get<unknown>(this.base + path); }
+`);
+    const marked = callsOf(graph).find((call) => call.meta?.['via'] === 'marker');
+    expect(marked?.meta).toMatchObject({ method: 'GET', path: '/items', service: 'catalog' });
+  });
+
+  it('keeps the two-word form, with no service on the request', () => {
+    const graph = extract(`
+  /** @flowatlas-calls GET /items */
+  a(path: string): Observable<unknown> { return this.http.get<unknown>(this.base + path); }
+`);
+    const marked = callsOf(graph).find((call) => call.meta?.['via'] === 'marker');
+    expect(marked?.meta).toMatchObject({ method: 'GET', path: '/items' });
+    expect(marked?.meta).not.toHaveProperty('service');
+  });
+
+  it('reads no request from a tag with no verb in it', () => {
+    const graph = extract(`
+  /** @flowatlas-calls catalog items */
+  a(path: string): Observable<unknown> { return this.http.get<unknown>(this.base + path); }
+`);
+    expect(callsOf(graph).filter((call) => call.meta?.['via'] === 'marker')).toEqual([]);
+  });
+
+  it('puts the service on a request it read, rather than a second request', () => {
+    const graph = extract(`
+  /** @flowatlas-calls catalog GET /orders */
+  a(): Observable<OrderDto> { return this.http.get<OrderDto>('/orders'); }
+`);
+    expect(callsOf(graph)).toHaveLength(1);
+    expect(callsOf(graph)[0]?.meta).toMatchObject({ via: 'literal', service: 'catalog' });
+  });
+
   it('turns @flowatlas-consumes into a channel with a handler on it', () => {
     const graph = extract(`
   /** @flowatlas-consumes order.updated */
@@ -665,21 +701,21 @@ describe('a request made through a wrapper', () => {
 @Injectable({ providedIn: 'root' })
 export class DealsClient {
   constructor(private readonly api: ApiClient) {}
-  deals(): Observable<OrderDto[]> { return this.api.get<OrderDto[]>('/chat/me/deals'); }
+  deals(): Observable<OrderDto[]> { return this.api.get<OrderDto[]>('/portal/me/deals'); }
   one(id: string): Observable<OrderDto> {
-    return this.api.get<OrderDto>(\`/chat/deals/\${id}\`, { params: { lang: 'en' } });
+    return this.api.get<OrderDto>(\`/portal/deals/\${id}\`, { params: { lang: 'en' } });
   }
   claim(id: string, body: CreateOrderDto): Observable<OrderDto> {
-    return this.api.post<OrderDto>(\`/chat/deals/\${id}/claim\`, body);
+    return this.api.post<OrderDto>(\`/portal/deals/\${id}/claim\`, body);
   }
 }
 `,
     );
     const calls = callsOf(graph);
     expect(calls.map((call) => `${String(call.meta?.['method'])} ${String(call.meta?.['path'])}`).sort()).toEqual([
-      'GET /chat/deals/:param',
-      'GET /chat/me/deals',
-      'POST /chat/deals/:param/claim',
+      'GET /portal/deals/:param',
+      'GET /portal/me/deals',
+      'POST /portal/deals/:param/claim',
     ]);
     expect(calls.every((call) => call.meta?.['baseUrlEnv'] === 'apiUrl')).toBe(true);
     expect(calls.every((call) => call.file === 'orders-api.service.ts')).toBe(true);
@@ -939,5 +975,59 @@ export class Early {
     const method = (name: string) => graph.nodes.find((node) => node.id.endsWith(`OrdersApiService.${name}`));
     expect(method('a')?.meta?.['unreferenced']).toBe(true);
     expect(method('b')?.meta?.['unreferenced']).toBeUndefined();
+  });
+});
+
+/**
+ * A wrapper handed the verb, and a helper whose suffix defaults to nothing
+ * (P91): each caller's request carries the verb it hands in, and `url()` is
+ * the collection the default leaves.
+ */
+describe('a verb a wrapper is handed, and an argument left to its default', () => {
+  const said = (graph: RepoGraph) =>
+    callsOf(graph)
+      .map((call) => `${String(call.meta?.['method'])} ${String(call.meta?.['path'])}`)
+      .sort();
+
+  it('reads the verb at each caller, through the frame its address came out by', () => {
+    const graph = extract(`
+  private req<T>(method: string, path: string): Observable<T> { return this.http.request<T>(method, \`\${environment.apiUrl}\${path}\`); }
+  rename(id: string): Observable<unknown> { return this.req('PATCH', \`/orders/\${id}\`); }
+  remove(id: string): Observable<unknown> { return this.req(Verb.Delete, \`/orders/\${id}\`); }
+`, {}, `export enum Verb { Delete = 'DELETE' }`);
+    expect(said(graph)).toEqual(['DELETE /orders/:param', 'PATCH /orders/:param']);
+    expect(reasons(graph)).not.toContain('api-method-dynamic');
+  });
+
+  it('reads it at each caller where the address is read in place', () => {
+    const graph = extract(`
+  private send(method: string): Observable<unknown> { return this.http.request(method, \`\${environment.apiUrl}/orders/sync\`); }
+  pull(): Observable<unknown> { return this.send('GET'); }
+  push(): Observable<unknown> { return this.send('POST'); }
+`);
+    expect(said(graph)).toEqual(['GET /orders/sync', 'POST /orders/sync']);
+  });
+
+  it('keeps a verb a caller hands on unread at that caller', () => {
+    const graph = extract(`
+  private req<T>(method: string, path: string): Observable<T> { return this.http.request<T>(method, \`\${environment.apiUrl}\${path}\`); }
+  any(verb: string, id: string): Observable<unknown> { return this.req(verb, \`/orders/\${id}\`); }
+`, {}, `
+@Injectable({ providedIn: 'root' })
+export class Screen {
+  constructor(private readonly api: OrdersApiService) {}
+  run(choice: string): void { this.api.any(choice, '1').subscribe(); }
+}`);
+    expect(said(graph)).toEqual(['null /orders/1']);
+    expect(reasons(graph)).toContain('api-method-dynamic');
+  });
+
+  it('reads a helper called without its suffix as the address its default leaves', () => {
+    const graph = extract(`
+  private url(suffix = ''): string { return \`\${environment.apiUrl}/orders\${suffix}\`; }
+  list(): Observable<unknown> { return this.http.get(this.url()); }
+  one(id: string): Observable<unknown> { return this.http.get(this.url(\`/\${id}\`)); }
+`);
+    expect(said(graph)).toEqual(['GET /orders', 'GET /orders/:param']);
   });
 });

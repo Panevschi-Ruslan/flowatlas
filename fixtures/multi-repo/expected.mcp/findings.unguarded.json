@@ -1,0 +1,41 @@
+{
+  "kind": "unguarded",
+  "rows": [
+    {
+      "kind": "unguarded",
+      "id": "entry:orders:http:POST:/orders",
+      "method": "orders#src/orders/orders.controller.ts:OrdersController.create",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:31",
+      "message": "POST /orders has no guard in front of it and reaches orders.",
+      "rank": 1,
+      "reach": {
+        "writes": 1,
+        "reads": 1
+      },
+      "next": "get_flow({entry: \"entry:orders:http:POST:/orders\"})"
+    },
+    {
+      "kind": "unguarded",
+      "id": "entry:orders:http:GET:/orders/:param",
+      "method": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+      "service": "orders",
+      "loc": "src/orders/orders.controller.ts:25",
+      "message": "GET /orders/:param has no guard in front of it and reaches orders.",
+      "rank": 2,
+      "reach": {
+        "writes": 0,
+        "reads": 1
+      },
+      "next": "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
+    }
+  ],
+  "total": 4,
+  "truncated": "2 more; next page offset 2",
+  "nextOffset": 2,
+  "next": [
+    "findings({kind: \"unguarded\", maxNodes: 2, offset: 2})",
+    "get_flow({entry: \"entry:orders:http:POST:/orders\"})",
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})"
+  ]
+}

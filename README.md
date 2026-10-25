@@ -61,35 +61,36 @@ reason about all of them.
 
 ---
 
-## Measured on a real project
+## Measured on the demo project
 
-Five repositories that ship as one product: three NestJS services and two Angular
-frontends, with a shared package of types between them. It is the project this
-was built against, which is worth knowing when you read the numbers: they are
-reproducible, and they are from one codebase whose author also wrote the tool.
-Measured with 0.5.0.
+The demo project is [`fixtures/multi-repo`](fixtures/multi-repo), the same one
+the walkthrough on the [project page](https://panevschi-ruslan.github.io/flowatlas/)
+is recorded against. It is synthetic: four repositories, three NestJS services
+(`gateway`, `orders`, `billing`) and an Angular frontend (`web`), with a shared
+package of types between them, written for the test suite. It holds every kind
+of join the linker makes exactly once, including the ones that fail, so the
+figures are small and the rows that did not join are there on purpose. Anyone
+can rebuild them from a checkout. Measured with 0.6.0.
 
 | | |
 |---|---|
-| Source read | 1,312 files, 229,680 lines of TypeScript and templates, tests left out |
-| Cold build | 8.0 s |
-| Rebuild with nothing changed | 1.1 s |
-| Graph | 11,668 nodes, 20,523 edges |
-| **Edges that cross a repository boundary** | **543** |
+| Source read | 27 files, 962 lines of TypeScript |
+| Cold build | 1.2 s |
+| Rebuild with nothing changed | 0.3 s |
+| Graph | 130 nodes, 114 edges |
+| **Edges that cross a repository boundary** | **12** |
 
-That last row is the point. Five hundred and forty three connections that no
-compiler in any of those five checkouts can see, because each one only ever
-reads its own.
+That last row is the point. Twelve connections that no compiler in any of
+those four checkouts can see, because each one only ever reads its own.
 
-**Where the edges come from.** 20,323 were read from the code, 178 were
-inferred and marked `heuristic`, and 22 were declared by an annotation. Every
-edge says which of the three it is.
+**Where the edges come from.** 104 were read from the code, 5 were inferred and
+marked `heuristic`, and 5 were declared by an annotation. Every edge says which
+of the three it is.
 
-**Ways in.** 564 HTTP routes, 64 more through a bot — 13 commands, 45 button
-callbacks, 6 events — and 2 event streams. Something in the project reaches 508
-of the routes. Nothing it can see calls the other 56 — and of those, 12 are
-declared public in the configuration and 7 look like health probes, which leaves
-37 worth a look.
+**Ways in.** 15 HTTP routes and 2 message handlers. Something in the project
+reaches 7 of the routes. Nothing it can see calls the other 8, and
+`flowatlas dead` lists each with the reason. One route is claimed by two
+handlers.
 
 **What joined across the boundaries.** Two columns, because the first build of
 any project is not the one to judge it by and quoting only the second would be
@@ -97,88 +98,62 @@ selling you something:
 
 | | first build | configured |
 |---|---|---|
-| Browser requests matched to the route that answers them | 494 of 503 | 494 of 503 |
-| Calls between services matched to a route | **1 of 43** | 41 of 43 |
-| Routes something in the project reaches | 483 | 508 |
-| Message channels with a handler | 7 of 19 | 7 of 19 |
+| Browser requests matched to the route that answers them | 4 of 13 | 6 of 13 |
+| Calls between services matched to a route | 3 of 7 | 3 of 7 |
+| Routes something in the project reaches | 6 | 7 |
+| Message channels with both a publisher and a handler | 1 of 3 | 1 of 3 |
+| Edges that cross a repository boundary | 10 | 12 |
+| Edges inferred and marked `heuristic` | 10 | 5 |
+| Types read from the shared package | 0 | 4 |
 
-The configuration behind the second column names the settings key that
-addresses a service (`baseUrlEnv`), the key a frontend's requests are rooted at
-and where it points (`apiBaseEnv`, `apiTarget`), and the shared package of
-types (`sharedPackages`). Nothing can work those out for you: a string in one
+The first build already joins three of the seven calls between services, but two
+of them only by guessing the service from the name of the setting, and it says so.
+The configuration behind the second column, the fixture's own
+`flowatlas.config.json`, names the settings key that addresses a service
+(`baseUrlEnv`), the key a frontend's requests are rooted at and where it points
+(`apiBaseEnv`, `apiTarget`), and the shared package of types
+(`sharedPackages`). Nothing can work those out for you: a string in one
 repository and a route in another are joined by a fact only the person who
 deployed them knows. `flowatlas doctor` names what is missing, with the file and
-the line that wants it.
-
-**What each version changed, on the same repositories.** The same configuration
-and the same commit of every repository, read by each:
-
-| | 0.1.1 | 0.2.0 | 0.3.0 | 0.4.0 | 0.5.0 |
-|---|---|---|---|---|---|
-| Browser requests found | 343 | 495 | 499 | 499 | 503 |
-| …matched to the route that answers them | 318 | 489 | 493 | 493 | 494 |
-| Routes nothing appears to call | 220 | 62 | 58 | 57 | 56 |
-| Edges that cross a repository boundary | 366 | 537 | 541 | 542 | 543 |
-| Boundaries a contract could be compared on | 337 | 636 | 636 | 636 | 636 |
-| Contract errors | 37 | 1 | 1 | 0 | 0 |
-| Contract warnings | 398 | 1,069 | 1,069 | 1,014 | 1,014 |
-| Front ends asking for a route nothing serves | — | 2 | 1 | **0** | **0** |
-
-Most of the first step is requests made through a wrapper — a pass-through
-client, a base service whose resource a subclass decides — that 0.1.1 followed
-as far as the wrapper and no further. The routes 0.1.1 reported as never called
-were being called all along. The contract rows move in opposite directions on
-purpose: nearly twice as many boundaries can be compared, several kinds of false
-error were removed, and a request from a method nothing references is now a
-warning rather than an error, because nothing proves it runs.
-
-The second step is smaller and the same shape: the four streams the application
-holds open, opened through a wrapper that remembers what it was given rather
-than using it there and then, which is how a subscription survives being
-backgrounded. The third is smaller again, and is mostly about saying true
-things rather than reading new ones: the one contract error and the one route
-the front end appeared to ask for and the back end appeared not to serve were
-both false, and both are gone.
-
-The fourth step moves the joins by one or two and moves the data layer a great
-deal. Queries through the project's own repository classes now name the
-collection each class states, and a collection named in the driver's chain is
-read from there: 1,867 of 1,974 query sites name a real collection, where 0.4.0
-put a table called `Document` on every untyped one. A plain `fetch` in a
-browser is read, and an outgoing request keeps the verb and host its own code
-states. The cold build is slower for reading all of that.
+the line that wants it. The four calls that stay unjoined are the fixture's
+deliberate ones: a route the target renamed, a setting no service claims, a
+third party, and an address built at run time.
 
 **What it found once they were joined.**
 
 | | |
 |---|---|
-| Names declared more than one way in two repositories | 64 |
-| Channels published to and handled nowhere | 12 |
-| Contract errors, over 636 compared boundaries | 0 |
-| Front ends asking for a route nothing serves | 0 |
+| Names declared more than one way in two repositories | 1 |
+| Channels published to and handled nowhere | 1 |
+| Channels handled and published to nowhere | 1 |
+| Contract errors, over 7 compared boundaries | 0 |
+| Front-end requests for a route nothing serves | 2 |
 
-**What it says it cannot see.** 145 findings to act on, and 328 places static
-reading cannot reach at all, folded into 24 rows so the list stays readable.
-None of it is guessed at; each row carries a file, a line and a reason. The
-findings went up from 0.4.0's 22 because the tool stopped being quiet: a query
-whose collection is decided at run time, or reached only by a name, is now a
-row saying so, where 0.4.0 said nothing or guessed.
+**What it says it cannot see.** 11 findings to act on, over 13 rows, and 2
+places static reading cannot reach at all. None of it is guessed at; each row
+carries a file, a line and a reason.
 
-A further 397 places are listed apart from both, because nothing joins them to
-anything: a template binding that assigns to a field has no method behind it, in
-this project or any other. They are places, not gaps, and adding them to the
-figure above would make it say something untrue.
+To reproduce, from a checkout after `pnpm install && pnpm -r build`:
 
 ```sh
-flowatlas stats     # the tables above, for your own project
-flowatlas doctor    # the findings, grouped by reason, with what to change
+repo=$PWD
+scripts/demo/reset.sh            # the fixture as four git repositories, in /tmp/flowatlas-demo
+cd /tmp/flowatlas-demo && export PATH="$PWD/.bin:$PATH"
+flowatlas init --dir . --yes && flowatlas build && flowatlas stats    # the first column
+cp "$repo/fixtures/multi-repo/flowatlas.config.json" . && flowatlas build && flowatlas stats    # the second
+flowatlas doctor                 # the findings, grouped by reason, with what to change
+# the edges that cross a repository boundary
+node -e 'const g=require("./.flowatlas/project-graph.json"),r=new Map(g.nodes.map(n=>[n.id,n.repo]));console.log(g.edges.filter(e=>r.get(e.from)&&r.get(e.to)&&r.get(e.from)!==r.get(e.to)).length)'
 ```
+
+`flowatlas stats` and `flowatlas doctor` print the same figures for your own
+project.
 
 ---
 
 ## Install
 
-Node 20 or newer.
+Node 22.12 or newer.
 
 ```sh
 npm install -g @flowatlas/cli
@@ -212,7 +187,7 @@ flowatlas flow "POST /orders"   # follow one request through
 
 ![one click in a browser, followed into a third repository](docs/media/04-flow.gif)
 
-![the Map of five repositories, then one route's types field by field in the Graph](docs/media/14-map-tour.gif)
+![the Map of four repositories coloured by p95, the busiest way in opened in Steps and as a waterfall, Not joined, the search, and one route's types in the Graph](docs/media/14-map-tour.gif)
 
 That is one button in an Angular template, followed through the gateway, into the
 orders service, to the row it reads. Three repositories, and `unresolved on this
@@ -220,7 +195,9 @@ path: 0` says nothing along it was guessed.
 
 [**The walkthrough**](https://panevschi-ruslan.github.io/flowatlas/) does the whole
 thing from an empty directory, with a recording of every step. The same thing as
-markdown is [docs/getting-started.md](docs/getting-started.md).
+markdown is [docs/getting-started.md](docs/getting-started.md), and
+[docs/workflow.md](docs/workflow.md) is which command to reach for at each step of
+a change, from before you start to after it runs.
 
 `init` writes `flowatlas.config.json`, works out each repository's name and kind
 from its manifest, and registers the graph server in every one of them so an
@@ -243,6 +220,12 @@ place. Adding a sixth later is one more `link`.
 | `project-graph.json` | the whole graph, and the canonical artefact |
 | `link-report.json` | what joined, what did not, and why |
 | `graph.db` | the same graph as SQLite, which every query reads |
+
+Beside them it keeps `cache.json` (what the next build may reuse) and
+`stand-ins.json` (what was read in place of packages that are not installed:
+their source in another repository, or a shape file), and the commands that answer add their own: `doctor.json`,
+`observed.json` after `flowatlas observe`, `accepted.json` after
+`flowatlas accept`, and `diff.json` or `check.<env>.json` after a comparison.
 
 What it keeps between builds, each service's own graph and file hashes, is in the
 same directory under `services/`. Nothing is written into the repositories it
@@ -273,8 +256,9 @@ flowatlas build --no-cache         # read everything again
 flowatlas build --timing           # how long each phase took
 ```
 
-On the 259,000-line project measured above: 5.5 seconds cold, one second when
-nothing changed, about two seconds for a one-file edit under `--watch`.
+On the demo project measured above: 1.2 seconds cold, 0.3 seconds when nothing
+changed, and about a second when one file did, because the service holding it is
+read again and the others come from the cache.
 
 ### Asking
 
@@ -287,31 +271,74 @@ nothing changed, about two seconds for a one-file edit under `--watch`.
 | `flowatlas contracts` | what each service sends against what the other declares, field by field |
 | `flowatlas stats` | what the graph is made of |
 | `flowatlas cycles` | circular dependencies, cross-service ones first |
-| `flowatlas dead` | entries, channels and providers nothing appears to reach |
+| `flowatlas dead` | entries, channels and providers nothing appears to reach; probes, webhooks and callbacks folded apart, and `likely-dead` where a request read in part could still reach the route |
 | `flowatlas config <selector>` | the settings one flow depends on |
 | `flowatlas hotspots` | what the most things point at |
 | `flowatlas visualise` | the whole graph as one page you can open |
+| `flowatlas observe <file...>` | which joins real traffic went through, how long each step took and how it answered, from trace files you already have (OTLP JSON or protobuf, @nestjs/observe, Zipkin, Jaeger, a browser HAR, AWS exports), or a directory of HAR files an end-to-end test run left; runs add up over a window. `--listen` takes the same from exporters posting to `127.0.0.1:4318` while the service runs, and `--diff` compares two observed files. **[Run time in five minutes](docs/run-time.md)**: Playwright's `recordHar`, your e2e tests, `flowatlas observe test-results` |
+| `flowatlas shapes --suggest` | which packages that are not installed are used the most, with the names used of each; `--out` writes a starter shape file per package |
+| `flowatlas patterns test\|explain\|suggest` | the project's own extraction patterns: run their tests, explain a near miss part by part, write starters |
 
 ### Checking
 
 | Command | Answers |
 |---|---|
 | `flowatlas doctor` | what could not be read, what the annotations get wrong, what has drifted |
-| `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks |
+| `flowatlas rules` | which joins between services break the architecture rules the configuration writes down |
+| `flowatlas accept <reason\|gap-id>` | accept a known gap, or every gap like it by rule, so checks show only new ones |
+| `flowatlas diff <base> [head]` | what a branch changes, who would notice, and what it breaks; `--env prod` compares with what an environment runs |
+| `flowatlas check --env <name>` | can this be deployed: every service read at the ref the environment runs, the one being shipped in its place, and what that would break |
+| `flowatlas deployed set\|show` | the pins file `check` reads: which ref of each service runs in each environment |
+| `flowatlas spec` | an OpenAPI document of each service's routes and an AsyncAPI document of its channels, written from the graph; `spec diff <base>` sorts an API change into breaking kinds with the callers each breaks; `spec --against <service>=<file>` says where a committed document no longer describes the code |
+| `flowatlas export backstage\|structurizr` | the map as a Backstage catalogue (`consumesApis` and `dependsOn` from the joins) or a Structurizr workspace (containers and one dynamic view per flow); `--check` fails when a committed copy is out of date |
 | `flowatlas cache <action>` | list, prune or clear the graphs `diff` keeps per commit |
+| `flowatlas docs [paths...]` | whether the Markdown blocks that describe a flow still say what the graph says; `--write` regenerates them |
 
 `doctor` is the one to run after a first build. It groups every finding by
-reason, and each row carries the file, the line and what to do about it:
+reason, and each row carries the file, the line and what to do about it. When
+requests, packages and channels point at one name no service answers to, it
+opens with the repository that is probably missing, and the `flowatlas link`
+command that adds the directory that looks like it:
 
 ```sh
 flowatlas doctor --section desync      # calls that no longer match a route
 flowatlas doctor --service gateway     # narrow every section to one repository
 flowatlas doctor --strict              # exit 1 on a broken annotation or a contract error
+flowatlas doctor --unresolved          # what it could not follow, by cause and package
+flowatlas doctor --missing             # the repository the project probably lacks, and the evidence
+flowatlas link --suggested --dry-run   # the directory beside the others that fits it
+flowatlas shapes --suggest             # which missing packages to describe, with the names used of each
+flowatlas patterns suggest             # starter rules for the in-house wrappers it could not follow
+flowatlas patterns test                # run your pattern files' tests before a build reads them
 flowatlas doctor --accept              # write today's numbers as the baseline
 ```
 
 With a baseline, `--strict` fails only on growth, which is what makes it usable
-on a project that starts with findings.
+on a project that starts with findings. A gap you have looked at and decided to
+live with can be accepted on its own instead, with a note, and `doctor`, the
+page and the graph server leave it out of what to act on:
+
+```sh
+flowatlas accept channel-dynamic --service billing --note 'one channel per tenant'
+flowatlas accept route-unguarded --path 'GET /api/public/*' --note 'public catalogue' --dry-run
+```
+
+Who may call, write, publish to or consume what can be written down as rules
+in the configuration - "the browser reaches only the gateway", "only orders
+writes the orders table", "only billing consumes `invoice.*`" - by service, tag,
+table and channel, and `flowatlas rules` says which joins break one, at the
+line where the fix goes. They are checked over the edges between repositories,
+which a single repository's import rules never see; `doctor --strict` and
+`diff --fail-on-rule-break` fail on a new violation, and a rule naming a service
+that does not exist is never a pass:
+
+```json
+"rules": [
+  { "name": "frontends-reach-only-edge", "tags": { "source": "frontend", "mayReach": ["edge"] } },
+  { "name": "only-orders-writes-orders",
+    "only": { "from": { "service": "orders" }, "to": { "table": "orders" }, "op": "write" } }
+]
+```
 
 Some graphs are not worth a verdict, and `doctor` refuses them with exit 2
 whatever flags it was given: a graph a failed build wrote, a graph with nothing
@@ -325,14 +352,42 @@ the route itself: `route-unguarded`, a route with no guard or middleware in
 front of it that reaches stored data; `route-shadowed`, a route a worker
 answers before the application whose guards would have run; `route-wildcard-only`,
 a request nothing but a catch-all serves; and `whitelist-strip`, a field sent to
-a receiver whose whitelisting `ValidationPipe` removes it on arrival. Routes
-that are public by decision go in `doctor.publicRoutes`, and a decorator that
-switches a guard off through the reflector goes in `doctor.skipGuardDecorators`;
-both are in [the command reference](docs/CLI.md). `diff` answers the other question a build
+a receiver whose whitelisting `ValidationPipe` removes it on arrival. App-wide
+guards (`APP_GUARD`, `useGlobalGuards`) count, a `@Public()`-style decorator the
+project wrote is read as the opt-out it is, and a route that checks the caller
+in its own body is `route-checked-in-body` rather than unguarded, also when the
+exception comes from a helper that picks it from a table
+(`throw toHttpError(check)`). A route is public only where something says so in
+words: a decorator, `doctor.publicRoutes`, or `/** @flowatlas-public <why> */`
+on the handler or its controller, which is listed at `info` with its reason. Routes that
+are public by decision go in `doctor.publicRoutes` or are accepted by rule, and
+a decorator that cannot be followed goes in `doctor.skipGuardDecorators`; all of
+it is in [the command reference](docs/CLI.md). `diff` answers the other question a build
 asks: given this branch, which entry points in which repositories would notice.
 Its output is markdown because it is meant for a pull request comment, and
-`--fail-on-contract-break` turns a new disagreement into a failure.
+`--fail-on-contract-break` turns a new disagreement into a failure. `doctor`,
+`contracts`, `rules`, `dead`, `cycles` and `diff` also write `--format sarif`, a
+SARIF 2.1.0 log GitHub code scanning shows on the lines of a pull request and
+keeps open until the finding is fixed.
 [docs/ci.md](docs/ci.md) is the whole recipe.
+
+A page can name a flow in a block of two HTML comments, which no Markdown
+renderer shows, and `flowatlas docs --write` fills it from the graph - the tree,
+a flowchart, a sequence diagram, a contract table, the prompt text, or a tour
+with a note slot under each step that the next regeneration keeps:
+
+```md
+## Placing an order
+
+<!-- flowatlas:flow id="POST /orders" view="sequence" -->
+<!-- /flowatlas:flow -->
+```
+
+`flowatlas docs --check` exits 1 when the flow a block describes gained or lost
+a step since it was written, naming the step, or when its route is gone; moving
+or reformatting code never fails it. `diff` lists the blocks a branch makes
+stale, and the graph server tells an agent which pages describe the flow it is
+changing.
 
 An entry can be named the way you would say it out loud. All three of these mean
 the same route:
@@ -349,13 +404,13 @@ two applications serving one path puts the application in the id,
 comes back with the ids to choose from.
 
 `flow`, `impact` and `channel` take `--detail 0..3` and
-`--format tree|json|mermaid`, so the same
+`--format tree|json|mermaid` (and `flow` also `sequence`), so the same
 walk is read in a terminal, parsed by a script, or pasted into a document as a
 diagram. Every flag of every command is in the [command reference](docs/CLI.md).
-Output is bounded and says what it cut:
+Output is bounded and says what it cut, and which flag shows more:
 
 ```
-12 more nodes, increase depth or narrow scope
+… truncated: 12 more nodes (raise --max-nodes)
 ```
 
 The three are not interchangeable if something has to reason about the answer.
@@ -371,23 +426,43 @@ at a pull request.
 ```sh
 flowatlas visualise                     # writes graph.html next to the configuration
 flowatlas visualise --out map.html --title "Ledger"
+flowatlas visualise --diff main         # add a Changes tab against a ref
+flowatlas visualise --observed-diff before.json after.json   # add a Run time changes tab
 ```
 
 One file with the graph inside it: no server and nothing to install. It asks
 Google Fonts for two typefaces and falls back to your own if it cannot reach
 them, so it reads offline and is not free of a third party until that is
 inlined. It opens on a Map of the whole project - one box per service, in
-columns by what it is for, joined by what passes between them and counted, with
-families of services that open and close and a layer for the packages they are
-built from - then lists every way in, follows
+columns by call order from the front ends (or by what each is for), with queues
+between the columns and each service's stores under it, joined by what passes
+between them and counted, with families of services that open and close and a
+layer for the packages they are built from - then lists every way in, follows
 any one of them across service boundaries, and has a tab each for every crossing
-and for everything that did not join. A fourth tab, Graph, draws the
-neighbourhood of any node you search for, with its details one click away, and
+and for everything that did not join. The Graph tab draws the
+neighbourhood of any node the search or a click opens, with its details one click away, and
 walks on from there in either direction. It folds the plumbing round a route,
 groups a busy table's callers, finds a path between two nodes and what reaches
 one, marks the nodes with problems, and keeps a view as a link. Hovering a node
 shows what it takes and gives back - a method's parameters by name and type, a
-route's body, query and response - and any type opens to its fields; see
+route's body, query and response - and any type opens to its fields.
+
+**Steps** shows one way in as a list in call order, indented by depth: each
+step with its table, address or channel, calls run side by side or once per
+item of a loop, failure paths in red, where the chain breaks, what the way in
+can fail with and the lines each step logs. *Copy as prompt* copies it as Markdown for an
+assistant. **Not joined** lists everything that did not join, grouped by cause and
+package under *Couldn't join*, with what the code itself risks under *Risks*
+and what was accepted under *Accepted*.
+**Busiest** ranks the methods most things lean on, with the ways in that reach
+each. **Changes**, with `--diff`, lists what a branch adds and removes, the
+removed routes something still calls, and shapes that moved. **Traces**, once
+`flowatlas observe` kept samples, opens the slowest and the latest failing
+request of each way in as a tree on its own time axis, and **Run time changes**,
+with `--observed-diff`, compares two observed files from before and after a
+deploy. One search box
+above the tabs (`/`) finds a route, channel, table, type, gap, class, exception or
+node and goes to it, marked; `?` lists every key and ⌘K the commands; see
 [`docs/CLI.md`](docs/CLI.md#flowatlas-visualise).
 
 It is a report you can click, not a viewer you keep running. A page generated
@@ -404,24 +479,46 @@ flowatlas mcp                 # serve over stdio, which the editor does for you
 
 `--install` writes `.mcp.json` into each repository, merging rather than
 overwriting so any servers already there survive. After that, `claude mcp list`
-shows `flowatlas`, and a session has ten tools:
+shows `flowatlas`, and a session has these twenty-six tools, beside three
+prompts and the `flowatlas://` resources. Only the tools the project can answer
+are listed: the run-time ones appear after `flowatlas observe`, `check_rules`
+once rules are configured, `what_changed` after `flowatlas diff` or `check --env`, and the
+channel and type tools once the graph holds one, without restarting anything
+(`flowatlas mcp --all-tools` lists all of them):
 
 | Tool | Answers |
 |---|---|
+| `start_here` | counts per service, the commonest gaps, and the entry ids to begin from |
 | `list_entries` | every way in — routes, procedures, bot triggers, jobs, message handlers — filtered by service, kind or path |
 | `get_flow` | one entry followed through every service it reaches |
 | `who_calls` | what reaches a symbol, across repositories |
 | `impact` | every entry point that can reach a symbol, and whose |
 | `who_emits` / `who_consumes` | both ends of a message channel |
 | `get_type` | the shape of a type, with what it refers to |
+| `type_usage` | every way in, crossing, channel and call that takes or returns a type, and the types holding it |
 | `check_contract` | whether two services still agree about what crosses |
+| `get_spec` | a service's routes as OpenAPI or channels as AsyncAPI, or one operation with the schemas it uses |
 | `find_symbol` | fuzzy search, by substring or camel-case initials |
+| `search` | one query over routes, channels, tables, types, gaps, failures and classes |
+| `what_changed` | the last `flowatlas diff`, read back |
 | `get_source` | the code of one symbol, and the only tool returning code |
+| `describe_for_prompt` | an entry, channel, symbol or gap, or a whole class, file or service, as bounded Markdown to paste into a prompt; the page's *Copy as prompt* writes the same text |
+| `cant_follow` | why the reading stopped: every step it could not follow, by cause and by package |
+| `dead` | whether a node is dead, with what could make that wrong, or a service's dead rows, verdict first |
+| `findings` | likely N+1 loops, unguarded routes, contract breaks and one-ended channels, ranked by reach |
+| `check_rules` | the architecture rules in the configuration: each violation and where it crosses |
+| `test_pattern` | a draft extraction pattern run over code by the build's own reader: what it draws, or why it is refused |
+| `hot_paths` / `slow_steps` / `trace_for` | after `flowatlas observe`: the ways in traffic used most, the steps it was slowest on, and one slow and one failing request step by step |
+| `undeclared_failures` / `never_seen` | after `flowatlas observe`: statuses traffic got that the code never declares, and what the code runs that traffic never touched |
 
-Every tool takes `detail` and `maxNodes` except `get_source`, which takes
-`context` and a line limit instead. Source leaves through `get_source` and
-nowhere else, so asking for a trace never drags in the body of every method on
-the path.
+Every row carries an `id` the next tool takes as it is, and every answer ends
+with `next`: the calls that take the ids it returned.
+
+Answers are compact JSON, also sent as `structuredContent`, and every tool is
+read-only. The tools that thin their rows take `detail` and `maxNodes`, and a
+list that was cut says the `offset` of its next page. Source leaves through
+`get_source` and nowhere else, a page of at most 400 lines at a time, so asking
+for a trace never drags in the body of every method on the path.
 
 [**docs/mcp.md**](docs/mcp.md) is the whole thing: setup per client (Claude
 Code, Cursor, VS Code, Claude Desktop), what each tool takes, the order to call
@@ -487,8 +584,12 @@ The two keys that matter most:
 
 **`baseUrlEnv`** is what turns a request into an edge. A service declares the
 settings keys other services use to address it; when a request is rooted at one
-of them, it resolves to that service's route. Without it, a request is recorded
-but joined to nothing.
+of them, it resolves to that service's route. Without it, the setting's value is
+looked for in what the repositories write down - example environment files, a
+compose file, `serverless.yml`, `wrangler` variables, the code's own fallback -
+and its host matched to a service by name or by `services[].hosts`; only the
+address is kept, never a secret, and such a join is `heuristic`. A request whose
+setting is given nowhere is recorded but joined to nothing.
 
 **`sharedPackages`** is what stops one declaration looking like two. A type both
 repositories import from a shared package is merged into one registry entry, so
@@ -497,6 +598,18 @@ comparing a contract compares the same thing rather than a copy against itself.
 **`readTestDirectories`**, on a service, names directories called like tests
 (`fixtures`, `e2e`, `test`, …) that hold code the application runs. Every other
 such directory is left out and reported with a row, so you see what to name.
+
+**`builtInShapes`** (default `true`) lets a repository with nothing installed
+still read the packages it is written against: where `rxjs`, the NestJS
+packages, `@nestjs/passport`, `@angular/core` or `@angular/common/http` do not
+resolve, a few hand-written declarations stand in, and an installed package
+always wins. **`packageSources`** (default `true`) reads a package that is not
+installed from its source, when a repository the project reads is that package,
+and **`shapes`** names `.d.ts` shape files of the project's own for the rest;
+`flowatlas shapes --suggest --out <dir>` writes starters for the packages most
+places need. **`settingFiles`** turns reading base addresses from the
+repositories' own files off (`read: false`) or picks one environment
+(`environment`). Every key is in [the command reference](docs/CLI.md#configuration).
 
 ---
 
@@ -573,7 +686,11 @@ recorded with a reason and a location rather than guessed at or dropped:
 Those are a handful of about a hundred; the whole list, grouped by what each is
 about, is in [the command reference](docs/CLI.md#the-reasons-a-row-can-carry).
 `flowatlas doctor` groups them with what to do, `flowatlas stats` counts them
-and `flowatlas dead` explains the routes nothing calls.
+and `flowatlas dead` explains the routes nothing calls: the ones something
+outside the project calls on purpose (a probe, a webhook, a provider's
+callback, a route declared public) are folded into a line of their own, and a
+route a partly read request could still reach is `likely-dead`, with that
+request named.
 
 A reader that could read nothing says so as well. A file the parser gave up on
 is a `file-not-parsed` row; a service a reader opened and put nothing in the
@@ -582,7 +699,7 @@ some routes and not the rest says how many. The one failure this tool is built
 not to have is silence that reads as a clean result.
 
 An edge is never drawn on a guess *silently*. Some are drawn on a guess and say
-so: on the project measured above, 19,406 edges were read from the code and 397
+so: on the demo project measured above, 104 edges were read from the code and 5
 were inferred and carry `confidence: "heuristic"`. An inference is a guess with
 its reasoning attached, and the field is there so you can filter on it, not so
 the word can be avoided. What cannot be inferred either is recorded as
@@ -608,7 +725,9 @@ the code, `marker` was asserted by an annotation in the code, `declared` was
 asserted by a document about code that is not here, `heuristic` was inferred —
 from a name, from what the source states where the types were not installed, or
 from an assumption the edge names. A fifth word, `runtime`, is reserved for an
-edge observed while the code runs, and nothing here produces it yet.
+edge observed while the code runs, and nothing here produces it yet:
+`flowatlas observe` reads trace files you already have and marks which of the
+static joins real traffic went through, without drawing any edge of its own.
 
 A join is no stronger than the weaker of its two ends. A request read in full
 that reaches a route a document declared is `declared`; one that reaches a route
@@ -620,8 +739,8 @@ is `heuristic` and carries the settings it assumed.
 
 ## Where it stands
 
-Working, verified against the five-repository project measured above, and held
-to a fixture for every shape below. Each fixture's README says what it exists to
+Working, checked against real multi-repository projects, and held to a fixture
+for every shape below. Each fixture's README says what it exists to
 prove, and the path is given so you can run it.
 
 - **Routes declared by a decorator.** NestJS controllers, with modules,
@@ -692,7 +811,8 @@ prove, and the path is given so you can run it.
   table by the schema's `@@map` (`fixtures/prisma-not-generated`). Knex reached
   through an ORM manager's `getKnex()` is read as knex
   (`fixtures/nest-mikro-orm-knex`), and so is the SQL handed to `knex.raw`
-  (`fixtures/nest-knex-raw`). A MongoDB collection is read where the driver's
+  (`fixtures/nest-knex-raw`) or, when written out whole, to TypeORM's `query`
+  (`fixtures/loops-worth-fixing`). A MongoDB collection is read where the driver's
   chain names it, `db.collection('orders').find()`, and a repository base of
   your own reads the table each subclass states in a property you name
   (`fixtures/nest-mongo-tables`). Redis and cache-manager, outgoing requests and
@@ -750,7 +870,45 @@ prove, and the path is given so you can run it.
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —
   and four checks report a route whose gate is missing, bypassed, a catch-all,
-  or silently stripping a field (`fixtures/nest-guards`).
+  or silently stripping a field (`fixtures/nest-guards`). A NestJS route says
+  which guard covers it and from where - app-wide, a module, its controller or
+  itself - and which opt-out decorator switches one off
+  (`fixtures/nest-route-access`).
+- **What a way in can fail with.** A NestJS route lists the exceptions its
+  handler and the code it calls throw, a guard's refusal and the framework's
+  pipes, each with the status it is answered with (`fixtures/nest-failures`):
+  a validation 400 only where a class is validated, a domain error's own
+  status where an exception filter reads it, a guard's 403 only where it can
+  say no, and every status that is only a default marked assumed
+  (`fixtures/nest-fails-accurate`); and what an interceptor's `catchError`
+  makes of an error on its way out: another exception, the same one, or a
+  value that means the request does not fail (`fixtures/nest-fails-intercepted`).
+  A loop that runs a query, request or publish once per item is one
+  `query-in-loop` row naming everything it reaches, ranked by how many ways in
+  reach it; loops bounded on purpose (chunks, pages, cursors, retries, literal
+  lists, batch calls, migrations) are set aside and counted, and per-item
+  writes and sends are notes (`fixtures/loops-worth-fixing`). Calls side by
+  side are marked, and every step carries
+  the lines it logs as templates, never values (`fixtures/nest-query-loop`,
+  `fixtures/nest-jobs-logs`).
+- **Reading with nothing installed.** Built-in declaration shapes stand in for
+  the NestJS, passport, Angular and rxjs packages a fresh clone lacks, and a
+  base address no `baseUrlEnv` claims is read from the repository's own files
+  (`fixtures/multi-repo-base-urls`). What still cannot be followed is grouped
+  by cause and package, so the one package to install is named
+  (`fixtures/cant-follow`). An internal package nobody installed is read from
+  its source when a repository of the project is that package, and from a
+  shape file the project lists under `shapes` when none is;
+  `flowatlas shapes --suggest` says which to write and with which names
+  (`fixtures/uninstalled-internal-packages`).
+- **Your own extraction patterns.** An in-house bus, HTTP client or data kit is
+  described once in a YAML file of code patterns -
+  `$BUS.emit({ topic: $CHANNEL, data: $PAYLOAD })` on a `ShopBus` publishes to
+  `$CHANNEL` - with tests beside each rule. `flowatlas patterns test` runs
+  them by the build's own reader, `explain` shows a near miss part by part, and
+  `suggest` writes starters from the places the reader could not follow; the
+  build compiles each rule into the descriptions it already reads
+  (`fixtures/house-patterns`).
 - **Comparing** what each side of a boundary declares, field by field, with the
   rules of the JSON wire applied so a date meeting a string is not a finding
   (`fixtures/multi-repo-contracts`).
@@ -764,8 +922,10 @@ prove, and the path is given so you can run it.
 - **Serving** the graph to an agent, to a terminal in three formats, and to a
   browser as one generated page; **rebuilding** only what changed, with a watch
   mode, and noticing when dependencies were installed since; **reporting** every
-  finding as one list with a baseline; and **comparing revisions**, so a branch
-  reports which entry points in which other repositories would notice it.
+  finding as one list with a baseline and gaps accepted one by one or by rule;
+  **comparing revisions**, so a branch reports which entry points in which
+  other repositories would notice it; and **laying traces over the graph**, so
+  a join real traffic went through says so (`fixtures/multi-repo/traces`).
 
 Known gaps in what it can read:
 
@@ -816,7 +976,12 @@ Known gaps in what it can read:
   with `tableProperty` saying which property of each class states its table.
   Until it is named, those calls are rows saying so, naming the workspace package
   the class comes from where it comes from one, rather than queries nobody
-  checked.
+  checked. Three shapes need no naming: a base whose own queries hand
+  `this.<field>` to the library's table argument, a helper of the class that
+  hands out the collection, and a TypeORM entity class handed to a manager
+  (`manager.find(Rating)`, named by its `@Entity(...)`). A call the graph already
+  draws into a repository method of the service's own is not a row: its queries
+  are read where the method writes them, and `flowatlas stats` counts it.
 - An address built entirely at run time, where no part of it is written down,
   and a route whose address begins with a part read from a setting that some
   committed environment file sets, or that no committed environment file
@@ -832,8 +997,8 @@ Known gaps in what it can read:
   edge.
 - A channel whose name only exists as run-time data on both sides.
 
-What it does on the five-repository project it was built against is
-[measured at the top of this file](#measured-on-a-real-project). Every figure
+What it does on the demo project is
+[measured at the top of this file](#measured-on-the-demo-project). Every figure
 there was read off a build rather than estimated, and the places it still cannot
 read are listed above rather than rounded away.
 
@@ -851,14 +1016,14 @@ Or one at a time:
 pnpm -r build
 pnpm -r typecheck
 pnpm fixtures:run     # run the tool over every fixture
-pnpm -r test          # 2,480 tests
+pnpm -r test          # 5,397 tests
 pnpm invariants       # rules no test can express
 pnpm fixtures:check   # extraction, server and terminal snapshots, and the read gate
 ```
 
 `fixtures:check` compares against recorded output, so the fixtures have to be run
 first, and a snapshot nobody compares is not a gate. It therefore prints two
-counts — `161 compared, 162 validated` — and every snapshot in the gap between
+counts — `342 compared, 343 validated` — and every snapshot in the gap between
 them has to be accounted for: either the fixture has not been run, which fails and
 says so, or the fixture is named in `VALIDATE_ONLY` in `scripts/fixtures-check.mjs`
 with the reason, which the gate then prints on every run. One fixture is,
@@ -945,16 +1110,37 @@ there and over `multi-repo` and `nest-leaves`, and
 not changed; only something written from the source proves it is right.
 
 `docs/getting-started.md` is the walkthrough, recorded step by step, and
-`scripts/demo/page.mjs` writes the same thing as `docs/index.html`, which is what
-GitHub Pages serves at <https://panevschi-ruslan.github.io/flowatlas/>.
+`docs/index.html` is the same thing as a page, which is what GitHub Pages serves
+at <https://panevschi-ruslan.github.io/flowatlas/>.
 `docs/CLI.md` is the complete reference: every command, every flag, every
-configuration key. `docs/mcp.md` is the graph server. `docs/ci.md` is how to run
+configuration key. `docs/run-time.md` adds run time from an end-to-end test
+run in five minutes. `docs/mcp.md` is the graph server. `docs/ci.md` is how to run
 it in a build. `docs/coverage.md` is how this tool is measured against
 repositories nobody here wrote, by one counting rule; the list of repositories and
 the reports stay on the machine that measures. The [fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists every fixture and what it proves, generated from their READMEs.
-`PUBLISHING.md` is the release runbook. `scripts/demo/record.sh` remakes every recording in the
-walkthrough from `fixtures/multi-repo`.
+`PUBLISHING.md` is the release runbook. `scripts/demo/record.sh` remakes every terminal
+recording in the walkthrough from `fixtures/multi-repo`, and `scripts/demo/page-tour.mjs`
+the page's still and tour, from the page `scripts/demo/page-project.sh` builds.
+
+The page `flowatlas visualise` writes is one file made of parts that live apart
+in `packages/cli/src/visualise/`: `page.html` is the markup and a placeholder
+per part, `page.css` its styles, `graph.js`, `frame.js`, `map.js` and
+`steps.js` the logic (with core's `prompt-text.js`), and `panels/` the page
+itself, one module per panel - `context.js` for what every panel reads and the
+state the tabs share, then `band.js`, `virtual-list.js`, `ways.js`, `sheet.js`
+(the title and the sheet the table tabs draw into), `tables.js`, `find.js`,
+`menu.js`, `missing.js`, the Graph tab's `graph-draw.js`, `details.js`,
+`checking.js`, `graph-ui.js` and `frame-ui.js`, then `map-ui.js`,
+`steps-ui.js`, `traces.js`, `palette.js` and `wiring.js`, and `boot.js`, which
+sets them up in that order.
+`PAGE_PARTS` in `packages/cli/src/commands/visualise.ts` lists every part in
+the order it is written in; the build copies the folder beside the command. A
+panel is a factory handed the page so far and returning what the panels after
+it may call, so each has a test beside it that mounts the page's markup in a
+small test document (`panels/test-dom.ts`) and checks what it drew; a new panel
+is a module, its `.d.ts`, a placeholder in `page.html`, a row in `PAGE_PARTS`
+and a place in `boot.js`'s list.
 
 ### The rules the code is held to
 

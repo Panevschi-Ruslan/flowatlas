@@ -1,0 +1,31 @@
+{
+  "query": "423",
+  "counts": {
+    "fails": 2
+  },
+  "results": {
+    "fails": [
+      {
+        "id": "entry:lending:http:DELETE:/desk/holds/:param",
+        "type": "entry",
+        "label": "DELETE /desk/holds/:param",
+        "exception": "toHttpError",
+        "sites": 1,
+        "service": "lending"
+      },
+      {
+        "id": "entry:lending:http:POST:/desk/renewals",
+        "type": "entry",
+        "label": "POST /desk/renewals",
+        "exception": "toHttpError",
+        "sites": 1,
+        "service": "lending"
+      }
+    ]
+  },
+  "next": [
+    "get_flow({entry: \"entry:lending:http:DELETE:/desk/holds/:param\"})",
+    "describe_for_prompt({id: \"entry:lending:http:DELETE:/desk/holds/:param\"})",
+    "impact({symbol: \"entry:lending:http:DELETE:/desk/holds/:param\"})"
+  ]
+}

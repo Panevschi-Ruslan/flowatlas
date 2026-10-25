@@ -1,0 +1,21 @@
+gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there.
+
+unresolved: total=9 (skipped) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 9 to act on · missed: 9 · notes: 0 · findings: 0
+  unknown-db-package: 9 rows
+    Add a descriptor for fake-orm to record which of its methods read and which write.
+      orders/src/orders/orders.service.ts:46  this.rows.persist
+      orders/src/orders/orders.service.ts:57  this.rows.find
+      orders/src/orders/orders.service.ts:70  this.rows.find
+      orders/src/orders/orders.service.ts:80  this.rows.find
+      orders/src/orders/orders.service.ts:91  this.rows.find
+      orders/src/orders/orders.service.ts:101  this.rows.drop
+      orders/src/orders/orders.service.ts:135  this.rows.find
+      orders/src/orders/orders.service.ts:144  this.rows.find
+      orders/src/orders/orders.service.ts:148  this.rows.find
+
+desync: none
+
+verdict:
+  gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there

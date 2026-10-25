@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:34:21.891Z",
+  "builtAt": "2026-10-17T03:50:27.496Z",
   "services": [
     {
       "name": "api",
@@ -23,7 +23,7 @@
         "providers": [
           "MongoConnection",
           "OrdersRepository",
-          "MenuRepository",
+          "ProductRepository",
           "AuditRepository",
           "OrdersService",
           "Migrations"
@@ -41,6 +41,37 @@
       "kind": "injectable",
       "meta": {
         "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/catalog/product.repository.ts:ProductRepository",
+      "type": "provider",
+      "label": "ProductRepository",
+      "repo": "api",
+      "file": "src/catalog/product.repository.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/catalog/product.repository.ts:ProductRepository.findByCategory",
+      "type": "method",
+      "label": "ProductRepository.findByCategory",
+      "repo": "api",
+      "file": "src/catalog/product.repository.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "category",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Product[]"
+        }
       }
     },
     {
@@ -227,37 +258,6 @@
       }
     },
     {
-      "id": "api#src/menu/menu.repository.ts:MenuRepository",
-      "type": "provider",
-      "label": "MenuRepository",
-      "repo": "api",
-      "file": "src/menu/menu.repository.ts",
-      "line": 7,
-      "kind": "injectable",
-      "meta": {
-        "module": "AppModule"
-      }
-    },
-    {
-      "id": "api#src/menu/menu.repository.ts:MenuRepository.findByCategory",
-      "type": "method",
-      "label": "MenuRepository.findByCategory",
-      "repo": "api",
-      "file": "src/menu/menu.repository.ts",
-      "line": 12,
-      "meta": {
-        "signature": {
-          "params": [
-            {
-              "name": "category",
-              "type": "string"
-            }
-          ],
-          "returns": "type:api#MenuItem[]"
-        }
-      }
-    },
-    {
       "id": "api#src/orders/orders.repository.ts:OrdersRepository",
       "type": "provider",
       "label": "OrdersRepository",
@@ -343,6 +343,25 @@
       }
     },
     {
+      "id": "db_query:api#src/catalog/product.repository.ts:13:12",
+      "type": "db_query",
+      "label": "read products",
+      "repo": "api",
+      "file": "src/catalog/product.repository.ts",
+      "line": 13,
+      "meta": {
+        "op": "read",
+        "table": "products",
+        "tables": [
+          "products"
+        ],
+        "package": "mongodb",
+        "method": "find",
+        "receiver": "this.coll()",
+        "source": "string-arg"
+      }
+    },
+    {
       "id": "db_query:api#src/db/base.repository.ts:19:12",
       "type": "db_query",
       "label": "read ?",
@@ -409,7 +428,8 @@
         "package": "mongodb",
         "method": "updateMany",
         "receiver": "users",
-        "source": "string-arg"
+        "source": "string-arg",
+        "batch": true
       }
     },
     {
@@ -445,25 +465,6 @@
         "package": "mongodb",
         "method": "drop",
         "receiver": "db.collection('archived_orders')",
-        "source": "string-arg"
-      }
-    },
-    {
-      "id": "db_query:api#src/menu/menu.repository.ts:13:12",
-      "type": "db_query",
-      "label": "read menuItems",
-      "repo": "api",
-      "file": "src/menu/menu.repository.ts",
-      "line": 13,
-      "meta": {
-        "op": "read",
-        "table": "menuItems",
-        "tables": [
-          "menuItems"
-        ],
-        "package": "mongodb",
-        "method": "find",
-        "receiver": "this.coll()",
         "source": "string-arg"
       }
     },
@@ -508,39 +509,40 @@
     {
       "id": "db_query:api#src/orders/orders.service.ts:21:12",
       "type": "db_query",
-      "label": "read menuItems",
+      "label": "read products",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
       "line": 21,
       "meta": {
         "op": "read",
-        "table": "menuItems",
+        "table": "products",
         "tables": [
-          "menuItems"
+          "products"
         ],
         "package": "local:BaseRepository",
         "method": "findById",
-        "receiver": "this.menu",
+        "receiver": "this.products",
         "source": "string-arg"
       }
     },
     {
       "id": "db_query:api#src/orders/orders.service.ts:26:12",
       "type": "db_query",
-      "label": "read AuditEntry",
+      "label": "read audit",
       "repo": "api",
       "file": "src/orders/orders.service.ts",
       "line": 26,
       "meta": {
         "op": "read",
-        "table": "AuditEntry",
+        "table": "audit",
         "tables": [
-          "AuditEntry"
+          "audit"
         ],
         "package": "local:LegacyRepository",
         "method": "list",
         "receiver": "this.audit",
-        "source": "type-arg"
+        "source": "string-arg",
+        "tableFrom": "inferred-property"
       }
     },
     {
@@ -556,8 +558,8 @@
           "classes": 9,
           "skippedExternalCalls": {
             "mongodb": 17,
-            "local:BaseRepository.coll": 4,
             "mongodb.toArray": 4,
+            "local:BaseRepository.coll": 4,
             "mongodb.collection": 4,
             "mongodb.db": 1
           }
@@ -571,27 +573,27 @@
       }
     },
     {
-      "id": "table:api#AuditEntry",
-      "type": "table",
-      "label": "AuditEntry",
-      "repo": "api"
-    },
-    {
       "id": "table:api#archived_orders",
       "type": "table",
       "label": "archived_orders",
       "repo": "api"
     },
     {
-      "id": "table:api#menuItems",
+      "id": "table:api#audit",
       "type": "table",
-      "label": "menuItems",
+      "label": "audit",
       "repo": "api"
     },
     {
       "id": "table:api#orders",
       "type": "table",
       "label": "orders",
+      "repo": "api"
+    },
+    {
+      "id": "table:api#products",
+      "type": "table",
+      "label": "products",
       "repo": "api"
     },
     {
@@ -602,6 +604,24 @@
     }
   ],
   "edges": [
+    {
+      "from": "api#src/catalog/product.repository.ts:ProductRepository.findByCategory",
+      "to": "api#src/db/base.repository.ts:BaseRepository.coll",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:mongodb#Collection<T>",
+      "file": "src/catalog/product.repository.ts",
+      "line": 13
+    },
+    {
+      "from": "api#src/catalog/product.repository.ts:ProductRepository.findByCategory",
+      "to": "db_query:api#src/catalog/product.repository.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog/product.repository.ts",
+      "line": 13
+    },
     {
       "from": "api#src/db/base.repository.ts:BaseRepository.coll",
       "to": "api#src/db/connection.ts:MongoConnection.collection",
@@ -695,24 +715,6 @@
       "line": 20
     },
     {
-      "from": "api#src/menu/menu.repository.ts:MenuRepository.findByCategory",
-      "to": "api#src/db/base.repository.ts:BaseRepository.coll",
-      "type": "calls",
-      "confidence": "static",
-      "params": [],
-      "returns": "type:mongodb#Collection<T>",
-      "file": "src/menu/menu.repository.ts",
-      "line": 13
-    },
-    {
-      "from": "api#src/menu/menu.repository.ts:MenuRepository.findByCategory",
-      "to": "db_query:api#src/menu/menu.repository.ts:13:12",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/menu/menu.repository.ts",
-      "line": 13
-    },
-    {
       "from": "api#src/orders/orders.repository.ts:OrdersRepository.large",
       "to": "api#src/db/base.repository.ts:BaseRepository.coll",
       "type": "calls",
@@ -740,7 +742,7 @@
     },
     {
       "from": "api#src/orders/orders.service.ts:OrdersService",
-      "to": "api#src/menu/menu.repository.ts:MenuRepository",
+      "to": "api#src/catalog/product.repository.ts:ProductRepository",
       "type": "injects",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -811,6 +813,14 @@
       "line": 16
     },
     {
+      "from": "db_query:api#src/catalog/product.repository.ts:13:12",
+      "to": "table:api#products",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/catalog/product.repository.ts",
+      "line": 13
+    },
+    {
       "from": "db_query:api#src/db/migrations.ts:15:12",
       "to": "table:api#users",
       "type": "queries",
@@ -825,14 +835,6 @@
       "confidence": "static",
       "file": "src/db/migrations.ts",
       "line": 9
-    },
-    {
-      "from": "db_query:api#src/menu/menu.repository.ts:13:12",
-      "to": "table:api#menuItems",
-      "type": "queries",
-      "confidence": "static",
-      "file": "src/menu/menu.repository.ts",
-      "line": 13
     },
     {
       "from": "db_query:api#src/orders/orders.repository.ts:16:12",
@@ -852,7 +854,7 @@
     },
     {
       "from": "db_query:api#src/orders/orders.service.ts:21:12",
-      "to": "table:api#menuItems",
+      "to": "table:api#products",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -860,7 +862,7 @@
     },
     {
       "from": "db_query:api#src/orders/orders.service.ts:26:12",
-      "to": "table:api#AuditEntry",
+      "to": "table:api#audit",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -868,10 +870,32 @@
     }
   ],
   "types": {
-    "type:api#MenuItem": {
-      "name": "MenuItem",
+    "type:api#Order": {
+      "name": "Order",
       "kind": "object",
-      "declaredIn": "api#src/menu/menu.repository.ts",
+      "declaredIn": "api#src/orders/orders.repository.ts",
+      "structuralHash": "ea7f9f057490df7e",
+      "fields": [
+        {
+          "name": "_id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#Product": {
+      "name": "Product",
+      "kind": "object",
+      "declaredIn": "api#src/catalog/product.repository.ts",
       "structuralHash": "a91bef03a19c4298",
       "fields": [
         {
@@ -887,28 +911,6 @@
         {
           "name": "category",
           "type": "string",
-          "optional": false
-        }
-      ],
-      "meta": {
-        "declKind": "interface",
-        "exported": true
-      }
-    },
-    "type:api#Order": {
-      "name": "Order",
-      "kind": "object",
-      "declaredIn": "api#src/orders/orders.repository.ts",
-      "structuralHash": "ea7f9f057490df7e",
-      "fields": [
-        {
-          "name": "_id",
-          "type": "string",
-          "optional": false
-        },
-        {
-          "name": "total",
-          "type": "number",
           "optional": false
         }
       ],
@@ -954,17 +956,9 @@
       "line": 19,
       "reason": "dynamic-table-name",
       "level": "info",
-      "sites": 2,
+      "sites": 3,
       "hint": "BaseRepository declares this query for every class that extends it; the table is each class's own, and is recorded at each call made through one of them.",
       "symbol": "this.coll().findOne",
-      "service": "api"
-    },
-    {
-      "file": "src/db/legacy.repository.ts",
-      "line": 15,
-      "reason": "dynamic-table-name",
-      "hint": "this.mongo.collection<T>(this.source).find goes through LegacyRepository, whose classes name their table somewhere the configuration has not said. Write the base as { \"name\": \"LegacyRepository\", \"tableProperty\": \"<property>\" } under adapters.db.localBaseClasses, naming the property each class sets to its table.",
-      "symbol": "this.mongo.collection<T>(this.source).find",
       "service": "api"
     },
     {

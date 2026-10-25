@@ -1,0 +1,90 @@
+{
+  "rows": [
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:35",
+      "window": "2h",
+      "reachableFrom": "outside",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:40",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/refund",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:65",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/resume",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:71",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/ship",
+      "type": "entry",
+      "kind": "http",
+      "service": "gateway",
+      "loc": "src/orders/orders.controller.ts:60",
+      "window": "2h",
+      "reachableFrom": "code",
+      "neighbours": {
+        "seen": 1,
+        "of": 7,
+        "most": 22
+      },
+      "confidence": "strong"
+    }
+  ],
+  "window": {
+    "from": "2025-10-16T07:00:00.000Z",
+    "to": "2025-10-16T09:00:00.000Z",
+    "label": "2h"
+  },
+  "total": 14,
+  "truncated": "9 more rows; ask with a larger limit",
+  "next": [
+    "dead({id: \"entry:gateway:http:POST:/orders/:param/cancel\"})",
+    "get_flow({entry: \"entry:gateway:http:POST:/orders/:param/cancel\"})"
+  ]
+}

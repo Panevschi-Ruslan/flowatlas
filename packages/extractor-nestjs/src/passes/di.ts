@@ -1,4 +1,4 @@
-import { lineOf, resolveConstructorInjection } from '@flowatlas/core';
+import { causeMeta, lineOf, resolveConstructorInjection } from '@flowatlas/core';
 import type { ClassDeclaration } from 'ts-morph';
 import { nestDiOptions } from '../di/resolver.js';
 import type { ClassRole } from '../index-classes.js';
@@ -53,6 +53,7 @@ export const diPass = definePass('di', (ctx) => {
           reason: resolution.reason,
           ...(resolution.level === undefined ? {} : { level: resolution.level }),
           hint: resolution.hint,
+          ...causeMeta(resolution.cause),
           symbol: `${indexed.name}.constructor[${entry.index}]`,
         });
         continue;

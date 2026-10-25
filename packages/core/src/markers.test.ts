@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { namesGivenTo, takesNames } from './markers.js';
+import { jsDocCallsIn, namesGivenTo, takesNames } from './markers.js';
 
 const given = (...args: unknown[]) => namesGivenTo({ name: 'Emits', args });
 
@@ -97,5 +97,24 @@ describe('the names an annotation gives', () => {
       expect(takesNames(name), name).toBe(false);
       expect(namesGivenTo({ name, args: ['orders'] }).names).toEqual(['orders']);
     }
+  });
+});
+
+describe('the requests a @flowatlas-calls tag names (P127)', () => {
+  it('reads a service written before the verb', () => {
+    expect(jsDocCallsIn('@flowatlas-calls catalog get /items')).toEqual([{ service: 'catalog', method: 'GET', path: '/items' }]);
+  });
+
+  it('reads the two-word form with no service', () => {
+    expect(jsDocCallsIn('@flowatlas-calls GET /items')).toEqual([{ method: 'GET', path: '/items' }]);
+  });
+
+  it('reads nothing from a tag with no verb in either place', () => {
+    expect(jsDocCallsIn('@flowatlas-calls catalog items')).toEqual([]);
+  });
+
+  it('does not take the next line as part of the tag', () => {
+    expect(jsDocCallsIn('@flowatlas-calls GET /items\nPOST /other')).toEqual([{ method: 'GET', path: '/items' }]);
+    expect(jsDocCallsIn('@flowatlas-calls catalog GET\n/items')).toEqual([]);
   });
 });

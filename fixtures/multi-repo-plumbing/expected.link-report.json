@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T07:12:48.980Z",
+  "configHash": "b6a231168445",
+  "services": [
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 30,
+      "edges": 33,
+      "types": 3,
+      "unresolved": 1,
+      "durationMs": 737,
+      "packages": {
+        "name": "billing",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 33,
+      "edges": 46,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 783,
+      "packages": {
+        "name": "gateway",
+        "runtime": [
+          "@nestjs/axios",
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 44,
+      "edges": 69,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 749,
+      "packages": {
+        "name": "orders",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices",
+          "rxjs",
+          "typeorm"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 9,
+    "called": 3,
+    "uncalled": [
+      "entry:billing:http:GET:/invoices/:param",
+      "entry:gateway:http:GET:/orders/:param",
+      "entry:gateway:http:POST:/orders/:param/cancel",
+      "entry:gateway:http:POST:/orders/:param/invoice",
+      "entry:orders:http:POST:/orders",
+      "entry:orders:http:POST:/orders/:param/archive"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 7,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 15,
+      "reason": "route-unguarded",
+      "message": "GET /orders/:param has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /orders/:param"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 22,
+      "reason": "route-unguarded",
+      "message": "POST /orders has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "POST /orders"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 28,
+      "reason": "route-unguarded",
+      "message": "POST /orders/:param/archive has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "POST /orders/:param/archive"
+    },
+    {
+      "service": "orders",
+      "file": "src/orders/orders.controller.ts",
+      "line": 34,
+      "reason": "route-unguarded",
+      "message": "POST /orders/:param/cancel has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "POST /orders/:param/cancel"
+    }
+  ],
+  "totals": {
+    "nodes": 106,
+    "edges": 151,
+    "types": 7,
+    "missed": 1,
+    "sites": 1,
+    "notes": 0,
+    "findings": 4,
+    "unresolved": 1
+  }
+}

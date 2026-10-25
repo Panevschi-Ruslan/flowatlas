@@ -6,6 +6,6 @@
         @  GET /orders/:param
           -> OrdersController.findOne
             -> OrdersService.findOne
-              [] read Order
-                #  Order
+              [] read orders
+                #  orders
 unresolved on this path: 0

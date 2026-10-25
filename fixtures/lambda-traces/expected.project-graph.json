@@ -1,0 +1,1383 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T11:32:17.743Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:dynamodb/orders",
+      "type": "channel",
+      "label": "dynamodb/orders",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 6,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb",
+          "aws-dynamodb-document"
+        ],
+        "declaredBy": "aws_dynamodb_table.orders",
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/receipts",
+      "type": "channel",
+      "label": "sns/receipts",
+      "repo": "shop",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 41,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/order-placed",
+      "type": "channel",
+      "label": "sqs/order-placed",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 99,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:shop#FULFIL_ORDER_ARN",
+      "type": "config_key",
+      "label": "FULFIL_ORDER_ARN",
+      "repo": "shop",
+      "file": "src/handlers/checkout.ts",
+      "line": 18,
+      "meta": {
+        "key": "FULFIL_ORDER_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:shop#ORDERS_TABLE",
+      "type": "config_key",
+      "label": "ORDERS_TABLE",
+      "repo": "shop",
+      "file": "src/handlers/checkout.ts",
+      "line": 15,
+      "meta": {
+        "key": "ORDERS_TABLE",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:shop#ORDER_PLACED_URL",
+      "type": "config_key",
+      "label": "ORDER_PLACED_URL",
+      "repo": "shop",
+      "file": "src/handlers/checkout.ts",
+      "line": 16,
+      "meta": {
+        "key": "ORDER_PLACED_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.index_orders",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 104,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.index_orders",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.ship_order",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 99,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.ship_order",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "db_query:shop#statemachine/fulfil-order.asl.json:21:5",
+      "type": "db_query",
+      "label": "write orders",
+      "repo": "shop",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 21,
+      "meta": {
+        "op": "write",
+        "table": "orders",
+        "tables": [
+          "orders"
+        ],
+        "service": "dynamodb",
+        "action": "updateItem"
+      }
+    },
+    {
+      "id": "entry:shop:event:dynamodb/orders",
+      "type": "entry",
+      "label": "event dynamodb/orders",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 104,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/orders",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.index_orders",
+        "deployedBy": "terraform",
+        "changesOf": "table",
+        "name": "orders",
+        "function": "index-orders",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/checkout",
+      "type": "entry",
+      "label": "POST /checkout",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 122,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/checkout",
+        "rawPath": "/checkout",
+        "deployedBy": "terraform",
+        "api": "shop",
+        "function": "checkout",
+        "declaredAs": "aws_apigatewayv2_route.checkout",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:charge-card",
+      "type": "entry",
+      "label": "charge-card",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 61,
+      "kind": "invoke",
+      "meta": {
+        "key": "charge-card",
+        "deployedBy": "terraform",
+        "name": "charge-card",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.charge_card",
+        "handler": "handlers/charge-card.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:shop#Order"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:checkout",
+      "type": "entry",
+      "label": "checkout",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "checkout",
+        "deployedBy": "terraform",
+        "name": "checkout",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.checkout",
+        "handler": "handlers/checkout.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "FULFIL_ORDER_ARN": {
+            "written": "aws_sfn_state_machine.fulfil_order.arn",
+            "value": "fulfil-order",
+            "kind": "workflow"
+          },
+          "ORDERS_TABLE": {
+            "written": "aws_dynamodb_table.orders.name",
+            "value": "orders",
+            "kind": "table"
+          },
+          "ORDER_PLACED_URL": {
+            "written": "aws_sqs_queue.order_placed.url",
+            "value": "order-placed",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:index-orders",
+      "type": "entry",
+      "label": "index-orders",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 91,
+      "kind": "invoke",
+      "meta": {
+        "key": "index-orders",
+        "deployedBy": "terraform",
+        "name": "index-orders",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.index_orders",
+        "handler": "handlers/index-orders.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#DynamoDBStreamEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:print-label",
+      "type": "entry",
+      "label": "print-label",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 83,
+      "kind": "invoke",
+      "meta": {
+        "key": "print-label",
+        "deployedBy": "terraform",
+        "name": "print-label",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.print_label",
+        "handler": "handlers/print-label.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:shop#Order"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:reserve-stock",
+      "type": "entry",
+      "label": "reserve-stock",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 53,
+      "kind": "invoke",
+      "meta": {
+        "key": "reserve-stock",
+        "deployedBy": "terraform",
+        "name": "reserve-stock",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.reserve_stock",
+        "handler": "handlers/reserve-stock.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:shop#Order"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:ship-order",
+      "type": "entry",
+      "label": "ship-order",
+      "repo": "shop",
+      "file": "infra/main.tf",
+      "line": 69,
+      "kind": "invoke",
+      "meta": {
+        "key": "ship-order",
+        "deployedBy": "terraform",
+        "name": "ship-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.ship_order",
+        "handler": "handlers/ship-order.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "aws_dynamodb_table.orders.name",
+            "value": "orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "type:shop#Order"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:workflow:fulfil-order",
+      "type": "entry",
+      "label": "workflow fulfil-order",
+      "repo": "shop",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "fulfil-order",
+        "name": "fulfil-order",
+        "nameFrom": "deployment",
+        "startAt": "ReserveStock",
+        "states": 4,
+        "queryLanguage": "JSONPath",
+        "comment": "Fulfils an order: reserves the stock, charges the card, marks the order paid and publishes the receipt.",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "terraform",
+        "declaredAs": "aws_sfn_state_machine.fulfil_order",
+        "definitionFrom": "templatefile",
+        "declaredIn": "infra/main.tf:128"
+      }
+    },
+    {
+      "id": "producer:shop#src/handlers/checkout.ts:15:9",
+      "type": "producer",
+      "label": "write dynamodb/orders",
+      "repo": "shop",
+      "file": "src/handlers/checkout.ts",
+      "line": 15,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb-document",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "dynamodb",
+              {
+                "environment": "ORDERS_TABLE",
+                "forms": [
+                  "^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)$"
+                ]
+              }
+            ],
+            "payload": "{orderId:string;customerId:string;items:string[]}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:shop#src/handlers/checkout.ts:16:9",
+      "type": "producer",
+      "label": "message sqs/order-placed",
+      "repo": "shop",
+      "file": "src/handlers/checkout.ts",
+      "line": 16,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "ORDER_PLACED_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "type:shop#Order"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:shop#src/handlers/checkout.ts:17:9",
+      "type": "producer",
+      "label": "start fulfil-order",
+      "repo": "shop",
+      "file": "src/handlers/checkout.ts",
+      "line": 17,
+      "kind": "start",
+      "meta": {
+        "kind": "start",
+        "adapter": "aws-stepfunctions",
+        "method": "send",
+        "starts": "workflow",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "payload": "type:shop#Order",
+        "confidence": "static",
+        "awaiting": [
+          {
+            "parts": [
+              {
+                "environment": "FULFIL_ORDER_ARN",
+                "forms": [
+                  "^arn:[^:]+:states:[^:]*:[^:]*:stateMachine:([^:]+)(?::[^:]+)?$"
+                ]
+              }
+            ]
+          }
+        ],
+        "channelVia": "environment",
+        "reaches": [
+          "workflow:fulfil-order"
+        ]
+      }
+    },
+    {
+      "id": "producer:shop#src/handlers/ship-order.ts:11:11",
+      "type": "producer",
+      "label": "invoke print-label",
+      "repo": "shop",
+      "file": "src/handlers/ship-order.ts",
+      "line": 11,
+      "kind": "invoke",
+      "meta": {
+        "kind": "invoke",
+        "adapter": "aws-lambda-invoke",
+        "method": "send",
+        "starts": "invoke",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "payload": "Uint8Array<ArrayBufferLike>",
+        "confidence": "static",
+        "reaches": [
+          "invoke:print-label"
+        ]
+      }
+    },
+    {
+      "id": "producer:shop#statemachine/fulfil-order.asl.json:21:5",
+      "type": "producer",
+      "label": "write dynamodb/orders",
+      "repo": "shop",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 21,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "channelVia": "definition",
+        "service": "dynamodb",
+        "action": "updateItem",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:shop#statemachine/fulfil-order.asl.json:41:5",
+      "type": "producer",
+      "label": "message sns/receipts",
+      "repo": "shop",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 41,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "definition",
+        "service": "sns",
+        "action": "publish"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/lib-dynamodb": 2,
+            "@aws-sdk/client-sqs": 1,
+            "@aws-sdk/client-sfn": 1,
+            "@aws-sdk/client-lambda": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#src/handlers/charge-card.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/handlers/charge-card.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:shop#Order"
+            }
+          ],
+          "returns": "{charged:boolean;orderId:string}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/handlers/checkout.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/handlers/checkout.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "shop#src/handlers/index-orders.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/handlers/index-orders.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#DynamoDBStreamEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/handlers/print-label.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/handlers/print-label.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:shop#Order"
+            }
+          ],
+          "returns": "{label:string}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/handlers/reserve-stock.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/handlers/reserve-stock.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:shop#Order"
+            }
+          ],
+          "returns": "{reserved:string[]}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/handlers/ship-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/handlers/ship-order.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/lib/clients.ts:payloadOf",
+      "type": "function",
+      "label": "payloadOf",
+      "repo": "shop",
+      "file": "src/lib/clients.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "value",
+              "type": "unknown"
+            }
+          ],
+          "returns": "Uint8Array<ArrayBufferLike>"
+        }
+      }
+    },
+    {
+      "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard",
+      "type": "function",
+      "label": "ChargeCard [Task function]",
+      "repo": "shop",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 15,
+      "kind": "state",
+      "meta": {
+        "workflow": "fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "name": "charge-card"
+        },
+        "reaches": [
+          "invoke:charge-card"
+        ],
+        "resultPath": "$.payment"
+      }
+    },
+    {
+      "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/MarkPaid",
+      "type": "function",
+      "label": "MarkPaid [Task dynamodb:updateItem]",
+      "repo": "shop",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 21,
+      "kind": "state",
+      "meta": {
+        "workflow": "fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "table",
+          "service": "dynamodb",
+          "action": "updateItem",
+          "pattern": "request-response",
+          "op": "write",
+          "tables": [
+            "orders"
+          ]
+        },
+        "parameters": {
+          "TableName": "orders",
+          "Key": {
+            "orderId": {
+              "S.$": "$.orderId"
+            }
+          },
+          "UpdateExpression": "SET paid = :yes",
+          "ExpressionAttributeValues": {
+            ":yes": {
+              "BOOL": true
+            }
+          }
+        },
+        "resultPath": null
+      }
+    },
+    {
+      "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock",
+      "type": "function",
+      "label": "ReserveStock [Task lambda:invoke]",
+      "repo": "shop",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "fulfil-order",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "reserve-stock"
+        },
+        "reaches": [
+          "invoke:reserve-stock"
+        ],
+        "parameters": {
+          "FunctionName": "${reserve_stock_arn}",
+          "Payload.$": "$"
+        },
+        "resultPath": "$.stock"
+      }
+    },
+    {
+      "id": "shop#statemachine/fulfil-order.asl.json:fulfil-order/SendReceipt",
+      "type": "function",
+      "label": "SendReceipt [Task sns:publish]",
+      "repo": "shop",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 41,
+      "kind": "state",
+      "meta": {
+        "workflow": "fulfil-order",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "channel",
+          "service": "sns",
+          "action": "publish",
+          "pattern": "request-response",
+          "transport": "topic",
+          "targets": [
+            "receipts"
+          ],
+          "channels": [
+            "sns/receipts"
+          ]
+        },
+        "parameters": {
+          "TopicArn": "${receipts_arn}",
+          "Message.$": "States.JsonToString($)"
+        }
+      }
+    },
+    {
+      "id": "table:shop#orders",
+      "type": "table",
+      "label": "orders",
+      "repo": "shop"
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:dynamodb/orders",
+      "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 104,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/order-placed",
+      "to": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 99,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.index_orders",
+      "to": "entry:shop:event:dynamodb/orders",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 104,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:shop#infra/main.tf:aws_lambda_event_source_mapping.ship_order",
+      "to": "entry:shop:invoke:ship-order",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 99,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "db_query:shop#statemachine/fulfil-order.asl.json:21:5",
+      "to": "table:shop#orders",
+      "type": "queries",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 21
+    },
+    {
+      "from": "entry:shop:event:dynamodb/orders",
+      "to": "shop#src/handlers/index-orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/index-orders.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:shop:http:POST:/checkout",
+      "to": "shop#src/handlers/checkout.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:shop#Order",
+      "file": "src/handlers/checkout.ts",
+      "line": 12,
+      "meta": {
+        "requestRead": true,
+        "body": "{customerId:string;items:string[]}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:invoke:charge-card",
+      "to": "shop#src/handlers/charge-card.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/charge-card.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:shop:invoke:checkout",
+      "to": "shop#src/handlers/checkout.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/checkout.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:shop:invoke:index-orders",
+      "to": "shop#src/handlers/index-orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/index-orders.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:shop:invoke:print-label",
+      "to": "shop#src/handlers/print-label.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/print-label.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:shop:invoke:reserve-stock",
+      "to": "shop#src/handlers/reserve-stock.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/reserve-stock.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:shop:invoke:ship-order",
+      "to": "shop#src/handlers/ship-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers/ship-order.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:shop:workflow:fulfil-order",
+      "to": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 3
+    },
+    {
+      "from": "producer:shop#src/handlers/checkout.ts:15:9",
+      "to": "channel:dynamodb/orders",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/handlers/checkout.ts",
+      "line": 15,
+      "params": [
+        "{orderId:string;customerId:string;items:string[]}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ORDERS_TABLE"
+        ],
+        "functions": [
+          "checkout"
+        ]
+      }
+    },
+    {
+      "from": "producer:shop#src/handlers/checkout.ts:16:9",
+      "to": "channel:sqs/order-placed",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/handlers/checkout.ts",
+      "line": 16,
+      "params": [
+        "type:shop#Order"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ORDER_PLACED_URL"
+        ],
+        "functions": [
+          "checkout"
+        ]
+      }
+    },
+    {
+      "from": "producer:shop#src/handlers/checkout.ts:17:9",
+      "to": "entry:shop:workflow:fulfil-order",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/checkout.ts",
+      "line": 17,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:fulfil-order"
+      }
+    },
+    {
+      "from": "producer:shop#src/handlers/ship-order.ts:11:11",
+      "to": "entry:shop:invoke:print-label",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/ship-order.ts",
+      "line": 11,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:print-label"
+      }
+    },
+    {
+      "from": "producer:shop#statemachine/fulfil-order.asl.json:21:5",
+      "to": "channel:dynamodb/orders",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 21,
+      "meta": {
+        "payload": {
+          "Key": {
+            "orderId": {
+              "S.$": "$.orderId"
+            }
+          }
+        }
+      }
+    },
+    {
+      "from": "producer:shop#statemachine/fulfil-order.asl.json:41:5",
+      "to": "channel:sns/receipts",
+      "type": "emits",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 41,
+      "meta": {
+        "payload": {
+          "Message.$": "States.JsonToString($)"
+        }
+      }
+    },
+    {
+      "from": "shop#src/handlers/checkout.ts:handler",
+      "to": "config_key:shop#FULFIL_ORDER_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/handlers/checkout.ts",
+      "line": 18,
+      "meta": {
+        "setBy": [
+          {
+            "function": "checkout",
+            "written": "aws_sfn_state_machine.fulfil_order.arn",
+            "value": "fulfil-order"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#src/handlers/checkout.ts:handler",
+      "to": "config_key:shop#ORDERS_TABLE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/handlers/checkout.ts",
+      "line": 15,
+      "meta": {
+        "setBy": [
+          {
+            "function": "checkout",
+            "written": "aws_dynamodb_table.orders.name",
+            "value": "orders"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#src/handlers/checkout.ts:handler",
+      "to": "config_key:shop#ORDER_PLACED_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/handlers/checkout.ts",
+      "line": 16,
+      "meta": {
+        "setBy": [
+          {
+            "function": "checkout",
+            "written": "aws_sqs_queue.order_placed.url",
+            "value": "order-placed"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#src/handlers/checkout.ts:handler",
+      "to": "producer:shop#src/handlers/checkout.ts:15:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/checkout.ts",
+      "line": 15
+    },
+    {
+      "from": "shop#src/handlers/checkout.ts:handler",
+      "to": "producer:shop#src/handlers/checkout.ts:16:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/checkout.ts",
+      "line": 16
+    },
+    {
+      "from": "shop#src/handlers/checkout.ts:handler",
+      "to": "producer:shop#src/handlers/checkout.ts:17:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/checkout.ts",
+      "line": 17
+    },
+    {
+      "from": "shop#src/handlers/ship-order.ts:handler",
+      "to": "config_key:shop#ORDERS_TABLE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/handlers/ship-order.ts",
+      "line": 10,
+      "meta": {
+        "setBy": [
+          {
+            "function": "ship-order",
+            "written": "aws_dynamodb_table.orders.name",
+            "value": "orders"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#src/handlers/ship-order.ts:handler",
+      "to": "producer:shop#src/handlers/ship-order.ts:11:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/ship-order.ts",
+      "line": 11,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 8
+        }
+      }
+    },
+    {
+      "from": "shop#src/handlers/ship-order.ts:handler",
+      "to": "shop#src/lib/clients.ts:payloadOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "Uint8Array<ArrayBufferLike>",
+      "file": "src/handlers/ship-order.ts",
+      "line": 11,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 8
+        }
+      }
+    },
+    {
+      "from": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard",
+      "to": "entry:shop:invoke:charge-card",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 15,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:charge-card"
+      }
+    },
+    {
+      "from": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard",
+      "to": "shop#statemachine/fulfil-order.asl.json:fulfil-order/MarkPaid",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 19,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#statemachine/fulfil-order.asl.json:fulfil-order/MarkPaid",
+      "to": "db_query:shop#statemachine/fulfil-order.asl.json:21:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 21
+    },
+    {
+      "from": "shop#statemachine/fulfil-order.asl.json:fulfil-order/MarkPaid",
+      "to": "producer:shop#statemachine/fulfil-order.asl.json:21:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 21
+    },
+    {
+      "from": "shop#statemachine/fulfil-order.asl.json:fulfil-order/MarkPaid",
+      "to": "shop#statemachine/fulfil-order.asl.json:fulfil-order/SendReceipt",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 39,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock",
+      "to": "entry:shop:invoke:reserve-stock",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:reserve-stock"
+      }
+    },
+    {
+      "from": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ReserveStock",
+      "to": "shop#statemachine/fulfil-order.asl.json:fulfil-order/ChargeCard",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 13,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "shop#statemachine/fulfil-order.asl.json:fulfil-order/SendReceipt",
+      "to": "producer:shop#statemachine/fulfil-order.asl.json:41:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/fulfil-order.asl.json",
+      "line": 41
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEventV2": {
+      "name": "APIGatewayProxyEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#DynamoDBStreamEvent": {
+      "name": "DynamoDBStreamEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "426b6e41a64d2ec9",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:shop#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "shop#src/lib/clients.ts",
+      "structuralHash": "378913549523cc5b",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "items",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "infra/main.tf",
+      "line": 122,
+      "reason": "route-unguarded",
+      "message": "POST /checkout has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "POST /checkout"
+    },
+    {
+      "file": "src/handlers/ship-order.ts",
+      "line": 8,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 publish once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "shop#src/handlers/ship-order.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 8
+        },
+        "reaches": [
+          {
+            "id": "producer:shop#src/handlers/ship-order.ts:11:11",
+            "type": "producer",
+            "words": "publish"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 1,
+        "entries": [
+          "entry:shop:invoke:ship-order"
+        ]
+      },
+      "service": "shop"
+    }
+  ]
+}

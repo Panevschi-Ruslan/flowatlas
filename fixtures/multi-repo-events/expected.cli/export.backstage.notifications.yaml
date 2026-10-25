@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: notifications
+  annotations:
+    flowatlas/graph-id: repo:notifications
+spec:
+  type: function
+  lifecycle: unknown
+  owner: unknown
+  consumesApis:
+    - routing-asyncapi

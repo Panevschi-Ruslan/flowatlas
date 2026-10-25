@@ -1,0 +1,103 @@
+{
+  "services": [
+    {
+      "service": "gateway",
+      "nodes": 43,
+      "entries": 8,
+      "entriesByKind": {
+        "http": 8
+      },
+      "gaps": 3
+    }
+  ],
+  "counts": {
+    "gaps": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "nothing": 0
+  },
+  "topGaps": [
+    {
+      "reason": "dynamic-http-url",
+      "count": 1,
+      "services": [
+        "gateway"
+      ],
+      "example": {
+        "message": "this.http.post<InvoiceDto>(this.registry.invoicesUrl(), {\n      orderId: order.i",
+        "service": "gateway",
+        "loc": "src/clients/billing.client.ts:33"
+      }
+    },
+    {
+      "reason": "target-route-not-found",
+      "count": 1,
+      "services": [
+        "gateway"
+      ],
+      "example": {
+        "message": "target service orders has no route POST /orders/:param/cancel",
+        "service": "gateway",
+        "loc": "src/clients/orders.client.ts:44",
+        "id": "http_out:gateway#src/clients/orders.client.ts:44:12"
+      }
+    },
+    {
+      "reason": "unknown-base-url-env",
+      "count": 1,
+      "services": [
+        "gateway"
+      ],
+      "example": {
+        "message": "no service declares PAYMENTS_URL",
+        "service": "gateway",
+        "loc": "src/clients/payments.client.ts:24",
+        "id": "http_out:gateway#src/clients/payments.client.ts:24:12"
+      }
+    }
+  ],
+  "topFindings": [],
+  "channels": {
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "startFrom": [
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:30",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/cancel",
+      "type": "entry",
+      "label": "POST /orders/:param/cancel",
+      "loc": "src/orders/orders.controller.ts:35",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "label": "POST /orders/:param/invoice",
+      "loc": "src/orders/orders.controller.ts:40",
+      "service": "gateway",
+      "kind": "http"
+    }
+  ],
+  "staleDocs": 0,
+  "missingRepos": [
+    {
+      "token": "payments"
+    }
+  ],
+  "hidden": "what_changed: after flowatlas diff or check --env · check_rules: after rules[] in flowatlas.config.json · test_pattern: under flowatlas mcp · hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after flowatlas observe",
+  "next": [
+    "get_flow({entry: \"entry:gateway:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:gateway:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:gateway:http:GET:/orders/:param\"})"
+  ]
+}

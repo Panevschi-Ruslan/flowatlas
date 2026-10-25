@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T04:49:56.851Z",
+  "configHash": "95fcc497df76",
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 28,
+      "edges": 11,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 844,
+      "packages": {
+        "name": "catalog-api",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/terminus"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ops-scripts",
+      "repo": "./ops-scripts",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 683,
+      "packages": {
+        "name": "ops-scripts",
+        "runtime": [],
+        "dev": [
+          "@types/node"
+        ]
+      }
+    },
+    {
+      "name": "orders-worker",
+      "repo": "./orders-worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 6,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 570,
+      "packages": {
+        "name": "orders-worker",
+        "runtime": [],
+        "dev": [
+          "@cloudflare/workers-types"
+        ]
+      }
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 15,
+      "edges": 11,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 606,
+      "packages": {
+        "name": "storefront",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 4,
+    "linked": 4,
+    "byMarker": 1,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 4,
+    "unresolved": 1,
+    "byReason": {
+      "api-path-partly-read": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 11,
+    "called": 5,
+    "uncalled": [
+      "entry:catalog-api:http:GET:/healthz",
+      "entry:catalog-api:http:GET:/items/:param/price",
+      "entry:catalog-api:http:GET:/items/export",
+      "entry:catalog-api:http:GET:/oauth/callback",
+      "entry:catalog-api:http:GET:/ready",
+      "entry:catalog-api:http:POST:/webhooks/payments"
+    ],
+    "duplicated": [],
+    "nearMissed": {
+      "entry:catalog-api:http:GET:/items/:param/price": [
+        "ui_api_call:storefront#src/app/items.client.ts:59:12"
+      ]
+    }
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "ops-scripts",
+      "file": "src/reindex.ts",
+      "line": 3,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "REINDEX_URL is https://catalog.internal/items/reindex in .env.example, which is taken as catalog-api",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add REINDEX_URL to services[].baseUrlEnv of catalog-api to say so outright.",
+      "symbol": "http_out:ops-scripts#src/reindex.ts:3:9",
+      "meta": {
+        "variable": "REINDEX_URL",
+        "value": "https://catalog.internal/items/reindex",
+        "from": ".env.example"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 57,
+    "edges": 38,
+    "types": 4,
+    "missed": 2,
+    "sites": 2,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

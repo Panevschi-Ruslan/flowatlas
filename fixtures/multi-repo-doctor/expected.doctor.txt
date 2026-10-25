@@ -1,8 +1,13 @@
 gateway: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there.
 
-unresolved: total=26 (baseline 26, +0) · markers: errors=7 warnings=4 · desync=2 · contracts: errors=4 ignored=1 · exit=0
+unresolved: total=26 (baseline 26, +0) · markers: errors=7 warnings=4 · desync=2 · contracts: errors=4 ignored=1 · rules: errors=0 new=0 · exit=0
 
-unresolved: 26 to act on over 31 rows, and 5 places static reading cannot see, folded into 5
+unresolved: 26 to act on · missed: 28 · notes: 0 · findings: 3
+  5 missed places static reading cannot see, folded into 5 rows
+  3 findings: 3 routes with no guard
+  Probably missing: a repository for "legacy" — 1 kind of evidence, 1 place
+    LEGACY_URL is used by gateway (1 request) and no service claims it
+    nothing next to the configured repositories looks like it; if it exists elsewhere, `flowatlas link <path>`
   unknown-db-package: 9 rows
     Add a descriptor for fake-orm to record which of its methods read and which write.
       orders/src/orders/orders.service.ts:46  this.rows.persist
@@ -25,8 +30,8 @@ unresolved: 26 to act on over 31 rows, and 5 places static reading cannot see, f
       gateway/src/app.module.ts:8  AppModule imports HttpModule
       gateway/src/app.module.ts:8  AppModule imports ConfigModule
       orders/src/app.module.ts:10  AppModule imports ConfigModule
-  route-unguarded: 3 rows
-    Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.
+  route-unguarded (finding): 3 rows
+    Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path "<METHOD> /prefix/*" --note "<why>".
       orders/src/orders/orders.controller.ts:11  POST /orders
       orders/src/orders/orders.controller.ts:16  POST /orders/legacy
       orders/src/orders/orders.controller.ts:21  GET /orders/:param
@@ -44,7 +49,7 @@ unresolved: 26 to act on over 31 rows, and 5 places static reading cannot see, f
     Check orders's controllers, or correct the annotation.
       gateway/src/clients/orders.client.ts:40  @CallsService points at DELETE /orders/:id/void, which orders does not serve
   marker-service-unknown: 1 row
-    Add warehouse to services[] in flowatlas.config.json, or correct the annotation.
+    Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.
       gateway/src/clients/orders.client.ts:49  @CallsService names warehouse, which is not a configured service
   target-route-not-found: 1 row
     Route renamed? Check orders's controllers, or annotate the call with @CallsService.
@@ -67,7 +72,7 @@ markers: 7 errors, 4 warnings:
   warning   marker-consumes-shadowed             billing src/invoices/invoices.consumer.ts:18  @Consumes("order.created") on InvoicesConsumer.onOrderCreated says what the code already says               Static reading finds this subscription on its own, so the annotation adds nothing. Remove it.
   error     marker-consumes-without-consumer     billing src/invoices/invoices.service.ts:18   @Consumes("order.refunded") on InvoicesService.onOrderRefunded, which nothing subscribes and nothing calls  Remove the annotation, or register the method as a handler. Nothing in the repository connects it to a message.
   error     marker-callsservice-route-missing    gateway src/clients/orders.client.ts:38       @CallsService points at DELETE /orders/:id/void, which orders does not serve                                Did you mean POST /orders? Otherwise check orders's controllers.
-  error     marker-callsservice-unknown-service  gateway src/clients/orders.client.ts:47       @CallsService names warehouse, which is not a configured service                                            Add warehouse to services[] in flowatlas.config.json, or correct the annotation.
+  error     marker-callsservice-unknown-service  gateway src/clients/orders.client.ts:47       @CallsService names warehouse, which is not a configured service                                            Add warehouse to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.
   warning   marker-emits-shadowed                orders src/orders/orders.service.ts:44        @Emits("order.created") on OrdersService.create says what the code already says                             Static reading finds this publish on its own, so the annotation adds nothing and will not be corrected when the channel is renamed. Remove it.
   error     marker-emits-without-emit            orders src/orders/orders.service.ts:55        @Emits("order.audited") on OrdersService.audit, which publishes nothing                                     Remove the annotation, or publish from this method. Nothing else in it puts a message on any channel.
   error     marker-arg-not-a-name                orders src/orders/orders.service.ts:68        @Emits on OrdersService.tally was given 7, which is not a name                                              Each argument must be a string or an array of strings. A value of another shape names nothing, and was not read as anything.

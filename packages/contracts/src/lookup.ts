@@ -17,7 +17,7 @@ export const isProjectGraph = (source: ProjectGraph | GraphLookup): source is Pr
  * Indexes for a graph that is already in memory.
  *
  * Built once and thrown away with the check. Walking the edge array for every
- * question would turn a project with twenty thousand edges into a minute of
+ * question would turn a large project into a long wait of
  * scanning, and the answers are the same either way.
  */
 export const lookupOf = (graph: ProjectGraph): GraphLookup => {

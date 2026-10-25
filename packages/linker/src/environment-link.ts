@@ -13,6 +13,8 @@ import {
   type EnvironmentValue,
   type GraphEdge,
   type GraphNode,
+  type RepoSettings,
+  type SettingValue,
   type Unresolved,
 } from '@flowatlas/core';
 import { cmp, edgeKey } from './order.js';
@@ -42,7 +44,7 @@ import { cmp, edgeKey } from './order.js';
 const REACH = new Set(['handles', 'calls']);
 
 /** Every node each deployed function reaches, within its own service. */
-const reachedBy = (
+export const reachedBy = (
   nodes: ReadonlyMap<string, GraphNode>,
   edges: ReadonlyMap<string, GraphEdge>,
   functions: readonly GraphNode[],
@@ -89,7 +91,13 @@ const callAt = (producer: GraphNode): string => `the call at ${producer.file ?? 
  * (`defaults`), or what stopped it.
  */
 type Completion =
-  | { readonly name: string; readonly variables: readonly string[]; readonly defaults: readonly string[] }
+  | {
+      readonly name: string;
+      readonly variables: readonly string[];
+      readonly defaults: readonly string[];
+      /** Variables the repository's own files gave a value, and the file each came from (P77). */
+      readonly fromFiles: readonly FromFile[];
+    }
   | { readonly missing: string }
   | { readonly unread: string; readonly value: EnvironmentValue };
 
@@ -99,10 +107,15 @@ type Completion =
  * stops the address where it did not. A value the deployment sets and the files
  * do not settle stops it either way: the fallback is not what runs there.
  */
-const complete = (address: AwaitedAddress, environment: Readonly<Record<string, EnvironmentValue>>): Completion => {
+const complete = (
+  address: AwaitedAddress,
+  environment: Readonly<Record<string, EnvironmentValue>>,
+  files: RepoSettings | undefined,
+): Completion => {
   const parts: string[] = [];
   const variables: string[] = [];
   const defaults: string[] = [];
+  const fromFiles: FromFile[] = [];
   for (const part of address.parts) {
     if (typeof part === 'string') {
       parts.push(part);
@@ -110,23 +123,60 @@ const complete = (address: AwaitedAddress, environment: Readonly<Record<string, 
     }
     const value = environment[part.environment];
     if (value === undefined) {
-      if (part.otherwise === undefined) return { missing: part.environment };
-      parts.push(part.otherwise);
-      defaults.push(part.environment);
+      if (part.otherwise !== undefined) {
+        parts.push(part.otherwise);
+        defaults.push(part.environment);
+        continue;
+      }
+      // Not deployed with it and no fallback in the code: the repository's own
+      // files may still write it down, once, the same way everywhere (P77).
+      const written = soleValue(files?.values[part.environment]);
+      if (written === undefined) return { missing: part.environment };
+      parts.push(nameWithin(written.value, part.forms));
+      fromFiles.push({ variable: part.environment, file: written.file, value: written.value });
       continue;
     }
     if (value.value === undefined) return { unread: part.environment, value };
     parts.push(value.kind === undefined ? nameWithin(value.value, part.forms) : value.value);
     variables.push(part.environment);
   }
-  return { name: parts.join('/'), variables, defaults };
+  return { name: parts.join('/'), variables, defaults, fromFiles };
 };
+
+/** A variable completed from a repository's own files, with where (P77). */
+interface FromFile {
+  readonly variable: string;
+  readonly file: string;
+  readonly value: string;
+}
+
+/** The one value the files agree on, or nothing where they say nothing or disagree. */
+const soleValue = (values: readonly SettingValue[] | undefined): SettingValue | undefined => {
+  const [first] = values ?? [];
+  return first !== undefined && (values ?? []).every((value) => value.value === first.value) ? first : undefined;
+};
+
+/** What is said where a variable a function is not deployed with was read from the repository's files. */
+const fromFilesFinding = (producer: GraphNode, fn: GraphNode | undefined, found: FromFile, said: { verb: string }): Unresolved => ({
+  ...at(producer),
+  reason: 'environment-from-files',
+  level: 'info',
+  message:
+    `${callAt(producer)} ${said.verb} the value of ${found.variable}` +
+    `${fn === undefined ? ', which nothing deployed here sets' : `; ${fn.label} runs it and is not deployed with ${found.variable}`}` +
+    `, so it is read as ${found.value} from ${found.file}`,
+  hint: `The value is one the repository writes down for running it, not necessarily the deployed one. Set ${found.variable} where ${fn?.label ?? 'the code'} is deployed to say so outright.`,
+  symbol: producer.id,
+  meta: { ...(fn === undefined ? {} : { function: fn.id }), variable: found.variable, file: found.file },
+});
 
 /** One channel an address reached, and for whom: the functions, the variables they set, and those left to the code's fallback. */
 interface Reached {
   readonly functions: Set<string>;
   readonly variables: Set<string>;
   readonly defaults: Set<string>;
+  /** The file each variable read from the repository's files came from (P77). */
+  readonly fromFiles: Map<string, string>;
   readonly payload?: string;
 }
 
@@ -141,23 +191,28 @@ export const completeFromEnvironment = (
   nodes: Map<string, GraphNode>,
   edges: Map<string, GraphEdge>,
   rows: Unresolved[],
+  /** What each service's own files say its settings are (P77). */
+  settings: Readonly<Record<string, RepoSettings>> = {},
 ): Unresolved[] => {
   const functions = [...nodes.values()]
     .filter((node) => node.type === 'entry' && node.meta?.[ENVIRONMENT_META] !== undefined)
     .sort((a, b) => cmp(a.id, b.id));
-  if (functions.length === 0) return [];
-  const reached = reachedBy(nodes, edges, functions);
+  if (functions.length === 0 && Object.keys(settings).length === 0) return [];
+  const reached = functions.length === 0 ? new Map<string, GraphNode[]>() : reachedBy(nodes, edges, functions);
   const findings: Unresolved[] = [];
   const callsInto = new Map<string, GraphEdge[]>();
   for (const edge of edges.values()) {
     if (edge.type === 'calls') callsInto.set(edge.to, [...(callsInto.get(edge.to) ?? []), edge]);
   }
 
+  // A producer no deployed function runs is completed from its repository's
+  // files alone, where they settle every part it waits on (P77).
   const producers = [...nodes.values()]
-    .filter((node) => Array.isArray(node.meta?.[AWAITING_META]) && reached.has(node.id))
+    .filter((node) => Array.isArray(node.meta?.[AWAITING_META]) && (reached.has(node.id) || settings[node.repo] !== undefined))
     .sort((a, b) => cmp(a.id, b.id));
   for (const producer of producers) {
-    const runners = reached.get(producer.id) as GraphNode[];
+    const runners = reached.get(producer.id) ?? [];
+    const files = settings[producer.repo];
     const addresses = producer.meta?.[AWAITING_META] as AwaitedAddress[];
     // How far the call can be trusted, as the reader of the call said; its edge
     // was drawn weak only because there was no channel yet to put it on.
@@ -168,14 +223,44 @@ export const completeFromEnvironment = (
     const said = isDeployedEntryKind(starts) ? { verb: 'starts', what: 'what it starts' } : { verb: 'sends to', what: 'where it sends' };
     const reachedChannels = new Map<string, Reached>();
     const reported = new Set<string>();
+    const fromFilesRows: Unresolved[] = [];
+    const tookFromFiles = (found: Reached, done: Extract<Completion, { name: string }>, fn: GraphNode | undefined): void => {
+      for (const each of done.fromFiles) {
+        found.fromFiles.set(each.variable, each.file);
+        const key = `${fn?.id ?? ''}\0${each.variable}`;
+        if (reported.has(key)) continue;
+        reported.add(key);
+        fromFilesRows.push(fromFilesFinding(producer, fn, each, said));
+      }
+    };
+    const reachedFor = (name: string, address: AwaitedAddress): Reached =>
+      reachedChannels.get(name) ?? {
+        functions: new Set(),
+        variables: new Set(),
+        defaults: new Set(),
+        fromFiles: new Map(),
+        ...(address.payload === undefined ? {} : { payload: address.payload }),
+      };
     for (const address of addresses) {
+      // Nothing deployed runs it: the files are the only environment it has,
+      // and an address they leave a part of unsettled stays the extractor's row.
+      if (runners.length === 0) {
+        const done = complete(address, {}, files);
+        if (!('name' in done) || done.fromFiles.length === 0) continue;
+        const found = reachedFor(done.name, address);
+        for (const variable of done.defaults) found.defaults.add(variable);
+        tookFromFiles(found, done, undefined);
+        reachedChannels.set(done.name, found);
+        continue;
+      }
       for (const fn of runners) {
-        const done = complete(address, environmentOf(fn));
+        const done = complete(address, environmentOf(fn), files);
         if ('name' in done) {
-          const found: Reached = reachedChannels.get(done.name) ?? { functions: new Set(), variables: new Set(), defaults: new Set(), ...(address.payload === undefined ? {} : { payload: address.payload }) };
+          const found = reachedFor(done.name, address);
           found.functions.add(fn.label);
           for (const variable of done.variables) found.variables.add(variable);
           for (const variable of done.defaults) found.defaults.add(variable);
+          tookFromFiles(found, done, fn);
           reachedChannels.set(done.name, found);
           continue;
         }
@@ -209,6 +294,9 @@ export const completeFromEnvironment = (
         );
       }
     }
+    // Unreached and unsettled by the files: the extractor's own row stands.
+    if (runners.length === 0 && reachedChannels.size === 0) continue;
+    findings.push(...fromFilesRows);
     // The row the extractor wrote said nothing was known about where this
     // sends; a function runs it, so the rows above say exactly what is.
     for (let index = rows.length - 1; index >= 0; index -= 1) {
@@ -223,6 +311,9 @@ export const completeFromEnvironment = (
     producer.label = `${kind} ${names.join(', ')}`;
     producer.meta = { ...producer.meta, channelVia: 'environment' };
     for (const edge of callsInto.get(producer.id) ?? []) edge.confidence = calledAt;
+    // A part read from a repository's files is a guess at what is deployed.
+    const sendsAt = (found: Reached): Confidence =>
+      found.fromFiles.size > 0 && CONFIDENCE_RANK[calledAt] > CONFIDENCE_RANK.heuristic ? 'heuristic' : calledAt;
     if (isDeployedEntryKind(starts)) {
       // Joined by its deployed name with every other reference, later.
       const reaches = (producer.meta[REACHES_META] as string[] | undefined) ?? [];
@@ -247,7 +338,7 @@ export const completeFromEnvironment = (
         from: producer.id,
         to: id,
         type: 'emits',
-        confidence: calledAt,
+        confidence: sendsAt(found),
         ...(producer.file === undefined ? {} : { file: producer.file }),
         ...(producer.line === undefined ? {} : { line: producer.line }),
         ...(found.payload === undefined ? {} : { params: [found.payload] }),
@@ -255,6 +346,9 @@ export const completeFromEnvironment = (
           via: 'environment',
           variables: [...found.variables].sort(cmp),
           ...(found.defaults.size === 0 ? {} : { defaults: [...found.defaults].sort(cmp) }),
+          ...(found.fromFiles.size === 0
+            ? {}
+            : { fromFiles: Object.fromEntries([...found.fromFiles.entries()].sort(([a], [b]) => cmp(a, b))) }),
           functions: [...found.functions].sort(cmp),
         },
       };

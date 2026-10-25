@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "trpc-inferred-context",
-  "generatedAt": "2026-10-08T19:06:34.284Z",
+  "generatedAt": "2026-10-17T03:51:18.892Z",
   "nodes": [
     {
       "id": "db_query:trpc-inferred-context#src/procedures.ts:10:23",
@@ -76,7 +76,8 @@
         "package": "@prisma/client",
         "method": "deleteMany",
         "receiver": "prisma.order",
-        "source": "receiver-prop"
+        "source": "receiver-prop",
+        "batch": true
       }
     },
     {
@@ -95,7 +96,8 @@
         "package": "@prisma/client",
         "method": "updateMany",
         "receiver": "tx.order",
-        "source": "receiver-prop"
+        "source": "receiver-prop",
+        "batch": true
       }
     },
     {
@@ -514,6 +516,31 @@
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "orders.clearDrafts@9 -> prisma.order.deleteMany",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/router.ts",
+                "line": 11,
+                "symbol": "orders.clearDrafts@9 -> prisma.order.deleteMany"
+              },
+              {
+                "file": "src/router.ts",
+                "line": 16,
+                "symbol": "orders.archive@15 -> ctx.prisma.$transaction"
+              },
+              {
+                "file": "src/router.ts",
+                "line": 17,
+                "symbol": "orders.archive@15 -> tx.order.updateMany"
+              }
+            ]
+          }
+        ]
+      },
       "sites": 3
     }
   ]

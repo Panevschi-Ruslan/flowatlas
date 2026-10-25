@@ -12,12 +12,17 @@ import {
   parseConfig,
   readPackageJson,
   readResolvedPackageJson,
+  readStandInsOfBuild,
+  standInsFingerprintOf,
+  patternFilesFor,
   SCHEMA_VERSION,
-  wasMissed,
+  countsOf,
   type FlowatlasConfig,
   type PackageJson,
+  type Logger,
   type RepoGraph,
   type ServiceConfig,
+  type StandInsOfBuild,
 } from '@flowatlas/core';
 import { deployedSourceDirectories } from '@flowatlas/adapters-entry';
 import { extractRepo as extractAngularRepo, openProject as openAngularProject } from '@flowatlas/extractor-angular';
@@ -32,7 +37,7 @@ import {
   repoFiles,
   type ExtractRepoOptions,
 } from '@flowatlas/extractor-nestjs';
-import type { Command } from 'commander';
+import { Option, type Command } from 'commander';
 import type { Project } from 'ts-morph';
 import { partialReadNotice } from '../partial-read.js';
 import {
@@ -134,16 +139,35 @@ export interface ExtractOptions {
   verbose?: boolean;
   /** Commander sets this to false for `--no-cache`. */
   cache?: boolean;
+  /**
+   * The stand-ins file the build that started this reading wrote (P82). An
+   * internal flag, hidden from `--help`: a reading started by hand works them
+   * out itself.
+   */
+  standIns?: string;
 }
 
+/**
+ * The build's stand-ins, when it handed a file over and the file is one this
+ * reader reads. Anything else is said once, at debug level, and the reading
+ * works them out itself: a stale or foreign file is never trusted.
+ */
+const standInsGiven = (path: string | undefined, logger: Logger): StandInsOfBuild | undefined => {
+  if (path === undefined) return undefined;
+  const read = readStandInsOfBuild(path);
+  if ('given' in read) return read.given;
+  logger.debug(`stand-ins: ${read.problem}; working them out in this reading instead`);
+  return undefined;
+};
+
 /** Name a repository is known by: the configured service if there is one. */
-/** Rows of a repository's graph that say something was not read. */
-const missed = (graph: RepoGraph): number => graph.unresolved.filter(wasMissed).length;
+/** Rows of a repository's graph that say something was not read: gaps, by the one counter (P81). */
+const missed = (graph: RepoGraph): number => countsOf(graph.unresolved).missed;
 
 const resolveService = (
   rootDir: string,
   configPath: string | undefined,
-): { repo: string; service?: ServiceConfig; config?: FlowatlasConfig } => {
+): { repo: string; service?: ServiceConfig; config?: FlowatlasConfig; configDir?: string } => {
   if (configPath !== undefined) {
     try {
       const loaded = loadConfig(configPath, { checkRepos: false });
@@ -152,11 +176,11 @@ const resolveService = (
           ? service.repo
           : resolve(loaded.rootDir, service.repo);
         if (candidate === rootDir) {
-          return { repo: service.name, service, config: loaded.config };
+          return { repo: service.name, service, config: loaded.config, configDir: loaded.rootDir };
         }
       }
       const pkgName = readPackageJson(rootDir)?.name;
-      return { repo: nameFrom(pkgName, rootDir), config: loaded.config };
+      return { repo: nameFrom(pkgName, rootDir), config: loaded.config, configDir: loaded.rootDir };
     } catch {
       // A configuration that cannot be read is not a reason to refuse to
       // extract a single repository; fall through to naming it ourselves.
@@ -240,20 +264,24 @@ export const runExtract = async (
   const ownConfig = join(rootDir, CONFIG_FILENAME);
   const configPath =
     options.config ?? (existsSync(ownConfig) ? ownConfig : findConfig(process.cwd()));
-  const { repo, service, config } = resolveService(rootDir, configPath);
+  const { repo, service, config, configDir } = resolveService(rootDir, configPath);
 
   const registry = createRegistry();
+  const logger = createLogger(options.verbose === true ? 'debug' : 'warn');
+  const standInsOfBuild = standInsGiven(options.standIns, logger);
   const extractOptions: ExtractRepoOptions = {
     rootDir,
     repo,
     ...(service === undefined ? {} : { service }),
     ...(config === undefined ? {} : { config }),
+    ...(configDir === undefined ? {} : { configDir }),
+    ...(standInsOfBuild === undefined ? {} : { standInsOfBuild }),
     registry,
     extraPasses: EXTRA_PASSES,
     ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }),
     ...(options.types === false ? { noTypes: true } : {}),
     ...(options.typesDepth === undefined ? {} : { typesDepth: Number(options.typesDepth) }),
-    logger: createLogger(options.verbose === true ? 'debug' : 'warn'),
+    logger,
   };
 
   // The configured type says which extractor reads a repository. Without a
@@ -299,7 +327,7 @@ export const runExtract = async (
   if (options.cache !== false) {
     saveBuildCache(
       join(dirname(outPath), 'cache.json'),
-      repoCacheOf({ warm, graph, outPath, repo, rootDir, registry, extractor: readBrowser?.extractor ?? NESTJS_EXTRACTOR, ...(service === undefined ? {} : { service }), ...(config === undefined ? {} : { config }), ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }) }),
+      repoCacheOf({ warm, graph, outPath, repo, rootDir, registry, extractor: readBrowser?.extractor ?? NESTJS_EXTRACTOR, ...(configDir === undefined ? {} : { configDir }), ...(service === undefined ? {} : { service }), ...(config === undefined ? {} : { config }), ...(options.tsconfig === undefined ? {} : { tsconfig: options.tsconfig }) }),
     );
   }
 
@@ -314,6 +342,8 @@ interface RepoCacheOptions {
   rootDir: string;
   registry: ReturnType<typeof createRegistry>;
   extractor: string;
+  /** The configuration's directory, which the stand-ins recorded are relative to (P83). */
+  configDir?: string;
   service?: ServiceConfig;
   config?: FlowatlasConfig;
   tsconfig?: string;
@@ -345,6 +375,10 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
   for (const [file, stamp] of Object.entries(files)) stamp.deps = imports[file] ?? [];
 
   const tsconfig = findTsconfig(rootDir, options.tsconfig ?? options.service?.tsconfig);
+  const standIns =
+    options.configDir === undefined
+      ? undefined
+      : standInsFingerprintOf(warm.project, options.configDir, patternFilesFor(config, options.service, options.configDir));
   cache.repos[repo] = {
     repo: options.service?.repo ?? rootDir,
     extractor,
@@ -354,6 +388,9 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
     globalFiles: [...globalFiles(warm), ...deployed],
     files,
     packages: stampPackageFiles(rootDir, packageFiles(warm), undefined),
+    // What stood in and for which names (P83): the build that started this
+    // reading asks the names of it and answers them from its own index.
+    ...(standIns === undefined ? {} : { standIns }),
     graphPath: outPath,
     graphHash: hashGraphFile(outPath),
     counts: {
@@ -399,6 +436,8 @@ export const registerExtract = (program: Command): void => {
     .option('--types-depth <n>', 'how deep anonymous shapes are written out')
     .option('--json', 'print the summary as JSON')
     .option('-v, --verbose', 'log each pass')
+    // What `build` hands each reading it starts (P82); not for typing by hand.
+    .addOption(new Option('--stand-ins <file>', 'stand-ins worked out by the build').hideHelp())
     .action(async (repoPath: string, options: ExtractOptions) => {
       const { graph, outPath } = await runExtract(repoPath, options);
       if (options.json === true) {

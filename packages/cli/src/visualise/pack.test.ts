@@ -1,8 +1,13 @@
-import type { GraphNode } from '@flowatlas/core';
+import type { GraphEdge, GraphNode } from '@flowatlas/core';
 import type { AnchoredUnresolvedRow, LinkReport } from '@flowatlas/linker';
 import { describe, expect, it } from 'vitest';
 import { stableKeys } from './keys.js';
-import { packGraph } from './pack.js';
+import { wordsOf } from './dictionary.js';
+import { createModel, serviceOfRow, type GraphModel } from './graph.js';
+import { packObserved } from './observed.js';
+import { packGraph, type PackedGraph } from './pack.js';
+import { ambiguousOf, logsOf, unmatchedOf } from './steps.js';
+import { nodeAt, testObserved, testPack, testRunTimePack } from './panels/test-page.js';
 
 const report = {
   httpOut: {},
@@ -162,8 +167,11 @@ describe('packing what the details panel shows', () => {
     expect(levels[onNode![5] as number]).toBe('action');
     expect(hints[onNode![8] as number]).toBe('name the class');
     expect(onNode![7]).toBe('a receiver read by its name only');
-    // A service with no node of its own has no index; the row says -1 rather than a wrong one.
-    expect(elsewhere![1]).toBe(-1);
+    // A service with no node of its own is not in the list of services, so its row names it (P97, P133).
+    expect(elsewhere![1]).toBe('web');
+    expect(serviceOfRow(repos, elsewhere!)).toBe('web');
+    expect(serviceOfRow(repos, onNode!)).toBe('api');
+    expect(serviceOfRow(repos, [-1, -1])).toBe('');
     expect(files[elsewhere![2] as number]).toBe('src/new.ts');
     expect(elsewhere![6]).toBe(4);
     expect(elsewhere![8]).toBe(-1);
@@ -174,6 +182,41 @@ describe('packing what the details panel shows', () => {
       ['db-receiver-name-only', 2],
       ['dynamic-table-name', 1],
     ]);
+  });
+});
+
+describe('the stat row and the Not joined tab, by kind (P81)', () => {
+  // A report as 0.5.x stored it: `unresolved` alone, counting every row not
+  // at `nothing`, and `query-in-loop` written at `nothing`.
+  const old = {
+    ...report,
+    totals: { nodes: 2, edges: 1, types: 0, unresolved: 5 },
+  } as unknown as LinkReport;
+  const rows = [
+    row({}),
+    row({ reason: 'call-dynamic-receiver', level: 'info', sites: 12, line: 20 }),
+    row({ reason: 'base-url-from-files', level: 'info', sites: 3, line: 30 }),
+    row({ reason: 'query-in-loop', level: 'nothing', line: 40 }),
+    row({ reason: 'route-unguarded', line: 50 }),
+  ];
+  const kinded = packGraph({ builtAt: '2026-10-07T00:00:00.000Z', nodes, edges: [], unresolved: rows, report: old });
+
+  it('counts missed, notes and findings from the rows, whatever the stored report says', () => {
+    expect(kinded.report).toMatchObject({
+      totals: { nodes: 2, edges: 1, types: 0, missed: 2, sites: 13, notes: 1, findings: 2, unresolved: 2 },
+    });
+  });
+
+  it('lists each reason under its kind', () => {
+    expect(kinded.unresolved.map((group) => [group.reason, group.kind])).toEqual(
+      expect.arrayContaining([
+        ['db-receiver-name-only', 'gap'],
+        ['call-dynamic-receiver', 'gap'],
+        ['base-url-from-files', 'note'],
+        ['query-in-loop', 'finding'],
+        ['route-unguarded', 'finding'],
+      ]),
+    );
   });
 });
 
@@ -196,5 +239,176 @@ describe('naming nodes in a link', () => {
     });
     expect(keyAt(moved.keys, 1)).toBe(keyAt(packed.keys, 2));
     expect(keyAt(moved.keys, 2)).toBe(keyAt(packed.keys, 1));
+  });
+});
+
+describe('edges a stand-in typed (P78)', () => {
+  it('ships how and whose types, by edge position, and nothing when none was', () => {
+    expect(packed.standIns).toBeUndefined();
+    const marked = packGraph({
+      builtAt: '2026-10-07T00:00:00.000Z',
+      nodes,
+      edges: [
+        { from: nodes[0]!.id, to: nodes[1]!.id, type: 'calls', confidence: 'static' },
+        {
+          from: nodes[1]!.id,
+          to: nodes[0]!.id,
+          type: 'calls',
+          confidence: 'heuristic',
+          meta: { because: ['shape-file'], typedBy: '@acme/queue-client' },
+        },
+      ],
+      unresolved: [],
+      report,
+    });
+    expect(marked.standIns).toEqual({
+      via: ['package-from-repo', 'shape-file'],
+      packages: ['@acme/queue-client'],
+      edges: { '1': [1, 0] },
+    });
+  });
+});
+
+describe('logs and unmatched spans through dictionaries (P84)', () => {
+  const levels = ['log', 'warn', 'error'];
+  const logging: GraphNode[] = Array.from({ length: 12 }, (_, i) => ({
+    id: `api#src/jobs.ts:Jobs.run${i}`,
+    type: 'method',
+    label: `Jobs.run${i}`,
+    repo: 'api',
+    file: 'src/jobs.ts',
+    line: 10 * i,
+    meta: {
+      logs: [
+        { level: levels[i % 3], text: 'job started', at: 10 * i + 1 },
+        { level: 'log', text: `job ${i} wrote {count} rows`, at: 10 * i + 2 },
+        { level: 'error', at: 10 * i + 3 },
+      ],
+    },
+  }));
+  const packLogs = (list: GraphNode[]) => packGraph({ builtAt: '2026-10-07T00:00:00.000Z', nodes: list, edges: [], unresolved: [], report });
+
+  it('lists the repeated levels and templates once, ships a one-off template as it is, and reads back the same lines', () => {
+    const data = packLogs(logging);
+    expect(data.dicts.logLevels).toEqual(['error', 'log', 'warn']);
+    expect(data.dicts.logTexts).toEqual(['job started']);
+    expect(data.logs?.[0]).toEqual([[1, 1, 0], [1, 2, 'job 0 wrote {count} rows'], [0, 3]]);
+    const model = createModel(data) as GraphModel;
+    logging.forEach((node, i) => {
+      const lines = (node.meta!['logs'] as Array<{ level: string; text?: string; at: number }>).map(({ level, text, at }) => ({
+        level,
+        line: at,
+        text: text ?? '',
+      }));
+      expect(logsOf(model, i)).toEqual(lines);
+    });
+  });
+
+  it('ships a block with nothing worth listing exactly as its words, with no list at all', () => {
+    const data = packLogs(logging.slice(0, 1));
+    expect(data.dicts.logLevels).toBeUndefined();
+    expect(data.dicts.logTexts).toBeUndefined();
+    expect(data.logs?.[0]).toEqual([['log', 1, 'job started'], ['log', 2, 'job 0 wrote {count} rows'], ['error', 3]]);
+    expect(logsOf(createModel(data) as GraphModel, 0)[2]).toEqual({ level: 'error', line: 3, text: '' });
+  });
+
+  it('reads back every unmatched span, with and without a service', () => {
+    const unmatched = [
+      ...Array.from({ length: 6 }, (_, i) => ({ service: 'billing', kind: 'code', name: `LedgerClient.post${i}`, count: 1 })),
+      { kind: 'http', name: 'GET /metrics', count: 2 },
+      { service: 'gateway', kind: 'http', name: 'GET /health', count: 1 },
+    ];
+    const packed = packObserved({ joins: {}, entries: {}, symbols: {}, channels: {}, unmatched } as never, [], {}, new Map());
+    expect(packed.services).toEqual(['billing']);
+    expect(packed.kinds).toEqual(['code', 'http']);
+    expect(packed.unmatched[6]).toEqual([-1, 1, 'GET /metrics']);
+    expect(packed.unmatched[7]).toEqual(['gateway', 1, 'GET /health']);
+    expect(unmatchedOf(packed)).toEqual(unmatched.map(({ count: _, ...span }) => span));
+  });
+
+  it('reads back what fit several places: edges for a join, nodes otherwise, and how many it does not name', () => {
+    const edges = [{ from: 'a', to: 'b', type: 'calls', confidence: 'static' }] as GraphEdge[];
+    const ambiguous = [
+      { service: 'billing', kind: 'symbol', name: 'LedgerClient.post', candidates: ['a', 'gone'], more: 2, count: 3 },
+      { kind: 'join', name: 'GET /x', candidates: ['a -calls-> b'], count: 1 },
+    ];
+    const packed = packObserved(
+      { joins: {}, entries: {}, symbols: {}, channels: {}, unmatched: [], ambiguous } as never,
+      edges,
+      {},
+      new Map([['a', 4]]),
+    );
+    expect(packed.ambiguous).toEqual([
+      ['billing', 'symbol', 'LedgerClient.post', 3, [4], 3],
+      [-1, 'join', 'GET /x', 1, [0]],
+    ]);
+    expect(ambiguousOf(packed)).toEqual([
+      { service: 'billing', kind: 'symbol', name: 'LedgerClient.post', count: 3, places: [4], unnamed: 3 },
+      { kind: 'join', name: 'GET /x', count: 1, places: [0], unnamed: 0 },
+    ]);
+    expect(packObserved({ joins: {}, entries: {}, symbols: {}, channels: {}, unmatched: [] } as never, [], {}, new Map())).not.toHaveProperty('ambiguous');
+  });
+
+  it('packs the ways in whose bodies differ from their code by entry id, and only those the page has (P113)', () => {
+    const empty = { joins: {}, entries: {}, symbols: {}, channels: {}, unmatched: [] } as never;
+    const traffic = {
+      never: { window: '2h', rows: [] },
+      confirmed: [],
+      drift: [
+        { entry: 'entry:api:http:GET:/orders', fields: 2, paths: ['request giftNote', '200 owner'] },
+        { entry: 'entry:gone:http:GET:/x', fields: 1, paths: ['request x'] },
+      ],
+    };
+    const packed = packObserved(empty, [], { 'entry:api:http:GET:/orders': 0 }, new Map(), [], traffic);
+    expect(packed.drift).toEqual({ 'entry:api:http:GET:/orders': [2, ['request giftNote', '200 owner']] });
+    expect(packObserved(empty, [], {}, new Map(), [], { ...traffic, drift: [] })).not.toHaveProperty('drift');
+  });
+
+  it('packs one build to the same bytes twice, with every dictionary sorted', () => {
+    const one = JSON.stringify(packLogs(logging));
+    expect(JSON.stringify(packLogs(logging))).toBe(one);
+    const data = JSON.parse(one) as PackedGraph;
+    const { types, repos, kinds, files, edgeTypes, confidences, values, logLevels, logTexts } = data.dicts;
+    for (const list of [types, repos, kinds, files, edgeTypes, confidences, values, logLevels!, logTexts!]) {
+      expect(list).toEqual([...list].sort());
+    }
+  });
+});
+
+describe('wordsOf (P84)', () => {
+  it('lists only what pays for its place, and nothing unless the list pays for its name', () => {
+    expect(wordsOf(['a', 'b', 'a'], 'k').list).toEqual([]);
+    const many = wordsOf([...Array(10).fill('NotFoundException'), 'Once'], 'exceptions');
+    expect(many.list).toEqual(['NotFoundException']);
+    expect(many.word('NotFoundException')).toBe(0);
+    expect(many.word('Once')).toBe('Once');
+  });
+});
+
+describe('run time in the pack (P111)', () => {
+  it('adds nothing to a page with no observed file', () => {
+    const plain = testPack('pack-plain');
+    expect(plain.observed).toBeUndefined();
+    expect(plain.observedDiff).toBeUndefined();
+  });
+
+  it('packs each step’s own figures by node position, and the slow and the failing request once each', () => {
+    const data = testRunTimePack('pack-runtime');
+    const at = nodeAt(data);
+    expect(data.observed!.nodes![String(at('orders#src/orders/orders.service.ts:OrdersService.create'))]).toMatchObject({ p95: 294 });
+    const samples = data.observed!.samples!['entry:gateway:http:POST:/orders']!;
+    expect(samples.map((sample) => [sample.slow ?? 0, sample.failing ?? 0, sample.ms])).toEqual([[1, 0, 310], [0, 1, 40]]);
+    // The tree names nodes by position and a service only where it changes.
+    expect(samples[0]!.tree).toMatchObject({ node: at('entry:gateway:http:POST:/orders'), service: 'gateway' });
+    expect(samples[0]!.tree.children![0]!.service).toBeUndefined();
+    expect(data.observed!.entries['entry:gateway:http:POST:/orders']).toMatchObject({ errorRate: 0.1 });
+  });
+
+  it('packs a request that is both the slowest and failing once, as both', () => {
+    const observed = testObserved();
+    const bad = observed.samples['entry:gateway:http:POST:/orders']!.failing[0]!;
+    observed.samples['entry:gateway:http:POST:/orders'] = { slow: [bad], failing: [bad] };
+    const packed = packObserved(observed, [], { 'entry:gateway:http:POST:/orders': 0 }, new Map());
+    expect(packed.samples!['entry:gateway:http:POST:/orders']!.map((sample) => [sample.slow, sample.failing])).toEqual([[1, 1]]);
   });
 });

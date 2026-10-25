@@ -1,0 +1,1043 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T10:22:09.864Z",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "catalog",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "BooksController"
+        ],
+        "providers": [
+          "BooksService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "catalog#src/books/books.controller.ts:BooksController",
+      "type": "provider",
+      "label": "BooksController",
+      "repo": "catalog",
+      "file": "src/books/books.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog#src/books/books.controller.ts:BooksController.add",
+      "type": "method",
+      "label": "BooksController.add",
+      "repo": "catalog",
+      "file": "src/books/books.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "book",
+              "type": "type:catalog#NewBook"
+            }
+          ],
+          "returns": "type:catalog#Book"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/books/books.controller.ts:BooksController.list",
+      "type": "method",
+      "label": "BooksController.list",
+      "repo": "catalog",
+      "file": "src/books/books.controller.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Book[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/books/books.controller.ts:BooksController.remove",
+      "type": "method",
+      "label": "BooksController.remove",
+      "repo": "catalog",
+      "file": "src/books/books.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "isbn",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/books/books.service.ts:BooksService",
+      "type": "provider",
+      "label": "BooksService",
+      "repo": "catalog",
+      "file": "src/books/books.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog#src/books/books.service.ts:BooksService.add",
+      "type": "method",
+      "label": "BooksService.add",
+      "repo": "catalog",
+      "file": "src/books/books.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "book",
+              "type": "type:catalog#NewBook"
+            }
+          ],
+          "returns": "type:catalog#Book"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/books/books.service.ts:BooksService.list",
+      "type": "method",
+      "label": "BooksService.list",
+      "repo": "catalog",
+      "file": "src/books/books.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Book[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/books/books.service.ts:BooksService.remove",
+      "type": "method",
+      "label": "BooksService.remove",
+      "repo": "catalog",
+      "file": "src/books/books.service.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "isbn",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "channel:book.added",
+      "type": "channel",
+      "label": "book.added",
+      "repo": "catalog",
+      "file": "src/books/books.service.ts",
+      "line": 23,
+      "meta": {
+        "channelKind": "channel",
+        "adapters": [
+          "pattern:shop-bus-emit",
+          "pattern:shop-bus-on"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:catalog#STOCK_URL",
+      "type": "config_key",
+      "label": "STOCK_URL",
+      "repo": "catalog",
+      "file": "src/books/books.service.ts",
+      "line": 20,
+      "meta": {
+        "key": "STOCK_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:stock#src/stock/stock.service.ts:StockService.shelve",
+      "type": "consumer",
+      "label": "StockService.shelve",
+      "repo": "stock",
+      "file": "src/stock/stock.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "pattern:shop-bus-on",
+        "decorator": "on",
+        "entryId": "entry:stock:event:book.added",
+        "describedBy": "pattern:shop-bus-on"
+      }
+    },
+    {
+      "id": "entry:catalog:http:DELETE:/books/:param",
+      "type": "entry",
+      "label": "DELETE /books/:param",
+      "repo": "catalog",
+      "file": "src/books/books.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/books/:param",
+        "rawPath": "/books/:isbn",
+        "controller": "BooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/books",
+      "type": "entry",
+      "label": "GET /books",
+      "repo": "catalog",
+      "file": "src/books/books.controller.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/books",
+        "rawPath": "/books",
+        "controller": "BooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/books",
+      "type": "entry",
+      "label": "POST /books",
+      "repo": "catalog",
+      "file": "src/books/books.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/books",
+        "rawPath": "/books",
+        "controller": "BooksController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:stock:event:book.added",
+      "type": "entry",
+      "label": "event book.added",
+      "repo": "stock",
+      "file": "src/stock/stock.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "book.added",
+        "adapter": "pattern:shop-bus-on"
+      }
+    },
+    {
+      "id": "entry:stock:http:POST:/stock/reserve",
+      "type": "entry",
+      "label": "POST /stock/reserve",
+      "repo": "stock",
+      "file": "src/stock/stock.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/stock/reserve",
+        "rawPath": "/stock/reserve",
+        "controller": "StockController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "http_out:catalog#src/books/books.service.ts:20:11",
+      "type": "http_out",
+      "label": "POST /stock/reserve",
+      "repo": "catalog",
+      "file": "src/books/books.service.ts",
+      "line": 20,
+      "meta": {
+        "method": "POST",
+        "url": "${STOCK_URL}/stock/reserve",
+        "path": "/stock/reserve",
+        "baseUrlEnv": "STOCK_URL",
+        "responseType": null,
+        "bodyType": "{isbn:string;copies:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "copies",
+          "isbn"
+        ],
+        "describedBy": "pattern:api-client-call",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "producer:catalog#src/books/books.service.ts:23:5",
+      "type": "producer",
+      "label": "event book.added",
+      "repo": "catalog",
+      "file": "src/books/books.service.ts",
+      "line": 23,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "pattern:shop-bus-emit",
+        "channelVia": "literal",
+        "method": "emit",
+        "describedBy": "pattern:shop-bus-emit"
+      }
+    },
+    {
+      "id": "producer:catalog#src/books/books.service.ts:29:5",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "catalog",
+      "file": "src/books/books.service.ts",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "pattern:shop-bus-emit",
+        "channelVia": "unresolved",
+        "method": "emit",
+        "describedBy": "pattern:shop-bus-emit"
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "stock#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "stock",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "StockController"
+        ],
+        "providers": [
+          "StockService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "stock#src/stock/stock.controller.ts:StockController",
+      "type": "provider",
+      "label": "StockController",
+      "repo": "stock",
+      "file": "src/stock/stock.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock#src/stock/stock.controller.ts:StockController.reserve",
+      "type": "method",
+      "label": "StockController.reserve",
+      "repo": "stock",
+      "file": "src/stock/stock.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reservation",
+              "type": "type:stock#Reservation"
+            }
+          ],
+          "returns": "{reserved:number}"
+        }
+      }
+    },
+    {
+      "id": "stock#src/stock/stock.service.ts:StockService",
+      "type": "provider",
+      "label": "StockService",
+      "repo": "stock",
+      "file": "src/stock/stock.service.ts",
+      "line": 14,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "stock#src/stock/stock.service.ts:StockService.onModuleInit",
+      "type": "method",
+      "label": "StockService.onModuleInit",
+      "repo": "stock",
+      "file": "src/stock/stock.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "stock#src/stock/stock.service.ts:StockService.reserve",
+      "type": "method",
+      "label": "StockService.reserve",
+      "repo": "stock",
+      "file": "src/stock/stock.service.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reservation",
+              "type": "type:stock#Reservation"
+            }
+          ],
+          "returns": "{reserved:number}"
+        }
+      }
+    },
+    {
+      "id": "stock#src/stock/stock.service.ts:StockService.shelve",
+      "type": "method",
+      "label": "StockService.shelve",
+      "repo": "stock",
+      "file": "src/stock/stock.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "book",
+              "type": "type:stock#ShelvedBook"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/books/books.ts:addBook",
+      "type": "function",
+      "label": "addBook",
+      "repo": "storefront",
+      "file": "src/books/books.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "book",
+              "type": "type:storefront#NewBook"
+            }
+          ],
+          "returns": "type:storefront#Book"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/books/books.ts:listBooks",
+      "type": "function",
+      "label": "listBooks",
+      "repo": "storefront",
+      "file": "src/books/books.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:storefront#Book[]"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/books/books.ts:20:10",
+      "type": "ui_api_call",
+      "label": "GET /books",
+      "repo": "storefront",
+      "file": "src/books/books.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_CATALOG_URL}/books",
+        "path": "/books",
+        "baseUrlEnv": "VITE_CATALOG_URL",
+        "responseType": "type:storefront#Book[]",
+        "bodyType": null,
+        "package": null,
+        "client": "pattern:storefront-send",
+        "via": "template-env",
+        "describedBy": "pattern:storefront-send",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#src/books/books.ts:24:10",
+      "type": "ui_api_call",
+      "label": "POST /books",
+      "repo": "storefront",
+      "file": "src/books/books.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_CATALOG_URL}/books",
+        "path": "/books",
+        "baseUrlEnv": "VITE_CATALOG_URL",
+        "responseType": "type:storefront#Book",
+        "bodyType": "type:storefront#NewBook",
+        "bodyFrom": "literal",
+        "package": null,
+        "client": "pattern:storefront-send",
+        "via": "template-env",
+        "describedBy": "pattern:storefront-send",
+        "targetService": "catalog"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalog#src/books/books.controller.ts:BooksController",
+      "to": "catalog#src/books/books.service.ts:BooksService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/books/books.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "catalog#src/books/books.controller.ts:BooksController.add",
+      "to": "catalog#src/books/books.service.ts:BooksService.add",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:catalog#NewBook"
+      ],
+      "returns": "type:catalog#Book",
+      "file": "src/books/books.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "catalog#src/books/books.controller.ts:BooksController.list",
+      "to": "catalog#src/books/books.service.ts:BooksService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Book[]",
+      "file": "src/books/books.controller.ts",
+      "line": 11
+    },
+    {
+      "from": "catalog#src/books/books.controller.ts:BooksController.remove",
+      "to": "catalog#src/books/books.service.ts:BooksService.remove",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/books/books.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "catalog#src/books/books.service.ts:BooksService.add",
+      "to": "config_key:catalog#STOCK_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/books/books.service.ts",
+      "line": 20
+    },
+    {
+      "from": "catalog#src/books/books.service.ts:BooksService.add",
+      "to": "http_out:catalog#src/books/books.service.ts:20:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/books/books.service.ts",
+      "line": 20
+    },
+    {
+      "from": "catalog#src/books/books.service.ts:BooksService.add",
+      "to": "producer:catalog#src/books/books.service.ts:23:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/books/books.service.ts",
+      "line": 23
+    },
+    {
+      "from": "catalog#src/books/books.service.ts:BooksService.remove",
+      "to": "producer:catalog#src/books/books.service.ts:29:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/books/books.service.ts",
+      "line": 29
+    },
+    {
+      "from": "channel:book.added",
+      "to": "consumer:stock#src/stock/stock.service.ts:StockService.shelve",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/stock/stock.service.ts",
+      "line": 21
+    },
+    {
+      "from": "consumer:stock#src/stock/stock.service.ts:StockService.shelve",
+      "to": "stock#src/stock/stock.service.ts:StockService.shelve",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:stock#ShelvedBook"
+      ],
+      "returns": "void",
+      "file": "src/stock/stock.service.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:catalog:http:DELETE:/books/:param",
+      "to": "catalog#src/books/books.controller.ts:BooksController.remove",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/books/books.controller.ts",
+      "line": 19,
+      "meta": {
+        "params": "{isbn:string}"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/books",
+      "to": "catalog#src/books/books.controller.ts:BooksController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Book[]",
+      "file": "src/books/books.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:catalog:http:POST:/books",
+      "to": "catalog#src/books/books.controller.ts:BooksController.add",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:catalog#NewBook"
+      ],
+      "returns": "type:catalog#Book",
+      "file": "src/books/books.controller.ts",
+      "line": 14,
+      "meta": {
+        "body": "type:catalog#NewBook"
+      }
+    },
+    {
+      "from": "entry:stock:event:book.added",
+      "to": "stock#src/stock/stock.service.ts:StockService.shelve",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:stock#ShelvedBook"
+      ],
+      "returns": "void",
+      "file": "src/stock/stock.service.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:stock:http:POST:/stock/reserve",
+      "to": "stock#src/stock/stock.controller.ts:StockController.reserve",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:stock#Reservation"
+      ],
+      "returns": "{reserved:number}",
+      "file": "src/stock/stock.controller.ts",
+      "line": 8,
+      "meta": {
+        "body": "type:stock#Reservation"
+      }
+    },
+    {
+      "from": "http_out:catalog#src/books/books.service.ts:20:11",
+      "to": "entry:stock:http:POST:/stock/reserve",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/books/books.service.ts",
+      "line": 20,
+      "params": [
+        "{isbn:string;copies:number}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "stock"
+      }
+    },
+    {
+      "from": "producer:catalog#src/books/books.service.ts:23:5",
+      "to": "channel:book.added",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "type:catalog#Book"
+      ],
+      "file": "src/books/books.service.ts",
+      "line": 23
+    },
+    {
+      "from": "stock#src/stock/stock.controller.ts:StockController",
+      "to": "stock#src/stock/stock.service.ts:StockService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/stock/stock.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "stock#src/stock/stock.controller.ts:StockController.reserve",
+      "to": "stock#src/stock/stock.service.ts:StockService.reserve",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:stock#Reservation"
+      ],
+      "returns": "{reserved:number}",
+      "file": "src/stock/stock.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "stock#src/stock/stock.service.ts:StockService.onModuleInit",
+      "to": "stock#src/stock/stock.service.ts:StockService.shelve",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:stock#ShelvedBook"
+      ],
+      "returns": "void",
+      "file": "src/stock/stock.service.ts",
+      "line": 21
+    },
+    {
+      "from": "storefront#src/books/books.ts:addBook",
+      "to": "ui_api_call:storefront#src/books/books.ts:24:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/books/books.ts",
+      "line": 24
+    },
+    {
+      "from": "storefront#src/books/books.ts:listBooks",
+      "to": "ui_api_call:storefront#src/books/books.ts:20:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/books/books.ts",
+      "line": 20
+    },
+    {
+      "from": "ui_api_call:storefront#src/books/books.ts:20:10",
+      "to": "entry:catalog:http:GET:/books",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/books/books.ts",
+      "line": 20,
+      "returns": "type:storefront#Book[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#src/books/books.ts:24:10",
+      "to": "entry:catalog:http:POST:/books",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/books/books.ts",
+      "line": 24,
+      "params": [
+        "type:storefront#NewBook"
+      ],
+      "returns": "type:storefront#Book",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog"
+      }
+    }
+  ],
+  "types": {
+    "type:catalog#Book": {
+      "name": "Book",
+      "kind": "object",
+      "declaredIn": "catalog#src/books/book.ts",
+      "structuralHash": "dde4caa6c6d7e436",
+      "fields": [
+        {
+          "name": "addedAt",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true,
+        "extends": [
+          "type:catalog#NewBook"
+        ]
+      }
+    },
+    "type:catalog#NewBook": {
+      "name": "NewBook",
+      "kind": "object",
+      "declaredIn": "catalog#src/books/book.ts",
+      "structuralHash": "e8d4f679b4472e83",
+      "fields": [
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:stock#Reservation": {
+      "name": "Reservation",
+      "kind": "object",
+      "declaredIn": "stock#src/stock/stock.service.ts",
+      "structuralHash": "88fc3844962bf92c",
+      "fields": [
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "copies",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:stock#ShelvedBook": {
+      "name": "ShelvedBook",
+      "kind": "object",
+      "declaredIn": "stock#src/stock/stock.service.ts",
+      "structuralHash": "e8d4f679b4472e83",
+      "fields": [
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:storefront#Book": {
+      "name": "Book",
+      "kind": "object",
+      "declaredIn": "storefront#src/books/books.ts",
+      "structuralHash": "dde4caa6c6d7e436",
+      "fields": [
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "addedAt",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:storefront#NewBook": {
+      "name": "NewBook",
+      "kind": "object",
+      "declaredIn": "storefront#src/books/books.ts",
+      "structuralHash": "e8d4f679b4472e83",
+      "fields": [
+        {
+          "name": "isbn",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/books/books.service.ts",
+      "line": 29,
+      "reason": "channel-dynamic",
+      "message": "BooksService.remove -> topicFor('removed')",
+      "hint": "The channel name cannot be read here. Annotate BooksService.remove with the channel it uses.",
+      "symbol": "producer:catalog#src/books/books.service.ts:29:5",
+      "service": "catalog"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 1,
+      "reason": "bootstrap-not-found",
+      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
+      "symbol": "bootstrap",
+      "service": "catalog"
+    },
+    {
+      "file": "src/main.ts",
+      "line": 1,
+      "reason": "bootstrap-not-found",
+      "hint": "Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.",
+      "symbol": "bootstrap",
+      "service": "stock"
+    }
+  ]
+}

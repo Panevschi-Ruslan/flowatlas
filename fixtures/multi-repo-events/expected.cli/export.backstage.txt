@@ -1,0 +1,5 @@
+backstage: 4 components, 4 APIs, 0 resources in 9 files -> <out> (register catalog-locations.yaml)
+owner not given for 4 services, written as unknown: loans, notifications, platform-events, routing (services[].catalog.owner)
+lifecycle not given for 4 services, written as unknown: loans, notifications, platform-events, routing (services[].catalog.lifecycle)
+no system for 4 services: loans, notifications, platform-events, routing (services[].catalog.system)
+3 heuristic joins left out (--include-heuristic draws them, named in flowatlas/heuristic-relations)

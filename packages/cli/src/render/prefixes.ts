@@ -86,7 +86,7 @@ export const ASCII_KIND_PREFIX: Partial<Record<EntryKind, string>> = {
 
 /** Nodes the walk invents rather than reads: a repeat, a gap, a heading. */
 const SYNTHETIC = { ref: '↺', missing: '✗', group: '·' } as const;
-const ASCII_SYNTHETIC = { ref: '(cycle)', missing: 'x', group: '-' } as const;
+const ASCII_SYNTHETIC = { ref: '(again)', missing: 'x', group: '-' } as const;
 
 /** Marks a repo boundary on the child that crosses it. */
 export const CROSSING = '⇢';

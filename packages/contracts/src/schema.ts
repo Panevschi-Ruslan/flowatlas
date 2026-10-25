@@ -84,6 +84,13 @@ export const contractReportSchema = z.strictObject({
   findings: z.array(contractFindingSchema),
   ignored: z.array(contractFindingSchema),
   unchecked: z.array(uncheckedEdgeSchema),
+  // What traffic carried (P113): written by the command beside an observed file, read loosely.
+  traffic: z
+    .strictObject({
+      window: z.object({ since: z.string().optional(), from: z.string().nullable(), to: z.string().nullable() }),
+      entries: z.array(z.object({ entry: z.string(), samples: z.number(), differs: z.number() }).loose()),
+    })
+    .optional(),
   summary: z.strictObject({
     edges: z.number().int().nonnegative(),
     shared: z.number().int().nonnegative(),

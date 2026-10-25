@@ -28,6 +28,8 @@ export {
   packageFiles,
   reopenRepo,
   repoFiles,
+  standInWantsOf,
+  useStandIns,
 } from './incremental.js';
 export type { ScopedExtract, WarmRepo } from './incremental.js';
 
@@ -149,3 +151,5 @@ export { pathMatches, routeMatches, wrappingCollectPass, wrappingEdgesPass } fro
 export { typesPass } from './passes/types-pass.js';
 export { createNestFieldMetaReader, nestFieldMetaReader } from './types/field-meta-reader.js';
 export type { NestFieldMetaOptions } from './types/field-meta-reader.js';
+export { logLineOf, logLinesIn, logsPass } from './passes/logs.js';
+export type { LogLine } from './passes/logs.js';

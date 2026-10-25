@@ -13,6 +13,7 @@ export {
   dbAdapters,
   descriptorAliases,
   drizzleDescriptor,
+  entityNamings,
   handovers,
   knexDescriptor,
   kyselyDescriptor,
@@ -22,12 +23,13 @@ export {
   pgDescriptor,
   prismaDescriptor,
   sequelizeDescriptor,
+  statementMethods,
   tableReadings,
   typeormDescriptor,
 } from './descriptors/index.js';
-export type { Handover, TableReading } from './descriptors/index.js';
-export { locateTable } from './descriptors/table.js';
-export type { TableLocator } from './descriptors/table.js';
+export type { EntityNaming, Handover, StatementMethod, TableReading } from './descriptors/index.js';
+export { entityTableName, locateTable, locateTableAt, statedEntityTable } from './descriptors/table.js';
+export type { EntityDecorator, TableLocator } from './descriptors/table.js';
 export { sqlOperation, sqlTables } from './sql.js';
 export { readConfig } from './leaves/config.js';
 export type { ConfigRead, ConfigSource } from './leaves/config.js';

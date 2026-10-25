@@ -3,7 +3,7 @@ import { AdapterRegistry, type GraphNode, type RepoGraph } from '@flowatlas/core
 import { extractRepo } from '@flowatlas/extractor-nestjs';
 import { describe, expect, it } from 'vitest';
 import { registerDbAdapters } from './index.js';
-import { leavesPass } from './leaves-pass.js';
+import { explainedByEdge, leavesPass } from './leaves-pass.js';
 
 const FIXTURES = resolve(import.meta.dirname, '../../../fixtures');
 
@@ -113,11 +113,15 @@ describe('the document a write stores', () => {
     );
 
     // The declared name is still reported only when it differed from the table,
-    // which is the one thing `entityType` was ever about.
+    // which is the one thing `entityType` was ever about. Both classes state
+    // their table with `@Entity(...)`, and the table is what they state (P88
+    // D1), so both declared names differ from it now.
     const named = writes.filter((write) => write.meta?.['entityType'] !== undefined);
-    expect(named.map((write) => write.meta?.['entityType'])).toEqual([
-      'InvoiceEntity',
-      'InvoiceEntity',
+    expect(named.map((write) => [write.meta?.['table'], write.meta?.['entityType']]).sort()).toEqual([
+      ['invoices', 'InvoiceEntity'],
+      ['invoices', 'InvoiceEntity'],
+      ['orders', 'Order'],
+      ['orders', 'Order'],
     ]);
   });
 });
@@ -330,6 +334,11 @@ describe('a request forwarded to its callers', () => {
         // `{ method: 'GET', ...init }` is a default the caller's settings
         // replace, so the caller's verb is the one sent.
         'StockService.archive -> POST /items/archive @ api.example.com',
+        // Handed the verb by the caller (P91): the one it hands in, and none
+        // where nothing can read what it hands in.
+        'Restocker.restock -> PATCH /items/:param/stock @ api.example.com',
+        'Restocker.reserve -> POST /items/reservations @ api.example.com',
+        'Restocker.settle -> ? /items/settlement @ api.example.com',
       ].sort(),
     );
   });
@@ -337,10 +346,248 @@ describe('a request forwarded to its callers', () => {
   it('reads no body from a caller whose request carries its own settings', async () => {
     const graph = await graphOf('nest-forwarded-verb');
     const bodies = graph.nodes
-      .filter((node) => node.type === 'http_out')
+      .filter((node) => node.type === 'http_out' && node.meta?.path !== '/items/reservations')
       .map((node) => node.meta?.bodyType ?? null);
     // The caller's second argument is `reason`, or the settings it hands
-    // over; neither is a body.
-    expect(bodies).toEqual([null, null, null, null, null]);
+    // over, or the path beside the verb it hands in; none is a body.
+    expect(bodies).toEqual([null, null, null, null, null, null, null]);
+  });
+
+  it('reads the body a wrapper is handed at the caller that hands it (P128)', async () => {
+    const graph = await graphOf('nest-forwarded-verb');
+    const reserve = graph.nodes.find((node) => node.type === 'http_out' && node.meta?.path === '/items/reservations');
+    expect(reserve?.meta).toMatchObject({ method: 'POST', bodyFrom: 'literal', bodyKeys: ['count', 'id'] });
+  });
+});
+
+/**
+ * A body handed through a verb wrapper (P128): `req(method, path, body)` sets
+ * `init.body = JSON.stringify(body)`, and the caller's `invoice` is what is
+ * sent - not its second argument, which is the path.
+ */
+describe('a body handed through a verb wrapper', () => {
+  const request = async (path: string): Promise<GraphNode | undefined> =>
+    (await graphOf('nest-client-wrapper')).nodes.find((node) => node.type === 'http_out' && node.meta?.path === path && node.meta?.method !== 'GET');
+
+  it('carries the type the caller hands in', async () => {
+    expect((await request('/invoices'))?.meta).toMatchObject({
+      method: 'POST',
+      bodyType: 'type:nest-client-wrapper#Invoice',
+      bodyFrom: 'value',
+    });
+  });
+
+  it('reads the body a request writes in its own settings, where it is made (P131)', async () => {
+    const graph = await graphOf('nest-client-wrapper');
+    const sent = graph.nodes.find((node) => node.type === 'http_out' && String(node.meta?.path).endsWith('/sendMessage'));
+    expect(sent?.meta).toMatchObject({ method: 'POST', bodyType: '{text:string}', bodyFrom: 'literal', bodyKeys: ['text'] });
+  });
+
+  it('leaves a wrapper that settles the verb on the way out as it was', async () => {
+    expect((await request('/orders'))?.meta).toMatchObject({ bodyType: 'type:nest-client-wrapper#Order', bodyFrom: 'value' });
+    expect((await request('/orders/:param/cancel'))?.meta).toMatchObject({ bodyFrom: 'literal', bodyKeys: ['reason'] });
+  });
+});
+
+describe('tables named where they are set (P88)', () => {
+  const recipes = (): Promise<RepoGraph> => graphOf('tables-set-elsewhere/recipes-api');
+  const ratings = (): Promise<RepoGraph> => graphOf('tables-set-elsewhere/ratings-api');
+
+  /** The query a method holds, by the method's label. */
+  const queryOf = (graph: RepoGraph, holder: string): GraphNode | undefined => {
+    const edge = graph.edges.find(
+      (each) => each.type === 'calls' && each.from.endsWith(`:${holder}`) && each.to.startsWith('db_query:'),
+    );
+    return edge === undefined ? undefined : graph.nodes.find((node) => node.id === edge.to);
+  };
+  const confidenceInto = (graph: RepoGraph, query: GraphNode | undefined): string | undefined =>
+    graph.edges.find((edge) => edge.to === query?.id && edge.type === 'calls')?.confidence;
+  const rowsAt = (graph: RepoGraph, file: string, reason: string) =>
+    graph.unresolved.filter((row) => row.file === file && row.reason === reason);
+  const statsOf = (graph: RepoGraph): Record<string, unknown> =>
+    (graph.nodes.find((node) => node.type === 'repo')?.meta?.['stats'] ?? {}) as Record<string, unknown>;
+
+  it('lists no name-only row at a call drawn as a static edge into a repository method, and counts it', async () => {
+    const graph = await recipes();
+    expect(rowsAt(graph, 'src/recipes/recipes.service.ts', 'db-receiver-name-only')).toEqual([]);
+    expect(statsOf(graph)['receiversExplainedByEdge']).toBe(1);
+  });
+
+  it('keeps the row where no edge explains the call', async () => {
+    const graph = await ratings();
+    const kept = rowsAt(graph, 'src/ratings/ratings.service.ts', 'db-receiver-name-only');
+    expect(kept.map((row) => row.symbol)).toEqual(['this.reviewsRepository.recent']);
+    expect(kept[0]?.meta).toEqual({ cause: 'data-layer-unnamed' });
+    expect(statsOf(graph)['receiversExplainedByEdge']).toBe(1);
+  });
+
+  it('reads the field a subclass sets for a base nothing configures', async () => {
+    const graph = await recipes();
+    const list = queryOf(graph, 'RecipesService.list');
+    expect(list?.meta).toMatchObject({ table: 'recipes', op: 'read', tableFrom: 'inferred-property' });
+    expect(confidenceInto(graph, list)).toBe('static');
+    expect(queryOf(graph, 'RecipesService.popular')?.meta).toMatchObject({ table: 'recipes' });
+  });
+
+  it('reads the field through two levels of bases', async () => {
+    const graph = await recipes();
+    for (const holder of ['RecipesService.cookbooks', 'RecipesService.newestCookbooks']) {
+      expect(queryOf(graph, holder)?.meta).toMatchObject({ table: 'cookbooks', tableFrom: 'inferred-property' });
+    }
+  });
+
+  it('lowers the confidence where the field is not readonly', async () => {
+    const graph = await recipes();
+    const tags = queryOf(graph, 'RecipesService.tags');
+    expect(tags?.meta).toMatchObject({ table: 'tags', tableFrom: 'inferred-property' });
+    expect(confidenceInto(graph, tags)).toBe('heuristic');
+  });
+
+  it('names the subclass whose field cannot be read', async () => {
+    const graph = await recipes();
+    const [row] = rowsAt(graph, 'src/recipes/recipes.service.ts', 'dynamic-table-name');
+    expect(row?.level).toBeUndefined();
+    expect(row?.hint).toContain('DraftsRepository sets collectionName');
+  });
+
+  it('keeps the base queries at info, declared for every class that extends them', async () => {
+    const graph = await recipes();
+    // Folded into one row: the two queries of the first base and the one of
+    // the second, each written once for every class under it.
+    const rows = graph.unresolved.filter((row) => row.reason === 'dynamic-table-name' && row.level === 'info');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ file: 'src/db/base.repository.ts', sites: 3 });
+    expect(rows[0]?.hint).toContain('BaseRepository declares this query for every class that extends it');
+  });
+
+  it('reads the collection a helper method and a getter hand out', async () => {
+    const graph = await recipes();
+    expect(queryOf(graph, 'CommentsStore.add')?.meta).toMatchObject({ table: 'comments', op: 'write', tableFrom: 'helper' });
+    expect(queryOf(graph, 'CommentsStore.forRecipe')?.meta).toMatchObject({ table: 'comments', op: 'read', tableFrom: 'helper' });
+    // A helper whose table is its caller's argument stays a gap.
+    expect(queryOf(graph, 'CommentsStore.flag')?.meta?.['table']).toBeNull();
+    expect(rowsAt(graph, 'src/comments/comments.store.ts', 'dynamic-table-name')).toHaveLength(1);
+  });
+
+  it('names a manager call by the entity class it is handed', async () => {
+    const graph = await ratings();
+    expect(queryOf(graph, 'RatingsRepository.topRated')?.meta).toMatchObject({
+      table: 'ratings',
+      source: 'entity-arg',
+      entityType: 'Rating',
+    });
+    expect(queryOf(graph, 'RatingsRepository.reviewersNamed')?.meta).toMatchObject({ table: 'Reviewer', source: 'entity-arg' });
+    expect(queryOf(graph, 'RatingsRepository.reviewersNamed')?.meta?.['entityType']).toBeUndefined();
+    expect(queryOf(graph, 'RatingsRepository.award')?.meta).toMatchObject({ table: 'reviewer_badges', op: 'write' });
+    expect(queryOf(graph, 'RatingsRepository.award')?.meta?.['entityTypeId']).toBeTypeOf('string');
+    expect(queryOf(graph, 'RatingsRepository.fromBuilder')?.meta).toMatchObject({ table: 'ratings', source: 'entity-arg' });
+  });
+
+  it('names the type-argument path the same way', async () => {
+    const graph = await ratings();
+    expect(queryOf(graph, 'RatingsService.all')?.meta).toMatchObject({ table: 'ratings', source: 'type-arg', entityType: 'Rating' });
+    expect(queryOf(graph, 'RatingsRepository.count')?.meta).toMatchObject({ table: 'ratings', source: 'type-arg' });
+    expect(queryOf(graph, 'RatingsRepository.badges')?.meta).toMatchObject({ table: 'reviewer_badges' });
+    const tables = graph.nodes.filter((node) => node.type === 'table').map((node) => node.label).sort();
+    expect(tables).toEqual(['Reviewer', 'ratings', 'reviewer_badges']);
+  });
+
+  it('keeps a sub-query and SQL built at run time as gaps', async () => {
+    const graph = await ratings();
+    const rows = rowsAt(graph, 'src/ratings/ratings.repository.ts', 'dynamic-table-name');
+    expect(rows.map((row) => row.symbol).sort()).toEqual(['this.em.createQueryBuilder', 'this.em.query']);
+    expect(queryOf(graph, 'RatingsRepository.nested')?.meta?.['source']).toBe('none');
+  });
+});
+
+describe('explainedByEdge', () => {
+  const method = (id: string, repo = 'shop'): GraphNode => ({ id, type: 'method', label: id.split(':').pop() ?? id, repo });
+  const nodes = new Map([
+    ['a', method('shop#a.ts:OrdersRepository.findOpen')],
+    ['b', method('other#b.ts:OrdersRepository.findOpen', 'other')],
+  ]);
+  const nodeOf = (id: string): GraphNode | undefined => nodes.get(id);
+  const edge = (to: string, confidence: 'static' | 'heuristic') =>
+    ({ from: 'caller', to, type: 'calls', confidence, file: 'x.ts', line: 3 }) as const;
+
+  it('answers for a static edge into a method of this repository, by place and method name', () => {
+    const explained = explainedByEdge([edge('a', 'static')], nodeOf, 'shop');
+    expect(explained('caller', 'x.ts', 3, 'findOpen')).toBe(true);
+    expect(explained('caller', 'x.ts', 4, 'findOpen')).toBe(false);
+    expect(explained('caller', 'x.ts', 3, 'findAll')).toBe(false);
+  });
+
+  it('does not answer for a heuristic edge, or one into another repository', () => {
+    expect(explainedByEdge([edge('a', 'heuristic')], nodeOf, 'shop')('caller', 'x.ts', 3, 'findOpen')).toBe(false);
+    expect(explainedByEdge([edge('b', 'static')], nodeOf, 'shop')('caller', 'x.ts', 3, 'findOpen')).toBe(false);
+  });
+});
+
+/**
+ * A worker's request through its binding, a client handed the verb, and a
+ * request to exactly what a setting holds (P91).
+ */
+describe('requests the dead-routes fixture makes', () => {
+  const requestsOf = (graph: RepoGraph) =>
+    graph.nodes
+      .filter((node) => node.type === 'http_out')
+      .map((node): Record<string, unknown> => ({ line: node.line, ...node.meta }))
+      .sort((a, b) => Number(a['line'] ?? 0) - Number(b['line'] ?? 0));
+
+  it('records a request through a binding at its path, with the binding and no host', async () => {
+    const graph = await graphOf('multi-repo-dead-routes/orders-worker');
+    const [item, , restock] = requestsOf(graph);
+    expect(item).toMatchObject({ method: 'GET', path: '/items/:param', binding: 'CATALOG' });
+    expect(item?.['host']).toBeUndefined();
+    // Handed the verb by its caller, and its second argument is the wrapper's path, not a body.
+    expect(restock).toMatchObject({ method: 'PATCH', path: '/items/:param', binding: 'CATALOG', bodyType: null });
+    expect(graph.nodes.some((node) => node.type === 'external_api')).toBe(false);
+  });
+
+  it('records the annotation a function carries in JSDoc as the decorator it stands for', async () => {
+    const graph = await graphOf('multi-repo-dead-routes/orders-worker');
+    const fn = graph.nodes.find((node) => node.type === 'function' && node.label === 'allItems');
+    expect(fn?.meta?.['markers']).toEqual([{ name: 'CallsService', args: ['catalog', 'GET /items'] }]);
+  });
+
+  it('records a request to exactly what a setting holds as rooted at it, with nothing more to its path', async () => {
+    const graph = await graphOf('multi-repo-dead-routes/ops-scripts');
+    expect(requestsOf(graph)).toEqual([expect.objectContaining({ method: 'POST', path: '', baseUrlEnv: 'REINDEX_URL' })]);
+    expect(graph.unresolved.map((row) => row.reason)).not.toContain('dynamic-http-url');
+  });
+});
+
+describe("TypeORM's raw SQL, read as a statement (P126)", () => {
+  const meta = (graph: RepoGraph, file: string): Record<string, unknown>[] =>
+    queriesIn(graph, file).map((node) => {
+      const { receiver: _spelling, entityTypeId: _id, ...rest } = node.meta ?? {};
+      return { line: node.line, ...rest };
+    });
+
+  it('names the tables and the verb a whole statement writes, and the flags read off its text', async () => {
+    const graph = await graphOf('loops-worth-fixing/parcels');
+    expect(meta(graph, 'src/parcels/handover.ts')).toEqual([
+      // `runner.query('UPDATE parcels … WHERE id = $2 AND status = $3')`
+      { line: 19, op: 'write', table: 'parcels', tables: ['parcels'], package: 'typeorm', method: 'query', source: 'sql-parse', conditional: true },
+      // `manager.update(Parcel, { id, status: 'open' }, …)`: the criteria after the class.
+      { line: 26, op: 'write', table: 'parcels', tables: ['parcels'], package: 'typeorm', method: 'update', source: 'entity-arg', conditional: true, entityType: 'Parcel' },
+      // `manager.query('SELECT … WHERE id = ANY($1)')`
+      { line: 34, op: 'read', table: 'parcels', tables: ['parcels'], package: 'typeorm', method: 'query', source: 'sql-parse', batch: true },
+      // `repository.query('SELECT … FROM parcels p JOIN carriers c …')`: the text, not the type argument.
+      { line: 44, op: 'read', table: 'parcels', tables: ['parcels', 'carriers'], package: 'typeorm', method: 'query', source: 'sql-parse' },
+    ]);
+  });
+
+  it('reads a statement not read whole as the library reads its other calls', async () => {
+    const graph = await graphOf('tables-set-elsewhere/ratings-api');
+    const raw = queriesIn(graph, 'src/ratings/ratings.repository.ts').filter((node) => node.meta?.['method'] === 'query');
+    // `this.em.query('SELECT * FROM ratings WHERE ' + where)`: the manager's
+    // own row for a table it cannot name, not the row for computed SQL.
+    expect(raw.map((node) => node.meta?.['source'])).toEqual(['none']);
+    const reasons = graph.unresolved
+      .filter((row) => row.file === 'src/ratings/ratings.repository.ts' && row.line === raw[0]?.line)
+      .map((row) => row.reason);
+    expect(reasons).toContain('dynamic-table-name');
+    expect(reasons).not.toContain('sql-parse-failed');
   });
 });

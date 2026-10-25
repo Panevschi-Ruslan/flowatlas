@@ -98,7 +98,49 @@ export interface MapHash {
   mark: string | null;
   packages: boolean;
   dev: boolean;
+  layout: 'calls' | 'role';
+  /** What the links are coloured by (P111), or null for their kinds. */
+  heat: MapHeatBy | null;
 }
+
+export interface MapCallOrder extends MapLayout {
+  columns: Array<{ name: string; label: string; x: number }>;
+  placed: Map<string, MapPlaced & { under?: string }>;
+  more: Array<{ owner: string; n: number } & MapPlaced>;
+  hidden: Set<string>;
+}
+
+export declare const MAP_HANG: Readonly<{ under: number; indent: number; more: number }>;
+export declare const mapCallOrder: (map: MapModel, view: MapView, hang?: number) => MapCallOrder;
+export declare const mapTouching: (view: MapView, id: string) => Set<string>;
+export declare const mapTopTargets: (
+  data: Pick<PackedGraph, 'nodes' | 'edges' | 'dicts'>,
+  repo: string,
+  limit?: number,
+) => { tables: Array<{ node: number; n: number }>; channels: Array<{ node: number; n: number }> };
+export declare const mapSeenCount: (
+  map: MapModel,
+  link: MapViewLink,
+  seenJoin: (edge: number) => { count: number } | null,
+) => number;
+
+export type MapHeatBy = 'traffic' | 'p95';
+export declare const MAP_HEATS: readonly MapHeatBy[];
+export declare const MAP_HEAT_STEPS: number;
+export declare const mapHeat: (
+  map: MapModel,
+  link: MapViewLink,
+  seen: { join(edge: number): { count: number } | null; stats(edge: number): { p95?: number } | null },
+  by: MapHeatBy,
+) => { value: number; count: number } | null;
+export declare const mapHeatStep: (value: number, hottest: number) => number;
+
+export declare const mapGuessesConfirmed: (
+  map: MapModel,
+  link: MapViewLink,
+  isGuess: (edge: number) => boolean,
+  confirmed: (edge: number) => boolean,
+) => boolean;
 
 export declare const boxId: (box: MapBox) => string;
 export declare const clusterId: (box: MapBox) => string;
@@ -129,6 +171,8 @@ export interface MapHashState {
   mark?: string | null;
   packages?: boolean;
   dev?: boolean;
+  layout?: 'calls' | 'role';
+  heat?: MapHeatBy | null;
 }
 
 export declare const formatMapHash: (state: MapHashState) => string;

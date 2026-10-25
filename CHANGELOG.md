@@ -6,6 +6,1867 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+## [0.6.0][] - 2026-10-25
+
+`@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0.
+
+The repository's history was rewritten on 2026-10-25, to take out wording that
+fixtures and tests had carried over from another project. The tags `v0.2.0` to
+`v0.5.1` were made again on the new commits, with the same code: a clone or a
+fork from before that date should be cloned again rather than pulled. The
+packages on npm are unchanged.
+
+0.6.0 adds what really ran to what the code says. `flowatlas observe` reads
+trace files and exports (OTLP, @nestjs/observe, Zipkin, Jaeger, HAR, AWS X-Ray,
+Step Functions histories, API Gateway and Lambda logs) or listens on this
+machine, and lays counts, timings, statuses and payload shapes over the map
+without ever drawing an edge from a trace. A branch can now be reviewed and
+shipped from the map: `diff` draws changed flows as sequence diagrams and gives
+a verdict, `rules` checks architecture rules, `check --env` says whether a
+change can be deployed against what an environment runs, `spec` writes and
+compares OpenAPI and AsyncAPI documents, `export` feeds Backstage and
+Structurizr, `docs` keeps Markdown tied to flows, and every finding can go to
+code scanning as SARIF. What the reader cannot follow is grouped by cause, can
+be accepted, closed with project-written patterns, shape files or package
+sources, and points at the repository probably missing. The page was rebuilt
+around one Steps view and one search, and the MCP server grew from ten tools to
+twenty-six, with prompts, resources and paged, structured answers.
+
+### Migrating from 0.5.1
+
+- **Node 22.12 or later (P86).** `@flowatlas/cli` declares `engines.node
+  >=22.12.0`, which is what its dependencies already needed (`commander` 15
+  needs 22.12, `better-sqlite3` 13 needs 22). 0.5.1 said `>=20` and failed on
+  Node 20 anyway.
+- **Rebuild once.** The build cache moved from version 4 to 5 (P83), so the
+  first `flowatlas build` after upgrading reads every repository again and says
+  `cache-invalid:version`. The graph's `SCHEMA_VERSION` is unchanged at 6, and
+  `graph.db` gained an `unresolved.meta` column (P75) and `unresolved.kind` and
+  `risk` columns (P208, `db_format_version` 2), each read with or without it,
+  so a 0.5.1 database still opens and reads the same.
+- **Upgrade a team together.** The configuration schema is strict, and 0.5.1
+  refuses a configuration that uses any of the new keys: at the top level
+  `shapes`, `packageSources` (P78), `builtInShapes` (P70), `settingFiles`
+  (P77), `patterns` (P121), `callShape` (P89), `dead` (P91), `docs` (P120),
+  `rules` and `rulesSettings` (P114), `deployed` (P117) and `mcp` (P201); on a service
+  `hosts` (P77), `aliases` (P91), `tags` (P114), `apiDocuments` (P195),
+  `catalog` (P119), `builtInShapes`, `shapes`, `patterns` and
+  `packageSources`; and `adapters.http.clients` (P121). An `accepted.json`
+  (format 2, P76) is likewise for 0.6.0 only.
+- **Some ids moved.** A function URL's entry is keyed by its function,
+  `http:ALL:/*@<function>` (P54), and a route that two APIs, load balancers or
+  listeners serve gains `@api:<api>` and, where needed,
+  `@listener:<protocol>:<port>` (P59, P61); a route only one API serves keeps
+  its plain key. A saved page link, a `flowatlas.baseline.json` key or an
+  accepted gap naming an old id stops matching: rewrite the baseline with
+  `flowatlas doctor --accept`, and check `flowatlas accept --list` against the
+  current gaps. A page link to the removed Walk tab (`#walk/<key>`) opens Steps
+  on the same way in (P99).
+- **Counts and levels moved.** Every unresolved row is now a gap, a note or a
+  finding (P81), and only gaps count as missed: the build line reads `missed: N
+  over S sites · notes: N · findings: N`, and `LinkReport.totals` gained
+  `missed`, `sites`, `notes` and `findings`. `totals.unresolved` is kept equal
+  to `missed` for this version and is deprecated; read `totals.missed`.
+  `query-in-loop`, `package-from-repo` and `shape-file-unmatched` moved from
+  `nothing` to `info`. Expect far fewer `route-unguarded` rows (P76), joins
+  newly made from repository files (P77) and package sources (P78), marked
+  `heuristic`, and the Map laid out in call order (P66). A doctor baseline
+  keeps counting every actionable row, so no baseline changes verdict on
+  upgrade.
+- **File formats.** `diff.json` moved from format 1 to 5 (P96, P116, P114,
+  P118) and `flowatlas.baseline.json` from 1 to 2 (P114); the older formats are
+  still read, and a file from a newer flowatlas is refused by name. New files,
+  each with its own version: `observed.json` (`observedFormatVersion: 3`, P65,
+  P85, P105), `accepted.json` (2), `rules.json` (`rulesFormatVersion: 1`),
+  `docs.json` (`docsFormatVersion: 1`), `check.<env>.json`
+  (`checkFormatVersion: 1`), `spec-diff.json`, `spec-against.json`
+  (`specAgainstFormatVersion: 1`), `flowatlas.deployed.json`
+  (`deployedFormatVersion: 1`) and the build's own `stand-ins.json` (P82).
+  `doctor.json` stays at `doctorFormatVersion: 2` and the contracts report at
+  format 5; their new fields are optional.
+- **A session lists only the tools its project can answer (P201).** A prompt
+  or a script that expects a tool the project cannot answer yet (a run-time
+  tool before `flowatlas observe`, `check_rules` without rules) finds it
+  missing from `tools/list`; `start_here` says when each appears, and
+  `flowatlas mcp --all-tools` or `"mcp": { "tools": "all" }` lists every tool
+  as 0.5.1 did.
+- **Accepted rules use the `shapes` glob grammar (P80):** `?` is one
+  character, `**` as a whole segment matches zero segments too, and route
+  patterns keep `*` as any run, `/` included.
+- **Observed counts are not spread (P85).** A span that fits several joins,
+  routes or methods is credited to none and listed under `ambiguous`, so a
+  count is never shared between candidates.
+- **On the page:** the Walk tab, the Ways in list's own filter box, the Graph
+  tab's node search and the *show accepted* checkbox are gone; Steps, the one
+  search box and the Not joined tab's *Accepted* section replace them (P99,
+  P100, P101).
+- **The package no longer declares `types` (P86).** It pointed at a
+  `dist/index.d.ts` that never shipped.
+
+### Added
+
+#### Run time: `flowatlas observe`
+
+- **`flowatlas observe <file...>`: traffic laid over the static map (P65,
+  P85).** It reads trace files, keeps only the names that place a span in code
+  (method, route template, `Class.method`, queue or topic, collection), drops
+  every value, and matches spans to entries, handlers, channels, outbound calls
+  and cross-service joins. It writes `.flowatlas/observed.json`: per join a
+  count and when it was last seen, per entry its hits, and the spans no code
+  accounts for. No edge is ever drawn from a trace. The page shows seen counts
+  on ways in and steps, thicker Map links and a "seen at run time, not found in
+  code" list, and `get_flow` and `who_calls` rows carry `observed: n`
+  (`fixtures/multi-repo/traces`). The @nestjs/observe reader reads the batch
+  the SDK (0.3.x) posts - `serviceId`, `snapshots` with `ct`, `p`, `op`, `a.m`,
+  `a.sc`, `a.ou` and the span tree in `t` (nodes need `o`, `c`, `m`; `n` is
+  optional), outgoing `http` nodes as client spans and `mongodb` / `pg` /
+  `mysql2` nodes by collection - plain or gzipped, and a bare snapshot array.
+  Each reader copies only the fields of its allow-list: no header, body, user
+  id, query string, host, statement, tag, error message or log line reaches
+  `observed.json`, the page or an MCP answer. Snapshots of another protocol,
+  nodes the contract refuses and jobs without a tree are counted in the summary
+  (`not read: ...`). A span that fits several joins, routes, calls, methods or
+  tables is credited to none and listed under `ambiguous`, which the summary,
+  `--format json`, the page (*could be more than one place*) and the graph
+  server (`seenAmbiguous: n`) show. The file's name, version, join id and
+  reader (`readObserved`) are defined once, in `@flowatlas/core`.
+- **How long it took, how it answered, and runs that add up (P105).** Each
+  span's duration, HTTP status and error flag are kept: every entry, join,
+  method, table and channel credited gains a count, a p50, p95 and max (from
+  log buckets about 9% wide, the max exact), the statuses seen and an error
+  rate (the error flag or a 5xx; a 4xx is in the status mix only). A join is
+  timed on the caller's span when one was read, and says `measuredAt`. Runs add
+  to `observed.json` hour by hour instead of overwriting it: `--since <dur>`
+  keeps a window of whole hours (`--since all` stops cutting), `--reset` starts
+  again, and a file already read, known by the hash of its contents, is skipped
+  and said. The file is `observedFormatVersion: 3`, with a `privacy` block (the
+  fields kept, the categories dropped, how many attribute keys went unread),
+  the `window`, the `sources` read, the hour `buckets`, and per entry the three
+  slowest and three latest failing requests as trees of what each span was
+  credited to, the only place a trace id is written (`--no-samples` keeps
+  none); format 1 and 2 files are carried forward as one hour without timings.
+  Every reader ends with one allow-list (`KEPT_FIELDS`, `keepAllowed`), and
+  OTLP attributes off it are skipped while they are walked. `observe` also
+  reads OTLP protobuf (`.pb`, or any file that is not JSON), gzipped or not,
+  with no dependency, and a saved series of @nestjs/observe posts (`{ batches:
+  [...] }`); the summary names the five slowest and five most failing entries
+  and the window. The MCP server gained `hot_paths`, `slow_steps` and
+  `trace_for`, and `get_flow` and `who_calls` rows gained `p95` and
+  `errorRate` beside `observed` (`fixtures/multi-repo/traces`).
+- **Zipkin, Jaeger and HAR readers (P112).** Zipkin v2 JSON (a list of spans
+  or of traces) and Jaeger JSON (the UI's *Download JSON*, `{ data: [...] }`)
+  are read into the same spans as OTLP: their tags go through OTLP's key set,
+  so an export of the same traffic gives the same observed file; span and
+  operation names, annotations, logs, endpoints and process tags are never
+  read. A browser's HAR (*Save all as HAR*) becomes client spans of the front
+  end (`--service`, else the map's one front end): each call a script made, by
+  method, path shape, status (`0` is a failure), time and duration; files are
+  skipped and counted. The URL's origin is compared with the front end's base
+  URLs (`apiBaseEnv` values, `apiTarget`, `services[].hosts`) and dropped, and
+  narrows the call to the `ui_api_call` whose join reaches a route of that
+  service; that join is counted. A call to an origin nothing names is a third
+  party, new unmatched kind `external`, by host only. Headers, cookies, query
+  strings, request bodies and response content are never read, by key; an
+  error names the entry and the field and never quotes the file. New span
+  fields `peerService` and `thirdParty` in `privacy.kept`, five new
+  `privacy.dropped` categories (`fixtures/multi-repo/traces/web.har`,
+  `checkout.zipkin.json`, `checkout.jaeger.json`).
+- **AWS traffic matched to the map (P107).** What an OpenTelemetry-instrumented
+  Lambda function or the AWS Distro's layer writes lands on the nodes the
+  Terraform and state machine readers draw: a function's span on its `invoke`
+  entry (by `faas.name`, or the ARN in `cloud.resource_id` with its alias cut),
+  a workflow's run on its `workflow` entry, a step on its node, a DynamoDB call
+  on each table it names (`aws.dynamodb.table_names`, read as a list in JSON
+  and protobuf), and SQS, SNS, EventBridge, Kinesis and S3 sends on the channel
+  as the readers spell it (`order-placed` on an SQS span is
+  `sqs/order-placed`), with the `emits` join from the caller; `Lambda`
+  `Invoke` and `SFN` `StartExecution` on the join into the entry they reach, a
+  queue's or a stream's delivery on the `consumes` join and the mapping's join
+  into the function, and a step on the join into the function its task
+  invokes. Which of several joins a call ran is settled by the function or step
+  it ran in; a bus with several events and no telling which is counted on none.
+  New unmatched kinds `function`, `workflow`, `state` (named `<workflow>/?`,
+  never by a step name the map lacks), `table` and `cloud` (an SDK call of a
+  service nothing reads, by `<service>/<method>` only); new ambiguity kind
+  `channel`. Every ARN and URL is cut to the name inside it before a span
+  exists, so no account id or region reaches the file, and no request
+  parameter is read. A `calls` edge into an entry (a step, a mapping or a call
+  site that invokes a function or starts a workflow) counts as a join, for the
+  page and for `slow_steps` too (`fixtures/lambda-traces`).
+- **AWS exports read without a collector (P108).** Four files a Lambda team can
+  export with the AWS CLI or the console are read, picked by looking at them,
+  with no AWS API called: X-Ray `batch-get-traces` output (`xray`: functions,
+  workflows, steps, stages and every SDK call, matched as P107 matches their
+  OTLP spans), a Step Functions `get-execution-history` (`sfn-history`: the
+  run, its steps paired by the chain of events, a step's direct invoke of a
+  function), API Gateway JSON access logs (`apigw-access-log`) and Lambda
+  `REPORT` lines from a Logs Insights export in JSON or CSV, or plain
+  (`lambda-report`). The last two give entries only: no joins and no samples (a
+  span has `sampleable: false`, on `privacy.kept`). New flags `--workflow`,
+  `--function` and `--access-log-keys`; a history that names no state machine
+  or `REPORT` lines no log group names the function of are refused with the
+  flag that gives it, and a flag given for a format that does not take it is an
+  error. Each reader's never-read list (X-Ray annotations, metadata, `sql` and
+  `cause`, a workflow's input, output and parameters, client addresses, request
+  ids, memory figures) is tested absent from the file
+  (`fixtures/lambda-traces/exports/`).
+- **`observe --listen`, a receiver on this machine (P109).** `flowatlas
+  observe --listen [port]` takes OTLP/HTTP traces (JSON or protobuf, gzip) on
+  `/v1/traces` and the @nestjs/observe agent's batches on
+  `/applications/telemetry`, on `127.0.0.1:4318`, so a service run locally
+  with `OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318` fills
+  `.flowatlas/observed.json` as requests happen. Posts are read by the same
+  readers and allow-lists as files; a trace's spans wait in a bounded buffer
+  (10,000 spans, 2,000 traces, `--trace-wait`) for the rest of the trace; every
+  `--flush` and on exit the matches are merged with the merge a file run uses,
+  so the same traffic gives the same file, with one `sources` entry of format
+  `listen` a flush. Metrics and logs are answered and dropped unparsed; nothing
+  is forwarded. It binds loopback unless `--host` and `--allow-remote` are both
+  given, refuses a `Host` that is not its own loopback name (421), any request
+  with an `Origin` (403), `OPTIONS` (405, no CORS header ever), `text/plain`
+  (415) and a body over `--max-body` before or after inflating (413,
+  connection cut), and reads no request header but `Host`, `Content-Type`,
+  `Content-Encoding` and `Content-Length`. While it runs it holds
+  `.flowatlas/observed.lock`; `observe <files>` waits five seconds for it, then
+  says a listener is running, and a lock whose process is gone is taken over.
+  The observed file is written to a temporary file and renamed over the old
+  one. `scripts/observe-send.mjs` posts the fixtures' traces to it (dev only,
+  not packaged).
+- **Never seen, blind spots, and best guesses traffic confirmed (P110).** Three
+  read-time overlays of `observed.json`; the graph on disk never changes and no
+  edge becomes `runtime`. **Never seen**: the MCP tool `never_seen({ since,
+  service, kind, confidence, limit })` lists the ways in, channels and methods
+  the code runs that traffic never touched, `strong` beside a sibling seen 20
+  times over a window the file holds in full, `weak` otherwise, with one note
+  per service the window holds nothing of. `flowatlas dead` and the MCP `dead`
+  read traffic as evidence (`evidence.seen`, `evidence.neverSeen`): seen is
+  `alive` whatever the code says, and an outside way in never seen beside busy
+  neighbours is `likely-dead`; the CLI gains a `seen` column and `--since
+  <dur>`. **Blind spots**: what `observe` matched to nothing becomes one
+  `seen-not-in-code` info row per service and kind in `doctor`, listed under
+  that cause by `doctor --unresolved` and the MCP `cant_follow` with the names
+  the trace kept and the call that looks for each; the page's "Seen at run
+  time, not found in code" list says the same. A send, invoke or start whose
+  target the map has, along a join it does not draw, is a new unmatched kind
+  `join`. **Best guesses confirmed**: a `heuristic` join traffic went through
+  is counted apart (`1 of 4 best guesses confirmed by traffic in 2h`,
+  `doctor.json` `traffic`), the row explaining the guess is withdrawn while it
+  holds, `get_flow` / `who_calls` rows say `confirmedBy: "traffic"`, the Steps
+  mark reads `best guess, seen ×n`, and the Map draws such a link solid. The
+  page marks a never-seen way in `not seen in <window>` and the Busiest tab
+  lists them. A client span that names the method it ran in (`code.function`)
+  singles out that method's call site when two calls of one route fit, and a
+  workflow step's task that names no target in an execution history is
+  credited to the one target of its kind the step's task reaches (P108's open
+  item).
+- **Failures seen but not declared (P106).** The statuses each way in answered
+  are set beside the failures its code declares, over the file's window: a
+  status from 400 up that no failure declares is *undeclared*, with `expected:
+  <why>` where the framework answers it anyway (the router's 404 and 405, a 401
+  or 403 from a check in front of it, a 400 for a body it cannot read); a
+  declared failure no request answered is *declared, never seen*, said only of
+  a way in hit at least 20 times. An assumed status traffic answered is
+  confirmed, and a failure that names no status is `maybe` beside an
+  unexplained status. The page's failure chips say `404 seen ×3`, `409 never
+  seen` and `500 ×4 not declared`; `get_flow` and `describe_for_prompt` carry
+  `failures` and each `fails` row `seen`; the copied prompt has a *Failures
+  seen at run time* section; the MCP server gained `undeclared_failures`, worst
+  first; `doctor` gained `failure-seen-undeclared` and
+  `failure-declared-unseen` rows at `info`, and `--strict-runtime` to make them
+  count. Core's `riskOf` places the first under `wiring`, `PAGE_WORDS` says
+  both, and one pure comparison, `compareSeenFailures`, decides them
+  (`fixtures/multi-repo/traces`).
+- **Run time on the page (P111, P148).** With an observed file beside the
+  database, `flowatlas visualise` draws what traffic measured: the Steps
+  waterfall in milliseconds by each step's p50 or p95 (a switch, kept per
+  browser), its axis saying *typical time per step, not one request*; p95 and
+  error-rate chips on steps and ways in; a *heat* switch on the Map (traffic,
+  or the p95 of the slowest edge behind each link) with a key; the window in
+  the header; and a **Traces** tab drawing each way in's slowest and latest
+  failing request on its own time axis, with no trace or span id in the page.
+  `visualise --observed-diff <a> <b>` adds a **Run time changes** tab (slower,
+  failing more, newly seen, no longer seen, compared only above `--min-count`,
+  default 20), and `flowatlas observe --diff <a> <b>` prints the same. The
+  copied prompt and `describe_for_prompt` write a step's and a way in's p95 and
+  error rate. Sample trees in `observed.json` say when each span began after
+  the request did (`start`, ms). A way in that traffic carried bodies to (see
+  P113) counts as seen, and so does its handler, for `never_seen`, the page's
+  *not seen in* mark and `dead`'s evidence; its hits and joins stay what the
+  spans said.
+- **Payload shapes from traffic (P113).** `flowatlas observe --shapes` reads
+  the JSON bodies a HAR or a @nestjs/observe batch carries for their shape
+  only - key names and JSON types, never a value - folding keys that are values
+  (ids, emails, tokens, UUIDs) into an index signature, and keeps them per
+  route and status under `shapes` in `observed.json` (optional;
+  `privacy.bodies` says `not read` or `read for shape only`). Each route's
+  shapes are compared with the types its code declares through the contracts
+  package and its wire rules: the summary names the routes whose traffic
+  differs, `flowatlas contracts` gains a `traffic` section (`seenIn` / `of` per
+  field, never an error), `check_contract` carries `traffic` and takes an entry
+  id, `get_flow` hints it where traffic differs, the page's Steps header shows
+  `traffic differs: n fields` (and the Ways in row beside the way in's p95 and
+  error rate), and `flowatlas dead` lists declared optional fields no traffic
+  carried. Without `--shapes` no body is read.
+- **Run time from an end-to-end test run (P205).** `flowatlas observe
+  test-results` reads every HAR a Playwright run left under the directory
+  (`*.har`, `*.har.gz`, and the `.zip` a `recordHar` path ending in `.zip`
+  writes), leaves everything else alone and says how many files it left; a
+  quoted glob is the files it matches. The HAR reader reads Playwright's
+  files in each shape (`mode: 'minimal'` or `'full'`; `content: 'omit'`,
+  `'embed'`, or `'attach'`, whose body files beside the HAR or in its archive
+  `--shapes` reads), counts what was not the page's own call to a server (a
+  request the test made through its `request` API, a service worker's, one the
+  test answered with `route.fulfill` or stopped with `route.abort`), and reads
+  Playwright's status `-1` as a call that failed. `docs/run-time.md` is the
+  recipe: `recordHar` in a fixture, the e2e tests, `observe`, then what the
+  page and the graph server's `slow_steps` and `never_seen` say.
+
+#### What the map could not read, and how to close it
+
+- **What the reader could not follow, grouped by cause (P75).** A row about a
+  step that could not be followed records why, as the code states it, under
+  `meta.cause`, and the package it points into under `meta.package`; a folded
+  row lists the same per cause under `meta.causes`, with a few places each.
+  Causes include `module-not-installed:<package>`, `import-unresolved`,
+  `re-export-missing`, `any-typed`, `language-any`, `untyped-parameter`,
+  `callback-param`, `dynamic-member`, `interface-type`, `function-field` and
+  `data-layer-unnamed`. `flowatlas doctor --unresolved` prints them by cause
+  and by package (`--top`, `--samples`, `--cause`, `--package`, `--json`), the
+  page's Not joined tab gains a Can't follow sheet, and the graph server gains
+  `cant_follow` (`fixtures/cant-follow`).
+- **`flowatlas doctor --reason <code>` (P141).** Lists the places of one
+  reason, or several (repeatable, or a comma list), under every level the
+  reason is at, so a reason with hundreds of places can be read on its own:
+  `flowatlas doctor --reason dynamic-http-url --max-nodes 500`. The rows are
+  narrowed as `--service` narrows them, the sections default to `unresolved`
+  and `desync`, and a reason neither the catalogue nor any row knows exits 2
+  with the nearest names. `--unresolved --reason` narrows the breakdown the
+  same way, and its JSON says so under `reasons`. `--accept` refuses it.
+- **`flowatlas accept` (P72, P76, P80).** Accepts a known gap by reason or by
+  gap id (`gap:<service>|<file>|<reason>`), narrowed with `--service` and
+  `--file`, with a `--note`, undone with `--remove`; `--list` prints what is
+  accepted. It writes `accepted.json` (format 2) beside `graph.db` and refuses
+  a target no current gap matches. A rule accepts a route finding on every
+  route a `--path` pattern names (`'GET /api/public/*'`), or in every file a
+  `--file` glob names, in the glob grammar `shapes` uses (`isGlob`, with
+  `isFileGlob` kept for one version under the old name); a rule needs `--note`,
+  and `--dry-run` lists what it would take. `doctor` leaves accepted gaps out
+  of every count and says how many (`unresolved.accepted` in `doctor.json`).
+  Every surface - doctor's report, `doctor --unresolved`, `shapes --suggest`,
+  the page and the graph server's `cant_follow` and `search` - goes through one
+  split in the linker (`acceptedSplitOf`): rows an annotation answered are
+  demoted first, a route rule takes a row read back without its symbol, and the
+  rules are compiled once per surface. A file that does not parse (a merge
+  conflict, a truncated write), does not match the format, or comes from a
+  newer flowatlas is never wiped: adding and `--remove` refuse, exit 2, naming
+  the file and the problem; `--list`, `--dry-run`, doctor (a warning line and
+  `unresolved.accepted.problem`), `doctor --unresolved`, `shapes --suggest`,
+  `visualise`, `cant_follow` and `search` say the problem and accept nothing.
+  The file is written through a temporary renamed into place; `readAccepted`
+  returns the gaps and the problem, with `loadAccepted` kept for one version.
+- **The repository that is probably missing (P122, P144, P146).** `doctor`
+  names the repository the project most likely lacks, from evidence the graph
+  already holds: a setting no service claims (`PAYMENTS_URL`), a host of the
+  project's own network nothing answers, a package under the project's scope
+  that is not installed and no read repository is, a channel with one end, and
+  a deployment that starts or roots something nobody deploys. Names that agree
+  once their separators, generic words and plural are taken off are one group,
+  ranked by kinds of evidence, then places; a configured service's name is
+  never one. Directories beside the configured repositories (and `--scan
+  <dir>`) are matched by manifest name, directory name, a compose service built
+  from them and the hosts their own setting files name - manifests and
+  root-level setting files only, never source - and the line ends with the
+  `flowatlas link` command that adds the one that fits. The report opens its
+  unresolved section with "Probably missing"; `doctor --missing` lists every
+  group with every place (`--json`, `--top`); `doctor.json` gains the optional
+  `unresolved.missingRepos`; `--format github` adds a `::notice` at the
+  configuration. It decides no exit code. `flowatlas link --suggested` (with
+  `--dry-run`, `--scan`) links the one directory that fits each group, and none
+  where two do. Requests rooted at a setting whose values name no service keep
+  those values on the call as `meta.baseUrlValues`.
+  - **Traffic as a sixth kind of evidence (P144).** With an observed file, a
+    blind spot (`seen-not-in-code`, P110) whose service no configured service
+    is becomes `traffic` evidence, one place per blind-spot group, each with
+    what it reached and the window it was seen in. Alone it is weak (a proxy
+    or a collector writes spans under its own name), so `doctor` says it in its
+    head only when another kind agrees or a directory fits. `doctor --missing`
+    lists the traffic places with their window and `doctor.json`'s places gain
+    an optional `seen`. A service's blind spots are a check of their own,
+    `gap:<service>||seen-not-in-code`, that `describe_for_prompt` writes and
+    the page's *Seen at run time, not found in code* sheet copies (*Copy as
+    prompt*, *Copy for agent*).
+  - **A call's `peer.service` (P146).** `observe` reads OpenTelemetry's
+    `peer.service` on client and producer spans (OTLP, Zipkin and Jaeger) into
+    a kept span field, `peerName`: a name only, an address dropped as every
+    host is, a value-like name masked as `:value`. A name that is not one of
+    the map's services, once normalised as the groups are (`orders-api` is
+    `orders`), is counted in `observed.json` as an unmatched row of the new
+    kind `peer`, by the calling service; it shows in the summary and among the
+    blind spots (*peer services*), and nothing is matched by it. Each name is
+    `traffic` evidence, one place per calling service: `doctor --missing` says
+    `gateway: called payments-api, 6 spans in 1h (peer.service)`, and
+    `doctor.json`'s traffic places gain an optional `seen.called`. A peer
+    blind-spot row carries every name under `meta.peers` when it lists only
+    five.
+  - **A subscription nothing here writes to (P204).** `stream-no-writer` (a
+    stream a function reads that nothing configured writes to) and
+    `subscription-matches-nothing` (a rule taking events by a pattern nothing
+    published matches) stay findings, and are evidence of a kind of their own,
+    `subscription`: the stream by its name, as a channel is named, and a
+    rule's pattern by each `source` it names, its last dotted word the token
+    (`acme.payments` → `payments`; the platform's `aws.*` sources name none).
+    Weak alone, like a channel with one end, since another account, a partner
+    or the platform feeds as many; a declared stream read and never written is
+    said only as a subscription, no longer also as a channel. Both reasons'
+    checks now open *How to close it* with the `flowatlas link` line, naming
+    the repository when the row is its evidence, on the page and from
+    `describe_for_prompt`; `doctor --missing` says `stream kinesis/payments is
+    read by jobs and nothing here writes to it` and `events from
+    acme.payments* are taken by jobs (1 rule) and nothing here publishes one`.
+    `fixtures/missing-repo` gained a configured `jobs` service whose stream and
+    rule are both such evidence for "payments".
+- **Every gap says how to close it (P122).** A check's prompt - the page's
+  *Copy as prompt* and `describe_for_prompt` on a gap id - ends with *How to
+  close it*, one line per way that applies to its reason from one table
+  (`REMEDIES`, `remediesOf`, `remedyLinesOf` in `@flowatlas/core`): link the
+  repository (by name when the gap is its evidence), a setting, an alias,
+  `apiTarget`, a pattern, a shape file, the annotation meant for it, or the
+  advice on its places, then the `flowatlas accept` line. The page's row menu
+  gains *Copy for agent*: the same text as a task, with how to see it gone.
+  `describe_for_prompt` also takes a place (`file:line`, `service#file:line`);
+  `cant_follow` and `search` gap hits hand on to `describe_for_prompt({id:
+  <gap id>})`; `start_here` lists `missingRepos` (at most three, by name, with
+  the directories `flowatlas mcp` found for each).
+- **Your own extraction patterns (P121).** A project can write a YAML file of
+  code patterns - `$BUS.emit({ topic: $CHANNEL, data: $PAYLOAD })` on a
+  receiver of type `ShopBus` publishes to `$CHANNEL` - with tests beside each
+  rule, and list it under `patterns` (top level or per service). Each rule is
+  compiled into the description the readers already read (`broker.custom`,
+  `starters`, `db.tables`, and the new `adapters.http.clients`), so a Can't
+  follow row for an in-house bus, HTTP client or data kit becomes something the
+  project fixes in one file. A pattern is one TypeScript expression: `$NAME`
+  holes, `$$$NAME` runs, `_`, object keys in any order, chains, constructions,
+  literals that must match. A rule that cannot be said as locators is refused
+  with the part named (`pattern-not-expressible`); a file that cannot be read
+  is `pattern-file-unread`; a written description on the same call wins
+  (`pattern-shadowed`, info); two rules on one call read neither
+  (`pattern-ambiguous`); a rule nothing matches is `pattern-unmatched` (info).
+  Nodes a rule drew carry `meta.describedBy: "pattern:<id>"`, and a call a
+  description now reads loses its `call-dynamic-receiver` row. New commands:
+  `flowatlas patterns test [files...]` runs every rule's tests by the reader
+  the build runs, in memory (exit 1 on a failing test, 2 on a rule that does
+  not compile; `--sample`, `--service`, `--json`), `flowatlas patterns explain
+  <place>` shows how far each rule got at a place and the first part that did
+  not fit, and `flowatlas patterns suggest` writes starter rules for the
+  wrappers the reader could not follow most often (`--min-sites`, `--out`). The
+  MCP server gained `test_pattern({ yaml, code?, service? })`, and
+  `cant_follow` offers it with a starter. Pattern files join the stand-ins
+  fingerprint, so an added, edited or removed file reads the services that list
+  it again (`fixtures/house-patterns`).
+- **`adapters.http.clients` (P121).** An HTTP client of the project's own,
+  described by its receiver type, the function that makes it, or its own name,
+  with locators for the address, the body and the verb (or the verb fixed, or
+  the method's own name), read by the server reader and both browser readers.
+  Every description gained `where` (values the call must write) and
+  `describedBy`; a `broker.custom` producer gained `module`.
+- **Built-in declaration shapes for uninstalled repositories (P70).** Where
+  `rxjs`, `@nestjs/common`, `@nestjs/core`, `@nestjs/microservices` or
+  `@nestjs/passport` do not resolve, the server reader reads a few hand-written
+  declarations of their public surface in their place, and the Angular reader
+  does the same for `rxjs`, `@angular/core` and `@angular/common/http`. They
+  are held in memory, never written to disk, and an installed package always
+  wins. On a clone with nothing installed, a `ClientsModule.register([{ name
+  }])` token resolves for `@Inject(name) ClientProxy`, passport's `AuthGuard`
+  keeps its 401, and `Observable<T>` returns unwrap: on `fixtures/multi-repo`
+  copied out of the workspace, `module-import-dynamic` went from 1 to 0,
+  `di-token-unknown` from 1 to 0 and `type-unresolved` from 12 to 0.
+  `builtInShapes: false` turns them off, project-wide or per service.
+- **Sources for uninstalled internal packages, and shape files (P78).** An
+  import of a package that is not installed resolves to that package's source
+  where a configured repository, a workspace member of one, or a directory
+  directly under the configuration has a `package.json` whose `name` is the
+  package: through its `exports`, `types`, `typings` or `main`, the same under
+  `src/` for a build nobody ran, then `src/index.ts`, with its own tsconfig
+  `paths`. It is read for its types alone, at the path an install would have,
+  so no node of it is minted in the importer. A new top-level and per-service
+  `shapes` key lists `.d.ts` files of the project's own holding `declare module
+  '<package>' { ... }` blocks, read in memory like a built-in shape. The order
+  is fixed: installed, source, shape file, built-in shape; `packageSources:
+  false` (or `"services"`) turns the first off (or keeps it to configured
+  repositories). An edge drawn through those types is `heuristic`, with
+  `because: ["package-from-repo" | "shape-file"]` and `typedBy`, shown as a
+  small mark on the page's steps and in `get_flow`. New rows:
+  `package-from-repo` and `shape-file-unmatched`, `package-version-differs`
+  (info), `package-source-ambiguous`, `shape-file-unread`. `flowatlas shapes
+  --suggest` lists the missing packages most places need with the names used
+  of each (`--top`, `--service`, `--package`, `--members`, `--json`), and
+  `--out <dir>` writes a starter `.d.ts` per package, names only and every type
+  `any`, never into a repository and never over a file. `cant_follow` places
+  gained `coveredBy` and its `next` names the command; the build cache records
+  the source files and shape files read, so editing one re-reads the importer
+  (`fixtures/uninstalled-internal-packages`).
+- **Base URLs from the repositories' own files (P77).** A request rooted at a
+  setting no service claims under `baseUrlEnv` is completed from what the
+  setting is given: the environment a function running it is deployed with,
+  else `.env.example`, `.env.sample`, `.env.template` or `.env.development`,
+  the compose container built from the repository (`environment:`,
+  `env_file:`), `serverless.yml` and `wrangler.json` / `wrangler.toml`
+  variables, and the code's own fallback (`?? '…'`, `|| '…'`, `config.get(key,
+  '…')`, a `registerAs` factory). `.env`, `.env.local` and other environments'
+  files are read for names only. Only an address is kept, scheme, host and
+  path; secrets by name, credentials, queries and token-like paths are dropped.
+  The host is matched to a service by its name, the new `services[].hosts`, its
+  compose container names and published ports, and the port its example file
+  runs it on; a host outside the project is a third party. Such a join is
+  `heuristic`, with `baseUrl` and `baseUrlFrom` on the edge, the request, the
+  page and `get_flow`, and a `base-url-from-files` note. A setting nothing
+  gives a value and named after exactly one service is taken as it
+  (`base-url-from-name`). The same files complete an address waiting on the
+  environment where no deployed function sets it (`environment-from-files`).
+  `settingFiles.read: false` turns it off and `settingFiles.environment`
+  chooses one environment (`fixtures/multi-repo-base-urls`).
+
+#### Reading code
+
+- **What each route can fail with (P68).** A NestJS entry gained `meta.fails:
+  [{status, exception, at, file, line, source}]`: the built-in exceptions and
+  `new HttpException(..., status)` thrown by its handler, by the services and
+  helpers it calls and by the exception classes they extend, a guard's refusal
+  (403; 401 for passport's `AuthGuard`, 429 for the throttler), and the
+  framework's pipes (400) on the route or on a parameter. Throws caught in the
+  same body and rethrows are left out; a non-HTTP entry keeps the exception and
+  no status. `get_flow` shows `fails` on each entry, and `describe_for_prompt`
+  gained a "Can fail with" section (`fixtures/nest-failures`).
+- **Which guard covers a route, and from where (P76).** A NestJS entry gained
+  `meta.access`: every guard and middleware in front of it with `where`
+  (`global`, `module`, `controller`, `route`) and `via` (`APP_GUARD in
+  AuthModule.forRoot`, `useGlobalGuards in src/main.ts`, `@UseGuards on
+  OrdersController`). `APP_GUARD` is read through spreads, named arrays, a
+  provider held in a const and a module's own `forRoot()`, and an installed
+  class (`useClass: ThrottlerGuard`) counts too; a `providers:` list that
+  cannot be followed is a `module-providers-unread` row. A `@Public()`-style
+  decorator - `SetMetadata(KEY, true)`, through a function of the project's own
+  or `applyDecorators`, on the handler or the class - switches off each guard
+  that reads the key. `get_flow`, `describe_for_prompt` (an "In front of it"
+  section) and the page's details panel show it all
+  (`fixtures/nest-route-access`).
+- **`/** @flowatlas-public <why> */` (P90).** On a handler or its controller,
+  a route open on purpose has no `route-unguarded` row and a
+  `route-public-declared` row at `info` naming the reason instead; a marker
+  with no reason is taken as public and listed as `marker-reason-missing`.
+  Nothing else is read as public: not a verb, a path or a name.
+- **Calls run once per item, or side by side (P69).** A call inside a `for`,
+  `for…of`, `for…in`, `while` or `do` body, or inside a function handed to
+  `map`, `forEach`, `reduce` and the like, gained `meta.inLoop: {kind, line}`;
+  one inside the arguments of `Promise.all`, `allSettled`, `race` or `any`
+  gained `meta.concurrent` and `meta.together: {by, line}`. A query, cache
+  call, request or publish reached once per item, directly or through a
+  function the loop calls, is a `query-in-loop` row: a likely N+1
+  (`fixtures/nest-query-loop`; see P89 under Changed for which loops count).
+- **Log lines on steps, and the zone a schedule fires in (P71).** Methods and
+  functions gained `meta.logs: [{level, text, at}]`, one per line written
+  through a logger or the console, with the message kept as a template whose
+  values are named by what holds them, never by what they hold. A `@Cron` way
+  in gained `meta.timeZone` or `meta.utcOffset` from its options
+  (`fixtures/nest-jobs-logs`).
+- **Tables named where they are set (P88).** Three shapes of a table written
+  one step away from the query are read with no configuration. A base,
+  abstract or extended, whose queries hand `this.<field>` to the library's own
+  table argument (`db.collection(this.collectionName)`) is read as a
+  `localBaseClasses` entry with that `tableProperty`: each call through a class
+  under it is on the table that class sets, `heuristic` when the field is not
+  `readonly`, and a class setting it to something unreadable gets a
+  `dynamic-table-name` row naming the class. A helper of the same class that
+  returns one expression (`this.coll()`, a getter `this.collection`) is
+  followed one level in the chain walk. On TypeORM's `EntityManager` and
+  `DataSource`, the entity class handed to `find`, `save`, `createQueryBuilder`
+  and the like, or to a builder's `from`, names the table (`meta.source:
+  "entity-arg"`). Queries read the first two ways carry `meta.tableFrom:
+  "inferred-property"` or `"helper"` (`fixtures/tables-set-elsewhere`).
+- **TypeORM's raw SQL read as a statement (P126).** A whole statement handed
+  to `query` on a repository, an `EntityManager`, a `DataSource` or a
+  `QueryRunner` names the tables and the verb its text writes (`meta.source:
+  "sql-parse"`), where it had been a read of the repository's entity or a
+  `dynamic-table-name` row; a text not written out whole is read as before. A
+  loop of guarded raw `UPDATE`s through it is a `query-in-loop` note and a loop
+  of `… = ANY($1)` statements is set aside as a batch, as through a driver; a
+  manager's `update(Entity, criteria, …)` is read as conditional by its
+  criteria (`fixtures/loops-worth-fixing`).
+- **Callers `dead` used to miss (P91).** A service can be named by
+  `services[].aliases` (unique across every name and alias, matched exactly)
+  wherever a service is named: `@CallsService`, its JSDoc twin `/**
+  @flowatlas-calls <service> <METHOD> <path> */` (now read on server methods
+  and functions too), `apiTarget`, a base address's host. A worker's
+  `env.X.fetch(input, init)` is an `http_out` with `meta.binding`, joined
+  `static`, `via: "serviceBinding"`, to the service its `wrangler.*`
+  `services` bind `X` to (by name, alias, or the `name` that service's own
+  wrangler file deploys it under); a binding to no known worker is a
+  `service-binding-unknown` row. A request made to exactly what a setting
+  holds (`fetch(process.env.REINDEX_URL)`) whose value is a whole address takes
+  the value's path. A wrapper handed the verb (`this.req('PATCH', path)` into
+  `fetch(url, { method })`, `http.request(method, url)`) credits each caller
+  with the verb it hands in, through further wrappers, by one walk in the core
+  (`verbsAtCallers`, `verbAlong`) the server, Angular and React readers share;
+  and a caller leaving an argument out hands in its default (`url()` for
+  `url(suffix = '')`) (`fixtures/multi-repo-dead-routes`).
+- **`likely-dead` (P91).** A route nothing calls that a request read in part
+  could still reach - what was read matches, each unread piece standing for
+  the rest of its segment and any after it, or only the verb was unread - is
+  listed by the build in `routes.nearMissed` and by `dead` as `likely-dead`
+  with up to three such requests (under `evidence.couldHit`, P95). No edge is
+  drawn.
+- **A browser annotation that names its service (P127).** `/**
+  @flowatlas-calls catalog GET /items */` above an Angular method or a React
+  function is read as `GET /items` at the service it names, by name or alias
+  (`meta.service` on the request), ahead of `apiTarget` and every other way a
+  browser request's service is decided, and joined `via: "marker"`. A name no
+  service answers to is a `marker-service-unknown` row, and a route the named
+  service lacks a `marker-route-not-found` row, as for the server's
+  annotation. The two-word form (`GET /items`) keeps its meaning, and the React
+  reader reads either form for the first time. A tag with no verb in first or
+  second place is no longer read as a request (`catalog items` had been the
+  verb `CATALOG`), and a tag is read on one line only
+  (`fixtures/multi-repo-annotated-browser`).
+- **A body handed through a verb wrapper (P128).** A server request whose body
+  is a parameter of the wrapper that sends it - `req(method, path, body)` into
+  `fetch(url, { method, body: JSON.stringify(body) })`, the settings one
+  `const` away, or `init.body = JSON.stringify(body)` set on them afterwards -
+  reads its body at each caller, along the same calls its address and verb are
+  followed through (the core's `argumentAlong`), so `this.req('POST',
+  '/invoices', invoice)` carries `invoice`'s type and keys. The caller's second
+  argument stays the body only for a wrapper that does not say where its body
+  is (`fixtures/nest-client-wrapper`, `fixtures/nest-forwarded-verb`).
+- **A server request's own body (P131).** `fetch(url, { method: 'POST', body:
+  JSON.stringify(order) })` carries `order`'s type and keys where it is made;
+  the server reader had read no body from a request's own settings at all. A
+  body already a string, `body: event.body`, is read as `string`, and
+  `contracts` says so (`body-already-serialised`).
+
+#### Reading AWS
+
+- **A table write reaches the function its stream runs (P51).** DynamoDB
+  writes - `PutItem`, `UpdateItem`, `DeleteItem`, `BatchWriteItem`,
+  `TransactWriteItems`, the document client's `put`, `update`, `delete`,
+  `batchWrite` and `transactWrite`, from `@aws-sdk/client-dynamodb`,
+  `@aws-sdk/lib-dynamodb` and version 2 - are publishers onto
+  `dynamodb/<table>` wherever some service's Terraform declares that table's
+  stream (`stream_enabled`, `stream_view_type`, or a mapping from its
+  `stream_arn`), and the mapping from the stream is a consumer of that channel
+  triggering its `event` entry. `flow` and `impact` follow Lambda A → table →
+  stream → Lambda B, across repositories too. Kinesis `PutRecord` and
+  `PutRecords` land on `kinesis/<stream>` the same way. A table named by
+  `process.env` is completed from the function's deployed environment, as a
+  queue is. A write to a table with no stream, and any read, joins nothing and
+  says nothing. A mapping's `filter_criteria` is put on the edge with a
+  `stream-filter-not-matched` row, and a stream something reads and nothing
+  writes is a `stream-no-writer` row, both at `info`
+  (`fixtures/lambda-terraform-table-stream`).
+- **A workflow's write reaches the function a stream runs (P55).** A Step
+  Functions task that writes to a table - `dynamodb:putItem`, `updateItem`,
+  `deleteItem`, and through `aws-sdk:` the batch and transaction writes - is a
+  producer onto `dynamodb/<table>` from that state, kept only where the table's
+  stream is declared, as a function's write is; `aws-sdk:kinesis:putRecord`
+  and `putRecords` land on `kinesis/<stream>`. A table chosen at run time
+  (`TableName.$`, JSONata) stays the existing `workflow-target-dynamic` row. A
+  batch keyed by a bare word, `RequestItems: { orders: [...] }`, or by a
+  shorthand property, is read as the table that word names
+  (`fixtures/lambda-terraform-table-stream`).
+- **S3 bucket notifications, and the writes that fire them (P52, P56, P60).**
+  `aws_s3_bucket_notification` is read from Terraform, in HCL and in JSON, and
+  so is `terraform-aws-modules/s3-bucket/aws//modules/notification`: each
+  `lambda_function`, `queue` and `topic` block (`lambda_notifications`,
+  `sqs_notifications`, `sns_notifications` in the module) is a consumer of
+  `s3/<bucket>` taking its `events` and keys by `filter_prefix` and
+  `filter_suffix`, and `eventbridge = true` puts the bucket's events on the
+  default bus as `aws.s3`, where existing rules take them. `PutObject`,
+  `CopyObject`, `CompleteMultipartUpload`, `DeleteObject(s)`, version 2's
+  `upload` and `@aws-sdk/lib-storage`'s `Upload` are publishers onto the bucket
+  by `Bucket` - written out, from `process.env` completed from the deployment,
+  or a constant - recorded as the event they fire with the key they write.
+  Each write's edge says which notifications take it (`takenBy`), `static`
+  where the key as written says so and `heuristic` with the reason otherwise;
+  a URL signed for a `PutObjectCommand` is a `heuristic` write, `because:
+  ["presigned"]`. On a bucket that keeps versions (`aws_s3_bucket_versioning`
+  Enabled or Suspended, or the bucket module's `versioning` input), a
+  `DeleteObject` or `DeleteObjects` naming no `VersionId` is taken as
+  `s3:ObjectRemoved:DeleteMarkerCreated` rather than
+  `s3:ObjectRemoved:Delete`. New rows `bucket-notification-unread` and
+  `s3-write-matches-nothing` (info), and a locator `receiver-constructed-path`
+  that reads what a receiver was constructed with
+  (`fixtures/lambda-terraform-bucket-notification`,
+  `fixtures/lambda-terraform-bucket-module`).
+- **Other ways a Lambda function is run, read from Terraform (P53, P56, P60).**
+  A function URL and an Application Load Balancer target group of functions
+  are `http` entries on the function - `ALL /*` for a URL, each listener rule's
+  path and verb for a load balancer, its hosts kept on the entry. A user pool's
+  `lambda_config` is an `event` entry `cognito/<pool>/<trigger>` per step, and
+  an IoT topic rule an `event` entry `iot/<topic filter>` running its function.
+  An IoT rule's other actions are drawn as well: `sqs` and `sns` onto their
+  queue or topic, `kinesis` onto `kinesis/<stream>`, `dynamodb` and
+  `dynamodbv2` onto `dynamodb/<table>` - so a rule reaches the function that
+  table's stream runs - and `step_functions` starting its state machine, as
+  `StartExecution` does. An `error_action`'s action is drawn the same way and
+  marked `when: "failure"`, a workflow or a function named elsewhere included.
+  Any other action (`firehose`, `s3`, `republish`, ...) is an
+  `iot-action-not-read` row, and an `aws_lambda_permission` for a principal
+  none of these reads an `invoker-not-read` row, both at `info`
+  (`fixtures/lambda-terraform-other-ways-in`).
+- **Function URL callers and Lambda destinations (P54, P60).** A request
+  rooted at a setting no service claims joins the `ALL /*` entry of the
+  function URL the running function's environment names
+  (`aws_lambda_function_url.x.function_url`, directly or through a module
+  output), `via: "functionUrl"`, `static` where the path is read and
+  `heuristic` where it is not; `process.env.X + '/path'` is read as an address
+  rooted at `X`. `aws_lambda_function_event_invoke_config`
+  `destination_config` and an event-source mapping's `on_failure` are
+  `triggers` edges from the run to the destination function, or to a publisher
+  onto its queue, topic or bus, with `meta.when: "success" | "failure"`; a
+  result put on a bus is the platform's `lambda` / `Lambda Function Invocation
+  Result - Success|Failure` event. A destination function another service
+  deploys is joined the same way, and an invoke configuration of a function
+  another service creates is joined from that function's entry instead of
+  being a `subscription-source-unread` row
+  (`fixtures/lambda-terraform-destinations`).
+
+#### Reviewing a branch, and deploying it
+
+- **A verdict on what a branch changed, and what stopped joining (P96).**
+  `what_changed({verdict: true})` answers `safe`, `unsafe` or `unknown` with one
+  sentence per reason under `because`: unsafe for a new contract error, a call
+  whose target went or a channel left with one end, and a removed way in
+  another service still calls; unknown for a service the base ref could not be
+  read for, a new gap on a path from a change to a way in, or a `diff.json` too
+  old to hold gaps. It lists `newGaps` by gap id with the method each is in,
+  `vanishedTargets` (`{ caller, target, now }`), the ways in to `retest` ranked
+  by the changed nodes each reaches and then by observed traffic, and
+  `newFindings`, which never decide it (`fixtures/multi-repo-diff`). The
+  `flowatlas diff` document gained two sections: each request that joined a
+  route on the base side and joins nothing now, with what the head side says
+  instead, and each channel left with no producer or no consumer; and the gap
+  ids and findings the head has and the base does not. `lostJoins(base, head)`
+  in the linker computes the first, for any two graphs.
+- **Changed flows as sequence diagrams (P116).** After the impact, `flowatlas
+  diff` gained a "Changed flows" section: each way in the impact lists, and
+  each way in the branch added or removed, walked on both graphs and compared
+  step by step, matched on what a step is rather than its line. Each changed
+  flow gets a `<details>` with a Mermaid sequence diagram across the services
+  (added steps green and prefixed `+`, removed ones red with the cross arrow
+  and `−`, a changed body or confidence in a note, a guess said as `(best
+  guess)`, a place the walk could not see past as `stops here: <reason>`) and
+  the same steps as a `diff` block under it. New flags `--max-diagrams` (5),
+  `--context` (3), `--sequence-detail service|class`, `--max-chars` (60,000:
+  diagrams are dropped from the last back, then flows, each counted),
+  `--no-diagrams` and `--max-flows` (50, the rest counted in a
+  `flows-truncated` warning). `flowatlas flow --format sequence` draws the walk
+  from one way in as the same diagram, without the marks, 16 hops unless
+  `--depth` says (`--sequence-detail class` draws a participant per class).
+  `what_changed` says what each changed flow does now: a way in under `entries`
+  or `retest` whose flow changed gains `flow: { side, added, removed, changed,
+  steps }`, and `counts` gains `flows` (`fixtures/multi-repo-diff`'s sixth
+  edit: `orders` publishes `order.gift-wrapped` and `billing` takes it).
+- **Architecture rules across services (P114).** `flowatlas.config.json`
+  gained `services[].tags` and a top-level `rules` list: each rule a `name`, a
+  `severity` (`error` by default), a `note` and one of four shapes - `forbid`
+  (`from` must not reach `to`, in one hop or `transitive`ly), `only` (nothing
+  outside `from` may reach `to`, a table's `op` too), `tags` (a service tagged
+  `source` joins only services carrying one of `mayReach`) and `reachable` (a
+  path that `must` exist, or must not) - over selectors by service, tag, way
+  in, table, channel, route and node type, along the edges between
+  repositories (`hits`, `http_calls`, `emits`, `consumes`, `queries`,
+  `triggers`; `calls` when named). New command `flowatlas rules` (`--format
+  text|json|markdown|github`, `--rule`, `--service`, `--fail-on`,
+  `--max-nodes`, `--out`, `--list`) writes `rules.json` (`rulesFormatVersion:
+  1`); each violation carries its path, the crossing hop's `file:line` and the
+  weakest confidence, and one along a guessed edge fails a run only with
+  `rulesSettings.failOnHeuristic`. A rule naming nothing is listed as not
+  checked (`rule-matches-nothing`), never passed; one over a service read in
+  part says so (`rule-over-partial-read`); one that fails its schema is refused
+  naming it (`rule-invalid`). `doctor` gained a `rules` section (`--no-rules`;
+  `--strict` fails on a new violation at `error`), `flowatlas accept
+  rule:<name>` excuses violations, `flowatlas diff` gained a "Rules" section
+  and `--fail-on-rule-break`, and the MCP server a `check_rules` tool,
+  `violates` on `get_flow` steps, a "Rules it breaks" section in
+  `describe_for_prompt`, `rules` counts on `start_here`, a `rule` kind in
+  `findings` and a verdict that is `unsafe` on a new rule violation
+  (`fixtures/multi-repo-rules`).
+- **An `only` rule that reaches through (P203).** `only` takes `reach:
+  "direct" | "transitive"`, as `forbid` does. Transitive, "only billing may
+  reach the payments table, even through other services" is one rule:
+  whatever `from` reaches acts for it (a workflow it starts, a route it calls,
+  a handler of a channel it publishes onto), and a violation is a path into
+  `to` that does not go through `from`, reported where it starts, at the
+  nearest node `from` neither selects nor reaches, with its path and its
+  weakest confidence; a gateway in front of that node is not reported again.
+  A `via` without `emits` and `consumes` leaves channels out of what acts for
+  `from`. `fixtures/multi-repo-rules` gained `only-gateway-reaches-billing`:
+  `orders` publishing what billing consumes breaks it, which a direct `only`
+  cannot see.
+- **SARIF output for code scanning (P115).** `contracts`, `dead`, `cycles`,
+  `rules`, `doctor` and `diff` gained `--format sarif`: one SARIF 2.1.0 run per
+  command, under the category `flowatlas/<command>/`, which GitHub code
+  scanning shows on the lines of a pull request, keeps open while the finding
+  is there and closes when it is fixed. Every `ruleId` is a code already in use
+  (a doctor reason, a marker code, a contract finding kind, `dead-entry`,
+  `dead-channel`, `dead-provider`, `dead-field`, `cycle`, `no-way-in`, and
+  `rule/<name>` for an architecture rule), described from the hint catalogue.
+  One level map: contract and rule severities as they are (`info` → `note`), a
+  gap or finding row at `action` a warning and at `info` a note, a call that
+  lands nowhere and a wrong annotation errors, a dead row a note, a cycle a
+  warning; a note row (P81) and a place with nothing to join are never
+  written. Paths are the ones the configuration's directory sees (as `doctor
+  --format github` writes them since P191); a contract finding sits at the
+  sender's line with the receiver as a related location, a rule violation at
+  its crossing hop with its path, and a cycle with its hops, as a code flow; a
+  finding with no file sits at the line of `flowatlas.config.json` naming its
+  service or rule. `partialFingerprints` (`flowatlas/v1`, and
+  `primaryLocationLineHash` from the same key) come from the keys the baseline
+  already uses, so moving a line keeps an alert open. A row the baseline holds
+  is `unchanged` and one it does not `new`; a row `accepted.json` names, a
+  violation it excuses and a contract finding `@ContractIgnore` or
+  `contracts.ignoreEdges` excuses are written suppressed with why; `diff`
+  writes the new (`new`) and fixed (`absent`) contract findings and rule
+  violations. `--output <file>` writes the log there and prints one line about
+  it, `--sarif-root <dir>` writes paths relative to one checkout (and leaves a
+  result in another out, counted), `--sarif-level` leaves quieter results out,
+  and a log holds at most 5,000 results unless `--max-nodes` (`--max` on `dead`
+  and `cycles`) says otherwise, saying how many were cut and where the whole
+  report is. The format changes no exit code. `docs/ci.md` gained a "Code
+  scanning" workflow; `toSarif` and the adapters are exported from
+  `@flowatlas/cli`.
+- **`flowatlas check --env <name>`: can this be deployed there (P117).** A
+  committed `flowatlas.deployed.json` (`deployedFormatVersion: 1`, path
+  `deployed.file` in the configuration or `--pins`) says which ref of each
+  service runs in each environment; `--pin <service>=<ref>` and
+  `FLOWATLAS_PIN_<SERVICE>` lay a pipeline's own versions over it. `check`
+  reads every service at its pin (the deployed side), puts the services being
+  shipped (`--service`, or every one whose head differs from its pin) at
+  `--head` or the working tree, runs what `diff` runs on the two and answers
+  `deployable` (exit 0) or `not deployable` (1) for what deploying introduces:
+  a new contract error, a new rule violation at `error`, a call a deployed
+  service makes to a route the candidate removes (with the caller's file and
+  line), a channel left with one end, a new handler of a channel nothing
+  deployed publishes, and a new request no deployed route serves. What already
+  ran wrong is listed under "already deployed" and never fails it. A pin that
+  does not resolve, an unknown environment and a service in a subdirectory of a
+  repository exit 2, naming `git fetch --tags` in which repository, and are
+  never read as the working tree in their place. `--env` is repeatable (one
+  section each, the worst exit); `--format text|markdown|json|sarif`; every
+  environment leaves `check.<env>.json` (`checkFormatVersion: 1`) holding the
+  whole `diff.json` of its two sides. The graph cache is `diff`'s.
+  `flowatlas deployed set <env> <service> <ref>` records a deployment in the
+  pins file (`--resolve` records the commit the ref names); `deployed show
+  [env]` prints each pin with its commit, kind and age, and warns of a branch
+  and of a ref the repository does not have. `what_changed({file:
+  "check.prod.json"})` reads a check document like a diff, with `check: {
+  environment, verdict, because }`, and `start_here` says each environment's
+  verdict in one line and leads `next` with the first one not deployable.
+- **A new handler of what nothing publishes is a lost join (P117).**
+  `lostJoins` also names a consumer the head side added to a channel nothing on
+  the head side publishes (`kind: 'no-producer'`, `now: 'never-produced'`), so
+  `diff`'s "Calls that stopped joining" and `what_changed`'s verdict say it
+  too. `buildAtRef` gained `refFor` (a ref per repository) and `fallback:
+  false`.
+- **`flowatlas diff --env <name> [head-ref]` (P193).** The comparison `check`
+  makes, without its verdict, for a reviewer who wants the changed flows
+  against production in a pull-request comment: the base side is each service
+  at its pin, read as `check --env` reads it (`--pin`, `--pins` and
+  `FLOWATLAS_PIN_*` as there), and `diff.json`'s `base.ref` is the
+  environment's name; every section equals the check document's `diff`. The
+  Markdown opens with the pins. A pin that does not resolve exits 2, never
+  assumed unchanged; `<base-ref>` and `--env` are exclusive.
+- **`flowatlas diff --section <name>` (P226).** Only those parts of the
+  Markdown, repeatable: `impact`, `flows`, `docs`, `contracts`, `api`,
+  `rules`, `joins`, `gaps`, `types` or `graph`, in the document's order and
+  without its heading, side table and footer, so `diff main --section impact`
+  answers who would notice in a terminal. The warnings stay, since what could
+  not be read qualifies every section; `diff.json` is whole either way, and
+  `--section` with `--format json` or `sarif` exits 2.
+- **Docs tied to flows (P120).** `flowatlas docs [paths...]` reads Markdown
+  blocks that name a flow, a channel or a symbol by its graph id (`<!--
+  flowatlas:flow id="POST /orders" view="sequence" -->` … `<!--
+  /flowatlas:flow fingerprint="…" -->`, and `<!-- flowatlas:ref id="…" -->`
+  before a mention in prose). `--write` regenerates the content between the
+  markers, in place and nowhere else, in one of six views: `steps`, `mermaid`,
+  `sequence`, `prompt`, `contract` and `tour`, whose notes are kept by step and
+  never deleted. `--check` exits 1 when a block is `changed` (the steps it
+  covered were added to or removed since it was written, each named), `gone`
+  (with the nearest names) or `ambiguous`, and 2 on a marker it cannot read;
+  `--format github` writes a `::warning` at each block. The fingerprint is of
+  what the block shows, not its text, so a reformat never fails it. Every run
+  writes `docs.json` beside the graph (`docsFormatVersion: 1`); the
+  configuration gained `docs.files`. `flowatlas diff` gained **Docs this
+  branch makes stale**; `get_flow`, `describe_for_prompt` and `impact` gained
+  `docs` (the blocks about the node, each checked when asked), `start_here`
+  gained `staleDocs`, and the page's details panel lists the docs that
+  describe a node (`fixtures/multi-repo/docs`,
+  `fixtures/multi-repo-diff/base/docs`).
+
+#### API documents and catalogues
+
+- **`flowatlas spec`: OpenAPI and AsyncAPI documents from the graph (P118).**
+  An OpenAPI 3.1 document of each service's routes (one per application) and
+  an AsyncAPI 3.0 document of each service's channel ends, written to
+  `<output>/spec/` from what the graph read: paths with their parameters'
+  names, query and header values, bodies and answers expanded from the type
+  registry into JSON Schema 2020-12 through the contract check's wire rules,
+  one response per failure status (a helper's choices each under theirs), the
+  guards in front, the public mark, and on every operation where it was read,
+  how surely and who calls it (`x-flowatlas-*`). A delivery's wrapping is
+  `x-flowatlas-envelope`. What could not be read is left out and counted, or
+  `{}` with `x-flowatlas-unread`; each document is read back through the
+  reader of its format before it is written (the OpenAPI reader takes `2XX` as
+  a success answer after every exact 2xx code, so a document flowatlas wrote
+  reads back with its answer). `--check` fails when a committed copy is out of
+  date; `--inventory` writes one table of every route (guarded, public,
+  callers, tables written, channels published, fails). The MCP server gained
+  `get_spec` (a service's document, or one route or channel end with the
+  schemas it uses, as JSON text bounded by `maxChars`) and
+  `describe_for_prompt({withSpec})`, which carries a route's fragment.
+- **`flowatlas spec diff <base> [head]` (P118).** Both sides' documents,
+  written in memory and compared operation by operation, each change one kind
+  of a fixed catalogue modelled on oasdiff's (`endpoint-removed`,
+  `request-property-added-required`, `response-property-removed`,
+  `channel-removed`, ...) with the callers it breaks on the base side; a
+  breaking change no caller in the project reaches, on a route nothing marks
+  public, is a warning saying so. `--fail-on`, `--format
+  text|markdown|json|sarif` (`spec/<kind>` rules), `spec-diff.json`.
+  `flowatlas diff --spec` adds the same table as "API changes".
+- **`flowatlas spec --against <service>=<file>`: a committed document against
+  the code (P195).** A hand-written OpenAPI or AsyncAPI document, YAML or
+  JSON, is read through its reader, written back in the code's normal form and
+  compared with the document written from the graph by `spec diff`'s
+  catalogue, the document as the base side: a route or channel end the
+  document declares and the code no longer answers is an error at the
+  document's line, one the code answers and the document leaves out is said,
+  and a field the two disagree on is named, with the query and header values
+  and failure statuses the document declares compared too. Descriptions,
+  guards and formats are not compared. `--format text|markdown|json|sarif`
+  (command `spec-against`), `--fail-on`, `spec-against.json`
+  (`specAgainstFormatVersion: 1`). The new `services[].apiDocuments` lists a
+  repository's committed documents; `contracts` compares each in a section of
+  its own and fails on a broken promise at `--fail-on`
+  (`fixtures/nest-committed-openapi`).
+- **`flowatlas export backstage` and `flowatlas export structurizr` (P119).**
+  The map written into the tools that already keep one, from the joins the
+  graph made and nothing else. `backstage` writes a `Component` per service
+  (`service`, `website` or `function`), an `API` per service and kind pointing
+  at the OpenAPI or AsyncAPI document written beside it, `Resource`s for the
+  tables queried (one per table, owned by its writer) and the hosts called, and
+  one `Location` listing every file; `consumesApis` comes from requests into
+  another service's routes and deliveries off channels another service
+  publishes, `dependsOn` from queries, outside hosts and functions started by
+  name. Owner, lifecycle and system come from the new `services[].catalog`
+  (`owner`, `lifecycle`, `system`, `description`, `sourceUrl`) and are
+  `unknown` (and listed) when nobody wrote them. `structurizr` writes a DSL
+  workspace: a container per service, store and channel prefix, the hosts
+  outside, relationships described by what crosses them (collapsed past
+  `--max-labels`), the container view, and a dynamic view per flow in call
+  order (`--flow`, `--max-flows`). Only `static`, `declared` and `marker` joins
+  by default; `--include-heuristic` draws the rest, marked. Files go to
+  `<output>/export/<kind>/`, never into a configured repository, the same bytes
+  every run; `--check` writes nothing and fails when a committed copy is out of
+  date, naming the first relation that differs; `--json` prints the entities
+  or the model.
+
+#### The page
+
+- **A Steps tab (P64, P74).** One way in as a list in call order, indented by
+  depth: each step with a kind mark and its table, address template or channel
+  inline, calls side by side and calls per item marked, a likely N+1 flagged,
+  failure paths in red, a red row where a chain breaks (no route, no handler,
+  an address not read), and best guesses marked. Its heading lists what the way
+  in can fail with, as the ways-in list and the details panel do too, and the
+  step that throws is marked; a scheduled way in shows its expression and zone,
+  and each step's log lines are folded under it. Hovering a row lights its node
+  in the Graph tab.
+- **Copy as prompt (P67).** On the Steps tab, a channel and a check row, and
+  from the graph server as `describe_for_prompt({id})`: bounded Markdown with
+  what is in front of the way in, what it can fail with, its schedule, the
+  steps with repo-relative `file:line`, shapes in and out, log lines, open gaps
+  with their reasons and the ids to ask next. No source code. Rendered by the
+  pure `describeForPrompt`, exported from `@flowatlas/mcp` (see P97 under
+  Changed for the one renderer both sides now share).
+- **One search box, a Busiest tab and a Changes tab (P73).** The search box
+  above the tabs finds a route or other way in, a channel, a table, a type, a
+  gap or a class, and under *Fails with* the ways in that can fail with an
+  exception or a status; a hit opens where it is (see P101). Busiest ranks
+  methods as `flowatlas hotspots` does, with how many ways in reach each, how
+  far the nearest is, and its own service's edges against all of them.
+  `visualise --diff <ref>` runs `flowatlas diff` and adds a Changes tab: routes
+  added and removed, removed routes something still calls and who calls them,
+  shapes that moved, new contract findings, and the unresolved count on each
+  side.
+- **A class, a file or a service as one prompt (P95, P134).**
+  `describe_for_prompt` takes `scope`: `class` writes every method of a class
+  with the ways in that reach it and its own chain, sharing `maxSteps`; `file`
+  every node of a file under the class it belongs to, the gaps in the file and
+  the ways in that reach it; `service` its ways in by kind, its crossings to
+  and from each other service worst verdict first, its channels, its findings
+  ranked as the `findings` tool ranks them and its most common gaps. A scope a
+  node does not have is an error naming the ones it has. On the page, the
+  Graph tab's details panel has *Copy as prompt* on every node and a `⋯` beside
+  it that copies the node's class, its file or its service, and a service's
+  box on the Map copies the service: each the text `describe_for_prompt`
+  writes, character for character (`steps.js` gathers all three scopes, and the
+  parity test compares every service of every built fixture). The pack gained
+  `overview`: the project's findings, ranked where the database is, and the
+  contract verdict of each crossing that is not unchecked (about 2% of the
+  pack over the fixtures).
+
+- **One request read "1 hits".** A route's details on the page and
+  `describe_for_prompt` said "1 hits are too few to say a declared failure was
+  never seen" and "Run time: 1 hits"; one is a hit now.
+
+#### The graph server (MCP)
+
+- **Every answer hands on the next question (P63, P72, P75).** Every answer
+  ends with `next`, the calls that take the ids it returned, and the server
+  instructions spell out the chains (entry → flow → source, channel →
+  publishers and handlers → flow, symbol → impact). New tools: `start_here`
+  (counts per service, the commonest gaps and the entry ids to begin from),
+  `describe_for_prompt`, `search` (routes, channels, tables, types, gaps,
+  `fails` and classes in one query), `what_changed` (the last `flowatlas diff`,
+  read back from `diff.json`) and `cant_follow`. `who_calls`, `impact`,
+  `who_emits` and `who_consumes` take the same optional `service` filter
+  `list_entries` and `find_symbol` already did.
+- **Lists read a page at a time, and structured answers (P93).**
+  `list_entries`, `find_symbol`, `search` (every kind from one offset),
+  `who_emits`, `who_consumes`, `impact`'s entries, `what_changed`'s lists and
+  `cant_follow`'s causes take `offset`, and a cut answer says `total`,
+  `nextOffset` and `n more; next page offset k`, with that same call first in
+  `next`; an offset past the end is an empty page with the total. `get_source`
+  takes `fromLine` and `maxLines` (at most 400) and says `truncated:
+  "declaration continues past line N; ask with fromLine N+1"` where it had
+  stopped a long declaration at 400 lines with an `endLine` that read as its
+  end. Every answer also goes out as `structuredContent`, and `start_here`,
+  `list_entries`, `find_symbol`, `who_emits`, `who_consumes`, `get_type`,
+  `get_source`, `search` and `cant_follow` declare an `outputSchema`; every
+  tool is annotated `readOnlyHint`, `openWorldHint: false` and
+  `idempotentHint`, and an answer that is an error carries `isError`.
+- **`dead`, `findings` and `type_usage` (P95).** `dead({id})` says whether a
+  way in, channel, class, method or function is dead, with a verdict (`dead`,
+  `likely-dead`, `unknown` or `alive`) and the evidence that could make it
+  wrong: the requests read in part that could reach it (`couldHit`), the
+  requests that found no route one segment off it (`oneOff`, `cancel for
+  archive`), what is outside the project (`outside: cron`, `probe`, `stream`,
+  …), or one caller of an alive node; `dead({service, kind})` lists the rows
+  `flowatlas dead` lists, verdict first, paged. The analysis moved from the CLI
+  into the linker, so the command and the tool read the same functions (a test
+  compares them on three fixtures). `findings()` counts every finding by kind -
+  likely N+1 loops, unguarded routes, contract errors and warnings from the
+  last `flowatlas contracts`, channels with one end, and every other finding
+  reason - with the top three of each, ranked by reach, each row with the call
+  that shows it; `findings({kind})` lists one kind, paged, the per-item loops
+  counted as `notes`. `type_usage({type})` lists every way in that takes or
+  returns a type, each crossing, publish, subscription and call that carries
+  it, and the types holding it one level out; a name two types have answers
+  `candidates` (`fixtures/multi-repo`, `fixtures/loops-worth-fixing`,
+  `fixtures/cant-follow`).
+- **`who_calls` and `impact` on a class (P95).** Asked about a class, both
+  answer for the methods of it something calls, where they had answered
+  nothing, since calls point at methods; each caller names the method it calls
+  (`calls`), and `impact` says how many methods it answered for
+  (`forMethods`).
+- **Prompts and resources (P96).** `before-rename`, `pr-review` and
+  `trace-route` write out the calls those reviews take, ids resolved, with the
+  same call strings `next` uses; a name answering to several lists each
+  candidate. `flowatlas://reasons` lists every reason with its kind, cause and
+  `doctor`'s sentence, `flowatlas://services` the services, and
+  `flowatlas://services/{name}` one service's summary, crossings and top
+  findings.
+
+### Changed
+
+#### The package
+
+- **`engines.node` is `>=22.12.0` (P86)**, what `commander` 15 and
+  `better-sqlite3` 13 already needed; 0.5.1 said `>=20` and failed on Node 20
+  anyway.
+- **No `types` entry (P86).** The manifest pointed `types` at a
+  `dist/index.d.ts` that never shipped; the field is gone.
+
+#### Counting and levels
+
+- **Gaps, notes and findings counted apart (P81).** Every unresolved row is
+  one of three kinds, derived from its reason (`kindOfRow`, `ROW_KINDS` in
+  `@flowatlas/core`, no schema change): a gap (the reader could not follow
+  something), a note (how a join or a reading was made: `base-url-from-files`,
+  `base-url-from-name`, `environment-from-files`, `package-from-repo`,
+  `package-version-differs`, `shape-file-unmatched`, `route-checked-in-body`,
+  `route-mount-assumed-empty`, `route-api-guessed`, `workflow-named-by-file`,
+  `document-age` and the like) or a finding (something about the code:
+  `query-in-loop`, `route-unguarded`, `route-shadowed`, `route-claimed-twice`,
+  `s3-write-matches-nothing` and the like). Only gaps count as missed
+  (`wasMissed`), and one function counts them all (`countsOf` → `{missed,
+  sites, notes, findings, nothing}`), so the build line, `stats`, doctor, the
+  page and the graph server say the same numbers for one database. A request
+  joined from the value a file gives its setting (P77) is a note, so `missed`
+  goes down by the request it joined, and a likely N+1 (P69), once printed as
+  "nothing to join" and counted nowhere, is a finding. The build line became
+  `missed: N over S sites · notes: N · findings: N` (and the watch line
+  `missed: N`); `LinkReport.totals` gained `missed`, `sites`, `notes` and
+  `findings`, with `totals.unresolved` kept equal to `missed` for one version
+  and deprecated, and readers of a stored report fall back to it. Doctor's
+  heading says the three figures, findings get a line of their own (`2
+  findings: 1 likely N+1, 1 route with no guard`), a group of notes or findings
+  is marked `(note)` or `(finding)`, and `doctor.json` gained
+  `unresolved.notes`, `unresolved.findings` and a `kind` on each group;
+  `unresolved.info` and `unresolved.nothing` count gaps only. The page's "Left
+  unresolved" became "Missed", with "joined from files" and "findings" under
+  it. `start_here` gained `counts: {gaps, sites, notes, findings, nothing}` and
+  lists only gaps among `topGaps`; `search` gap hits gained `kind`;
+  `cant_follow` counts notes and findings apart under `apart`. A doctor
+  baseline keeps counting every actionable row, findings included, so no
+  baseline changes verdict on upgrade; only its `info` and `nothing` tallies
+  were recounted by kind. The read gate fails on a reason doctor knows with no
+  kind.
+- **A row's kind stored on the row (P208).** `graph.db`'s `unresolved` table
+  gained `kind` (gap, note, finding) and `risk` (a finding's auth, performance
+  or wiring), written once by `kindOfRow`, which stays the one place a kind is
+  decided; the database records `db_format_version` 2
+  (`GRAPH_DB_FORMAT_VERSION`). Doctor, the page's pack, `stats`, the SARIF log,
+  the diff's gap references and the MCP server's `start_here`, `cant_follow`,
+  `search` and prompts read the stored answer (`rowKindOf`, `rowRiskOf` in
+  `@flowatlas/core`); a database written before the columns, a graph file's
+  rows and a row made at read time are decided as before, so every answer is
+  the same. Nothing printed changed. `SCHEMA_VERSION` (6) and the build cache
+  (5) are unchanged: the database is written whole on every build.
+- **`query-in-loop`, `package-from-repo` and `shape-file-unmatched` at `info`
+  (P81).** They had been written at `nothing` only to stay out of the count of
+  what was missed; their kind does that now, and `nothing` again means only a
+  place with no edge to draw.
+- **Fewer `route-unguarded` rows (P76).** A route covered by an app-wide guard,
+  or opened by a public-sounding opt-out decorator on the handler or its class,
+  no longer has a row; an opt-out that switches one check off makes it
+  `route-guard-skipped`; and a route with no guard whose own code throws a 401
+  or 403 is `route-checked-in-body` at `info`, naming the throw. The
+  `route-unguarded` hint names accepting by rule.
+- **`unknown-base-url-env` says more (P77):** which values were found where,
+  and which files set the setting without being read.
+
+#### Reading code
+
+- **What a route fails with is what it can answer (P87).** Under a global or
+  `@UsePipes` `ValidationPipe`, a route lists the 400 only when its handler
+  takes a `@Body`, `@Query` or `@Param` typed as a class; any other pipe in
+  front of a route only when the handler takes a value pipes are handed. A
+  project's own error class that states its status (`readonly status = 404`, a
+  getter, `getStatus()`, or what its constructor stores from `super(...,
+  409)`) is answered with that status where an exception filter in front of
+  the route (`useGlobalFilters`, `APP_FILTER`, `@UseFilters`, matched by its
+  `@Catch`) reads it off the exception; a filter answering a fixed status gives
+  that one. A guard written in the project keeps its synthetic 403 only where
+  its `canActivate` can answer anything but `true`, and one extending
+  passport's `AuthGuard(...)` answers 401. A status written nowhere on the path
+  - an unknown error's 500, a declared status nothing maps (kept in
+  `declared`), a filter whose answer cannot be read - gains `assumed: true` in
+  `meta.fails`, and a filter of that kind is a `fails-filter-unread` row at
+  `info`. `meta.fails` stays one row per site; every reader groups it:
+  `get_flow`'s `fails` is one entry per (status, exception) with `sources`,
+  `sites`, `loc` and, at `detail >= 2`, `places`; `describe_for_prompt` writes
+  one line per group (`- **404** \`LoanNotFound\` — throw ×6, first at ...`),
+  capped by `maxFails` (12); a `fails` search hit is one per route; the page's
+  error card and *Copy as prompt* list the groups with counts, draw an assumed
+  status as `500?` and keep the places behind a disclosure
+  (`fixtures/nest-fails-accurate`).
+- **A check thrown through a helper (P90).** `throw toHttpError(check)`, where
+  the helper picks the exception from a table at run time, is read through the
+  helper (a function, a method of the class, a member of an object of
+  functions, a method of an injected class), a `const` it is held in and an
+  `await`: the failure is named after the helper, with `via: 'helper'` and
+  `chosenFrom: [{exception, status}]` (an object or `Map` of classes, a table
+  of built exceptions, a `switch` or ternary, one more helper down), each
+  choice answered through the filters, and `status` only where every choice
+  agrees. A helper whose answer cannot be read, under an `if` that tests what a
+  check of who is asking answered (`soundsLikeAuthCheck` in the core), is
+  `family: 'auth'`. The route audit counts either as `route-checked-in-body`,
+  naming the helper and its statuses; a table of 404 and 410 stays
+  `route-unguarded`. `get_flow`, `describe_for_prompt` (`toHttpError (401 |
+  403 | 423)`), search and the page show the choices
+  (`fixtures/nest-check-through-helper`).
+- **N+1 that is worth fixing (P89).** `query-in-loop` is one row per loop, at
+  the loop's line, naming every query, cache call, request and publish it
+  reaches (`meta.reaches: [{id, type, words, via?}]`, nearest first, eight at
+  most with `reachesCut` counting the rest), where it had been one row per
+  call. A loop bounded on purpose writes no row: chunks (a constant step above
+  one, a `slice`/`splice` of a constant size, a list from `chunk`, `batches`
+  and the like or a helper named under `callShape.boundedCalls`), pages and
+  cursors (`while (hasMore)`, `do … while (token)`, `skip`/`take` or a cursor
+  key handed to the query, a `while (true)` that stops on a short page),
+  retries (a constant number of tries left on success), literal lists, loops
+  around nothing but batch calls, and loops in a migration. Each keeps
+  `meta.inLoop.bounded` on its edges and is counted in the repository's
+  `stats.loopsBounded`; `flowatlas stats` prints `loops set aside: chunk 1 ·
+  page 2 · …`. A loop whose every leaf is a conditional write (a filter naming
+  a state besides the id, an SQL `UPDATE … AND col =` or `RETURNING`, a helper
+  named under `callShape.conditionalWrites`) or a send to one recipient (a
+  producer described with `perItem: true`, a request to a host under
+  `callShape.perItemHosts`) is a note (`meta.severity: 'note'`); the rest are
+  `likely` findings. Each row carries `meta.waysIn` and `meta.entries`, the
+  ways in of its service that reach the loop, and doctor, the MCP `search` and
+  `describe_for_prompt`, and the page's Busiest view list the likely loops
+  most-reached first; the Steps view says *likely N+1* only for those. Query
+  nodes gained `meta.batch` and `meta.conditional`, and producers `meta.batch`
+  (the SDK's batch sends and writes) and `meta.perItem`, from the descriptors
+  (`fixtures/loops-worth-fixing`; `nest-query-loop`'s rows moved to the loop
+  lines).
+- **One table, one name (P88).** A TypeORM entity whose `@Entity('orders')` or
+  `@Entity({ name: 'orders' })` states its table is drawn on that table through
+  `Repository<Order>` too, where it had been the class name `Order`; the class
+  name stays the default, and the declared name moved to `meta.entityType`.
+  Snapshots of `nest-typeorm`, `nest-query-loop`, `fn-data-layer`,
+  `multi-repo`, `multi-repo-contracts`, `nest-route-access` and
+  `nest-check-through-helper` moved with it.
+- **No row where an edge explains the call (P88).** A call that reads as data
+  only by its receiver's name, and that the graph draws as a `static` call into
+  a method of the service's own, is no longer a `db-receiver-name-only` row:
+  its queries are read where that method writes them. Each is counted as
+  `receiversExplainedByEdge` in the repository's stats, and `flowatlas stats`
+  prints `receivers explained by a drawn call`. A base named in
+  `localBaseClasses` as a bare string has its `tableProperty` read off its own
+  queries where they state it (`fixtures/nest-mongo-tables`).
+- **A subscription described in configuration is matched on what the source
+  states (P121).** A `broker.custom` subscriber on a receiver whose type is not
+  installed was read only where the checker resolved it; it is now matched on
+  the annotation or the construction that names the class, as a described
+  publish already was, and its `consumes` edge is `heuristic`. A described
+  table access (`db.tables`) and a described subscription withdraw the
+  `call-dynamic-receiver` row at their call, as a described publish did
+  (`fixtures/data-kit-tables`: seven fewer places).
+- **A verb nobody read is not `GET` (P91).** A request whose verb a caller
+  hands in and nothing can read keeps `method: null`, joins nothing and is an
+  `api-method-dynamic` row; on the server it had been recorded as `GET`. A
+  caller handing in the verb no longer has its second argument read as the
+  body. Snapshots of `nest-forwarded-verb`, `nest-client-wrapper`,
+  `koa-react-full-stack`, `react-client-base` and `react-local-client` moved
+  with it; `ground-truth` and `multi-repo` gained `routes.nearMissed`.
+- **Each function URL's entry is keyed by its function (P54)**,
+  `http:ALL:/*@<function>`, so two URLs in one repository no longer merge into
+  one entry.
+- **A write's recorded value that is written and not read is kept as an empty
+  list (P56)** rather than left out, so a version named by a variable still
+  counts as named.
+- **The graph database keeps each unresolved row's meta (P75)**, in a new
+  `unresolved.meta` column. An older database without it is still read,
+  without causes.
+
+#### Commands and file formats
+
+- **`flowatlas dead` prints a verdict, and tells routes called from outside
+  apart (P91, P95).** Every entry row gained `class` (`actionable`, `stream`,
+  `infrastructure`, `declared`), `why` (the rule that put it there) and `role`
+  for infrastructure (`probe`, `webhook`, `callback`, `discovery`,
+  `configured`). Infrastructure takes the probes, webhook and callback
+  receivers by path (at any depth), a `@HealthCheck()` handler, a handler or
+  controller named for what it answers, and what
+  `dead.infrastructure.{paths,decorators,names}` names (`builtIn: false` turns
+  the built-in rules off); a route marked `@flowatlas-public` is `declared`,
+  like one under `doctor.publicRoutes`. The table lists the actionable rows and
+  folds every other class into one line (`4 infrastructure routes: 2 probes, 1
+  callback, 1 webhook`); `--class` lists one. The entries table's verdict
+  column says `dead`, `likely-dead` or `unknown`, the channel and provider
+  tables gained one, and a route a request one segment off named is listed with
+  that request beneath it. In JSON every row gained `verdict` and `evidence`
+  (the near miss under `evidence.couldHit`). Infrastructure, stream and
+  declared routes are `unknown`, with `outside` saying why; a class in a
+  service with unresolved injects is `likely-dead`. The Map counts
+  infrastructure apart from the routes nothing calls. A NestJS entry gained
+  `meta.controllerDecorators`.
+- **`diff.json` is format 5 (P96, P116, P114, P118).** Format 2 added
+  `unresolved` (the gap ids and findings each side has that the other does
+  not) and `joins.lost`; format 3 `flows`, one per way in walked, with its
+  participants and its steps, each `same`, `added`, `removed` or `changed`;
+  format 4 `rules: { new, fixed, existing, excused }`; format 5 `spec`, the API
+  changes with `--spec` and `null` without it. Every older format is still
+  read without the sections it predates, and one from a newer flowatlas is
+  refused by name. The verdict reads no flows and no spec, so a format-2 file
+  is not `unknown` for lacking them; a file without `rules` makes it
+  `unknown`.
+- **`flowatlas.baseline.json` is format 2 (P114).** It gained `rules`, the
+  keys of the rule violations accepted; a version-1 baseline is still read, as
+  one that accepted none. `doctor`'s summary line gained `rules: errors=N
+  new=M`, and `--section` a sixth value, `rules`.
+- **`flowatlas diff`'s documented defaults (P190).** `docs/CLI.md` said
+  `--max-entries` 20 and `--max-nodes` 50; the command has always used 150 and
+  100, which the reference now says.
+
+#### The page
+
+- **The page opens on the product (P98).** The masthead and the band are one
+  strip: the name, then a pill per figure, whose meaning is its title and the
+  line under the strip while it is open; a pill whose total is nought is not
+  drawn, except *Missed* and how many repositories were read. The build's
+  timings fold into *build · <total>ms · <n> services*, slowest first; the
+  sentence under the name moved to the foot of the page. Past twelve services
+  the rail becomes one *Services* button and a checklist with a search, *All*
+  and *None*. The tabs' row sticks to the top while a tab scrolls, and on a
+  narrow screen the tabs come before the ways in. Every tab gained an address,
+  `#<tab>[/<way in>][/reason=<reason>]` beside the map's and the graph's;
+  moving between tabs rewrites it, picking another way in adds to the history,
+  and Steps and the table tabs gained *Copy link*. A first visit offers a
+  *Start here* card naming the busiest way in, the worst gap and, with
+  `--diff`, the latest change, each worked out from the graph and each a link.
+- **One Steps view (P99).** The Walk tab is gone: Steps is the page's one view
+  of a way in, and everything that opened the Walk - a way in clicked on the
+  left, *Open in Steps* in the Graph's details, Start here, an old
+  `#walk/<key>` link - opens Steps on the same way in. Steps draws in one
+  vocabulary of step kinds, now with `view` (screen), `act` (user action) and
+  `cfg` (reads config), in a neutral chip, the service being the colour of the
+  row's rule; the legend lists every kind. A crossing into another service is a
+  row of its own (*→ orders · requests*, trust only when not read from code),
+  and guards are said under the step they stand in front of. A switch on the
+  bar, remembered in the browser, draws the steps *compact* (a line each, the
+  file by its name, only the marks that change the reading), *detailed* (every
+  mark, the full path, logs, and the settings a step reads as leaves) or as a
+  *waterfall*: a bar per step in its service's colour, laid out in steps, not
+  time, on an axis that says so. The steps above the Graph's drawing and the
+  command list follow the switch. The line under a cut list says whether the
+  depth or the 300 rows left steps out, and the second has a button for 300
+  more. `stepsOf` rows gained `start` and `span` and the result `cut`.
+- **Not joined is split by what a row is (P100).** The tab's one table became
+  three sections, each with its count and a line on what would appear when
+  empty: *Couldn't join* (gaps by reason, with the breakdown by cause and
+  package folded under them), *Risks* (findings, grouped *who may ask*,
+  *likely N+1 and cost*, then *wired wrong or meeting nothing*) and *Accepted*
+  (each rule once, then every accepted row with its note), which replaced the
+  *show accepted* checkbox. The split comes from the pack (`dicts.reasonClass`,
+  a reason's row kind and risk, and `rowKinds` for a row of another kind than
+  its reason's), never from the words of a reason, and a row's tone is its
+  risk's. Notes left the tab, with one line saying how many and that `doctor`
+  lists them. A reason row opens to every place it stands for, fifty at most,
+  and each row and place has one `⋯` menu - *Copy as prompt*, *Copy accept
+  command* for that place (a route by its route, another row by its file), and
+  *Copy accept command for every row like this* where a rule takes more,
+  always ending in `--dry-run`; what was copied is shown in a toast. The
+  Graph's details rows gained the same menu. Core gained `riskOf(reason)`
+  (`auth`, `performance`, `wiring`), `RISK_NAMES`, `RISKS` and
+  `findingsWithoutRisk`, and the reasons gate fails on a finding with no risk.
+- **The page speaks in words and has one search (P101).** A check row's
+  reason, an edge's type and its trust are said in words - *route not found on
+  the target*, *requests*, *best guess* - from one table (`PAGE_WORDS` in
+  `frame.js`), the code kept in the tooltip, in the details panel beside the
+  row, and in prompts, links and the MCP server. Trust is said only when it is
+  not *read from code*: Steps lost its *certain* mark and Crossings shows the
+  edge's verb with a chip only for a guess or an annotation. The Map says
+  *problems to fix* for *rows to act on*, numbers its call-order columns from
+  *step 1*, and counts a front end's screen actions as its ways in. The
+  colophon says the page was read from code, and only with a trace that what
+  was seen at run time is beside it. The global search is the only one: `/`
+  reaches it, it gained the Graph tab's *Nodes*, and a hit goes to where it is
+  in the tab open - a way in picked and opened on Steps or the Map, a node
+  focused on the Graph, a gap on its Not joined row - marking where it landed,
+  else opens the Graph; the Ways in list's filter box and the Graph's node
+  search went, the first kept as the search's *Filter the Ways in list to '…'*
+  and a chip over the list. The Graph's filters and checks moved into
+  *Filters* and *Check* popovers. Crossings, Busiest and Changes hide the Ways
+  in list. `?` lists every key from the table the handlers read (`SHORTCUTS`),
+  and ⌘K (Ctrl+K) opens a command list of the tabs, the open tab's actions and
+  a search.
+- **The page on a phone, for the keyboard and a screen reader, and fast
+  (P102).** On a narrow screen the tab row is one line that scrolls sideways
+  inside itself, faded on the side that has more, the open tab kept in sight;
+  under 360px, or when more than two tabs fall past the edge, a *View* select
+  stands in for it. Below 640px the Map tab lists its boxes as cards under
+  their call-order columns, each with its type, ways in, nodes and problems and
+  what it reaches and what reaches it as buttons; *Show the drawing* (or full
+  screen) draws the map. Every text colour reads at 4.5:1 or more on every
+  ground in both themes (`--faint`, `--muted`, `--good`, `--warn` and the
+  service hues adjusted, the fifth service hue an indigo); a service let out by
+  the rail is dashed rather than faded. No text is under 12px but inside the
+  drawings, whose node and column names are 12px at zoom 1. The tab row is a
+  tablist the keyboard moves along (one tab in the Tab order, ← → and Home
+  End), each tab tied to its panel; the page says `<html lang="en">`. A
+  *Theme* button in the strip turns the colours from the system's to light to
+  dark, remembered in the browser. A plain wheel over the Map or the Graph
+  scrolls the page, saying once in the corner that Ctrl (⌘) and the wheel
+  zoom; a pinch zooms, a drag pans, and in full screen the wheel pans as
+  before. Crossings builds its rows a hundred at a time while the browser is
+  idle; the Ways in list draws only the rows in sight, so its *N more* cut
+  went; the search waits for a pause in the typing.
+- **The Map laid out in call order by default (P66).** Services go in columns
+  by call depth from the front ends, with queues and topics between the
+  columns, stores and outside hosts under the app that uses them (one box per
+  outside host, capped with `+n more`), and hovering a box dims what it does
+  not touch. The layout by role stays, under *layout*.
+- **A lighter page (P84).** The page ships each failure once: a guard's
+  refusal, a pipe's 400 or a shared service's throw that stands in front of
+  many routes is one record in `dicts.fails`, and each route a list of record
+  positions. Log lines' levels and templates (`dicts.logLevels`,
+  `dicts.logTexts`) and an unmatched span's service and kind
+  (`observed.services`, `observed.kinds`) go through dictionaries too, each
+  listing only the words that repeat enough to pay for it. Every view shows the
+  same text. On the synthetic `fixtures/nest-shared-failures` (18 routes behind
+  one guard, one pipe and one service) the failure data went from 7.6 KB to 0.5
+  KB and the page's data from 18.2 KB to 11.1 KB; scaled to 258 routes, the
+  whole page shrank by about 16%. The Busiest view works out how many ways in
+  reach each row by one backward search per row shown instead of a forward walk
+  from every way in; the numbers are the same. `HOTSPOT_EDGES` moved to
+  `analysis/hotspots.ts` (still exported from `@flowatlas/cli`).
+- **The page's source in modules (P103).** `page.html` keeps only its markup:
+  its styles moved to `page.css` and its script to one module per panel under
+  `src/visualise/panels/`, each a factory handed the page so far, written in
+  through placeholders `PAGE_PARTS` lists in order. The page the command writes
+  is still one file and draws the same thing on every fixture; the command
+  refuses to write one with a part or a placeholder missing, and the built
+  command ships `page.css` and `panels/` beside it. Every panel gained a test
+  that mounts the page's markup in a small test document.
+
+#### The graph server (MCP)
+
+- **Twenty-six tools (P93, P95, P105, P106, P114, P118, P121, P122).** 0.5.1
+  served ten; 0.6.0 adds `start_here`, `describe_for_prompt`, `search`,
+  `what_changed`, `cant_follow`, `dead`, `findings`, `type_usage`, `hot_paths`,
+  `slow_steps`, `trace_for`, `undeclared_failures`, `never_seen`,
+  `test_pattern`, `check_rules` and `get_spec`. The run-time tools each say one
+  short sentence with no output schema, and the server's instructions name
+  them as chains. A test holds the list's size: the part a model reads (names,
+  descriptions, input schemas) under 13,150 characters and the whole list
+  under 32,700 (13,133 and 32,652 measured), each ceiling raised only with the
+  tool that needed it.
+- **A session is offered the tools its project can answer (P201).** Tools
+  follow what the project has, not its frameworks: the five run-time tools are
+  listed once an observed file is beside the graph, `check_rules` once the
+  configuration has `rules`, `what_changed` once a `diff.json` or a
+  `check.<env>.json` is there, `who_emits` / `who_consumes` and `get_type` /
+  `type_usage` once the graph holds a channel or a type, `check_contract` once
+  something crosses between services (or traffic was observed), `get_spec` once
+  there is a route or a channel, `get_source` when the server knows the
+  repositories, and `test_pattern` when the readers are there; the other eleven
+  always. One table in the server (`tool-needs.ts`) says what each tool needs
+  and where that is read, and the server refuses to start with a tool missing
+  from it. The list is decided again before every list and call, when a build
+  replaces the graph, and every two seconds while a client is connected, and the
+  server sends `tools/list_changed` (declaring `listChanged`), so after a first
+  `flowatlas observe` the run-time tools appear without a restart. Before any
+  graph only the always-listed tools (which say to build one) and
+  `test_pattern` are listed. `start_here` says in one line under `hidden` which
+  tools are not listed and when each appears, and a call of a tool not listed
+  is a failed call saying what it needs (`needs`). The multi-repo fixture,
+  with no observed file and no rules, is offered nineteen tools: 10,081
+  characters read and 28,543 in all, against 13,133 and 32,652 for the whole
+  list. An `mcp` block in `flowatlas.config.json` tunes it (`tools: "auto" |
+  "all"`, `include`, `exclude`; a name that is no tool is a configuration error
+  naming it and the nearest), and `flowatlas mcp --all-tools` lists every tool.
+- **Smaller answers (P93).** Every answer is written as compact JSON, and each
+  fact once: a `cant_follow` place is `{ loc, id?, symbol?, service? }`, a
+  `check_contract` finding `{ severity, kind, direction, field, expected,
+  actual, message, ignored? }` without the edge the answer names at its top, a
+  repeat in a tree `{ id, ref: true }`, and a row of `get_flow` or `who_calls`
+  leaves `service` to a parent of the same service. `get_type` and
+  `what_changed` apply `detail`, which they had taken and ignored: `get_type`
+  at 0 names the type and its fields, at 1 (the default) says what each field
+  is and names the nested types, at 2 adds the hash, `meta` and the nested
+  declarations; `what_changed` at 0 gives ids, at 1 service and label, at 2 the
+  changed fields. `detail`, `maxNodes`, `offset` and `service` are described
+  once in the server's instructions. The MCP snapshots of `fixtures/multi-repo`
+  came to 38% fewer characters, and to half on the trees. `get_type`'s `next`
+  names `type_usage` first, a class's hints add the class prompt, and
+  `cant_follow` asked about a finding's reason points at `findings({kind})`
+  (P95).
+- **A `get_flow` that reaches the other end (P92).** The walk expanded a node
+  again under every path that reached it, so a repository helper and a logger
+  every method calls were written out once per caller, and on a large graph the
+  150 rows were gone before the request reached the service it ends in. Each
+  node is now expanded once: met again it is `{ id, ref: true, seenAt }`, with
+  `seenAt` the row its subtree is under (a cycle stays a bare reference). The
+  budget goes to the steps that leave the service first, then stores,
+  handlers, calls into a method that leaves the service, other calls, and
+  plumbing (a method more than five methods call) last; children are still
+  written in call order. `get_flow` defaults to 60 rows and takes `maxChars`
+  (about 12,000 characters of answer), whichever comes first. A cut names the
+  limit that caused it and the advice that helps (`n more nodes past maxNodes
+  60; raise maxNodes or ask get_flow on a child id`, `past depth 8; raise
+  depth`, `past about 12000 characters; raise maxChars…`), with `stoppedBy`,
+  and `crossingsLeft` lists up to eight crossings it did not follow; `next`
+  gained `check_contract` for the first HTTP crossing and `get_flow` on the
+  first crossing left. `who_calls` says `past maxNodes` the same way.
+  `describe_for_prompt` uses the same walk, writes a repeat as `again —
+  followed under …`, and asks for more depth when depth is what cut it. In the
+  terminal, `flow` and `channel` write a repeat as `↺` (`(again)` with
+  `--ascii`, which said `(cycle)`) with the node's label, and the cut line
+  names the one flag that shows more (`fixtures/multi-repo-plumbing`).
+- **Walks that say where they stopped (P94).** `who_calls` counts the callers
+  it left past its depth (`n more nodes past depth 3; raise depth`,
+  `stoppedBy`, and `frontier`, the rows to ask on from at depth 16), writes a
+  caller the graph has no node for as a `missing` row instead of dropping it,
+  and marks a row that is no way in and that nothing calls `topOfChain` with
+  `gapsInFile`, the gaps of its file that may hide the call, with
+  `cant_follow` and a gap search in `next`. `impact` with no way in says
+  `entriesNone` and where to look, and its walk limit moved from `note` to
+  `truncated`. `who_calls`, `impact` and `get_source` take a route said aloud,
+  a bot key or an `invoke:` name as `get_flow` does, and `get_source` a name;
+  a route with a literal segment resolves to the most specific route, as the
+  linker joins it, naming the others under `alsoAnswers` (`GET
+  /orders/latest` used to come back as three candidates), in the terminal's
+  `flow` and `config` too. After an ambiguous name `next` asks the same tool
+  once per candidate. An unknown channel, symbol or entry names up to five
+  `suggestions`; every error is `isError`. `check_contract` between two
+  service names lists every crossing from one into the other with its status
+  and the call that checks it. `cant_follow` for a cause with no gaps says why
+  (`route-unguarded is a finding, not a step the reader missed`), and for a
+  cause nothing knows is an error with the `known` causes and the `nearest`. A
+  `search` gap hit's `id` is the method it is in, its gap id moved to `gapId`,
+  and it carries `sites` and every `places` (at most ten), so `next` leads to
+  `get_source` and `who_calls`. `start_here` lists `topFindings` beside
+  `topGaps` (`fixtures/cant-follow/expected.mcp`).
+- **Copy as prompt writes the same text as `describe_for_prompt` (P97).** Both
+  gather one subject and hand it to one renderer, core's `renderPrompt`
+  (`prompt-text.js`, written into the page as it is), so the same way in,
+  channel or check is the same characters from either. One heading scheme for
+  every subject: `# Way in:`, `# Channel:`, `# Check:` or `# Symbol:`, the id
+  line, *In front of it*, *Can fail with* with its statuses in the heading,
+  *Published by · n* and *Consumed by · n* (each consumer with what it goes on
+  to do), *Where · n* for a check, *Reached from*, **Steps** in call order,
+  **Shapes**, **Gaps** and **Ask next** with each call written out with its
+  id. The server's text gained the page's step marks (best guess, on failure,
+  side by side, per item, likely N+1, throws, seen ×n) and log lines, a
+  schedule and the hits seen at run time; the page's gained the ids and calls,
+  and walks the steps `get_flow` walks (`reads_config` included, each node
+  once, the crossings first). `describe_for_prompt` takes a gap id
+  (`gap:<service>|<file>|<reason>`), as a check row on the page copies it:
+  every row of it at its line, with the node it is on. The page ships every
+  node's id, less what its type, service and file already say. The shared
+  snapshots are `fixtures/multi-repo/expected.prompt/`, and a parity test
+  compares both sides on every way in, channel, symbol and gap of every built
+  fixture, walked in full and cut short.
+- **`what_changed` says `base` and `head` as objects (P96).** Each is `{ ref,
+  label }`, `label` `working tree` where no ref was read and the ref with each
+  service's commit otherwise: `head: null` had read as "no head". Its `counts`
+  are those of the service asked about, types are filtered by the service in
+  their id, and `counts` gained `gaps` and `lostJoins`.
+- **The demo project's billing service calls orders (P209).** `billing` made
+  no outgoing call in code, so its @nestjs/observe batch joined nothing on its
+  own. `InvoicesService.create` now reads the order it invoices from `orders`
+  (`GET /orders/:param` through `ORDERS_URL`), and `traces/orders.observe.json`
+  is orders' answer in the same trace: billing's batch alone joins billing's
+  call, and beside orders' it is paired with orders' snapshot by their shared
+  `ti`. The demo figures in the README and on the project page are measured
+  again: 130 nodes, 114 edges, 12 of them across a repository boundary, 3 of 7
+  calls between services joined.
+- **The walkthrough is recorded again, and the page is pictured by a
+  script.** Every recording in `docs/media` is retaken with 0.6.0. Scene 02
+  shows `doctor` grouping by cause, naming the repository probably missing and
+  asked by `--reason`; scene 08 the flows a renamed route cuts, step by step;
+  scene 09 the tools the demo can answer; and a new scene, 15, lays the demo's
+  traces over the map. The page's still (`10-visualise.png`, also the site's
+  preview) and its tour (`14-map-tour.gif`) are taken by
+  `scripts/demo/page-tour.mjs` in a headless Chrome, of the page
+  `scripts/demo/page-project.sh` builds: the demo with its traces.
+  `DEMO_DRY=1 scripts/demo/record.sh` runs every scene untyped and keeps what it
+  printed, to read before anything is recorded. Every command a scene types is
+  one a reader can run as it stands, with no `jq`, `sed`, `grep` or `head`
+  between it and what it prints: a scene shows code with `show <file>
+  <from>-<to>`, an edit as `git diff`, part of `doctor` by `--section` and
+  `--reason`, part of `diff` by `--section`, and `mcp-call` takes
+  `key=value` arguments and prints the tools by title and an answer as text. `scripts/demo/page.mjs`, which
+  wrote an older `docs/index.html` and would have overwritten the newer one, is
+  removed; the page is edited by hand.
+
+### Fixed
+
+#### Build and package
+
+- **A large service file no longer slows the cold build down (P79, P123,
+  P124, P129).** The call-shape pass of P69 walked every call in a file once
+  for each call edge it looked up there, so its cost grew with calls times
+  edges; it, and the pass that marks edges typed by a stand-in (P78), read one
+  index of the file's calls by line instead, built once per parsed file. Every
+  line and column the readers write is found by a lookup in a list of the
+  file's line breaks, kept once per parsed file, rather than by counting
+  newlines from the top of the file for each node (P123). The method a call
+  names on a class, and a field or getter a reader looks up there, come from
+  one walk of the class's members kept per class (P124); whether a node is a
+  conditional write is worked out once per node rather than once per search
+  that visits it (P129). The graph is unchanged. `scripts/bench-call-shape.mjs`
+  measures the pass over a generated service.
+- **Package sources cost a build less (P82).** The index of the package
+  sources a service may read in place of an install, and every listed shape
+  file, are worked out once by `flowatlas build` and written to
+  `<output>/stand-ins.json`, which each repository read in a process of its own
+  is handed instead of indexing and parsing them again (a watch works them out
+  once for every repository it holds open). A path's mount is found by the
+  `node_modules/<name>` segment it is under rather than by trying every mount;
+  the files a program reads from its mounts are listed once per program; the
+  package a file belongs to, a package's own aliases and the shapes a project
+  installed are looked up rather than scanned for. A reader handed a
+  `stand-ins.json` of another version works them out itself; `flowatlas
+  extract` run by hand always does, and comes to the same graph.
+  `scripts/bench-package-sources.mjs` measures a cold build with
+  `packageSources` on against off over a generated project.
+- **A cached graph went stale when what stood in for a package moved (P83).**
+  A shape file added under a listed `shapes` glob, a package directory whose
+  `name` answered an import nothing had, and one of two directories claiming a
+  name going away each left the importer's graph as it was until one of its own
+  files changed, under `build --watch` too. Each build now records the expanded
+  shape files and what the index answered for every package a reading wanted,
+  reads a service again when either moved and says which in the plan
+  (`stand-ins changed: ...`); the index is worked out again on every build.
+  The build cache is version 5, so the first build after upgrading reads every
+  repository once (`cache-invalid:version`).
+- **Package sources were not mounted on Windows (P83).** A mount was held at a
+  path spelled with backslashes while the compiler asks with forward slashes,
+  so nothing matched, silently. Paths are compared with forward slashes, and a
+  drive letter in either case, whatever the OS; a file outside the service on
+  the same drive is named relative to it, and one on another drive stays
+  absolute.
+- **A pack after an incremental build shipped stale chunks (P198).** A build
+  over an earlier one left the earlier, hash-named bundle chunks in `dist/`,
+  and a pack shipped them all; the bundle now starts from an empty `dist/`.
+- **A reading on Windows compared two spellings of one path (P199).** The
+  compiler names files with forward slashes on Windows too, and a directory
+  built with `path.join` has backslashes, so every "is this file under that
+  directory" answered no: shape files went unrecognised, a declared workspace
+  package's files were not the service's, the NestJS reader found no global
+  prefix, the data reader read no query, and `patterns suggest` found no calls.
+  Both spellings are now compared as one, and paths recorded or printed are
+  POSIX. On Windows a temporary repository is now seen as a git repository, a
+  ref build links `node_modules` with a junction, query commands and a
+  disconnected MCP server let go of `graph.db`, and `get_source` drops the `\r`
+  of a CRLF file. A checkout is LF on every OS (`.gitattributes`). A
+  `tsconfig.json` with a syntax error no longer stops the build on Windows (the
+  compiler asserted on the path's spelling instead of reporting the error), and
+  a watch from a directory that does not exist yet is held in the platform's
+  spelling like every other.
+- **`build --watch` sees what stands in for a package (P206).** A watch
+  looked only inside the repositories, so a package directory appearing beside
+  the configuration, a new workspace member there, a shape or pattern file
+  added or edited outside a repository, an edit to a package source read from
+  outside every repository, and a repository removed and put back rebuilt
+  nothing until the next save in a repository. It now watches those places,
+  one level deep where a level is all the package index reads, and a change
+  there reads again only the services it concerns, with the build's own reason
+  (`stand-ins changed: package @acme/flags now at flags-lib`). The line it
+  starts with says what it watches. A build also forgets the workspace members
+  it found, so a member that appears during a watch is a package the next
+  rebuild can mount.
+- **`build --watch` follows an edit to its configuration (P219).** Every
+  rebuild loaded the configuration again, but the repositories the watch held
+  open and listened to were the ones it started with: a service added was
+  read in a process of its own with nothing watching it, a dropped one kept
+  its watch, and an edit to the file itself rebuilt nothing. The file is now
+  watched; an edit rebuilds once from it, every repository opened again, the
+  added ones watched and the dropped ones let go. One that does not load says
+  why, and the next edit is tried again.
+- **What a NestJS route fails with, through its interceptors (P207).** P87
+  read failures through exception filters only, so an interceptor that maps
+  errors in an RxJS `catchError(...)` left a route listing what its handler
+  throws rather than what the caller gets: a `BookNotFound` 404 where every
+  error becomes a `BadGatewayException` 502, a failure a fallback `of(...)`
+  answers with a value, and no 408 from the framework's documented
+  `TimeoutInterceptor`. Interceptors installed globally (`useGlobalInterceptors`,
+  `APP_INTERCEPTOR`), on the controller and on the handler are now read in
+  the framework's order, inside the filters: each `catchError` branch by
+  `instanceof` test gives a new exception (`source: 'interceptor'`), hands the
+  error on, or swallows it; `timeout()` raises its error; a guard's refusal
+  passes none of them. An interceptor whose handling cannot be read leaves
+  the statuses behind it `assumed` and is a `fails-interceptor-unread` row
+  (`fixtures/nest-fails-intercepted`).
+- **The @nestjs/observe reader against the SDK's own contract (P202).** P85
+  wrote the reader from field names alone; it is now checked against the wire
+  contract of `@nestjs/observe` 0.3.12, and newer versions are read the same
+  way, field by field. A job's time is `c`, not `ct`, and a queue's job is
+  now a consumer span of its queue (a `@nestjs/schedule` run is read for its
+  tree); a `manual` span, which names the method it was opened in, is no
+  longer counted as a second call of it; a node the agent folded
+  (`observe.collapsed`) counts as the calls it stands for; a node's `so` places
+  it in time; a request no route matched, which the agent names by its folded
+  URL, is read by the URL's shape, so no id in it becomes a route; a GraphQL
+  operation over HTTP is read for its spans, its document never taken for a
+  path; WebSocket and broker messages (Kafka, NATS, Redis, MQTT, RabbitMQ) are
+  consumer spans of their event or pattern, and TCP and gRPC requests server
+  spans of their RPC pattern, where they were skipped; a failed job, `e: true`
+  on any node and a body the agent cut short (`bodyTruncated`) are read as
+  such. `ti` is the `x-request-id` the agent adopts and passes on, not a W3C
+  trace id, so a server snapshot that names no parent is paired with the one
+  client span of its trace in another service with the same method and path,
+  and the join between two services read with the agent is counted. The
+  fixture batches were rewritten from the contract.
+- **A versioned path reached no route (P213).** A path segment such as `v1`
+  is masked as `:value` like any segment with a digit, and `:value` fitted
+  only a parameter, so every call to `/api/v1/...` read from a HAR, an OTLP
+  client span or a URL missed its route. A masked segment now fits a declared
+  literal the same rule masks, scored as a parameter.
+- **Two services' @nestjs/observe snapshots of one request kept apart
+  (P222).** The reader made up a snapshot's span ids from its trace id and its
+  place in the batch, so the caller's and the callee's snapshot of one request,
+  which share a `ti`, had the same ids: the second took the first's place as
+  the parent of its tree and as the span its captured body belonged to, which
+  put billing's request body on orders' route. The ids now name the service
+  (`<ti>:billing/0`).
+- **A step to something a walk already drew lands where it was drawn
+  (P223).** A walk writes a node it reached before as a reference with its id
+  and label only, so a sequence drew a table read a second time as a new
+  `orders (store)` participant, and a call back into a method or a way in
+  already drawn as a participant named after its label. It lands where that
+  node was first drawn, in `flow --format sequence`, `diff`, doc blocks and
+  the Structurizr dynamic views.
+- **A channel's doc block put a call back into its own service on the channel
+  (P224).** The walk from a channel stood in the service that declared it, and
+  each step to that service was rewritten as a step to the channel, so a
+  consumer's request back to the publisher read `billing → order.created GET
+  /orders/:param`. The walk now starts at the channel itself.
+- **An EventBridge event with one end named its bus as the missing repository
+  (P225).** `doctor --missing` read an event's first segment after
+  `eventbridge/`, which is its bus, so an event nobody here published on the
+  default bus pointed at a repository called `default`. It is named by its
+  `source` now, as P204 reads a rule's pattern (`com.acme.payments` →
+  `payments`), which is how AWS, the schema registry and EventCatalog say who
+  sent an event; a custom bus names it only when its source names nobody, and
+  the platform's `aws.*` sources and a partner's bus name none.
+- **`flowatlas mcp` reports its version (P86).** `initialize` answered every
+  client `serverInfo.version: "0.0.0"`; it now answers the command's version.
+  The standalone server bin answers its own package's.
+
+#### Reading
+
+- **Routes of two APIs, two listeners or two addresses stay apart (P59,
+  P61).** Two API Gateway APIs (REST, HTTP or WebSocket) or two load balancers
+  of one deployment serving the same method and path, each in front of its own
+  function, were one entry node. Such a route is keyed with its API,
+  `GET:/status@api:<api>`, and with the listener where two listeners of one
+  load balancer send it to different functions,
+  `GET:/health@api:staff-lb@listener:HTTPS:443`; listeners sending it to one
+  target stay one route. An API or load balancer whose name is not read is
+  keyed by its Terraform address, `GET:/hours@api:aws_apigatewayv2_api.desk_hours`.
+  A route no other API serves keeps its plain key, so existing ids do not
+  move. Routes are compared across every deployment a repository is read from,
+  and a route rooted at another repository's point that lands on a route of
+  another API keeps both apart rather than being reported as declared twice. A
+  request reaching them through a `baseUrlEnv` setting, and a `@CallsService`
+  annotation whose route several APIs serve, join the API whose name shares
+  the most words with the setting's (`LOANS_API_URL` → `library-loans-api`),
+  `via: "apiName"`, `heuristic`, with a `route-api-guessed` row at `info`;
+  where the name settles nothing, an `ambiguous-route-api` row names the APIs
+  and nothing is joined. Annotations on methods of plain classes, as a
+  function's code writes them, are read
+  (`fixtures/lambda-terraform-shared-paths`).
+- **Error actions and run-time batch lists (P62).** A function an IoT rule's
+  `error_action` names was taken as the code the rule's entry runs
+  (`meta.invokes`) when no other action had named one first; it is always a
+  reference carrying `when: "failure"`. The edge to a queue, topic, bus or
+  stream an `error_action` publishes onto gained `meta.when: "failure"`, as its
+  producer already had. A Step Functions batch or transaction whose whole list
+  is a path (`RequestItems.$`, `TransactItems.$`) or a JSONata expression is
+  one `workflow-target-dynamic` row per state naming that field, instead of a
+  state whose `TableName` is missing (`fixtures/lambda-terraform-table-stream`).
+- **A transaction's `ConditionCheck` (P55)** names no written table and stopped
+  reading as an address nobody could read, in code and in a definition; a
+  batch or a transaction writes no single message, so it stopped being a
+  `payload-type-unknown` row.
+- **`{ method }` was read as no verb at all (P91).** `fetch(url, { method })`
+  written with a shorthand property was taken as the protocol's default,
+  `GET`; it names a binding, and is read as one. An address joined with `+` to
+  a value read at run time (`'https://catalog/items/' + id`) is read as far as
+  it goes, where it had been no address.
+- **A document's `null` in a list of types was dropped (P196).** OpenAPI 3.1
+  and JSON Schema say a value may be null as `type: ['string', 'null']`; the
+  document reader took the first type and read the field as never null, so the
+  contract check could not see a receiver that did not expect null. It is now
+  `string | null`, as `nullable: true` already was.
+- **An optional named request value was read as required (P197).**
+  `@Query('page') page?: number` (or `page = 1`) put `{page:number}` on the
+  route, so the written OpenAPI document required it and a caller leaving it
+  out looked like one leaving out a required value. It is now
+  `{page?:number}`.
+
+#### doctor and diff
+
+- **`doctor.json` holds every row (P192).** The file `doctor` writes was cut
+  like the terminal: six places per reason and 150 rows per section, with
+  `truncated` saying how many, although `--max-nodes` promised "the file is
+  always complete" and every `… N more rows` line sent the reader to it. The
+  check now builds the whole report, writes it, and cuts only what it prints:
+  text, `github` and `--format json` are unchanged, and the file has every row
+  and no `truncated` field (same `doctorFormatVersion: 2`; the field was always
+  optional). `runDoctorComplete` and `boundDoctorReport` are exported beside
+  `runDoctor`, which is the two together.
+- **`doctor --format github` annotated paths that were not there (P191).** An
+  annotation's file was the one inside its repository (`src/x.ts`), and the
+  checkout sees it under the directory the configuration gives the repository;
+  the mapping existed and was never passed. Annotations now name
+  `billing/src/x.ts`.
+- **A new gap under a gap id the base already had (P194).** `flowatlas diff`
+  compared gaps by gap id (one reason in one file), so a second unjoined
+  request in a file that already had one, or any gap id whose rows grew, was
+  not new, and one whose rows shrank was not gone. The rows under an id both
+  sides hold are now matched one by one on what each says (symbol with
+  positions masked, and message), never on the line, and the sites left over
+  are listed under the same id at the first new or gone one, with the new
+  optional field `kept` (the sites both sides share) on the row in `diff.json`,
+  on `what_changed`'s `newGaps`, and in the Markdown (`gap, 1 more beside 1`).
+  A site replaced by another is listed under both; a row standing for several
+  sites is matched by its count. Same `diff.json` format.
+
+#### The page
+
+- **Four page bugs seen in a browser (P137).** A page opened at `#map` (a
+  link, a bookmark, a reload) showed the Map tab selected over an empty panel;
+  no tab is open now until the first is shown, and a test boots the page at
+  every tab's address, at desktop and phone widths. The Map's kinds of link
+  stacked in a column since P101 gave the Graph's Filters popover that class;
+  they are a wrapping row of their own again. On a phone, the Ways in list cut
+  a failure chip mid-word (`500 ×1 not de…`); the chips now wrap whole, and the
+  row's tooltip says them all. The line under a Not joined row names
+  `flowatlas doctor --reason <code> --max-nodes <n>` (and `--service` when the
+  reason is all in one service), which lists only that reason's places.
+- **The Crossings tab drew nothing (P140).** Its table reached for the Not
+  joined tab's per-kind sections, which were not in its scope, and stopped on
+  the error before drawing a row; it lists every crossing again.
+- **Controls' edges at 3:1 (P142).** A search box, a select, a tool button, a
+  chip, a tab, a service on the rail, a key and the palette's input were
+  outlined in the colour of the page's rules, about 1.4:1 on their ground; they
+  are drawn in a token of their own, `--edge`, at 3:1 or more on every ground
+  in both themes. A row focused or picked by a fill alone (a search result, a
+  menu item, the palette's pick) also carries an accent bar along its start.
+  The contrast test holds the edge, the focus rings and the marks at 3:1, and
+  no control's edge in `--rule`.
+- **Time axes that read cleanly (P145).** On the Steps waterfall in time and on
+  the Traces tab the last tick label (`500 ms`) wrapped at the right edge; every
+  tick label is now one line, and none runs off the axis. The waterfall's
+  caption says what is drawn: what a step calls sits inside its bar, from where
+  it starts, one call after another and side-by-side ones together.
+- **The ways-in filter matches service names (P73 follow-up)**, not only a way
+  in's own label, and **the Map fits a short drawing at the top of its frame on
+  first load (P73)**; *Copy link* and *Full screen* keep their icons at phone
+  width.
+
+#### The graph server (MCP)
+
+- **A service's prompt counted gaps somebody accepted (P143).**
+  `describe_for_prompt({scope: "service"})` listed its most common gaps over
+  every row, accepted ones included; it counts the rows nobody accepted now, as
+  the page does.
+- **`impact` said only one of its notes (P132).** An answer whose walk stopped
+  at its limit, asked at `detail: 3`, said only that the level was clamped; it
+  now says both: the walk limit under `truncated`, the clamp as `note`.
+- **A file's likely N+1 hidden behind its note (P130).** The MCP `search`
+  keeps one `query-in-loop` hit per file, and of loops reached alike it kept
+  the first; a finding now ranks before a note reached alike.
+
+#### Documentation
+
+- **Command and tool counts in the READMEs.** `packages/cli/README.md` and
+  `docs/mcp.md` quoted command and tool counts that had drifted; they now say
+  what `flowatlas --help` and the tool-list test hold.
+- **The walkthrough, the site and the READMEs say what 0.6.0 prints.** The
+  `flow` and `channel` transcripts in `docs/getting-started.md` predated
+  billing's call into orders (P209); three spellings of `POST /orders/:param`
+  named a route the demo does not have, and now name `POST
+  /orders/:param/archive`; the npm README's first-build table said 2 of 6 calls
+  and 9 → 11 crossing edges (3 of 7, and 10 → 12) and 167 fixtures (168); the
+  README said 99 edges were read from code (104). The project page's scenes
+  describe what each recording now shows, its configure table is measured
+  again, a scene shows `observe`, and it says what reads traces and what checks
+  a merge. The page's tabs are described as they are (Not joined's sections,
+  Traces, Run time changes, one search), a session's tools as the ones its
+  project can answer (19 on the demo, 26 with `--all-tools`), and `docs/ci.md`
+  names the build line `missed · notes · findings`. `docs/CLI.md` lists
+  `FLOWATLAS_PIN_<SERVICE>` among the environment variables, in place of
+  `FLOWATLAS_DB`, which `flowatlas mcp` never read.
+- **`doctor --help` named the wrong baseline.** It gave the default as
+  `<output>/baseline.json`; the baseline is `flowatlas.baseline.json` beside the
+  configuration, as `docs/CLI.md` says.
+
 ## [0.5.1][] - 2026-10-12
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0. Two things
@@ -295,7 +2156,7 @@ up to date as well.
   by service, edge type and confidence, light and dark, phone width. Inline SVG
   and plain JavaScript; nothing is fetched. The page carries the node metadata
   and the rows the panel shows, packed, and a word the label already says is not
-  shipped again: on a project of twelve thousand nodes it grows by about a tenth.
+  shipped again, so the page grows by much less than the metadata it carries.
 - **A graph you can read.** The Graph tab folds guards, interceptors, pipes and
   middleware into a chip on the way in they wrap (`2 guards · 3 interceptors ·
   1 pipe`), drawn beside it on a click or all at once from a toggle, so a NestJS
@@ -324,9 +2185,8 @@ up to date as well.
   come to share offers both. *Copy link* copies that
   address; *SVG* and *PNG* save the drawing as it stands, at its own size, the
   PNG drawn from the SVG in the page with nothing fetched. Two fingers pan and
-  pinch to zoom. The keys add six bytes a node: on a project of twelve thousand
-  nodes the page goes from 1,268 to 1,369 KB, on the largest fixture from 103 to
-  134 KB.
+  pinch to zoom. The keys add six bytes a node: on the largest fixture the page
+  goes from 103 to 134 KB.
 - **Checking tools in the Graph tab.** *Problems*: a node with rows naming it, or
   rows at its line, carries the count, the two said apart (`badgesFor(node)` is
   the hook the drawing reads); *problems only* cuts the drawing to them and what
@@ -401,20 +2261,16 @@ up to date as well.
   edge carries them only where what the handler returns is what the request is
   answered with (a controller method), since the contracts read it as that. A
   way in that is not a request - a template event, a bot command, a consumer -
-  shows what it hands its handler (`onSave(order: Order) → void`). On the same
-  project every method and function of all five services now has one (5,648,
-  from 2,645), every edge between two functions carries its types, and every
-  one of its 2,350 ways in shows its handler's; the graph grows by 7% and the
-  page from 2,035 KB to 2,195 KB. Eight fixtures whose graphs held no types
-  before now hold some, so `contracts` reads them and their reports are
-  snapshotted. The page ships only the types those reach:
-  on a real five-service project 3,808 nodes have a face and 1,180 types are
-  shipped, and the page grows from 1,466 KB to 1,998 KB. Hovering a node, or
-  moving the keys onto it, shows the same in a card beside it with one level of
-  each type it names (four types of eight rows at most, the rest counted), and
-  hovering a type in the details peeks at its fields without opening it; the
-  card replaces the node's browser tooltip and never shows on a touch. The
-  pointer can move onto the card, which scrolls, and what it counted opens
+  shows what it hands its handler (`onSave(order: Order) → void`). Every method
+  and function of every service now has one, every edge between two functions
+  carries its types, and every way in shows its handler's. Eight fixtures whose
+  graphs held no types before now hold some, so `contracts` reads them and their
+  reports are snapshotted. The page ships only the types those reach.
+  Hovering a node, or moving the keys onto it, shows the same in a card beside
+  it with one level of each type it names (four types of eight rows at most, the
+  rest counted), and hovering a type in the details peeks at its fields without
+  opening it; the card replaces the node's browser tooltip and never shows on a
+  touch. The pointer can move onto the card, which scrolls, and what it counted opens
   there: *+N more — show* on a type, the rest of a long face, the types it left
   out, up to 200 rows a card. A type's name on it, its title, or a click on its
   node opens the details with what the card showed already open.
@@ -553,16 +2409,14 @@ up to date as well.
   *also uses …*, grouped by service and class, with a legend entry; `+N`
   counts only the flow. The address carries it as a sixth segment, after the
   filters. **Links made before still open**, and the nodes they expanded are
-  expanded in the flow, so such a link now draws less than it did. On a real
-  five-service project, a route with seven helpers expanded drew 35 nodes and
-  12 groups, most of them other routes' callers; it now draws 25 nodes, all of
-  the flow.
+  expanded in the flow, so such a link now draws less than it did: a route with
+  its helpers expanded used to draw mostly other routes' callers, and now draws
+  only the flow.
 - **A walk goes on to a node whose id is part of another's.** The cycle check of
   every walk - `flow`, `impact`, the graph server's - asked whether a node's id
   appeared anywhere in the path so far, so `Auth.refresh` was never
-  reached through `Auth.refreshToken`. It now compares whole ids.
-  On a real five-service project, `impact` on a busy channel reached 37 nodes
-  where 50 reach it.
+  reached through `Auth.refreshToken`. It now compares whole ids,
+  so `impact` on a busy channel no longer stops short of nodes that do reach it.
 - **The `visualise` page draws a label as text.** A label holding markup -
   `requireSecret<Ctx>(...)`, `click="save()"` - was written into the page as
   HTML and broke the row it was in; a title or label holding `$'` or `$&` was
@@ -1543,15 +3397,12 @@ and that is a change to their signatures.
 
 0.3.0 stopped the tool claiming things it had not checked. This does the same
 one level down: the lists it produces are now short enough to read by hand, and
-reading them by hand showed that the last few rows were wrong. Measured on the
-five-repository project this is developed against, same configuration, same
-commits: the one row saying a front end asks for something the back end does not
-serve is gone, and it is gone because the two routes joined; the one contract
-error is gone; findings to act on went from 30 to 22; contract warnings from
-1,069 to 1,014; and four routes that read as having no guard now say that
-somebody took the guard off on purpose. A channel that never existed — a
-template wildcard standing for three real events — is gone too, which took the
-project from 18 channels to 17.
+reading them by hand showed that the last few rows were wrong. A row saying a
+front end asks for something the back end does not serve can now be gone
+because the routes joined; a false contract error is gone; findings to act on
+and contract warnings went down; and a route that read as having no guard can
+now say that somebody took the guard off on purpose. A channel that never
+existed — a template wildcard standing for several real events — is gone too.
 
 ### Added
 
@@ -1573,8 +3424,8 @@ project from 18 channels to 17.
 - A `whitelist-strip` finding carries an `impact`: `none` when the receiving
   handler reaches no write and therefore cannot lose data, `stored` when it
   writes a document that declares the field, `unknown` otherwise. The `none`
-  rows are counted on one line rather than listed — 25 of 56 on that project —
-  and every one is still in `--format json`.
+  rows are counted on one line rather than listed, and every one is still in
+  `--format json`.
 - `@Emits`, `@Consumes` and the routes of `@CallsService` take a name, several
   names, or a list of them, and every form means what a stack of single
   annotations means. **This is a signature change in `@flowatlas/markers`**, so
@@ -1635,8 +3486,8 @@ project from 18 channels to 17.
   it, or by the one caller of the method that makes the request says what it
   does send — and where several callers each write one, their keys together. A
   spread of a wider object into a literal still puts its keys on the wire and
-  is still reported. 28 rows on that project, all of them a client echoing back
-  a key the server owns.
+  is still reported. The rows this removes were a client echoing back a key the
+  server owns.
 - A message about a shape read from a declared type says "permits" rather than
   "sends", and never "always sent". Response and payload wording is unchanged.
 - A finding on one arm of a handler that answers with a choice of shapes names
@@ -1670,16 +3521,14 @@ project from 18 channels to 17.
 
 `@flowatlas/cli` only. `@flowatlas/markers` is unchanged at 0.1.1.
 
-Everything here was found by reading the tool's own output on the project it is
-developed against, and most of it is about saying true things rather than
-reading new ones. Measured on that project, same configuration, same commits:
-browser requests matched to a route went from 489 of 495 to 493 of 499, routes
-something reaches from 502 to 506, and the routes nothing appears to call from
-62 to 58 — of which 14 are declared public and 7 are health probes, leaving 37
-worth reading. The lists a person actually reads got shorter without anything
-being hidden: 721 unresolved sites became 321 that say something was not read
-and 397 that say nothing joins there, and 1,445 field rows became 63 the
-receiving side really throws away.
+Everything here was found by reading the tool's own output on a real project,
+and most of it is about saying true things rather than reading new ones. More
+browser requests are matched to a route, more routes are reached, and the
+routes nothing appears to call say why each is there. The lists a person
+actually reads got shorter without anything being hidden: the unresolved sites
+are split into those that say something was not read and those that say
+nothing joins there, and the field rows shrink to the ones the receiving side
+really throws away.
 
 ### Added
 
@@ -1691,18 +3540,17 @@ receiving side really throws away.
 - A third level for an unresolved row, `nothing`, for a place where no edge
   exists to draw — a template binding that assigns to a field has no method
   behind it. Counted apart from the places it could not read, in `build`, in
-  `doctor` and in the baseline. On the project this is developed against that is
-  397 places that were being counted as gaps and are not.
+  `doctor` and in the baseline, so places that were being counted as gaps no
+  longer are.
 - `dead` gives a route nothing calls the reason it is in the list: declared
   public under `doctor.publicRoutes`, a health or status probe, an event stream,
   or nothing of the sort, and orders them so that the rows nothing explains come
-  first and `--max` cuts from the other end. Of the 58 rows on that project, 21
-  are one of the first three and 37 are worth reading.
+  first and `--max` cuts from the other end.
 - A request made through a wrapper that remembers what it was given —
   `this.params = { url, key }`, opened later from `this.params` — is followed to
   the caller that wrote the address. A field two places write is refused rather
-  than guessed at. On the project this is developed against that is five stream
-  subscriptions read and four routes that stop reading as never called.
+  than guessed at, so stream subscriptions opened that way are read and the
+  routes they reach stop reading as never called.
 - A call on a module of functions is followed from a method body, not only from
   a function's, and a brace-less arrow body is walked for the calls in it.
 - `dead` says when a channel with no consumer belongs to a service that serves
@@ -1718,8 +3566,7 @@ receiving side really throws away.
   other. A field assigned a function from elsewhere is still reported.
 - `dead --kind fields` lists the fields something happens to — the ones a
   receiver's whitelisting pipe removes on arrival, read from that receiver's own
-  validation — and counts the rest on one line. On the project this is developed
-  against that is 1,445 rows become 63 and a number. Every row is still in
+  validation — and counts the rest on one line. Every row is still in
   `--format json`, with its direction and whether it is dropped.
 
 ### Changed
@@ -1738,12 +3585,9 @@ receiving side really throws away.
 
 `@flowatlas/cli` only. `@flowatlas/markers` is unchanged at 0.1.1.
 
-Measured on the five-repository project this is developed against, with the
-same configuration and the same commit of every repository read by both
-versions: routes reported as never called went from 220 to 62, browser requests
-matched to a route from 318 to 489, and edges crossing a repository boundary from
-366 to 537. The routes 0.1.1 called unused were being called through wrappers it
-could not read.
+Far fewer routes are reported as never called, more browser requests are
+matched to a route, and more edges cross a repository boundary. The routes 0.1.1
+called unused were being called through wrappers it could not read.
 
 ### Added
 
@@ -1790,7 +3634,8 @@ could not read.
 
 The first published version of both `@flowatlas/cli` and `@flowatlas/markers`.
 
-[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.1...HEAD
+[unreleased]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/Panevschi-Ruslan/flowatlas/compare/v0.4.0...v0.4.1

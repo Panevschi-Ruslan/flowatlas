@@ -1,0 +1,103 @@
+{
+  "docsFormatVersion": 1,
+  "files": [
+    "docs/architecture.md"
+  ],
+  "blocks": [
+    {
+      "file": "docs/architecture.md",
+      "line": 10,
+      "kind": "flow",
+      "id": "GET /orders/:param",
+      "node": "entry:gateway:http:GET:/orders/:param",
+      "view": "steps",
+      "options": {
+        "service": "gateway"
+      },
+      "state": "ok",
+      "fingerprint": "214311f4"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 32,
+      "kind": "flow",
+      "id": "POST /orders",
+      "node": "entry:orders:http:POST:/orders",
+      "view": "sequence",
+      "state": "ok",
+      "fingerprint": "0311e9f4"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 63,
+      "kind": "flow",
+      "id": "POST /orders",
+      "node": "entry:orders:http:POST:/orders",
+      "view": "contract",
+      "state": "changed",
+      "why": "never written: run flowatlas docs --write"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 66,
+      "kind": "ref",
+      "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "node": "orders#src/orders/orders.service.ts:OrdersService.create",
+      "state": "ok"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 71,
+      "kind": "channel",
+      "id": "order.created",
+      "node": "channel:order.created",
+      "view": "mermaid",
+      "state": "ok",
+      "fingerprint": "8bd99de0"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 113,
+      "kind": "flow",
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "node": "entry:gateway:http:GET:/orders/:param",
+      "view": "tour",
+      "state": "ok",
+      "fingerprint": "214311f4"
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 144,
+      "kind": "flow",
+      "id": "GET /orders/:param/export",
+      "view": "steps",
+      "state": "gone",
+      "near": [
+        "entry:gateway:http:GET:/orders/:param",
+        "entry:orders:http:GET:/orders/:param"
+      ]
+    },
+    {
+      "file": "docs/architecture.md",
+      "line": 151,
+      "kind": "flow",
+      "id": "GET /orders/:param",
+      "view": "steps",
+      "state": "ambiguous",
+      "candidates": [
+        "entry:gateway:http:GET:/orders/:param",
+        "entry:orders:http:GET:/orders/:param"
+      ]
+    }
+  ],
+  "problems": [],
+  "counts": {
+    "ok": 5,
+    "changed": 1,
+    "gone": 1,
+    "ambiguous": 1
+  },
+  "written": []
+}
+--- stderr ---
+exit 1

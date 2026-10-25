@@ -40,7 +40,11 @@ const line = (delivery: DeployedDelivery): string => {
           ? `changes of ${from.of} ${from.name}`
           : from.kind === 'connection'
             ? `connection ${from.api} ${from.route}`
-            : `${from.kind} ${from.name}`;
+            : from.kind === 'trigger'
+              ? `trigger ${from.key}`
+              : from.kind === 'outcome'
+                ? `${from.when} of ${'function' in from.of ? from.of.function : 'name' in from.of ? from.of.name : from.of.delivery}`
+                : `${from.kind} ${from.name}`;
   const to = delivery.to;
   const target =
     to === undefined
@@ -196,6 +200,30 @@ resource "aws_scheduler_schedule" "weekly" {
       'mapping changes of stream library-scans -> function #0',
     ]);
     expect(deployment.deliveries[0]?.meta).toEqual({ disabled: true });
+  });
+
+  it('declares the stream of a table that has one, and of a stream, and of nothing else (P51)', () => {
+    const deployment = readHcl(`
+resource "aws_dynamodb_table" "orders" {
+  name           = "shop-orders"
+  stream_enabled = true
+}
+resource "aws_dynamodb_table" "returns" {
+  name             = "shop-returns"
+  stream_view_type = "KEYS_ONLY"
+}
+resource "aws_dynamodb_table" "carts" { name = "shop-carts" }
+resource "aws_dynamodb_table" "off" {
+  name           = "shop-off"
+  stream_enabled = false
+}
+data "aws_dynamodb_table" "theirs" { name = "shop-theirs" }
+resource "aws_kinesis_stream" "clicks" { name = "shop-clicks" }`);
+    expect(deployment.streams?.map((stream) => `${stream.of} ${stream.name} by ${stream.address}`)).toEqual([
+      'table shop-orders by aws_dynamodb_table.orders',
+      'table shop-returns by aws_dynamodb_table.returns',
+      'stream shop-clicks by aws_kinesis_stream.clicks',
+    ]);
   });
 
   it('reads the integrations that send: an action with the queue in a parameter, a template putting an event, an HTTP API queue', () => {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T19:05:21.448Z",
+  "builtAt": "2026-10-17T03:00:31.423Z",
   "services": [
     {
       "name": "gateway",
@@ -209,15 +209,15 @@
     {
       "id": "db_query:orders#src/orders/orders.service.ts:28:11",
       "type": "db_query",
-      "label": "write Draft",
+      "label": "write drafts",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 28,
       "meta": {
         "op": "write",
-        "table": "Draft",
+        "table": "drafts",
         "tables": [
-          "Draft"
+          "drafts"
         ],
         "package": "typeorm",
         "method": "save",
@@ -230,15 +230,15 @@
     {
       "id": "db_query:orders#src/orders/orders.service.ts:81:11",
       "type": "db_query",
-      "label": "write Draft",
+      "label": "write drafts",
       "repo": "orders",
       "file": "src/orders/orders.service.ts",
       "line": 81,
       "meta": {
         "op": "write",
-        "table": "Draft",
+        "table": "drafts",
         "tables": [
-          "Draft"
+          "drafts"
         ],
         "package": "typeorm",
         "method": "save",
@@ -402,7 +402,17 @@
         "path": "/orders/drafts/preview",
         "rawPath": "/orders/drafts/preview",
         "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "orders#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+            "file": "src/orders/orders.controller.ts",
+            "line": 96,
+            "source": "pipe"
+          }
+        ]
       }
     },
     {
@@ -418,7 +428,17 @@
         "path": "/orders/drafts/store",
         "rawPath": "/orders/drafts/store",
         "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "orders#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+            "file": "src/orders/orders.controller.ts",
+            "line": 84,
+            "source": "pipe"
+          }
+        ]
       }
     },
     {
@@ -434,7 +454,17 @@
         "path": "/orders/drafts/tag",
         "rawPath": "/orders/drafts/tag",
         "controller": "OrdersController",
-        "adapter": "nestjs-http"
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "status": 400,
+            "exception": "BadRequestException",
+            "at": "orders#node_modules/@nestjs/common:ValidationPipe({\"whitelist\":true})",
+            "file": "src/orders/orders.controller.ts",
+            "line": 90,
+            "source": "pipe"
+          }
+        ]
       }
     },
     {
@@ -1967,9 +1997,9 @@
       }
     },
     {
-      "id": "table:orders#Draft",
+      "id": "table:orders#drafts",
       "type": "table",
-      "label": "Draft",
+      "label": "drafts",
       "repo": "orders"
     },
     {
@@ -2160,7 +2190,7 @@
     },
     {
       "from": "db_query:orders#src/orders/orders.service.ts:28:11",
-      "to": "table:orders#Draft",
+      "to": "table:orders#drafts",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -2168,7 +2198,7 @@
     },
     {
       "from": "db_query:orders#src/orders/orders.service.ts:81:11",
-      "to": "table:orders#Draft",
+      "to": "table:orders#drafts",
       "type": "queries",
       "confidence": "static",
       "file": "src/orders/orders.service.ts",
@@ -4460,8 +4490,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 83,
       "reason": "route-unguarded",
-      "message": "POST /orders/drafts/store has no guard in front of it and reaches Draft.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "POST /orders/drafts/store has no guard in front of it and reaches drafts.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/drafts/store"
     },
     {
@@ -4469,8 +4499,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 89,
       "reason": "route-unguarded",
-      "message": "POST /orders/drafts/tag has no guard in front of it and reaches Draft.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "POST /orders/drafts/tag has no guard in front of it and reaches drafts.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/drafts/tag"
     },
     {
@@ -4478,8 +4508,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 109,
       "reason": "route-unguarded",
-      "message": "POST /orders/drafts/batch has no guard in front of it and reaches Draft.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "POST /orders/drafts/batch has no guard in front of it and reaches drafts.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/drafts/batch"
     },
     {

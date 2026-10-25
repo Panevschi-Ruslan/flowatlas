@@ -1,0 +1,21 @@
+{
+  "services": [
+    {
+      "name": "catalog-api",
+      "repo": "./catalog-api",
+      "type": "nestjs",
+      "aliases": ["catalog", "catalog-worker"],
+      "hosts": ["catalog.internal"]
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl"],
+      "apiTarget": { "apiUrl": "catalog" }
+    },
+    { "name": "orders-worker", "repo": "./orders-worker", "type": "nestjs" },
+    { "name": "ops-scripts", "repo": "./ops-scripts", "type": "nestjs" }
+  ],
+  "output": ".flowatlas"
+}

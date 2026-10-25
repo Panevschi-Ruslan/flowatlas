@@ -6,6 +6,7 @@ import {
   methodBodies,
   type ClassMethod,
   type GraphNode,
+  lineAndColumnAt,
 } from '@flowatlas/core';
 import {
   endpointShapingAt,
@@ -122,7 +123,7 @@ export const socketsPass = definePass('sockets', (ctx: AngularExtractContext) =>
   };
 
   const lineColOf = (node: TsNode): { line: number; column: number } =>
-    node.getSourceFile().getLineAndColumnAtPos(node.getStart());
+    lineAndColumnAt(node.getSourceFile(), node.getStart());
 
   const emitProducer = (
     call: CallExpression,

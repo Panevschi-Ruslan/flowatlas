@@ -15,3 +15,8 @@ export interface OrderDto {
   customerId: string;
   status: string;
 }
+
+export interface ShipmentDto {
+  id: string;
+  status: string;
+}

@@ -1,0 +1,1503 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T06:05:42.035Z",
+  "services": [
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "catalog",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "ProductsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "catalog#src/products.controller.ts:ProductsController",
+      "type": "provider",
+      "label": "ProductsController",
+      "repo": "catalog",
+      "file": "src/products.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "catalog#src/products.controller.ts:ProductsController.list",
+      "type": "method",
+      "label": "ProductsController.list",
+      "repo": "catalog",
+      "file": "src/products.controller.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "config_key:catalog#ORDERS_FEED_URL",
+      "type": "config_key",
+      "label": "ORDERS_FEED_URL",
+      "repo": "catalog",
+      "file": "src/products.controller.ts",
+      "line": 9,
+      "meta": {
+        "key": "ORDERS_FEED_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:payments#ORDERS_API",
+      "type": "config_key",
+      "label": "ORDERS_API",
+      "repo": "payments",
+      "file": "src/payments.controller.ts",
+      "line": 9,
+      "meta": {
+        "key": "ORDERS_API",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:storefront#CATALOG_URL",
+      "type": "config_key",
+      "label": "CATALOG_URL",
+      "repo": "storefront",
+      "file": "src/catalog.config.ts",
+      "line": 9,
+      "meta": {
+        "key": "CATALOG_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:storefront#INVENTORY_URL",
+      "type": "config_key",
+      "label": "INVENTORY_URL",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 43,
+      "meta": {
+        "key": "INVENTORY_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:storefront#LEDGER_URL",
+      "type": "config_key",
+      "label": "LEDGER_URL",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 33,
+      "meta": {
+        "key": "LEDGER_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:storefront#ORDERS_API",
+      "type": "config_key",
+      "label": "ORDERS_API",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 15,
+      "meta": {
+        "key": "ORDERS_API",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:storefront#ORDERS_SERVICE_URL",
+      "type": "config_key",
+      "label": "ORDERS_SERVICE_URL",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 23,
+      "meta": {
+        "key": "ORDERS_SERVICE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:storefront#PAYMENTS_BASE",
+      "type": "config_key",
+      "label": "PAYMENTS_BASE",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 28,
+      "meta": {
+        "key": "PAYMENTS_BASE",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:storefront#SHIPPING_URL",
+      "type": "config_key",
+      "label": "SHIPPING_URL",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 38,
+      "meta": {
+        "key": "SHIPPING_URL",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "config_key:storefront#catalog.url",
+      "type": "config_key",
+      "label": "catalog.url",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 48,
+      "meta": {
+        "key": "catalog.url",
+        "source": "config.get"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "src/products.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "controller": "ProductsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "orders",
+      "file": "src/orders.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:payments:http:POST:/payments",
+      "type": "entry",
+      "label": "POST /payments",
+      "repo": "payments",
+      "file": "src/payments.controller.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/payments",
+        "rawPath": "/payments",
+        "controller": "PaymentsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:payments:http:POST:/refunds",
+      "type": "entry",
+      "label": "POST /refunds",
+      "repo": "payments",
+      "file": "src/payments.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/refunds",
+        "rawPath": "/refunds",
+        "controller": "PaymentsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/checkout/:param",
+      "type": "entry",
+      "label": "GET /checkout/:param",
+      "repo": "storefront",
+      "file": "src/checkout.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/checkout/:param",
+        "rawPath": "/checkout/:id",
+        "controller": "CheckoutController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:storefront:http:POST:/checkout/:param",
+      "type": "entry",
+      "label": "POST /checkout/:param",
+      "repo": "storefront",
+      "file": "src/checkout.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/checkout/:param",
+        "rawPath": "/checkout/:id",
+        "controller": "CheckoutController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "external_api:api.shipping.example.com",
+      "type": "external_api",
+      "label": "api.shipping.example.com",
+      "repo": "storefront",
+      "meta": {
+        "host": "api.shipping.example.com"
+      }
+    },
+    {
+      "id": "http_out:catalog#src/products.controller.ts:9:26",
+      "type": "http_out",
+      "label": "GET /orders/latest",
+      "repo": "catalog",
+      "file": "src/products.controller.ts",
+      "line": 9,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_FEED_URL}/orders/latest",
+        "path": "/orders/latest",
+        "baseUrlEnv": "ORDERS_FEED_URL",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "http://localhost:3001",
+        "baseUrlFrom": "wrangler.toml",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:payments#src/payments.controller.ts:9:25",
+      "type": "http_out",
+      "label": "GET /orders/:param",
+      "repo": "payments",
+      "file": "src/payments.controller.ts",
+      "line": 9,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_API}/orders/${…}",
+        "path": "/orders/:param",
+        "baseUrlEnv": "ORDERS_API",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "http://orders:3000",
+        "baseUrlFrom": "serverless.yml",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients/shop.client.ts:15:12",
+      "type": "http_out",
+      "label": "GET /orders/:param",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 15,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_API}/orders/${…}",
+        "path": "/orders/:param",
+        "baseUrlEnv": "ORDERS_API",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "http://orders:3000",
+        "baseUrlFrom": ".env.example",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients/shop.client.ts:23:12",
+      "type": "http_out",
+      "label": "GET /orders/:param",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 23,
+      "meta": {
+        "method": "GET",
+        "url": "${ORDERS_SERVICE_URL}/orders/${…}",
+        "path": "/orders/:param",
+        "baseUrlEnv": "ORDERS_SERVICE_URL",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrlFrom": "its name",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients/shop.client.ts:28:12",
+      "type": "http_out",
+      "label": "POST /payments",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 28,
+      "meta": {
+        "method": "POST",
+        "url": "${PAYMENTS_BASE}/payments",
+        "path": "/payments",
+        "baseUrlEnv": "PAYMENTS_BASE",
+        "responseType": null,
+        "bodyType": "{id:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id"
+        ],
+        "baseUrl": "http://payments-api:4000",
+        "baseUrlFrom": "docker-compose.yml (shop)",
+        "targetService": "payments"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients/shop.client.ts:33:12",
+      "type": "http_out",
+      "label": "POST /refunds",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 33,
+      "meta": {
+        "method": "POST",
+        "url": "${LEDGER_URL}/refunds",
+        "path": "/refunds",
+        "baseUrlEnv": "LEDGER_URL",
+        "baseUrlDefault": "http://localhost:4000",
+        "responseType": null,
+        "bodyType": "{id:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id"
+        ],
+        "baseUrl": "http://localhost:4000",
+        "baseUrlFrom": "src/clients/shop.client.ts (the code’s own fallback)",
+        "targetService": "payments"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients/shop.client.ts:38:12",
+      "type": "http_out",
+      "label": "GET /rates",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 38,
+      "meta": {
+        "method": "GET",
+        "url": "${SHIPPING_URL}/rates",
+        "path": "/rates",
+        "baseUrlEnv": "SHIPPING_URL",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "https://api.shipping.example.com/v2",
+        "baseUrlFrom": ".env.example",
+        "host": "api.shipping.example.com"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients/shop.client.ts:43:12",
+      "type": "http_out",
+      "label": "GET /stock",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 43,
+      "meta": {
+        "method": "GET",
+        "url": "${INVENTORY_URL}/stock",
+        "path": "/stock",
+        "baseUrlEnv": "INVENTORY_URL",
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients/shop.client.ts:48:12",
+      "type": "http_out",
+      "label": "GET /products",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 48,
+      "meta": {
+        "method": "GET",
+        "url": "${catalog.url}/products",
+        "path": "/products",
+        "baseUrlEnv": "catalog.url",
+        "baseUrlVariable": "CATALOG_URL",
+        "baseUrlDefault": "http://catalog:3002",
+        "baseUrlDefaultFrom": "src/catalog.config.ts",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "http://catalog:3002",
+        "baseUrlFrom": "src/catalog.config.ts (the code’s own fallback)",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "orders#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "orders",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders#src/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "orders",
+      "file": "src/orders.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders.controller.ts:OrdersController.findOne",
+      "type": "method",
+      "label": "OrdersController.findOne",
+      "repo": "orders",
+      "file": "src/orders.controller.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "payments#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "payments",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "PaymentsController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "payments#src/payments.controller.ts:PaymentsController",
+      "type": "provider",
+      "label": "PaymentsController",
+      "repo": "payments",
+      "file": "src/payments.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "payments#src/payments.controller.ts:PaymentsController.pay",
+      "type": "method",
+      "label": "PaymentsController.pay",
+      "repo": "payments",
+      "file": "src/payments.controller.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "payments#src/payments.controller.ts:PaymentsController.refund",
+      "type": "method",
+      "label": "PaymentsController.refund",
+      "repo": "payments",
+      "file": "src/payments.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:payments",
+      "type": "repo",
+      "label": "payments",
+      "repo": "payments",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@nestjs/config": 3
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "storefront#node_modules/@nestjs/config:ConfigModule",
+      "type": "module",
+      "label": "ConfigModule",
+      "repo": "storefront",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "storefront#node_modules/@nestjs/config:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "storefront",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "storefront#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "storefront",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "CheckoutController"
+        ],
+        "providers": [
+          "ShopClient"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "storefront#src/catalog.config.ts:default.registerAs@8",
+      "type": "function",
+      "label": "default.registerAs@8",
+      "repo": "storefront",
+      "file": "src/catalog.config.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{url:string;pageSize:50}"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/checkout.controller.ts:CheckoutController",
+      "type": "provider",
+      "label": "CheckoutController",
+      "repo": "storefront",
+      "file": "src/checkout.controller.ts",
+      "line": 6,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "storefront#src/checkout.controller.ts:CheckoutController.pay",
+      "type": "method",
+      "label": "CheckoutController.pay",
+      "repo": "storefront",
+      "file": "src/checkout.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/checkout.controller.ts:CheckoutController.summary",
+      "type": "method",
+      "label": "CheckoutController.summary",
+      "repo": "storefront",
+      "file": "src/checkout.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients/shop.client.ts:ShopClient",
+      "type": "provider",
+      "label": "ShopClient",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "storefront#src/clients/shop.client.ts:ShopClient.history",
+      "type": "method",
+      "label": "ShopClient.history",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients/shop.client.ts:ShopClient.order",
+      "type": "method",
+      "label": "ShopClient.order",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients/shop.client.ts:ShopClient.pay",
+      "type": "method",
+      "label": "ShopClient.pay",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients/shop.client.ts:ShopClient.products",
+      "type": "method",
+      "label": "ShopClient.products",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 47,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients/shop.client.ts:ShopClient.rates",
+      "type": "method",
+      "label": "ShopClient.rates",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients/shop.client.ts:ShopClient.refund",
+      "type": "method",
+      "label": "ShopClient.refund",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients/shop.client.ts:ShopClient.stock",
+      "type": "method",
+      "label": "ShopClient.stock",
+      "repo": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalog#src/products.controller.ts:ProductsController.list",
+      "to": "config_key:catalog#ORDERS_FEED_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/products.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "catalog#src/products.controller.ts:ProductsController.list",
+      "to": "http_out:catalog#src/products.controller.ts:9:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/products.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/products.controller.ts:ProductsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/products.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:orders:http:GET:/orders/:param",
+      "to": "orders#src/orders.controller.ts:OrdersController.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}",
+      "file": "src/orders.controller.ts",
+      "line": 6,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:payments:http:POST:/payments",
+      "to": "payments#src/payments.controller.ts:PaymentsController.pay",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/payments.controller.ts",
+      "line": 6,
+      "meta": {
+        "body": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:payments:http:POST:/refunds",
+      "to": "payments#src/payments.controller.ts:PaymentsController.refund",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "{id:string}",
+      "file": "src/payments.controller.ts",
+      "line": 14,
+      "meta": {
+        "body": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/checkout/:param",
+      "to": "storefront#src/checkout.controller.ts:CheckoutController.summary",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/checkout.controller.ts",
+      "line": 10,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/checkout/:param",
+      "to": "storefront#src/checkout.controller.ts:CheckoutController.pay",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/checkout.controller.ts",
+      "line": 20,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "http_out:catalog#src/products.controller.ts:9:26",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/products.controller.ts",
+      "line": 9,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "orders",
+        "baseUrl": "http://localhost:3001",
+        "baseUrlFrom": "wrangler.toml"
+      }
+    },
+    {
+      "from": "http_out:payments#src/payments.controller.ts:9:25",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/payments.controller.ts",
+      "line": 9,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "orders",
+        "baseUrl": "http://orders:3000",
+        "baseUrlFrom": "serverless.yml"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients/shop.client.ts:15:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/clients/shop.client.ts",
+      "line": 15,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "orders",
+        "baseUrl": "http://orders:3000",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients/shop.client.ts:23:12",
+      "to": "entry:orders:http:GET:/orders/:param",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/clients/shop.client.ts",
+      "line": 23,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "orders",
+        "baseUrlFrom": "its name"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients/shop.client.ts:28:12",
+      "to": "entry:payments:http:POST:/payments",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/clients/shop.client.ts",
+      "line": 28,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "payments",
+        "baseUrl": "http://payments-api:4000",
+        "baseUrlFrom": "docker-compose.yml (shop)"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients/shop.client.ts:33:12",
+      "to": "entry:payments:http:POST:/refunds",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/clients/shop.client.ts",
+      "line": 33,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "payments",
+        "baseUrl": "http://localhost:4000",
+        "baseUrlFrom": "src/clients/shop.client.ts (the code’s own fallback)"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients/shop.client.ts:38:12",
+      "to": "external_api:api.shipping.example.com",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/clients/shop.client.ts",
+      "line": 38,
+      "meta": {
+        "baseUrl": "https://api.shipping.example.com/v2",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients/shop.client.ts:48:12",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/clients/shop.client.ts",
+      "line": 48,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "catalog",
+        "baseUrl": "http://catalog:3002",
+        "baseUrlFrom": "src/catalog.config.ts (the code’s own fallback)"
+      }
+    },
+    {
+      "from": "payments#src/payments.controller.ts:PaymentsController.pay",
+      "to": "config_key:payments#ORDERS_API",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/payments.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "payments#src/payments.controller.ts:PaymentsController.pay",
+      "to": "http_out:payments#src/payments.controller.ts:9:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/payments.controller.ts",
+      "line": 9
+    },
+    {
+      "from": "storefront#src/app.module.ts:AppModule",
+      "to": "storefront#node_modules/@nestjs/config:ConfigModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "storefront#src/catalog.config.ts:default.registerAs@8",
+      "to": "config_key:storefront#CATALOG_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/catalog.config.ts",
+      "line": 9
+    },
+    {
+      "from": "storefront#src/checkout.controller.ts:CheckoutController",
+      "to": "storefront#src/clients/shop.client.ts:ShopClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/checkout.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "storefront#src/checkout.controller.ts:CheckoutController.pay",
+      "to": "storefront#src/clients/shop.client.ts:ShopClient.pay",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "Response",
+      "file": "src/checkout.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "storefront#src/checkout.controller.ts:CheckoutController.pay",
+      "to": "storefront#src/clients/shop.client.ts:ShopClient.refund",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "Response",
+      "file": "src/checkout.controller.ts",
+      "line": 23
+    },
+    {
+      "from": "storefront#src/checkout.controller.ts:CheckoutController.summary",
+      "to": "storefront#src/clients/shop.client.ts:ShopClient.history",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "Response",
+      "file": "src/checkout.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "storefront#src/checkout.controller.ts:CheckoutController.summary",
+      "to": "storefront#src/clients/shop.client.ts:ShopClient.order",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "Response",
+      "file": "src/checkout.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "storefront#src/checkout.controller.ts:CheckoutController.summary",
+      "to": "storefront#src/clients/shop.client.ts:ShopClient.products",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "Response",
+      "file": "src/checkout.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "storefront#src/checkout.controller.ts:CheckoutController.summary",
+      "to": "storefront#src/clients/shop.client.ts:ShopClient.rates",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "Response",
+      "file": "src/checkout.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "storefront#src/checkout.controller.ts:CheckoutController.summary",
+      "to": "storefront#src/clients/shop.client.ts:ShopClient.stock",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "Response",
+      "file": "src/checkout.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient",
+      "to": "storefront#node_modules/@nestjs/config:ConfigService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 11
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.history",
+      "to": "config_key:storefront#ORDERS_SERVICE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 23
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.history",
+      "to": "http_out:storefront#src/clients/shop.client.ts:23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 23
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.order",
+      "to": "config_key:storefront#ORDERS_API",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 15
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.order",
+      "to": "http_out:storefront#src/clients/shop.client.ts:15:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 15
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.pay",
+      "to": "config_key:storefront#PAYMENTS_BASE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 28
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.pay",
+      "to": "http_out:storefront#src/clients/shop.client.ts:28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 28
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.products",
+      "to": "config_key:storefront#catalog.url",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 48
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.products",
+      "to": "http_out:storefront#src/clients/shop.client.ts:48:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 48
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.rates",
+      "to": "config_key:storefront#SHIPPING_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 38
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.rates",
+      "to": "http_out:storefront#src/clients/shop.client.ts:38:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 38
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.refund",
+      "to": "config_key:storefront#LEDGER_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 33
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.refund",
+      "to": "http_out:storefront#src/clients/shop.client.ts:33:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 33
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.stock",
+      "to": "config_key:storefront#INVENTORY_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 43
+    },
+    {
+      "from": "storefront#src/clients/shop.client.ts:ShopClient.stock",
+      "to": "http_out:storefront#src/clients/shop.client.ts:43:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients/shop.client.ts",
+      "line": 43
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "catalog",
+      "file": "src/products.controller.ts",
+      "line": 9,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "ORDERS_FEED_URL is http://localhost:3001 in wrangler.toml, which is taken as orders",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add ORDERS_FEED_URL to services[].baseUrlEnv of orders to say so outright.",
+      "symbol": "http_out:catalog#src/products.controller.ts:9:26",
+      "meta": {
+        "variable": "ORDERS_FEED_URL",
+        "value": "http://localhost:3001",
+        "from": "wrangler.toml"
+      }
+    },
+    {
+      "service": "payments",
+      "file": "src/payments.controller.ts",
+      "line": 9,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "ORDERS_API is http://orders:3000 in serverless.yml, which is taken as orders",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add ORDERS_API to services[].baseUrlEnv of orders to say so outright.",
+      "symbol": "http_out:payments#src/payments.controller.ts:9:25",
+      "meta": {
+        "variable": "ORDERS_API",
+        "value": "http://orders:3000",
+        "from": "serverless.yml"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 15,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "ORDERS_API is http://orders:3000 in .env.example, which is taken as orders",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add ORDERS_API to services[].baseUrlEnv of orders to say so outright.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:15:12",
+      "meta": {
+        "variable": "ORDERS_API",
+        "value": "http://orders:3000",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 23,
+      "reason": "base-url-from-name",
+      "level": "info",
+      "message": "no service declares ORDERS_SERVICE_URL and nothing read gives it a value (it is set in .env, whose values are never read), so it is taken as orders, the one service it is named after",
+      "hint": "Only the setting's name chose the service. Add ORDERS_SERVICE_URL to services[].baseUrlEnv of orders to say so outright, or of the service it really is.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:23:12",
+      "meta": {
+        "variable": "ORDERS_SERVICE_URL",
+        "from": "its name"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 28,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "PAYMENTS_BASE is http://payments-api:4000 in docker-compose.yml (shop), which is taken as payments",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add PAYMENTS_BASE to services[].baseUrlEnv of payments to say so outright.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:28:12",
+      "meta": {
+        "variable": "PAYMENTS_BASE",
+        "value": "http://payments-api:4000",
+        "from": "docker-compose.yml (shop)"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 33,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "LEDGER_URL is http://localhost:4000 in src/clients/shop.client.ts (the code’s own fallback), which is taken as payments",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add LEDGER_URL to services[].baseUrlEnv of payments to say so outright.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:33:12",
+      "meta": {
+        "variable": "LEDGER_URL",
+        "value": "http://localhost:4000",
+        "from": "src/clients/shop.client.ts (the code’s own fallback)"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 38,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHIPPING_URL is https://api.shipping.example.com/v2 in .env.example, which is taken as api.shipping.example.com",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add SHIPPING_URL to services[].baseUrlEnv of api.shipping.example.com to say so outright.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:38:12",
+      "meta": {
+        "variable": "SHIPPING_URL",
+        "value": "https://api.shipping.example.com/v2",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 43,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares INVENTORY_URL; it is set in .env, whose values are never read",
+      "hint": "Add INVENTORY_URL to services[].baseUrlEnv of whichever service answers it, or the host to its services[].hosts.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:43:12"
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 48,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "catalog.url is http://catalog:3002 in src/catalog.config.ts (the code’s own fallback), which is taken as catalog",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add catalog.url to services[].baseUrlEnv of catalog to say so outright.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:48:12",
+      "meta": {
+        "variable": "catalog.url",
+        "value": "http://catalog:3002",
+        "from": "src/catalog.config.ts (the code’s own fallback)"
+      }
+    }
+  ]
+}

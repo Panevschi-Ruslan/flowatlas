@@ -179,7 +179,7 @@ describe('routes declared by calling the application', () => {
   });
 
   it('refuses a named call the handler makes on its way to answering', () => {
-    // Eight of the real project's worker routes call a boot helper first and
+    // Worker routes on a real project call a boot helper first and
     // answer afterwards. Pointing the route at the helper says the request ends
     // where it starts, so only what the function gives back counts.
     const read = extract(

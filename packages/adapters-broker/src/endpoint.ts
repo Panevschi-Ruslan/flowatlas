@@ -1,4 +1,4 @@
-import { evaluateExpression, getDecorator, resolveTypeOrigin, type Unresolved } from '@flowatlas/core';
+import { classMembersOf, evaluateExpression, getDecorator, resolveTypeOrigin, type Unresolved } from '@flowatlas/core';
 import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { BrokerSpec, ChannelPrefix, EndpointCarrier } from './adapters/types.js';
@@ -134,7 +134,7 @@ const MOST_STEPS = 12;
  */
 const fieldValues = (owner: ClassDeclaration, name: string): TsNode[] => {
   const values: TsNode[] = [];
-  const initializer = owner.getProperty(name)?.getInitializer();
+  const initializer = classMembersOf(owner).property(name)?.getInitializer();
   if (initializer !== undefined) values.push(initializer);
   owner.forEachDescendant((node) => {
     if (!Node.isBinaryExpression(node)) return;

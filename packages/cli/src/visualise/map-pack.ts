@@ -1,5 +1,11 @@
 import type { GraphNode } from '@flowatlas/core';
-import type { AnchoredUnresolvedRow, ServiceReport } from '@flowatlas/linker';
+import {
+  classifyRoute,
+  routeFactsOf,
+  type AnchoredUnresolvedRow,
+  type InfrastructureRules,
+  type ServiceReport,
+} from '@flowatlas/linker';
 
 /**
  * The whole project at the size of its services, for the Map tab.
@@ -9,7 +15,7 @@ import type { AnchoredUnresolvedRow, ServiceReport } from '@flowatlas/linker';
  * it, a service's tables are one box beside it (its data), and an outside API
  * is a box. An edge whose two ends are owned by different boxes is part of a
  * link between them, counted, with the edges kept so the page can list them.
- * Nothing is drawn per node: a project of twelve thousand nodes is a hairball
+ * Nothing is drawn per node: a project of thousands of nodes is a hairball
  * at any zoom, and the shape a person asks for first is the services and what
  * joins them.
  *
@@ -90,6 +96,12 @@ export interface MapInput {
   rows: readonly Pick<AnchoredUnresolvedRow, 'service' | 'level'>[];
   /** `[node, kind]` per answer a route gives besides its own, as `shapes.ts` packs them. */
   answers?: ReadonlyArray<readonly [node: number, kind: string]>;
+  /**
+   * What the configuration says about routes nobody calls (P91): those it
+   * calls public, and what it names as infrastructure. Without it the
+   * built-in rules alone decide which routes are counted apart.
+   */
+  routes?: { publicRoutes?: readonly string[]; infrastructure?: InfrastructureRules };
 }
 
 /** The count a service box keeps per kind of answer, of the routes that give one (P32). */
@@ -196,6 +208,9 @@ export const packMap = (input: MapInput): PackedMap => {
   // A service's own counts first, since its column comes from them.
   const entries = new Map<string, Record<string, number>>();
   const ui = new Map<string, number>();
+  // A front end's ways in are its screen actions, as the Ways in list holds them (P101).
+  const actions = new Map<string, number>();
+  const screens = new Map<string, number>();
   const anchors = new Map<string, number>();
   const nodeCount = new Map<string, number>();
   const consumers = new Map<string, number>();
@@ -209,6 +224,8 @@ export const packMap = (input: MapInput): PackedMap => {
       entries.set(node.repo, kinds);
     }
     if (UI_TYPES.has(node.type)) ui.set(node.repo, (ui.get(node.repo) ?? 0) + 1);
+    if (node.type === 'ui_action') actions.set(node.repo, (actions.get(node.repo) ?? 0) + 1);
+    if (node.type === 'ui_component') screens.set(node.repo, (screens.get(node.repo) ?? 0) + 1);
     if (node.type === 'consumer') consumers.set(node.repo, (consumers.get(node.repo) ?? 0) + 1);
   });
 
@@ -223,7 +240,9 @@ export const packMap = (input: MapInput): PackedMap => {
     const box = boxes[boxOf('service', name, roleOf(kinds, ui.get(name) ?? 0, consumers.get(name) ?? 0), anchors.get(name) ?? -1)] as MapBox;
     box.s = {
       nodes: nodeCount.get(name) ?? 0,
-      ways: Object.values(kinds).reduce((sum, n) => sum + n, 0),
+      ways: Object.values(kinds).reduce((sum, n) => sum + n, 0) + (actions.get(name) ?? 0),
+      ...(actions.has(name) ? { actions: actions.get(name) } : {}),
+      ...(screens.has(name) ? { screens: screens.get(name) } : {}),
       problems: problems.get(name) ?? 0,
       ...(reported.get(name)?.skipped === undefined ? {} : { unread: 1 }),
       ...Object.fromEntries(Object.entries(kinds).map(([kind, n]) => ['e:' + kind, n])),
@@ -291,9 +310,22 @@ export const packMap = (input: MapInput): PackedMap => {
     if (rank(confidence) < rank(link.b)) link.b = confidence;
     if (rank(confidence) > rank(link.w)) link.w = confidence;
   });
+  // Counted as `dead` counts them (P91): a probe, a webhook or a route the
+  // configuration calls public is called from outside the project, and is
+  // counted apart from the routes nothing explains.
+  const handlerOf = new Map<number, string>();
+  if (neverCalled.size > 0) {
+    for (const [from, to, type] of input.edges) {
+      if (input.edgeTypes[type as number] !== 'handles' || !neverCalled.has(from as number) || handlerOf.has(from as number)) continue;
+      const label = input.nodes[to as number]?.label;
+      if (label !== undefined) handlerOf.set(from as number, label);
+    }
+  }
   for (const i of neverCalled) {
     const box = boxes[owner[i] as number] as MapBox;
-    box.s['uncalled'] = (box.s['uncalled'] ?? 0) + 1;
+    const found = classifyRoute(routeFactsOf(input.nodes[i] as GraphNode, handlerOf.get(i)), input.routes ?? {});
+    const stat = found.class === 'actionable' ? 'uncalled' : 'uncalledOutside';
+    box.s[stat] = (box.s[stat] ?? 0) + 1;
   }
   const answered = new Set<string>();
   for (const [node, kind] of input.answers ?? []) {

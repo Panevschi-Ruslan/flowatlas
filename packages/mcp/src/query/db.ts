@@ -26,15 +26,23 @@ export interface DbHandleOptions {
 export class DbHandle implements SourceRoots {
   readonly path: string;
   readonly config: FlowatlasConfig | undefined;
+  /** The configuration file read, when one was: what a configuration error names. */
+  readonly configPath: string | undefined;
+  /** The configuration's directory, which its relative paths are written against. */
+  readonly configDir: string | undefined;
   readonly #repoDirs = new Map<string, string>();
+  readonly #listeners = new Set<() => void>();
   #db: GraphDb | undefined;
   #openedAt = 0;
+  #generation = 0;
 
   constructor(options: DbHandleOptions = {}) {
     let dbPath = options.dbPath;
     if (options.configPath !== undefined) {
       const loaded = loadConfig(options.configPath);
       this.config = loaded.config;
+      this.configPath = loaded.configPath;
+      this.configDir = loaded.rootDir;
       for (const service of loaded.config.services) {
         this.#repoDirs.set(service.name, loaded.repoDir(service));
       }
@@ -49,6 +57,30 @@ export class DbHandle implements SourceRoots {
   }
 
   /**
+   * Which database this is: a number that moves whenever a question opened a
+   * file, reopened one a build replaced, or found none where one had been
+   * (P201). What is read once per database is cached against it.
+   */
+  get generation(): number {
+    return this.#generation;
+  }
+
+  /**
+   * Calls `listener` whenever `generation` moves, after the move: the tool
+   * list is decided again when the graph under it changed (P201). A close
+   * because the client left is not a change. Returns the unsubscribe.
+   */
+  onChange(listener: () => void): () => void {
+    this.#listeners.add(listener);
+    return () => this.#listeners.delete(listener);
+  }
+
+  #changed(): void {
+    this.#generation += 1;
+    for (const listener of [...this.#listeners]) listener();
+  }
+
+  /**
    * The database, or a sentence saying why there is none.
    *
    * A missing or stale file is an ordinary answer rather than a crash: the
@@ -56,7 +88,10 @@ export class DbHandle implements SourceRoots {
    */
   open(): { db: GraphDb } | { error: string } {
     if (!existsSync(this.path)) {
-      this.#close();
+      if (this.#db !== undefined) {
+        this.#close();
+        this.#changed();
+      }
       return { error: `graph.db not found at ${this.path}; run flowatlas build` };
     }
 
@@ -75,6 +110,7 @@ export class DbHandle implements SourceRoots {
         this.#close();
         return { error: `schema-mismatch ${found} vs ${SCHEMA_VERSION}; run flowatlas build` };
       }
+      this.#changed();
     }
     return { db: this.#db };
   }

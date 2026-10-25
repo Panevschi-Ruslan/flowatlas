@@ -1,12 +1,19 @@
 import { nameInForms } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { DEPLOYED_FORMS, deployedArn, deployedNameIn, eventChannel, queueChannel, topicChannel } from './index.js';
+import { bucketChannel, DEPLOYED_FORMS, deployedArn, deployedNameIn, eventChannel, queueChannel, topicChannel } from './index.js';
 
 describe('the channel grammar', () => {
   it('names each service and the default bus explicitly', () => {
     expect(queueChannel('returns')).toBe('sqs/returns');
     expect(topicChannel('borrower-notifications')).toBe('sns/borrower-notifications');
     expect(eventChannel(undefined, 'library.loans', 'LoanCreated')).toBe('eventbridge/default/library.loans/LoanCreated');
+  });
+
+  it('names a bucket by its name, read out of its ARN and not out of an object\'s', () => {
+    expect(bucketChannel('library-covers')).toBe('s3/library-covers');
+    expect(deployedNameIn('arn:aws:s3:::library-covers')).toEqual({ kind: 'bucket', name: 'library-covers' });
+    expect(deployedNameIn('arn:aws:s3:::library-covers/incoming/a.png')).toBeUndefined();
+    expect(deployedNameIn(deployedArn('bucket', 'library-covers'))).toEqual({ kind: 'bucket', name: 'library-covers' });
   });
 });
 
@@ -50,5 +57,17 @@ describe('the forms a deployed name is written inside', () => {
   it('answers nothing for text that is not one of them', () => {
     expect(deployedNameIn('returns')).toBeUndefined();
     expect(deployedNameIn('arn:aws:iam::111122223333:role/library')).toBeUndefined();
+  });
+});
+
+describe('batches (P89)', () => {
+  it('marks every operation that sends or writes many items in one round trip', async () => {
+    const { SDK_SENDS, SDK_WRITES } = await import('./index.js');
+    const batches = [...Object.values(SDK_SENDS), ...Object.values(SDK_WRITES)]
+      .flatMap((service) => service.operations as readonly { method: string; batch?: true }[])
+      .filter((operation) => operation.batch === true)
+      .map((operation) => operation.method)
+      .sort();
+    expect(batches).toEqual(['batchWrite', 'batchWriteItem', 'publishBatch', 'putEvents', 'putRecords', 'sendMessageBatch', 'transactWrite', 'transactWriteItems']);
   });
 });

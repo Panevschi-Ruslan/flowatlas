@@ -1,0 +1,141 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-10-17T06:05:23.203Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "channel:kinesis/library-shelf-scans",
+        "to": "consumer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:kinesis/library-shelf-scans|consumes|consumer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:kinesis/library-shelf-scans is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan.on_failure",
+        "to": "channel:sns/library-return-alerts",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sns/library-return-alerts|emits|producer:lending#infra/destinations.tf:aws_lambda_event_source_mapping.shelf_scan.on_failure",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sns/library-return-alerts is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.request_loan.on_failure",
+        "to": "channel:sqs/library-loan-failures",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/library-loan-failures|emits|producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.request_loan.on_failure",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/library-loan-failures is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "http_out:lending#src/kiosk/kiosk.ts:5:22",
+        "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:5:22|http_calls|entry:lending:http:ALL:/*@library-lending-card-lookup",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "lending#src/kiosk/kiosk.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:lending#src/kiosk/kiosk.ts:5:22",
+        "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:5:22|http_calls|entry:lending:http:ALL:/*@library-lending-card-lookup",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "lending#src/kiosk/kiosk.ts:handler declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:lending#src/kiosk/kiosk.ts:7:25",
+        "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:7:25|http_calls|entry:lending:http:ALL:/*@library-lending-card-lookup",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "lending#src/kiosk/kiosk.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:lending#src/kiosk/kiosk.ts:7:25",
+        "to": "entry:lending:http:ALL:/*@library-lending-card-lookup",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:7:25|http_calls|entry:lending:http:ALL:/*@library-lending-card-lookup",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "lending#src/kiosk/kiosk.ts:handler declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "http_out:lending#src/kiosk/kiosk.ts:8:22",
+        "to": "entry:lending:http:ALL:/*@library-lending-request-loan",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:8:22|http_calls|entry:lending:http:ALL:/*@library-lending-request-loan",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "lending#src/loans/request-loan.ts:handler reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
+    },
+    {
+      "edge": {
+        "from": "http_out:lending#src/kiosk/kiosk.ts:8:22",
+        "to": "entry:lending:http:ALL:/*@library-lending-request-loan",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:lending#src/kiosk/kiosk.ts:8:22|http_calls|entry:lending:http:ALL:/*@library-lending-request-loan",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "lending#src/loans/request-loan.ts:handler answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.return_item.on_success",
+        "to": "consumer:lending#infra/destinations.tf:aws_cloudwatch_event_target.audit_return",
+        "type": "emits"
+      },
+      "edgeKey": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.return_item.on_success|emits|consumer:lending#infra/destinations.tf:aws_cloudwatch_event_target.audit_return",
+      "direction": "payload",
+      "reason": "sender-forwards",
+      "message": "producer:lending#infra/destinations.tf:aws_lambda_function_event_invoke_config.return_item.on_success hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 10,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "corner-shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Orders for a small shop, as Lambda functions that write a DynamoDB table and a Kinesis stream.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@aws-sdk/client-kinesis": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

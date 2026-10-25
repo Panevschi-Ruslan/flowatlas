@@ -1,0 +1,13 @@
+{
+  "error": "scope \"class\" does not fit entry:orders:http:POST:/orders (type entry); it can be written at node, file, service",
+  "scopes": [
+    "node",
+    "file",
+    "service"
+  ],
+  "next": [
+    "describe_for_prompt({id: \"POST /orders\"})",
+    "describe_for_prompt({id: \"POST /orders\", scope: \"file\"})",
+    "describe_for_prompt({id: \"POST /orders\", scope: \"service\"})"
+  ]
+}

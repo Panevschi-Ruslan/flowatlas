@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { toPosixPath } from './ids.js';
 import { createProject, listRepoSources, skippedTestDirectories, sourceRootsOf } from './project.js';
 
 /**
@@ -128,8 +129,9 @@ describe('a workspace package imported by its name', () => {
     });
     const project = createProject({ rootDir: root });
     const file = project.getSourceFileOrThrow(join(root, 'packages/stock/src/uses-ledger.ts'));
+    // Named as the compiler names files, with forward slashes on every OS (P199).
     expect(file.getImportDeclarations()[0]?.getModuleSpecifierSourceFile()?.getFilePath()).toBe(
-      join(root, 'packages/ledger/src/index.ts'),
+      toPosixPath(join(root, 'packages/ledger/src/index.ts')),
     );
   });
 });

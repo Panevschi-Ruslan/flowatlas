@@ -1,0 +1,19 @@
+{
+  "type": "type:@fx/contracts#Money",
+  "nested": [
+    "type:@fx/contracts#CreateOrderDto",
+    "type:@fx/contracts#OrderDto"
+  ],
+  "counts": {
+    "taking": 0,
+    "returning": 0,
+    "crossings": 0,
+    "channels": 0,
+    "calls": 0
+  },
+  "note": "no edge names type:@fx/contracts#Money: it is used inside one function at most, or only through the types that hold it",
+  "next": [
+    "type_usage({type: \"type:@fx/contracts#CreateOrderDto\"})",
+    "get_type({type: \"type:@fx/contracts#Money\"})"
+  ]
+}

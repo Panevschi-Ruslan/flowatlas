@@ -10,9 +10,22 @@ import {
   type SourceFile,
 } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
-import { normalizeFilePath } from './ids.js';
+import {
+  installDeclarationShapes,
+  isDeclarationShape,
+  type DeclarationShape,
+} from './declaration-shapes.js';
+import { normalizeFilePath, toPosixPath } from './ids.js';
 import type { Unresolved } from './model/graph.js';
 import { readPackageJson } from './package-json.js';
+import {
+  isWithinDir,
+  mountedFileSystem,
+  recordStandIns,
+  virtualRootOf,
+  type Mount,
+  type StandInRequest,
+} from './stand-ins.js';
 import { isTestDirectory, isTestName } from './test-files.js';
 import {
   serviceExtent,
@@ -67,6 +80,18 @@ export interface CreateProjectOptions extends SourceRootOptions {
    * skipped and reported (see {@link reportSkippedTestDirectories}).
    */
   readTestDirectories?: readonly string[];
+  /**
+   * Declarations read in place of a package that does not resolve from the
+   * root (see {@link installDeclarationShapes}). None unless a reader hands
+   * some over.
+   */
+  shapes?: readonly DeclarationShape[];
+  /**
+   * What stands in for a package that is not installed besides those shapes
+   * (P78): the source of a repository that is that package, then a shape file
+   * of the project's own. See `standInsFor`.
+   */
+  standIns?: StandInRequest;
 }
 
 /** Directories that never hold sources worth reading. */
@@ -233,6 +258,15 @@ const isDirectory = (path: string): boolean => {
 };
 
 /**
+ * A tsconfig read as the compiler reads it. The compiler keeps file names with
+ * forward slashes and asserts that a parse error's file is the one it parsed,
+ * so a Windows path handed in as written fails that assertion on the first
+ * syntax error instead of returning it (P199).
+ */
+const readTsconfig = (configPath: string): ReturnType<typeof ts.readConfigFile> =>
+  ts.readConfigFile(toPosixPath(configPath), ts.sys.readFile);
+
+/**
  * The roots a tsconfig names through `include` and `files`, following a
  * relative `extends` when it names neither, as the compiler does. Empty when it
  * names none: a tsconfig with neither means "everything", which is not a
@@ -241,7 +275,7 @@ const isDirectory = (path: string): boolean => {
  */
 const tsconfigRoots = (rootDir: string, configPath: string | undefined, depth = 0): string[] => {
   if (configPath === undefined || depth > 8) return [];
-  const read = ts.readConfigFile(configPath, ts.sys.readFile);
+  const read = readTsconfig(configPath);
   const config = read.error === undefined ? (read.config as Record<string, unknown>) : undefined;
   if (config === undefined) return [];
   const entries = [config['include'], config['files']]
@@ -364,7 +398,8 @@ const SKIPPED_TEST_DIRECTORIES = new WeakMap<Project, ReadonlyMap<string, readon
 
 /**
  * The test directories {@link createProject} left out of a project, by absolute
- * path, with the absolute paths of the source files each held.
+ * path, with the absolute paths of the source files each held: all spelled
+ * with forward slashes, as the compiler spells the files it opened (P199).
  */
 export const skippedTestDirectories = (
   project: Project,
@@ -372,7 +407,7 @@ export const skippedTestDirectories = (
 
 export const findTsconfig = (rootDir: string, tsconfig?: string): string | undefined => {
   if (tsconfig !== undefined) {
-    const path = tsconfig.startsWith('/') ? tsconfig : join(rootDir, tsconfig);
+    const path = isAbsolute(tsconfig) ? tsconfig : join(rootDir, tsconfig);
     return existsSync(path) ? path : undefined;
   }
   for (const candidate of TSCONFIG_CANDIDATES) {
@@ -409,10 +444,29 @@ interface PackageAliases {
  * real tsconfig, the compiler would otherwise walk the whole package to answer
  * something nobody asked.
  */
+const ALIASES = new Map<string, PackageAliases | undefined>();
+
+/**
+ * A package's own aliases, remembered for the process (P82): every service
+ * that mounts a package, and every one whose extent holds it, asks the same
+ * tsconfig the same question. Forgotten with {@link forgetPackageAliases}.
+ */
 const aliasesOf = (dir: string): PackageAliases | undefined => {
+  if (ALIASES.has(dir)) return ALIASES.get(dir);
+  const aliases = readAliases(dir);
+  ALIASES.set(dir, aliases);
+  return aliases;
+};
+
+/** Forgets the aliases {@link aliasesOf} remembered, for a process that reads the disk again (P83). */
+export const forgetPackageAliases = (): void => {
+  ALIASES.clear();
+};
+
+const readAliases = (dir: string): PackageAliases | undefined => {
   const configPath = findTsconfig(dir);
   if (configPath === undefined) return undefined;
-  const read = ts.readConfigFile(configPath, ts.sys.readFile);
+  const read = readTsconfig(configPath);
   if (read.error !== undefined) return undefined;
   const parsed = ts.parseJsonConfigFileContent(
     read.config,
@@ -498,8 +552,7 @@ const namedMembersOf = (rootDir: string): ReadonlyMap<string, NamedMember> => {
   const extent = serviceSourceDirs(rootDir);
   const own = extent[0] as string;
   const roots = [...(workspaceGlobs(own).length > 0 ? [own] : []), ...workspaceRootsAbove(own)];
-  const inExtent = (dir: string): boolean =>
-    extent.some((at) => dir === at || dir.startsWith(`${at}/`));
+  const inExtent = (dir: string): boolean => extent.some((at) => isWithinDir(dir, at));
   const found = new Map<string, NamedMember>();
   for (const root of roots) {
     for (const { name, dir } of workspacePackages(root)) {
@@ -628,6 +681,106 @@ const candidateFiles = (path: string): string[] => {
   ];
 };
 
+/** Directories a package's build is written to, beside the `src` it is built from. */
+const BUILT = /^(?:\.\/)?(?:dist|lib|build|out|esm|cjs)\//;
+
+/**
+ * The files a package's source may be entered through, for a package nobody
+ * built (P78): what its manifest names, then each of those under `src/` where
+ * the manifest names a build output, then `src/index` and `index` for the
+ * package itself, or the subpath under `src/` and under its root.
+ */
+const sourceTargets = (targets: readonly string[], subpath: string): string[] => {
+  const rebuilt = targets.flatMap((target) => (BUILT.test(target) ? [target.replace(BUILT, './src/')] : []));
+  const fallbacks = subpath === '.' ? ['./src/index', './index'] : [`./src/${subpath.slice(2)}`, subpath];
+  return [...new Set([...targets, ...rebuilt, ...fallbacks])];
+};
+
+/** The compiler options a root is read with, for asking what resolves before anything is mounted. */
+const compilerOptionsAt = (configPath: string | undefined): ts.CompilerOptions => {
+  if (configPath === undefined) return { ...FALLBACK_COMPILER_OPTIONS };
+  const read = readTsconfig(configPath);
+  if (read.error !== undefined) return {};
+  return ts.parseJsonConfigFileContent(
+    read.config,
+    {
+      useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
+      fileExists: ts.sys.fileExists,
+      readFile: ts.sys.readFile,
+      readDirectory: () => [],
+    },
+    dirname(configPath),
+    undefined,
+    configPath,
+  ).options;
+};
+
+/** A file at the root, which need not exist, that a package is resolved from. */
+const INSTALL_PROBE = '__flowatlas_install_probe__.ts';
+
+/** Whether a package resolves from the root as the disk stands: installed, or aliased by the service's own paths. */
+const installedFrom = (rootDir: string, configPath: string | undefined): ((name: string) => boolean) => {
+  const options = compilerOptionsAt(configPath);
+  const answers = new Map<string, boolean>();
+  return (name) => {
+    let known = answers.get(name);
+    if (known === undefined) {
+      known =
+        existsSync(join(rootDir, 'node_modules', name)) ||
+        ts.resolveModuleName(name, join(rootDir, INSTALL_PROBE), options, ts.sys).resolvedModule !== undefined;
+      answers.set(name, known);
+    }
+    return known;
+  };
+};
+
+/**
+ * Which package sources a service reads in place of an install (P78): each
+ * one it has not installed, is not a package of its own extent, and is not
+ * the directory the service itself is in.
+ *
+ * The virtual root is spelled with forward slashes and every directory is
+ * compared that way (P83), so a mount on Windows is held where the compiler
+ * will ask for it.
+ */
+const mountsFor = (
+  rootDir: string,
+  request: StandInRequest | undefined,
+  members: ReadonlyMap<string, NamedMember>,
+  installed: (name: string) => boolean,
+): Mount[] => {
+  if (request === undefined || request.packages.length === 0) return [];
+  const extent = serviceSourceDirs(rootDir).map((dir) => resolve(dir));
+  const root = resolve(rootDir);
+  return request.packages
+    .filter(
+      (pkg) =>
+        !members.has(pkg.name) &&
+        !extent.some((dir) => isWithinDir(pkg.dir, dir)) &&
+        !isWithinDir(root, pkg.dir) &&
+        !installed(pkg.name),
+    )
+    .map((pkg) => ({ source: pkg, virtual: virtualRootOf(root, pkg.name) }))
+    .sort((a, b) => (a.source.name < b.source.name ? -1 : a.source.name > b.source.name ? 1 : 0));
+};
+
+/** A mounted package's own aliases (R141), spelled at the path it is mounted at. */
+const mountedAliases = (mount: Mount): PackageAliases | undefined => {
+  const own = aliasesOf(mount.source.dir);
+  if (own === undefined) return undefined;
+  // Compared and moved with forward slashes (P83): the compiler's paths are
+  // spelled so on every OS, and the source's directory is the OS's own.
+  const dir = toPosixPath(mount.source.dir).replace(/\/+$/, '');
+  const moved = (path: string): string =>
+    isWithinDir(path, dir) ? mount.virtual + toPosixPath(path).slice(dir.length) : path;
+  return {
+    dir: mount.virtual,
+    paths: own.paths,
+    base: moved(own.base),
+    baseUrl: own.baseUrl === undefined ? undefined : moved(own.baseUrl),
+  };
+};
+
 /**
  * A workspace package's file, reached by the name the package is imported by,
  * when nothing is installed (R152).
@@ -656,23 +809,29 @@ const candidateFiles = (path: string): string[] => {
 const workspaceMemberResolution = (
   members: ReadonlyMap<string, NamedMember>,
   fileExists: (path: string) => boolean,
+  { source = false }: { source?: boolean } = {},
 ): ((specifier: string) => ts.ResolvedModuleFull | undefined) => {
   const answers = new Map<string, ts.ResolvedModuleFull | undefined>();
   const answer = (specifier: string): ts.ResolvedModuleFull | undefined => {
     const split = splitSpecifier(specifier);
     const member = split === undefined ? undefined : members.get(split.name);
     if (split === undefined || member === undefined) return undefined;
-    for (const target of manifestTargets(member.manifest, split.subpath)) {
+    const targets = manifestTargets(member.manifest, split.subpath);
+    for (const target of source ? sourceTargets(targets, split.subpath) : targets) {
       const path = resolve(member.dir, target);
       const inside = relative(member.dir, path);
       const segments = inside.split(sep);
       if (segments[0] === '..' || segments.includes('node_modules')) continue;
       const file = candidateFiles(path).find(fileExists);
       if (file === undefined) continue;
+      // A package source is read as an install would be: from outside the
+      // repository, at the path an install would have.
+      // Spelled with forward slashes, as the compiler spells every path it
+      // resolves, whatever the OS joined it with (P83).
       return {
-        resolvedFileName: file,
+        resolvedFileName: toPosixPath(file),
         extension: extensionOf(file),
-        isExternalLibraryImport: false,
+        isExternalLibraryImport: source,
       };
     }
     return undefined;
@@ -717,6 +876,7 @@ const workspaceMemberResolution = (
 const workspaceResolution = (
   packages: readonly PackageAliases[],
   members: ReadonlyMap<string, NamedMember>,
+  sources: ReadonlyMap<string, NamedMember> = new Map(),
 ): ResolutionHostFactory => (host) => {
   const canonical = ts.sys.useCaseSensitiveFileNames
     ? (path: string) => path
@@ -748,9 +908,22 @@ const workspaceResolution = (
   };
   // Longest first, so a package nested inside another answers for its own files.
   const byDepth = [...packages].sort((a, b) => b.dir.length - a.dir.length);
-  const ownerOf = (file: string): PackageAliases | undefined =>
-    byDepth.find((pkg) => file.startsWith(`${pkg.dir}/`));
+  // Asked of every import of every file, and the answer is the directory's
+  // (P82): a file is under a package exactly when its directory is the
+  // package's or under it.
+  const owners = new Map<string, PackageAliases | undefined>();
+  const ownerOf = (file: string): PackageAliases | undefined => {
+    if (byDepth.length === 0) return undefined;
+    const dir = dirname(file);
+    if (owners.has(dir)) return owners.get(dir);
+    // The file as the compiler spells it, the package as the extent does: on
+    // Windows forward slashes against backslashes (P199).
+    const owner = byDepth.find((pkg) => isWithinDir(dir, pkg.dir));
+    owners.set(dir, owner);
+    return owner;
+  };
   const byName = workspaceMemberResolution(members, (path) => host.fileExists(path));
+  const bySource = workspaceMemberResolution(sources, (path) => host.fileExists(path), { source: true });
 
   return {
     resolveModuleNames: (names, containingFile, _reused, redirected, options, containingSourceFile) => {
@@ -773,7 +946,7 @@ const workspaceResolution = (
           owner !== undefined &&
           Object.keys(owner.paths).some((pattern) => aliasMatches(pattern, name));
         return (
-          (claimed ? resolve(name, own) : undefined) ?? resolve(name, service) ?? byName(name)
+          (claimed ? resolve(name, own) : undefined) ?? resolve(name, service) ?? byName(name) ?? bySource(name)
         );
       });
     },
@@ -795,26 +968,43 @@ const workspaceResolution = (
 export const createProject = (options: CreateProjectOptions): Project => {
   const { rootDir, tsconfig, readTestDirectories } = options;
   const skipped = new Map<string, string[]>();
+  // Recorded with forward slashes, as the compiler names the files it opened
+  // (P199), so one directory is one key and a path sliced from it is POSIX on
+  // every OS.
   const tests = testDirectoriesOf(rootDir, readTestDirectories, (dir, files) => {
-    skipped.set(dir, [...(skipped.get(dir) ?? []), ...files]);
+    const key = toPosixPath(dir);
+    skipped.set(key, [...(skipped.get(key) ?? []), ...files.map(toPosixPath)]);
   });
   const tsConfigFilePath = findTsconfig(rootDir, tsconfig);
   // Every package of the extent, one nested in the service's directory too: a
   // package whose files may be opened is one whose aliases are honoured (R115).
   const packages = extentMembers(rootDir);
-  const aliases = packages.flatMap((dir) => aliasesOf(dir) ?? []);
   const members = namedMembersOf(rootDir);
+  // The packages whose source stands in for an install (P78), decided before
+  // the project exists: whether a package is installed is asked of the disk
+  // as it is, before anything is mounted over it.
+  const installed = installedFrom(rootDir, tsConfigFilePath);
+  const mounts = mountsFor(rootDir, options.standIns, members, installed);
+  const aliases = [
+    ...packages.flatMap((dir) => aliasesOf(dir) ?? []),
+    ...mounts.flatMap((mount) => mountedAliases(mount) ?? []),
+  ];
+  const sources = new Map<string, NamedMember>(
+    mounts.map((mount) => [mount.source.name, { dir: mount.virtual, manifest: mount.source.manifest }]),
+  );
 
   const project = new Project({
     ...(tsConfigFilePath === undefined ? {} : { tsConfigFilePath }),
     skipAddingFilesFromTsConfig: true,
     ...(tsConfigFilePath === undefined ? { compilerOptions: FALLBACK_COMPILER_OPTIONS } : {}),
-    // Only inside a workspace. A service with no package of its own to alias and
-    // none to import by name, which is every service outside a workspace, keeps
-    // the compiler's own resolution untouched rather than an imitation of it.
-    ...(aliases.length === 0 && members.size === 0
+    ...(mounts.length === 0 ? {} : { fileSystem: mountedFileSystem(mounts) }),
+    // Only inside a workspace, or where a package's source stands in. A service
+    // with no package of its own to alias, none to import by name and no source
+    // read in place of an install, which is every service outside a workspace,
+    // keeps the compiler's own resolution untouched rather than an imitation of it.
+    ...(aliases.length === 0 && members.size === 0 && sources.size === 0
       ? {}
-      : { resolutionHost: workspaceResolution(aliases, members) }),
+      : { resolutionHost: workspaceResolution(aliases, members, sources) }),
   });
 
   // The service's own roots first, then every other directory its code is in. A
@@ -844,6 +1034,34 @@ export const createProject = (options: CreateProjectOptions): Project => {
   }
   for (const dir of membersBeyond(rootDir, roots)) {
     for (const file of sourceFilesUnder(dir, tests)) project.addSourceFileAtPath(join(dir, file));
+  }
+  // After the sources are opened, before anything builds the program: a shape
+  // is decided by whether the package resolves, and stands in from the first
+  // import the checker resolves.
+  //
+  // A shape file of the project's own goes before a reader's built-in shape of
+  // the same package, and neither is read for a package whose source is (D3).
+  const mounted = new Set(sources.keys());
+  const userShapes = (options.standIns?.shapeFiles ?? []).flatMap((reading) => reading.shapes);
+  installDeclarationShapes(
+    project,
+    rootDir,
+    [...userShapes, ...(options.shapes ?? [])].filter((shape) => !mounted.has(shape.package)),
+  );
+  if (options.standIns !== undefined) {
+    recordStandIns(project, {
+      rootDir,
+      index: {
+        sources: new Map(options.standIns.packages.map((source) => [source.name, source])),
+        ambiguous: options.standIns.ambiguous,
+      },
+      mounts,
+      ambiguous: new Map([...options.standIns.ambiguous].filter(([name]) => !installed(name) && !members.has(name))),
+      shapeFiles: options.standIns.shapeFiles,
+      ownShapeFiles: options.standIns.ownShapeFiles,
+      speaksForProject: options.standIns.speaksForProject,
+      installed: new Set(userShapes.map((shape) => shape.package).filter((name) => installed(name) || members.has(name))),
+    });
   }
   SKIPPED_TEST_DIRECTORIES.set(
     project,
@@ -934,7 +1152,10 @@ export interface RepoStats extends SourceCounts {
  */
 export const countSources = (project: Project): SourceCounts => {
   const program = project.getProgram();
-  const files = project.getSourceFiles();
+  // A shape held in memory stands for a package, and is no file of this one.
+  const files = project
+    .getSourceFiles()
+    .filter((file) => !isDeclarationShape(project, file.getFilePath()));
   const unreadable = files.filter((file) => firstSyntaxError(program, file) !== undefined);
   return {
     files: files.length,

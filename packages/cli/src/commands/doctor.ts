@@ -14,27 +14,55 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { loadConfig, type Unresolved } from '@flowatlas/core';
+import { ConfigInvalidError, loadConfig, readAccepted, type AcceptedProblem, type StoredKindRow, type Unresolved } from '@flowatlas/core';
+import type { RulesReport } from '@flowatlas/linker';
 import type { CheckOptions } from '@flowatlas/contracts';
-import type { GraphDb } from '@flowatlas/linker';
+import { acceptedSplitOf, withAnsweredDemoted, type GraphDb, type KindOfStoredRow, type MissingService } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { openProjectDb } from '../analysis/open.js';
+import { dbPathFor } from '../db.js';
 import { CliError, EXIT } from '../exit.js';
 import { documentAgeRows, gitAgeReader, type DeclaredDocument } from '../doctor/age.js';
-import { expandReasons } from '../doctor/hints.js';
+import { expandReasons, isKnownReason, KNOWN_REASONS, nearestReasons } from '../doctor/hints.js';
+import { runtimeFailureRows } from '../doctor/runtime.js';
+import { blindSpotRows, withConfirmedGuesses } from '../doctor/traffic.js';
+import { readObservedBeside } from '../observe/store.js';
 import { processIo, type QueryIo } from '../query/answer.js';
 import { looksLike } from '../stacks.js';
 import { VERSION } from '../version.js';
 import {
   acceptedBy,
   readBaseline,
+  rulesSnapshotOf,
   snapshotOf,
   writeBaseline,
   type Baseline,
   type BaselineRead,
 } from '../doctor/baseline.js';
-import { renderDoctorGithub, renderDoctorJson, renderDoctorText, summaryLine } from '../doctor/render.js';
-import { runDoctor, withAnsweredDemoted } from '../doctor/run.js';
+import { missingSayOf, renderDoctorGithub, renderDoctorJson, renderDoctorText, summaryLine } from '../doctor/render.js';
+import { candidatesFor, NOTHING_MISSING, sayMissing, type MissingRepoEntry } from '../doctor/missing.js';
+import {
+  cantFollowReport,
+  renderCantFollowJson,
+  renderCantFollowText,
+  type CantFollowReport,
+} from '../doctor/cant-follow.js';
+import { boundDoctorReport, missingReposOf, runDoctorComplete, type DoctorSettings } from '../doctor/run.js';
+import {
+  deliverSarif,
+  doctorCut,
+  doctorFindings,
+  doctorNotes,
+  namedLines,
+  sarifBound,
+  sarifLevelFlag,
+  sarifPathsOf,
+  toSarif,
+  withSarifOptions,
+  type AcceptedRow,
+  type SarifFlags,
+} from '../sarif/index.js';
+import { ruleReportOf, rulesContextOf, type RulesContext } from './rules.js';
 import {
   BASELINE_FORMAT_VERSION,
   SECTIONS,
@@ -42,7 +70,7 @@ import {
   type Section,
 } from '../doctor/schema.js';
 
-export const FORMATS = ['text', 'json', 'github'] as const;
+export const FORMATS = ['text', 'json', 'github', 'sarif'] as const;
 export type DoctorFormat = (typeof FORMATS)[number];
 
 /** The file every run leaves behind, whatever it printed. */
@@ -51,25 +79,49 @@ export const DOCTOR_FILE = 'doctor.json';
 /** What `--accept` writes, and where `--strict` looks for it. */
 export const BASELINE_FILE = 'flowatlas.baseline.json';
 
-export interface DoctorOptions {
+export interface DoctorOptions extends SarifFlags {
   config?: string;
   db?: string;
   format?: string;
   strict?: boolean;
+  /** `--strict-runtime`: a failure traffic answered and the code does not declare, or one it declares and nobody answered, exits 1 (P106). */
+  strictRuntime?: boolean;
   accept?: boolean;
   /** A path, or `false` when `--no-baseline` was passed. */
   baseline?: string | false;
   section?: string[];
   service?: string;
+  /** `--reason` (P141): only the rows of these reasons; repeatable, each a comma list. */
+  reason?: string[];
   /** `false` only when `--no-contracts` was passed. */
   contracts?: boolean;
+  /** `false` only when `--no-rules` was passed (P114). */
+  rules?: boolean;
   maxNodes?: string;
   /** Where to write `doctor.json`. Defaults to the configured output. */
   out?: string;
+  /** `--unresolved`: what could not be followed, by cause and package, instead of the report (P75). */
+  unresolved?: boolean;
+  /** Most causes and packages `--unresolved` lists. */
+  top?: string;
+  /** Places listed per package under a cause. */
+  samples?: string;
+  /** Narrow `--unresolved` to one cause, or one package. */
+  cause?: string;
+  package?: string;
+  /** Shorthand for `--format json`. */
+  json?: boolean;
+  /** `--missing`: only the repositories probably missing, with every place (P122). */
+  missing?: boolean;
+  /** More directories to look for a missing repository in, one level down (repeatable). */
+  scan?: string[];
 }
 
 export interface DoctorRun {
+  /** The report as it was printed, each list cut by `--max-nodes`. */
   report: DoctorReport;
+  /** The same report with nothing cut: what `doctor.json` holds (P192). */
+  complete: DoctorReport;
   text: string;
   /** Where the complete report was written, or undefined when nowhere was known. */
   file?: string;
@@ -107,6 +159,59 @@ const whole = (value: string | undefined, fallback: number, flag: string): numbe
   return parsed;
 };
 
+/** `--reason` as typed, split on commas; undefined when it was not. */
+const reasonsTyped = (options: Pick<DoctorOptions, 'reason'>): string[] | undefined => {
+  const typed = (options.reason ?? []).flatMap((value) => value.split(',')).map((value) => value.trim());
+  const named = [...new Set(typed.filter((value) => value !== ''))];
+  return named.length === 0 ? undefined : named;
+};
+
+/**
+ * The reasons a run is narrowed to, in every spelling (P141).
+ *
+ * A reason is one the catalogue knows, or one a row of this graph carries: a
+ * reason with advice and no row here is an answer ("none"), and a reason
+ * nobody registered is still one a reader can ask for by the name the report
+ * printed. Anything else is a typo, and stops with the nearest names.
+ */
+export const reasonsFor = (
+  options: Pick<DoctorOptions, 'reason'>,
+  rows: readonly Unresolved[],
+): string[] | undefined => {
+  const typed = reasonsTyped(options);
+  if (typed === undefined) return undefined;
+  const carried = new Set(rows.map((row) => row.reason));
+  const unknown = typed.filter((reason) => !isKnownReason(reason) && !carried.has(reason));
+  if (unknown.length > 0) {
+    const pool = [...new Set([...KNOWN_REASONS, ...carried])].sort();
+    const near = unknown.flatMap((reason) => {
+      const found = nearestReasons(reason, pool);
+      return found.length === 0 ? [] : [`did you mean (for ${reason}): ${found.join(', ')}`];
+    });
+    // Nothing close: the reasons this graph does carry are the useful list.
+    const here = [...carried].sort();
+    const listed = here.length <= 10 ? here.join(', ') : `${here.slice(0, 10).join(', ')}, … ${here.length - 10} more`;
+    throw new CliError(
+      `no reason named ${unknown.map((reason) => JSON.stringify(reason)).join(', ')}`,
+      EXIT.cannotRun,
+      near.length > 0 || here.length === 0 ? near : [`reasons in this graph: ${listed}`],
+    );
+  }
+  return expandReasons(typed);
+};
+
+/**
+ * The sections `--section` named, or every one. Under `--reason`, the two made
+ * of rows that carry a reason: markers and contracts list no reason's places,
+ * and a baseline compared over some reasons would read as the rest gone.
+ */
+const sectionsFor = (options: DoctorOptions): Section[] => {
+  if (options.section !== undefined && options.section.length > 0) {
+    return options.section.map((name) => oneOf(name, SECTIONS, 'unresolved', '--section'));
+  }
+  return reasonsTyped(options) === undefined ? [...SECTIONS] : ['unresolved', 'desync'];
+};
+
 /** What the project asked for in `flowatlas.config.json`, when there is one. */
 interface FromConfig {
   outputDir?: string;
@@ -116,6 +221,8 @@ interface FromConfig {
   warnAsError: boolean;
   check: CheckOptions;
   envOwners: Map<string, string[]>;
+  /** Every alias a service is configured with, to the service's name (P91). */
+  aliases: Map<string, string>;
   /** Each service's directory as the configuration writes it, `./` stripped. */
   repoDirs: Map<string, string>;
   /** The services described by a document instead of a repository. */
@@ -130,28 +237,11 @@ interface FromConfig {
    * as every annotation's file is relative to where it was read (R173).
    */
   serviceAt: Map<string, { file: string; line: number }>;
+  /** The configuration file, absolute. */
+  configPath?: string;
+  /** Each service's aliases and hosts, so a name that is one is never taken for a missing repository (P122). */
+  missingServices: MissingService[];
 }
-
-/** A service's own `name`, as one line of a configuration writes it. */
-const NAMED = /"name"\s*:\s*("(?:[^"\\]|\\.)*")/;
-
-/**
- * The line each service is named on: the first line that names it.
- *
- * Read from the text, because the parsed configuration keeps no lines; a
- * service whose name is not written as `"name": "…"` on one line has none, and
- * its annotation names the file alone.
- */
-const serviceLines = (text: string, names: readonly string[]): Map<string, number> => {
-  const wanted = new Set(names);
-  const lines = new Map<string, number>();
-  text.split('\n').forEach((line, index) => {
-    const written = NAMED.exec(line)?.[1];
-    const name = written === undefined ? undefined : (JSON.parse(written) as string);
-    if (name !== undefined && wanted.has(name) && !lines.has(name)) lines.set(name, index + 1);
-  });
-  return lines;
-};
 
 /**
  * What a service's repository looks like, read from its directory, for the
@@ -172,11 +262,13 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
     warnAsError: false,
     check: {},
     envOwners: new Map(),
+    aliases: new Map(),
     repoDirs: new Map(),
     declared: [],
     readableDirs: [],
     serviceDirs: new Map(),
     serviceAt: new Map(),
+    missingServices: [],
   };
   try {
     const loaded = loadConfig(options.config ?? process.cwd(), { checkRepos: false });
@@ -186,10 +278,12 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
     const declared: DeclaredDocument[] = [];
     const readableDirs: string[] = [];
     const serviceDirs = new Map<string, string>();
+    const aliases = new Map<string, string>();
     for (const service of services) {
       for (const env of service.baseUrlEnv ?? []) {
         envOwners.set(env, [...(envOwners.get(env) ?? []), service.name]);
       }
+      for (const alias of service.aliases ?? []) aliases.set(alias, service.name);
       // A declared service's rows already name the document relative to the
       // configuration, because the document is where they came from and there
       // is no repository under it. Putting its directory in front would spell
@@ -211,7 +305,7 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       if (dir !== '' && dir !== '.') repoDirs.set(service.name, dir);
     }
     const file = relative(loaded.rootDir, loaded.configPath).replace(/\\/g, '/');
-    const lines = serviceLines(readFileSync(loaded.configPath, 'utf8'), services.map((service) => service.name));
+    const lines = namedLines(readFileSync(loaded.configPath, 'utf8'), services.map((service) => service.name));
     const serviceAt = new Map(services.map((service) => [service.name, { file, line: lines.get(service.name) ?? 0 }]));
     return {
       outputDir: loaded.outputDir,
@@ -227,11 +321,18 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
         ignoreEdges: [...contracts.ignoreEdges],
       },
       envOwners,
+      aliases,
       repoDirs,
       declared,
       readableDirs,
       serviceDirs,
       serviceAt,
+      configPath: loaded.configPath,
+      missingServices: services.map((service) => ({
+        name: service.name,
+        ...(service.aliases === undefined ? {} : { aliases: service.aliases }),
+        ...(service.hosts === undefined ? {} : { hosts: service.hosts }),
+      })),
     };
   } catch {
     // Pointed at a bare database with no configuration beside it there is
@@ -241,6 +342,40 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
       : { ...empty, outputDir: dirname(resolve(options.db)) };
   }
 };
+
+/**
+ * What the check is handed to say which repository is probably missing
+ * (P122): the services as configured, and where on disk to look - beside the
+ * configured repositories and in every `--scan` directory.
+ */
+const missingSettingsOf = (
+  options: Pick<DoctorOptions, 'scan'>,
+  settings: FromConfig,
+): Pick<DoctorSettings, 'missingServices' | 'candidatesOf' | 'configDir'> => {
+  const root = settings.rootDir;
+  return {
+    missingServices: settings.missingServices,
+    ...(root === undefined
+      ? {}
+      : {
+          configDir: root,
+          candidatesOf: (groups) =>
+            candidatesFor(groups, {
+              configured: settings.readableDirs,
+              configDir: root,
+              scan: (options.scan ?? []).map((dir) => resolve(dir)),
+            }),
+        }),
+  };
+};
+
+/** How a text report spells places and the command that links a candidate. */
+const textOptionsOf = (settings: FromConfig) => ({
+  repoDirs: settings.repoDirs,
+  ...(settings.rootDir === undefined ? {} : { rootDir: settings.rootDir }),
+  ...(settings.configPath === undefined ? {} : { configPath: settings.configPath }),
+  cwd: process.cwd(),
+});
 
 /**
  * The rows as the graph wrote them, which is not what the database holds.
@@ -253,8 +388,33 @@ const fromConfig = (options: DoctorOptions): FromConfig => {
  * stale output once already, and here it would quietly change the number a
  * build is failed on.
  */
-const rowsFor = (db: GraphDb, outputDir: string | undefined): { rows: Unresolved[]; note?: string } => {
-  const fallback = (): { rows: Unresolved[] } => ({
+/** Where a row is and what it says, as the graph file and the database both hold it. */
+const placeKeyOf = (row: { service?: string | null; file?: string | null; line?: number | null; reason: string; message?: string | null }): string =>
+  [row.service ?? '', row.file ?? '', row.line ?? 0, row.reason, row.message ?? ''].join('\u0000');
+
+/**
+ * The graph file's rows with the kind and risk the database stored for each
+ * (P208), matched by place, reason and message. A row the database holds
+ * twice under one key with two kinds, or not at all, keeps none, and is
+ * decided by `kindOfRow` as it always was.
+ */
+const withStoredKinds = (rows: readonly Unresolved[], db: GraphDb): Array<Unresolved & StoredKindRow> => {
+  const stored = new Map<string, KindOfStoredRow | null>();
+  for (const row of db.allUnresolved()) {
+    const key = placeKeyOf(row);
+    const before = stored.get(key);
+    if (before === undefined) stored.set(key, { kind: row.kind, ...(row.risk === undefined ? {} : { risk: row.risk }) });
+    else if (before !== null && (before.kind !== row.kind || before.risk !== row.risk)) stored.set(key, null);
+  }
+  return rows.map((row) => {
+    const found = stored.get(placeKeyOf({ ...row, message: row.message ?? row.symbol ?? row.reason }));
+    return found == null ? row : { ...row, ...found };
+  });
+};
+
+const rowsFor = (db: GraphDb, outputDir: string | undefined): { rows: Array<Unresolved & StoredKindRow>; note?: string } => {
+  // Read from the database, a row keeps the kind and risk stored with it (P208).
+  const fallback = (): { rows: Array<Unresolved & StoredKindRow> } => ({
     rows: db.allUnresolved().map((row) => ({
       file: row.file ?? '',
       line: row.line ?? 0,
@@ -264,6 +424,9 @@ const rowsFor = (db: GraphDb, outputDir: string | undefined): { rows: Unresolved
       message: row.message,
       ...(row.hint === null ? {} : { hint: row.hint }),
       ...(row.service === null ? {} : { service: row.service }),
+      ...(row.meta === undefined ? {} : { meta: row.meta }),
+      kind: row.kind,
+      ...(row.risk === undefined ? {} : { risk: row.risk }),
     })),
   });
 
@@ -288,7 +451,7 @@ const rowsFor = (db: GraphDb, outputDir: string | undefined): { rows: Unresolved
       };
     }
     if (!Array.isArray(parsed.unresolved)) return fallback();
-    return { rows: parsed.unresolved };
+    return { rows: withStoredKinds(parsed.unresolved, db) };
   } catch (cause) {
     return {
       ...fallback(),
@@ -320,6 +483,23 @@ const baselinePathFor = (options: DoctorOptions, settings: FromConfig): string |
   return settings.rootDir === undefined ? undefined : join(settings.rootDir, BASELINE_FILE);
 };
 
+/**
+ * The rules this run checks, or undefined when there are none or `--no-rules`
+ * was passed. A rule that fails its schema stops the run (exit 2, naming it):
+ * every other problem with the configuration is the rest of doctor's to
+ * answer around, as it always was.
+ */
+const rulesFor = (options: DoctorOptions): RulesContext | undefined => {
+  if (options.rules === false) return undefined;
+  try {
+    const context = rulesContextOf(options);
+    return context.ruleSet.rules.length === 0 ? undefined : context;
+  } catch (cause) {
+    if (cause instanceof CliError && cause.message.includes('rule-invalid')) throw cause;
+    return undefined;
+  }
+};
+
 /** The numbers this run would accept, ready to be committed. */
 const baselineOf = (
   db: GraphDb,
@@ -328,6 +508,7 @@ const baselineOf = (
   settings: FromConfig,
   now: string,
   who: string,
+  rules: RulesReport | undefined,
 ): Baseline => ({
   baselineFormatVersion: BASELINE_FORMAT_VERSION,
   schemaVersion: db.schemaVersion(),
@@ -347,6 +528,7 @@ const baselineOf = (
     infos: 0,
     ignored: report.contracts.ignored,
   },
+  rules: rules === undefined ? {} : rulesSnapshotOf(rules),
 });
 
 /**
@@ -359,14 +541,19 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
   const format = oneOf(options.format, FORMATS, 'text', '--format');
   // Left undefined when nobody asked, so the check can hold two defaults: a
   // section of rows is bounded at 150, and the places listed under one
-  // reason at a handful. One number for both made `doctor` six hundred
-  // lines on a project whose commonest reason covered seven hundred places.
+  // reason at a handful. One number for both made `doctor` hundreds of
+  // lines on a project whose commonest reason covered hundreds of places.
+  //
+  // A SARIF log is read by a code host that keeps its own list, so every
+  // place is written up to the bound code scanning shows (P115).
   const maxNodes =
-    options.maxNodes === undefined ? undefined : whole(options.maxNodes, 150, '--max-nodes');
-  const sections: Section[] =
-    options.section === undefined || options.section.length === 0
-      ? [...SECTIONS]
-      : options.section.map((name) => oneOf(name, SECTIONS, 'unresolved', '--section'));
+    options.maxNodes === undefined
+      ? format === 'sarif'
+        ? sarifBound(undefined)
+        : undefined
+      : whole(options.maxNodes, 150, '--max-nodes');
+  const sarifLevel = sarifLevelFlag(options.sarifLevel);
+  const sections = sectionsFor(options);
   const accept = options.accept === true;
   const strict = options.strict === true;
 
@@ -378,11 +565,18 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
       'A baseline over one service would be compared against every service on the next run.',
     ]);
   }
+  if (accept && reasonsTyped(options) !== undefined) {
+    throw new CliError('--accept refuses --reason: accept the whole project, or nothing', EXIT.cannotRun, [
+      'A baseline over some reasons would be compared against every reason on the next run.',
+    ]);
+  }
 
   const settings = fromConfig(options);
+  const ruleContext = sections.includes('rules') ? rulesFor(options) : undefined;
   const { db, close } = openProjectDb(options);
   try {
     const { rows: raw, note } = rowsFor(db, settings.outputDir);
+    const rulesReport = ruleContext === undefined ? undefined : ruleReportOf(db, ruleContext.ruleSet, dbPathFor(options));
     // How old each declared document is, asked now rather than read off the
     // graph. Both of its dates move whenever anybody commits, so the build
     // records neither and this is the only place the question is answered
@@ -395,8 +589,22 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
             gitAgeReader(settings.rootDir, settings.readableDirs),
           );
     // Demoted here rather than inside the report, so that the baseline the
-    // accept writes and the count the report prints are the same rows (R36).
-    const rows = withAnsweredDemoted([...raw, ...age], db);
+    // accept writes and the count the report prints are the same rows (R36);
+    // gaps somebody accepted (P72, P76) leave every count, and are said once.
+    // The one split every surface uses (P80): see `acceptedSplitOf`.
+    // What traffic answered beside what the code declares (P106), when an
+    // observed file sits beside the database: asked now, like the ages above,
+    // and at info, so it moves neither the exit code nor the baseline unless
+    // --strict-runtime says it should.
+    // What traffic reached that no reader drew, one info row per service and
+    // kind, and the best guesses it went through (P110): the row explaining a
+    // guess is left out while traffic confirms it.
+    const observed = readObservedBeside(dbPathFor(options)).observed;
+    const runtime = [...runtimeFailureRows(db, observed), ...blindSpotRows(observed)];
+    const guesses = withConfirmedGuesses(db, observed, [...raw, ...age, ...runtime], options.service);
+    const split = acceptedSplitOf(db, guesses.rows, readAccepted(dbPathFor(options)));
+    const rows = split.fresh;
+    const reasons = reasonsFor(options, rows);
     const path = baselinePathFor(options, settings);
 
     // Reading the baseline is separate from comparing it, so that "there is no
@@ -410,25 +618,37 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
           : readBaseline(path);
     }
 
-    const report = runDoctor(
+    // Every row kept, for the file (P192); the cut one below is what is printed.
+    const complete = runDoctorComplete(
       { db, unresolved: rows, ...(note === undefined ? {} : { note }) },
       {
         strict,
+        ...(options.strictRuntime === true ? { strictRuntime: true } : {}),
         sections,
-        ...(maxNodes === undefined ? {} : { maxNodes }),
         contracts: options.contracts !== false,
+        ...(rulesReport === undefined || ruleContext === undefined
+          ? {}
+          : { rules: { report: rulesReport, failOnHeuristic: ruleContext.ruleSet.failOnHeuristic, configured: ruleContext.ruleSet.rules.length } }),
         ...(read === undefined ? {} : { baseline: read }),
         baselinePath: wantsBaseline ? (path ?? null) : null,
         ignoreReasons: settings.ignoreReasons,
         warnAsError: settings.warnAsError,
         check: settings.check,
         envOwners: settings.envOwners,
+        aliases: settings.aliases,
         flowatlasVersion: VERSION,
         ...(options.service === undefined ? {} : { service: options.service }),
+        ...(reasons === undefined ? {} : { reasons }),
         looksLike: describeRepository(settings),
         declared: settings.declared.map((document) => document.service),
+        ...missingSettingsOf(options, settings),
       },
     );
+
+    const accepted = acceptedCountOf(split);
+    if (accepted !== undefined) complete.unresolved.accepted = accepted;
+    if (guesses.confirmed !== undefined) complete.traffic = guesses.confirmed;
+    const report = boundDoctorReport(complete, maxNodes);
 
     const out = options.out ?? settings.outputDir;
     let file: string | undefined;
@@ -436,7 +656,7 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
       const directory = isAbsolute(out) ? out : resolve(out);
       mkdirSync(directory, { recursive: true });
       file = join(directory, DOCTOR_FILE);
-      writeFileSync(file, renderDoctorJson(report), 'utf8');
+      writeFileSync(file, renderDoctorJson(complete), 'utf8');
     }
 
     // A missing baseline is an answer on an ordinary run and a stop on a strict
@@ -455,35 +675,70 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
       }
       writeBaseline(
         path,
-        baselineOf(db, rows, report, settings, report.generatedAt, acceptedBy(settings.rootDir)),
+        baselineOf(db, rows, report, settings, report.generatedAt, acceptedBy(settings.rootDir), rulesReport),
       );
       baselineFile = path;
       exitCode = EXIT.ok;
       report.verdict.exitCode = EXIT.ok;
     }
 
+    // The rows accepted.json took out of the report, written to the log
+    // suppressed with their note rather than left out (P115).
+    const acceptedRows: AcceptedRow[] = split.rows.flatMap((row, index) => {
+      const entry = split.byEntry[index];
+      return entry === undefined || (options.service !== undefined && row.service !== options.service) ? [] : [{ row, entry }];
+    });
     const text =
-      format === 'json'
+      format === 'sarif'
+        ? deliverSarif(
+            toSarif({
+              command: 'doctor',
+              version: VERSION,
+              findings: doctorFindings(report, { lookup: db, accepted: acceptedRows }),
+              paths: sarifPathsOf(options, options.sarifRoot),
+              maxResults: sarifBound(maxNodes),
+              ...(sarifLevel === undefined ? {} : { minLevel: sarifLevel }),
+              // doctor.json keeps every row (P192), so a cut names it.
+              cutBefore: doctorCut(report),
+              ...(file === undefined ? {} : { completeFile: file }),
+              notes: doctorNotes(report),
+            }),
+            options,
+            io,
+          )
+        : format === 'json'
         ? renderDoctorJson(report)
         : format === 'github'
           ? renderDoctorGithub(report, {
               ...(file === undefined ? {} : { file }),
+              // Every annotation's file is relative to its repository; the
+              // checkout sees it under the directory the configuration names
+              // (P191: this was never passed, so annotations named paths that
+              // were not there).
+              repoDir: (service) => settings.repoDirs.get(service),
               serviceAt: (service) => settings.serviceAt.get(service),
+              ...(settings.rootDir === undefined || settings.configPath === undefined
+                ? {}
+                : { configAt: { file: relative(settings.rootDir, settings.configPath).replace(/\\/g, '/'), line: 0 } }),
             })
           : renderDoctorText(report, {
               ...(file === undefined ? {} : { file }),
-              repoDirs: settings.repoDirs,
-              // Only so the head of the report can establish, rather than
-              // assume, whether a repository has ever been installed (R129).
-              ...(settings.rootDir === undefined ? {} : { rootDir: settings.rootDir }),
+              // The root is there so the head of the report can establish,
+              // rather than assume, whether a repository has ever been
+              // installed (R129), and to write a link command (P122).
+              ...textOptionsOf(settings),
             });
 
-    io.out(text);
+    if (format !== 'sarif') {
+      io.out(text);
+    }
     if (baselineFile !== undefined) {
-      io.err(`baseline written to ${baselineFile}: ${report.unresolved.total} places accepted\n`);
+      const ruleKeys = rulesReport === undefined ? 0 : Object.keys(rulesSnapshotOf(rulesReport)).length;
+      io.err(`baseline written to ${baselineFile}: ${report.unresolved.total} places accepted${ruleKeys === 0 ? '' : `, ${ruleKeys} rule violation${ruleKeys === 1 ? '' : 's'}`}\n`);
     }
     return {
       report,
+      complete,
       text,
       ...(file === undefined ? {} : { file }),
       ...(baselineFile === undefined ? {} : { baselineFile }),
@@ -496,16 +751,150 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
 
 export { runDoctorCommand as runDoctorCli };
 
+/** What accepted.json left out of a surface's counts, and why it left out nothing when it could not be read. */
+export interface AcceptedCount {
+  rows: number;
+  sites: number;
+  problem?: AcceptedProblem;
+}
+
+/**
+ * The accepted rows counted, with the file's problem beside them; undefined
+ * when nothing was accepted and nothing is wrong, so the report says nothing.
+ */
+export const acceptedCountOf = (split: {
+  accepted: ReadonlyArray<{ sites?: number }>;
+  problem?: AcceptedProblem;
+}): AcceptedCount | undefined => {
+  if (split.accepted.length === 0 && split.problem === undefined) return undefined;
+  return {
+    rows: split.accepted.length,
+    sites: split.accepted.reduce((sum, row) => sum + (row.sites ?? 1), 0),
+    ...(split.problem === undefined ? {} : { problem: split.problem }),
+  };
+};
+
+export interface MissingRun {
+  missing: MissingRepoEntry[];
+  text: string;
+  exitCode: number;
+}
+
+/**
+ * `doctor --missing` (P122): only the repositories probably missing, every
+ * group with every place, likeliest first and at most `--top` (default 5);
+ * `--json` prints them as `doctor.json` holds them. A guess, so it decides no
+ * exit code.
+ */
+export const runMissingCommand = (options: DoctorOptions, io: QueryIo = processIo): MissingRun => {
+  const format = options.json === true ? 'json' : oneOf(options.format, ['text', 'json'] as const, 'text', '--format');
+  const top = whole(options.top, 5, '--top');
+  const settings = fromConfig(options);
+  const { fresh } = cantFollowRowsOf(options);
+  const { db, close } = openProjectDb(options);
+  try {
+    const all = missingReposOf(db, withAnsweredDemoted(fresh, db), {
+      ...(options.service === undefined ? {} : { service: options.service }),
+      ...missingSettingsOf(options, settings),
+    });
+    const missing = all.slice(0, top);
+    const say = missingSayOf(textOptionsOf(settings));
+    const more = all.length - missing.length;
+    const text =
+      format === 'json'
+        ? `${JSON.stringify({ missingRepos: missing, ...(more > 0 ? { truncated: more } : {}) }, null, 2)}\n`
+        : missing.length === 0
+          ? `${NOTHING_MISSING}.\n`
+          : `${[
+              ...missing.flatMap((entry, index) => [...(index === 0 ? [] : ['']), ...sayMissing(entry, { ...say, everyPlace: true })]),
+              ...(more > 0 ? ['', `… ${more} more; raise --top`] : []),
+            ].join('\n')}\n`;
+    io.out(text);
+    return { missing, text, exitCode: EXIT.ok };
+  } finally {
+    close();
+  }
+};
+
+export interface CantFollowRun {
+  report: CantFollowReport;
+  text: string;
+  exitCode: number;
+}
+
+/**
+ * `doctor --unresolved`: the rows the report would count, grouped by why they
+ * could not be followed (P75).
+ *
+ * The same rows as the report - demoted where an annotation answered them,
+ * less what `accepted.json` names - so the total here is the report's `sites`
+ * and a reader can move between the two without a number changing.
+ */
+export const runCantFollowCommand = (options: DoctorOptions, io: QueryIo = processIo): CantFollowRun => {
+  const format = options.json === true ? 'json' : oneOf(options.format, ['text', 'json'] as const, 'text', '--format');
+  const top = whole(options.top, 10, '--top');
+  // None is a fair answer here: the counts alone, without places to open.
+  const samples = options.samples === '0' ? 0 : whole(options.samples, 3, '--samples');
+  const settings = fromConfig(options);
+  const { fresh, accepted, note } = cantFollowRowsOf(options);
+  // Narrowed before grouping, as the report narrows its rows (P141), so the
+  // total here is still the report's under the same `--reason`.
+  const reasons = reasonsFor(options, fresh);
+  const kept = reasons === undefined ? fresh : fresh.filter((row) => reasons.includes(row.reason));
+  {
+    const report = cantFollowReport(kept, {
+      top,
+      samples,
+      ...(reasons === undefined ? {} : { reasons: reasonsTyped(options) ?? [] }),
+      ...(options.service === undefined ? {} : { service: options.service }),
+      ...(options.cause === undefined ? {} : { cause: options.cause }),
+      ...(options.package === undefined ? {} : { package: options.package }),
+      accepted,
+      ...(note === undefined ? {} : { note }),
+    });
+    const text =
+      format === 'json' ? renderCantFollowJson(report) : renderCantFollowText(report, { repoDirs: settings.repoDirs, top });
+    io.out(text);
+    return { report, text, exitCode: EXIT.ok };
+  }
+};
+
+/**
+ * The rows `doctor --unresolved` groups: the report's own, demoted where an
+ * annotation answered them, less what `accepted.json` names. Shared with
+ * `flowatlas shapes --suggest` (P78), so the two count the same places.
+ */
+export const cantFollowRowsOf = (
+  options: Pick<DoctorOptions, 'config' | 'db'>,
+): { fresh: Unresolved[]; accepted: AcceptedCount; note?: string } => {
+  const settings = fromConfig(options);
+  const { db, close } = openProjectDb(options);
+  try {
+    const { rows: raw, note } = rowsFor(db, settings.outputDir);
+    // What traffic reached and no reader drew (P110), the same rows doctor counts.
+    const blind = blindSpotRows(readObservedBeside(dbPathFor(options)).observed);
+    const split = acceptedSplitOf(db, [...raw, ...blind], readAccepted(dbPathFor(options)));
+    return {
+      fresh: split.fresh,
+      accepted: acceptedCountOf(split) ?? { rows: 0, sites: 0 },
+      ...(note === undefined ? {} : { note }),
+    };
+  } finally {
+    close();
+  }
+};
+
 export const registerDoctor = (program: Command): void => {
-  program
+  const command = program
     .command('doctor')
     .description('what the map could not read, what the annotations get wrong, and what has drifted')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')
     .option('--format <name>', `one of ${FORMATS.join(', ')}`)
-    .option('--strict', 'exit 1 on a broken annotation, a contract error, or growth past the baseline')
+    .option('--strict', 'exit 1 on a broken annotation, a contract error, a rule violation the baseline does not hold, or growth past the baseline')
+    .option('--strict-runtime', 'exit 1 on a failure traffic answered that the code does not declare, or one it declares that no request answered')
     .option('--accept', 'write the current numbers to the baseline')
-    .option('--baseline <path>', 'where the accepted numbers live (default: <output>/baseline.json)')
+    .option('--baseline <path>', 'where the accepted numbers live (default: flowatlas.baseline.json beside the configuration)')
     .option('--no-baseline', 'skip the growth check, so --strict asks only about annotations and contracts')
     .option(
       '--section <name>',
@@ -513,11 +902,39 @@ export const registerDoctor = (program: Command): void => {
       (value: string, all: string[] = []) => [...all, value],
     )
     .option('--service <name>', 'narrow every section to one service')
+    .option(
+      '--reason <code>',
+      'only the places of this reason, e.g. dynamic-http-url (repeatable, or a comma list)',
+      (value: string, all: string[] = []) => [...all, value],
+    )
     .option('--no-contracts', 'do not run the contract check')
+    .option('--no-rules', 'do not check the architecture rules')
     .option('--max-nodes <n>', 'most places to print per reason; the file is always complete')
     .option('--out <dir>', 'where to write doctor.json (default: the configured output)')
-    .action((options: DoctorOptions) => {
-      const { exitCode, report } = runDoctorCommand(options);
+    .option('--unresolved', "what the reader could not follow, grouped by cause and by package, instead of the report")
+    .option('--top <n>', 'with --unresolved: most causes and packages to list (default 10); with --missing, most repositories (default 5)')
+    .option('--samples <n>', 'with --unresolved: places to list per package under a cause (default 3)')
+    .option('--cause <code>', 'with --unresolved: only this cause, e.g. module-not-installed')
+    .option('--package <name>', 'with --unresolved: only what points into this package')
+    .option('--json', 'shorthand for --format json')
+    .option('--missing', 'only the repositories that are probably missing from the project, with every place that points at them')
+    .option(
+      '--scan <dir>',
+      'also look for a missing repository in this directory, one level down (repeatable)',
+      (value: string, all: string[] = []) => [...all, value],
+    );
+  withSarifOptions(command).action((options: DoctorOptions) => {
+    if (options.missing === true) {
+      runMissingCommand(options);
+      return;
+    }
+      if (options.unresolved === true) {
+        runCantFollowCommand(options);
+        return;
+      }
+      const { exitCode, report } = runDoctorCommand(
+        options.json === true ? { ...options, format: 'json' } : options,
+      );
       if (exitCode !== EXIT.ok) {
         throw new CliError(summaryLine(report), exitCode as 1 | 2, report.verdict.reasons);
       }

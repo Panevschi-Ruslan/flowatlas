@@ -1,0 +1,4 @@
+structurizr: 7 containers, 1 system outside, 10 relationships, 7 dynamic views -> <out>/workspace.dsl
+3 ways in draw the same steps as a flow ranked above them: drawn once
+8 ways in never leave one container: no dynamic view
+1 relationship lists more than --max-labels 3 and says "+N more"

@@ -1,4 +1,5 @@
 import {
+  makeApiRouteEntryKey,
   makeEntryId,
   makeHttpEntryKey,
   normalizePath,
@@ -96,6 +97,12 @@ const findingAt = (entry: GraphNode, row: Omit<Unresolved, 'file' | 'line' | 'se
   symbol: entry.id,
 });
 
+/** What marks a key kept apart by its API. */
+const API_MARK = '@api:';
+
+/** The API a route entry is of: its name, else its address (P61). */
+const apiOfEntry = (entry: GraphNode): string | undefined => stringOf(entry.meta?.['api']) ?? stringOf(entry.meta?.['apiAddress']);
+
 /** Routes rewritten to the full path of the point they hang from. */
 const rootRoutes = (nodes: Map<string, GraphNode>, edges: Map<string, GraphEdge>, rows: Unresolved[]): Unresolved[] => {
   const findings: Unresolved[] = [];
@@ -131,7 +138,22 @@ const rootRoutes = (nodes: Map<string, GraphNode>, edges: Map<string, GraphEdge>
     }
     const owner = owners[0] as Published;
     const full = normalizePath(`${owner.path}/${below}`);
-    const id = makeEntryId(entry.repo, 'http', makeHttpEntryKey(method, full));
+    // A route kept apart from another API's at the same address stays apart at its full one (P59, P61).
+    const apartAt = entry.id.indexOf(API_MARK);
+    const apart = apartAt < 0 ? '' : entry.id.slice(apartAt);
+    let id = makeEntryId(entry.repo, 'http', `${makeHttpEntryKey(method, full)}${apart}`);
+    // Rooted, it may land where a route of another API already is: the two
+    // are kept apart by their APIs, as two of one deployment would be (P61).
+    const api = apiOfEntry(entry) ?? owner.api;
+    const there = nodes.get(id);
+    const theirs = there === undefined ? undefined : apiOfEntry(there);
+    if (there !== undefined && apart === '' && api !== undefined && theirs !== undefined && theirs !== api) {
+      if (!there.id.includes(API_MARK)) {
+        const moved = makeEntryId(there.repo, 'http', makeApiRouteEntryKey(method, full, theirs));
+        renameNode(nodes, edges, rows, there.id, { ...there, id: moved });
+      }
+      id = makeEntryId(entry.repo, 'http', makeApiRouteEntryKey(method, full, api));
+    }
     if (nodes.has(id)) {
       findings.push(
         findingAt(entry, {

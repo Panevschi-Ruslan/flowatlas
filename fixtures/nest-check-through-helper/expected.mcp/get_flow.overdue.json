@@ -1,0 +1,126 @@
+{
+  "root": {
+    "node": {
+      "id": "entry:lending:http:GET:/desk/overdue",
+      "type": "entry",
+      "label": "GET /desk/overdue",
+      "loc": "src/desk/desk.controller.ts:39",
+      "service": "lending",
+      "kind": "http"
+    },
+    "fails": [
+      {
+        "exception": "reject",
+        "via": "helper",
+        "family": "auth",
+        "sources": [
+          "throw"
+        ],
+        "sites": 1,
+        "at": "lending#src/desk/desk.controller.ts:DeskController.overdue",
+        "loc": "src/desk/desk.controller.ts:41"
+      }
+    ],
+    "children": [
+      {
+        "node": {
+          "id": "lending#src/desk/desk.controller.ts:DeskController.overdue",
+          "type": "method",
+          "label": "DeskController.overdue",
+          "loc": "src/desk/desk.controller.ts:39"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static",
+          "params": [
+            "string"
+          ],
+          "returns": "type:lending#Loan[]"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "lending#src/auth/librarian-auth.ts:LibrarianAuth.verify",
+              "type": "method",
+              "label": "LibrarianAuth.verify",
+              "loc": "src/auth/librarian-auth.ts:13"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "string"
+              ],
+              "returns": "type:lending#LibrarianCheck"
+            },
+            "children": []
+          },
+          {
+            "node": {
+              "id": "lending#src/desk/desk.controller.ts:DeskController.reject",
+              "type": "method",
+              "label": "DeskController.reject",
+              "loc": "src/desk/desk.controller.ts:52"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "params": [
+                "Error"
+              ],
+              "returns": "Error"
+            },
+            "children": []
+          },
+          {
+            "node": {
+              "id": "lending#src/desk/loans.service.ts:LoansService.overdue",
+              "type": "method",
+              "label": "LoansService.overdue",
+              "loc": "src/desk/loans.service.ts:24"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "returns": "type:lending#Loan[]"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "db_query:lending#src/desk/loans.service.ts:25:12",
+                  "type": "db_query",
+                  "label": "read loans",
+                  "loc": "src/desk/loans.service.ts:25"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "table:lending#loans",
+                      "type": "table",
+                      "label": "loans"
+                    },
+                    "edge": {
+                      "type": "queries",
+                      "confidence": "static"
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unresolvedOnPath": 0,
+  "next": [
+    "describe_for_prompt({id: \"entry:lending:http:GET:/desk/overdue\"})",
+    "impact({symbol: \"entry:lending:http:GET:/desk/overdue\"})",
+    "get_source({symbol: \"lending#src/desk/desk.controller.ts:DeskController.overdue\"})"
+  ]
+}

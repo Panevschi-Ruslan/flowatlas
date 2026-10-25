@@ -10,6 +10,7 @@ import {
   type EntryNode,
   type EntryWrapping,
   type ExtractContext,
+  startLineOf,
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
@@ -175,7 +176,7 @@ const readMiddlewareList = (ctx: ExtractContext): MiddlewareList | undefined => 
               scope: 'prefix',
               source: DEFINE_MIDDLEWARES,
               file: fileOfNode(value, ctx),
-              line: value.getStartLineNumber(),
+              line: startLineOf(value),
               kind: 'function',
             }))
           : [];

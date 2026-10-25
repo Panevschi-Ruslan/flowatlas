@@ -1,0 +1,18 @@
+{
+  "entry": "entry:gateway:http:POST:/orders/:param/refund",
+  "traffic": {
+    "samples": 2,
+    "window": {
+      "from": "2025-10-16T07:00:00.000Z",
+      "to": "2025-10-16T09:00:00.000Z"
+    },
+    "unchecked": [
+      "request: no-declared-type",
+      "response 201: type-unreadable"
+    ]
+  },
+  "callers": 1,
+  "next": [
+    "check_contract({from: \"ui_api_call:web#src/app/orders-api.service.ts:95:12\", to: \"entry:gateway:http:POST:/orders/:param/refund\"})"
+  ]
+}

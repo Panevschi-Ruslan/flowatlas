@@ -1,6 +1,6 @@
 {
   "name": "@flowatlas/cli",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "One map of a project that lives in several repositories: read them, join them, ask questions.",
   "license": "MIT",
   "author": {
@@ -48,10 +48,8 @@
   ],
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
@@ -64,13 +62,13 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "node ../../scripts/bundle.mjs && mkdir -p dist/visualise && cp src/visualise/page.html src/visualise/graph.js src/visualise/frame.js src/visualise/map.js dist/visualise/",
+    "build": "node ../../scripts/bundle.mjs && node ../../scripts/page-parts.mjs",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --passWithNoTests --testTimeout=60000"
   },
@@ -90,6 +88,7 @@
     "@flowatlas/adapters-broker": "workspace:*",
     "@flowatlas/adapters-db": "workspace:*",
     "@flowatlas/adapters-entry": "workspace:*",
+    "@flowatlas/aws": "workspace:*",
     "@flowatlas/contracts": "workspace:*",
     "@flowatlas/core": "workspace:*",
     "@flowatlas/extractor-angular": "workspace:*",

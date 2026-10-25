@@ -1,0 +1,130 @@
+{
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+    "type": "method",
+    "label": "OrdersService.findOne",
+    "loc": "src/orders/orders.service.ts:25",
+    "service": "orders"
+  },
+  "callers": [
+    {
+      "node": {
+        "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+        "type": "method",
+        "label": "OrdersController.findOne",
+        "loc": "src/orders/orders.controller.ts:25"
+      },
+      "edge": {
+        "type": "calls",
+        "confidence": "static",
+        "params": [
+          "string"
+        ],
+        "returns": "type:@fx/contracts#OrderDto"
+      },
+      "children": [
+        {
+          "node": {
+            "id": "entry:orders:http:GET:/orders/:param",
+            "type": "entry",
+            "label": "GET /orders/:param",
+            "loc": "src/orders/orders.controller.ts:25",
+            "kind": "http"
+          },
+          "edge": {
+            "type": "handles",
+            "confidence": "static",
+            "params": [
+              "string"
+            ],
+            "returns": "type:@fx/contracts#OrderDto"
+          },
+          "children": [
+            {
+              "node": {
+                "id": "http_out:gateway#src/clients/orders.client.ts:33:12",
+                "type": "http_out",
+                "label": "GET /orders/:param",
+                "loc": "src/clients/orders.client.ts:33",
+                "service": "gateway"
+              },
+              "edge": {
+                "type": "http_calls",
+                "confidence": "static",
+                "returns": "type:@fx/contracts#OrderDto"
+              },
+              "children": [
+                {
+                  "node": {
+                    "id": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne",
+                    "type": "method",
+                    "label": "OrdersClient.fetchOne",
+                    "loc": "src/clients/orders.client.ts:32"
+                  },
+                  "edge": {
+                    "type": "calls",
+                    "confidence": "static"
+                  },
+                  "children": [
+                    {
+                      "node": {
+                        "id": "gateway#src/orders/orders.controller.ts:OrdersController.findOne",
+                        "type": "method",
+                        "label": "OrdersController.findOne",
+                        "loc": "src/orders/orders.controller.ts:30"
+                      },
+                      "edge": {
+                        "type": "calls",
+                        "confidence": "static",
+                        "params": [
+                          "string"
+                        ],
+                        "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+                      },
+                      "children": [
+                        {
+                          "node": {
+                            "id": "entry:gateway:http:GET:/orders/:param",
+                            "type": "entry",
+                            "label": "GET /orders/:param",
+                            "loc": "src/orders/orders.controller.ts:30",
+                            "kind": "http"
+                          },
+                          "edge": {
+                            "type": "handles",
+                            "confidence": "static",
+                            "params": [
+                              "string"
+                            ],
+                            "returns": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>"
+                          },
+                          "children": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "truncated": "5 more nodes past depth 6; raise depth",
+  "stoppedBy": [
+    "depth"
+  ],
+  "frontier": [
+    "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+    "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+    "entry:billing:http:POST:/invoices",
+    "entry:gateway:http:GET:/orders/:param"
+  ],
+  "next": [
+    "who_calls({symbol: \"orders#src/orders/orders.service.ts:OrdersService.findOne\", depth: 12, service: \"gateway\"})",
+    "get_flow({entry: \"entry:orders:http:GET:/orders/:param\"})",
+    "describe_for_prompt({id: \"entry:orders:http:GET:/orders/:param\"})",
+    "impact({symbol: \"entry:orders:http:GET:/orders/:param\"})"
+  ]
+}

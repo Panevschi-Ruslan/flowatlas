@@ -1,21 +1,28 @@
 import { createHash } from 'node:crypto';
 import {
   CONFIDENCE_RANK,
+  ENVIRONMENT_META,
   namesGivenTo,
   SCHEMA_VERSION,
-  wasMissed,
+  serviceNamesOf,
+  wasRead,
+  countsOf,
   type Confidence,
   type FlowatlasConfig,
   type GraphEdge,
   type GraphNode,
+  makeExternalApiId,
   type ProjectGraph,
   type RecordedMarker,
+  type RepoSettings,
   type RepoGraph,
   type ServiceSummary,
   type TypeEntry,
   type Unresolved,
 } from '@flowatlas/core';
+import { baseUrlOf, hostIndexOf, takenMeta, whereFound, type FoundValue } from './base-url-value.js';
 import {
+  baseUrlTakenFinding,
   findingFor,
   mountAssumedFinding,
   resolveCall,
@@ -25,7 +32,9 @@ import {
   type RouteIndex,
 } from './http-link.js';
 import { joinDeployments } from './deployment-link.js';
-import { completeFromEnvironment } from './environment-link.js';
+import { keepWhereDeclared } from './declared-link.js';
+import { completeFromEnvironment, reachedBy } from './environment-link.js';
+import { functionUrlsOf } from './function-url-link.js';
 import { mergeGraphs } from './merge.js';
 import {
   isProcedureEntry,
@@ -36,9 +45,10 @@ import {
   type ProcedureOutcome,
 } from './procedure-link.js';
 import { joinChannelPatterns } from './pattern-link.js';
+import { matchTakenPublishes } from './takes-link.js';
 import { joinReferences } from './reference-link.js';
 import { auditRoutes } from './route-audit.js';
-import { answeredOnlyByWildcard } from './route-match.js';
+import { answeredOnlyByWildcard, couldReach } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
@@ -62,6 +72,12 @@ export interface LinkOptions {
   builtAt?: string;
   /** What happened while reading each repository, including any that were not. */
   services?: readonly ServiceReport[];
+  /**
+   * What each service's own files say its settings are, by service (P77):
+   * read by whoever can see the files, used here to complete a base address
+   * and an address waiting on the environment.
+   */
+  settings?: Readonly<Record<string, RepoSettings>>;
 }
 
 const configHashOf = (config: FlowatlasConfig): string =>
@@ -74,6 +90,9 @@ const configHashOf = (config: FlowatlasConfig): string =>
           type: s.type,
           baseUrlEnv: s.baseUrlEnv ?? [],
           apiBaseEnv: s.apiBaseEnv ?? [],
+          // Only where there are any, so a configuration without aliases
+          // keeps the fingerprint it always had (P91).
+          ...((s.aliases ?? []).length === 0 ? {} : { aliases: s.aliases }),
         })),
         sharedPackages: [...config.sharedPackages].sort(),
       }),
@@ -151,12 +170,16 @@ const buildRouteIndex = (
     if (nodes.get(edge.to)?.type === 'http_out') callerOf.set(edge.to, edge.from);
   }
 
-  const known = new Set(config.services.map((service) => service.name));
+  // A service answers to its aliases wherever it is named (P91).
+  const names = serviceNamesOf(config);
+  const named = (service: string): string => names.get(service) ?? service;
   return {
     routesOf: (service) =>
-      known.has(service) || routesByService.has(service)
-        ? (routesByService.get(service) ?? [])
+      names.has(service) || routesByService.has(service)
+        ? (routesByService.get(named(service)) ?? [])
         : undefined,
+    serviceOf: (service) => (names.has(service) || routesByService.has(service) ? named(service) : undefined),
+    aliases: () => [...names.keys()].filter((name) => names.get(name) !== name).sort(cmp),
     claimantsOf: (env) => servicesByEnv.get(env) ?? [],
     markerOf: (callId) => callsServicesOf(nodes.get(callerOf.get(callId) ?? ''))[0],
     markersOf: (callId) => callsServicesOf(nodes.get(callerOf.get(callId) ?? '')),
@@ -169,18 +192,24 @@ const buildUiIndex = (
   routesByService: ReadonlyMap<string, GraphNode[]>,
   servicesByEnv: ReadonlyMap<string, string[]>,
 ): UiIndex => {
+  const names = serviceNamesOf(config);
   const targets = new Map<string, string>();
   for (const service of config.services) {
     for (const [env, target] of Object.entries(service.apiTarget ?? {})) {
-      targets.set(`${service.name}\0${env}`, target);
+      // An alias is the service it names (P91).
+      targets.set(`${service.name}\0${env}`, names.get(target) ?? target);
     }
   }
   const serving = [...routesByService.keys()].sort(cmp);
   return {
-    routesOf: (service) => routesByService.get(service),
+    routesOf: (service) => routesByService.get(names.get(service) ?? service),
     targetOf: (repo, env) => targets.get(`${repo}\0${env}`),
     claimantsOf: (env) => servicesByEnv.get(env) ?? [],
     services: () => serving,
+    // A browser annotation naming its service names it the way a server one
+    // does, by name or alias (P127).
+    serviceOf: (service) => names.get(service) ?? (routesByService.has(service) ? service : undefined),
+    aliases: () => [...names.keys()].filter((name) => names.get(name) !== name).sort(cmp),
   };
 };
 
@@ -203,9 +232,13 @@ const buildProcedureIndex = (
     declared.set(String(node.meta?.['key']), node);
     byService.set(node.repo, declared);
   }
+  const names = serviceNamesOf(config);
   const targets = new Map<string, string[]>();
   for (const service of config.services) {
-    targets.set(service.name, [...new Set(Object.values(service.apiTarget ?? {}))].sort(cmp));
+    targets.set(
+      service.name,
+      [...new Set(Object.values(service.apiTarget ?? {}).map((target) => names.get(target) ?? target))].sort(cmp),
+    );
   }
   const declaring = [...byService.keys()].sort(cmp);
   const none = new Map<string, GraphNode>();
@@ -290,18 +323,37 @@ const boundedByMount = (confidence: Confidence, mountAssumed: readonly string[] 
 const mountMeta = (mountAssumed: readonly string[] | undefined): Record<string, unknown> =>
   mountAssumed === undefined ? {} : { mountAssumedEmpty: [...mountAssumed] };
 
+/**
+ * How far each way of joining a request is trusted. A function URL answers
+ * every path, so the join is as sure as the path it was asked with (P54).
+ */
+const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via'], (call: GraphNode) => Confidence>> = {
+  marker: () => 'marker',
+  baseUrlEnv: () => 'static',
+  // One API of several at one address, chosen by the setting's name (P59).
+  apiName: () => 'heuristic',
+  // The service the value a setting is given names (P77): a guess unless the
+  // value is the one a function that runs the request is deployed with.
+  baseUrlValue: () => 'heuristic',
+  functionUrl: (call) => {
+    const path = call.meta?.['path'];
+    return typeof path === 'string' && wasRead(path) ? 'static' : 'heuristic';
+  },
+  // A worker's binding names the worker it reaches in its deployment, and the
+  // path was read in full to be matched at all (P91).
+  serviceBinding: () => 'static',
+};
+
 /** The edge a resolved call becomes. */
-const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>): GraphEdge => {
+const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>, baseUrl?: FoundValue): GraphEdge => {
   const params = call.meta?.['bodyType'];
   const returns = call.meta?.['responseType'];
+  const joinedAs = baseUrl?.deployed === true ? 'static' : JOINED_AS[outcome.via](call);
   return {
     from: call.id,
     to: outcome.entry.id,
     type: 'http_calls',
-    confidence: boundedByMount(
-      boundedByRoute(outcome.via === 'marker' ? 'marker' : 'static', outcome.entry),
-      outcome.mountAssumed,
-    ),
+    confidence: boundedByMount(boundedByRoute(joinedAs, outcome.entry), outcome.mountAssumed),
     ...(call.file === undefined ? {} : { file: call.file }),
     ...(call.line === undefined ? {} : { line: call.line }),
     ...(typeof params === 'string' ? { params: [params] } : {}),
@@ -309,6 +361,8 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
     meta: {
       via: outcome.via,
       targetService: outcome.entry.repo,
+      ...(outcome.via === 'functionUrl' ? { variable: call.meta?.['baseUrlEnv'] } : {}),
+      ...(baseUrl === undefined ? {} : takenMeta(baseUrl)),
       ...mountMeta(outcome.mountAssumed),
       ...(outcome.runnersUp.length === 0
         ? {}
@@ -333,7 +387,10 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
   const params = call.meta?.['bodyType'];
   const returns = call.meta?.['responseType'];
   const asserted = call.meta?.['via'] === 'marker';
-  const guessed = call.meta?.['guessed'] === true || outcome.via === 'unique-route';
+  const guessed =
+    call.meta?.['guessed'] === true ||
+    outcome.via === 'unique-route' ||
+    (outcome.via === 'base-url-value' && outcome.baseUrl?.deployed !== true);
   return {
     from: call.id,
     to: outcome.entry.id,
@@ -408,6 +465,128 @@ const emptyHttpOut = (): LinkReport['httpOut'] => ({
 const emptyUi = (): LinkReport['ui'] => ({ total: 0, resolved: 0, unresolved: 0, byReason: {} });
 
 /**
+ * The lookup a request rooted at a setting nobody claims asks of the values
+ * the setting is given (P77), or nothing where the configuration turns it off.
+ */
+const baseUrlLookup = (
+  nodes: ReadonlyMap<string, GraphNode>,
+  edges: ReadonlyMap<string, GraphEdge>,
+  config: FlowatlasConfig,
+  settings: Readonly<Record<string, RepoSettings>>,
+  byName: boolean,
+): RouteIndex['baseUrlOf'] => {
+  if (config.settingFiles.read === false) return undefined;
+  const hosts = hostIndexOf(config, settings);
+  const names = config.services.map((service) => service.name).sort(cmp);
+  const functions = [...nodes.values()].filter((node) => node.type === 'entry' && node.meta?.[ENVIRONMENT_META] !== undefined);
+  const runnersOf = functions.length === 0 ? new Map<string, GraphNode[]>() : reachedBy(nodes, edges, functions);
+  return (call) => {
+    const env = call.meta?.['baseUrlEnv'];
+    if (typeof env !== 'string') return undefined;
+    const variable = call.meta?.['baseUrlVariable'];
+    const own = settings[call.repo];
+    return baseUrlOf({
+      call,
+      variables: typeof variable === 'string' && variable !== env ? [env, variable] : [env],
+      runners: runnersOf.get(call.id) ?? [],
+      ...(own === undefined ? {} : { settings: own }),
+      hosts,
+      services: byName ? names : [],
+    });
+  };
+};
+
+/**
+ * The service a request through a worker's binding reaches (P91): the workers
+ * the caller's deployment binds the name to, each found among the names and
+ * aliases of the configured services, or among the names a service's own
+ * deployment files deploy it under.
+ */
+const bindingLookup = (
+  config: FlowatlasConfig,
+  settings: Readonly<Record<string, RepoSettings>>,
+): NonNullable<RouteIndex['bindingOf']> => {
+  const names = serviceNamesOf(config);
+  const deployed = new Map<string, string[]>();
+  for (const [service, own] of Object.entries(settings)) {
+    for (const name of own.deployedAs ?? []) deployed.set(name, [...(deployed.get(name) ?? []), service]);
+  }
+  return (call, binding) => {
+    const declared = (settings[call.repo]?.bindings ?? []).filter((each) => each.binding === binding);
+    if (declared.length === 0) return { kind: 'undeclared' };
+    const workers = [...new Set(declared.map((each) => each.service))].sort(cmp);
+    const services = [
+      ...new Set(workers.flatMap((worker) => (names.has(worker) ? [names.get(worker) as string] : (deployed.get(worker) ?? [])))),
+    ].sort(cmp);
+    return services.length === 1
+      ? { kind: 'service', service: services[0] as string, workers }
+      : { kind: 'unknown', workers, services };
+  };
+};
+
+/** A request that joined nothing, the services it may be asking, and what of it was read. */
+interface Unjoined {
+  readonly call: GraphNode;
+  /** The services it may reach; every service, where nothing named one. */
+  readonly services: readonly string[] | 'any';
+  readonly method: string | null;
+  readonly path: string;
+}
+
+/** Whether a request's address or verb was read in part, which is what makes it a near miss. */
+const partlyRead = (call: GraphNode): { method: string | null; path: string } | undefined => {
+  const path = call.meta?.['path'];
+  const method = call.meta?.['method'];
+  if (typeof path !== 'string' || path === '') return undefined;
+  const verb = typeof method === 'string' ? method : null;
+  return wasRead(path) && verb !== null ? undefined : { method: verb, path };
+};
+
+/** A request between services that may still reach a route of the service it was aimed at. */
+const nearMissOf = (call: GraphNode, outcome: CallOutcome): Unjoined | undefined => {
+  const read = partlyRead(call);
+  if (read === undefined) return undefined;
+  if (outcome.kind === 'dynamic' && outcome.targetService !== undefined) return { call, services: [outcome.targetService], ...read };
+  if (outcome.kind === 'unknownEnv' && outcome.claiming.length > 0) return { call, services: outcome.claiming, ...read };
+  return undefined;
+};
+
+/** A browser's request that may still reach a route: of the service its key names, or of any. */
+const uiNearMissOf = (call: GraphNode, index: UiIndex): Unjoined | undefined => {
+  const read = partlyRead(call);
+  if (read === undefined) return undefined;
+  const env = call.meta?.['baseUrlEnv'];
+  const named = typeof env === 'string' ? (index.targetOf(call.repo, env) ?? index.claimantsOf(env)) : [];
+  const services = typeof named === 'string' ? [named] : named;
+  return { call, services: services.length === 0 ? 'any' : services, ...read };
+};
+
+/**
+ * The requests that could reach each route nothing calls (P91), by route id.
+ *
+ * Asked only of the routes nothing calls: a route something already reaches
+ * is not in question. A near miss is a sentence, never an edge.
+ */
+const nearMissesOf = (
+  uncalled: readonly string[],
+  nodes: ReadonlyMap<string, GraphNode>,
+  partials: readonly Unjoined[],
+): Record<string, string[]> => {
+  const out: Record<string, string[]> = {};
+  if (partials.length === 0) return out;
+  for (const id of uncalled) {
+    const route = nodes.get(id);
+    if (route === undefined) continue;
+    const calls = partials
+      .filter((partial) => partial.services === 'any' || partial.services.includes(route.repo))
+      .filter((partial) => couldReach(partial.method, partial.path, route))
+      .map((partial) => partial.call.id);
+    if (calls.length > 0) out[id] = [...new Set(calls)].sort(cmp);
+  }
+  return out;
+};
+
+/**
  * Joins the repositories into one graph.
  *
  * Two things cross a service boundary: a call to another service's route, and a
@@ -429,15 +608,35 @@ export const linkGraphs = (
   // An address read from the environment, completed from the values each
   // function that runs it is deployed with; then every rule that takes its
   // channels by a pattern, matched against every channel, those included (P23).
-  found.push(...completeFromEnvironment(nodes, edges, merged.unresolved));
+  // The repository's own files fill in what a deployment leaves out (P77).
+  const settings = config.settingFiles.read === false ? {} : (options.settings ?? {});
+  found.push(...completeFromEnvironment(nodes, edges, merged.unresolved, settings));
+  // A write onto a table's stream is a publish only where the stream is
+  // declared, which only the whole project knows (P51).
+  found.push(...keepWhereDeclared(nodes, edges, [merged.unresolved, found]));
   found.push(...joinChannelPatterns(nodes, edges));
+  // What a consumer takes of its channel, asked of every publish onto it (P52).
+  found.push(...matchTakenPublishes(nodes, edges));
   const httpOut = emptyHttpOut();
   const ui = emptyUi();
+  /** Requests that joined nothing and may still reach a route (P91). */
+  const partials: Unjoined[] = [];
 
   const routesByService = routesByServiceOf(nodes);
   const servicesByEnv = servicesByEnvOf(config);
-  const index = buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv);
-  const uiIndex = buildUiIndex(config, routesByService, servicesByEnv);
+  const urls = functionUrlsOf(nodes, edges);
+  const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, true);
+  const valuedUiBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, false);
+  const index: RouteIndex = {
+    ...buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv),
+    functionUrlsOf: (callId) => urls.get(callId) ?? [],
+    ...(valuedBaseUrlOf === undefined ? {} : { baseUrlOf: valuedBaseUrlOf }),
+    bindingOf: bindingLookup(config, settings),
+  };
+  const uiIndex: UiIndex = {
+    ...buildUiIndex(config, routesByService, servicesByEnv),
+    ...(valuedUiBaseUrlOf === undefined ? {} : { baseUrlOf: valuedUiBaseUrlOf }),
+  };
   const procedureIndex = buildProcedureIndex(nodes, config);
 
   /** Where a finding happened; the finding itself says what and what to do. */
@@ -451,6 +650,26 @@ export const linkGraphs = (
     });
   };
 
+  /** One row per value taken, standing for every request it was taken for (P77). */
+  const taken = new Map<string, Unresolved>();
+  const tookValue = (call: GraphNode, found: FoundValue, target: string): void => {
+    const key = [call.repo, found.variable, found.value, whereFound(found), target].join('\0');
+    const seen = taken.get(key);
+    if (seen !== undefined) {
+      seen.sites = (seen.sites ?? 1) + 1;
+      return;
+    }
+    const row: Unresolved = {
+      service: call.repo,
+      file: call.file ?? '',
+      line: call.line ?? 0,
+      ...baseUrlTakenFinding(found, target),
+      symbol: call.id,
+      meta: { variable: found.variable, ...(found.byName === true ? {} : { value: found.value }), from: whereFound(found) },
+    };
+    taken.set(key, row);
+  };
+
   /**
    * The edge a request from a browser becomes, and the row a join across a
    * mount taken as empty carries beside it (R144).
@@ -458,21 +677,56 @@ export const linkGraphs = (
   const joinUi = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>, path: string): void => {
     const edge = uiEdge(call, outcome);
     edges.set(edgeKey(edge), edge);
+    if (outcome.baseUrl !== undefined) {
+      edge.meta = { ...edge.meta, ...takenMeta(outcome.baseUrl) };
+      call.meta = { ...call.meta, ...takenMeta(outcome.baseUrl) };
+      tookValue(call, outcome.baseUrl, outcome.targetService);
+    }
     if (outcome.mountAssumed !== undefined) {
       const method = String(call.meta?.['method'] ?? '?');
       record(call, mountAssumedFinding(method, path, outcome.entry, outcome.mountAssumed));
     }
   };
 
-  for (const call of nodes.values()) {
+  for (const call of [...nodes.values()]) {
     if (call.type !== 'http_out') continue;
     httpOut.total += 1;
 
-    const { outcome, notes, alsoLinked } = resolveCall(call, index);
+    const { outcome, notes, alsoLinked, baseUrl } = resolveCall(call, index);
     for (const note of notes) record(call, note);
+    // The values a setting nobody claims was found with, where they named no
+    // service: the hosts they name are evidence of the repository that is not
+    // here (P122). Addresses only, as the files were read (P77).
+    if (outcome.kind === 'unknownEnv' && outcome.values !== undefined && outcome.values.values.length > 0) {
+      call.meta = { ...call.meta, baseUrlValues: [...new Set(outcome.values.values.map((found) => found.value))].sort() };
+    }
+    if (baseUrl !== undefined) {
+      call.meta = { ...call.meta, ...takenMeta(baseUrl) };
+      const target = outcome.kind === 'external' ? (outcome.host ?? 'a third party') : (aimOf(outcome) ?? '?');
+      tookValue(call, baseUrl, target);
+    }
+    if (outcome.kind === 'external' && outcome.host !== undefined && baseUrl !== undefined) {
+      // A third party found from the value the setting is given is drawn the
+      // way one written in the call is, and is as sure as the value (P77).
+      const apiId = makeExternalApiId(outcome.host);
+      if (!nodes.has(apiId)) {
+        nodes.set(apiId, { id: apiId, type: 'external_api', label: outcome.host, repo: call.repo, meta: { host: outcome.host } });
+      }
+      call.meta = { ...call.meta, host: outcome.host };
+      const edge: GraphEdge = {
+        from: call.id,
+        to: apiId,
+        type: 'calls',
+        confidence: baseUrl.deployed ? 'static' : 'heuristic',
+        ...(call.file === undefined ? {} : { file: call.file }),
+        ...(call.line === undefined ? {} : { line: call.line }),
+        meta: takenMeta(baseUrl),
+      };
+      edges.set(edgeKey(edge), edge);
+    }
 
     if (outcome.kind === 'linked') {
-      const edge = callEdge(call, outcome);
+      const edge = callEdge(call, outcome, baseUrl);
       edges.set(edgeKey(edge), edge);
       for (const also of alsoLinked ?? []) {
         const more = callEdge(call, {
@@ -486,10 +740,14 @@ export const linkGraphs = (
       httpOut.linked += 1;
       if (outcome.via === 'marker') httpOut.byMarker += 1;
       const routes = routesByService.get(outcome.entry.repo) ?? [];
-      if (answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
+      if (outcome.via !== 'functionUrl' && answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
     } else {
-      httpOut[outcome.kind] += 1;
+      // A binding nothing is found behind is counted with the settings no
+      // service claims: both are a name the configuration does not place.
+      httpOut[outcome.kind === 'unknownBinding' ? 'unknownEnv' : outcome.kind] += 1;
     }
+    const partial = nearMissOf(call, outcome);
+    if (partial !== undefined) partials.push(partial);
 
     const aim = aimOf(outcome);
     if (aim !== undefined) call.meta = { ...call.meta, targetService: aim };
@@ -609,11 +867,17 @@ export const linkGraphs = (
     ui.unresolved += 1;
     const reason = uiReasonOf(outcome);
     if (reason !== undefined) ui.byReason[reason] = (ui.byReason[reason] ?? 0) + 1;
+    if (outcome.kind === 'dynamic') {
+      const partial = uiNearMissOf(call, uiIndex);
+      if (partial !== undefined) partials.push(partial);
+    }
     // An address built at run time was already reported where it was written,
     // with the annotation that would fix it; saying it again here adds nothing.
     const finding = uiFindingFor(outcome);
     if (finding !== undefined) record(call, finding);
   }
+
+  found.push(...taken.values());
 
   // Whatever names an entry by its deployed name alone, joined to the entry in
   // whichever service declares it.
@@ -629,7 +893,9 @@ export const linkGraphs = (
   );
 
   const channels = surveyChannels(nodes.values(), edges.values());
-  const routes = surveyRoutes(nodes.values(), edges.values());
+  const surveyed = surveyRoutes(nodes.values(), edges.values());
+  const nearMissed = nearMissesOf(surveyed.uncalled, nodes, partials);
+  const routes = Object.keys(nearMissed).length === 0 ? surveyed : { ...surveyed, nearMissed };
 
   found.push(...merged.collisions);
 
@@ -676,15 +942,28 @@ export const linkGraphs = (
     unresolved: found.sort(
       (a, b) => cmp(a.service ?? '', b.service ?? '') || cmp(a.file, b.file) || a.line - b.line,
     ),
-    totals: {
-      nodes: project.nodes.length,
-      edges: project.edges.length,
-      types: Object.keys(types).length,
-      unresolved: project.unresolved.filter(wasMissed).length,
-    },
+    totals: totalsOf(project, Object.keys(types).length),
   };
 
   return { project, report };
+};
+
+/**
+ * The project's totals, every row count by `countsOf` (P81): a join made from
+ * the repository's files is a note, and lowers `missed` by the gap it closed.
+ */
+const totalsOf = (project: ProjectGraph, types: number): LinkReport['totals'] => {
+  const { missed, sites, notes, findings } = countsOf(project.unresolved);
+  return {
+    nodes: project.nodes.length,
+    edges: project.edges.length,
+    types,
+    missed,
+    sites,
+    notes,
+    findings,
+    unresolved: missed,
+  };
 };
 
 export { configHashOf };

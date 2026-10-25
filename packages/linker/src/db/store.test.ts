@@ -46,7 +46,7 @@ const report: LinkReport = {
   routes: { total: 0, called: 0, uncalled: [], duplicated: [] },
   types: { total: 0, sharedPackage: 0 },
   unresolved: [],
-  totals: { nodes: 0, edges: 0, types: 0, unresolved: 0 },
+  totals: { nodes: 0, edges: 0, types: 0, missed: 0, sites: 0, notes: 0, findings: 0, unresolved: 0 },
 };
 
 const channel: GraphNode = {
@@ -144,7 +144,9 @@ describe('replacing one repository in a database that is already there', () => {
 });
 
 describe('writing the database over one a reader may be holding', () => {
-  it('never leaves a half-written file where the finished one belongs', () => {
+  // POSIX only (P199): a reader keeps answering from a file replaced under it
+  // there, while Windows refuses to remove or replace a file a reader holds.
+  it.skipIf(process.platform === 'win32')('never leaves a half-written file where the finished one belongs', () => {
     const path = dbAt('atomic');
     const before = openGraphDb(path);
     expect(before.counts().nodes).toBe(4);

@@ -1,0 +1,18 @@
+spec diff HEAD~1 -> working tree
+
+error   endpoint-removed  orders  GET /shipments/{id}
+        the route is gone
+        callers: gateway src/clients/orders.client.ts:26 (static)
+error   request-property-added-required  orders  POST /orders  body.channel
+        head has `body.channel` as `string` and requires it; base did not
+        callers: gateway src/clients/orders.client.ts:21 (static)
+info    endpoint-added  billing  receive order.gift-wrapped
+        added on the head side
+info    endpoint-added  orders  GET /shipments/{id}/status
+        added on the head side
+info    endpoint-added  orders  send order.gift-wrapped
+        added on the head side
+
+2 errors, 0 warnings, 3 infos · 2 breaking by kind, 0 of them with no caller in this project
+--- stderr ---
+spec diff: 2 errors, 0 warnings, 3 infos · 2 breaking by kind, 0 of them with no caller in this project · <scratch>/project/.flowatlas/spec-diff.json

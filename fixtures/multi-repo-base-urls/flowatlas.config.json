@@ -1,0 +1,9 @@
+{
+  "services": [
+    { "name": "storefront", "repo": "./storefront", "type": "nestjs" },
+    { "name": "orders", "repo": "./orders", "type": "nestjs" },
+    { "name": "payments", "repo": "./payments", "type": "nestjs" },
+    { "name": "catalog", "repo": "./catalog", "type": "nestjs" }
+  ],
+  "output": ".flowatlas"
+}

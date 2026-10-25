@@ -1,0 +1,42 @@
+{
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService.create",
+    "type": "method",
+    "label": "OrdersService.create",
+    "loc": "src/orders/orders.service.ts:40",
+    "service": "orders"
+  },
+  "entries": [
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "loc": "src/orders/orders.controller.ts:31",
+      "service": "orders",
+      "kind": "http"
+    }
+  ],
+  "total": 1,
+  "reached": 2,
+  "entriesByService": {
+    "orders": 1
+  },
+  "reachedByService": {
+    "orders": 2
+  },
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "docs": [
+    {
+      "file": "docs/architecture.md",
+      "line": 66,
+      "kind": "ref",
+      "state": "ok"
+    }
+  ],
+  "next": [
+    "get_flow({entry: \"entry:orders:http:POST:/orders\"})",
+    "describe_for_prompt({id: \"entry:orders:http:POST:/orders\"})",
+    "impact({symbol: \"entry:orders:http:POST:/orders\"})"
+  ]
+}

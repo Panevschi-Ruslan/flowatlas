@@ -1,0 +1,12 @@
+{
+  "description": "Trace entry:gateway:http:POST:/orders",
+  "messages": [
+    {
+      "role": "user",
+      "content": {
+        "type": "text",
+        "text": "# Trace POST /orders\n\n`entry:gateway:http:POST:/orders` — entry in gateway at `src/orders/gateway.controller.ts:11`.\n\nAsk, in this order:\n\n1. `get_flow({entry: \"entry:gateway:http:POST:/orders\"})` — what it reaches, crossing by crossing.\n\nIt crosses between services. For each crossing, whether both sides still agree:\n\n- `check_contract({from: \"http_out:gateway#src/clients/orders.client.ts:21:12\", to: \"entry:orders:http:POST:/orders\"})`\n- `check_contract({from: \"producer:orders#src/orders/orders.service.ts:20:5\", to: \"channel:order.created\"})`\n- `check_contract({from: \"producer:orders#src/orders/orders.service.ts:23:5\", to: \"channel:order.gift-wrapped\"})`\n\nIf the flow stops before you expect it to: `cant_follow({service: \"gateway\"})`, `cant_follow({service: \"orders\"})`, `cant_follow({service: \"billing\"})`.\n\nTo hand it on: `describe_for_prompt({id: \"entry:gateway:http:POST:/orders\"})`.\n"
+      }
+    }
+  ]
+}

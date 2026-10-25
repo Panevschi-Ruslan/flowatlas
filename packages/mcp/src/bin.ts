@@ -1,12 +1,28 @@
+import { readFileSync } from 'node:fs';
 import { startStdioServer } from './server.js';
 
-/** `--config <path>` and `--db <path>`, kept deliberately small. */
-const readArgs = (argv: readonly string[]): { configPath?: string; dbPath?: string } => {
-  const out: { configPath?: string; dbPath?: string } = {};
+/**
+ * This package's own version, for `initialize` (P86). `flowatlas mcp` passes the
+ * command's instead, which is what a user installed; this bin is only run from
+ * a checkout, where the manifest sits one folder above `dist/`.
+ */
+const manifestVersion = (): string | undefined => {
+  try {
+    const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version?: unknown };
+    return typeof manifest.version === 'string' ? manifest.version : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/** `--config <path>`, `--db <path>` and `--all-tools`, kept deliberately small. */
+const readArgs = (argv: readonly string[]): { configPath?: string; dbPath?: string; allTools?: boolean } => {
+  const out: { configPath?: string; dbPath?: string; allTools?: boolean } = {};
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     const value = argv[index + 1];
-    if (flag === '--config' && value !== undefined) {
+    if (flag === '--all-tools') out.allTools = true;
+    else if (flag === '--config' && value !== undefined) {
       out.configPath = value;
       index += 1;
     } else if (flag === '--db' && value !== undefined) {
@@ -27,6 +43,8 @@ const options = {
     : {}),
   ...(args.configPath === undefined ? {} : { configPath: args.configPath }),
   ...(args.dbPath ?? fromEnv ? { dbPath: args.dbPath ?? fromEnv } : {}),
+  ...(args.allTools === true ? { allTools: true } : {}),
 };
 
-await startStdioServer(options);
+const version = manifestVersion();
+await startStdioServer({ ...options, ...(version === undefined ? {} : { version }) });

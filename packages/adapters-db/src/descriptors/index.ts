@@ -7,7 +7,7 @@ import {
 } from '@flowatlas/core';
 import type { SourceFile } from 'ts-morph';
 import { isGeneratedPrismaClient, prismaTableOf } from '../leaves/prisma-schema.js';
-import type { TableLocator } from './table.js';
+import type { EntityDecorator, TableLocator } from './table.js';
 
 /**
  * How one library's table name is read.
@@ -27,21 +27,6 @@ import type { TableLocator } from './table.js';
 export interface TableReading {
   locators: readonly TableLocator[];
   entityInTypeArgs: boolean;
-  /**
-   * Methods that take a statement as text instead of naming a table, and the
-   * argument the text is in.
-   *
-   * `knex.raw(sql)` is knex's way out of its own builder, and what it touches is
-   * written in the SQL rather than anywhere a locator looks. Its text is read by
-   * the same reader a driver's query string is, so a statement means the same
-   * thing whichever library it was handed to (R155).
-   *
-   * Such a call is a statement only where it is used on its own. Handed to a
-   * call of the same library - `.where(knex.raw('…'))` - it is a fragment of
-   * that call's query, and a text no verb opens is a fragment wherever it is
-   * kept. A `Map` because it is asked about every method name a program calls.
-   */
-  statements?: ReadonlyMap<string, number>;
 }
 
 /**
@@ -88,6 +73,9 @@ const READ = 'read' as const;
 const WRITE = 'write' as const;
 const DELETE = 'delete' as const;
 
+/** A write's filter written as its first argument: `updateOne({ _id, status }, …)` (P89). */
+const FIRST_ARGUMENT_FILTER = { argument: 0, path: [] } as const;
+
 const typeormDescriptor: DbDescriptor = {
   package: 'typeorm',
   operations: {
@@ -122,6 +110,10 @@ const typeormDescriptor: DbDescriptor = {
     softRemove: DELETE,
     clear: DELETE,
   },
+  // `update({ id, status: 'open' }, …)`: the criteria come first (P89). A
+  // manager is handed the entity class before them, `update(Parcel, { … }, …)`,
+  // and the pass reads its arguments one later (P126).
+  filters: { update: FIRST_ARGUMENT_FILTER },
 };
 
 const prismaDescriptor: DbDescriptor = {
@@ -145,6 +137,9 @@ const prismaDescriptor: DbDescriptor = {
     delete: DELETE,
     deleteMany: DELETE,
   },
+  batch: ['createMany', 'createManyAndReturn', 'updateMany', 'updateManyAndReturn', 'deleteMany'],
+  // `update({ where: { id, status: 'open' }, data })` (P89).
+  filters: { update: { argument: 0, path: ['where'] } },
 };
 
 const pgDescriptor: DbDescriptor = {
@@ -201,6 +196,7 @@ const localBaseDescriptor: DbDescriptor = {
     'drop*': DELETE,
     'clear*': DELETE,
   },
+  batch: ['bulk*', 'insertMany', 'createMany', 'saveMany', 'updateMany', 'upsertMany', 'deleteMany', 'removeMany'],
 };
 
 /** The driver, used directly rather than through a mapper. */
@@ -227,6 +223,13 @@ const mongodbDescriptor: DbDescriptor = {
     deleteMany: DELETE,
     findOneAndDelete: DELETE,
     drop: DELETE,
+  },
+  batch: ['insertMany', 'updateMany', 'deleteMany', 'bulkWrite'],
+  filters: {
+    updateOne: FIRST_ARGUMENT_FILTER,
+    replaceOne: FIRST_ARGUMENT_FILTER,
+    findOneAndUpdate: FIRST_ARGUMENT_FILTER,
+    findOneAndReplace: FIRST_ARGUMENT_FILTER,
   },
 };
 
@@ -297,6 +300,13 @@ const mongooseDescriptor: DbDescriptor = {
     findByIdAndRemove: DELETE,
     remove: DELETE,
   },
+  batch: ['insertMany', 'updateMany', 'deleteMany', 'bulkWrite'],
+  filters: {
+    updateOne: FIRST_ARGUMENT_FILTER,
+    replaceOne: FIRST_ARGUMENT_FILTER,
+    findOneAndUpdate: FIRST_ARGUMENT_FILTER,
+    findOneAndReplace: FIRST_ARGUMENT_FILTER,
+  },
 };
 
 /**
@@ -329,6 +339,9 @@ const sequelizeDescriptor: DbDescriptor = {
     destroy: DELETE,
     truncate: DELETE,
   },
+  batch: ['bulkCreate'],
+  // `Model.update(values, { where: { id, status: 'open' } })` (P89).
+  filters: { update: { argument: 1, path: ['where'] } },
 };
 
 /**
@@ -576,7 +589,6 @@ export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
         { kind: 'chain-root-argument', index: 0 },
       ],
       entityInTypeArgs: true,
-      statements: new Map([['raw', 0]]),
     },
   ],
   ['kysely', { locators: [{ kind: 'argument', index: 0 }], entityInTypeArgs: false }],
@@ -589,6 +601,84 @@ export const tableReadings: ReadonlyMap<string, TableReading> = new Map([
       // made a table called `Document` of every untyped collection (R165).
       locators: [{ kind: 'chain-call', method: 'collection', index: 0 }],
       entityInTypeArgs: false,
+    },
+  ],
+]);
+
+/**
+ * A method that takes a statement as text instead of naming a table, and the
+ * argument the text is in.
+ *
+ * `knex.raw(sql)` is knex's way out of its own builder, and TypeORM's `query`
+ * is the same door on its repository, its manager, its data source and its
+ * query runner: what either touches is written in the SQL rather than anywhere
+ * a locator looks. The text is read by the same reader a driver's query string
+ * is, so a statement means the same thing whichever library it was handed to
+ * (R155), and the flags a loop asks about, a batch and a conditional write, are
+ * read off it as they are off a driver's (P126).
+ *
+ * Such a call is a statement only where it is used on its own. Handed to a call
+ * of the same library - `.where(knex.raw('…'))` - it is a fragment of that
+ * call's query, and a text no verb opens is a fragment wherever it is kept.
+ *
+ * `unreadFallsBack` says what a text that is not read whole is. For `knex.raw`
+ * it is computed SQL, and says so in its row: nothing else in the call names a
+ * table. For TypeORM it is a call like the library's others, whose table the
+ * repository's type argument or the class a manager is handed still names, so
+ * the statement wins only where the text is read whole.
+ */
+export interface StatementMethod {
+  readonly argument: number;
+  readonly unreadFallsBack: boolean;
+}
+
+/**
+ * The statement methods of each library, keyed by the package its descriptor is
+ * chosen by, and then by method. Beside `tableReadings` rather than inside it,
+ * because a library may take a statement without its table needing a locator:
+ * TypeORM's table is in its types. `Map`s because both keys come out of
+ * somebody else's source (R130).
+ */
+export const statementMethods: ReadonlyMap<string, ReadonlyMap<string, StatementMethod>> = new Map([
+  ['knex', new Map<string, StatementMethod>([['raw', { argument: 0, unreadFallsBack: false }]])],
+  ['typeorm', new Map<string, StatementMethod>([['query', { argument: 0, unreadFallsBack: true }]])],
+]);
+
+/**
+ * How a library that maps classes to tables names them (P88).
+ *
+ * A mapper whose repository is typed by its entity, `Repository<Rating>`, names
+ * the table through the type argument; its manager takes the entity class as an
+ * argument instead, `manager.find(Rating, …)`, and the class is the same fact
+ * written in a value. Both are read through the class's decorator when it states
+ * a name, so one table never reads as `Rating` from one call and `ratings` from
+ * the next.
+ *
+ * `managers` are the receivers whose calls take the class, by the name of their
+ * type; a repository of one entity is not among them, because its first argument
+ * is the options of the query. `locators` say where in such a call the class is
+ * written, in order: the call's own first argument, and for a builder made
+ * without one, the `from` of its chain. A string, a sub-query or nothing at all
+ * there names no class, and the call keeps the row it had.
+ *
+ * A `Map`, for the reason every table keyed by a package name here is one (R130).
+ */
+export interface EntityNaming extends EntityDecorator {
+  readonly managers: ReadonlySet<string>;
+  readonly locators: readonly TableLocator[];
+}
+
+export const entityNamings: ReadonlyMap<string, EntityNaming> = new Map([
+  [
+    'typeorm',
+    {
+      decorator: 'Entity',
+      key: 'name',
+      managers: new Set(['EntityManager', 'MongoEntityManager', 'DataSource', 'Connection']),
+      locators: [
+        { kind: 'argument', index: 0 },
+        { kind: 'chain-call', method: 'from', index: 0 },
+      ],
     },
   ],
 ]);

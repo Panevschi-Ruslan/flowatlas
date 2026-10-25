@@ -17,9 +17,16 @@ import {
   serviceDirectoryName,
   serviceOutputDir,
   serviceSourceDirs,
-  sitesIn,
-  wasMissed,
+  countsOf,
   SCHEMA_VERSION,
+  forgetPackageAliases,
+  forgetPackageIndexes,
+  forgetWorkspaces,
+  hashShapeFile,
+  STAND_INS_FILENAME,
+  standInsFingerprintOfBuild,
+  unmatchedPatternRows,
+  standInsOfBuild,
   type FlowatlasConfig,
   type PackageJson,
   type RepoGraph,
@@ -29,6 +36,7 @@ import {
 import { findTsconfig, listRepoSources } from '@flowatlas/extractor-nestjs';
 import {
   linkGraphs,
+  missedOf,
   writeGraphDb,
   type LinkResult,
   type ServicePackages,
@@ -52,6 +60,7 @@ import {
   type CacheProblem,
   type FileStamp,
   type RepoCache,
+  type StandInsState,
 } from '../build/cache.js';
 import { isDeclared, readDeclaredService } from '../build/declared.js';
 import { stampPackageFiles, surveyDependencies } from '../build/dependencies.js';
@@ -67,6 +76,7 @@ import {
 } from '../build/extractor.js';
 import { noReaderNote } from '../stacks.js';
 import { deploymentFiles } from '../build/deployment-files.js';
+import { settingsOfProject } from '../build/settings/index.js';
 import {
   hashGraphFile,
   planRebuild,
@@ -250,7 +260,14 @@ export const inPools = async <T, R>(
 };
 
 /** What only the extraction knows about a repository's files. */
-type FileFacts = Pick<RepoCache, 'files' | 'globalFiles' | 'packages'>;
+type FileFacts = Pick<RepoCache, 'files' | 'globalFiles' | 'packages'> & {
+  /**
+   * The package names the reading wanted something to stand in for (P83),
+   * which the build answers from its own index for the next cache. Absent
+   * where the reading did not say.
+   */
+  wants?: readonly string[];
+};
 
 interface Extracted {
   service: ServiceConfig;
@@ -307,6 +324,8 @@ interface SurveyOptions {
   previous?: RepoCache;
   session?: ServiceSession;
   trustTimestamps?: boolean;
+  /** What would stand in for it now, for the names its last reading wanted (P83). */
+  standIns?: StandInsState;
 }
 
 /** Everything planning needs to know about one repository, read from disk. */
@@ -337,6 +356,7 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
     packageJsonHash: hashFile(join(repoDir, 'package.json')),
     dependencies: surveyDependencies(repoDir),
     packages: stampPackageFiles(repoDir, Object.keys(previous?.packages ?? {}), previous?.packages),
+    ...(options.standIns === undefined ? {} : { standIns: options.standIns }),
     globalFiles: [...(session?.globalFiles() ?? []), ...deployed],
     files: stampFiles(repoDir, files, previous?.files, {
       ...(options.trustTimestamps === undefined ? {} : { trustTimestamps: options.trustTimestamps }),
@@ -361,16 +381,17 @@ const emptyReport = (service: ServiceConfig, extractor: string | null): ServiceR
 /**
  * What one repository came to, as the summary and the cache both count it.
  *
- * `unresolved` counts the rows that say something was not read. Rows at level
- * `nothing` are left out: they stand for places where no edge exists to draw,
- * so a repository full of them is not a repository read badly, and a number
- * that mixed the two would say it was.
+ * `unresolved` counts the rows that say something was not read: `missed`, by
+ * the one counter (P81). Rows at level `nothing` are left out - they stand for
+ * places where no edge exists to draw, so a repository full of them is not a
+ * repository read badly - and so are notes and findings, which say how a join
+ * was made and what the code does.
  */
-const countsOf = (graph: RepoGraph): RepoCache['counts'] => ({
+const repoCountsOf = (graph: RepoGraph): RepoCache['counts'] => ({
   nodes: graph.nodes.length,
   edges: graph.edges.length,
   types: Object.keys(graph.types).length,
-  unresolved: graph.unresolved.filter(wasMissed).length,
+  unresolved: countsOf(graph.unresolved).missed,
 });
 
 const reportOf = (
@@ -380,7 +401,7 @@ const reportOf = (
   durationMs: number,
 ): ServiceReport => ({
   ...emptyReport(service, extractor),
-  ...countsOf(graph),
+  ...repoCountsOf(graph),
   durationMs,
 });
 
@@ -560,6 +581,7 @@ const extractApart = async (
   out: string,
   configPath: string,
   heapMb: number | undefined,
+  standIns: string | undefined,
   signal?: AbortSignal,
 ): Promise<RepoGraph> => {
   // `out` is this service's own directory under the build's output, so the
@@ -573,7 +595,20 @@ const extractApart = async (
   // The heap limit goes on the runtime's own command line rather than into its
   // environment, so that it is visible in the process list beside the read it
   // belongs to and nothing a child of this one starts inherits it by accident.
-  const argv = [...heapArgs(heapMb), binPath(), 'extract', repoDir, '--config', configPath, '--out', out];
+  // The stand-ins the build worked out once (P82) go by file: the index and
+  // the shape files' text are too long for a command line, and an environment
+  // variable would reach everything the child starts.
+  const argv = [
+    ...heapArgs(heapMb),
+    binPath(),
+    'extract',
+    repoDir,
+    '--config',
+    configPath,
+    '--out',
+    out,
+    ...(standIns === undefined ? [] : ['--stand-ins', standIns]),
+  ];
   await run(process.execPath, argv, {
     maxBuffer: 64 * 1024 * 1024,
     ...(signal === undefined ? {} : { signal }),
@@ -586,6 +621,7 @@ const factsOf = (entry: RepoCache): FileFacts => ({
   files: entry.files,
   globalFiles: entry.globalFiles,
   ...(entry.packages === undefined ? {} : { packages: entry.packages }),
+  ...(entry.standIns === undefined ? {} : { wants: Object.keys(entry.standIns.packages) }),
 });
 
 /** The single entry a lone `flowatlas extract` leaves behind for the build. */
@@ -615,6 +651,8 @@ interface ExtractOneOptions {
   builtAt?: string;
   /** Heap limit for the process this read happens in, when one is being asked for. */
   heapMb?: number | undefined;
+  /** The build's stand-ins file (P82), handed to a read in a process of its own. */
+  standIns?: string;
   /** Aborted when the build this read belongs to has already failed. */
   signal?: AbortSignal;
 }
@@ -649,7 +687,7 @@ const extractDeclared = async (options: ExtractOneOptions): Promise<Extracted> =
       graph,
       report: {
         ...base,
-        ...countsOf(graph),
+        ...repoCountsOf(graph),
         repo: documentPath,
         durationMs: Date.now() - started,
       },
@@ -717,7 +755,7 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
     return {
       service,
       graph,
-      report: { ...base, ...countsOf(graph) },
+      report: { ...base, ...repoCountsOf(graph) },
       ...(previous === undefined
         ? {}
         : { facts: factsOf(previous) }),
@@ -728,7 +766,7 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
   try {
     const graph =
       session === undefined
-        ? await extractApart(repoDir, serviceDir, options.configPath, options.heapMb, options.signal)
+        ? await extractApart(repoDir, serviceDir, options.configPath, options.heapMb, options.standIns, options.signal)
         : normalise(await extractWarm(session, plan, graphPath));
     // An open repository is read in this process and cannot be interrupted
     // part-way, so a warm read finishes even when the build around it has
@@ -829,6 +867,7 @@ const factsFromSession = (
     files,
     globalFiles: [...session.globalFiles(), ...deployed],
     packages: stampPackageFiles(session.repoDir, session.packages(), previous?.packages),
+    wants: session.standInWants(),
   };
 };
 
@@ -998,6 +1037,29 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   for (const dir of serviceDirsIn(outputDir)) clearTemporaries(dir);
   const serviceDirOf = (service: ServiceConfig): string => serviceOutputDir(outputDir, service.name);
 
+  // What stands in for a missing package is worked out again on every build
+  // (P83), from the disk as it is now: a watch is one long process, and the
+  // index, the aliases and the workspace members (P206) one build remembered
+  // would otherwise answer the next.
+  forgetPackageIndexes();
+  forgetPackageAliases();
+  forgetWorkspaces();
+  const standIns = standInsOfBuild(loaded.config, loaded.rootDir);
+  const shapeHashes = new Map<string, string>();
+  const hashOf = (file: string): string => {
+    let hash = shapeHashes.get(file);
+    if (hash === undefined) {
+      hash = hashShapeFile(file);
+      shapeHashes.set(file, hash);
+    }
+    return hash;
+  };
+  const standInsOf = (service: ServiceConfig, wants: readonly string[]): StandInsState | undefined =>
+    standInsFingerprintOfBuild({ given: standIns, config: loaded.config, service, wants, hashOf });
+  // An open repository parses again from what it was opened with, so a full
+  // read of it stands in what this build found rather than what the watch did.
+  for (const session of options.sessions?.values() ?? []) session.useStandIns(standIns);
+
   const expected = cacheExpectations(loaded.config);
   const cachePath = cachePathFor(outputDir);
   const noCache = options.cache === false;
@@ -1012,11 +1074,13 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   const surveys = readable.map((service) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
+    const now = standInsOf(service, Object.keys(previous?.standIns?.packages ?? {}));
     return surveyService({
       service,
       repoDir: loaded.repoDir(service),
       graphPath: serviceGraphPath(outputDir, service.name),
       config: loaded.config,
+      ...(now === undefined ? {} : { standIns: now }),
       ...(previous === undefined ? {} : { previous }),
       ...(session === undefined ? {} : { session }),
       ...(options.sessions === undefined ? {} : { trustTimestamps: true }),
@@ -1049,6 +1113,19 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     options.heap === undefined ? undefined : Math.max(Number(options.heap), 1),
   );
 
+  // Worked out once for every reader this build starts (P82): the package
+  // index and every listed shape file, beside the graphs in the output. Only
+  // when a repository is read in a process of its own; an open repository was
+  // handed them when it was opened.
+  const readApart = readable.some(
+    (service) =>
+      plan[service.name]?.mode !== 'skip' &&
+      options.sessions?.get(service.name) === undefined &&
+      EXTRACTORS.get(service.type) !== undefined,
+  );
+  const standInsPath = readApart ? join(outputDir, STAND_INS_FILENAME) : undefined;
+  if (standInsPath !== undefined) await writeJson(standInsPath, standIns);
+
   const extracted = await inPools(loaded.config.services, limit, (service, signal) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
@@ -1061,6 +1138,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
       rootDir: loaded.rootDir,
       ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
       heapMb,
+      ...(standInsPath === undefined ? {} : { standIns: standInsPath }),
       plan: plan[service.name] ?? { mode: 'full', reason: 'not planned' },
       ...(options.skipFrontend === undefined ? {} : { skipFrontend: options.skipFrontend }),
       ...(session === undefined ? {} : { session }),
@@ -1073,19 +1151,33 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
 
   const silent = readNothing(loaded.config, (service) => loaded.repoDir(service), extracted);
   const armsLength = armsLengthOf(loaded.config, (service) => loaded.repoDir(service), extracted);
-  const rowFor = new Map(silent.map((found) => [found.service, readNothingRow(found)]));
+  const rowFor = new Map(silent.map((found) => [found.service, [readNothingRow(found)]]));
+  // Rules of the project's patterns nothing matched (P121), said once every
+  // service a rule applies to has been read: a project-wide judgement, so it
+  // is derived here rather than by any one reader.
+  const unmatched = unmatchedPatternRows(
+    loaded.config,
+    loaded.rootDir,
+    extracted.flatMap((item) =>
+      item.graph === undefined
+        ? []
+        : [{ service: item.service.name, repoDir: loaded.repoDir(item.service), nodes: item.graph.nodes, unresolved: item.graph.unresolved }],
+    ),
+  );
+  for (const [service, rows] of unmatched) rowFor.set(service, [...(rowFor.get(service) ?? []), ...rows]);
   const graphs = extracted.flatMap((item) => {
     if (item.graph === undefined) return [];
-    const row = rowFor.get(item.service.name);
+    const rows = rowFor.get(item.service.name);
     // A copy rather than the graph itself, because the same object is what the
     // cache counts and what was already written to the service's own
     // graph.json, and neither of those should gain a row that this build
     // derived from the project rather than read from the repository.
-    if (row === undefined) return [item.graph];
-    return [{ ...item.graph, unresolved: [...item.graph.unresolved, row] }];
+    if (rows === undefined) return [item.graph];
+    return [{ ...item.graph, unresolved: [...item.graph.unresolved, ...rows] }];
   });
   const result = linkGraphs(graphs, loaded.config, {
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
+    settings: settingsOfProject(loaded),
     services: extracted.map((item) => {
       const packages = packagesOf(readPackageJson(loaded.repoDir(item.service)));
       return packages === undefined ? item.report : { ...item.report, packages };
@@ -1124,7 +1216,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
 
   // Written even when it was ignored: `--no-cache` means read everything now,
   // not stay slow next time.
-  saveBuildCache(cachePath, nextCache(expected, result.project.builtAt, surveys, extracted));
+  saveBuildCache(cachePath, nextCache(expected, result.project.builtAt, surveys, extracted, standInsOf));
   pruneServiceDirs(outputDir, loaded.config.services);
   const leftovers = leftoverRepoOutputs(
     readable.map((service) => loaded.repoDir(service)),
@@ -1175,12 +1267,22 @@ const nextCache = (
   builtAt: string,
   surveys: readonly RepoSurvey[],
   extracted: readonly Extracted[],
+  standInsOf: (service: ServiceConfig, wants: readonly string[]) => StandInsState | undefined,
 ): BuildCache => {
   const cache = emptyCache(expected, builtAt);
   for (const item of extracted) {
     const survey = surveys.find((entry) => entry.service === item.service.name);
     if (survey === undefined || survey.extractor === null || item.graph === undefined) continue;
     const carried = item.facts;
+    // What stood in, for the names this reading wanted (P83): answered from
+    // the index the build handed it, with the shape files as the survey hashed
+    // them before anything was read (one hash per file a build). A reading
+    // that did not say what it wanted records nothing, and the next build
+    // reads it again.
+    const standIns =
+      survey.standIns === undefined || carried?.wants === undefined
+        ? undefined
+        : standInsOf(item.service, carried.wants);
     cache.repos[item.service.name] = {
       repo: survey.repo,
       extractor: survey.extractor,
@@ -1191,9 +1293,10 @@ const nextCache = (
       globalFiles: carried?.globalFiles ?? survey.globalFiles,
       files: carried?.files ?? survey.files,
       packages: carried?.packages ?? survey.packages,
+      ...(standIns === undefined ? {} : { standIns }),
       graphPath: survey.graphPath,
       graphHash: hashGraphFile(survey.graphPath),
-      counts: countsOf(item.graph),
+      counts: repoCountsOf(item.graph),
     };
   }
   return cache;
@@ -1202,23 +1305,23 @@ const nextCache = (
 /**
  * What the unresolved rows came to, in one line.
  *
- * Three numbers, and two of them are never added together. Rows and places
- * differ wherever a reason was folded, and both are worth saying: one is how
- * long the list is, the other is what it covers. A place where nothing joins is
- * neither — a template binding that assigns to a field has no other end, in
- * this project or any other — so it is said last, in its own clause, and only
- * when there is one.
+ * Every figure is `countsOf`'s (P81), and no two of them are added together.
+ * Missed rows and the places they cover differ wherever a reason was folded,
+ * and both are worth saying: one is how long the list is, the other is what it
+ * covers. Notes say how a join or a reading was made and findings say
+ * something about the code; neither is something the reader missed, so each
+ * has its own figure and is said even at zero, so the line reads the same on
+ * every build. A place where nothing joins is neither - a template binding
+ * that assigns to a field has no other end, in this project or any other - so
+ * it is said last, in its own clause, and only when there is one.
  */
-export const unresolvedLine = (rows: readonly Unresolved[], missed: number): string => {
-  const sites = sitesIn(rows.filter(wasMissed));
-  const nothing = rows.filter((row) => !wasMissed(row));
-  const nothingSites = sitesIn(nothing);
+export const unresolvedLine = (rows: ReadonlyArray<Pick<Unresolved, 'reason' | 'level' | 'sites' | 'meta'>>): string => {
+  const { missed, sites, notes, findings, nothing } = countsOf(rows);
   return (
-    `unresolved: ${missed}` +
-    (sites === missed ? '' : ` rows over ${sites} sites`) +
-    (nothing.length === 0
-      ? ''
-      : `, and ${nothingSites} site${nothingSites === 1 ? '' : 's'} with nothing to join`)
+    `missed: ${missed}` +
+    (sites === missed ? '' : ` over ${sites} sites`) +
+    ` · notes: ${notes} · findings: ${findings}` +
+    (nothing === 0 ? '' : ` · ${nothing} site${nothing === 1 ? '' : 's'} with nothing to join`)
   );
 };
 
@@ -1389,7 +1492,7 @@ export const summariseBuild = (result: BuildResult): string[] => {
   if (leftovers !== undefined) lines.push(leftovers);
   // Rows and places differ wherever a reason was folded, and both are worth
   // saying: one is how long the list is, the other is what it covers.
-  lines.push(unresolvedLine(result.project.unresolved, report.totals.unresolved));
+  lines.push(unresolvedLine(result.project.unresolved));
   // Beside that count, last, and never per row: it is the one thing a thousand
   // rows already imply, and it is the line the eye lands on when a build ends.
   if (partial !== undefined) lines.push(partial);
@@ -1399,7 +1502,7 @@ export const summariseBuild = (result: BuildResult): string[] => {
 /**
  * One line saying what was read and what was not.
  *
- * `previous` is the unresolved count of the last rebuild in this session, so a
+ * `previous` is the missed count of the last rebuild in this session, so a
  * watch says which edit started leaving things unresolved rather than only how
  * many there are.
  */
@@ -1413,9 +1516,9 @@ export const summariseRebuild = (result: BuildResult, previous?: number): string
   }
   if (read.length === 0) read.push('nothing changed');
   else if (cached.length > 0) read.push(cached.length === 1 ? `${cached[0]}: cached` : 'others: cached');
-  const total = result.report.totals.unresolved;
+  const total = missedOf(result.report.totals);
   const delta = previous === undefined || previous === total ? '' : ` (${signed(total - previous)})`;
-  return `rebuilt in ${result.timing.total}ms (${read.join(', ')}) unresolved: ${total}${delta}`;
+  return `rebuilt in ${result.timing.total}ms (${read.join(', ')}) missed: ${total}${delta}`;
 };
 
 const signed = (value: number): string => (value > 0 ? `+${value}` : String(value));

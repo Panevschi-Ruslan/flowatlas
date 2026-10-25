@@ -1,14 +1,29 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { CONFIDENCE_LEVELS, EDGE_TYPES, RISK_NAMES } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
+import { KNOWN_REASONS } from '../doctor/hints.js';
 import {
+  contrastOf,
   createKeys,
   DRAWER,
+  PAGE_WORDS,
+  pressed,
+  SHORTCUT_PLACES,
+  SHORTCUTS,
+  wheelIntent,
+  wordFor,
   drawerWidth,
   formatHash,
+  formatViewHash,
   parseHash,
+  parseViewHash,
   pictureName,
   pictureScale,
   pinch,
+  VIEWS,
+  VIEWS_MOVED,
 } from './frame.js';
+import { parseMapHash } from './map.js';
 import { stableKeys } from './keys.js';
 
 const IDS = ['entry:api:http:GET:/orders', 'method:api:OrdersService.list', 'table:orders', 'channel:orders.created'];
@@ -181,6 +196,61 @@ describe('the view in the address', () => {
   });
 });
 
+describe('every tab in the address (P98)', () => {
+  it('round-trips every tab, with and without a way in', () => {
+    for (const view of VIEWS.filter((name) => name !== 'map' && name !== 'graph')) {
+      expect(formatViewHash(view)).toBe(`#${view}`);
+      expect(parseViewHash(formatViewHash(view), keys)).toEqual({ view, name: view, entry: null, key: '', rest: {} });
+      const link = formatViewHash(view, key(1));
+      expect(link).toBe(`#${view}/${key(1)}`);
+      expect(parseViewHash(link, keys)).toEqual({ view, name: view, entry: 1, key: key(1), rest: {} });
+    }
+  });
+
+  it('carries where in a tab to go, after the way in or in its place', () => {
+    const link = formatViewHash('missing', key(0), { reason: 'target-route-not-found' });
+    expect(link).toBe(`#missing/${key(0)}/reason=target-route-not-found`);
+    expect(parseViewHash(link, keys)).toMatchObject({ view: 'missing', entry: 0, rest: { reason: 'target-route-not-found' } });
+    const bare = formatViewHash('missing', null, { reason: 'a reason/with odd & signs' });
+    expect(bare).toBe('#missing/reason=a%20reason%2Fwith%20odd%20%26%20signs');
+    expect(parseViewHash(bare, keys)).toMatchObject({ entry: null, key: '', rest: { reason: 'a reason/with odd & signs' } });
+    expect(formatViewHash('steps', null, { reason: '' })).toBe('#steps');
+  });
+
+  it('names a tab the page does not have, and a way in it does not hold, rather than guessing', () => {
+    expect(parseViewHash('#nowhere', keys)).toMatchObject({ view: null, name: 'nowhere' });
+    expect(parseViewHash('#steps/qqqqqq', keys)).toMatchObject({ view: 'steps', entry: null, key: 'qqqqqq' });
+    expect(parseViewHash('#steps/NOT-A-KEY', keys)).toMatchObject({ view: 'steps', entry: null, key: 'NOT-A-KEY' });
+  });
+
+  it('opens the Graph tab from #graph alone, and leaves #graph/… and #map… to their own grammars', () => {
+    expect(parseViewHash('#graph', keys)).toMatchObject({ view: 'graph', entry: null });
+    const graphLink = formatHash(keys, 0, 2);
+    expect(parseViewHash(graphLink, keys)).toBeNull();
+    expect(parseHash(graphLink, keys)).toMatchObject({ focus: 0 });
+    for (const map of ['#map', '#map/s=service%3Aorders&m=dead']) {
+      expect(parseViewHash(map, keys)).toBeNull();
+      expect(parseMapHash(map)).not.toBeNull();
+    }
+    expect(parseViewHash('', keys)).toBeNull();
+    expect(parseViewHash('#', keys)).toBeNull();
+  });
+
+  it('opens a tab that went on the tab that took it over, the way in and all (P99)', () => {
+    expect(VIEWS).not.toContain('walk');
+    expect(parseViewHash(`#walk/${key(1)}`, keys)).toEqual({ view: 'steps', name: 'walk', entry: 1, key: key(1), rest: {} });
+    expect(parseViewHash('#walk', keys)).toMatchObject({ view: 'steps', entry: null });
+    for (const moved of Object.values(VIEWS_MOVED)) expect(VIEWS).toContain(moved);
+    expect(parseViewHash('#constructor', keys)).toMatchObject({ view: null, name: 'constructor' });
+  });
+
+  it('lists each tab once, map first and graph last', () => {
+    expect(new Set(VIEWS).size).toBe(VIEWS.length);
+    expect(VIEWS[0]).toBe('map');
+    expect(VIEWS.at(-1)).toBe('graph');
+  });
+});
+
 describe('two fingers', () => {
   it('pans by how far the point between them moved', () => {
     const move = pinch(
@@ -238,5 +308,82 @@ describe('pictures', () => {
   it('names the file after the project and the focus, in characters every system keeps', () => {
     expect(pictureName('Shop map', 'GET /orders/:id', 'svg')).toBe('shop-map-get-orders-id.svg');
     expect(pictureName('', '¿?', 'png')).toBe('graph.png');
+  });
+});
+
+describe('the words the page says for codes (P101)', () => {
+  it('has a word for every reason the doctor knows, and none for a reason it does not', () => {
+    const missing = KNOWN_REASONS.filter((reason) => !(reason in PAGE_WORDS.reason));
+    // A reason added to the doctor's hints gets a word here, or is listed as a gap.
+    expect(missing).toEqual([]);
+    expect(Object.keys(PAGE_WORDS.reason).filter((reason) => !KNOWN_REASONS.includes(reason))).toEqual([]);
+  });
+
+  it('has a verb for every edge type and a word for every trust, each told apart from the others', () => {
+    expect(Object.keys(PAGE_WORDS.edge).sort()).toEqual([...EDGE_TYPES].sort());
+    expect(Object.keys(PAGE_WORDS.trust).sort()).toEqual([...CONFIDENCE_LEVELS].sort());
+    expect(Object.keys(PAGE_WORDS.risk).sort()).toEqual([...RISK_NAMES].sort());
+    for (const table of Object.values(PAGE_WORDS)) {
+      const words = Object.values(table);
+      expect(new Set(words).size, words.join(', ')).toBe(words.length);
+      // Words, never a code: no dashes, no underscores.
+      expect(words.filter((word) => /[-_]/.test(word))).toEqual([]);
+    }
+  });
+
+  it('falls back to the code with its dashes as spaces', () => {
+    expect(wordFor('reason', 'route-unguarded')).toBe('no guard in front');
+    expect(wordFor('edge', 'http_calls')).toBe('requests');
+    expect(wordFor('trust', 'heuristic')).toBe('best guess');
+    expect(wordFor('reason', 'some-new_reason')).toBe('some new reason');
+    expect(wordFor('reason', 'constructor')).toBe('constructor');
+  });
+});
+
+describe('the keys (P101)', () => {
+  it('answers a shortcut by its keys, Ctrl or ⌘ only where asked, never with Alt', () => {
+    expect(pressed('find', { key: '/' })).toBe(true);
+    expect(pressed('find', { key: '/', ctrlKey: true })).toBe(false);
+    expect(pressed('palette', { key: 'k', metaKey: true })).toBe(true);
+    expect(pressed('palette', { key: 'k', ctrlKey: true })).toBe(true);
+    expect(pressed('palette', { key: 'k' })).toBe(false);
+    expect(pressed('graph.full', { key: 'F' })).toBe(true);
+    expect(pressed('graph.full', { key: 'f', altKey: true })).toBe(false);
+    expect(() => pressed('nothing.here', { key: 'x' })).toThrow('no shortcut nothing.here');
+  });
+
+  it('lists each shortcut once, under a place the overlay has a heading for', () => {
+    const ids = SHORTCUTS.map((shortcut) => shortcut.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(SHORTCUTS.filter((shortcut) => !(shortcut.where in SHORTCUT_PLACES))).toEqual([]);
+  });
+
+  it('is the table the handlers read: every key one answers is listed, and every key listed is answered', () => {
+    const dir = new URL('./panels/', import.meta.url);
+    const code = readdirSync(dir).filter((file) => file.endsWith('.js'))
+      .map((file) => readFileSync(new URL(file, dir), 'utf8')).join('\n');
+    const asked = new Set([...code.matchAll(/pressed\('([^']+)'/g)].map(([, id]) => id));
+    expect([...asked].filter((id) => !SHORTCUTS.some((shortcut) => shortcut.id === id))).toEqual([]);
+    expect(SHORTCUTS.filter((shortcut) => shortcut.keys.length > 0 && !asked.has(shortcut.id)).map((s) => s.id)).toEqual([]);
+    // No handler asks a key by its name any more; every key goes through the table.
+    expect(code.match(/event\.key === '(?:[a-zA-Z+?/*]|Escape|Enter)'/g)).toBeNull();
+  });
+});
+
+describe('the wheel and the colours (P102)', () => {
+  it('scrolls the page with a plain wheel, zooms with Ctrl or ⌘ (a pinch), and pans only in full screen', () => {
+    expect(wheelIntent({}, false)).toBe('page');
+    expect(wheelIntent({ ctrlKey: true }, false)).toBe('zoom');
+    expect(wheelIntent({ metaKey: true }, true)).toBe('zoom');
+    expect(wheelIntent({}, true)).toBe('pan');
+  });
+
+  it('works out a contrast ratio as WCAG does, either way round', () => {
+    expect(contrastOf('#000000', '#ffffff')).toBeCloseTo(21, 5);
+    expect(contrastOf('#fff', '#000')).toBeCloseTo(21, 5);
+    expect(contrastOf('#5c6560', '#5c6560')).toBe(1);
+    // The grey that famously just misses AA on white.
+    expect(contrastOf('#777777', '#ffffff')).toBeCloseTo(4.48, 2);
+    expect(() => contrastOf('red', '#fff')).toThrow('not a colour');
   });
 });

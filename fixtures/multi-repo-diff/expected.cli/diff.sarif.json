@@ -1,0 +1,224 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "flowatlas",
+          "version": "0.6.0",
+          "semanticVersion": "0.6.0",
+          "informationUri": "https://panevschi-ruslan.github.io/flowatlas/",
+          "rules": [
+            {
+              "id": "missing_required",
+              "name": "missing_required",
+              "shortDescription": {
+                "text": "field the receiver requires and the sender does not send"
+              },
+              "help": {
+                "text": "Send the field, or make it optional on the receiver. `flowatlas contracts --edge <key>` shows the boundary.",
+                "markdown": "Send the field, or make it optional on the receiver. `flowatlas contracts --edge <key>` shows the boundary."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "rule/billing-stays-out-of-gift-wrapping",
+              "name": "rule/billing-stays-out-of-gift-wrapping",
+              "shortDescription": {
+                "text": "architecture rule billing-stays-out-of-gift-wrapping (forbid)"
+              },
+              "help": {
+                "text": "gift wrapping is fulfilment, which orders does. `flowatlas rules --rule billing-stays-out-of-gift-wrapping` lists every violation.",
+                "markdown": "gift wrapping is fulfilment, which orders does. `flowatlas rules --rule billing-stays-out-of-gift-wrapping` lists every violation."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "shape": "forbid"
+              }
+            }
+          ]
+        }
+      },
+      "automationDetails": {
+        "id": "flowatlas/diff/"
+      },
+      "originalUriBaseIds": {
+        "%SRCROOT%": {
+          "description": {
+            "text": "The directory flowatlas.config.json is in."
+          }
+        },
+        "billing": {
+          "uri": "billing/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "gateway": {
+          "uri": "gateway/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "orders": {
+          "uri": "orders/",
+          "uriBaseId": "%SRCROOT%"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "rule/billing-stays-out-of-gift-wrapping",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "billing GiftWrapConsumer.onGiftWrapped consumes channel order.gift-wrapped. gift wrapping is fulfilment, which orders does. ([target order.gift-wrapped](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/gift-wrap.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 23
+                }
+              },
+              "message": {
+                "text": "target order.gift-wrapped"
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "orders/src/orders/orders.service.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 23
+                          }
+                        },
+                        "message": {
+                          "text": "billing order.gift-wrapped"
+                        }
+                      },
+                      "executionOrder": 1
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "billing/src/invoices/gift-wrap.consumer.ts",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 15
+                          }
+                        },
+                        "message": {
+                          "text": "consumes GiftWrapConsumer.onGiftWrapped"
+                        }
+                      },
+                      "executionOrder": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d392e4d2c06c358b5f23efa1c257d37c",
+            "primaryLocationLineHash": "d392e4d2c06c358b:1"
+          },
+          "baselineState": "new",
+          "properties": {
+            "service": "billing",
+            "shape": "forbid",
+            "via": "consumes",
+            "confidence": "static",
+            "heuristic": false,
+            "partial": [
+              "billing"
+            ]
+          }
+        },
+        {
+          "ruleId": "missing_required",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "gateway → orders: receiver orders requires `channel: string`; sender gateway does not send it ([receiver orders](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 20
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 23
+                }
+              },
+              "message": {
+                "text": "receiver orders"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "dfa58fd8aaa47114de32d5143481137f",
+            "primaryLocationLineHash": "dfa58fd8aaa47114:1"
+          },
+          "baselineState": "new",
+          "properties": {
+            "service": "gateway",
+            "direction": "request",
+            "edge": "http_out:gateway#src/clients/orders.client.ts:21:12|http_calls|entry:orders:http:POST:/orders",
+            "field": "channel"
+          }
+        }
+      ]
+    }
+  ]
+}

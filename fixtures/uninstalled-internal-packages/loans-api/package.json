@@ -1,0 +1,12 @@
+{
+  "name": "loans-api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@acme/feature-flags": "^1.0.0",
+    "@acme/money": "^2.0.0",
+    "@acme/queue-client": "^3.1.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
+  }
+}

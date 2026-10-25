@@ -1,0 +1,61 @@
+{
+  "shapesSuggestFormatVersion": 1,
+  "service": null,
+  "total": {
+    "packages": 1,
+    "sites": 1
+  },
+  "packages": [
+    {
+      "package": "@acme/feature-flags",
+      "sites": 1,
+      "services": [
+        "loans-api"
+      ],
+      "specifiers": [
+        "@acme/feature-flags"
+      ],
+      "files": 1,
+      "exports": [
+        {
+          "name": "FlagClient",
+          "kind": "class",
+          "uses": 1,
+          "members": [
+            "variant()"
+          ],
+          "statics": []
+        },
+        {
+          "name": "isOn",
+          "kind": "function",
+          "uses": 1,
+          "members": [],
+          "statics": []
+        }
+      ],
+      "samples": [
+        {
+          "service": "loans-api",
+          "file": "src/loans/loans.service.ts",
+          "line": 27,
+          "symbol": "LoansService.fee -> this.flags.variant"
+        }
+      ],
+      "coveredBy": null,
+      "coveredFrom": null
+    }
+  ],
+  "skipped": [],
+  "shapeFiles": [
+    {
+      "file": "flowatlas-shapes/acme-queue-client.d.ts",
+      "declares": [
+        "@acme/queue-client"
+      ],
+      "unread": null,
+      "unmatched": []
+    }
+  ],
+  "note": null
+}

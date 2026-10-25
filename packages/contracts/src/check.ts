@@ -129,7 +129,7 @@ interface Verdict {
  * `ValidationPipe` configured with `whitelist: true`, wherever it was attached.
  * A pipe whose options could not be read says nothing, and nothing is assumed.
  */
-const stripsUndecorated = (lookup: GraphLookup, entryId: string): boolean =>
+export const stripsUndecorated = (lookup: GraphLookup, entryId: string): boolean =>
   lookup.edgesFrom(entryId, ['guarded_by']).some((edge) => {
     if (edge.meta?.['layer'] !== 'pipe') return false;
     const pipe = lookup.node(edge.to);
@@ -539,11 +539,10 @@ const declaresPath = (
 /**
  * What a field the receiver strips off the body actually costs.
  *
- * Seventy-nine rows on one project, every one of them true, one of them a bug
- * that had been in production unnoticed: a field the admin screen sets, the
- * warehouse display groups by, and the DTO does not declare. Finding it cost an
- * afternoon of reading the other seventy-eight, which is the afternoon the tool
- * exists to save (R30).
+ * Many rows on one project, every one of them true, and among them a bug that
+ * had been in production unnoticed: a field one screen sets, another screen
+ * groups by, and the DTO does not declare. Finding it meant reading all the
+ * others, which is the reading the tool exists to save (R30).
  *
  * Neither test is a name heuristic. `_id` and `createdAt` need no special case:
  * they fail the second test on their own, because the handler does not read

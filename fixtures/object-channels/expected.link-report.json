@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:41.240Z",
+  "builtAt": "2026-10-16T23:29:26.691Z",
   "configHash": "a2182287a03c",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 21,
       "types": 4,
       "unresolved": 1,
-      "durationMs": 660,
+      "durationMs": 662,
       "packages": {
         "name": "object-channels-api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 7,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 656,
+      "durationMs": 650,
       "packages": {
         "name": "object-channels-worker",
         "runtime": [
@@ -82,6 +82,10 @@
     "nodes": 38,
     "edges": 28,
     "types": 6,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 2
   }
 }

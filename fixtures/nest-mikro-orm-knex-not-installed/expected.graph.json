@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-mikro-orm-knex-not-installed",
-  "generatedAt": "2026-10-07T18:29:31.290Z",
+  "generatedAt": "2026-10-16T15:11:52.954Z",
   "nodes": [
     {
       "id": "db_query:nest-mikro-orm-knex-not-installed#src/inventory/inventory-level.repository.ts:24:12",
@@ -407,6 +407,10 @@
       "line": 16,
       "reason": "di-type-unresolved",
       "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@mikro-orm/postgresql"
+      },
       "symbol": "InventoryLevelRepository.constructor[0]"
     },
     {
@@ -416,6 +420,43 @@
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "InventoryLevelRepository.reserved -> super\n      .getActiveManager<SqlEntityManager>()\n      .getKnex()({ il: 'inventory_level' })\n      .select('reserved_quantity').where",
+      "meta": {
+        "causes": [
+          {
+            "cause": "untyped-value",
+            "sites": 13,
+            "samples": [
+              {
+                "file": "src/inventory/inventory-level.repository.ts",
+                "line": 24,
+                "symbol": "InventoryLevelRepository.reserved -> super\n      .getActiveManager<SqlEntityManager>()\n      .getKnex()({ il: 'inventory_level' })\n      .select('reserved_quantity').where"
+              },
+              {
+                "file": "src/inventory/inventory-level.repository.ts",
+                "line": 24,
+                "symbol": "InventoryLevelRepository.reserved -> super\n      .getActiveManager<SqlEntityManager>()\n      .getKnex()({ il: 'inventory_level' }).select"
+              },
+              {
+                "file": "src/inventory/inventory-level.repository.ts",
+                "line": 24,
+                "symbol": "InventoryLevelRepository.reserved -> super\n      .getActiveManager<SqlEntityManager>().getKnex"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "@mikro-orm/postgresql",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/inventory/inventory-level.repository.ts",
+                "line": 53,
+                "symbol": "InventoryLevelRepository.adjust -> this.em\n      .getKnex()('inventory_level').where"
+              }
+            ]
+          }
+        ]
+      },
       "sites": 14
     },
     {

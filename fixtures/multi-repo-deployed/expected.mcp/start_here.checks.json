@@ -1,0 +1,136 @@
+{
+  "services": [
+    {
+      "service": "billing",
+      "nodes": 11,
+      "entries": 2,
+      "entriesByKind": {
+        "event": 1,
+        "http": 1
+      },
+      "gaps": 2
+    },
+    {
+      "service": "gateway",
+      "nodes": 15,
+      "entries": 2,
+      "entriesByKind": {
+        "http": 2
+      },
+      "gaps": 0
+    },
+    {
+      "service": "orders",
+      "nodes": 12,
+      "entries": 2,
+      "entriesByKind": {
+        "http": 2
+      },
+      "gaps": 2
+    }
+  ],
+  "counts": {
+    "gaps": 4,
+    "sites": 4,
+    "notes": 0,
+    "findings": 0,
+    "nothing": 0
+  },
+  "topGaps": [
+    {
+      "reason": "di-token-unknown",
+      "count": 2,
+      "services": [
+        "billing",
+        "orders"
+      ],
+      "example": {
+        "message": "InvoicesController.constructor[0]",
+        "service": "billing",
+        "loc": "src/invoices/invoices.controller.ts:8"
+      }
+    },
+    {
+      "reason": "module-import-dynamic",
+      "count": 2,
+      "services": [
+        "billing",
+        "orders"
+      ],
+      "example": {
+        "message": "AppModule imports ClientsModule",
+        "service": "billing",
+        "loc": "src/app.module.ts:9"
+      }
+    }
+  ],
+  "topFindings": [],
+  "channels": {
+    "noConsumers": [
+      "channel:invoice.paid"
+    ],
+    "noProducers": []
+  },
+  "startFrom": [
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "type": "entry",
+      "label": "POST /invoices",
+      "loc": "src/invoices/invoices.controller.ts:10",
+      "service": "billing",
+      "kind": "http"
+    },
+    {
+      "id": "entry:billing:event:order.placed",
+      "type": "entry",
+      "label": "event order.placed",
+      "loc": "src/invoices/placed.consumer.ts:9",
+      "service": "billing",
+      "kind": "event"
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/gateway.controller.ts:17",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "loc": "src/orders/gateway.controller.ts:11",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:17",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "loc": "src/orders/orders.controller.ts:12",
+      "service": "orders",
+      "kind": "http"
+    }
+  ],
+  "rules": {
+    "errors": 1,
+    "warnings": 0,
+    "unchecked": 0
+  },
+  "checks": "canary: undecided · prod: not deployable · staging: not deployable",
+  "hidden": "test_pattern: under flowatlas mcp · hot_paths, slow_steps, trace_for, undeclared_failures, never_seen: after flowatlas observe",
+  "next": [
+    "what_changed({file: \"check.prod.json\", verdict: true})",
+    "check_rules()",
+    "get_flow({entry: \"entry:billing:http:POST:/invoices\"})"
+  ]
+}

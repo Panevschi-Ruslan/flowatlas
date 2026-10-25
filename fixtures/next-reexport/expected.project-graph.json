@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T07:28:12.354Z",
+  "builtAt": "2026-10-16T15:12:18.380Z",
   "services": [
     {
       "name": "web",
@@ -319,6 +319,9 @@
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "legacyHandler -> response.json",
+      "meta": {
+        "cause": "interface-type"
+      },
       "service": "web"
     },
     {

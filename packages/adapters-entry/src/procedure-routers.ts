@@ -7,7 +7,7 @@ import type {
   ExtractContext,
   StatedSignature,
 } from '@flowatlas/core';
-import { hasAnyDependency, makeEntryId, placedFunction, suppliedTypes } from '@flowatlas/core';
+import { hasAnyDependency, makeEntryId, placedFunction, suppliedTypes, startLineOf } from '@flowatlas/core';
 import type {
   ArrowFunction,
   FunctionDeclaration,
@@ -63,7 +63,7 @@ interface Site {
 
 const siteOf = (node: TsNode, ctx: ExtractContext): Site => ({
   file: fileOfNode(node, ctx),
-  line: node.getStartLineNumber(),
+  line: startLineOf(node),
 });
 
 /**

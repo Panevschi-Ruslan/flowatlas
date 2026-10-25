@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T11:32:17.743Z",
+  "configHash": "c50b88062c2b",
+  "services": [
+    {
+      "name": "shop",
+      "repo": ".",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 37,
+      "edges": 31,
+      "types": 5,
+      "unresolved": 3,
+      "durationMs": 623,
+      "packages": {
+        "name": "corner-shop-checkout",
+        "runtime": [
+          "@aws-sdk/client-lambda",
+          "@aws-sdk/client-sfn",
+          "@aws-sdk/client-sqs",
+          "@aws-sdk/lib-dynamodb"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 2,
+    "noConsumers": [
+      "channel:sns/receipts"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:shop:http:POST:/checkout"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "infra/main.tf",
+      "line": 122,
+      "reason": "route-unguarded",
+      "message": "POST /checkout has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "POST /checkout"
+    }
+  ],
+  "totals": {
+    "nodes": 37,
+    "edges": 37,
+    "types": 5,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 2,
+    "unresolved": 0
+  }
+}

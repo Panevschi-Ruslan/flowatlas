@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:36:47.850Z",
+  "builtAt": "2026-10-16T11:07:33.083Z",
   "services": [
     {
       "name": "circulation",
@@ -1198,7 +1198,13 @@
       ],
       "returns": "string",
       "file": "src/handlers/pull-copy.ts",
-      "line": 9
+      "line": 9,
+      "meta": {
+        "inLoop": {
+          "kind": "map",
+          "line": 9
+        }
+      }
     },
     {
       "from": "catalogue#src/handlers/reserve-copy.ts:handler",

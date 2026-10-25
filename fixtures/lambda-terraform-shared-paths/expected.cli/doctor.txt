@@ -1,0 +1,39 @@
+unresolved: total=4 (missing) · markers: errors=0 warnings=0 · desync=3 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 4 to act on · missed: 4 · notes: 3 · findings: 0
+  ambiguous-route-api: 2 rows
+    Which one the call reaches is the base URL it is given. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.
+      kiosk/src/kiosk/hours-board.ts:19  2 APIs in branch serve GET /hours: aws_apigatewayv2_api.desk_hours, aws_apigatewayv2_api.lab_hours
+      kiosk/src/kiosk/status-board.ts:14  2 APIs in branch serve GET /status: library-events-api, library-loans-api
+  ambiguous-route: 1 row
+    Candidates: entry:branch:http:GET:/health@api:library-staff-lb@listener:HTTP:80, entry:branch:http:GET:/health@api:library-staff-lb@listener:HTTPS:443. Make the path more specific, or annotate the call with @CallsService.
+      kiosk/src/kiosk/status-board.ts:12  more than one route in branch answers GET /health
+  dynamic-http-url: 1 row
+    The address is built at run time. Annotate the calling method with @CallsService('<service>', '<METHOD> /<path>') to say where it goes.
+      kiosk/src/kiosk/hours-board.ts:19  fetch(base)
+  route-api-guessed (note): 3 rows
+    Only the name of the setting chose the API. Annotate the call with @CallsService where that is wrong.
+      kiosk/src/kiosk/hours-board.ts:12  GET /hours is served by aws_apigatewayv2_api.desk_hours, aws_apigatewayv2_api.lab_hours; aws_apigatewayv2_api.desk_hours is taken because the call's base URL is read from DESK_HOURS_URL
+      kiosk/src/kiosk/status-board.ts:10  GET /status is served by library-events-api, library-loans-api; library-loans-api is taken because the call's base URL is read from LOANS_API_URL
+      kiosk/src/kiosk/status-board.ts:11  GET /status is served by library-events-api, library-loans-api; library-events-api is taken because the call's base URL is read from EVENTS_API_URL
+
+markers: none
+
+desync: 3:
+  reason               where                               call         target  to do
+  ambiguous-route-api  kiosk src/kiosk/hours-board.ts:19   GET ?        ?       Which one the call reaches is the base URL it is given. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.
+  ambiguous-route      kiosk src/kiosk/status-board.ts:12  GET /health  branch  Candidates: entry:branch:http:GET:/health@api:library-staff-lb@listener:HTTP:80, entry:branch:http:GET:/health@api:library-staff-lb@listener:HTTPS:443. Make the path more specific, or annotate the call with @CallsService.
+  ambiguous-route-api  kiosk src/kiosk/status-board.ts:14  GET /status  branch  Which one the call reaches is the base URL it is given. Name the setting after the API (BILLING_API_URL for billing-api), or annotate the call with @CallsService.
+
+contracts: no errors, 0 excused, 6 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 4 now, +4)
+  no baseline at <root>/fixtures/lambda-terraform-shared-paths/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  ambiguous-route: 0 → 1 (+1)
+  ambiguous-route-api: 0 → 2 (+2)
+  dynamic-http-url: 0 → 1 (+1)
+  new (4):
+    kiosk|src/kiosk/hours-board.ts|fetch(base)|dynamic-http-url
+    kiosk|src/kiosk/hours-board.ts|http_out:kiosk#src/kiosk/hours-board.ts:19:28|ambiguous-route-api
+    kiosk|src/kiosk/status-board.ts|http_out:kiosk#src/kiosk/status-board.ts:12:23|ambiguous-route
+    kiosk|src/kiosk/status-board.ts|http_out:kiosk#src/kiosk/status-board.ts:14:24|ambiguous-route-api

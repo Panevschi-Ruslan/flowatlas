@@ -196,19 +196,20 @@
                                 "node": {
                                   "id": "db_query:orders#src/orders/orders.service.ts:26:23",
                                   "type": "db_query",
-                                  "label": "read Order",
+                                  "label": "read orders",
                                   "loc": "src/orders/orders.service.ts:26",
                                   "service": "orders",
                                   "meta": {
                                     "op": "read",
-                                    "table": "Order",
+                                    "table": "orders",
                                     "tables": [
-                                      "Order"
+                                      "orders"
                                     ],
                                     "package": "typeorm",
                                     "method": "findOne",
                                     "receiver": "this.orders",
-                                    "source": "type-arg"
+                                    "source": "type-arg",
+                                    "entityType": "Order"
                                   }
                                 },
                                 "edge": {
@@ -218,9 +219,9 @@
                                 "children": [
                                   {
                                     "node": {
-                                      "id": "table:orders#Order",
+                                      "id": "table:orders#orders",
                                       "type": "table",
-                                      "label": "Order",
+                                      "label": "orders",
                                       "service": "orders"
                                     },
                                     "edge": {

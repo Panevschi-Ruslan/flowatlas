@@ -1,0 +1,89 @@
+{
+  "base": {
+    "ref": "HEAD~1",
+    "label": "HEAD~1 (billing 392089da, orders 08ad86ef; gateway from the working tree)"
+  },
+  "head": {
+    "ref": null,
+    "label": "working tree"
+  },
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "counts": {
+    "nodes": {
+      "added": 4,
+      "removed": 0,
+      "changed": 2,
+      "moved": 3
+    },
+    "edges": {
+      "added": 2,
+      "removed": 0,
+      "changed": 0
+    },
+    "types": {
+      "added": 1,
+      "removed": 0,
+      "changed": 0
+    },
+    "entries": 1,
+    "contracts": {
+      "new": 0,
+      "breaks": 0,
+      "fixed": 0
+    },
+    "gaps": {
+      "added": 0,
+      "removed": 0
+    },
+    "lostJoins": 0,
+    "flows": 3
+  },
+  "nodes": {
+    "added": [
+      "billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer",
+      "billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+      "consumer:billing#src/invoices/gift-wrap.consumer.ts:GiftWrapConsumer.onGiftWrapped",
+      "entry:billing:event:order.gift-wrapped"
+    ],
+    "removed": [],
+    "changed": [
+      {
+        "id": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated",
+        "service": "billing",
+        "label": "InvoicesConsumer.onOrderCreated"
+      },
+      {
+        "id": "repo:billing",
+        "service": "billing",
+        "label": "billing"
+      }
+    ]
+  },
+  "types": {
+    "added": [
+      "type:billing#GiftWrappedEvent"
+    ],
+    "removed": [],
+    "changed": []
+  },
+  "entries": [
+    {
+      "id": "entry:billing:event:order.created",
+      "type": "entry",
+      "kind": "event",
+      "label": "event order.created",
+      "service": "billing",
+      "confidence": "static",
+      "reaches": "billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated"
+    }
+  ],
+  "breaks": [],
+  "warnings": [
+    "gateway: ref HEAD~1 not found, so it was read as it stands and assumed unchanged"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:billing:event:order.created\"})",
+    "impact({symbol: \"billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})",
+    "get_source({symbol: \"billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onOrderCreated\"})"
+  ]
+}

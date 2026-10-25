@@ -1,0 +1,25 @@
+{
+  "services": [{ "name": "parcels", "repo": "./parcels", "type": "nestjs" }],
+  "adapters": {
+    "broker": {
+      "custom": [
+        {
+          "name": "mail",
+          "channelKind": "queue",
+          "producers": [
+            {
+              "receiverType": ["Transporter"],
+              "method": "sendMail",
+              "address": [{ "literal": "mail" }],
+              "payloadArg": 0,
+              "kind": "mail",
+              "perItem": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "doctor": { "publicRoutes": ["* /parcels/*"] },
+  "output": ".flowatlas"
+}

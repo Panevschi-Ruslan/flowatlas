@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-16T23:28:30.764Z",
+  "configHash": "df4e82d2e373",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 877,
+      "packages": {
+        "name": "catalog",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 884,
+      "packages": {
+        "name": "orders",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 880,
+      "packages": {
+        "name": "payments",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 33,
+      "edges": 27,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 976,
+      "packages": {
+        "name": "storefront",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 9,
+    "linked": 7,
+    "byMarker": 0,
+    "unknownEnv": 1,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 1,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 6,
+    "called": 4,
+    "uncalled": [
+      "entry:storefront:http:GET:/checkout/:param",
+      "entry:storefront:http:POST:/checkout/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "catalog",
+      "file": "src/products.controller.ts",
+      "line": 9,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "ORDERS_FEED_URL is http://localhost:3001 in wrangler.toml, which is taken as orders",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add ORDERS_FEED_URL to services[].baseUrlEnv of orders to say so outright.",
+      "symbol": "http_out:catalog#src/products.controller.ts:9:26",
+      "meta": {
+        "variable": "ORDERS_FEED_URL",
+        "value": "http://localhost:3001",
+        "from": "wrangler.toml"
+      }
+    },
+    {
+      "service": "payments",
+      "file": "src/payments.controller.ts",
+      "line": 9,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "ORDERS_API is http://orders:3000 in serverless.yml, which is taken as orders",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add ORDERS_API to services[].baseUrlEnv of orders to say so outright.",
+      "symbol": "http_out:payments#src/payments.controller.ts:9:25",
+      "meta": {
+        "variable": "ORDERS_API",
+        "value": "http://orders:3000",
+        "from": "serverless.yml"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 15,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "ORDERS_API is http://orders:3000 in .env.example, which is taken as orders",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add ORDERS_API to services[].baseUrlEnv of orders to say so outright.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:15:12",
+      "meta": {
+        "variable": "ORDERS_API",
+        "value": "http://orders:3000",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 23,
+      "reason": "base-url-from-name",
+      "level": "info",
+      "message": "no service declares ORDERS_SERVICE_URL and nothing read gives it a value (it is set in .env, whose values are never read), so it is taken as orders, the one service it is named after",
+      "hint": "Only the setting's name chose the service. Add ORDERS_SERVICE_URL to services[].baseUrlEnv of orders to say so outright, or of the service it really is.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:23:12",
+      "meta": {
+        "variable": "ORDERS_SERVICE_URL",
+        "from": "its name"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 28,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "PAYMENTS_BASE is http://payments-api:4000 in docker-compose.yml (shop), which is taken as payments",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add PAYMENTS_BASE to services[].baseUrlEnv of payments to say so outright.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:28:12",
+      "meta": {
+        "variable": "PAYMENTS_BASE",
+        "value": "http://payments-api:4000",
+        "from": "docker-compose.yml (shop)"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 33,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "LEDGER_URL is http://localhost:4000 in src/clients/shop.client.ts (the code’s own fallback), which is taken as payments",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add LEDGER_URL to services[].baseUrlEnv of payments to say so outright.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:33:12",
+      "meta": {
+        "variable": "LEDGER_URL",
+        "value": "http://localhost:4000",
+        "from": "src/clients/shop.client.ts (the code’s own fallback)"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 38,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHIPPING_URL is https://api.shipping.example.com/v2 in .env.example, which is taken as api.shipping.example.com",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add SHIPPING_URL to services[].baseUrlEnv of api.shipping.example.com to say so outright.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:38:12",
+      "meta": {
+        "variable": "SHIPPING_URL",
+        "value": "https://api.shipping.example.com/v2",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 43,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares INVENTORY_URL; it is set in .env, whose values are never read",
+      "hint": "Add INVENTORY_URL to services[].baseUrlEnv of whichever service answers it, or the host to its services[].hosts.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:43:12"
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients/shop.client.ts",
+      "line": 48,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "catalog.url is http://catalog:3002 in src/catalog.config.ts (the code’s own fallback), which is taken as catalog",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add catalog.url to services[].baseUrlEnv of catalog to say so outright.",
+      "symbol": "http_out:storefront#src/clients/shop.client.ts:48:12",
+      "meta": {
+        "variable": "catalog.url",
+        "value": "http://catalog:3002",
+        "from": "src/catalog.config.ts (the code’s own fallback)"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 55,
+    "edges": 43,
+    "types": 0,
+    "missed": 1,
+    "sites": 1,
+    "notes": 8,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

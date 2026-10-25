@@ -1,0 +1,33 @@
+::error file=web/src/app/orders-api.service.ts,line=34,title=rule frontends-reach-only-edge::web (frontend) requests orders GET /orders/:param, and orders carries none of edge. the browser talks to the gateway, never to a domain service
+::error file=gateway/src/audit/order-audit.consumer.ts,line=14,title=rule only-billing-consumes-order-events::gateway OrderAuditConsumer.onOrderCreated consumes channel order.created, which only service billing may. order events are billing's to act on
+::error file=orders/src/orders/orders.service.ts,line=49,title=rule only-gateway-reaches-billing::orders event order.created reaches billing InvoicesConsumer.onOrderCreated in 2 hops, which only service gateway may. billing is asked through the gateway, never by another service
+::error file=billing/src/invoices/invoices.service.ts,line=33,title=rule only-orders-writes-orders::billing writes table orders (billing), which only service orders may. orders owns its table; everyone else asks orders
+::error title=rule typo-rule%3A rule-matches-nothing::not checked (to): service "biling" names nothing in this graph; did you mean billing?
+rules: 6 checked · 4 broken · 1 unchecked · errors=4 warnings=0 infos=0 · excused=0
+
+frontends-reach-only-edge  tags  error  1 violation
+  why: the browser talks to the gateway, never to a domain service
+  web (frontend) requests orders GET /orders/:param, and orders carries none of edge
+    at web/src/app/orders-api.service.ts:34  (hits, static)
+
+only-orders-writes-orders  only  error  1 violation
+  why: orders owns its table; everyone else asks orders
+  billing writes table orders (billing), which only service orders may
+    at billing/src/invoices/invoices.service.ts:33  (queries, static)
+
+only-billing-consumes-order-events  only  error  1 violation
+  why: order events are billing's to act on
+  gateway OrderAuditConsumer.onOrderCreated consumes channel order.created, which only service billing may
+    at gateway/src/audit/order-audit.consumer.ts:14  (consumes, static)
+
+only-gateway-reaches-billing  only  error  1 violation
+  why: billing is asked through the gateway, never by another service
+  orders event order.created reaches billing InvoicesConsumer.onOrderCreated in 2 hops, which only service gateway may
+    at orders/src/orders/orders.service.ts:49  (emits, static)
+
+order-created-keeps-a-consumer  reachable  error  held
+  why: an order nobody invoices is lost money
+
+typo-rule  forbid  error  unchecked
+  why: names a service that does not exist, so it is never a pass
+  not checked (to): service "biling" names nothing in this graph; did you mean billing? (rule-matches-nothing)

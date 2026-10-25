@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:46.406Z",
+  "builtAt": "2026-10-18T11:34:29.805Z",
   "configHash": "6bdd35fd6118",
   "services": [
     {
@@ -8,17 +8,20 @@
       "repo": "./billing",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 19,
-      "edges": 14,
-      "types": 4,
+      "nodes": 23,
+      "edges": 18,
+      "types": 5,
       "unresolved": 0,
-      "durationMs": 917,
+      "durationMs": 818,
       "packages": {
         "name": "billing",
         "runtime": [
+          "@nestjs/axios",
           "@nestjs/common",
+          "@nestjs/config",
           "@nestjs/core",
           "@nestjs/microservices",
+          "axios",
           "rxjs"
         ],
         "dev": []
@@ -33,7 +36,7 @@
       "edges": 38,
       "types": 7,
       "unresolved": 1,
-      "durationMs": 983,
+      "durationMs": 850,
       "packages": {
         "name": "gateway",
         "runtime": [
@@ -58,7 +61,7 @@
       "edges": 26,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 930,
+      "durationMs": 827,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -81,7 +84,7 @@
       "edges": 21,
       "types": 1,
       "unresolved": 3,
-      "durationMs": 723,
+      "durationMs": 658,
       "packages": {
         "name": "web",
         "runtime": [
@@ -94,8 +97,8 @@
     }
   ],
   "httpOut": {
-    "total": 6,
-    "linked": 2,
+    "total": 7,
+    "linked": 3,
     "byMarker": 1,
     "unknownEnv": 1,
     "noRoute": 1,
@@ -139,10 +142,15 @@
     ],
     "duplicated": [
       "entry:orders:http:GET:/a/:param"
-    ]
+    ],
+    "nearMissed": {
+      "entry:orders:http:GET:/orders/latest": [
+        "http_out:gateway#src/clients/orders.client.ts:59:12"
+      ]
+    }
   },
   "types": {
-    "total": 14,
+    "total": 15,
     "sharedPackage": 4
   },
   "unresolved": [
@@ -169,8 +177,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 19,
       "reason": "route-unguarded",
-      "message": "GET /orders/latest has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "GET /orders/latest has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /orders/latest"
     },
     {
@@ -178,8 +186,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 25,
       "reason": "route-unguarded",
-      "message": "GET /orders/:param has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "GET /orders/:param has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "GET /orders/:param"
     },
     {
@@ -187,8 +195,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 31,
       "reason": "route-unguarded",
-      "message": "POST /orders has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "POST /orders has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders"
     },
     {
@@ -196,8 +204,8 @@
       "file": "src/orders/orders.controller.ts",
       "line": 42,
       "reason": "route-unguarded",
-      "message": "POST /orders/:param/archive has no guard in front of it and reaches Order.",
-      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes.",
+      "message": "POST /orders/:param/archive has no guard in front of it and reaches orders.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
       "symbol": "POST /orders/:param/archive"
     },
     {
@@ -229,9 +237,13 @@
     }
   ],
   "totals": {
-    "nodes": 126,
-    "edges": 109,
-    "types": 14,
-    "unresolved": 13
+    "nodes": 130,
+    "edges": 114,
+    "types": 15,
+    "missed": 9,
+    "sites": 9,
+    "notes": 0,
+    "findings": 4,
+    "unresolved": 9
   }
 }

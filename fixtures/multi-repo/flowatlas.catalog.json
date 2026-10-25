@@ -1,0 +1,40 @@
+{
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nestjs",
+      "catalog": {
+        "owner": "team-storefront",
+        "lifecycle": "production",
+        "system": "bookshop",
+        "description": "The one address the browser calls.",
+        "sourceUrl": "https://example.com/bookshop/gateway/tree/main/"
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "baseUrlEnv": ["ORDERS_URL"],
+      "catalog": { "owner": "team-orders", "lifecycle": "production", "system": "bookshop", "description": "Takes and keeps orders." }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "baseUrlEnv": ["BILLING_URL"],
+      "catalog": { "owner": "team-billing", "lifecycle": "experimental", "system": "bookshop" }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "apiBaseEnv": ["apiUrl", "ordersUrl"],
+      "apiTarget": { "apiUrl": "gateway" },
+      "catalog": { "system": "bookshop" }
+    }
+  ],
+  "sharedPackages": ["@fx/contracts"],
+  "output": ".flowatlas"
+}

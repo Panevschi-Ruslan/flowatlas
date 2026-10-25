@@ -1,0 +1,41 @@
+The dependencies of storefront and payments are not installed, and 7 types could not be resolved: this is a partial read. What a table is called is usually declared in a package, and a package that is not installed cannot be read. Installing them and building again recovers what a package declares — never what a package generates, which is absent either way.
+
+unresolved: total=8 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 8 to act on · missed: 10 over 21 sites · notes: 0 · findings: 0
+  13 missed places static reading cannot see, folded into 2 rows
+  type-unresolved: 7 rows
+    The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.
+      payments/src/charges/charges.controller.ts:10  LedgerEntry
+      payments/src/charges/charges.service.ts:8  LedgerEntry
+      storefront/src/notify/notify.service.ts:16  Receipt
+      storefront/src/orders/orders.controller.ts:10  Receipt
+      storefront/src/orders/orders.controller.ts:15  Receipt
+      storefront/src/orders/orders.service.ts:17  Receipt
+  … 1 more rows; the whole list is in <root>/fixtures/cant-follow/.flowatlas/doctor.json
+  di-type-unresolved: 1 row
+    Inject a class, or name the provider with @Inject(TOKEN).
+      storefront/src/jobs/reminder.job.ts:6  ReminderJob.constructor[0]
+  call-dynamic-receiver (info): 2 rows over 13 places
+    The receiver has no single class type; inject a class to make the edge visible.
+      payments/src/charges/charges.service.ts:9  ChargesService.create -> this.ledger.reserve
+      storefront/src/jobs/reminder.job.ts:11  ReminderJob.start -> registry.on
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 0 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 8 now, +8)
+  no baseline at <root>/fixtures/cant-follow/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  di-type-unresolved: 0 → 1 (+1)
+  type-unresolved: 0 → 7 (+7)
+  new (6):
+    payments|src/charges/charges.controller.ts|LedgerEntry|type-unresolved
+    payments|src/charges/charges.service.ts|LedgerEntry|type-unresolved
+    storefront|src/jobs/reminder.job.ts|ReminderJob.constructor[0]|di-type-unresolved
+    storefront|src/notify/notify.service.ts|Receipt|type-unresolved
+    storefront|src/orders/orders.controller.ts|Receipt|type-unresolved
+    storefront|src/orders/orders.service.ts|Receipt|type-unresolved

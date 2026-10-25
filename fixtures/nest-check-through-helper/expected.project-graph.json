@@ -1,0 +1,1355 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-17T03:00:37.332Z",
+  "services": [
+    {
+      "name": "lending",
+      "repo": "./lending",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "db_query:lending#src/catalogue/catalogue.service.ts:14:12",
+      "type": "db_query",
+      "label": "read catalogue_items",
+      "repo": "lending",
+      "file": "src/catalogue/catalogue.service.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "catalogue_items",
+        "tables": [
+          "catalogue_items"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.items",
+        "source": "type-arg",
+        "entityType": "CatalogueItem"
+      }
+    },
+    {
+      "id": "db_query:lending#src/desk/loans.service.ts:17:12",
+      "type": "db_query",
+      "label": "write loans",
+      "repo": "lending",
+      "file": "src/desk/loans.service.ts",
+      "line": 17,
+      "meta": {
+        "op": "write",
+        "table": "loans",
+        "tables": [
+          "loans"
+        ],
+        "package": "typeorm",
+        "method": "save",
+        "receiver": "this.loans",
+        "source": "type-arg",
+        "entityType": "Loan",
+        "entityTypeId": "type:lending#Loan"
+      }
+    },
+    {
+      "id": "db_query:lending#src/desk/loans.service.ts:21:12",
+      "type": "db_query",
+      "label": "delete holds",
+      "repo": "lending",
+      "file": "src/desk/loans.service.ts",
+      "line": 21,
+      "meta": {
+        "op": "delete",
+        "table": "holds",
+        "tables": [
+          "holds"
+        ],
+        "package": "typeorm",
+        "method": "delete",
+        "receiver": "this.holds",
+        "source": "type-arg",
+        "entityType": "Hold"
+      }
+    },
+    {
+      "id": "db_query:lending#src/desk/loans.service.ts:25:12",
+      "type": "db_query",
+      "label": "read loans",
+      "repo": "lending",
+      "file": "src/desk/loans.service.ts",
+      "line": 25,
+      "meta": {
+        "op": "read",
+        "table": "loans",
+        "tables": [
+          "loans"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.loans",
+        "source": "type-arg",
+        "entityType": "Loan"
+      }
+    },
+    {
+      "id": "db_query:lending#src/desk/loans.service.ts:29:12",
+      "type": "db_query",
+      "label": "read loans",
+      "repo": "lending",
+      "file": "src/desk/loans.service.ts",
+      "line": 29,
+      "meta": {
+        "op": "read",
+        "table": "loans",
+        "tables": [
+          "loans"
+        ],
+        "package": "typeorm",
+        "method": "count",
+        "receiver": "this.loans",
+        "source": "type-arg",
+        "entityType": "Loan"
+      }
+    },
+    {
+      "id": "db_query:lending#src/hours/opening-hours.controller.ts:16:12",
+      "type": "db_query",
+      "label": "read opening_hours",
+      "repo": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 16,
+      "meta": {
+        "op": "read",
+        "table": "opening_hours",
+        "tables": [
+          "opening_hours"
+        ],
+        "package": "typeorm",
+        "method": "find",
+        "receiver": "this.hours",
+        "source": "type-arg",
+        "entityType": "OpeningHour"
+      }
+    },
+    {
+      "id": "db_query:lending#src/hours/opening-hours.controller.ts:21:12",
+      "type": "db_query",
+      "label": "read opening_hours",
+      "repo": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 21,
+      "meta": {
+        "op": "read",
+        "table": "opening_hours",
+        "tables": [
+          "opening_hours"
+        ],
+        "package": "typeorm",
+        "method": "findOne",
+        "receiver": "this.hours",
+        "source": "type-arg",
+        "entityType": "OpeningHour"
+      }
+    },
+    {
+      "id": "entry:lending:http:DELETE:/desk/holds/:param",
+      "type": "entry",
+      "label": "DELETE /desk/holds/:param",
+      "repo": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/desk/holds/:param",
+        "rawPath": "/desk/holds/:id",
+        "controller": "DeskController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "exception": "toHttpError",
+            "at": "lending#src/desk/desk.controller.ts:DeskController.cancelHold",
+            "file": "src/desk/desk.controller.ts",
+            "line": 33,
+            "source": "throw",
+            "via": "helper",
+            "chosenFrom": [
+              {
+                "exception": "UnauthorizedException",
+                "status": 401
+              },
+              {
+                "exception": "ForbiddenException",
+                "status": 403
+              },
+              {
+                "exception": "LockedAccountError",
+                "status": 423
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:lending:http:GET:/catalogue/items",
+      "type": "entry",
+      "label": "GET /catalogue/items",
+      "repo": "lending",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalogue/items",
+        "rawPath": "/catalogue/items",
+        "controller": "CatalogueController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:lending:http:GET:/catalogue/new-arrivals",
+      "type": "entry",
+      "label": "GET /catalogue/new-arrivals",
+      "repo": "lending",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalogue/new-arrivals",
+        "rawPath": "/catalogue/new-arrivals",
+        "controller": "CatalogueController",
+        "publicNote": "",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:lending:http:GET:/desk/overdue",
+      "type": "entry",
+      "label": "GET /desk/overdue",
+      "repo": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 39,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/desk/overdue",
+        "rawPath": "/desk/overdue",
+        "controller": "DeskController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "exception": "reject",
+            "at": "lending#src/desk/desk.controller.ts:DeskController.overdue",
+            "file": "src/desk/desk.controller.ts",
+            "line": 41,
+            "source": "throw",
+            "via": "helper",
+            "family": "auth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:lending:http:GET:/desk/stats",
+      "type": "entry",
+      "label": "GET /desk/stats",
+      "repo": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 46,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/desk/stats",
+        "rawPath": "/desk/stats",
+        "controller": "DeskController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "exception": "toNotFound",
+            "at": "lending#src/desk/desk.controller.ts:DeskController.stats",
+            "file": "src/desk/desk.controller.ts",
+            "line": 48,
+            "source": "throw",
+            "via": "helper",
+            "chosenFrom": [
+              {
+                "exception": "NotFoundException",
+                "status": 404
+              },
+              {
+                "exception": "GoneException",
+                "status": 410
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:lending:http:GET:/opening-hours",
+      "type": "entry",
+      "label": "GET /opening-hours",
+      "repo": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/opening-hours",
+        "rawPath": "/opening-hours",
+        "controller": "OpeningHoursController",
+        "publicNote": "opening hours are shown to anyone",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:lending:http:GET:/opening-hours/today",
+      "type": "entry",
+      "label": "GET /opening-hours/today",
+      "repo": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/opening-hours/today",
+        "rawPath": "/opening-hours/today",
+        "controller": "OpeningHoursController",
+        "publicNote": "opening hours are shown to anyone",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:lending:http:POST:/desk/renewals",
+      "type": "entry",
+      "label": "POST /desk/renewals",
+      "repo": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/desk/renewals",
+        "rawPath": "/desk/renewals",
+        "controller": "DeskController",
+        "adapter": "nestjs-http",
+        "fails": [
+          {
+            "exception": "toHttpError",
+            "at": "lending#src/desk/desk.controller.ts:DeskController.renew",
+            "file": "src/desk/desk.controller.ts",
+            "line": 23,
+            "source": "throw",
+            "via": "helper",
+            "chosenFrom": [
+              {
+                "exception": "UnauthorizedException",
+                "status": 401
+              },
+              {
+                "exception": "ForbiddenException",
+                "status": 403
+              },
+              {
+                "exception": "LockedAccountError",
+                "status": 423
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "lending#node_modules/typeorm:Repository",
+      "type": "provider",
+      "label": "Repository",
+      "repo": "lending",
+      "file": "node_modules/typeorm",
+      "kind": "external",
+      "meta": {
+        "package": "typeorm",
+        "external": true
+      }
+    },
+    {
+      "id": "lending#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "lending",
+      "file": "src/app.module.ts",
+      "line": 11,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "DeskController",
+          "OpeningHoursController",
+          "CatalogueController"
+        ],
+        "providers": [
+          "LibrarianAuth",
+          "LoansService",
+          "CatalogueService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "lending#src/auth/librarian-auth.ts:LibrarianAuth",
+      "type": "provider",
+      "label": "LibrarianAuth",
+      "repo": "lending",
+      "file": "src/auth/librarian-auth.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending#src/auth/librarian-auth.ts:LibrarianAuth.verify",
+      "type": "method",
+      "label": "LibrarianAuth.verify",
+      "repo": "lending",
+      "file": "src/auth/librarian-auth.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "badge",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending#LibrarianCheck"
+        }
+      }
+    },
+    {
+      "id": "lending#src/catalogue/catalogue.controller.ts:CatalogueController",
+      "type": "provider",
+      "label": "CatalogueController",
+      "repo": "lending",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 11,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending#src/catalogue/catalogue.controller.ts:CatalogueController.items",
+      "type": "method",
+      "label": "CatalogueController.items",
+      "repo": "lending",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:lending#CatalogueItem[]"
+        }
+      }
+    },
+    {
+      "id": "lending#src/catalogue/catalogue.controller.ts:CatalogueController.newArrivals",
+      "type": "method",
+      "label": "CatalogueController.newArrivals",
+      "repo": "lending",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:lending#CatalogueItem[]"
+        }
+      }
+    },
+    {
+      "id": "lending#src/catalogue/catalogue.service.ts:CatalogueService",
+      "type": "provider",
+      "label": "CatalogueService",
+      "repo": "lending",
+      "file": "src/catalogue/catalogue.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending#src/catalogue/catalogue.service.ts:CatalogueService.all",
+      "type": "method",
+      "label": "CatalogueService.all",
+      "repo": "lending",
+      "file": "src/catalogue/catalogue.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:lending#CatalogueItem[]"
+        }
+      }
+    },
+    {
+      "id": "lending#src/desk/desk.controller.ts:DeskController",
+      "type": "provider",
+      "label": "DeskController",
+      "repo": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 12,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending#src/desk/desk.controller.ts:DeskController.cancelHold",
+      "type": "method",
+      "label": "DeskController.cancelHold",
+      "repo": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "badge",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "lending#src/desk/desk.controller.ts:DeskController.overdue",
+      "type": "method",
+      "label": "DeskController.overdue",
+      "repo": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "badge",
+              "type": "string"
+            }
+          ],
+          "returns": "type:lending#Loan[]"
+        }
+      }
+    },
+    {
+      "id": "lending#src/desk/desk.controller.ts:DeskController.reject",
+      "type": "method",
+      "label": "DeskController.reject",
+      "repo": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "error",
+              "type": "Error"
+            }
+          ],
+          "returns": "Error"
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "desk refused: {message}",
+            "at": 53
+          }
+        ]
+      }
+    },
+    {
+      "id": "lending#src/desk/desk.controller.ts:DeskController.renew",
+      "type": "method",
+      "label": "DeskController.renew",
+      "repo": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "badge",
+              "type": "string"
+            },
+            {
+              "name": "loan",
+              "type": "type:lending#Loan"
+            }
+          ],
+          "returns": "type:lending#Loan"
+        }
+      }
+    },
+    {
+      "id": "lending#src/desk/desk.controller.ts:DeskController.stats",
+      "type": "method",
+      "label": "DeskController.stats",
+      "repo": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 46,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "period",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "lending#src/desk/loans.service.ts:LoansService",
+      "type": "provider",
+      "label": "LoansService",
+      "repo": "lending",
+      "file": "src/desk/loans.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending#src/desk/loans.service.ts:LoansService.cancelHold",
+      "type": "method",
+      "label": "LoansService.cancelHold",
+      "repo": "lending",
+      "file": "src/desk/loans.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "lending#src/desk/loans.service.ts:LoansService.count",
+      "type": "method",
+      "label": "LoansService.count",
+      "repo": "lending",
+      "file": "src/desk/loans.service.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "lending#src/desk/loans.service.ts:LoansService.overdue",
+      "type": "method",
+      "label": "LoansService.overdue",
+      "repo": "lending",
+      "file": "src/desk/loans.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:lending#Loan[]"
+        }
+      }
+    },
+    {
+      "id": "lending#src/desk/loans.service.ts:LoansService.renew",
+      "type": "method",
+      "label": "LoansService.renew",
+      "repo": "lending",
+      "file": "src/desk/loans.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "loan",
+              "type": "type:lending#Loan"
+            }
+          ],
+          "returns": "type:lending#Loan"
+        }
+      }
+    },
+    {
+      "id": "lending#src/hours/opening-hours.controller.ts:OpeningHoursController",
+      "type": "provider",
+      "label": "OpeningHoursController",
+      "repo": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 7,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "lending#src/hours/opening-hours.controller.ts:OpeningHoursController.list",
+      "type": "method",
+      "label": "OpeningHoursController.list",
+      "repo": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:lending#OpeningHour[]"
+        }
+      }
+    },
+    {
+      "id": "lending#src/hours/opening-hours.controller.ts:OpeningHoursController.today",
+      "type": "method",
+      "label": "OpeningHoursController.today",
+      "repo": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:lending#OpeningHour"
+        }
+      }
+    },
+    {
+      "id": "repo:lending",
+      "type": "repo",
+      "label": "lending",
+      "repo": "lending",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 12,
+          "skippedExternalCalls": {
+            "typeorm": 7
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "table:lending#catalogue_items",
+      "type": "table",
+      "label": "catalogue_items",
+      "repo": "lending"
+    },
+    {
+      "id": "table:lending#holds",
+      "type": "table",
+      "label": "holds",
+      "repo": "lending"
+    },
+    {
+      "id": "table:lending#loans",
+      "type": "table",
+      "label": "loans",
+      "repo": "lending"
+    },
+    {
+      "id": "table:lending#opening_hours",
+      "type": "table",
+      "label": "opening_hours",
+      "repo": "lending"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:lending#src/catalogue/catalogue.service.ts:14:12",
+      "to": "table:lending#catalogue_items",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/catalogue/catalogue.service.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:lending#src/desk/loans.service.ts:17:12",
+      "to": "table:lending#loans",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/desk/loans.service.ts",
+      "line": 17
+    },
+    {
+      "from": "db_query:lending#src/desk/loans.service.ts:21:12",
+      "to": "table:lending#holds",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/desk/loans.service.ts",
+      "line": 21
+    },
+    {
+      "from": "db_query:lending#src/desk/loans.service.ts:25:12",
+      "to": "table:lending#loans",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/desk/loans.service.ts",
+      "line": 25
+    },
+    {
+      "from": "db_query:lending#src/desk/loans.service.ts:29:12",
+      "to": "table:lending#loans",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/desk/loans.service.ts",
+      "line": 29
+    },
+    {
+      "from": "db_query:lending#src/hours/opening-hours.controller.ts:16:12",
+      "to": "table:lending#opening_hours",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "db_query:lending#src/hours/opening-hours.controller.ts:21:12",
+      "to": "table:lending#opening_hours",
+      "type": "queries",
+      "confidence": "static",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:lending:http:DELETE:/desk/holds/:param",
+      "to": "lending#src/desk/desk.controller.ts:DeskController.cancelHold",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/desk/desk.controller.ts",
+      "line": 28,
+      "meta": {
+        "headers": "{x-badge:string}",
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:lending:http:GET:/catalogue/items",
+      "to": "lending#src/catalogue/catalogue.controller.ts:CatalogueController.items",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:lending#CatalogueItem[]",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:lending:http:GET:/catalogue/new-arrivals",
+      "to": "lending#src/catalogue/catalogue.controller.ts:CatalogueController.newArrivals",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:lending#CatalogueItem[]",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:lending:http:GET:/desk/overdue",
+      "to": "lending#src/desk/desk.controller.ts:DeskController.overdue",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:lending#Loan[]",
+      "file": "src/desk/desk.controller.ts",
+      "line": 39,
+      "meta": {
+        "headers": "{x-badge:string}"
+      }
+    },
+    {
+      "from": "entry:lending:http:GET:/desk/stats",
+      "to": "lending#src/desk/desk.controller.ts:DeskController.stats",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/desk/desk.controller.ts",
+      "line": 46,
+      "meta": {
+        "query": "{period:string}"
+      }
+    },
+    {
+      "from": "entry:lending:http:GET:/opening-hours",
+      "to": "lending#src/hours/opening-hours.controller.ts:OpeningHoursController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:lending#OpeningHour[]",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:lending:http:GET:/opening-hours/today",
+      "to": "lending#src/hours/opening-hours.controller.ts:OpeningHoursController.today",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:lending#OpeningHour",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:lending:http:POST:/desk/renewals",
+      "to": "lending#src/desk/desk.controller.ts:DeskController.renew",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:lending#Loan"
+      ],
+      "returns": "type:lending#Loan",
+      "file": "src/desk/desk.controller.ts",
+      "line": 20,
+      "meta": {
+        "headers": "{x-badge:string}",
+        "body": "type:lending#Loan"
+      }
+    },
+    {
+      "from": "lending#src/catalogue/catalogue.controller.ts:CatalogueController",
+      "to": "lending#src/catalogue/catalogue.service.ts:CatalogueService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 13
+    },
+    {
+      "from": "lending#src/catalogue/catalogue.controller.ts:CatalogueController.items",
+      "to": "lending#src/catalogue/catalogue.service.ts:CatalogueService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:lending#CatalogueItem[]",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 17
+    },
+    {
+      "from": "lending#src/catalogue/catalogue.controller.ts:CatalogueController.newArrivals",
+      "to": "lending#src/catalogue/catalogue.service.ts:CatalogueService.all",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:lending#CatalogueItem[]",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 23
+    },
+    {
+      "from": "lending#src/catalogue/catalogue.service.ts:CatalogueService",
+      "to": "lending#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/catalogue/catalogue.service.ts",
+      "line": 9
+    },
+    {
+      "from": "lending#src/catalogue/catalogue.service.ts:CatalogueService.all",
+      "to": "db_query:lending#src/catalogue/catalogue.service.ts:14:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalogue/catalogue.service.ts",
+      "line": 14
+    },
+    {
+      "from": "lending#src/desk/desk.controller.ts:DeskController",
+      "to": "lending#src/auth/librarian-auth.ts:LibrarianAuth",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desk/desk.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "lending#src/desk/desk.controller.ts:DeskController",
+      "to": "lending#src/desk/loans.service.ts:LoansService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desk/desk.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "lending#src/desk/desk.controller.ts:DeskController.cancelHold",
+      "to": "lending#src/auth/librarian-auth.ts:LibrarianAuth.verify",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:lending#LibrarianCheck",
+      "file": "src/desk/desk.controller.ts",
+      "line": 30
+    },
+    {
+      "from": "lending#src/desk/desk.controller.ts:DeskController.cancelHold",
+      "to": "lending#src/desk/loans.service.ts:LoansService.cancelHold",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/desk/desk.controller.ts",
+      "line": 35
+    },
+    {
+      "from": "lending#src/desk/desk.controller.ts:DeskController.overdue",
+      "to": "lending#src/auth/librarian-auth.ts:LibrarianAuth.verify",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:lending#LibrarianCheck",
+      "file": "src/desk/desk.controller.ts",
+      "line": 41
+    },
+    {
+      "from": "lending#src/desk/desk.controller.ts:DeskController.overdue",
+      "to": "lending#src/desk/desk.controller.ts:DeskController.reject",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "Error"
+      ],
+      "returns": "Error",
+      "file": "src/desk/desk.controller.ts",
+      "line": 41
+    },
+    {
+      "from": "lending#src/desk/desk.controller.ts:DeskController.overdue",
+      "to": "lending#src/desk/loans.service.ts:LoansService.overdue",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:lending#Loan[]",
+      "file": "src/desk/desk.controller.ts",
+      "line": 42
+    },
+    {
+      "from": "lending#src/desk/desk.controller.ts:DeskController.renew",
+      "to": "lending#src/auth/librarian-auth.ts:LibrarianAuth.verify",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:lending#LibrarianCheck",
+      "file": "src/desk/desk.controller.ts",
+      "line": 22
+    },
+    {
+      "from": "lending#src/desk/desk.controller.ts:DeskController.renew",
+      "to": "lending#src/desk/loans.service.ts:LoansService.renew",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:lending#Loan"
+      ],
+      "returns": "type:lending#Loan",
+      "file": "src/desk/desk.controller.ts",
+      "line": 24
+    },
+    {
+      "from": "lending#src/desk/desk.controller.ts:DeskController.stats",
+      "to": "lending#src/desk/loans.service.ts:LoansService.count",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/desk/desk.controller.ts",
+      "line": 49
+    },
+    {
+      "from": "lending#src/desk/loans.service.ts:LoansService",
+      "to": "lending#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/desk/loans.service.ts",
+      "line": 10
+    },
+    {
+      "from": "lending#src/desk/loans.service.ts:LoansService.cancelHold",
+      "to": "db_query:lending#src/desk/loans.service.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/desk/loans.service.ts",
+      "line": 21
+    },
+    {
+      "from": "lending#src/desk/loans.service.ts:LoansService.count",
+      "to": "db_query:lending#src/desk/loans.service.ts:29:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/desk/loans.service.ts",
+      "line": 29
+    },
+    {
+      "from": "lending#src/desk/loans.service.ts:LoansService.overdue",
+      "to": "db_query:lending#src/desk/loans.service.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/desk/loans.service.ts",
+      "line": 25
+    },
+    {
+      "from": "lending#src/desk/loans.service.ts:LoansService.renew",
+      "to": "db_query:lending#src/desk/loans.service.ts:17:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/desk/loans.service.ts",
+      "line": 17
+    },
+    {
+      "from": "lending#src/hours/opening-hours.controller.ts:OpeningHoursController",
+      "to": "lending#node_modules/typeorm:Repository",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "lending#src/hours/opening-hours.controller.ts:OpeningHoursController.list",
+      "to": "db_query:lending#src/hours/opening-hours.controller.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "lending#src/hours/opening-hours.controller.ts:OpeningHoursController.today",
+      "to": "db_query:lending#src/hours/opening-hours.controller.ts:21:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 21
+    }
+  ],
+  "types": {
+    "type:lending#CatalogueItem": {
+      "name": "CatalogueItem",
+      "kind": "object",
+      "declaredIn": "lending#src/catalogue/catalogue-item.entity.ts",
+      "structuralHash": "18b09d07301e3307",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:lending#Librarian": {
+      "name": "Librarian",
+      "kind": "object",
+      "declaredIn": "lending#src/auth/librarian-auth.ts",
+      "structuralHash": "249e7ca81fbc5242",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "branch",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:lending#LibrarianCheck": {
+      "name": "LibrarianCheck",
+      "kind": "union",
+      "declaredIn": "lending#src/auth/librarian-auth.ts",
+      "structuralHash": "a1a7de17c61bc000",
+      "members": [
+        "{ok:true;librarian:type:lending#Librarian}",
+        "{ok:false;reason:'denied'|'locked'|'missing'}"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:lending#Loan": {
+      "name": "Loan",
+      "kind": "object",
+      "declaredIn": "lending#src/desk/loan.entity.ts",
+      "structuralHash": "625abd8076932625",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "copyId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "dueOn",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:lending#OpeningHour": {
+      "name": "OpeningHour",
+      "kind": "object",
+      "declaredIn": "lending#src/hours/opening-hour.entity.ts",
+      "structuralHash": "8efba6ce2bfda265",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "weekday",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "opens",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "lending",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 15,
+      "reason": "route-unguarded",
+      "message": "GET /catalogue/items has no guard in front of it and reaches catalogue_items.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /catalogue/items"
+    },
+    {
+      "service": "lending",
+      "file": "src/catalogue/catalogue.controller.ts",
+      "line": 21,
+      "reason": "marker-reason-missing",
+      "level": "info",
+      "message": "GET /catalogue/new-arrivals has no guard in front of it and reaches catalogue_items, and is marked @flowatlas-public with no reason given.",
+      "hint": "Taken as public. Write why after the marker, /** @flowatlas-public <why> */, so whoever reviews the route can check the decision still holds.",
+      "symbol": "GET /catalogue/new-arrivals"
+    },
+    {
+      "service": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 20,
+      "reason": "route-checked-in-body",
+      "level": "info",
+      "message": "POST /desk/renewals reaches loans with no guard in front of it, and refuses a request in its own code through toHttpError(…) (401, 403 or 423, chosen at run time) in DeskController.renew, src/desk/desk.controller.ts:23.",
+      "hint": "The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
+      "symbol": "POST /desk/renewals"
+    },
+    {
+      "service": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 28,
+      "reason": "route-checked-in-body",
+      "level": "info",
+      "message": "DELETE /desk/holds/:param reaches holds with no guard in front of it, and refuses a request in its own code through toHttpError(…) (401, 403 or 423, chosen at run time) in DeskController.cancelHold, src/desk/desk.controller.ts:33.",
+      "hint": "The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
+      "symbol": "DELETE /desk/holds/:param"
+    },
+    {
+      "service": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 39,
+      "reason": "route-checked-in-body",
+      "level": "info",
+      "message": "GET /desk/overdue reaches loans with no guard in front of it, and refuses a request in its own code through reject(…) after a check of who is asking (the status it gives was not read) in DeskController.overdue, src/desk/desk.controller.ts:41.",
+      "hint": "The exception is chosen at run time by the helper; the statuses listed are what its table can give, and which one a request gets, or whether the check runs before the data is read, this cannot tell. A guard would make the check visible to every reader; /** @flowatlas-auth <how> */ on the handler says it in words.",
+      "symbol": "GET /desk/overdue"
+    },
+    {
+      "service": "lending",
+      "file": "src/desk/desk.controller.ts",
+      "line": 46,
+      "reason": "route-unguarded",
+      "message": "GET /desk/stats has no guard in front of it and reaches loans.",
+      "hint": "Add a guard, or mark it public: a decorator named under doctor.publicDecorators, or the route under doctor.publicRoutes. Routes public by decision can be accepted together: flowatlas accept route-unguarded --service <name> --path \"<METHOD> /prefix/*\" --note \"<why>\".",
+      "symbol": "GET /desk/stats"
+    },
+    {
+      "service": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 14,
+      "reason": "route-public-declared",
+      "level": "info",
+      "message": "GET /opening-hours has no guard in front of it and reaches opening_hours, and is declared public: opening hours are shown to anyone.",
+      "hint": "Decided on purpose, so nothing is missing. Check that the reason still holds.",
+      "symbol": "GET /opening-hours"
+    },
+    {
+      "service": "lending",
+      "file": "src/hours/opening-hours.controller.ts",
+      "line": 19,
+      "reason": "route-public-declared",
+      "level": "info",
+      "message": "GET /opening-hours/today has no guard in front of it and reaches opening_hours, and is declared public: opening hours are shown to anyone.",
+      "hint": "Decided on purpose, so nothing is missing. Check that the reason still holds.",
+      "symbol": "GET /opening-hours/today"
+    }
+  ]
+}

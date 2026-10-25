@@ -1,0 +1,51 @@
+{
+  "Comment": "Fulfils an order: reserves the stock, charges the card, marks the order paid and publishes the receipt.",
+  "StartAt": "ReserveStock",
+  "States": {
+    "ReserveStock": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${reserve_stock_arn}",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.stock",
+      "Next": "ChargeCard"
+    },
+    "ChargeCard": {
+      "Type": "Task",
+      "Resource": "${charge_card_arn}",
+      "ResultPath": "$.payment",
+      "Next": "MarkPaid"
+    },
+    "MarkPaid": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:updateItem",
+      "Parameters": {
+        "TableName": "${orders_table}",
+        "Key": {
+          "orderId": {
+            "S.$": "$.orderId"
+          }
+        },
+        "UpdateExpression": "SET paid = :yes",
+        "ExpressionAttributeValues": {
+          ":yes": {
+            "BOOL": true
+          }
+        }
+      },
+      "ResultPath": null,
+      "Next": "SendReceipt"
+    },
+    "SendReceipt": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${receipts_arn}",
+        "Message.$": "States.JsonToString($)"
+      },
+      "End": true
+    }
+  }
+}

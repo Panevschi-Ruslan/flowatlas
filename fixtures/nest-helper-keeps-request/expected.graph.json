@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-helper-keeps-request",
-  "generatedAt": "2026-10-07T18:29:22.579Z",
+  "generatedAt": "2026-10-17T06:06:04.338Z",
   "nodes": [
     {
       "id": "config_key:nest-helper-keeps-request#LIBRARY_BOT_TOKEN",
@@ -53,7 +53,12 @@
         "path": "/bot${…}/:param",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null,
+        "bodyType": "{chat_id:string;text:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "chat_id",
+          "text"
+        ],
         "host": "api.example.test"
       }
     },
@@ -70,7 +75,12 @@
         "path": "/bot${…}/sendMessage",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null,
+        "bodyType": "{chat_id:string;text:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "chat_id",
+          "text"
+        ],
         "host": "api.example.test"
       }
     },

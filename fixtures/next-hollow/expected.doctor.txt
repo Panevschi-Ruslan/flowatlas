@@ -1,6 +1,6 @@
-unresolved: total=6 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · exit=2
+unresolved: total=6 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=2
 
-unresolved: 6 to act on over 6 rows
+unresolved: 6 to act on · missed: 6 · notes: 0 · findings: 0
   ways in: 7 found, 2 with a handler that was read, 5 without
   route-handler-unread: 5 rows
     Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.

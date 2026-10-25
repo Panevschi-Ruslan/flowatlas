@@ -1,0 +1,21 @@
+{
+  "target": {
+    "id": "storefront#src/jobs/reminder.job.ts:ReminderJob.start",
+    "type": "method",
+    "label": "ReminderJob.start",
+    "loc": "src/jobs/reminder.job.ts:10",
+    "service": "storefront"
+  },
+  "entries": [],
+  "total": 0,
+  "entriesNone": "nothing reaches this",
+  "reached": 0,
+  "entriesByService": {},
+  "reachedByService": {},
+  "servicesWithoutEntry": [],
+  "channels": [],
+  "next": [
+    "cant_follow({service: \"storefront\"})",
+    "search({query: \"src/jobs/reminder.job.ts\", kinds: [\"gaps\"]})"
+  ]
+}

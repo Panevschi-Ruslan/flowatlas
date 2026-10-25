@@ -1,0 +1,158 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "flowatlas",
+          "version": "0.6.0",
+          "semanticVersion": "0.6.0",
+          "informationUri": "https://panevschi-ruslan.github.io/flowatlas/",
+          "rules": [
+            {
+              "id": "join/no-producer",
+              "name": "join/no-producer",
+              "shortDescription": {
+                "text": "handler with nothing publishing to it"
+              },
+              "help": {
+                "text": "After the deploy, nothing deployed publishes what this handler consumes. Deploy the publisher first, or ship both together.",
+                "markdown": "After the deploy, nothing deployed publishes what this handler consumes. Deploy the publisher first, or ship both together."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "join/target-gone",
+              "name": "join/target-gone",
+              "shortDescription": {
+                "text": "call whose route deploying removes"
+              },
+              "help": {
+                "text": "A caller that is deployed asks for a route the version being deployed no longer serves. Deploy the caller first, keep the route, or ship both together.",
+                "markdown": "A caller that is deployed asks for a route the version being deployed no longer serves. Deploy the caller first, keep the route, or ship both together."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            }
+          ]
+        }
+      },
+      "automationDetails": {
+        "id": "flowatlas/check/"
+      },
+      "originalUriBaseIds": {
+        "%SRCROOT%": {
+          "description": {
+            "text": "The directory flowatlas.config.json is in."
+          }
+        },
+        "billing": {
+          "uri": "billing/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "gateway": {
+          "uri": "gateway/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "orders": {
+          "uri": "orders/",
+          "uriBaseId": "%SRCROOT%"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "join/target-gone",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "prod: gateway calls GET /orders/:param on orders, which is gone after this deploy (now target-route-not-found) ([GET /orders/:param (as deployed)](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 21
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              },
+              "message": {
+                "text": "GET /orders/:param (as deployed)"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "beacdfbcb901bebe4888b591a9f99e79",
+            "primaryLocationLineHash": "beacdfbcb901bebe:1"
+          },
+          "baselineState": "new",
+          "properties": {
+            "service": "gateway",
+            "environment": "prod",
+            "edge": "http_calls",
+            "now": "target-route-not-found"
+          }
+        },
+        {
+          "ruleId": "join/no-producer",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "prod: orders InvoicePaidConsumer.onPaid is a new handler of invoice.paid, which nothing deployed publishes"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/invoice-paid.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "a603f41610adbacfbf968c529868bb58",
+            "primaryLocationLineHash": "a603f41610adbacf:1"
+          },
+          "baselineState": "new",
+          "properties": {
+            "service": "orders",
+            "environment": "prod",
+            "edge": "consumes",
+            "now": "never-produced"
+          }
+        }
+      ]
+    }
+  ]
+}
+--- stderr ---
+check prod: not deployable · 2 reason(s) · 2 already deployed · moved orders

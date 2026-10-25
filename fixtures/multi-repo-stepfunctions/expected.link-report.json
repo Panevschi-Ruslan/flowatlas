@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:56.629Z",
+  "builtAt": "2026-10-16T23:28:38.299Z",
   "configHash": "a7b646c99a88",
   "services": [
     {
@@ -11,8 +11,8 @@
       "nodes": 20,
       "edges": 14,
       "types": 3,
-      "unresolved": 1,
-      "durationMs": 546,
+      "unresolved": 0,
+      "durationMs": 513,
       "packages": {
         "name": "lending-library-catalogue",
         "runtime": [],
@@ -26,11 +26,11 @@
       "repo": "./circulation",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 21,
-      "edges": 19,
+      "nodes": 23,
+      "edges": 21,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 367
+      "durationMs": 346
     },
     {
       "name": "members",
@@ -41,7 +41,7 @@
       "edges": 10,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 537,
+      "durationMs": 519,
       "packages": {
         "name": "lending-library-members",
         "runtime": [],
@@ -90,6 +90,10 @@
     "nodes": 53,
     "edges": 49,
     "types": 6,
-    "unresolved": 1
+    "missed": 0,
+    "sites": 0,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 0
   }
 }

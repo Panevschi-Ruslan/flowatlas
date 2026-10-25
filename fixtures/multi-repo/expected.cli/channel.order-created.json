@@ -81,7 +81,7 @@
                       "id": "billing#src/invoices/invoices.service.ts:InvoicesService.create",
                       "type": "method",
                       "label": "InvoicesService.create",
-                      "loc": "src/invoices/invoices.service.ts:10",
+                      "loc": "src/invoices/invoices.service.ts:30",
                       "service": "billing"
                     },
                     "edge": {
@@ -92,7 +92,106 @@
                       ],
                       "returns": "type:billing#InvoiceDto"
                     },
-                    "children": []
+                    "children": [
+                      {
+                        "node": {
+                          "id": "config_key:billing#ORDERS_URL",
+                          "type": "config_key",
+                          "label": "ORDERS_URL",
+                          "loc": "src/invoices/invoices.service.ts:33",
+                          "service": "billing"
+                        },
+                        "edge": {
+                          "type": "reads_config",
+                          "confidence": "static"
+                        },
+                        "children": []
+                      },
+                      {
+                        "node": {
+                          "id": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+                          "type": "http_out",
+                          "label": "GET /orders/:param",
+                          "loc": "src/invoices/invoices.service.ts:33",
+                          "service": "billing"
+                        },
+                        "edge": {
+                          "type": "calls",
+                          "confidence": "static"
+                        },
+                        "children": [
+                          {
+                            "node": {
+                              "id": "entry:orders:http:GET:/orders/:param",
+                              "type": "entry",
+                              "label": "GET /orders/:param",
+                              "loc": "src/orders/orders.controller.ts:25",
+                              "service": "orders",
+                              "kind": "http"
+                            },
+                            "edge": {
+                              "type": "http_calls",
+                              "confidence": "static",
+                              "returns": "type:billing#OrderView"
+                            },
+                            "children": [
+                              {
+                                "node": {
+                                  "id": "orders#src/orders/orders.controller.ts:OrdersController.findOne",
+                                  "type": "method",
+                                  "label": "OrdersController.findOne",
+                                  "loc": "src/orders/orders.controller.ts:25",
+                                  "service": "orders"
+                                },
+                                "edge": {
+                                  "type": "handles",
+                                  "confidence": "static",
+                                  "params": [
+                                    "string"
+                                  ],
+                                  "returns": "type:@fx/contracts#OrderDto"
+                                },
+                                "children": [
+                                  {
+                                    "node": {
+                                      "id": "orders#src/orders/orders.service.ts:OrdersService.findOne",
+                                      "type": "method",
+                                      "label": "OrdersService.findOne",
+                                      "loc": "src/orders/orders.service.ts:25",
+                                      "service": "orders"
+                                    },
+                                    "edge": {
+                                      "type": "calls",
+                                      "confidence": "static",
+                                      "params": [
+                                        "string"
+                                      ],
+                                      "returns": "type:@fx/contracts#OrderDto"
+                                    },
+                                    "children": [
+                                      {
+                                        "node": {
+                                          "id": "db_query:orders#src/orders/orders.service.ts:26:23",
+                                          "type": "db_query",
+                                          "label": "read orders",
+                                          "loc": "src/orders/orders.service.ts:26",
+                                          "service": "orders"
+                                        },
+                                        "edge": {
+                                          "type": "calls",
+                                          "confidence": "static"
+                                        },
+                                        "children": []
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
                   }
                 ]
               }
@@ -101,5 +200,6 @@
         ]
       }
     ]
-  }
+  },
+  "truncated": "1 more nodes past depth 8; raise depth"
 }

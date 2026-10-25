@@ -1,10 +1,14 @@
 import Database from 'better-sqlite3';
-import type {
-  GraphEdge,
-  GraphNode,
-  ServiceSummary,
-  TypeEntry,
-  UnresolvedLevel,
+import {
+  rowKindOf,
+  rowRiskOf,
+  type GraphEdge,
+  type GraphNode,
+  type Risk,
+  type RowKind,
+  type ServiceSummary,
+  type TypeEntry,
+  type UnresolvedLevel,
 } from '@flowatlas/core';
 import type { LinkReport } from '../report.js';
 
@@ -60,8 +64,23 @@ export interface UnresolvedRow {
  * rather than a node, so the field is often a string that is no node's id, and
  * a reader checks it against the nodes rather than trusting it.
  */
-export interface AnchoredUnresolvedRow extends UnresolvedRow {
+export interface AnchoredUnresolvedRow extends UnresolvedRow, Partial<KindOfStoredRow> {
   node: string | null;
+  /** What the row recorded beside its reason - why its step could not be followed (P75). Absent when nothing. */
+  meta?: Record<string, unknown>;
+}
+
+/**
+ * What a row is, as the database stored it when the graph was written (P208):
+ * core's `kindOfRow`, and a finding's risk. Read from a database written
+ * before they were stored, both are decided again, the same way. Every row
+ * the database reads has them; a row built elsewhere may not, and core's
+ * `rowKindOf` decides it then.
+ */
+export interface KindOfStoredRow {
+  kind: RowKind;
+  /** Only on a finding, and only when its reason has one. */
+  risk?: Risk;
 }
 
 export interface SearchOptions {
@@ -153,6 +172,31 @@ const toEdge = (row: EdgeRow): GraphEdge => ({
   meta: parse(row.meta),
 });
 
+/** A row's stored extras as they come out of SQLite: JSON text, and a kind and a risk or nulls. */
+interface StoredExtras {
+  meta: string;
+  kind: string | null;
+  risk: string | null;
+}
+
+/**
+ * A row with its meta parsed and its kind and risk read back (P208): the
+ * stored ones, through core's `rowKindOf` and `rowRiskOf`, which decide them
+ * again for a database that stored none.
+ */
+const withStored = <R extends { reason: string }>({ meta, kind, risk, ...row }: R & StoredExtras): Omit<R, keyof StoredExtras> & KindOfStoredRow & { meta?: Record<string, unknown> } => {
+  const parsed = parse(meta);
+  const recorded = { reason: row.reason, ...(Object.keys(parsed).length === 0 ? {} : { meta: parsed }) };
+  const stored = { ...recorded, kind: kind as RowKind | null, risk: risk as Risk | null };
+  const found = rowRiskOf(stored);
+  return {
+    ...(row as Omit<R, keyof StoredExtras>),
+    ...(recorded.meta === undefined ? {} : { meta: recorded.meta }),
+    kind: rowKindOf(stored),
+    ...(found === undefined ? {} : { risk: found }),
+  };
+};
+
 /** Keeps the shallowest sighting of each node; rows arrive depth-ordered. */
 const once = (result: TraverseResult): TraverseResult => {
   const seen = new Set<string>();
@@ -173,6 +217,7 @@ const once = (result: TraverseResult): TraverseResult => {
  */
 export class GraphDb {
   readonly #db: Database.Database;
+  readonly #tables = new Map<string, ReadonlySet<string>>();
 
   constructor(path: string, options: { readonly?: boolean } = {}) {
     this.#db = new Database(path, { readonly: options.readonly ?? true, fileMustExist: true });
@@ -285,14 +330,45 @@ export class GraphDb {
     ).map(toEdge);
   }
 
+  /** The columns a table has, asked once: an older database lacks some, and is still read. */
+  #columns(table: string): ReadonlySet<string> {
+    let found = this.#tables.get(table);
+    if (found === undefined) {
+      found = new Set((this.#db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).map((column) => column.name));
+      this.#tables.set(table, found);
+    }
+    return found;
+  }
+
+  /**
+   * What a row is stored as beside its place, as a select list: its meta
+   * (P75) and its kind and risk (P208), each a constant where a database
+   * written before the column existed has none.
+   */
+  #rowExtras(): string {
+    const has = this.#columns('unresolved');
+    return [
+      has.has('meta') ? 'meta' : "'{}' AS meta",
+      has.has('kind') ? 'kind' : 'NULL AS kind',
+      has.has('risk') ? 'risk' : 'NULL AS risk',
+    ].join(', ');
+  }
+
+  /** The layout version the database was written with: 1 when it says none (P208). */
+  formatVersion(): number {
+    const row = this.#db.prepare('SELECT value FROM meta WHERE key = ?').get('db_format_version') as { value: string } | undefined;
+    return row === undefined ? 1 : Number(row.value);
+  }
+
   /** Every finding, in the order a reader would walk them, with the symbol it names. */
-  allUnresolved(): AnchoredUnresolvedRow[] {
-    return this.#db
+  allUnresolved(): Array<AnchoredUnresolvedRow & KindOfStoredRow> {
+    const rows = this.#db
       .prepare(
-        `SELECT service, file, line, reason, level, sites, message, hint, node_id AS node
+        `SELECT service, file, line, reason, level, sites, message, hint, node_id AS node, ${this.#rowExtras()}
            FROM unresolved ORDER BY service, file, line`,
       )
-      .all() as AnchoredUnresolvedRow[];
+      .all() as Array<Omit<AnchoredUnresolvedRow, 'meta' | 'kind' | 'risk'> & StoredExtras>;
+    return rows.map(withStored);
   }
 
   search(text: string, options: SearchOptions = {}): GraphNode[] {
@@ -398,10 +474,13 @@ export class GraphDb {
   }
 
   /** Everything recorded against one node, for saying why a walk stops there. */
-  unresolvedFor(id: string): UnresolvedRow[] {
-    return this.#db
-      .prepare('SELECT service, file, line, reason, level, sites, message, hint FROM unresolved WHERE node_id = ?')
-      .all(id) as UnresolvedRow[];
+  /** The rows recorded against one node, each with its meta when it has one (P89: a loop's reach). */
+  unresolvedFor(id: string): Array<UnresolvedRow & KindOfStoredRow & { meta?: Record<string, unknown> }> {
+    // As `allUnresolved` reads them: a database older than a column still answers.
+    const rows = this.#db
+      .prepare(`SELECT service, file, line, reason, level, sites, message, hint, ${this.#rowExtras()} FROM unresolved WHERE node_id = ?`)
+      .all(id) as Array<UnresolvedRow & StoredExtras>;
+    return rows.map(withStored);
   }
 
   /** Findings across the project, newest first is meaningless here, so by place. */
@@ -425,6 +504,20 @@ export class GraphDb {
     const one = (table: string): number =>
       (this.#db.prepare(`SELECT count(*) AS n FROM ${table}`).get() as { n: number }).n;
     return { nodes: one('nodes'), edges: one('edges'), types: one('types'), unresolved: one('unresolved') };
+  }
+
+  /**
+   * The node types, entry kinds and edge types the graph holds at least one
+   * of, read off the type indexes: what the MCP server decides its tool list
+   * by (P201) without reading a row it does not need.
+   */
+  held(): { nodes: string[]; entryKinds: string[]; edges: string[] } {
+    const column = (sql: string): string[] => (this.#db.prepare(sql).all() as Array<{ value: string | null }>).flatMap((row) => (row.value === null ? [] : [row.value]));
+    return {
+      nodes: column('SELECT DISTINCT type AS value FROM nodes ORDER BY value'),
+      entryKinds: column("SELECT DISTINCT kind AS value FROM nodes WHERE type = 'entry' ORDER BY value"),
+      edges: column('SELECT DISTINCT type AS value FROM edges ORDER BY value'),
+    };
   }
 
   close(): void {

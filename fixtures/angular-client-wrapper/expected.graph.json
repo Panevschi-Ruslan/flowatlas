@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "angular-client-wrapper",
-  "generatedAt": "2026-10-08T19:04:42.443Z",
+  "generatedAt": "2026-10-16T16:20:16.550Z",
   "nodes": [
     {
       "id": "angular-client-wrapper#node_modules/@angular/common:HttpClient",
@@ -557,7 +557,7 @@
         "signature": {
           "params": [
             {
-              "name": "sessionData",
+              "name": "sessionToken",
               "type": "string"
             }
           ],
@@ -1107,15 +1107,15 @@
     {
       "id": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:21:12@24:12",
       "type": "ui_api_call",
-      "label": "GET /chat/me/deals",
+      "label": "GET /portal/me/deals",
       "repo": "angular-client-wrapper",
       "file": "src/app/deals/deals.client.ts",
       "line": 21,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "url": "${apiUrl}/chat/me/deals",
-        "path": "/chat/me/deals",
+        "url": "${apiUrl}/portal/me/deals",
+        "path": "/portal/me/deals",
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal[]",
         "bodyType": null,
@@ -1127,15 +1127,15 @@
     {
       "id": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:25:12@24:12",
       "type": "ui_api_call",
-      "label": "GET /chat/deals/:param",
+      "label": "GET /portal/deals/:param",
       "repo": "angular-client-wrapper",
       "file": "src/app/deals/deals.client.ts",
       "line": 25,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "url": "${apiUrl}/chat/deals/:param",
-        "path": "/chat/deals/:param",
+        "url": "${apiUrl}/portal/deals/:param",
+        "path": "/portal/deals/:param",
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal",
         "bodyType": null,
@@ -1147,15 +1147,15 @@
     {
       "id": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:29:12@28:12",
       "type": "ui_api_call",
-      "label": "POST /chat/deals/:param/claim",
+      "label": "POST /portal/deals/:param/claim",
       "repo": "angular-client-wrapper",
       "file": "src/app/deals/deals.client.ts",
       "line": 29,
       "kind": "http",
       "meta": {
         "method": "POST",
-        "url": "${apiUrl}/chat/deals/:param/claim",
-        "path": "/chat/deals/:param/claim",
+        "url": "${apiUrl}/portal/deals/:param/claim",
+        "path": "/portal/deals/:param/claim",
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal",
         "bodyType": "type:angular-client-wrapper#ClaimDealDto",
@@ -1168,15 +1168,15 @@
     {
       "id": "ui_api_call:angular-client-wrapper#src/app/deals/deals.client.ts:33:12@32:12",
       "type": "ui_api_call",
-      "label": "DELETE /chat/deals/:param",
+      "label": "DELETE /portal/deals/:param",
       "repo": "angular-client-wrapper",
       "file": "src/app/deals/deals.client.ts",
       "line": 33,
       "kind": "http",
       "meta": {
         "method": "DELETE",
-        "url": "${apiUrl}/chat/deals/:param",
-        "path": "/chat/deals/:param",
+        "url": "${apiUrl}/portal/deals/:param",
+        "path": "/portal/deals/:param",
         "baseUrlEnv": "apiUrl",
         "responseType": "void",
         "bodyType": null,
@@ -1900,10 +1900,10 @@
       "name": "RequestOpts",
       "kind": "object",
       "declaredIn": "angular-client-wrapper#src/app/shared/api-client.ts",
-      "structuralHash": "38351d058c962cc3",
+      "structuralHash": "2433203331063d15",
       "fields": [
         {
-          "name": "sessionData",
+          "name": "sessionToken",
           "type": "string",
           "optional": true,
           "meta": {

@@ -16,7 +16,7 @@ Two packages, and only two.
 They are versioned separately, because they change for different reasons: the
 command moves with nearly every release, and the markers move only when an
 annotation changes what it takes. At the time of writing `@flowatlas/cli` is at
-0.5.1 and `@flowatlas/markers` at 0.2.0. `CHANGELOG.md` names the package when
+0.6.0 and `@flowatlas/markers` at 0.2.0. `CHANGELOG.md` names the package when
 only one of them moved.
 
 The other `@flowatlas/*` packages are how the source is organised, not
@@ -105,7 +105,15 @@ shows up later.
 
 **1. Bump the version.** Change `version` in `packages/cli/package.json`, and
 nothing else's. `flowatlas --version` reads it from that manifest at run time,
-so it is the one place the version is written.
+and so do the version `flowatlas mcp` answers `initialize` with, the
+`flowatlasVersion` of `doctor --json` and the tool version of every SARIF log,
+so it is the one place the version is written. The internal packages depend on
+each other through `workspace:*`, so no range moves with it.
+
+While you are in the manifest, check `engines` against what the dependencies
+need (`node -p "require('commander/package.json').engines"` and the same for
+`better-sqlite3`, from `packages/cli`): the command declares the highest floor
+any of them sets, which is Node 22.12 at the time of writing.
 
 **2. Write the changelog entry.** In `CHANGELOG.md`:
 
@@ -122,10 +130,12 @@ upgrading to run `flowatlas build` once: a database built by the previous
 version is refused, and the message is less surprising if they read it here
 first.
 
-**3. Regenerate the snapshot that records the version.** One CLI snapshot
-records the tool's version: `flowatlasVersion` in
-`fixtures/multi-repo-doctor/expected.doctor.json`. The snapshots read built
-graphs, so build and run the fixtures first:
+**3. Regenerate the snapshots that record the version.** The CLI snapshots that
+record the tool's version are `flowatlasVersion` in
+`fixtures/multi-repo-doctor/expected.doctor.json` and the driver's `version` and
+`semanticVersion` in every `*.sarif.json` snapshot (`git grep -l
+semanticVersion fixtures` lists them). The snapshots read built graphs, so
+build and run the fixtures first:
 
 ```sh
 pnpm -r build
@@ -134,8 +144,8 @@ node scripts/cli-snapshots.mjs --update
 git status
 ```
 
-Then check that nothing else moved. The version bump should change that one
-field and no other snapshot; anything more is a change to the tool's output that
+Then check that nothing else moved. The version bump should change those
+fields and nothing else in any snapshot; anything more is a change to the tool's output that
 belongs to some other commit and should be read before it is accepted.
 
 **4. Run the gates.** `pnpm install && pnpm check`, and read the exit code.
@@ -149,12 +159,24 @@ out="$(mktemp -d)"
 (cd packages/cli && pnpm pack --pack-destination "$out")
 ```
 
-About eleven files and about 330 kB packed: `bin/flowatlas.js`,
-`dist/index.js`, the chunks under `dist/chunks/` that the bundle is split into,
-`dist/visualise/page.html` for `flowatlas visualise`, the README, the licence
-and the manifest. The split is deliberate: the graph server is its own chunk,
-loaded by `flowatlas mcp` and by nothing else, so `flowatlas --version` does not
-read it.
+At 0.6.0 that is forty files, about 1.1 MB packed and 4.2 MB unpacked:
+
+- `bin/flowatlas.js`, `dist/index.js`, and the eight chunks under
+  `dist/chunks/` that the bundle is split into;
+- the page `flowatlas visualise` writes, read as text from `dist/visualise/`:
+  `page.html`, `page.css`, `graph.js`, `frame.js`, `map.js`, `steps.js`,
+  `prompt-text.js` and the twenty panel modules under `panels/` (copied by
+  `scripts/page-parts.mjs`, a whole folder, so a new panel ships without being
+  named anywhere);
+- the README, the licence and the manifest.
+
+No test, fixture, type declaration, roadmap or schema file is in it; the
+configuration and file-format schemas are compiled into the bundle. The split
+is deliberate: the graph server is its own chunk, loaded by `flowatlas mcp` and
+by nothing else, so `flowatlas --version` does not read it. Each chunk should
+appear once: `scripts/bundle.mjs` empties `dist/` before it bundles, since the
+chunks are named by hash and a build over an earlier one would otherwise ship
+both sets.
 
 Then install that tarball as a stranger would, into an empty directory, with
 npm:
@@ -166,7 +188,11 @@ npx flowatlas --version
 ```
 
 That catches the two things a workspace hides: a dependency that was only ever
-resolved through the monorepo, and a file that was never added to `files`.
+resolved through the monorepo, and a file that was never added to `files`. On
+a copy of `fixtures/multi-repo`, also run `npx flowatlas build`, `visualise`,
+`doctor` and `observe traces/checkout.otlp.json`, and connect to
+`npx flowatlas mcp`: `initialize` answers the new version and `tools/list` the
+twenty-six tools.
 
 **6. Land it on `main`.** Merge the release commit, and wait for the `check`
 workflow and the GitHub Pages build to go green. The package is published from

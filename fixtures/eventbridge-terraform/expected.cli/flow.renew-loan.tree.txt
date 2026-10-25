@@ -9,7 +9,7 @@
             -> ReviewLoan [Task lambda:invoke]              circulation/statemachines/loan-review.asl.json:5
               @  library-review-loan                        circulation/infra/functions.tf:37
                 -> handler                                  circulation/src/reviews/review-loan.ts:9
-                  -> findLoan                               circulation/src/lib/loans-table.ts:15
+                  (again) findLoan
               -> Approved? [Choice]                         circulation/statemachines/loan-review.asl.json:19
                 -> Renewed [Succeed]                        circulation/statemachines/loan-review.asl.json:30
                 -> Refused [Fail]                           circulation/statemachines/loan-review.asl.json:33

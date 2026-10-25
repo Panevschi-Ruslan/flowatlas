@@ -1,0 +1,15 @@
+{
+  "id": "entry:billing:http:GET:/invoices/:param",
+  "type": "entry",
+  "kind": "http",
+  "service": "billing",
+  "loc": "src/invoices/invoices.controller.ts:26",
+  "verdict": "dead",
+  "reason": "no http_calls/hits from any repo (may be a public API)",
+  "class": "actionable",
+  "evidence": {},
+  "next": [
+    "get_source({symbol: \"entry:billing:http:GET:/invoices/:param\"})",
+    "cant_follow({service: \"billing\"})"
+  ]
+}

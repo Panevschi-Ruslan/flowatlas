@@ -1,0 +1,562 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/billing.client.ts:33:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{orderId:string;amount:number}",
+        "symbol": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice",
+        "writes": [
+          "amount",
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "type:billing#CreateInvoiceDto",
+        "symbol": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/billing.client.ts:33:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#InvoiceDto",
+        "symbol": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#InvoiceDto",
+        "symbol": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
+            "to": "entry:billing:http:POST:/invoices",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:gateway#src/clients/billing.client.ts:33:12|http_calls|entry:billing:http:POST:/invoices",
+          "direction": "response",
+          "sender": {
+            "service": "billing",
+            "typeId": "type:billing#InvoiceDto",
+            "symbol": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+          },
+          "receiver": {
+            "service": "gateway",
+            "typeId": "type:gateway#InvoiceDto",
+            "symbol": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice"
+          },
+          "typeId": "type:gateway#InvoiceDto",
+          "field": "status",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender billing sends `status: string`; receiver gateway declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:33:12",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:33:12|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "response",
+      "status": "shared",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:@fx/contracts#OrderDto",
+        "symbol": "orders#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:@fx/contracts#OrderDto",
+        "symbol": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+        "to": "entry:gateway:http:GET:/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:21:12|hits|entry:gateway:http:GET:/orders/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
+        "symbol": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#OrderDto",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.order"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "type-missing:."
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:73:12",
+        "to": "entry:gateway:http:GET:/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:73:12|hits|entry:gateway:http:GET:/orders/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "type:axios#AxiosResponse<type:@fx/contracts#OrderDto>",
+        "symbol": "gateway#src/orders/orders.controller.ts:OrdersController.findOne"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#OrderDto",
+        "symbol": "web#src/app/orders-api.service.ts:OrdersApiService.one"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "type-missing:."
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:gateway#src/clients/billing.client.ts:33:12",
+        "to": "entry:billing:http:POST:/invoices",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/billing.client.ts:33:12|http_calls|entry:billing:http:POST:/invoices",
+      "direction": "response",
+      "sender": {
+        "service": "billing",
+        "typeId": "type:billing#InvoiceDto",
+        "symbol": "billing#src/invoices/invoices.controller.ts:InvoicesController.create"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#InvoiceDto",
+        "symbol": "gateway#src/clients/billing.client.ts:BillingClient.requestInvoice"
+      },
+      "typeId": "type:gateway#InvoiceDto",
+      "field": "status",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender billing sends `status: string`; receiver gateway declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "channel:invoice.requested",
+        "to": "consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:invoice.requested|consumes|consumer:billing#src/invoices/invoices.consumer.ts:InvoicesConsumer.onInvoiceRequested",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:invoice.requested is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/orders/orders.service.ts:61:5",
+        "to": "channel:order.archived",
+        "type": "emits"
+      },
+      "edgeKey": "channel:order.archived|emits|producer:orders#src/orders/orders.service.ts:61:5",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:order.archived is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "http_out:billing#src/invoices/invoices.service.ts:33:7",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:billing#src/invoices/invoices.service.ts:33:7|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "billing#src/invoices/invoices.service.ts:InvoicesService.create declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/clients/orders.client.ts:33:12",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:gateway#src/clients/orders.client.ts:33:12|http_calls|entry:orders:http:GET:/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "gateway#src/clients/orders.client.ts:OrdersClient.fetchOne declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:106:12",
+        "to": "entry:gateway:http:POST:/orders/:param/resume",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:106:12|hits|entry:gateway:http:POST:/orders/:param/resume",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.advance declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:106:12",
+        "to": "entry:gateway:http:POST:/orders/:param/resume",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:106:12|hits|entry:gateway:http:POST:/orders/:param/resume",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.advance declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:123:3",
+        "to": "entry:gateway:http:POST:/orders/:param/invoice",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:123:3|hits|entry:gateway:http:POST:/orders/:param/invoice",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.probe declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:123:3",
+        "to": "entry:gateway:http:POST:/orders/:param/invoice",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:123:3|hits|entry:gateway:http:POST:/orders/:param/invoice",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.probe declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:138:3",
+        "to": "entry:gateway:http:POST:/orders/:param/invoice",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:138:3|hits|entry:gateway:http:POST:/orders/:param/invoice",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.twoBlind declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:138:3",
+        "to": "entry:gateway:http:POST:/orders/:param/invoice",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:138:3|hits|entry:gateway:http:POST:/orders/:param/invoice",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.twoBlind declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+        "to": "entry:gateway:http:GET:/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:21:12|hits|entry:gateway:http:GET:/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.order declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:61:12",
+        "to": "entry:gateway:http:POST:/orders/:param/invoice",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:61:12|hits|entry:gateway:http:POST:/orders/:param/invoice",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.invoice declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:61:12",
+        "to": "entry:gateway:http:POST:/orders/:param/invoice",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:61:12|hits|entry:gateway:http:POST:/orders/:param/invoice",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.invoice declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:73:12",
+        "to": "entry:gateway:http:GET:/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:73:12|hits|entry:gateway:http:GET:/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.one declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:95:12",
+        "to": "entry:gateway:http:POST:/orders/:param/refund",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:95:12|hits|entry:gateway:http:POST:/orders/:param/refund",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.decide declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:95:12",
+        "to": "entry:gateway:http:POST:/orders/:param/refund",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:95:12|hits|entry:gateway:http:POST:/orders/:param/refund",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.decide declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:95:12",
+        "to": "entry:gateway:http:POST:/orders/:param/ship",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:95:12|hits|entry:gateway:http:POST:/orders/:param/ship",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.decide declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/orders-api.service.ts:95:12",
+        "to": "entry:gateway:http:POST:/orders/:param/ship",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/orders-api.service.ts:95:12|hits|entry:gateway:http:POST:/orders/:param/ship",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/app/orders-api.service.ts:OrdersApiService.decide declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 5,
+    "shared": 1,
+    "identical": 0,
+    "hash_differs": 4,
+    "unchecked": 18,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 1,
+    "ignored": 0
+  },
+  "traffic": {
+    "window": {
+      "from": "2025-10-16T07:00:00.000Z",
+      "to": "2025-10-16T09:00:00.000Z"
+    },
+    "entries": [
+      {
+        "entry": "entry:gateway:http:GET:/orders/:param",
+        "samples": 1,
+        "lastSeen": "2025-10-16T08:10:06.021Z",
+        "responses": {
+          "200": {
+            "against": {
+              "typeId": "type:web#OrderDto",
+              "by": "caller",
+              "symbol": "ui_api_call:web#src/app/orders-api.service.ts:21:12",
+              "service": "web"
+            },
+            "samples": 1,
+            "diffs": [
+              {
+                "kind": "extra_field",
+                "path": "history",
+                "expected": null,
+                "actual": "Record<string,object>",
+                "rule": null,
+                "seenIn": 1,
+                "of": 1,
+                "severity": "info",
+                "message": "responses carry `history: Record<string,object>`; web's OrderDto declares no such field (1 of 1)"
+              },
+              {
+                "kind": "extra_field",
+                "path": "owner",
+                "expected": null,
+                "actual": "string",
+                "rule": null,
+                "seenIn": 1,
+                "of": 1,
+                "severity": "info",
+                "message": "responses carry `owner: string`; web's OrderDto declares no such field (1 of 1)"
+              }
+            ],
+            "rulesApplied": []
+          }
+        },
+        "unchecked": [],
+        "differs": 2
+      },
+      {
+        "entry": "entry:gateway:http:POST:/orders/:param/invoice",
+        "samples": 1,
+        "lastSeen": "2025-10-16T08:10:24.084Z",
+        "request": {
+          "against": {
+            "typeId": "type:@fx/contracts#OrderDto",
+            "by": "route",
+            "symbol": "gateway#src/orders/orders.controller.ts:OrdersController.invoice",
+            "service": "gateway"
+          },
+          "samples": 1,
+          "diffs": [
+            {
+              "kind": "extra_field",
+              "path": "giftNote",
+              "expected": null,
+              "actual": "string",
+              "rule": null,
+              "seenIn": 1,
+              "of": 1,
+              "severity": "info",
+              "message": "requests send `giftNote: string`; the route's OrderDto declares no such field (1 of 1)"
+            },
+            {
+              "kind": "missing_required",
+              "path": "status",
+              "expected": "type:@fx/contracts#OrderStatus",
+              "actual": null,
+              "rule": null,
+              "seenIn": 0,
+              "of": 1,
+              "severity": "warning",
+              "message": "the route's OrderDto requires `status: type:@fx/contracts#OrderStatus`; no request sent it (0 of 1)"
+            }
+          ],
+          "rulesApplied": []
+        },
+        "unchecked": [
+          {
+            "direction": "response",
+            "status": "500",
+            "reason": "status-not-declared",
+            "samples": 1
+          }
+        ],
+        "differs": 2
+      },
+      {
+        "entry": "entry:gateway:http:POST:/orders/:param/refund",
+        "samples": 2,
+        "lastSeen": "2025-10-16T08:10:10.035Z",
+        "unchecked": [
+          {
+            "direction": "request",
+            "reason": "no-declared-type",
+            "samples": 2
+          },
+          {
+            "direction": "response",
+            "status": "201",
+            "reason": "type-unreadable",
+            "samples": 2
+          }
+        ],
+        "differs": 0
+      },
+      {
+        "entry": "entry:gateway:http:POST:/orders/:param/resume",
+        "samples": 1,
+        "lastSeen": "2025-10-16T08:10:14.049Z",
+        "unchecked": [
+          {
+            "direction": "response",
+            "status": "200",
+            "reason": "type-unreadable",
+            "samples": 1
+          }
+        ],
+        "differs": 0
+      },
+      {
+        "entry": "entry:gateway:http:POST:/orders/:param/ship",
+        "samples": 1,
+        "lastSeen": "2025-10-16T08:10:12.042Z",
+        "unchecked": [
+          {
+            "direction": "request",
+            "reason": "no-declared-type",
+            "samples": 1
+          }
+        ],
+        "differs": 0
+      }
+    ]
+  }
+}

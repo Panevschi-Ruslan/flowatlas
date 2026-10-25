@@ -1,7 +1,7 @@
 {
   "schemaVersion": 6,
   "repo": "nest-interface-dispatch",
-  "generatedAt": "2026-10-07T14:34:14.021Z",
+  "generatedAt": "2026-10-16T15:11:44.316Z",
   "nodes": [
     {
       "id": "config_key:nest-interface-dispatch#BASECAMP_URL",
@@ -413,7 +413,10 @@
       "reason": "call-dynamic-receiver",
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
-      "symbol": "CalendarManagerService.remove -> calendar.deleteEvent"
+      "symbol": "CalendarManagerService.remove -> calendar.deleteEvent",
+      "meta": {
+        "cause": "interface-type"
+      }
     },
     {
       "file": "src/main.ts",

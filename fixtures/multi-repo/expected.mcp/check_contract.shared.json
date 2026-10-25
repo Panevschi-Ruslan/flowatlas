@@ -17,5 +17,8 @@
     "right": "type:@fx/contracts#OrderDto",
     "note": "both sides import it from @fx/contracts"
   },
-  "findings": []
+  "findings": [],
+  "next": [
+    "get_type({type: \"type:@fx/contracts#OrderDto\"})"
+  ]
 }

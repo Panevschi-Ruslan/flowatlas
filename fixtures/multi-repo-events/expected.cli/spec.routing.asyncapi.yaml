@@ -1,0 +1,103 @@
+asyncapi: 3.0.0
+info:
+  title: routing
+  version: unversioned
+  description: The channels routing publishes to and consumes from, as flowatlas read them from the code. Nothing here was run.
+channels:
+  eventbridge_library_library.loans_LoanCreated:
+    address: eventbridge/library/library.loans/LoanCreated
+    messages:
+      receive.eventbridge_library_library.loans_LoanCreated:
+        $ref: "#/components/messages/receive.eventbridge_library_library.loans_LoanCreated"
+    x-flowatlas-channel-kind: topic
+  eventbridge_library_library.loans_LoanReturned:
+    address: eventbridge/library/library.loans/LoanReturned
+    messages:
+      receive.eventbridge_library_library.loans_LoanReturned:
+        $ref: "#/components/messages/receive.eventbridge_library_library.loans_LoanReturned"
+    x-flowatlas-channel-kind: topic
+  sqs_library-loan-digest:
+    address: sqs/library-loan-digest
+    messages:
+      send.sqs_library-loan-digest:
+        $ref: "#/components/messages/send.sqs_library-loan-digest"
+      send.sqs_library-loan-digest_2:
+        $ref: "#/components/messages/send.sqs_library-loan-digest_2"
+    x-flowatlas-channel-kind: queue
+operations:
+  receive.eventbridge_library_library.loans_LoanCreated:
+    action: receive
+    channel:
+      $ref: "#/channels/eventbridge_library_library.loans_LoanCreated"
+    messages:
+      - $ref: "#/channels/eventbridge_library_library.loans_LoanCreated/messages/receive.eventbridge_library_library.loans_LoanCreated"
+    summary: rule library-loan-created
+    x-flowatlas-envelope:
+      path: detail
+      text: false
+    x-flowatlas-source: rules.tf:45
+    x-flowatlas-confidence: static
+    x-flowatlas-callers:
+      loans: 1
+  receive.eventbridge_library_library.loans_LoanReturned:
+    action: receive
+    channel:
+      $ref: "#/channels/eventbridge_library_library.loans_LoanReturned"
+    messages:
+      - $ref: "#/channels/eventbridge_library_library.loans_LoanReturned/messages/receive.eventbridge_library_library.loans_LoanReturned"
+    summary: rule library-loan-activity
+    x-flowatlas-forwards-to:
+      - sqs/library-loan-digest
+    x-flowatlas-source: rules.tf:63
+    x-flowatlas-confidence: heuristic
+    x-flowatlas-callers:
+      loans: 1
+  send.sqs_library-loan-digest:
+    action: send
+    channel:
+      $ref: "#/channels/sqs_library-loan-digest"
+    messages:
+      - $ref: "#/channels/sqs_library-loan-digest/messages/send.sqs_library-loan-digest"
+    summary: rule library-loan-activity
+    x-flowatlas-source: rules.tf:63
+    x-flowatlas-confidence: static
+    x-flowatlas-consumers:
+      notifications: 1
+  send.sqs_library-loan-digest_2:
+    action: send
+    channel:
+      $ref: "#/channels/sqs_library-loan-digest"
+    messages:
+      - $ref: "#/channels/sqs_library-loan-digest/messages/send.sqs_library-loan-digest_2"
+    summary: rule library-partner-titles
+    x-flowatlas-source: rules.tf:79
+    x-flowatlas-confidence: static
+    x-flowatlas-consumers:
+      notifications: 1
+components:
+  messages:
+    receive.eventbridge_library_library.loans_LoanCreated:
+      name: receive.eventbridge_library_library.loans_LoanCreated
+      payload:
+        $ref: "#/components/schemas/LoanDetail"
+    receive.eventbridge_library_library.loans_LoanReturned:
+      name: receive.eventbridge_library_library.loans_LoanReturned
+      x-flowatlas-unread: payload-unread
+    send.sqs_library-loan-digest:
+      name: send.sqs_library-loan-digest
+      x-flowatlas-unread: payload-unread
+    send.sqs_library-loan-digest_2:
+      name: send.sqs_library-loan-digest_2
+      x-flowatlas-unread: payload-unread
+  schemas:
+    LoanDetail:
+      type: object
+      properties:
+        loanId:
+          type: string
+        borrowerId:
+          type: string
+      required:
+        - loanId
+        - borrowerId
+      x-flowatlas-type: type:notifications#LoanDetail

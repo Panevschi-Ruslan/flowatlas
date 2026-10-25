@@ -115,8 +115,19 @@ export const refOf = (
   if (schema === undefined) return UNREADABLE;
   const inner = bareRefOf(schema, context, name);
   // A nullable field carries a `null` the receiving side really does read, so
-  // it is part of the reference rather than a note about it.
-  return schema.nullable === true && inner !== UNREADABLE ? `${inner} | null` : inner;
+  // it is part of the reference rather than a note about it. OpenAPI 3.0 says
+  // it with `nullable: true`, 3.1 (and JSON Schema) with `null` in a list of
+  // types (P196); `type: ['null']` alone is the scalar, already said.
+  const typed = Array.isArray(schema.type) ? (schema.type as unknown[]) : [];
+  const nullable = schema.nullable === true || (typed.includes('null') && typed.some((each) => each !== 'null'));
+  return nullable && inner !== UNREADABLE && inner !== 'null' ? `${inner} | null` : inner;
+};
+
+/** The type a schema is, out of a list of them: the first that is not `null`, when there is one. */
+const kindOf = (schema: JsonSchemaNode): string | undefined => {
+  const types: unknown[] = Array.isArray(schema.type) ? schema.type : [schema.type];
+  const found = types.find((each) => each !== 'null') ?? types[0];
+  return typeof found === 'string' ? found : undefined;
 };
 
 const bareRefOf = (schema: JsonSchemaNode, context: ShapeContext, name: string): string => {
@@ -138,7 +149,7 @@ const bareRefOf = (schema: JsonSchemaNode, context: ShapeContext, name: string):
     }
   }
 
-  const kind = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  const kind = kindOf(schema);
   if (kind === 'array') return `${refOf(schema.items, context, `${name}Item`)}[]`;
 
   if (kind === 'object' || schema.properties !== undefined) {

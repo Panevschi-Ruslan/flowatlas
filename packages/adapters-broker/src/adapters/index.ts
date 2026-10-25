@@ -308,6 +308,8 @@ const consumerOf = (described: CustomBrokerConfig['consumers'][number]): Consume
         channel: described.channel,
         ...(described.payloadArg === undefined ? {} : { payloadArg: described.payloadArg }),
         ...(described.payloadPath === undefined ? {} : { payloadPath: described.payloadPath }),
+        ...(described.where === undefined ? {} : { where: described.where }),
+        ...(described.describedBy === undefined ? {} : { describedBy: described.describedBy }),
         kind: described.kind,
       };
 
@@ -325,13 +327,19 @@ export const createCustomBrokerAdapter = (config: CustomBrokerConfig): BrokerSpe
     // type it is called on. The schema has already refused anything else.
     ...(producer.function === undefined
       ? { method: producer.method ?? '', receiverType: producer.receiverType }
-      : { method: producer.function, calledAs: 'function' as const }),
+      : producer.module === undefined
+        ? { method: producer.function, calledAs: 'function' as const }
+        : { method: producer.function, calledAs: 'function' as const, module: producer.module }),
     channelArg: producer.channelArg,
     ...(producer.channel === undefined ? {} : { channel: producer.channel }),
     ...(producer.address === undefined ? {} : { address: producer.address }),
     ...(producer.payload === undefined ? {} : { payload: producer.payload }),
     ...(producer.payloadArg === undefined ? {} : { payloadArg: producer.payloadArg }),
     ...(producer.payloadPath === undefined ? {} : { payloadPath: producer.payloadPath }),
+    ...(producer.batch === undefined ? {} : { batch: producer.batch }),
+    ...(producer.perItem === undefined ? {} : { perItem: producer.perItem }),
+    ...(producer.where === undefined ? {} : { where: producer.where }),
+    ...(producer.describedBy === undefined ? {} : { describedBy: producer.describedBy }),
     kind: producer.kind,
   })),
   consumerDecorators: config.consumers.map(consumerOf).map((each) => each.decorator),
@@ -345,6 +353,8 @@ export const createCustomBrokerAdapter = (config: CustomBrokerConfig): BrokerSpe
     ...(subscriber.channel === undefined ? {} : { channel: subscriber.channel }),
     ...(subscriber.handlerArg === undefined ? {} : { handlerArg: subscriber.handlerArg }),
     receiverType: subscriber.receiverType,
+    ...(subscriber.where === undefined ? {} : { where: subscriber.where }),
+    ...(subscriber.describedBy === undefined ? {} : { describedBy: subscriber.describedBy }),
     kind: subscriber.kind,
   })),
   channelKind: config.channelKind,

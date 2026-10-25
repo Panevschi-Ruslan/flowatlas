@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:51:49.711Z",
+  "builtAt": "2026-10-16T23:29:36.032Z",
   "configHash": "554932e24a02",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 16,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 497,
+      "durationMs": 496,
       "packages": {
         "name": "same-service",
         "runtime": [
@@ -72,6 +72,10 @@
     "nodes": 20,
     "edges": 18,
     "types": 0,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 2
   }
 }

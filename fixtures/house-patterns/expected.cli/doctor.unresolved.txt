@@ -1,0 +1,11 @@
+can't follow: 3 places over 3 rows, by cause
+
+  bootstrap-not-found: 2 places  2 services
+    Set services[].bootstrap in the configuration, or pass --bootstrap, so globals can be read.
+      catalog/src/main.ts:1  bootstrap
+      stock/src/main.ts:1  bootstrap
+
+  channel-dynamic: 1 place  catalog
+    The channel name cannot be read here. Annotate BooksService.remove with the channel it uses.
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause channel-dynamic
+      catalog/src/books/books.service.ts:29  producer:catalog#src/books/books.service.ts:29:5

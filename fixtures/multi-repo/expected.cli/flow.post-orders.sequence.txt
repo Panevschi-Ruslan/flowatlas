@@ -1,0 +1,18 @@
+sequenceDiagram
+  autonumber
+  actor n_caller as client
+  box rgba(128,128,128,0.08) orders
+    participant n_orders as orders
+    participant n_table_orders_orders as orders (table)
+  end
+  participant n_channel_order_created as order.created (topic)
+  box rgba(128,128,128,0.08) billing
+    participant n_billing as billing
+  end
+  n_caller->>n_orders: POST /orders
+  n_orders->>n_table_orders_orders: write orders
+  n_orders-)n_channel_order_created: order.created
+  n_channel_order_created-)n_billing: order.created
+  n_billing->>n_orders: GET /orders/:param
+  n_orders->>n_table_orders_orders: read orders
+  %% unresolved on this path: 0

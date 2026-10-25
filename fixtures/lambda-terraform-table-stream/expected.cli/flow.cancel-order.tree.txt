@@ -1,0 +1,8 @@
+@  POST /orders/:param/cancel                                             returns/infra/main.tf:65
+  -> handler                                                              returns/src/returns/cancel-order.ts:11
+    ~  write dynamodb/shop-orders                                         returns/src/returns/cancel-order.ts:13
+      ~  dynamodb/shop-orders                                             infra/main.tf:6
+        => shop ~  mapping aws_lambda_event_source_mapping.order_changed  shop/infra/main.tf:115
+          ~  event dynamodb/shop-orders                                   shop/infra/main.tf:115
+            -> handler                                                    shop/src/orders/order-changed.ts:6
+unresolved on this path: 1

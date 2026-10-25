@@ -150,4 +150,67 @@ const SNS: InfraModuleDescription = {
   },
 };
 
-export const MESSAGING_MODULES: readonly InfraModuleDescription[] = [EVENTBRIDGE, SQS, SNS];
+/**
+ * `terraform-aws-modules/s3-bucket/aws`: a bucket, and its versioning from the
+ * `versioning` input - `{ enabled = true }`, or `{ status = "Enabled" }` (or
+ * `true`) - spelled as the module spells it, so a delete naming no version is
+ * taken as the marker it leaves (P60). Its notifications are the
+ * `notification` submodule's, or a resource of the project's own.
+ */
+const S3_BUCKET: InfraModuleDescription = {
+  source: 'terraform-aws-modules/s3-bucket/aws',
+  variables: {
+    create_bucket: 'true',
+    bucket: 'null',
+    versioning: '{}',
+  },
+  resources: {
+    'aws_s3_bucket.this': {
+      count: 'var.create_bucket ? 1 : 0',
+      bucket: 'var.bucket',
+    },
+    'aws_s3_bucket_versioning.this': {
+      count: 'var.create_bucket && length(keys(var.versioning)) > 0 ? 1 : 0',
+      bucket: 'aws_s3_bucket.this[0].id',
+      versioning_configuration:
+        '{ status = try(var.versioning["enabled"] ? "Enabled" : "Suspended", tobool(var.versioning["status"]) ? "Enabled" : "Suspended", title(lower(var.versioning["status"]))) }',
+    },
+  },
+  outputs: {
+    s3_bucket_id: 'try(aws_s3_bucket.this[0].id, "")',
+    s3_bucket_arn: 'try(aws_s3_bucket.this[0].arn, "")',
+  },
+};
+
+/** The blocks of one kind of target of a bucket notification, from one input of the module keyed by id. */
+const notified = (input: string, arn: string, from: string): string =>
+  `[for id, notification in var.${input} : { id = id, ${arn} = notification.${from}, events = notification.events, filter_prefix = try(notification.filter_prefix, null), filter_suffix = try(notification.filter_suffix, null) }]`;
+
+/**
+ * `terraform-aws-modules/s3-bucket/aws//modules/notification`: one
+ * notification of a bucket, its functions, queues and topics keyed by id in
+ * `lambda_notifications`, `sqs_notifications` and `sns_notifications`, and
+ * `eventbridge` to send every event to the default bus besides (P56).
+ */
+const S3_NOTIFICATION: InfraModuleDescription = {
+  source: 'terraform-aws-modules/s3-bucket/aws//modules/notification',
+  variables: {
+    create: 'true',
+    eventbridge: 'null',
+    lambda_notifications: '{}',
+    sqs_notifications: '{}',
+    sns_notifications: '{}',
+  },
+  resources: {
+    'aws_s3_bucket_notification.this': {
+      count: 'var.create ? 1 : 0',
+      bucket: 'var.bucket',
+      eventbridge: 'var.eventbridge',
+      lambda_function: notified('lambda_notifications', 'lambda_function_arn', 'function_arn'),
+      queue: notified('sqs_notifications', 'queue_arn', 'queue_arn'),
+      topic: notified('sns_notifications', 'topic_arn', 'topic_arn'),
+    },
+  },
+};
+
+export const MESSAGING_MODULES: readonly InfraModuleDescription[] = [EVENTBRIDGE, SQS, SNS, S3_BUCKET, S3_NOTIFICATION];

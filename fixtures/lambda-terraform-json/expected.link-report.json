@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T10:50:38.039Z",
+  "builtAt": "2026-10-16T23:28:15.647Z",
   "configHash": "852e202a9e98",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 3,
       "unresolved": 0,
-      "durationMs": 468,
+      "durationMs": 484,
       "packages": {
         "name": "lending-library-catalogue",
         "runtime": [],
@@ -62,6 +62,10 @@
     "nodes": 10,
     "edges": 7,
     "types": 3,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
     "unresolved": 0
   }
 }

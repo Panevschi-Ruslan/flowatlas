@@ -1,0 +1,21 @@
+unresolved: total=5 (skipped) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 5 to act on · missed: 6 · notes: 0 · findings: 0
+  1 missed place static reading cannot see, folded into 1 row
+  1 of 4 best guesses confirmed by traffic in 2h
+  api-path-dynamic: 2 rows
+    This method carries 1 annotation and 2 requests whose address is built at run time, so nothing here says which annotation describes which. Write one per request, or move each request into its own method.
+      web/src/app/orders-api.service.ts:139  this.http.post<unknown>(this.opaque(), {})
+      web/src/app/orders-api.service.ts:140  this.http.get<unknown>(this.opaque())
+  target-route-not-found: 2 rows
+    The target service serves no such route. Check its controllers for a rename, or annotate the call with @CallsService.
+      web/src/app/orders-api.service.ts:26  target service gateway has no route GET /orders/:param/receipt
+        ↳ Route renamed? Check gateway's controllers, or annotate the method with /** @flowatlas-calls GET /orders/:param/receipt */.
+      web/src/app/orders-api.service.ts:106  POST /orders/:param/hold reaches no route, though /orders/:param/resume does
+        ↳ The segment is written as a closed set of values and one of them has no route. A renamed or missing handler looks exactly like this; check the ones named.
+  ambiguous-route-target: 1 row
+    Set services[].apiTarget on the frontend to say which service its settings key names.
+      web/src/app/orders-api.service.ts:34  gateway and orders both answer GET /orders/:param
+  api-path-dynamic (info): 1 row
+    The address is built at run time, and an annotation on this method already says where it goes. Nothing to do here.
+      web/src/app/orders-api.service.ts:124  this.http.get<unknown>(this.opaque())

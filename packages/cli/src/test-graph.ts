@@ -2,6 +2,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  countsOf,
   SCHEMA_VERSION,
   type GraphEdge,
   type GraphNode,
@@ -319,7 +320,11 @@ const report = (): LinkReport => ({
     nodes: NODES.length,
     edges: EDGES.length,
     types: Object.keys(TYPES).length,
-    unresolved: UNRESOLVED.length,
+    missed: countsOf(UNRESOLVED).missed,
+    sites: countsOf(UNRESOLVED).sites,
+    notes: countsOf(UNRESOLVED).notes,
+    findings: countsOf(UNRESOLVED).findings,
+    unresolved: countsOf(UNRESOLVED).missed,
   },
 });
 
@@ -337,8 +342,9 @@ export interface TestProject {
  * handler as a route, a cross-repo call, a channel with a handler and one
  * without, a cycle, and two declarations of one name that disagree. Written and
  * read the way the tool does it, so a query that passes here is a real query.
+ * `extra.unresolved` adds check rows after the project's own.
  */
-export const buildTestProject = (name = 'graph'): TestProject => {
+export const buildTestProject = (name = 'graph', extra: { unresolved?: readonly Unresolved[] } = {}): TestProject => {
   const dbPath = join(directory, `${name}.db`);
   const project: ProjectGraph = {
     schemaVersion: SCHEMA_VERSION,
@@ -347,7 +353,7 @@ export const buildTestProject = (name = 'graph'): TestProject => {
     nodes: NODES,
     edges: EDGES,
     types: TYPES,
-    unresolved: UNRESOLVED,
+    unresolved: [...UNRESOLVED, ...(extra.unresolved ?? [])],
   };
   writeGraphDb(project, report(), dbPath);
   return { db: openGraphDb(dbPath), dbPath };

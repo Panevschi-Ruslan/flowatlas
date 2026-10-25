@@ -9,8 +9,10 @@ import { localBaseClassNames, localBaseTableProperty,
   findConfig,
   loadConfig,
   parseConfig,
+  serviceNamesOf,
 } from './config.js';
 import { ConfigInvalidError, ConfigNotFoundError } from './errors.js';
+import { ruleSetOf } from './rule-config.js';
 
 const temporary: string[] = [];
 
@@ -44,10 +46,12 @@ describe('parseConfig', () => {
         entry: { registries: [], http: [], procedures: [] },
         broker: { custom: [] },
         starters: [],
+        http: { clients: [] },
         infra: { modules: [] },
         db: { localBaseClasses: [], tables: [] },
         frontend: { localClientClasses: [] },
       },
+      settingFiles: { read: true },
       output: DEFAULT_OUTPUT,
       types: { maxDepth: DEFAULT_TYPE_MAX_DEPTH },
       contracts: {
@@ -63,6 +67,10 @@ describe('parseConfig', () => {
         skipGuardDecorators: {},
         markers: { warnAsError: false },
       },
+      callShape: { conditionalWrites: [], perItemHosts: [], boundedCalls: [] },
+      dead: { infrastructure: { paths: [], decorators: [], names: [], builtIn: true } },
+      rules: [],
+      rulesSettings: { failOnHeuristic: false },
     });
   });
 
@@ -73,6 +81,7 @@ describe('parseConfig', () => {
       entry: { registries: [], http: [], procedures: [] },
       broker: { custom: [] },
       starters: [],
+      http: { clients: [] },
       infra: { modules: [] },
       db: { localBaseClasses: [], tables: [] },
       frontend: { localClientClasses: [] },
@@ -202,6 +211,30 @@ describe('parseConfig', () => {
  * would be the worst kind of breaking change: the build succeeds and the service
  * quietly has no routes.
  */
+describe('services named by an alias (P91)', () => {
+  const services = [
+    { name: 'catalog-api', repo: './catalog', type: 'nestjs', aliases: ['catalog', 'catalog-worker'] },
+    { name: 'storefront', repo: './web', type: 'browser', apiTarget: { apiUrl: 'catalog' } },
+  ];
+
+  it('names a service by its name or any alias, and takes an alias as an apiTarget', () => {
+    const config = parseConfig({ services });
+    expect([...serviceNamesOf(config)]).toEqual([
+      ['catalog-api', 'catalog-api'],
+      ['catalog', 'catalog-api'],
+      ['catalog-worker', 'catalog-api'],
+      ['storefront', 'storefront'],
+    ]);
+  });
+
+  it('refuses an alias written twice, or one that is another service\'s name', () => {
+    const twice = [...services, { name: 'stock', repo: './stock', type: 'nestjs', aliases: ['catalog'] }];
+    expect(() => parseConfig({ services: twice })).toThrow(/"catalog" is already a name of "catalog-api"/);
+    const named = [{ ...services[0], aliases: ['storefront'] }, services[1]];
+    expect(() => parseConfig({ services: named })).toThrow(/"storefront" is already a name of "storefront"/);
+  });
+});
+
 describe('a service declared by a document', () => {
   const documentOf = (service: Record<string, unknown>) =>
     parseConfig({ services: [{ name: 'billing', ...service }] }).services[0];
@@ -244,6 +277,34 @@ describe('a service declared by a document', () => {
     expect(() =>
       documentOf({ repo: './billing', document: { kind: 'openapi', path: './b.json' } }),
     ).toThrow(ConfigInvalidError);
+  });
+});
+
+describe('API documents a repository commits by hand (P195)', () => {
+  const serviceOf = (service: Record<string, unknown>) =>
+    parseConfig({ services: [{ name: 'billing', ...service }] }).services[0];
+
+  it('keeps them beside a repository that is read, the code still the source', () => {
+    const service = serviceOf({
+      repo: './billing',
+      type: 'nestjs',
+      apiDocuments: [{ kind: 'openapi', path: './billing/openapi.yaml' }, { kind: 'asyncapi', path: './billing/events.yaml', application: 'admin' }],
+    });
+    expect(service?.apiDocuments).toEqual([
+      { kind: 'openapi', path: './billing/openapi.yaml' },
+      { kind: 'asyncapi', path: './billing/events.yaml', application: 'admin' },
+    ]);
+    expect(service?.document).toBeUndefined();
+  });
+
+  it('refuses them on a service a document declares: there is no code to compare with', () => {
+    expect(() =>
+      serviceOf({ document: { kind: 'openapi', path: './b.json' }, apiDocuments: [{ kind: 'openapi', path: './b.json' }] }),
+    ).toThrow(/apiDocuments needs a repo/);
+  });
+
+  it('leaves a configuration without them as it was', () => {
+    expect(serviceOf({ repo: './billing' })).not.toHaveProperty('apiDocuments');
   });
 });
 
@@ -400,5 +461,43 @@ describe("a project's own request helpers, described (P30)", () => {
   it('refuses a helper that answers with a status no response has', () => {
     const answers = [{ ...request.answers[0], statusArg: undefined, status: 1200 }];
     expect(() => parseConfig({ adapters: { entry: { request: { answers } } } })).toThrow();
+  });
+});
+
+describe('architecture rules in the configuration (P114)', () => {
+  const service = { name: 'web', repo: '.', type: 'browser', tags: ['frontend'] };
+  const forbid = { from: { service: 'web' }, to: { service: 'billing' } };
+
+  it('reads tags and rules, every rule at error unless it says otherwise', () => {
+    const config = parseConfig({ services: [service], rules: [{ name: 'web-not-billing', forbid }] });
+    expect(config.services[0]?.tags).toEqual(['frontend']);
+    expect(config.rules[0]?.severity).toBe('error');
+    expect(config.rulesSettings).toEqual({ failOnHeuristic: false });
+    expect(ruleSetOf(config)).toEqual({ rules: config.rules, tags: { web: ['frontend'] }, failOnHeuristic: false });
+  });
+
+  it('refuses a rule that fails its schema, naming it as rule-invalid', () => {
+    expect(() => parseConfig({ services: [service], rules: [{ name: 'two', forbid, reachable: { ...forbid, must: true } }] })).toThrow(
+      /rules\.0 \(rule-invalid: rule "two"\): a rule has exactly one shape, and this one has forbid and reachable/,
+    );
+    expect(() => parseConfig({ services: [service], rules: [{ name: 'x', forbid: { ...forbid, sideways: true } }] })).toThrow(/rule-invalid: rule "x"/);
+  });
+
+  it('refuses two rules of one name: the name is the key a baseline holds it by', () => {
+    expect(() => parseConfig({ services: [service], rules: [{ name: 'a', forbid }, { name: 'a', forbid }] })).toThrow(/Duplicate rule name "a"/);
+  });
+});
+
+describe('what a software catalogue says of a service (P119)', () => {
+  it('reads services[].catalog as written, every key optional', () => {
+    const catalog = { owner: 'team-orders', lifecycle: 'production', system: 'shop', description: 'Takes orders.', sourceUrl: 'https://example.com/shop/orders' };
+    const config = parseConfig({ services: [{ name: 'orders', repo: '.', type: 'server', catalog }, { name: 'web', repo: './web', type: 'browser', catalog: {} }] });
+    expect(config.services[0]?.catalog).toEqual(catalog);
+    expect(config.services[1]?.catalog).toEqual({});
+  });
+
+  it('refuses a key the catalogue does not have, and an empty value', () => {
+    expect(() => parseConfig({ services: [{ name: 'orders', repo: '.', catalog: { team: 'x' } }] })).toThrow();
+    expect(() => parseConfig({ services: [{ name: 'orders', repo: '.', catalog: { owner: '' } }] })).toThrow();
   });
 });

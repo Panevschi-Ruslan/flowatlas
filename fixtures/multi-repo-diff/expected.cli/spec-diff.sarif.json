@@ -1,0 +1,289 @@
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/errata01/os/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "flowatlas",
+          "version": "0.6.0",
+          "semanticVersion": "0.6.0",
+          "informationUri": "https://panevschi-ruslan.github.io/flowatlas/",
+          "rules": [
+            {
+              "id": "spec/endpoint-added",
+              "name": "spec/endpoint-added",
+              "shortDescription": {
+                "text": "route or channel end added"
+              },
+              "help": {
+                "text": "Nothing that worked before can break.",
+                "markdown": "Nothing that worked before can break."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            },
+            {
+              "id": "spec/endpoint-removed",
+              "name": "spec/endpoint-removed",
+              "shortDescription": {
+                "text": "route removed"
+              },
+              "help": {
+                "text": "Every request to it now fails. Keep the route, or move its callers first.",
+                "markdown": "Every request to it now fails. Keep the route, or move its callers first."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "spec/request-property-added-required",
+              "name": "spec/request-property-added-required",
+              "shortDescription": {
+                "text": "required request field added"
+              },
+              "help": {
+                "text": "Callers written for the base side do not send it. Make it optional, or have every caller send it first.",
+                "markdown": "Callers written for the base side do not send it. Make it optional, or have every caller send it first."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            }
+          ]
+        }
+      },
+      "automationDetails": {
+        "id": "flowatlas/spec-diff/"
+      },
+      "originalUriBaseIds": {
+        "%SRCROOT%": {
+          "description": {
+            "text": "The directory flowatlas.config.json is in."
+          }
+        },
+        "billing": {
+          "uri": "billing/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "gateway": {
+          "uri": "gateway/",
+          "uriBaseId": "%SRCROOT%"
+        },
+        "orders": {
+          "uri": "orders/",
+          "uriBaseId": "%SRCROOT%"
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "spec/request-property-added-required",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "POST /orders: head has `body.channel` as `string` and requires it; base did not ([called from gateway (static)](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 19
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 21
+                }
+              },
+              "message": {
+                "text": "called from gateway (static)"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "ab8cde457dea2ffcc266050546b3840b",
+            "primaryLocationLineHash": "ab8cde457dea2ffc:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "orders",
+            "document": "orders",
+            "operation": "POST /orders",
+            "field": "body.channel",
+            "confidence": "static",
+            "callers": 1
+          }
+        },
+        {
+          "ruleId": "spec/endpoint-removed",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "GET /shipments/{id}: the route is gone ([called from gateway (static)](1))"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/shipments/shipments.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 16
+                }
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "id": 1,
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "gateway/src/clients/orders.client.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 26
+                }
+              },
+              "message": {
+                "text": "called from gateway (static)"
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "d3ed50cd7b6a4bdfd9610c4e97ea910f",
+            "primaryLocationLineHash": "d3ed50cd7b6a4bdf:1"
+          },
+          "baselineState": "updated",
+          "properties": {
+            "service": "orders",
+            "document": "orders",
+            "operation": "GET /shipments/{id}",
+            "confidence": "static",
+            "callers": 1
+          }
+        },
+        {
+          "ruleId": "spec/endpoint-added",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "receive order.gift-wrapped: added on the head side"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "billing/src/invoices/gift-wrap.consumer.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 15
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "15dd3a7463eea051b2a9cda61556496b",
+            "primaryLocationLineHash": "15dd3a7463eea051:1"
+          },
+          "baselineState": "new",
+          "properties": {
+            "service": "billing",
+            "document": "billing",
+            "operation": "receive order.gift-wrapped",
+            "confidence": "static",
+            "callers": 0
+          }
+        },
+        {
+          "ruleId": "spec/endpoint-added",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "send order.gift-wrapped: added on the head side"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/orders/orders.service.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 23
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "a312fb7ebf6c82ac7a6363d0df062235",
+            "primaryLocationLineHash": "a312fb7ebf6c82ac:1"
+          },
+          "baselineState": "new",
+          "properties": {
+            "service": "orders",
+            "document": "orders",
+            "operation": "send order.gift-wrapped",
+            "confidence": "static",
+            "callers": 0
+          }
+        },
+        {
+          "ruleId": "spec/endpoint-added",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "GET /shipments/{id}/status: added on the head side"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "orders/src/shipments/shipments.controller.ts",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "flowatlas/v1": "2b23e0455e8d894bd31c75b3bede37cc",
+            "primaryLocationLineHash": "2b23e0455e8d894b:1"
+          },
+          "baselineState": "new",
+          "properties": {
+            "service": "orders",
+            "document": "orders",
+            "operation": "GET /shipments/{id}/status",
+            "confidence": "static",
+            "callers": 0
+          }
+        }
+      ]
+    }
+  ]
+}

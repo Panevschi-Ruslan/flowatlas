@@ -10,4 +10,5 @@
             ~  eventbridge/library-audit/library.loans/LoanRenewed ~heuristic  infra/forward.tf:30
               => audit ~  rule library-audit-renewals ~heuristic          audit/infra/main.tf:75
                 @  library-audit-flag-renewal                             audit/infra/main.tf:38
+... truncated: 2 more nodes (raise --depth)
 unresolved on this path: 0

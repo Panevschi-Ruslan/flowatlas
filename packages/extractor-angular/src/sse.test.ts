@@ -216,21 +216,21 @@ export class TrackService {
       {},
       `
 @Injectable({ providedIn: 'root' })
-export class WarehouseScreen {
+export class DashboardScreen {
   constructor(private readonly live: LiveService) {}
-  watch(): void { this.live.open(\`\${environment.apiUrl}/warehouse/events\`); }
+  watch(): void { this.live.open(\`\${environment.apiUrl}/dashboard/events\`); }
 }
 `,
     );
     const streams = streamsOf(graph);
     expect(streams.map((stream) => stream.meta?.['path']).sort()).toEqual([
-      '/warehouse/events',
+      '/dashboard/events',
       '/orders/:param/stream',
     ]);
     expect(streams.every((stream) => stream.meta?.['through'] === 'LiveService.open')).toBe(true);
-    const warehouse = streams.find((stream) => stream.meta?.['path'] === '/warehouse/events');
-    expect(graph.edges.find((edge) => edge.to === warehouse?.id)?.from).toBe(
-      'web#live.service.ts:WarehouseScreen.watch',
+    const dashboard = streams.find((stream) => stream.meta?.['path'] === '/dashboard/events');
+    expect(graph.edges.find((edge) => edge.to === dashboard?.id)?.from).toBe(
+      'web#live.service.ts:DashboardScreen.watch',
     );
     expect(graph.unresolved).toEqual([]);
   });

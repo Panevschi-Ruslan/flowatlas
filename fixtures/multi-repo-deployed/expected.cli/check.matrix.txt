@@ -1,0 +1,14 @@
+check prod: deployable — deploying gateway introduces nothing that breaks
+deployed: billing v1 (e93604ab) · gateway v1 (5cce0519) · orders v1 (f36068c5)
+moving: gateway v1 (5cce0519) → invoice-on-checkout (66604417)
+already deployed (listed, not counted):
+  - [contract] orders → billing: receiver billing requires `customerRef: string`; sender orders does not send it  (orders src/orders/orders.service.ts:10)
+  - [rule] billing-reads-no-order-events: billing PlacedConsumer.onPlaced consumes channel order.placed  (billing src/invoices/placed.consumer.ts:9)
+the whole answer: <scratch>/project/.flowatlas/check.prod.json
+
+check canary: undecided — could not decide
+  - orders: v9 (from the pins file) does not resolve in ./orders. Fetch it first: git -C ./orders fetch --tags (in CI, check out with fetch-depth: 0).
+the whole answer: <scratch>/project/.flowatlas/check.canary.json
+--- stderr ---
+check prod: deployable · 0 reason(s) · 2 already deployed · moved gateway
+check canary: undecided · 1 refusal(s)

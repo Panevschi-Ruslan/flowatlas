@@ -1,0 +1,7 @@
+{
+  "services": [
+    { "name": "shop", "repo": "./shop", "type": "lambda" },
+    { "name": "returns", "repo": "./returns", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}

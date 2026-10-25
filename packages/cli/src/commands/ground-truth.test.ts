@@ -380,7 +380,7 @@ describe('the chain fixtures/multi-repo exists to draw', () => {
       'handles orders#src/orders/orders.controller.ts:OrdersController.findOne',
       'calls orders#src/orders/orders.service.ts:OrdersService.findOne',
       `calls ${read}`,
-      'queries table:orders#Order',
+      'queries table:orders#orders',
     ]);
   });
 
@@ -423,11 +423,11 @@ describe('the chain fixtures/multi-repo exists to draw', () => {
   it('ends at the table the entity names', () => {
     const findOne = 'orders#src/orders/orders.service.ts:OrdersService.findOne';
     // Its body is `this.orders.findOne(...)` on a `Repository<Order>`, and
-    // order.entity.ts declares `Order`.
+    // order.entity.ts declares `Order` with `@Entity('orders')`, the table (P88).
     const query = resolveNodeId(multiRepo, { type: 'db_query', calledBy: findOne });
     expect(follows(multiRepo, findOne, 'calls')).toBe(query);
-    expect(metaOf(multiRepo, query)).toMatchObject({ op: 'read', table: 'Order' });
-    expect(follows(multiRepo, query, 'queries')).toBe('table:orders#Order');
+    expect(metaOf(multiRepo, query)).toMatchObject({ op: 'read', table: 'orders', entityType: 'Order' });
+    expect(follows(multiRepo, query, 'queries')).toBe('table:orders#orders');
   });
 });
 

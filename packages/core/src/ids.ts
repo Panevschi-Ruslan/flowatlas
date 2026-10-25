@@ -139,18 +139,63 @@ export const normalizePath = (path: string): string => {
   return segments.length === 0 ? '/' : `/${segments.join('/')}`;
 };
 
+/** A path with forward slashes only, whatever the OS wrote it with (P83). */
+export const toPosixPath = (path: string): string => (path.includes('\\') ? path.replace(/\\/g, '/') : path);
+
+/** A drive letter, `C:/`, at the head of a POSIX-spelled Windows path. */
+const DRIVE = /^[A-Za-z]:(?:\/|$)/;
+
+/**
+ * A POSIX-spelled path as two of them are compared (P83): a drive letter is
+ * one drive whatever its case, so `c:/work` and `C:/work` are one place.
+ * Nothing else about case is decided here.
+ */
+export const pathKey = (path: string): string => (DRIVE.test(path) ? `${path.charAt(0).toUpperCase()}${path.slice(1)}` : path);
+
+/** A path as two paths are compared: forward slashes, the drive letter in one case, no trailing separator. */
+const comparable = (path: string): string => {
+  const key = pathKey(toPosixPath(path));
+  return key.length > 1 && key.endsWith('/') ? key.replace(/\/+$/, '') : key;
+};
+
+/**
+ * Whether a path is a directory or inside it, both spelled any way the OS
+ * writes them (P83, P199): compared with forward slashes, a drive letter in any
+ * case. The compiler names every file with forward slashes on Windows too,
+ * while `path.join` and `path.resolve` give backslashes, so a test written as
+ * `path.startsWith(dir + '/')` on two such paths is false there for every file.
+ */
+export const isWithinDir = (path: string, dir: string): boolean => {
+  const at = comparable(path);
+  const base = comparable(dir);
+  return at === base || at.startsWith(base.endsWith('/') ? base : `${base}/`);
+};
+
+/** Whether a path is inside a directory and not the directory itself, spelled either way (P199). */
+export const isBelowDir = (path: string, dir: string): boolean => comparable(path) !== comparable(dir) && isWithinDir(path, dir);
+
+/** The root a POSIX-spelled absolute path starts at: `/`, or a drive as `C:`; undefined for a relative one. */
+const rootOfPath = (path: string): string | undefined =>
+  path.startsWith('/') ? '/' : DRIVE.test(path) ? path.slice(0, 2).toUpperCase() : undefined;
+
 /**
  * Bring a file path into the form every id uses: POSIX separators,
  * repo-relative when `repoDir` is given, without a leading `./`.
+ *
+ * Whatever the OS (P83): a Windows path, with backslashes or with the forward
+ * slashes the compiler hands over, is named the way a POSIX one is. A drive
+ * letter is compared without its case, and a path on another drive than the
+ * repository stays absolute, because no relative path leads there.
  */
 export const normalizeFilePath = (file: string, repoDir?: string): string => {
-  let out = (typeof file === 'string' ? file : '').replace(/\\/g, '/');
+  let out = toPosixPath(typeof file === 'string' ? file : '');
   if (typeof repoDir === 'string' && repoDir !== '') {
-    const base = repoDir.replace(/\\/g, '/').replace(/\/+$/, '');
+    const base = pathKey(toPosixPath(repoDir).replace(/\/+$/, ''));
+    const key = pathKey(out);
     // A repository at the filesystem root leaves nothing to strip but the
     // separator, and a path that keeps it is not repo-relative.
     if (base === '') out = out.replace(/^\/+/, '');
-    else if (out === base || out.startsWith(`${base}/`)) out = out.slice(base.length + 1);
+    else if (key === base || key.startsWith(`${base}/`)) out = out.slice(base.length + 1);
     // A file the service reads that is not inside it — a handler body in a
     // sibling workspace package — is still named relative to the service,
     // because that is what every other path in its graph is relative to. It
@@ -158,13 +203,13 @@ export const normalizeFilePath = (file: string, repoDir?: string): string => {
     // home directory into node ids: a scheduling app's graph carried fifty-eight of
     // them. Climbing out of the service is a shorter and truer way to say the
     // same thing, and it is the same on every machine.
-    else if (out.startsWith('/')) {
+    else if (rootOfPath(key) !== undefined && rootOfPath(key) === rootOfPath(base)) {
       const from = base.split('/');
-      const to = out.split('/');
+      const to = key.split('/');
       let shared = 0;
       while (shared < from.length && shared < to.length && from[shared] === to[shared]) shared += 1;
       const up = '../'.repeat(from.length - shared);
-      out = `${up}${to.slice(shared).join('/')}`;
+      out = `${up}${out.split('/').slice(shared).join('/')}`;
     }
   }
   out = out.replace(/\/{2,}/g, '/');
@@ -233,6 +278,30 @@ export const makeEntryId = (
  */
 export const makeHttpEntryKey = (method: string, path: string): string =>
   `${required('method', method).toUpperCase()}:${normalizePath(path)}`;
+
+/**
+ * The `key` half of an HTTP entry id for a route that one API, of several in a
+ * deployment serving the same method and path, answers: `GET:/orders@api:billing`.
+ *
+ * Used only where two APIs (or two load balancers) of one deployment serve the
+ * same method and path, so a deployment with one API keeps the plain key.
+ * `api` is the API's name, or its declaration's address where the name is not
+ * read; `listener` is given where two listeners of one load balancer send the
+ * same method and path to different targets (P61):
+ * `GET:/health@api:staff-lb@listener:HTTPS:443`.
+ */
+export const makeApiRouteEntryKey = (method: string, path: string, api: string, listener?: string): string =>
+  `${makeHttpEntryKey(method, path)}@api:${required('api', api)}${listener === undefined ? '' : `@listener:${required('listener', listener)}`}`;
+
+/**
+ * The `key` half of a function URL's entry id: `ALL:/*@card-lookup`.
+ *
+ * A function URL answers every verb and every path, so its method and path are
+ * the same for every one; the function it stands in front of, and the alias
+ * where one is named, is what tells two of them apart.
+ */
+export const makeFunctionUrlEntryKey = (fn: string, qualifier?: string): string =>
+  `${makeHttpEntryKey('ALL', '/*')}@${required('fn', fn)}${qualifier === undefined ? '' : `:${qualifier}`}`;
 
 /**
  * The `key` half of an `invoke` entry id: the name the function is deployed
@@ -322,6 +391,30 @@ export const makeEntryReference = (kind: EntryKind, key: string): string =>
  * and a row for each that names none or several.
  */
 export const REACHES_META = 'reaches';
+
+/** How a node reaches one of its {@link REACHES_META} references, where that is not a plain `calls`. */
+export interface ReachedAs {
+  /** `triggers` for a run's outcome handed on (P54); `calls` otherwise. */
+  readonly type?: 'calls' | 'triggers';
+  /** The outcome the edge carries: a destination's, or an IoT rule's error action (P60). */
+  readonly when?: 'success' | 'failure';
+}
+
+/**
+ * The key of a node's `meta` that says, per reference it reaches, how: a map
+ * from a {@link REACHES_META} reference to its {@link ReachedAs}. A reference
+ * missing from it is reached by a plain `calls` edge, so a destination named
+ * elsewhere carries its outcome as surely as one this deployment creates (P60).
+ */
+export const REACHED_AS_META = 'reachedAs';
+
+/**
+ * The key of a node's `meta` naming the function whose run it hands on, where
+ * that function is created by another deployment: a
+ * {@link makeEntryReference} to its `invoke` entry, which the linker joins by
+ * a `triggers` edge into this node, carrying the outcome under `meta.when` (P60).
+ */
+export const RESULT_OF_META = 'resultOf';
 
 /** The kinds of entry a deployed name is the whole address of. */
 export type DeployedEntryKind = Extract<EntryKind, 'invoke' | 'workflow'>;

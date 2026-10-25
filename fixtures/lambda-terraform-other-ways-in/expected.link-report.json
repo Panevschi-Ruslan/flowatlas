@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-10-16T23:28:18.877Z",
+  "configHash": "c3d849be9f85",
+  "services": [
+    {
+      "name": "members",
+      "repo": "./members",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 34,
+      "edges": 25,
+      "types": 10,
+      "unresolved": 2,
+      "durationMs": 524,
+      "packages": {
+        "name": "lending-library-members",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 1,
+    "noConsumers": [
+      "channel:sqs/library-shelf-readings"
+    ],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:members:http:ALL:/*@library-members-card-lookup",
+      "entry:members:http:POST:/kiosk/checkout"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 10,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 32,
+    "edges": 26,
+    "types": 10,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

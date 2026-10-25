@@ -1,0 +1,343 @@
+{
+  "cantFollowFormatVersion": 1,
+  "service": null,
+  "cause": null,
+  "package": null,
+  "reasons": null,
+  "note": null,
+  "total": {
+    "rows": 10,
+    "sites": 21
+  },
+  "causes": [
+    {
+      "cause": "module-not-installed",
+      "label": "module-not-installed",
+      "sites": 12,
+      "reasons": [
+        "call-dynamic-receiver",
+        "di-type-unresolved",
+        "type-unresolved"
+      ],
+      "hint": "Install the repository's dependencies so the package resolves, or describe it in a shape file (flowatlas shapes --suggest); until then nothing typed by it can be followed.",
+      "services": [
+        "payments",
+        "storefront"
+      ],
+      "packages": [
+        {
+          "package": "@shopkit/mailer",
+          "sites": 7,
+          "samples": [
+            {
+              "service": "storefront",
+              "file": "src/notify/notify.service.ts",
+              "line": 19,
+              "symbol": "NotifyService.confirm -> this.mail.attach"
+            },
+            {
+              "service": "storefront",
+              "file": "src/notify/notify.service.ts",
+              "line": 20,
+              "symbol": "NotifyService.confirm -> this.mail.deliver"
+            },
+            {
+              "service": "storefront",
+              "file": "src/notify/notify.service.ts",
+              "line": 16,
+              "symbol": "Receipt"
+            }
+          ]
+        },
+        {
+          "package": "@shopkit/ledger",
+          "sites": 4,
+          "samples": [
+            {
+              "service": "payments",
+              "file": "src/charges/charges.controller.ts",
+              "line": 10,
+              "symbol": "LedgerEntry"
+            },
+            {
+              "service": "payments",
+              "file": "src/charges/charges.service.ts",
+              "line": 8,
+              "symbol": "LedgerEntry"
+            },
+            {
+              "service": "payments",
+              "file": "src/charges/charges.service.ts",
+              "line": 9,
+              "symbol": "ChargesService.create -> this.ledger.reserve"
+            }
+          ]
+        },
+        {
+          "package": "@shopkit/queue",
+          "sites": 1,
+          "samples": [
+            {
+              "service": "storefront",
+              "file": "src/jobs/reminder.job.ts",
+              "line": 6,
+              "symbol": "ReminderJob.constructor[0]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "import-unresolved",
+      "label": "import-unresolved",
+      "sites": 2,
+      "reasons": [
+        "call-dynamic-receiver"
+      ],
+      "hint": "The import resolves to no file: check the path, or the tsconfig paths and baseUrl it relies on.",
+      "services": [
+        "storefront"
+      ],
+      "packages": [
+        {
+          "package": "../legacy/templates",
+          "sites": 1,
+          "samples": [
+            {
+              "service": "storefront",
+              "file": "src/notify/notify.service.ts",
+              "line": 17,
+              "symbol": "NotifyService.confirm -> this.templates.render"
+            }
+          ]
+        },
+        {
+          "package": "@storefront/audit",
+          "sites": 1,
+          "samples": [
+            {
+              "service": "storefront",
+              "file": "src/notify/notify.service.ts",
+              "line": 18,
+              "symbol": "NotifyService.confirm -> this.audit.record"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "interface-type",
+      "label": "interface-type",
+      "sites": 2,
+      "reasons": [
+        "call-dynamic-receiver"
+      ],
+      "hint": "Typed by an interface or a type with no class behind it; type it as the class, or inject one.",
+      "services": [
+        "storefront"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "sites": 2,
+          "samples": [
+            {
+              "service": "storefront",
+              "file": "src/jobs/reminder.job.ts",
+              "line": 11,
+              "symbol": "ReminderJob.start -> registry.on"
+            },
+            {
+              "service": "storefront",
+              "file": "src/pricing/pricing.service.ts",
+              "line": 13,
+              "symbol": "PricingService.quote -> this.rules.apply"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "any-typed",
+      "label": "any-typed",
+      "sites": 1,
+      "reasons": [
+        "call-dynamic-receiver"
+      ],
+      "hint": "Declared as any; give it a class type to make the call visible.",
+      "services": [
+        "storefront"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "sites": 1,
+          "samples": [
+            {
+              "service": "storefront",
+              "file": "src/jobs/reminder.job.ts",
+              "line": 12,
+              "symbol": "ReminderJob.start -> this.legacy.flush"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "callback-param",
+      "label": "callback-param",
+      "sites": 1,
+      "reasons": [
+        "call-dynamic-receiver"
+      ],
+      "hint": "A callback's parameter the called function's signature does not type; annotate it, or type the function it is passed to.",
+      "services": [
+        "storefront"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "sites": 1,
+          "samples": [
+            {
+              "service": "storefront",
+              "file": "src/jobs/reminder.job.ts",
+              "line": 11,
+              "symbol": "ReminderJob.start -> job.ack"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "dynamic-member",
+      "label": "dynamic-member",
+      "sites": 1,
+      "reasons": [
+        "call-dynamic-receiver"
+      ],
+      "hint": "The method is chosen at run time, as obj[key](); there is nothing static to follow.",
+      "services": [
+        "storefront"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "sites": 1,
+          "samples": [
+            {
+              "service": "storefront",
+              "file": "src/orders/orders.service.ts",
+              "line": 19,
+              "symbol": "OrdersService.place -> this.steps[sku]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "re-export-missing",
+      "label": "re-export-missing",
+      "sites": 1,
+      "reasons": [
+        "call-dynamic-receiver"
+      ],
+      "hint": "The module resolves but exports no such name; the index that should re-export it is missing the line.",
+      "services": [
+        "storefront"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "sites": 1,
+          "samples": [
+            {
+              "service": "storefront",
+              "file": "src/pricing/pricing.service.ts",
+              "line": 14,
+              "symbol": "PricingService.quote -> this.tax.add"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cause": "untyped-parameter",
+      "label": "untyped-parameter",
+      "sites": 1,
+      "reasons": [
+        "call-dynamic-receiver"
+      ],
+      "hint": "A parameter with no type and no default; annotate it with the class it holds.",
+      "services": [
+        "storefront"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "sites": 1,
+          "samples": [
+            {
+              "service": "storefront",
+              "file": "src/jobs/reminder.job.ts",
+              "line": 16,
+              "symbol": "ReminderJob.handle -> payload.complete"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "package": "@shopkit/mailer",
+      "sites": 7,
+      "causes": [
+        {
+          "cause": "module-not-installed",
+          "sites": 7
+        }
+      ]
+    },
+    {
+      "package": "@shopkit/ledger",
+      "sites": 4,
+      "causes": [
+        {
+          "cause": "module-not-installed",
+          "sites": 4
+        }
+      ]
+    },
+    {
+      "package": "../legacy/templates",
+      "sites": 1,
+      "causes": [
+        {
+          "cause": "import-unresolved",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "package": "@shopkit/queue",
+      "sites": 1,
+      "causes": [
+        {
+          "cause": "module-not-installed",
+          "sites": 1
+        }
+      ]
+    },
+    {
+      "package": "@storefront/audit",
+      "sites": 1,
+      "causes": [
+        {
+          "cause": "import-unresolved",
+          "sites": 1
+        }
+      ]
+    }
+  ]
+}

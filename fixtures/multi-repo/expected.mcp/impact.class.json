@@ -1,0 +1,110 @@
+{
+  "target": {
+    "id": "orders#src/orders/orders.service.ts:OrdersService",
+    "type": "provider",
+    "label": "OrdersService",
+    "loc": "src/orders/orders.service.ts:11",
+    "service": "orders",
+    "kind": "injectable"
+  },
+  "forMethods": 4,
+  "entries": [
+    {
+      "id": "entry:billing:event:invoice.requested",
+      "type": "entry",
+      "label": "event invoice.requested",
+      "loc": "src/invoices/invoices.consumer.ts:28",
+      "service": "billing",
+      "kind": "event"
+    },
+    {
+      "id": "entry:billing:event:order.created",
+      "type": "entry",
+      "label": "event order.created",
+      "loc": "src/invoices/invoices.consumer.ts:17",
+      "service": "billing",
+      "kind": "event"
+    },
+    {
+      "id": "entry:billing:http:POST:/invoices",
+      "type": "entry",
+      "label": "POST /invoices",
+      "loc": "src/invoices/invoices.controller.ts:15",
+      "service": "billing",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:30",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:gateway:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "label": "POST /orders/:param/invoice",
+      "loc": "src/orders/orders.controller.ts:40",
+      "service": "gateway",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "loc": "src/orders/orders.controller.ts:25",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/latest",
+      "type": "entry",
+      "label": "GET /orders/latest",
+      "loc": "src/orders/orders.controller.ts:19",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "loc": "src/orders/orders.controller.ts:31",
+      "service": "orders",
+      "kind": "http"
+    },
+    {
+      "id": "entry:orders:http:POST:/orders/:param/archive",
+      "type": "entry",
+      "label": "POST /orders/:param/archive",
+      "loc": "src/orders/orders.controller.ts:42",
+      "service": "orders",
+      "kind": "http"
+    }
+  ],
+  "total": 9,
+  "reached": 41,
+  "entriesByService": {
+    "orders": 4,
+    "billing": 3,
+    "gateway": 2
+  },
+  "reachedByService": {
+    "orders": 10,
+    "billing": 11,
+    "gateway": 8,
+    "web": 12
+  },
+  "servicesWithoutEntry": [
+    "web"
+  ],
+  "channels": [
+    "channel:invoice.requested",
+    "channel:order.created"
+  ],
+  "next": [
+    "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
+    "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})",
+    "impact({symbol: \"entry:billing:event:invoice.requested\"})"
+  ]
+}

@@ -137,5 +137,10 @@
       "kind": "http"
     }
   ],
-  "total": 17
+  "total": 17,
+  "next": [
+    "get_flow({entry: \"entry:billing:event:invoice.requested\"})",
+    "describe_for_prompt({id: \"entry:billing:event:invoice.requested\"})",
+    "impact({symbol: \"entry:billing:event:invoice.requested\"})"
+  ]
 }

@@ -1,0 +1,26 @@
+# A second description of the same publish, written as if the bus were new:
+# both rules match every `emit`, so neither is read (pattern-ambiguous).
+- id: shop-bus-emit-again
+  kind: publish
+  on:
+    receiverType: ShopBus
+  pattern: "$B.emit({ topic: $T })"
+  channel: $T
+
+# A rule whose type is spelled the way no call in the project is: it matches
+# nothing (pattern-unmatched).
+- id: shop-bus-flush
+  kind: publish
+  on:
+    receiverType: ShopBusV2
+  pattern: "$B.flush($TOPIC)"
+  channel: $TOPIC
+
+# A rule that cannot be compiled: a hole inside a callback is not a place in
+# the call (pattern-not-expressible).
+- id: shop-bus-later
+  kind: publish
+  on:
+    receiverType: ShopBus
+  pattern: "$B.later(() => $TOPIC)"
+  channel: $TOPIC

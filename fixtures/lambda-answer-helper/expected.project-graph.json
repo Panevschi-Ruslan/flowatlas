@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-08T18:47:22.027Z",
+  "builtAt": "2026-10-16T15:10:57.449Z",
   "services": [
     {
       "name": "stations",
@@ -848,6 +848,32 @@
       "sites": 3,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "handler -> kit.readJson",
+      "meta": {
+        "causes": [
+          {
+            "cause": "module-not-installed",
+            "package": "@acme/http-kit",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/rentals/end-rental.ts",
+                "line": 14,
+                "symbol": "handler -> kit.readJson"
+              },
+              {
+                "file": "src/rentals/end-rental.ts",
+                "line": 15,
+                "symbol": "handler -> kit.fail"
+              },
+              {
+                "file": "src/rentals/end-rental.ts",
+                "line": 17,
+                "symbol": "handler -> kit.respond"
+              }
+            ]
+          }
+        ]
+      },
       "service": "stations"
     },
     {

@@ -1,0 +1,30 @@
+{
+  "query": "PAYMENTS_URL",
+  "counts": {
+    "gaps": 1
+  },
+  "results": {
+    "gaps": [
+      {
+        "id": "http_out:gateway#src/checkout.controller.ts:12:26",
+        "gapId": "gap:gateway|src/checkout.controller.ts|unknown-base-url-env",
+        "type": "gap",
+        "reason": "unknown-base-url-env",
+        "kind": "gap",
+        "service": "gateway",
+        "loc": "src/checkout.controller.ts:12",
+        "message": "no service declares PAYMENTS_URL",
+        "sites": 2,
+        "places": [
+          "src/checkout.controller.ts:12",
+          "src/checkout.controller.ts:21"
+        ]
+      }
+    ]
+  },
+  "next": [
+    "describe_for_prompt({id: \"gap:gateway|src/checkout.controller.ts|unknown-base-url-env\"})",
+    "get_source({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})",
+    "who_calls({symbol: \"http_out:gateway#src/checkout.controller.ts:12:26\"})"
+  ]
+}

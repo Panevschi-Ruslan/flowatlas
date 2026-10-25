@@ -1,0 +1,12 @@
+{
+  "name": "lending-library-loans",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A lending library's loans: a kiosk calling a function URL, and functions whose results and failures go on to destinations.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

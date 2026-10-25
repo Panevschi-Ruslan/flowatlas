@@ -1,0 +1,80 @@
+{
+  "root": {
+    "node": {
+      "id": "entry:orders:http:GET:/orders/latest",
+      "type": "entry",
+      "label": "GET /orders/latest",
+      "loc": "src/orders/orders.controller.ts:19",
+      "service": "orders",
+      "kind": "http"
+    },
+    "children": [
+      {
+        "node": {
+          "id": "orders#src/orders/orders.controller.ts:OrdersController.latest",
+          "type": "method",
+          "label": "OrdersController.latest",
+          "loc": "src/orders/orders.controller.ts:19"
+        },
+        "edge": {
+          "type": "handles",
+          "confidence": "static",
+          "returns": "type:@fx/contracts#OrderDto[]"
+        },
+        "children": [
+          {
+            "node": {
+              "id": "orders#src/orders/orders.service.ts:OrdersService.latest",
+              "type": "method",
+              "label": "OrdersService.latest",
+              "loc": "src/orders/orders.service.ts:30"
+            },
+            "edge": {
+              "type": "calls",
+              "confidence": "static",
+              "returns": "type:@fx/contracts#OrderDto[]"
+            },
+            "children": [
+              {
+                "node": {
+                  "id": "db_query:orders#src/orders/orders.service.ts:31:24",
+                  "type": "db_query",
+                  "label": "read orders",
+                  "loc": "src/orders/orders.service.ts:31"
+                },
+                "edge": {
+                  "type": "calls",
+                  "confidence": "static"
+                },
+                "children": [
+                  {
+                    "node": {
+                      "id": "table:orders#orders",
+                      "type": "table",
+                      "label": "orders"
+                    },
+                    "edge": {
+                      "type": "queries",
+                      "confidence": "static"
+                    },
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "alsoAnswers": [
+    "entry:gateway:http:GET:/orders/:param",
+    "entry:orders:http:GET:/orders/:param"
+  ],
+  "unresolvedOnPath": 0,
+  "next": [
+    "describe_for_prompt({id: \"entry:orders:http:GET:/orders/latest\"})",
+    "impact({symbol: \"entry:orders:http:GET:/orders/latest\"})",
+    "get_source({symbol: \"orders#src/orders/orders.controller.ts:OrdersController.latest\"})"
+  ]
+}

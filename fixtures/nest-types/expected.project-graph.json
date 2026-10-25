@@ -1,6 +1,6 @@
 {
   "schemaVersion": 6,
-  "builtAt": "2026-10-07T14:34:35.839Z",
+  "builtAt": "2026-10-16T15:12:10.560Z",
   "services": [
     {
       "name": "nest-types",
@@ -694,7 +694,13 @@
             }
           ],
           "returns": "void"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 64
+          }
+        ]
       }
     },
     {
@@ -1821,6 +1827,10 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "LegacyOrder",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@acme/legacy-orders"
+      },
       "service": "nest-types"
     },
     {

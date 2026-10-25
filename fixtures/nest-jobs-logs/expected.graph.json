@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 6,
+  "repo": "nest-jobs-logs",
+  "generatedAt": "2026-10-16T11:02:42.033Z",
+  "nodes": [
+    {
+      "id": "entry:nest-jobs-logs:cron:CleanupService.nightly",
+      "type": "entry",
+      "label": "cron CleanupService.nightly",
+      "repo": "nest-jobs-logs",
+      "file": "src/cleanup.service.ts",
+      "line": 12,
+      "kind": "cron",
+      "meta": {
+        "expression": "0 3 * * *",
+        "name": "nightly-cleanup",
+        "timeZone": "Europe/Paris",
+        "trigger": "Cron",
+        "adapter": "nestjs-schedule"
+      }
+    },
+    {
+      "id": "nest-jobs-logs#node_modules/@nestjs/schedule:ScheduleModule",
+      "type": "module",
+      "label": "ScheduleModule",
+      "repo": "nest-jobs-logs",
+      "file": "node_modules/@nestjs/schedule",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/schedule",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-jobs-logs#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-jobs-logs",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "CleanupService",
+          "DraftsStore"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-jobs-logs#src/cleanup.service.ts:CleanupService",
+      "type": "provider",
+      "label": "CleanupService",
+      "repo": "nest-jobs-logs",
+      "file": "src/cleanup.service.ts",
+      "line": 6,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-jobs-logs#src/cleanup.service.ts:CleanupService.nightly",
+      "type": "method",
+      "label": "CleanupService.nightly",
+      "repo": "nest-jobs-logs",
+      "file": "src/cleanup.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "cleanup started",
+            "at": 14
+          },
+          {
+            "level": "log",
+            "text": "removed {count} drafts",
+            "at": 17
+          },
+          {
+            "level": "error",
+            "at": 19
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-jobs-logs#src/drafts.store.ts:DraftsStore",
+      "type": "provider",
+      "label": "DraftsStore",
+      "repo": "nest-jobs-logs",
+      "file": "src/drafts.store.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-jobs-logs#src/drafts.store.ts:DraftsStore.removeOlderThan",
+      "type": "method",
+      "label": "DraftsStore.removeOlderThan",
+      "repo": "nest-jobs-logs",
+      "file": "src/drafts.store.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "days",
+              "type": "number"
+            }
+          ],
+          "returns": "number"
+        },
+        "logs": [
+          {
+            "level": "debug",
+            "text": "archived",
+            "at": 15
+          },
+          {
+            "level": "warn",
+            "text": "no drafts older than {days} days",
+            "at": 18
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:nest-jobs-logs",
+      "type": "repo",
+      "label": "nest-jobs-logs",
+      "repo": "nest-jobs-logs",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@nestjs/common": 4
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "nestjs-schedule"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-jobs-logs:cron:CleanupService.nightly",
+      "to": "nest-jobs-logs#src/cleanup.service.ts:CleanupService.nightly",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/cleanup.service.ts",
+      "line": 12,
+      "params": [],
+      "returns": "void"
+    },
+    {
+      "from": "nest-jobs-logs#src/app.module.ts:AppModule",
+      "to": "nest-jobs-logs#node_modules/@nestjs/schedule:ScheduleModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "nest-jobs-logs#src/cleanup.service.ts:CleanupService",
+      "to": "nest-jobs-logs#src/drafts.store.ts:DraftsStore",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/cleanup.service.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-jobs-logs#src/cleanup.service.ts:CleanupService.nightly",
+      "to": "nest-jobs-logs#src/drafts.store.ts:DraftsStore.removeOlderThan",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/cleanup.service.ts",
+      "line": 16,
+      "params": [
+        "number"
+      ],
+      "returns": "number"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/drafts.store.ts",
+      "line": 5,
+      "reason": "db-layer-unread",
+      "message": "DraftsStore reads as a data layer, and nothing was read through it.",
+      "hint": "Add \"DraftsStore\" to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.",
+      "symbol": "DraftsStore",
+      "adapter": "local-base"
+    }
+  ]
+}

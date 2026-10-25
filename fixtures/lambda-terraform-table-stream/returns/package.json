@@ -1,0 +1,16 @@
+{
+  "name": "corner-shop-returns",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Returns for the shop, as Lambda functions that change orders in the shop's table.",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "aws-sdk": "^2.1692.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

@@ -1,0 +1,8 @@
+@  POST /clicks                                                  shop/infra/main.tf:164
+  -> handler                                                     shop/src/clicks/track-click.ts:7
+    ~  record kinesis/shop-clicks                                shop/src/clicks/track-click.ts:9
+      ~  kinesis/shop-clicks                                     infra/main.tf:46
+        ~  mapping aws_lambda_event_source_mapping.count_clicks  shop/infra/main.tf:133
+          ~  event kinesis/shop-clicks                           shop/infra/main.tf:133
+            -> handler                                           shop/src/clicks/count-clicks.ts:6
+unresolved on this path: 0

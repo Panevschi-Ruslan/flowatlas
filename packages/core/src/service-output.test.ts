@@ -64,7 +64,7 @@ afterAll(() => rmSync(scratch, { recursive: true, force: true }));
 
 describe('the directory a service is written into', () => {
   it('keeps an ordinary service name as it is', () => {
-    for (const name of ['orders', 'admin-api', 'courier_bot', 'v2.api', 'web-app']) {
+    for (const name of ['orders', 'admin-api', 'support_bot', 'v2.api', 'web-app']) {
       expect(serviceDirectoryName(name)).toBe(name);
     }
   });

@@ -1,0 +1,10 @@
+can't follow: 1 place over 1 row, by cause
+
+  module-not-installed:@acme/feature-flags: 1 place  loans-api
+    Install the repository's dependencies so @acme/feature-flags resolves, or describe it in a shape file (flowatlas shapes --suggest); until then nothing typed by it can be followed.
+    rows: call-dynamic-receiver
+    or, where the calls go through a wrapper of the project's own: flowatlas patterns suggest --cause module-not-installed
+      loans-api/src/loans/loans.service.ts:27  LoansService.fee -> this.flags.variant
+
+by package:
+  @acme/feature-flags      1  module-not-installed 1

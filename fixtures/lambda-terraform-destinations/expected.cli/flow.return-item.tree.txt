@@ -1,0 +1,10 @@
+@  library-lending-return-item                                            lending/infra/main.tf:37
+  -> handler                                                              lending/src/returns/return-item.ts:2
+  ~  message sns/library-return-alerts                                    lending/infra/destinations.tf:29
+    ~  sns/library-return-alerts                                          infra/destinations.tf:29
+  ~  event eventbridge/library-events/lambda/Lambda Function Invocation Result - Success  lending/infra/destinations.tf:29
+    ~  eventbridge/library-events/lambda/Lambda Function Invocation Result - Success  infra/destinations.tf:53
+      ~  rule library-returned                                            lending/infra/destinations.tf:53
+        @  library-lending-audit-return                                   lending/infra/main.tf:37
+          -> handler                                                      lending/src/returns/audit-return.ts:4
+unresolved on this path: 0

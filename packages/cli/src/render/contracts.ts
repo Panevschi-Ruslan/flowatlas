@@ -12,6 +12,8 @@ import {
   type ContractFinding,
   type ContractReport,
   type Severity,
+  type TrafficDiff,
+  type TrafficReport,
   type UncheckedEdge,
 } from '@flowatlas/contracts';
 import { moreRows, renderTable, section } from '../format/table.js';
@@ -73,9 +75,9 @@ export const shown = (
  * Findings a strip cannot lose anything by, counted rather than listed.
  *
  * A handler that reaches no write cannot lose data by dropping a field, and on
- * one real project twenty-five of the fifty-six strips were on handlers like
- * that — a pricing preview being sent the caller's whole working object on
- * purpose. Every one of them is still in `--format json` (R30).
+ * a real project a large share of the strips were on handlers like that — a
+ * preview being sent the caller's whole working object on purpose. Every one
+ * of them is still in `--format json` (R30).
  */
 export const harmless = (findings: readonly ContractFinding[]): ContractFinding[] =>
   findings.filter((finding) => finding.impact === 'none');
@@ -91,6 +93,30 @@ const rows = <T>(all: readonly T[], max: number): { rows: T[]; dropped: number }
 /** `… 12 more findings; the whole list is in <file>` — never a silent cut (I9). */
 export const truncationNote = (dropped: number, file?: string): string =>
   `${moreRows(dropped).replace('rows', 'findings')}${file === undefined ? '' : `; the whole list is in ${file}`}`;
+
+/** One row of the traffic section: a diff, where it was seen, at or above the level asked. */
+interface TrafficRow {
+  entry: string;
+  direction: string;
+  diff: TrafficDiff;
+}
+
+/** The traffic section's rows (P113), request first then by status, at or above `severity`. */
+const trafficRows = (traffic: TrafficReport | undefined, severity: Severity): TrafficRow[] =>
+  (traffic?.entries ?? []).flatMap((comparison) => [
+    ...(comparison.request?.diffs ?? []).map((diff) => ({ entry: comparison.entry, direction: 'request', diff })),
+    ...Object.entries(comparison.responses ?? {}).flatMap(([status, side]) =>
+      side.diffs.map((diff) => ({ entry: comparison.entry, direction: `response ${status}`, diff })),
+    ),
+  ]).filter((row) => SEVERITY_RANK[row.diff.severity] <= SEVERITY_RANK[severity]);
+
+/** What the section is over, said once: the window and that it never fails anything. */
+const trafficSaid = (traffic: TrafficReport): string => {
+  const routes = traffic.entries.length;
+  const differing = traffic.entries.filter((comparison) => comparison.differs > 0).length;
+  const over = traffic.window.from === null ? 'no hour' : `${traffic.window.from} to ${traffic.window.to}`;
+  return `traffic over ${over}: bodies of ${routes} route(s) read for their shape, ${differing} differing from the code; never an error on its own`;
+};
 
 export const renderContractsText = (
   report: ContractReport,
@@ -166,6 +192,26 @@ export const renderContractsText = (
         ]),
       ),
       ...(rest.dropped > 0 ? [`  ${truncationNote(rest.dropped, options.file)}`] : []),
+    );
+  }
+
+  if (report.traffic !== undefined) {
+    const traffic = rows(trafficRows(report.traffic, settings.severity), settings.maxNodes);
+    lines.push(
+      ...section(
+        'traffic',
+        renderTable(traffic.rows, [
+          { header: 'severity', value: (row) => row.diff.severity },
+          { header: 'kind', value: (row) => row.diff.kind },
+          { header: 'route', value: (row) => row.entry },
+          { header: 'direction', value: (row) => row.direction },
+          { header: 'field', value: (row) => row.diff.path || '(whole body)' },
+          { header: 'seen', value: (row) => `${row.diff.seenIn}/${row.diff.of}`, align: 'right' },
+          { header: 'what', value: (row) => row.diff.message },
+        ]),
+      ),
+      `  ${trafficSaid(report.traffic)}`,
+      ...(traffic.dropped > 0 ? [`  ${truncationNote(traffic.dropped, options.file)}`] : []),
     );
   }
   return `${lines.join('\n')}\n`;
@@ -258,6 +304,28 @@ export const renderContractsMarkdown = (
       lines.push(markdownRow([group.reason, String(group.count), escape(group.first.hint)]));
     }
     lines.push('');
+  }
+
+  if (report.traffic !== undefined) {
+    lines.push('### Traffic', '', trafficSaid(report.traffic), '');
+    const traffic = trafficRows(report.traffic, settings.severity).slice(0, settings.maxNodes);
+    if (traffic.length > 0) {
+      lines.push('| severity | kind | route | direction | field | seen | what |', '|---|---|---|---|---|---|---|');
+      for (const row of traffic) {
+        lines.push(
+          markdownRow([
+            row.diff.severity,
+            row.diff.kind,
+            escape(row.entry),
+            row.direction,
+            escape(row.diff.path || '(whole body)'),
+            `${row.diff.seenIn}/${row.diff.of}`,
+            escape(row.diff.message),
+          ]),
+        );
+      }
+      lines.push('');
+    }
   }
   return `${lines.join('\n')}\n`;
 };
