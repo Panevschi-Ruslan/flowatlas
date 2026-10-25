@@ -6,7 +6,7 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
-## [0.6.0][] - 2026-10-20
+## [0.6.0][] - 2026-10-25
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0.
 
