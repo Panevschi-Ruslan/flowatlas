@@ -96,8 +96,31 @@ export const settingKeyIn = (expr: TsNode, roots: readonly string[]): string | n
     parts.unshift(current.getName());
     current = current.getExpression();
   }
-  if (!Node.isIdentifier(current) || !roots.includes(current.getText())) return null;
-  return parts.length === 0 ? null : parts.join('.');
+  const spellings = rootSpellings(current);
+  // The longest root that is listed wins, so a root with a path of its own
+  // (`useRuntimeConfig().public`, P233) is not read as the shorter one.
+  for (let at = parts.length - 1; at >= 0; at -= 1) {
+    const under = parts.slice(0, at).map((part) => `.${part}`).join('');
+    if (spellings.some((spelling) => roots.includes(`${spelling}${under}`))) return parts.slice(at).join('.');
+  }
+  return null;
+};
+
+/**
+ * How the start of a settings path may be listed: its name, or - a call with
+ * no arguments, written in place or held by a `const` - the call
+ * (`useRuntimeConfig()`), whatever the name it is held by.
+ */
+const rootSpellings = (node: TsNode): string[] => {
+  const called = (call: TsNode | undefined): string | undefined =>
+    call !== undefined && Node.isCallExpression(call) && call.getArguments().length === 0 && Node.isIdentifier(call.getExpression())
+      ? `${call.getExpression().getText()}()`
+      : undefined;
+  if (Node.isCallExpression(node)) return [called(node)].filter((spelling): spelling is string => spelling !== undefined);
+  if (!Node.isIdentifier(node)) return [];
+  const [declaration] = node.getSymbol()?.getDeclarations() ?? [];
+  const bound = declaration !== undefined && Node.isVariableDeclaration(declaration) ? called(declaration.getInitializer()) : undefined;
+  return bound === undefined ? [node.getText()] : [node.getText(), bound];
 };
 
 const fromTemplate = (

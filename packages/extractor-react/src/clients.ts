@@ -188,7 +188,20 @@ export const AXIOS: RequestClient = {
 };
 
 /** Every client this extractor reads without being told anything. */
-export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS];
+/**
+ * Nuxt's clients (P233): `$fetch` and `ofetch` take an address and options as
+ * the platform's `fetch` does, with the body under `body`, and `useFetch` /
+ * `useLazyFetch` the same in a component's setup. Nuxt makes `$fetch` and the
+ * composables global, so no import is asked for.
+ */
+export const OFETCH: RequestClient = {
+  name: 'ofetch',
+  package: null,
+  packages: ['ofetch', 'nuxt'],
+  callee: { names: ['$fetch', 'ofetch', 'useFetch', 'useLazyFetch'], method: null, urlAt: 0, optionsAt: 1, bodyAt: 1 },
+};
+
+export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS, OFETCH];
 
 /**
  * A client class the repository being read wrote itself.

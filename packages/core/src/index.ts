@@ -57,6 +57,7 @@ export {
   makeTypeId,
   makeWorkflowEntryKey,
   isBelowDir,
+  nameMadeUpFile,
   normalizeFilePath,
   normalizePath,
   pathKey,
@@ -1036,3 +1037,5 @@ export { AGENT_QUESTIONS, AGENT_RULES, agentQuestionsLine } from './agent-guide.
 export type { AgentQuestion } from './agent-guide.js';
 export { attachNotes, DEFAULT_NOTE_TAGS, leadingNotes, MAX_NOTE_CHARS, MAX_NOTES, NOTES_META, projectText } from './notes.js';
 export type { SourceText } from './notes.js';
+export { addEmbeddedScripts, blankOutside } from './embedded.js';
+export type { EmbeddedFile, EmbeddedFormat, EmbeddedScripts } from './embedded.js';

@@ -1,0 +1,439 @@
+{
+  "schemaVersion": 6,
+  "builtAt": "2026-11-05T16:34:05.836Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:DELETE:/api/orders/:param",
+      "type": "entry",
+      "label": "DELETE /api/orders/:param",
+      "repo": "shop",
+      "file": "src/routes/api/orders/[id]/+server.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "repo": "shop",
+      "file": "src/routes/api/orders/+server.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:shop#src/lib/orders.ts:3:3",
+      "type": "http_out",
+      "label": "POST /api/orders",
+      "repo": "shop",
+      "file": "src/lib/orders.ts",
+      "line": 3,
+      "meta": {
+        "method": "POST",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ]
+      }
+    },
+    {
+      "id": "http_out:shop#src/lib/orders.ts:5:58",
+      "type": "http_out",
+      "label": "DELETE /api/orders/:param",
+      "repo": "shop",
+      "file": "src/lib/orders.ts",
+      "line": 5,
+      "meta": {
+        "method": "DELETE",
+        "url": "/api/orders/${…}",
+        "path": "/api/orders/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 5,
+          "components": 2,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "svelte"
+          ],
+          "entry": [
+            "sveltekit-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#src/lib/OrderRow.svelte:OrderRow",
+      "type": "ui_component",
+      "label": "OrderRow",
+      "repo": "shop",
+      "file": "src/lib/OrderRow.svelte",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/lib/orders.ts:cancel",
+      "type": "function",
+      "label": "cancel",
+      "repo": "shop",
+      "file": "src/lib/orders.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/lib/orders.ts:place",
+      "type": "function",
+      "label": "place",
+      "repo": "shop",
+      "file": "src/lib/orders.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/routes/+page.svelte:place",
+      "type": "function",
+      "label": "place",
+      "repo": "shop",
+      "file": "src/routes/+page.svelte",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/routes/+page.svelte:routes/+page",
+      "type": "ui_component",
+      "label": "routes/+page",
+      "repo": "shop",
+      "file": "src/routes/+page.svelte",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "shop#src/routes/api/orders/+server.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "shop",
+      "file": "src/routes/api/orders/+server.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ request }",
+              "type": "{request:Request}"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/routes/api/orders/[id]/+server.ts:DELETE",
+      "type": "function",
+      "label": "DELETE",
+      "repo": "shop",
+      "file": "src/routes/api/orders/[id]/+server.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "{params:{id:string}}"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop#src/lib/OrderRow.svelte:11:13",
+      "type": "ui_action",
+      "label": "onclick=\"() => orders.cancel(id)\"",
+      "repo": "shop",
+      "file": "src/lib/OrderRow.svelte",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "() => orders.cancel(id)",
+        "component": "shop#src/lib/OrderRow.svelte:OrderRow",
+        "template": "src/lib/OrderRow.svelte",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#src/routes/+page.svelte:13:9",
+      "type": "ui_action",
+      "label": "on:click=\"place\"",
+      "repo": "shop",
+      "file": "src/routes/+page.svelte",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "place",
+        "component": "shop#src/routes/+page.svelte:routes/+page",
+        "template": "src/routes/+page.svelte",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/lib/orders.ts:3:3",
+      "type": "ui_api_call",
+      "label": "POST /api/orders",
+      "repo": "shop",
+      "file": "src/lib/orders.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/lib/orders.ts:5:58",
+      "type": "ui_api_call",
+      "label": "DELETE /api/orders/:param",
+      "repo": "shop",
+      "file": "src/lib/orders.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "/api/orders/:param",
+        "path": "/api/orders/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:DELETE:/api/orders/:param",
+      "to": "shop#src/routes/api/orders/[id]/+server.ts:DELETE",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/api/orders/[id]/+server.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders",
+      "to": "shop#src/routes/api/orders/+server.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string;name:string}",
+      "file": "src/routes/api/orders/+server.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true,
+        "body": "{name:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "shop#src/lib/orders.ts:cancel",
+      "to": "http_out:shop#src/lib/orders.ts:5:58",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/lib/orders.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#src/lib/orders.ts:cancel",
+      "to": "ui_api_call:shop#src/lib/orders.ts:5:58",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/lib/orders.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#src/lib/orders.ts:place",
+      "to": "http_out:shop#src/lib/orders.ts:3:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/lib/orders.ts",
+      "line": 3
+    },
+    {
+      "from": "shop#src/lib/orders.ts:place",
+      "to": "ui_api_call:shop#src/lib/orders.ts:3:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/lib/orders.ts",
+      "line": 3
+    },
+    {
+      "from": "shop#src/routes/+page.svelte:place",
+      "to": "shop#src/lib/orders.ts:place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "Response",
+      "file": "src/routes/+page.svelte",
+      "line": 7
+    },
+    {
+      "from": "shop#src/routes/+page.svelte:routes/+page",
+      "to": "shop#src/lib/orders.ts:place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "Response",
+      "file": "src/routes/+page.svelte",
+      "line": 7
+    },
+    {
+      "from": "ui_action:shop#src/lib/OrderRow.svelte:11:13",
+      "to": "shop#src/lib/orders.ts:cancel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/lib/OrderRow.svelte",
+      "line": 11
+    },
+    {
+      "from": "ui_action:shop#src/routes/+page.svelte:13:9",
+      "to": "shop#src/routes/+page.svelte:place",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/+page.svelte",
+      "line": 13
+    },
+    {
+      "from": "ui_api_call:shop#src/lib/orders.ts:3:3",
+      "to": "entry:shop:http:POST:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/lib/orders.ts",
+      "line": 3,
+      "params": [
+        "{name:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/lib/orders.ts:5:58",
+      "to": "entry:shop:http:DELETE:/api/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/lib/orders.ts",
+      "line": 5,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": []
+}

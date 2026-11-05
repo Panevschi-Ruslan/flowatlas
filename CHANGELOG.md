@@ -20,6 +20,18 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **Vue, Nuxt and Svelte (P233).** The three frameworks `init` used to name
+  and leave out are read. A `.vue` or `.svelte` component's scripts are read by
+  the checker as TypeScript, every position naming the component file at its
+  own line; its markup's event bindings are clicks that reach the script's
+  functions, the Options API's methods and Pinia or Vuex actions; Vue Router's
+  routes, lazy ones included, and Nuxt's and SvelteKit's pages make components
+  screens; `$fetch`, `ofetch` and `useFetch` are requests. Nuxt's Nitro server
+  is a row of the file-system routers, its verbs from file names, its request
+  read off h3's helpers whether imported or global, `throw createError` a
+  failure, and a Nuxt application is both halves of one service. New types
+  `vue`, `svelte` and `nuxt`; nothing needs to be installed. Astro and Solid
+  are now the frameworks `init` names as unread.
 - **Does it help an assistant, measured (P238).** `scripts/bench-agent/`
   generates an eight-repository TypeScript project from a seed, with traps and
   an answer key written from the generator's own model, asks Claude Code 30

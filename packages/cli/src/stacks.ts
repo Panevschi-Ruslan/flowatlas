@@ -40,15 +40,13 @@ export const UNKNOWN_TYPE = 'unknown';
  * strength of a second dependency it happens to declare.
  */
 export const UNREAD_SIGNATURES: ReadonlyArray<readonly [framework: string, dependency: string]> = [
-  // The file-system routers that are left. What they have in common with the four
-  // that are now read is that the path a route is served at is the path of the
-  // file declaring it — a different fact from a call with a path in it — and by
-  // now that part is a row of data rather than a reader (`fs-routes.ts`). What
-  // they do not have in common with them is the language the rest is written in,
-  // which is what would have to be read next.
-  ['Nuxt', 'nuxt'],
-  ['Vue', 'vue'],
-  ['Svelte', 'svelte'],
+  // Nuxt, Vue and Svelte were here until P233 read them: their components'
+  // scripts as TypeScript, Nuxt's server as a row of the file-system routers.
+  // These two are what is left. Astro is a script block in a file of its own
+  // format, as those were; Solid is TSX already, with a convention of its own
+  // for what a component is.
+  ['Astro', 'astro'],
+  ['Solid', 'solid-js'],
 ];
 
 /** The first name in a table whose dependency the manifest declares. */

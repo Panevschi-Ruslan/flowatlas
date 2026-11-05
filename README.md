@@ -10,7 +10,7 @@ One map of a project that lives in several repositories.
 **A command-line tool that reads several TypeScript repositories with the
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
-Protocol.** It knows NestJS and Angular, React and Next.js, SvelteKit and Remix,
+Protocol.** It knows NestJS and Angular, React and Next.js, Vue and Nuxt, Svelte and SvelteKit, Remix,
 Express, Fastify, Koa and Hono, Medusa, tRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
 Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka, RabbitMQ,
 BullMQ and socket.io; and OpenAPI and AsyncAPI documents for the services whose
@@ -790,11 +790,19 @@ prove, and the path is given so you can run it.
 - **Routes declared by where a file is.** A file-system router is four values —
   its root, which file names declare a route, the prefix in front and which
   segment spellings it honours — so Next.js (app router, pages router, API
-  routes), Medusa, SvelteKit (`+server`, a page's `load` and form actions) and
+  routes), Medusa, SvelteKit (`+server`, a page's `load` and form actions),
+  Nuxt (its pages and Nitro's `server/api` with the verb in the file name) and
   Remix / React Router (flat routes, `app/routes.ts`, `flatRoutes()`) are rows
   of one reading (`fixtures/react-next`, `fixtures/medusa-fs-router`,
-  `fixtures/sveltekit-server-routes`, `fixtures/remix-flat-routes`,
-  `fixtures/react-router-config`). A verb a helper built, aliased or re-exported is
+  `fixtures/sveltekit-server-routes`, `fixtures/nuxt-full-stack`,
+  `fixtures/remix-flat-routes`, `fixtures/react-router-config`).
+- **Components in files of their own format.** A `.vue` or `.svelte` file's
+  scripts are read by the checker as TypeScript, every position named by the
+  component file at its own line, and the event bindings of its markup are the
+  clicks a person makes: a function of the script, a method of the Options
+  API, an action of a Pinia or Vuex store. Vue Router's routes, lazy ones
+  included, and Nuxt's and SvelteKit's pages make components screens
+  (`fixtures/vue-spa`, `fixtures/nuxt-full-stack`, `fixtures/svelte-components`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
   `zsa` is a boundary with its callers (`fixtures/next-actions`).
@@ -954,11 +962,15 @@ prove, and the path is given so you can run it.
 
 Known gaps in what it can read:
 
-- A repository built on anything but the frameworks above. Nuxt and Vue are
+- A repository built on anything but the frameworks above. Astro and Solid are
   recognised by name and read by nothing: `init` and `build` both say which
   repository and which framework, and the graph is smaller than the project by
-  exactly that much. Remix, React Router and SvelteKit are read for their file
-  routes, loads and actions, not for their components.
+  exactly that much. Remix and React Router are read for their file routes,
+  loads and actions, and for their React components.
+- The aliases a framework generates its tsconfig for: SvelteKit's `$lib` and
+  Nuxt's `~` live in `.svelte-kit/` and `.nuxt/`, which a fresh clone does not
+  have, so an import through one resolves only once the framework has run or
+  the tsconfig names the path itself.
 - A file-system router nobody has described — `@fastify/autoload`, or a
   convention of the repository's own. The reader says it cannot tell such a
   repository from a library that merely depends on the framework, rather than

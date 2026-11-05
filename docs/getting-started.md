@@ -89,9 +89,9 @@ Wrote …/flowatlas.config.json with 4 service(s):
 Without `--yes` it asks about each one. The type is what decides which reader
 opens a repository, and it is read from the manifest: a server type wins over a
 browser type when a repository declares both, because the server reader reads
-the browser half too. A framework nothing here reads — Nuxt, Vue, plain
-Svelte — is named rather than silently skipped; SvelteKit and Remix are read
-for their file routes, loads and actions.
+the browser half too. A framework nothing here reads — Astro, Solid — is
+named rather than silently skipped; SvelteKit, Nuxt and Remix are read for
+their file routes, loads and actions, and Vue and Svelte for their components.
 
 **A monorepo is proposed as its applications.** A repository that declares a
 workspace, in `workspaces` or a `pnpm-workspace.yaml`, becomes one service per

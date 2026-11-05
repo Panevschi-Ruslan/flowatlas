@@ -108,6 +108,9 @@ export const READERS: readonly ReaderRow[] = [
   ['remix', '@remix-run/react', NESTJS_EXTRACTOR],
   // Remix's successor, whose routes are declared in `app/routes.ts` (P43).
   ['react-router', '@react-router/dev', NESTJS_EXTRACTOR],
+  // Nuxt (P233): Nitro's routes are the server half, its `.vue` components
+  // the browser half, one directory read by the server reader for both.
+  ['nuxt', 'nuxt', NESTJS_EXTRACTOR],
   ['express', 'express', NESTJS_EXTRACTOR],
   ['fastify', 'fastify', NESTJS_EXTRACTOR],
   ['koa', 'koa', NESTJS_EXTRACTOR],
@@ -126,6 +129,10 @@ export const READERS: readonly ReaderRow[] = [
   // to find, so reading it there would add passes with nothing to read and a
   // slower run to show for it.
   ['react', 'react', REACT_EXTRACTOR],
+  // Components in files of their own format, whose scripts the browser reader
+  // reads as TypeScript (P233).
+  ['vue', 'vue', REACT_EXTRACTOR],
+  ['svelte', 'svelte', REACT_EXTRACTOR],
 ];
 
 /**

@@ -327,12 +327,12 @@ describe('building a project', () => {
    * `constructor` with a function - so a typo would have been planned, cached and
    * reported as a repository with a reader, and whatever that function returned
    * would have been its extractor's name. It is a `Map` now and the answer is the
-   * same as for `svelte`: no reader, no nodes (R134).
+   * same as for `astro`: no reader, no nodes (R134).
    */
   it('leaves a service no extractor can read out, without failing', async () => {
     const config = configFor('unknown-type', [
       service('orders', { baseUrlEnv: ['ORDERS_URL'] }),
-      { name: 'landing', repo: join(FIXTURE, 'web'), type: 'svelte' },
+      { name: 'landing', repo: join(FIXTURE, 'web'), type: 'astro' },
       { name: 'mistyped', repo: join(FIXTURE, 'web'), type: 'constructor' },
     ]);
     const result = await buildProject({ config, builtAt: FIXED });

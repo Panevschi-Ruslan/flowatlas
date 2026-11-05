@@ -1,0 +1,117 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 6,
+  "generatedAt": "2026-11-05T16:33:34.789Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop#pages/index.vue:14:33",
+        "to": "entry:shop:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#pages/index.vue:14:33|hits|entry:shop:http:GET:/api/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#pages/index.vue:pages/index declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#pages/index.vue:14:33",
+        "to": "entry:shop:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#pages/index.vue:14:33|hits|entry:shop:http:GET:/api/orders",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#pages/index.vue:pages/index declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#pages/index.vue:17:9",
+        "to": "entry:shop:http:POST:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#pages/index.vue:17:9|hits|entry:shop:http:POST:/api/orders",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "shop#server/api/orders.post.ts:POST /api/orders@7 reads no typed body from the request it is handed",
+      "hint": "Type what the handler reads: the request's type argument for the body, or check the body with a validator, whose output is read as the shape."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#pages/index.vue:17:9",
+        "to": "entry:shop:http:POST:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#pages/index.vue:17:9|hits|entry:shop:http:POST:/api/orders",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#pages/index.vue:create declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#pages/orders/[id].vue:14:24",
+        "to": "entry:shop:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#pages/orders/[id].vue:14:24|hits|entry:shop:http:GET:/api/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#pages/orders/[id].vue:orders/[id] declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#pages/orders/[id].vue:14:24",
+        "to": "entry:shop:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#pages/orders/[id].vue:14:24|hits|entry:shop:http:GET:/api/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#pages/orders/[id].vue:orders/[id] declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#stores/orders.ts:6:11",
+        "to": "entry:shop:http:DELETE:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#stores/orders.ts:6:11|hits|entry:shop:http:DELETE:/api/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#stores/orders.ts:useOrdersStore declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#stores/orders.ts:6:11",
+        "to": "entry:shop:http:DELETE:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#stores/orders.ts:6:11|hits|entry:shop:http:DELETE:/api/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#stores/orders.ts:useOrdersStore declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 8,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

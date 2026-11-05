@@ -12,8 +12,10 @@ import {
 } from 'ts-morph';
 import { functionNamedBy, memberFunctionCalled } from '../passes/called-function.js';
 import {
+  ERROR_FACTORIES,
   EXCEPTION_STATUS,
   HTTP_EXCEPTION,
+  type ErrorFactory,
   HTTP_STATUS,
   STATUSLESS_EXCEPTIONS,
   UNKNOWN_ERROR_STATUS,
@@ -648,6 +650,36 @@ const thrownThrough = (call: CallExpression, statement: Node): Omit<Thrown, 'lin
   };
 };
 
+/** The error factory a call is, by its name and by where the name comes from: an import of one of its packages, or nothing at all. */
+const errorFactoryOf = (call: CallExpression): ErrorFactory | undefined => {
+  const callee = bare(call.getExpression());
+  if (!Node.isIdentifier(callee)) return undefined;
+  const factory = ERROR_FACTORIES.find((each) => each.name === callee.getText());
+  if (factory === undefined) return undefined;
+  const declarations = callee.getSymbol()?.getDeclarations() ?? [];
+  if (declarations.length === 0) return factory;
+  for (const declaration of declarations) {
+    if (Node.isImportSpecifier(declaration) && factory.packages.includes(declaration.getImportDeclaration().getModuleSpecifierValue())) return factory;
+    if (declaration.getSourceFile().isDeclarationFile()) return factory;
+  }
+  return undefined;
+};
+
+/** What `throw createError({ statusCode: 404 })` throws: the factory, at the status it writes. */
+const thrownByFactory = (call: CallExpression, factory: ErrorFactory): Omit<Thrown, 'line'> => {
+  const [options] = call.getArguments();
+  let status: number | undefined;
+  if (options !== undefined && Node.isObjectLiteralExpression(options)) {
+    for (const key of factory.statusKeys) {
+      const property = options.getProperty(key);
+      if (property !== undefined && Node.isPropertyAssignment(property)) status ??= statusWritten(property.getInitializer());
+    }
+  } else {
+    status = statusWritten(options);
+  }
+  return { exception: factory.name, ...(status === undefined ? {} : { status }), lineage: [] };
+};
+
 /**
  * What a `throw` throws: `new X(...)` as the class answers it; a helper's
  * answer, `throw f(x)`, `throw await f(x)` or `throw e` with `e` a `const`
@@ -668,6 +700,8 @@ const thrownBy = (expression: Expression | undefined, statement: Node): Omit<Thr
   // never read as a helper and is not one.
   const callee = bare(call.getExpression());
   if (Node.isIdentifier(callee) && classNamed(callee).builtIn === true) return undefined;
+  const factory = errorFactoryOf(call);
+  if (factory !== undefined) return thrownByFactory(call, factory);
   return thrownThrough(call, statement);
 };
 

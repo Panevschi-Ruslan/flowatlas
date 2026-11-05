@@ -116,3 +116,24 @@ export const KNOWN_REFUSALS: ReadonlyMap<string, ReadonlyMap<string, Refusal>> =
 /** The refusal of a check from an installed package, if it is one known here. */
 export const knownRefusal = (pkg: string | undefined, name: string): Refusal | undefined =>
   pkg === undefined ? undefined : KNOWN_REFUSALS.get(pkg)?.get(name);
+
+/**
+ * Functions that build the error a handler throws, and where each writes its
+ * status (P233): `throw createError({ statusCode: 404 })`, Nitro's and Nuxt's,
+ * imported from one of `packages` or global as Nuxt makes it. Read as a
+ * failure of that status, named after the function, because the function is
+ * what the code wrote.
+ */
+export interface ErrorFactory {
+  readonly name: string;
+  readonly packages: readonly string[];
+  /** Keys of an options object, written first, that hold the status. */
+  readonly statusKeys: readonly string[];
+}
+
+/** The frameworks whose handlers throw what an error factory builds: where the failures pass reads without NestJS. */
+export const ERROR_FACTORY_FRAMEWORKS: readonly string[] = ['nuxt', 'nitropack', 'h3'];
+
+export const ERROR_FACTORIES: readonly ErrorFactory[] = [
+  { name: 'createError', packages: ['h3', 'nuxt/app', '#app', '#imports', 'nitropack/runtime'], statusKeys: ['statusCode', 'status'] },
+];

@@ -183,6 +183,8 @@ export interface BuildFunctionIndexOptions {
    * Every file when absent; see `extractReact` for the rule that fills it.
    */
   reads?: (file: string) => boolean;
+  /** Functions a reading wrote itself and indexes its own way: a component file's tail (P233). */
+  skip?: (fn: NamedFunction) => boolean;
 }
 
 /**
@@ -249,7 +251,7 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
 export const buildReactFunctionIndex = (
   options: BuildFunctionIndexOptions,
 ): ReactFunctionIndex => {
-  const { project, repo, repoDir, reads = () => true } = options;
+  const { project, repo, repoDir, reads = () => true, skip = () => false } = options;
   const index = new ReactFunctionIndex({ repo, repoDir });
 
   for (const sourceFile of project.getSourceFiles()) {
@@ -260,6 +262,7 @@ export const buildReactFunctionIndex = (
     if (anonymous !== undefined) found.push(anonymous);
 
     for (const fn of found) {
+      if (skip(fn)) continue;
       index.add({
         id: makeSymbolId(repo, file, fn.name),
         name: fn.name,

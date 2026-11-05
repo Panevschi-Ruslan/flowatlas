@@ -26,7 +26,7 @@ import {
   throughInterceptors,
   type InterceptorInFront,
 } from './interceptors.js';
-import { GUARD_REFUSAL, HTTP_EXCEPTION, knownRefusal, NEST_PACKAGES, type Refusal } from './statuses.js';
+import { ERROR_FACTORY_FRAMEWORKS, GUARD_REFUSAL, HTTP_EXCEPTION, knownRefusal, NEST_PACKAGES, type Refusal } from './statuses.js';
 import { classNamed, throwsIn } from './throws.js';
 
 /** The edges control goes along from a way in to the code that can fail. */
@@ -364,7 +364,7 @@ const withoutStatus = ({ status: _status, assumed: _assumed, declared: _declared
  * because what a way in reaches is what the failures are read along.
  */
 export const failuresPass = definePass('failures', (ctx: NestExtractContext) => {
-  if (!hasAnyDependency(readPackageJson(ctx.repoDir) ?? {}, NEST_PACKAGES)) return;
+  if (!hasAnyDependency(readPackageJson(ctx.repoDir) ?? {}, [...NEST_PACKAGES, ...ERROR_FACTORY_FRAMEWORKS])) return;
   const interceptors = readInterceptors(ctx);
   const reading = read(ctx, interceptors.mappingThrows);
   const filters = readFilters(ctx);

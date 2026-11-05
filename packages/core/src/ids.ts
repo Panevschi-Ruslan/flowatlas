@@ -179,6 +179,18 @@ const rootOfPath = (path: string): string | undefined =>
   path.startsWith('/') ? '/' : DRIVE.test(path) ? path.slice(0, 2).toUpperCase() : undefined;
 
 /**
+ * The files a reading made up for the checker, by the POSIX path of each, and
+ * the file each stands for (P233, `embedded.ts`). A position in one is a
+ * position in the other, so the only thing to change is the name.
+ */
+const MADE_UP_FILES = new Map<string, string>();
+
+/** Records that `virtual` is the checker's copy of `real`: both absolute, POSIX. */
+export const nameMadeUpFile = (virtual: string, real: string): void => {
+  MADE_UP_FILES.set(virtual, real);
+};
+
+/**
  * Bring a file path into the form every id uses: POSIX separators,
  * repo-relative when `repoDir` is given, without a leading `./`.
  *
@@ -189,6 +201,8 @@ const rootOfPath = (path: string): string | undefined =>
  */
 export const normalizeFilePath = (file: string, repoDir?: string): string => {
   let out = toPosixPath(typeof file === 'string' ? file : '');
+  // A file made up for the checker is named as the file it was made from.
+  out = MADE_UP_FILES.get(out) ?? out;
   if (typeof repoDir === 'string' && repoDir !== '') {
     const base = pathKey(toPosixPath(repoDir).replace(/\/+$/, ''));
     const key = pathKey(out);

@@ -20,7 +20,8 @@ import type { Project } from 'ts-morph';
  */
 export const REACT_SOURCE_ROOTS: Readonly<Pick<SourceRootOptions, 'fallback' | 'companions'>> = Object.freeze({
   fallback: 'repository',
-  companions: ['.js', '.jsx', '.mjs', '.cjs'],
+  // A component file is read through the script made from it (P233), and a change to it is a change.
+  companions: ['.js', '.jsx', '.mjs', '.cjs', '.vue', '.svelte'],
 });
 
 /**

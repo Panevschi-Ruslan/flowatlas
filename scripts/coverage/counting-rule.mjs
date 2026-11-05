@@ -87,6 +87,9 @@ export const SOURCE_EXTENSIONS = [
   '.cjs',
   '.html',
   '.prisma',
+  // Components in files of their own format (P233).
+  '.vue',
+  '.svelte',
 ];
 
 /**
@@ -215,6 +218,29 @@ export const PROBES = [
     scope: 'line',
     what: 'a click bound in a template',
     pattern: /\(click\)\s*=/g,
+  },
+  {
+    name: 'component-file',
+    family: 'screens',
+    scope: 'file',
+    what: 'a Vue or Svelte component file',
+    path: /\.(?:vue|svelte)$/,
+  },
+  {
+    name: 'component-click-binding',
+    family: 'clicks',
+    scope: 'line',
+    what: 'a click bound in a Vue or Svelte component',
+    path: /\.(?:vue|svelte)$/,
+    pattern: /(?:@click|v-on:click|on:click|\bonclick)(?=[\s.|=])|\{\s*onclick\s*\}/g,
+  },
+  {
+    name: 'nitro-route-file',
+    family: 'routes',
+    scope: 'file',
+    what: 'a file under `server/api` or `server/routes` that default-exports a handler',
+    path: /(^|\/)server\/(?:api|routes)\/.+\.[cm]?[jt]s$/,
+    contains: /export\s+default\b/,
   },
   {
     name: 'prisma-call-site',
@@ -358,7 +384,8 @@ export const withoutComments = (text) => {
  * schema, whose `//` and `///` are line comments too. A template is markup,
  * where `//` is part of an address and nothing is a comment of this kind.
  */
-const COMMENTED = new Set(SOURCE_EXTENSIONS.filter((extension) => extension !== '.html'));
+// Markup's comments are not a script's, and a template's `//` is an address.
+const COMMENTED = new Set(SOURCE_EXTENSIONS.filter((extension) => !['.html', '.vue', '.svelte'].includes(extension)));
 
 /** What a probe reads: the file, with its comments blanked where it has any. */
 const codeOf = (path, text) => (COMMENTED.has(extensionOf(path)) ? withoutComments(text) : text);

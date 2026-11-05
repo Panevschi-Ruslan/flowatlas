@@ -1,4 +1,4 @@
-import { hasDependency, type PackageJson } from '@flowatlas/core';
+import { hasAnyDependency, hasDependency, type PackageJson } from '@flowatlas/core';
 
 /**
  * Whether a manifest declares the framework this extractor reads.
@@ -14,3 +14,9 @@ import { hasDependency, type PackageJson } from '@flowatlas/core';
  * to what this framework is.
  */
 export const declaresReact = (pkg: PackageJson): boolean => hasDependency(pkg, 'react');
+
+/** Vue, and Nuxt built on it (P233). */
+export const declaresVue = (pkg: PackageJson): boolean => hasAnyDependency(pkg, ['vue', 'nuxt']);
+
+/** Svelte, and SvelteKit built on it (P233). */
+export const declaresSvelte = (pkg: PackageJson): boolean => hasDependency(pkg, 'svelte');

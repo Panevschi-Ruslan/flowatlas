@@ -16,9 +16,11 @@ import { Node } from 'ts-morph';
  * Identifiers that stand for a settings object written by hand.
  *
  * The two conventions a repository that does not use the bundler's own
- * mechanism falls back on. Anything else is a hole like any other.
+ * mechanism falls back on, and Nuxt's runtime configuration (P233): its keys
+ * under `public` and beside it, read through `useRuntimeConfig()` called in
+ * place or held by a name. Anything else is a hole like any other.
  */
-export const ENV_ROOTS = ['environment', 'env', 'config'] as const;
+export const ENV_ROOTS = ['environment', 'env', 'config', 'useRuntimeConfig().public', 'useRuntimeConfig()'] as const;
 
 /**
  * Where a bundler puts the settings a build swaps out.

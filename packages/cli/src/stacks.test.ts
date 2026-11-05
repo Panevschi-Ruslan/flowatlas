@@ -30,7 +30,7 @@ describe('the stack a repository is built on', () => {
   it('looks in every dependency section', () => {
     expect(guessType({ devDependencies: { '@nestjs/core': '10.0.0' } })).toBe('nestjs');
     expect(guessType({ peerDependencies: { '@angular/core': '17.0.0' } })).toBe('angular');
-    expect(guessUnread({ optionalDependencies: { vue: '3.4.0' } })).toBe('Vue');
+    expect(guessUnread({ optionalDependencies: { astro: '4.16.0' } })).toBe('Astro');
   });
 
   it('says nothing about an empty manifest', () => {
@@ -69,9 +69,15 @@ describe('the stack a repository is built on', () => {
   });
 
   it('names the framework when there is no reader for it', () => {
-    expect(guessUnread({ dependencies: { nuxt: '3.14.0' } })).toBe('Nuxt');
-    expect(guessUnread({ dependencies: { vue: '3.5.0' } })).toBe('Vue');
-    expect(guessUnread({ devDependencies: { svelte: '5.0.0' } })).toBe('Svelte');
+    expect(guessUnread({ dependencies: { astro: '4.16.0' } })).toBe('Astro');
+    expect(guessUnread({ devDependencies: { 'solid-js': '1.9.0' } })).toBe('Solid');
+  });
+
+  it('reads Nuxt, Vue and Svelte, which it once named as unread (P233)', () => {
+    expect(guessType({ dependencies: { nuxt: '3.14.0', vue: '3.5.0' } })).toBe('nuxt');
+    expect(guessType({ dependencies: { vue: '3.5.0' } })).toBe('vue');
+    expect(guessType({ devDependencies: { svelte: '5.0.0' } })).toBe('svelte');
+    for (const dependency of ['nuxt', 'vue', 'svelte']) expect(guessUnread({ dependencies: { [dependency]: '1.0.0' } })).toBeUndefined();
   });
 
   // Every application built on the file-system router declares React too, and
@@ -130,7 +136,7 @@ describe('the stack a repository is built on', () => {
   });
 
   it('writes the note a build prints beside a repository it skipped', () => {
-    expect(noReaderNote({ dependencies: { nuxt: '3.14.0' } })).toBe('Nuxt, no reader yet');
+    expect(noReaderNote({ dependencies: { astro: '4.16.0' } })).toBe('Astro, no reader yet');
   });
 
   // A service configured as `nest` has no reader, and the repository it points
@@ -283,13 +289,13 @@ describe('what a repository looks like', () => {
   };
 
   it('names a deployment tool nothing reads before anything in the manifest', () => {
-    const dir = repository({ 'serverless.yml': 'service: holds\n', 'package.json': { dependencies: { vue: '3.4.0' } } });
+    const dir = repository({ 'serverless.yml': 'service: holds\n', 'package.json': { dependencies: { astro: '4.16.0' } } });
     expect(looksLike(dir, 'nestjs')).toBe('its functions are declared for the Serverless Framework, which nothing here reads yet');
   });
 
   it('names a framework nothing reads', () => {
-    expect(looksLike(repository({ 'package.json': { dependencies: { svelte: '5.0.0' } } }), 'express')).toBe(
-      'it is built on Svelte, which nothing here reads yet',
+    expect(looksLike(repository({ 'package.json': { dependencies: { 'solid-js': '1.9.0' } } }), 'express')).toBe(
+      'it is built on Solid, which nothing here reads yet',
     );
   });
 

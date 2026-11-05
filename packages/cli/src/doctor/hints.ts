@@ -288,6 +288,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // Routes (adapters-entry)
   'route-path-dynamic': () =>
     'Write the path as a literal, a const, or a + or template of them, and every path of a list the same way; a path that needs a call or a run-time value to compute is not recorded as a route at all, so no caller can reach it.',
+  'fs-route-handler-not-read': () =>
+    'The file serves a route and its default export is not a handler written in place. Export defineEventHandler((event) => ...) as the default, or describe the route in flowatlas.config.json.',
   'route-mount-unread': () =>
     'The route was read and the path its application is mounted under was not. Mount the application at a literal path, or declare its routes on the application that is served.',
   'route-handler-anonymous': () =>
@@ -424,6 +426,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The template could not be parsed, so every trigger in it is missing from the graph until it is fixed.',
   'route-link-dynamic': () =>
     'The path is built at run time, so no configured route can be matched against it. Nothing to fix.',
+  'template-handler-not-found': () =>
+    'The binding names a function the component neither declares nor imports, so the click runs nothing the graph can follow. Declare it, import it, or correct the name in the markup.',
   'route-screen-unread': () =>
     'A route answers this link, but nothing said which component it shows — a redirect, or a loader that was not read.',
   'route-target-unresolved': (row) =>

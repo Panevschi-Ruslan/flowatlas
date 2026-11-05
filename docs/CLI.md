@@ -118,7 +118,7 @@ Wrote /work/flowatlas/flowatlas.config.json with 103 service(s):
   api  ../api  nestjs
   web  ../web  angular
   and 101 that nothing here reads:
-No reader yet for 13 repositories: Vue (9), the Serverless Framework (4).
+No reader yet for 13 repositories: Astro (9), the Serverless Framework (4).
 flowatlas reads repositories of type nestjs and … and react today.
 Those repositories stay in the configuration and contribute nothing to the graph.
 Could not tell the type of 88 repositories. Of those:
@@ -133,18 +133,19 @@ The type of a repository is read from its manifest: `@nestjs/core` makes it
 `nestjs`, `@medusajs/framework` or `@medusajs/medusa` makes it `medusa`, `next`
 makes it `nextjs`, `@sveltejs/kit` makes it `sveltekit`, `@remix-run/node` or
 `@remix-run/react` makes it `remix`, `@react-router/dev` makes it `react-router`,
-`express`, `fastify` and `koa` make it each of those,
-`@angular/core` makes it `angular`, `react` makes it `react`, and anything else is
-written as `unknown`. Those eleven are every type there is. Hono and Telegraf have
+`nuxt` makes it `nuxt`, `express`, `fastify` and `koa` make it each of those,
+`@angular/core` makes it `angular`, `react` makes it `react`, `vue` makes it `vue`,
+`svelte` makes it `svelte`, and anything else is
+written as `unknown`. Those fourteen are every type there is. Hono and Telegraf have
 no type of their own: they are frameworks the server reader finds inside a
 repository whichever server type it is given, so a repository whose only
 framework is Hono is
 given any of the server types — `express` will do — and its routes are read. Where
-the manifest names a framework there is no reader for — Nuxt, Vue or Svelte
-without SvelteKit — `init` says so by name, and `build` repeats it on that repository's line:
+the manifest names a framework there is no reader for — Astro or Solid —
+`init` says so by name, and `build` repeats it on that repository's line:
 
 ```
-web            skipped (no-extractor: Nuxt, no reader yet)
+web            skipped (no-extractor: Astro, no reader yet)
 ```
 
 Where the manifest declares a framework it *can* read, the line says which type
@@ -227,11 +228,60 @@ address. A route under a mount whose path could not be read has a row of its own
 how many in `entry-http-routes-unplaced`, so a partial read never looks like a
 repository with fewer routes.
 
+**Vue, Nuxt and Svelte (P233).** A component written in a file of its own
+format is read through its scripts. Each `.vue` or `.svelte` file is handed to
+the checker as a TypeScript file beside it holding its `<script>` blocks where
+they are, everything else turned to spaces, so every line and column is the
+component's own and every id, position and row names the component file; an
+import of `./X.vue` resolves to it, so a component's functions are followed
+like any module's. A component is a `ui_component` whose code is its whole
+script: what `<script setup>` does when the component is shown - a
+`useFetch`, a store it reads, a composable it calls - is the component's, and
+each function the script declares is a function of its own.
+
+The markup's event bindings are its clicks: `@click="save"`,
+`v-on:submit.prevent="send(form)"`, `@custom-event="…"`, Svelte 4's
+`on:click={save}`, Svelte 5's `onclick={save}` and `{onclick}`. Each is a
+`ui_action` at the binding, with a `handles` edge to what it runs: a function
+of the script or one it imports, a method of the Options API (`methods`, or a
+function its `setup()` returns), an action of a store the script holds
+(`orders.add(id)`), every call of a handler written as statements. A binding
+that only assigns runs the component; one naming a function the component
+does not have is a row, `template-handler-not-found`. Bindings that fire while
+a person types - `@input`, `@change`, `@keyup` - are not ways in, nor are
+`v-model`, `bind:` or a displayed value.
+
+A Pinia store (`defineStore` with `actions`, or a setup function whose returned
+functions are its actions) and a Vuex store (`createStore` with `actions` and
+namespaced `modules`) have their actions as functions, and a call to one -
+`orders.add()` on the store a `useOrders()` returned, `dispatch('orders/add')`
+- is drawn without the library installed. A call to what a composable handed
+back (`const { load } = useOrders(); load()`) is a call into the composable.
+Requests are read as the React reader reads them, with Nuxt's `$fetch`,
+`ofetch`, `useFetch` and `useLazyFetch` beside `fetch` and axios.
+
+Vue Router's routes - an object with a `path` and a `component`, under a
+parent's `children`, the component imported or `() => import('./X.vue')` -
+make a component a screen at that address, as do Nuxt's `pages/` (`[id].vue`
+is `:id`, `index` the folder's own, a `(group)` nothing) and SvelteKit's
+`+page.svelte`. Nuxt's server is Nitro's: a file under `server/api` answers
+under `/api` and one under `server/routes` at the root, with the verb from its
+name (`orders.get.ts`, `[id].delete.ts`) or every verb without one; its
+handler is the function handed to `defineEventHandler`, what it reads is read
+off `readBody`, `readValidatedBody`, `getQuery` and `getRouterParam` whether
+imported from `h3` or global as Nuxt makes them, `throw createError({
+statusCode })` is a failure of that status, and every file under
+`server/middleware` stands in front of every route. A Nuxt application is
+both halves of one service (type `nuxt`): a page's `$fetch('/api/orders')`
+joins to its own `server/api/orders.get.ts`. Neither framework needs to be
+installed (`fixtures/vue-spa`, `fixtures/nuxt-full-stack`,
+`fixtures/svelte-components`).
+
 **A file-system router is four values.** Where the address is the path of a file
 rather than an argument of a call, what differs between one router and another
 is the root directory, which file names declare a route, the prefix in front,
 and which segment spellings are honoured. Next.js (the app router, the pages
-router and its API routes), Medusa, SvelteKit and Remix are rows of that
+router and its API routes), Medusa, SvelteKit, Nuxt and Remix are rows of that
 description, read by one walk, so they cannot drift on what counts as a verb read
 or a file served at no address (`fixtures/react-next`, `fixtures/medusa-fs-router`).
 SvelteKit's `src/routes/**/+server.ts` exports its verbs by name; a group in
@@ -3788,7 +3838,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 |---|---|---|---|
 | `name` | string | required | what this service is called everywhere else |
 | `repo` | string | required unless `document` is given | path to the repository, relative to this file or absolute. A service has a `repo` or a `document`, never both |
-| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `remix`, `react-router`, `express`, `fastify` or `koa` for anything with a server in it, `lambda` for functions whose ways in are declared in Terraform, `angular` or `react` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
+| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `nuxt`, `remix`, `react-router`, `express`, `fastify` or `koa` for anything with a server in it, `lambda` for functions whose ways in are declared in Terraform, `angular`, `react`, `vue` or `svelte` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `hosts` | string[] | `[]` | hosts this service is reached at, as `host` or `host:port` (`["orders.example.com"]`), for a base address read from a repository's files to be matched against beside the service's name |
