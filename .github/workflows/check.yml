@@ -25,6 +25,39 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
 
+  # The pull-request action, run from this checkout against the demo project with
+  # the command this checkout builds (P231): every step but the comment, which
+  # is off so the repository's own pull requests are not written on.
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - run: npm install --global ./packages/cli
+
+      - id: flowatlas
+        uses: ./action
+        with:
+          config: fixtures/multi-repo/flowatlas.config.json
+          base: HEAD~1
+          version: installed
+          comment: 'off'
+          fail-on: ''
+          docs-check: 'false'
+
+      - run: test -n "${{ steps.flowatlas.outputs.verdict }}" && test -n "${{ steps.flowatlas.outputs.reaches }}"
+
   # Builds and runs the unit tests on Windows (P83). A failure fails the run
   # since the tests passed there (P199, P200); the fixture snapshot gate is not
   # run here, and requiring the job before a merge is the repository's branch

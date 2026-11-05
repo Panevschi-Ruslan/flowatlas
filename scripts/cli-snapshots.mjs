@@ -977,6 +977,8 @@ const specDiff = (options) => async (io) => {
 const DIFF_CASES = [
   ['diff.md', diffMarkdown({})],
   ['diff.class.md', diffMarkdown({ sequenceDetail: 'class', maxDiagrams: '1', context: '0' })],
+  // The same as a pull request's comment (P231): the verdict first, the marker that finds it again.
+  ['diff.comment.md', diffMarkdown({ format: 'comment' })],
   [
     'diff.json',
     async (io) => {

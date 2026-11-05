@@ -17,7 +17,7 @@
  */
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
 import { loadConfig, ruleSetOf, SCHEMA_VERSION, type LoadedConfig } from '@flowatlas/core';
 import {
@@ -43,6 +43,10 @@ import { processIo, type QueryIo } from '../query/answer.js';
 import { environmentLead } from '../report/check-render.js';
 import { classifyContracts, contractBreaks } from '../report/contract-delta.js';
 import { DIFF_MARKDOWN_DEFAULTS, DIFF_SECTIONS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
+import { COMMENT_FILE, commentFacts, commentMarker, renderDiffComment } from '../report/diff-comment.js';
+
+/** What a comment's marker and verdict take of `--max-chars`. */
+const COMMENT_HEADER_ROOM = 600;
 import { flowChanges } from '../report/flow-changes.js';
 import { staleDocsOf, type StaleDocs } from '../report/stale-docs.js';
 import { classifyRules, ruleBreaks } from '../report/rule-delta.js';
@@ -62,7 +66,8 @@ import {
 import { VERSION } from '../version.js';
 import { registerCache } from './cache.js';
 
-export const FORMATS = ['markdown', 'json', 'sarif'] as const;
+/** `comment` is the Markdown as a pull request's comment, with its verdict first and a marker to find it by (P231). */
+export const FORMATS = ['markdown', 'json', 'sarif', 'comment'] as const;
 export type DiffFormat = (typeof FORMATS)[number];
 
 /** The file every run leaves behind, whatever it printed. */
@@ -480,7 +485,7 @@ export const runDiff = async (
     diagrams: options.diagrams !== false,
   };
   const sections = (options.section ?? []).map((name) => oneOf(name, DIFF_SECTIONS, 'impact', '--section'));
-  if (sections.length > 0 && format !== 'markdown') {
+  if (sections.length > 0 && format !== 'markdown' && format !== 'comment') {
     throw cannotRun(`--section picks parts of the Markdown, and --format ${format} writes the whole report`, [
       'Leave out --format, or leave out --section.',
     ]);
@@ -535,6 +540,13 @@ export const runDiff = async (
     const file = join(outputDir, DIFF_FILE);
     writeFileSync(file, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 
+    // A comment's figures, written beside the report for a workflow to read (P231).
+    // Which configuration's comment: its file name and its services, so two projects in one repository
+    // keep two comments, and the same project gets the same marker wherever it is checked out.
+    const commentKey = `${basename(loaded.configPath)}:${loaded.config.services.map((service) => service.name).sort().join(',')}`;
+    const facts = format === 'comment' ? commentFacts(report, docs, ruleSet.failOnHeuristic) : undefined;
+    if (facts !== undefined) writeFileSync(join(outputDir, COMMENT_FILE), `${JSON.stringify({ marker: commentMarker(commentKey), ...facts }, null, 2)}\n`, 'utf8');
+
     // The new and fixed contract findings and rule violations (P115): a new
     // one placed on the head side, a fixed one where it was on the base side.
     const text =
@@ -554,7 +566,14 @@ export const runDiff = async (
           )
         : format === 'json'
           ? `${JSON.stringify(report, null, 2)}\n`
-          : renderDiffMarkdown(report, { file, ...markdown, docs, sections, ...(said === undefined ? {} : { lead: environmentLead(said, head) }) });
+          : facts !== undefined
+            ? renderDiffComment(
+                commentKey,
+                facts,
+                // The header's room comes out of the comment's (D: one comment holds 65,536).
+                renderDiffMarkdown(report, { file, ...markdown, maxChars: Math.max(1000, markdown.maxChars - COMMENT_HEADER_ROOM), docs, sections, ...(said === undefined ? {} : { lead: environmentLead(said, head) }) }),
+              )
+            : renderDiffMarkdown(report, { file, ...markdown, docs, sections, ...(said === undefined ? {} : { lead: environmentLead(said, head) }) });
     if (format !== 'sarif') io.out(text);
     io.err(`${summariseDiff(report)}\n`);
     for (const note of said?.notes ?? []) io.err(`note: ${note}\n`);

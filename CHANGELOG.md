@@ -20,6 +20,15 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **A GitHub Action, and `diff --format comment` (P231).** The action in
+  `action/` fetches the other repositories a configuration names, caches the
+  base graphs under the base commit, and keeps one pull request comment up to
+  date: three lines first (what the change reaches, its new breaks and stale
+  docs, the verdict), the report under them, found again by a marker that
+  names the configuration. A fork's pull request gets the job summary. It can
+  fail the check on new breaks and upload SARIF. `flowatlas diff --format
+  comment` writes the same comment for any workflow, with its figures in
+  `diff-comment.json`.
 - **`flowatlas report` (P228).** The page a person reads first, from the
   graph: each service and what it is, what crosses between them (drawn as a
   Mermaid flowchart), what most of the project depends on by reach, what is
