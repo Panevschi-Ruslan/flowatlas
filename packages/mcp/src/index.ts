@@ -118,12 +118,13 @@ export type { PromptName } from './prompts.js';
 export {
   reasonCatalogOf,
   serviceSummaryOf,
+  OVERVIEW_URI,
   REASONS_URI,
   SERVICES_URI,
   SERVICE_TEMPLATE,
   SERVICE_TOP_FINDINGS,
 } from './resources.js';
-export type { ReasonEntry, ReasonHint } from './resources.js';
+export type { OverviewWriter, ReasonEntry, ReasonHint } from './resources.js';
 export { startSummaryOf } from './tools/start.js';
 export {
   blindSpotsAsRows,

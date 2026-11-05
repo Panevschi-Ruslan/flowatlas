@@ -556,6 +556,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'document-age': () =>
     'Nothing here can check a document against the running service, so how recently the document was updated is the only evidence there is that it is still true. Fetch the current one from whoever owns the service if it is behind.',
 
+  // A store more than one service writes (doctor/shared-store.ts, P228), asked at doctor time.
+  'store-shared': () =>
+    'Two services write this store, so a change to its shape in one is a change under the other. If that is the design, accept it; if only one should write it, an `only` rule says so and flowatlas rules lists every other writer.',
+
   // A checkout that moved since the build (doctor/checkout.ts, P230), asked at doctor time.
   'checkout-moved': () =>
     'The graph describes the commit each repository was on when it was built. Run flowatlas build after a checkout or a merge, or flowatlas hook install to have it rebuilt in the background every time.',

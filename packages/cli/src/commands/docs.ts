@@ -30,6 +30,8 @@ import {
   type GraphDb,
 } from '@flowatlas/linker';
 import { checkDocBlock, DbHandle, docsPathFor, type DocCheck } from '@flowatlas/mcp';
+import { OVERVIEW_SECTIONS, overviewFingerprint, overviewOf, type OverviewSection } from '../overview/overview.js';
+import { renderOverview } from '../overview/render.js';
 import type { Command } from 'commander';
 import { cannotRun, CliError, EXIT, type ExitCode } from '../exit.js';
 import { processIo, type QueryIo } from '../query/answer.js';
@@ -156,15 +158,27 @@ export const docsIn = (
   db: GraphDb,
   file: string,
   markdown: string,
-  options: { write?: boolean } = {},
+  options: { write?: boolean; overview?: (block: DocBlock) => string } = {},
 ): { results: DocResult[]; problems: DocsProblem[]; text: string } => {
   const parsed = parseDocs(markdown);
-  const results: DocResult[] = parsed.blocks.map((block) => ({ file, block, check: checkDocBlock(db, block) }));
   const problems = parsed.problems.map((problem) => ({ file, ...problem }));
+  // An overview naming a section there is none of is a marker that cannot be read (P228).
+  const blocks = parsed.blocks.filter((block) => {
+    const wrong = (block.options.sections ?? []).filter((name) => !(OVERVIEW_SECTIONS as readonly string[]).includes(name));
+    if (block.kind !== 'overview' || wrong.length === 0) return true;
+    problems.push({ file, line: block.line, message: `unknown overview section ${wrong.map((name) => JSON.stringify(name)).join(', ')}; one of ${OVERVIEW_SECTIONS.join(', ')}` });
+    return false;
+  });
+  const results: DocResult[] = blocks.map((block) => ({ file, block, check: checkBlock(db, block) }));
   if (options.write !== true) return { results, problems, text: markdown };
 
   const rewrites = new Map<DocBlock, DocRewrite>();
   for (const result of results) {
+    if (result.block.kind === 'overview') {
+      if (options.overview === undefined || result.check.fingerprint === undefined) continue;
+      rewrites.set(result.block, { content: options.overview(result.block), fingerprint: result.check.fingerprint, steps: [] });
+      continue;
+    }
     const subject = result.check.subject;
     if (result.block.kind === 'ref' || subject === undefined) continue;
     const drawn = renderDocView(db, result.block, subject);
@@ -182,6 +196,21 @@ export const docsIn = (
     result.check = { ...rest, state: 'ok' };
   }
   return { results, problems, text };
+};
+
+/**
+ * A block checked against a graph: an overview by the project's structure
+ * (P228 D2) - its services, what crosses between them, the stores two write,
+ * the single threads - and every other kind by the graph server's check.
+ */
+export const checkBlock = (db: GraphDb, block: DocBlock): DocCheck => {
+  if (block.kind !== 'overview') return checkDocBlock(db, block);
+  const fingerprint = overviewFingerprint(
+    overviewOf(db, undefined, { structureOnly: true, ...(block.options.service === undefined ? {} : { service: block.options.service }) }),
+  );
+  if (block.fingerprint === fingerprint) return { state: 'ok', fingerprint };
+  if (block.fingerprint === undefined) return { state: 'changed', fingerprint, why: 'never written: run flowatlas docs --write' };
+  return { state: 'changed', fingerprint, why: 'the project changed shape: a service, what crosses between two, a store two services write, or a single thread' };
 };
 
 /** A row of `docs.json`. */
@@ -336,7 +365,15 @@ export const runDocs = (paths: readonly string[], options: DocsOptions, io: Quer
     for (const path of files) {
       const file = rel(path);
       const markdown = readFileSync(path, 'utf8');
-      const read = docsIn(db, file, markdown, { write: options.write === true });
+      const read = docsIn(db, file, markdown, {
+        write: options.write === true,
+        // Drawn with what the tools read beside the graph, two levels down as every block's headings are.
+        overview: (block) =>
+          renderOverview(overviewOf(db, handle, block.options.service === undefined ? {} : { service: block.options.service }), {
+            level: 3,
+            ...(block.options.sections === undefined ? {} : { sections: block.options.sections as OverviewSection[] }),
+          }),
+      });
       results.push(...read.results);
       problems.push(...read.problems);
       if (read.text !== markdown) {

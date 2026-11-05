@@ -3,7 +3,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { registerPrompts } from './prompts.js';
 import { DbHandle, type DbHandleOptions } from './query/db.js';
-import { registerResources, type ReasonHint } from './resources.js';
+import { registerResources, type OverviewWriter, type ReasonHint } from './resources.js';
 import { registerCantFollow } from './tools/cant-follow.js';
 import { registerChanges } from './tools/changes.js';
 import { registerChannels } from './tools/channels.js';
@@ -75,6 +75,8 @@ export interface ServerOptions extends DbHandleOptions {
   reasonCatalog?: readonly ReasonHint[];
   /** The pattern tester, when the readers are there to run it (P121). */
   patternTester?: PatternTester;
+  /** Draws the project's overview for `flowatlas://overview`, from the command line, which owns it (P228). */
+  overview?: OverviewWriter;
   /** The directories that look like each repository probably missing, when the command line can look (P122). */
   missingCandidates?: MissingCandidates;
   /** A route's traffic shapes against its code, when the contracts package is installed (P113). */
@@ -154,7 +156,7 @@ export const createFlowatlasServer = (options: ServerOptions = {}): McpServer =>
 
   listing.capture(() => registerTools(server, context));
   registerPrompts(server, context);
-  registerResources(server, context, options.reasonCatalog);
+  registerResources(server, context, options.reasonCatalog, options.overview);
 
   // A closed connection lets go of the database (P199). On Windows a file held
   // open can be neither removed nor replaced, so a server that kept it after

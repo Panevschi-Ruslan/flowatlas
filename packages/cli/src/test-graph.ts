@@ -342,16 +342,20 @@ export interface TestProject {
  * handler as a route, a cross-repo call, a channel with a handler and one
  * without, a cycle, and two declarations of one name that disagree. Written and
  * read the way the tool does it, so a query that passes here is a real query.
- * `extra.unresolved` adds check rows after the project's own.
+ * `extra.unresolved` adds check rows after the project's own, and
+ * `extra.nodes` and `extra.edges` add to the graph.
  */
-export const buildTestProject = (name = 'graph', extra: { unresolved?: readonly Unresolved[] } = {}): TestProject => {
+export const buildTestProject = (
+  name = 'graph',
+  extra: { unresolved?: readonly Unresolved[]; nodes?: readonly GraphNode[]; edges?: readonly GraphEdge[] } = {},
+): TestProject => {
   const dbPath = join(directory, `${name}.db`);
   const project: ProjectGraph = {
     schemaVersion: SCHEMA_VERSION,
     builtAt: FIXED,
     services: SERVICES,
-    nodes: NODES,
-    edges: EDGES,
+    nodes: [...NODES, ...(extra.nodes ?? [])],
+    edges: [...EDGES, ...(extra.edges ?? [])],
     types: TYPES,
     unresolved: [...UNRESOLVED, ...(extra.unresolved ?? [])],
   };

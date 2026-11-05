@@ -268,6 +268,7 @@ read again and the others come from the cache.
 | `flowatlas impact <symbol>` | every entry point that reaches a symbol |
 | `flowatlas channel <name>` | who publishes to a channel and who handles it |
 | `flowatlas path <from> <to>` | how one node reaches another, by the shortest ways, across services; says when it is the other way round |
+| `flowatlas report` | the page to read first: the services, what crosses between them, what most depends on, what is worth a second look, what was not read, and questions to ask; `--output .` writes ARCHITECTURE.md |
 | `flowatlas explain <name>` | everything the graph knows about one name, in the Markdown the graph server and the page's *Copy as prompt* write |
 | `flowatlas types [--drift]` | the type registry, and names two repositories disagree about |
 | `flowatlas contracts` | what each service sends against what the other declares, field by field |

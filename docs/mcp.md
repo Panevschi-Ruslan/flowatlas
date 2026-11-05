@@ -925,6 +925,7 @@ the prompt asks which.
 |---|---|
 | `flowatlas://reasons` | every reason a row of the reading can give: its kind (gap, note, finding), the cause it is counted under, and the sentence `doctor` heads it with |
 | `flowatlas://services` | the services the graph holds, each with its resource |
+| `flowatlas://overview` | the project's overview as `flowatlas report` prints it: services, what crosses between them, what most depends on, what is worth a second look, what was not read, and questions to ask |
 | `flowatlas://services/{name}` | one service: what `start_here` says of it, its crossings to and from every other service with how each checks, and its top findings |
 
 Resources read the same database as the tools: without one, a service reads as

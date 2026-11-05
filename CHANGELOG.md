@@ -20,6 +20,16 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **`flowatlas report` (P228).** The page a person reads first, from the
+  graph: each service and what it is, what crosses between them (drawn as a
+  Mermaid flowchart), what most of the project depends on by reach, what is
+  worth a second look (a single thread between two services, a store two
+  services write, a best guess on a busy path), what was not read by cause,
+  the checks with the command for each, and questions to ask. `--output .`
+  writes ARCHITECTURE.md. An `overview` doc block keeps a committed one true:
+  `docs --check` fails when the structure changed, not when a count moved. The
+  graph server serves it as `flowatlas://overview`, and `doctor` notes a store
+  two services write (`store-shared`).
 - **`flowatlas agents install | status | remove` (P227).** Tells each
   assistant when to ask the graph rather than search the files: a Claude Code
   skill and a Cursor rule by default, a marked block in `AGENTS.md`,

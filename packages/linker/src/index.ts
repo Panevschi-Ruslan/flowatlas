@@ -333,6 +333,7 @@ export {
   DOC_KINDS,
   DOC_STATES,
   DOC_VIEWS,
+  OVERVIEW_ID,
   DOCS_FILE,
   DOCS_FORMAT_VERSION,
   docsEntrySchema,

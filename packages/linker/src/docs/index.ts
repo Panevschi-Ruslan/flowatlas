@@ -5,6 +5,7 @@ export {
   DOC_KINDS,
   DOC_STATES,
   DOC_VIEWS,
+  OVERVIEW_ID,
   encodeAttribute,
   parseDocBlocks,
   parseDocs,

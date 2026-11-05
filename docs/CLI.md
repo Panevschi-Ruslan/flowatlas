@@ -3474,6 +3474,54 @@ once. `ls`, `prune` or `clear`.
 | `--max <n>` | all | most rows to print |
 | `--json` | off | print the answer as JSON |
 
+### `flowatlas report`
+
+The page a person reads first (P228): what the project is, written from the
+graph, every row with where it is.
+
+```sh
+flowatlas report                          # print it
+flowatlas report --output .               # write ARCHITECTURE.md here
+flowatlas report --sections crossings,second-look
+flowatlas report --format json            # the model, with its fingerprint
+```
+
+| Section | Says |
+|---|---|
+| `services` | each service, what it is (a browser, an API, functions, a worker, a library), its ways in by kind, and how many were read to the end |
+| `crossings` | what crosses from each service to each other one: requests, messages through a channel, store use, and how many of them are best guesses; drawn as a Mermaid flowchart |
+| `load` | what most of the project depends on: methods by how many ways in reach them and from how many services, routes by callers elsewhere, channels by handlers, tables by the services that write them |
+| `second-look` | a pair of services joined by a single thread, a store two services write, and a best guess on the way of many ways in (the threshold is the 90th percentile of reach, at least 3, and is said) |
+| `not-read` | what the reading could not follow, grouped by cause, each with what to do |
+| `checks` | contract breaks, architecture rules broken, cycles across services, dead ways in, routes with no guard, likely N+1 queries, channels with one end, types two services disagree about, each with the command that lists them |
+| `run-time` | what traffic never touched and what it reached that no reader drew, when something was observed |
+| `questions` | the next things to ask, built from the rows above, each as a command and as the graph server's call |
+
+Nothing in it is inferred, clustered or summarised in prose. The services are
+the groups, as the configuration declares them, and load is ranked by reach,
+not by how many lines point at a thing, which mostly counts loggers. `--top`
+(10) bounds each list and says how many it left out; `--service` keeps what
+touches one service. A graph `doctor` would refuse is refused here too (exit 2).
+
+The same page is the graph server's `flowatlas://overview`, and a doc block
+keeps a committed one true:
+
+```md
+<!-- flowatlas:overview sections="services,crossings" -->
+<!-- /flowatlas:overview -->
+```
+
+`flowatlas docs --write` fills it, with its headings two levels down, and
+`flowatlas docs --check` fails when the project's structure changed since: a
+service, which pairs cross and by what kind, a store two services write, a
+single thread. A count moving, a route added, does not fail it, or the page
+would be red every week. `sections` takes the names above; `service` keeps one
+service.
+
+A store two services write is also a `doctor` note (`store-shared`), one row
+per writer, whose hint is the `only` rule a team writes when it is not the
+design.
+
 ### `flowatlas docs [paths...]`
 
 Markdown kept true to the graph. A page names a flow, a channel or a symbol in

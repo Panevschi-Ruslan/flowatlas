@@ -149,6 +149,7 @@ Then read it:
 
 ## 7. Now and then
 
+- `flowatlas report --output .`: ARCHITECTURE.md, the page to read first, kept true by an `overview` doc block and `docs --check`.
 - `flowatlas hotspots`: where change concentrates.
 - `flowatlas cycles`: call cycles, the ones that cross services first.
 - `flowatlas dead`: what to delete.

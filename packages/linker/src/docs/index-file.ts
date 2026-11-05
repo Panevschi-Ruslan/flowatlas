@@ -21,6 +21,7 @@ const optionsSchema = z.strictObject({
   maxNodes: z.number().int().optional(),
   detail: z.union([z.literal(0), z.literal(1), z.literal(2)]).optional(),
   service: z.string().optional(),
+  sections: z.array(z.string()).optional(),
 });
 
 export const docsEntrySchema = z.strictObject({

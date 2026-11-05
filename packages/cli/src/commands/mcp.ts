@@ -8,6 +8,8 @@ import { testPatternText } from '../patterns/test.js';
 import type { GraphDb } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { KNOWN_REASONS, kindHint } from '../doctor/hints.js';
+import { overviewOf } from '../overview/overview.js';
+import { renderOverview } from '../overview/render.js';
 import { ownBin } from '../own-path.js';
 import { VERSION } from '../version.js';
 
@@ -260,6 +262,8 @@ export const registerMcp = (program: Command): void => {
           // installed, not the private package the server is compiled from (P86 D3).
           version: VERSION,
           reasonCatalog: reasonCatalog(),
+          // The project's overview for flowatlas://overview (P228): the model is the command line's.
+          overview: (db, at) => renderOverview(overviewOf(db, at)),
           contractChecker: contractsHook(() => {
             const opened = handle.open();
             return 'error' in opened ? undefined : opened.db;

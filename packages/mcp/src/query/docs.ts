@@ -341,6 +341,8 @@ const asSequence = (steps: readonly RecordedStep[]): Sequence => ({
  * no longer names one node. A ref is `ok` when its id names one.
  */
 export const checkDocBlock = (db: GraphDb, block: DocAsk): DocCheck => {
+  // An overview names the project, and the command line checks it (P228); here it is what it says it is.
+  if (block.kind === 'overview') return { state: 'ok' };
   const target = resolveDocTarget(db, block);
   if (target.found === 'gone') return { state: 'gone', near: target.near, ...(target.note === undefined ? {} : { note: target.note }) };
   if (target.found === 'ambiguous') return { state: 'ambiguous', candidates: target.candidates };
@@ -401,6 +403,8 @@ const stateNow = (db: GraphDb, index: DocsIndex, row: number): DocState => {
   const known = cache.byRow.get(row);
   if (known !== undefined) return known;
   const entry = index.blocks[row] as DocsEntry;
+  // An overview is the command line's to draw (P228): its state is the one `flowatlas docs` last wrote.
+  if (entry.kind === 'overview') return entry.state;
   const state = checkDocBlock(db, {
     kind: entry.kind,
     id: entry.id,
