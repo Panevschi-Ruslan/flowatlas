@@ -3159,6 +3159,7 @@ are new. Markdown by default, because its destination is a pull request comment.
 | `--no-cache` | off | read every commit again rather than believing the cache |
 | `--keep-worktrees` | off | leave the detached checkouts on disk, for debugging |
 | `--out <dir>` | configured output | where `diff.json` goes |
+| `--head-db <file>` | none | keep the head side's graph at this file, for `docs --check --db <file>` or a query to read the branch as `diff` read it, without a second build; a pull request's run has no `graph.db` of its own |
 
 Each service is read at the ref **in its own repository**. A service that is a
 subdirectory of a repository rather than the root of one cannot be read at a

@@ -97,8 +97,12 @@ only one of them moved.
   base graphs under the base commit, and keeps one pull request comment up to
   date: three lines first (what the change reaches, its new breaks and stale
   docs, the verdict), the report under them, found again by a marker that
-  names the configuration. A fork's pull request gets the job summary. It can
-  fail the check on new breaks and upload SARIF. `flowatlas diff --format
+  names the configuration and written by the action's own token, never a
+  comment somebody else pasted the marker into. A fork's pull request gets the
+  job summary. It can fail the check on new breaks, and on doc blocks the
+  branch makes stale with `fail-on: stale-docs`, and upload SARIF. Its docs
+  check reads the branch's graph that `diff --head-db` keeps, and the tokens
+  it clones with never reach a clone's `.git/config`. `flowatlas diff --format
   comment` writes the same comment for any workflow, with its figures in
   `diff-comment.json`.
 - **`flowatlas report` (P228).** The page a person reads first, from the

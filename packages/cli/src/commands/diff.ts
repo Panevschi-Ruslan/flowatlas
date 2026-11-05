@@ -15,7 +15,7 @@
  * (P193): each service at its pin, read the way `check --env` reads it, and
  * the same document `check` carries under its verdict, without the verdict.
  */
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
@@ -92,6 +92,11 @@ export interface DiffOptions extends PinFlags {
    * With `--format sarif`, the log goes there instead of stdout (P115).
    */
   output?: string;
+  /**
+   * Keep the head side's graph at this file (P231), for a later `docs --check
+   * --db` or query to read the branch as `diff` read it, without a second build.
+   */
+  headDb?: string;
   /** With `--format sarif`: paths relative to this checkout. */
   sarifRoot?: string;
   /** With `--format sarif`: the least level written. */
@@ -627,6 +632,14 @@ export const runDiff = async (
       writeFileSync(target, text, 'utf8');
     }
 
+    // The head graph outlives the run's temporary directory only when asked; every reader of it is closed by now.
+    if (options.headDb !== undefined) {
+      const target = resolve(options.headDb);
+      mkdirSync(dirname(target), { recursive: true });
+      for (const suffix of ['-wal', '-shm']) rmSync(`${target}${suffix}`, { force: true });
+      copyFileSync(builtHead.dbPath, target);
+    }
+
     const breaks = contractBreaks(contracts);
     /**
      * A service neither ref could be read for, which makes the whole answer a
@@ -697,6 +710,7 @@ export const registerDiff = (program: Command): void => {
     .option('--spec', 'compare the two sides\' OpenAPI and AsyncAPI documents too, under "API changes"')
     .option('--concurrency <n>', 'how many repositories to read at once')
     .option('--out <dir>', 'where to write diff.json (default: the configured output)')
+    .option('--head-db <file>', "keep the head side's graph at this file, for docs --check --db or a query to read")
     .option('--no-cache', 'read every commit again rather than believing the cache')
     .option('--keep-worktrees', 'leave the detached checkouts on disk, for debugging');
   withSarifOptions(command, { output: false }).action(async (first: string | undefined, second: string | undefined, options: DiffOptions) => {

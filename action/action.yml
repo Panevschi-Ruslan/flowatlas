@@ -27,13 +27,13 @@ inputs:
     description: '`changes`: only when the diff says something, updating one already there to say nothing changed; `always`.'
     default: changes
   fail-on:
-    description: 'Fail the check on new breaks: `contract-break`, `rule-break`, or both, comma-separated; empty never fails.'
+    description: 'Fail the check on new breaks: `contract-break`, `rule-break`, `stale-docs` (doc blocks this branch makes stale), comma-separated; empty never fails.'
     default: contract-break,rule-break
   sarif:
     description: Also upload the new and fixed findings to code scanning (needs security-events write).
     default: 'false'
   docs-check:
-    description: Also run `flowatlas docs --check`, as annotations.
+    description: Also run `flowatlas docs --check` against the branch's graph, as annotations; it fails nothing by itself.
     default: 'true'
   install:
     description: '`none` reads the repositories as they are; `ci` runs `npm ci --ignore-scripts` in each first.'

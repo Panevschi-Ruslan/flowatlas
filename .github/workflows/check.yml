@@ -27,7 +27,10 @@ jobs:
 
   # The pull-request action, run from this checkout against the demo project with
   # the command this checkout builds (P231): every step but the comment, which
-  # is off so the repository's own pull requests are not written on.
+  # is off so the repository's own pull requests are not written on, and with
+  # the docs check at its default, against the head graph diff keeps. The demo's
+  # services are folders of this repository, not repositories, so no ref of
+  # them can be read and fail-on would fail every run: it is off.
   action:
     runs-on: ubuntu-latest
     steps:
@@ -54,9 +57,10 @@ jobs:
           version: installed
           comment: 'off'
           fail-on: ''
-          docs-check: 'false'
 
-      - run: test -n "${{ steps.flowatlas.outputs.verdict }}" && test -n "${{ steps.flowatlas.outputs.reaches }}"
+      - run: test -n "${{ steps.flowatlas.outputs.verdict }}" && test -n "${{ steps.flowatlas.outputs.reaches }}" && test -n "${{ steps.flowatlas.outputs.stale-docs }}"
+      # The docs check read the graph diff built, rather than finding none.
+      - run: test -s fixtures/multi-repo/.flowatlas/pull-request-graph.db
 
   # Builds and runs the unit tests on Windows (P83). A failure fails the run
   # since the tests passed there (P199, P200); the fixture snapshot gate is not

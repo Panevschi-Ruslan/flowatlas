@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
-import { checkoutPlan, parseRepositories, servicesOf, versionOf } from './lib.mjs';
+import { checkoutPlan, cloneOf, parseRepositories, servicesOf, versionOf } from './lib.mjs';
 
 const input = (name) => process.env[`INPUT_${name.toUpperCase().replace(/-/g, '_')}`] ?? '';
 const run = (command, args, options = {}) => execFileSync(command, args, { stdio: 'inherit', ...options });
@@ -43,9 +43,11 @@ for (const name of plan.unknown) console.log(`::warning::repositories names ${na
 for (const name of plan.missing) console.log(`::warning::${name} is not checked out and repositories does not name it; the diff runs without it`);
 for (const item of plan.fetch) {
   mkdirSync(dirname(item.dir), { recursive: true });
-  const url = `https://x-access-token:${token}@github.com/${item.repo}.git`;
+  // The token rides in a header git reads from its environment, never in the clone's remote.
+  const clone = cloneOf(item, token);
+  if (clone.secret !== undefined) console.log(`::add-mask::${clone.secret}`);
   try {
-    run('git', ['clone', '--quiet', '--depth=1', ...(item.ref === undefined ? [] : ['--branch', item.ref]), url, item.dir]);
+    run('git', clone.args, { env: { ...process.env, ...clone.env } });
   } catch {
     console.log(`::warning::could not clone ${item.repo} for ${item.name} with the token given; the diff runs without it`);
     continue;
