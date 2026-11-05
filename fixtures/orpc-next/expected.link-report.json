@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-05T22:27:05.730Z",
+  "configHash": "eb0f8a5034e2",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 34,
+      "edges": 35,
+      "types": 2,
+      "unresolved": 3,
+      "durationMs": 750,
+      "packages": {
+        "name": "orpc-next-api",
+        "runtime": [
+          "@orpc/openapi",
+          "@orpc/server",
+          "next",
+          "react",
+          "zod"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 17,
+      "edges": 9,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 679,
+      "packages": {
+        "name": "orpc-next-web",
+        "runtime": [
+          "@orpc/client",
+          "@orpc/tanstack-query",
+          "@tanstack/react-query",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 10,
+    "resolved": 8,
+    "unresolved": 2,
+    "byReason": {
+      "procedure-not-found": 1,
+      "procedure-path-dynamic": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 10,
+    "called": 9,
+    "uncalled": [
+      "entry:api:http:POST:/api/reports/daily"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/Orders.tsx",
+      "line": 19,
+      "reason": "procedure-not-found",
+      "message": "no procedure orders.refund in web or api",
+      "hint": "Renamed or removed? Check the tree this client is typed from, or add the service that declares it to services[] and name it in apiTarget.",
+      "symbol": "ui_api_call:web#src/Orders.tsx:19:44"
+    },
+    {
+      "service": "web",
+      "file": "src/legacy.ts",
+      "line": 12,
+      "reason": "procedure-link-unserved",
+      "message": "orders.list is sent to /api and served over rpc at /rpc",
+      "hint": "Nothing answers a request sent there. Point the link at /rpc, or mount the tree where the link sends.",
+      "symbol": "ui_api_call:web#src/legacy.ts:12:35"
+    }
+  ],
+  "totals": {
+    "nodes": 51,
+    "edges": 52,
+    "types": 2,
+    "missed": 7,
+    "sites": 7,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 7
+  }
+}

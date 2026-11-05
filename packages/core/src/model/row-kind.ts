@@ -114,6 +114,8 @@ const FINDINGS: readonly string[] = [
   'orphan-scene-decorator',
   'orphan-update-decorator',
   'procedure-call-mismatch',
+  // A client's link sent where no mount of its protocol answers (P58)
+  'procedure-link-unserved',
   'workflow-definition-invalid',
   // Ends that nothing on the other side meets
   's3-write-matches-nothing',
@@ -193,6 +195,10 @@ const GAPS: readonly string[] = [
   'procedure-members-unmatched',
   'procedure-path-dynamic',
   'entry-procedures-description-inactive',
+  // A link, a mount's prefix and a contract's member nobody could read (P58)
+  'procedure-link-dynamic',
+  'procedure-prefix-unread',
+  'procedure-contract-unread',
   // Bots
   'dynamic-bot-trigger',
   'bot-handlers-not-found',
@@ -400,6 +406,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
       'orphan-scene-decorator',
       'orphan-update-decorator',
       'procedure-call-mismatch',
+      'procedure-link-unserved',
       'workflow-definition-invalid',
       's3-write-matches-nothing',
       'stream-no-writer',

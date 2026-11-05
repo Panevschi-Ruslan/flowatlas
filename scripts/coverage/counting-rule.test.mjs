@@ -106,3 +106,19 @@ describe('a test file, by the definition the tool reads by', () => {
     }
   });
 });
+
+describe('a procedure of a tree (R95, P58)', () => {
+  it('counts a chain ending in a function written in place', () => {
+    const text = [
+      'export const list = authed.input(OrderQuery).handler(async ({ input }) => find(input));',
+      'export const read = procedure.query(({ ctx }) => ctx.user);',
+      'export const save = procedure.mutation(async function save() { return 1; });',
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/server/orders.ts', text), { routes: 3 });
+  });
+
+  it('does not count a database call that ends in the same word', () => {
+    const text = "await pool.query('select 1');\nawait pool.query(sql, [id]);\nconst handler = route.handler;\n";
+    assert.deepEqual(sitesIn('src/db.ts', text), {});
+  });
+});

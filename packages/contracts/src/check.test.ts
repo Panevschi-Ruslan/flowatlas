@@ -959,6 +959,51 @@ describe('a procedure asked for by its path', () => {
   });
 });
 
+describe('a route that answers for a procedure (P58)', () => {
+  /**
+   * An OpenAPI handler serves a procedure at a REST route of its own, and its
+   * handler is handed the same envelope whoever asks: a REST caller's body put
+   * against it would be a missing field on every route of the kind.
+   */
+  const report = checkContracts(
+    graphOf({
+      nodes: [
+        node('web#Orders', 'ui_component', 'web'),
+        node('ui_api_call:web#src/Orders.tsx:9:5', 'ui_api_call', 'web', {
+          kind: 'http',
+          meta: { method: 'GET', path: '/api/orders' },
+        }),
+        node('entry:api:http:GET:/api/orders', 'entry', 'api', {
+          kind: 'http',
+          meta: { method: 'GET', path: '/api/orders', procedure: 'orders.list', input: 'OrderQuery' },
+        }),
+        node('api#listOrders', 'function', 'api'),
+      ],
+      edges: [
+        edge('web#Orders', 'calls', 'ui_api_call:web#src/Orders.tsx:9:5'),
+        edge('ui_api_call:web#src/Orders.tsx:9:5', 'hits', 'entry:api:http:GET:/api/orders', {
+          params: ['type:caller#Body'],
+          returns: 'type:api#Answer',
+        }),
+        edge('entry:api:http:GET:/api/orders', 'handles', 'api#listOrders', {
+          params: ['type:api#Body'],
+          returns: 'type:api#Answer',
+        }),
+      ],
+      types: registry,
+    }),
+    { generatedAt: FIXED },
+  );
+
+  it('is unchecked for the reason a procedure is', () => {
+    expect(report.findings).toEqual([]);
+    expect(report.unchecked.map((row) => [row.direction, row.reason])).toEqual([
+      ['request', 'procedure-input-by-name'],
+      ['response', 'procedure-output-inferred'],
+    ]);
+  });
+});
+
 describe('a route whose handler reads its request and answers through what it is handed (P29)', () => {
   /** A caller sending a body that lacks a field the route requires, and a route read by a description. */
   const described = (handles: { returns?: string; meta: Record<string, unknown> }): ContractReport =>

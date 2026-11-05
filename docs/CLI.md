@@ -2882,7 +2882,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `middleware-route-dynamic`, `fails-filter-unread`, `fails-interceptor-unread` |
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
-| Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch` |
+| Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread` |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
@@ -5928,6 +5928,63 @@ made as a mutation to a procedure declared a query joins and says so in a
 `procedure-call-mismatch` row (`fixtures/trpc-join`). `adapters.entry.procedures`
 exposes the description the shipped reader is written as, for another framework
 of the same family.
+
+**oRPC** is the second row of the same description, read by the same walk
+(`fixtures/orpc-next`, `fixtures/orpc-contract`). What differs:
+
+- **A procedure** ends in `.handler(fn)`, so every one is `rpc` and every
+  client call asks for `handler`. Its `.input(…)` and `.output(…)` give the
+  signature (zod, valibot or any schema whose type says what it checks), and
+  `.errors({ NOT_FOUND: {…}, RATE_LIMITED: { status: 429 } })` declares the
+  failures it answers with, recorded with their statuses under `meta.errors`
+  (the library's table where the declaration writes none).
+- **A router** is any object whose values are procedures. `os.router({…})` is
+  read too, and what its chain installs - `os.use(audit).prefix('/v1')` - is in
+  front of every procedure under it, before the procedure's own guards; the
+  prefix applies to the REST route of each one that writes a path.
+  `lazy(() => import('./reports'))` is followed into that module's default
+  export. A computed key is `procedure-key-dynamic`.
+- **Contract-first.** `implement(contract)` hands back a builder whose property
+  accesses name the contract's members: `os.orders.list.handler(fn)` reads its
+  input, output, errors and route off `contract.orders.list`, through
+  `oc.prefix(…).router({…})`. An implementation of a member the contract does
+  not have, or a contract that cannot be followed, is
+  `procedure-contract-unread`, and the procedure keeps what it writes itself.
+- **Mounts** are handler objects, `new RPCHandler(router)` and `new
+  OpenAPIHandler(router)` from any adapter, and the prefix each answers under is
+  the `prefix` option of its `handle(…)` calls in the same file. Every
+  procedure records where it is mounted (`meta.mounted`: protocol, prefix,
+  file). Under an `OpenAPIHandler`, each procedure is also an HTTP route at the
+  prefix plus its `.route({ method, path })`, or `POST` plus its keys where it
+  writes none, with the same handler and guards and `meta.procedure` naming it;
+  a REST caller joins it as it joins any route. A prefix that is not text, or a
+  mount nothing in its file hands a request, is `procedure-prefix-unread`.
+- **Callers.** `client.orders.list(input)` on a client from `createORPCClient`,
+  and the query utilities' `queryOptions({ input })`, `mutationOptions()`,
+  `infiniteOptions`, `call`, are requests; `key()` is not. The URL of the link
+  the client was made with - `new RPCLink({ url })`, `new OpenAPILink(contract,
+  { url })` - is read through the browser reader's address reading into
+  `meta.link`, and its settings key decides the service: the one the caller's
+  `apiTarget` names for it, or the one service that claims it (`via:
+  link-url`). A URL worked out per request is `procedure-link-dynamic`, and the
+  join falls back to the caller's own service and `apiTarget`. A link sent to a
+  path where no mount of its protocol serves the tree joins and writes
+  `procedure-link-unserved`.
+- **In process.** `createRouterClient(router)` and `call(procedure, input)`
+  are requests that never leave the service (`meta.inProcess`), joined by the
+  procedure's declaration (`meta.procedureAt`), exact even where the path is
+  relative to a branch.
+- **Failures.** `throw new ORPCError('NOT_FOUND')` and `throw errors.NOT_FOUND()`
+  are read into `meta.fails` at the code's status (`errors.X` at the status the
+  procedure declares), what a function guard throws is read from its body, and
+  a procedure with an input can fail with the 400 its schema refuses with.
+  The same reader reads `new TRPCError({ code })`.
+- `dead` and the route survey count a procedure's REST route as called when the
+  procedure is, and the catch-all route of the file that mounts the tree when a
+  request crosses it.
+
+`contracts` treats a REST caller of a procedure's route as it treats a caller of
+the procedure: both directions unchecked, for the reasons above.
 
 ### Workflows written as state machines
 

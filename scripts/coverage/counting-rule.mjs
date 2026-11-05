@@ -242,6 +242,16 @@ export const PROBES = [
     pattern: /@(?:Query|Mutation|Subscription|ResolveField|FieldResolver)\s*\(\s*(?:\(\s*\)|[A-Za-z_$][\w$]*)\s*=>/g,
   },
   {
+    name: 'procedure-handler',
+    family: 'routes',
+    scope: 'line',
+    what: 'a procedure of a tRPC or oRPC tree, counted where the chain that declares it ends - `.query`, `.mutation`, `.subscription` or `.handler` - handed a function written in place; one handed a named function is not counted, because `pool.query(sql)` is spelled the same way',
+    // A procedure is a way in over HTTP too (R95, P58). The function written in
+    // place is what tells a procedure from a database call, which ends in the
+    // same word with a string or a name after it.
+    pattern: /\.\s*(?:query|mutation|subscription|handler)\s*\(\s*(?:async\s*)?(?:\(|function\b|[A-Za-z_$][\w$]*\s*=>)/g,
+  },
+  {
     name: 'nitro-route-file',
     family: 'routes',
     scope: 'file',

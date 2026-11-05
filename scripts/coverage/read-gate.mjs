@@ -160,6 +160,8 @@ const GATED = {
       'procedure-branch-unread',
       'procedure-key-dynamic',
       'entry-procedures-description-inactive',
+      'procedure-prefix-unread',
+      'procedure-contract-unread',
     ],
     perFile: true,
   },

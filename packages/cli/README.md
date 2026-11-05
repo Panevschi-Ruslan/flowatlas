@@ -3,7 +3,7 @@
 **A command-line tool that reads several TypeScript repositories without running
 them, joins them into one graph, and answers questions about it.** It knows
 NestJS and Angular, React and Next.js, SvelteKit and Remix, Express, Fastify,
-Koa and Hono, Medusa, tRPC and Telegraf; AWS Lambda, API Gateway, Step Functions, EventBridge, SQS
+Koa and Hono, Medusa, tRPC, oRPC and Telegraf; AWS Lambda, API Gateway, Step Functions, EventBridge, SQS
 and SNS as Terraform deploys them; TypeORM, Prisma, Drizzle, Mongoose, Sequelize, Kysely, Knex,
 MongoDB and node-postgres; Redis, Kafka, RabbitMQ, BullMQ and socket.io; and
 OpenAPI and AsyncAPI documents for the services whose source you do not have. It
@@ -50,11 +50,12 @@ steps with a recording of each.
 - Express, Fastify, Koa and Hono, where a route is registered by a call
 - Next.js, Medusa, SvelteKit and Remix / React Router, where a route is the path
   of a file - a SvelteKit page's `load` and form actions included
-- tRPC procedures, and Telegraf bot commands, callbacks and events
+- tRPC and oRPC procedures - an oRPC one under an OpenAPI handler as its REST
+  route too - and Telegraf bot commands, callbacks and events
 - what a request carries and what it answers, in every one of them: a
   validator, a typed request or reply, or a helper of your own that builds the
   answer - with each route's failures (`400 → Problem`) beside its success
-- what every function, method, component, directive, pipe and tRPC procedure
+- what every function, method, component, directive, pipe and procedure
   takes and gives back, field by field
 
 **Serverless on AWS**

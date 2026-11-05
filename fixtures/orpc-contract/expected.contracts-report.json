@@ -1,0 +1,93 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-05T22:27:04.546Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:10:44",
+        "to": "entry:orders:rpc:orders.cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:10:44|hits|entry:orders:rpc:orders.cancel",
+      "direction": "request",
+      "reason": "procedure-input-by-name",
+      "message": "entry:orders:rpc:orders.cancel takes z.object({ id: z.string() }), which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
+      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:10:44",
+        "to": "entry:orders:rpc:orders.cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:10:44|hits|entry:orders:rpc:orders.cancel",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:orders:rpc:orders.cancel answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:14:3",
+        "to": "entry:orders:http:DELETE:/api/shop/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:14:3|hits|entry:orders:http:DELETE:/api/shop/orders/:param",
+      "direction": "request",
+      "reason": "procedure-input-by-name",
+      "message": "entry:orders:http:DELETE:/api/shop/orders/:param takes z.object({ id: z.string() }), which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
+      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:14:3",
+        "to": "entry:orders:http:DELETE:/api/shop/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:14:3|hits|entry:orders:http:DELETE:/api/shop/orders/:param",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:orders:http:DELETE:/api/shop/orders/:param answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:8:45",
+        "to": "entry:orders:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:8:45|hits|entry:orders:rpc:orders.list",
+      "direction": "request",
+      "reason": "procedure-input-by-name",
+      "message": "entry:orders:rpc:orders.list takes z.object({ sku: z.string().optional() }), which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
+      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:8:45",
+        "to": "entry:orders:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:8:45|hits|entry:orders:rpc:orders.list",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:orders:rpc:orders.list answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 6,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

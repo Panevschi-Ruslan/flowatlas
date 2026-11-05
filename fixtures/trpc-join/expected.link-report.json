@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:29:50.321Z",
+  "builtAt": "2026-11-05T22:27:42.829Z",
   "configHash": "6770c6354ded",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 524,
+      "durationMs": 708,
       "packages": {
         "name": "trpc-join-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 541,
+      "durationMs": 707,
       "packages": {
         "name": "trpc-join-api",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 515,
+      "durationMs": 684,
       "packages": {
         "name": "trpc-join-web",
         "runtime": [
@@ -92,10 +92,8 @@
   },
   "routes": {
     "total": 1,
-    "called": 0,
-    "uncalled": [
-      "entry:api:http:ALL:/api/trpc/:param"
-    ],
+    "called": 1,
+    "uncalled": [],
     "duplicated": []
   },
   "types": {

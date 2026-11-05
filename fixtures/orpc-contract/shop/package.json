@@ -1,0 +1,11 @@
+{
+  "name": "orpc-contract-shop",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@acme/orders-contract": "^1.0.0",
+    "@orpc/client": "^1.0.0",
+    "@orpc/openapi-client": "^1.0.0",
+    "react": "^19.0.0"
+  }
+}

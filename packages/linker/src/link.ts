@@ -225,21 +225,29 @@ const buildUiIndex = (
 const buildProcedureIndex = (
   nodes: ReadonlyMap<string, GraphNode>,
   config: FlowatlasConfig,
+  servicesByEnv: ReadonlyMap<string, string[]>,
 ): ProcedureIndex => {
   const byService = new Map<string, Map<string, GraphNode>>();
+  /** Each procedure by where it is declared, for a caller that named it by its value (P58). */
+  const bySite = new Map<string, GraphNode>();
   for (const node of nodes.values()) {
     if (!isProcedureEntry(node)) continue;
     const declared = byService.get(node.repo) ?? new Map<string, GraphNode>();
     declared.set(String(node.meta?.['key']), node);
     byService.set(node.repo, declared);
+    if (node.file !== undefined && node.line !== undefined) bySite.set(`${node.repo}\0${node.file}:${node.line}`, node);
   }
   const names = serviceNamesOf(config);
   const targets = new Map<string, string[]>();
+  const targetByEnv = new Map<string, string>();
   for (const service of config.services) {
     targets.set(
       service.name,
       [...new Set(Object.values(service.apiTarget ?? {}).map((target) => names.get(target) ?? target))].sort(cmp),
     );
+    for (const [env, target] of Object.entries(service.apiTarget ?? {})) {
+      targetByEnv.set(`${service.name}\0${env}`, names.get(target) ?? target);
+    }
   }
   const declaring = [...byService.keys()].sort(cmp);
   const none = new Map<string, GraphNode>();
@@ -247,6 +255,9 @@ const buildProcedureIndex = (
     proceduresOf: (service) => byService.get(service) ?? none,
     targetsOf: (service) => targets.get(service) ?? [],
     services: () => declaring,
+    declaredAt: (service, site) => bySite.get(`${service}\0${site}`),
+    targetOf: (service, env) => targetByEnv.get(`${service}\0${env}`),
+    claimantsOf: (env) => servicesByEnv.get(env) ?? [],
   };
 };
 
@@ -638,7 +649,7 @@ export const linkGraphs = (
     ...buildUiIndex(config, routesByService, servicesByEnv),
     ...(valuedUiBaseUrlOf === undefined ? {} : { baseUrlOf: valuedUiBaseUrlOf }),
   };
-  const procedureIndex = buildProcedureIndex(nodes, config);
+  const procedureIndex = buildProcedureIndex(nodes, config, servicesByEnv);
 
   /** Where a finding happened; the finding itself says what and what to do. */
   const record = (call: GraphNode, finding: Finding): void => {

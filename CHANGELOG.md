@@ -33,6 +33,23 @@ only one of them moved.
   SDL or an introspection result (`document.kind: "graphql"`). A federated
   subgraph is said, not joined across. The language is read by a parser of the
   tool's own (`@flowatlas/graphql`), so nothing is installed. Schema version 7.
+- **oRPC procedures and their callers (P58).** An oRPC router - a plain
+  object, `os.router(…)` with the guards and prefix its chain installs, a
+  `lazy(() => import(…))` branch, or a contract-first `implement(contract)` -
+  is read by the tRPC walk as one `rpc` entry per procedure, keyed by its path,
+  with its input and output schemas, its guards, the failures `.errors(…)`
+  declares (`meta.errors`) and where it is mounted (`meta.mounted`). Under an
+  `OpenAPIHandler` each procedure is also a REST route at the `handle` prefix
+  plus its `.route(…)`, which REST callers join. `client.orders.list(input)`,
+  `orpc.orders.list.queryOptions(…)`, `createRouterClient(router)` and
+  `call(procedure, input)` are requests joined by path in the service the
+  link's URL names (`via: link-url`), or by declaration in process. `fails`
+  reads `ORPCError`, `errors.X()`, `TRPCError` and an input's 400. New rows
+  `procedure-link-dynamic`, `procedure-link-unserved`, `procedure-prefix-unread`,
+  `procedure-contract-unread`; a `procedure-handler` coverage probe. The
+  description `adapters.entry.procedures` gains `plainTrees`, `implementedBy`,
+  `lazyBy`, `outputMethod`, `errorsMethod`, `routeMethod`, `prefixMethod`, and
+  mounts `constructed`, `routes`, `prefixFrom`, `protocol`.
 - **Vue, Nuxt and Svelte (P233).** The three frameworks `init` used to name
   and leave out are read. A `.vue` or `.svelte` component's scripts are read by
   the checker as TypeScript, every position naming the component file at its

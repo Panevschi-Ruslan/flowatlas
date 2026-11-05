@@ -7,7 +7,15 @@ import type {
   ExtractContext,
   StatedSignature,
 } from '@flowatlas/core';
-import { hasAnyDependency, makeEntryId, placedFunction, suppliedTypes, startLineOf } from '@flowatlas/core';
+import {
+  hasAnyDependency,
+  makeEntryId,
+  makeHttpEntryKey,
+  normalizePath,
+  placedFunction,
+  suppliedTypes,
+  startLineOf,
+} from '@flowatlas/core';
 import type {
   ArrowFunction,
   FunctionDeclaration,
@@ -19,8 +27,8 @@ import type {
   Type,
 } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import type { ProcedureDialect } from './procedure-dialects.js';
-import { TRPC } from './procedure-dialects.js';
+import type { ProcedureDialect, ProcedureMount } from './procedure-dialects.js';
+import { ORPC, TRPC } from './procedure-dialects.js';
 import {
   enclosingClass,
   fileOfNode,
@@ -133,37 +141,84 @@ const chainOf = (expr: TsNode): { links: Link[]; base: TsNode } => {
   return { links, base: at };
 };
 
+/** The chain one named starting point was declared with, and the name. */
+interface Step {
+  links: Link[];
+  name: string;
+}
+
+/** A contract a chain implements, and which of its members the chain names (P58). */
+interface Implemented {
+  call: TsNode;
+  names: string[];
+}
+
+/** Everything a chain starts from, the root first. */
+interface Origin {
+  steps: Step[];
+  implemented?: Implemented;
+}
+
 /**
- * Everything installed in front of a way in, including what is nowhere near it.
+ * Everything a chain starts from, including what is nowhere near it.
  *
  * Nobody writes the guard at the procedure. They write one guarded starting
  * point — `const authedProcedure = procedure.use(perf).use(errors).use(isAuthed)`
  * — and start every guarded chain from that name, in another file. So this
  * follows the name and reads the chain it was declared with, and then follows
  * whatever *that* one starts from, because a project usually has two or three
- * built on each other.
+ * built on each other. What is read off the steps is the guards, and the
+ * failures a starting point declares (P58).
+ *
+ * A chain may also start from a contract's member - `os.orders.list.handler(fn)`
+ * with `os` made by `implement(contract)` - and the names between the root and
+ * the chain are then the member's path in the contract (P58). They are carried
+ * up to the call that was handed the contract.
  *
  * Depth is bounded by the set of names already followed rather than by a number:
  * the thing that could go on for ever is a cycle, and a cycle is exactly what
  * the set catches.
  */
-const guardsBefore = (
+const originOf = (
   expr: TsNode,
   dialect: ProcedureDialect,
-  seen: ReadonlySet<string>,
-  ctx: ExtractContext,
-): EntryWrapping[] => {
-  if (dialect.guardMethod === undefined || !Node.isIdentifier(expr)) return [];
-  const name = expr.getText();
-  if (seen.has(name)) return [];
-  const value = declaredValue(expr);
-  if (value === undefined) return [];
+  seen: ReadonlySet<string> = new Set(),
+): Origin => {
+  const names: string[] = [];
+  let at = unwrapValue(expr);
+  while (Node.isPropertyAccessExpression(at)) {
+    names.unshift(at.getName());
+    at = unwrapValue(at.getExpression());
+  }
+  if (Node.isCallExpression(at)) {
+    const called = calleeName(at);
+    return called !== undefined && dialect.implementedBy.includes(called)
+      ? { steps: [], implemented: { call: at, names } }
+      : { steps: [] };
+  }
+  if (!Node.isIdentifier(at)) return { steps: [] };
+  const name = at.getText();
+  if (seen.has(name)) return { steps: [] };
+  const value = declaredValue(at);
+  if (value === undefined) return { steps: [] };
   const { links, base } = chainOf(value);
-  // Installed on a starting point, which is a prefix of every chain begun from
-  // it: that is the scope, and the name it was installed on is how.
-  const here = guardsOn(links, dialect, 'prefix', name, ctx);
-  return [...guardsBefore(base, dialect, new Set([...seen, name]), ctx), ...here];
+  const inner = originOf(base, dialect, new Set([...seen, name]));
+  return {
+    steps: [...inner.steps, { links, name }],
+    ...(inner.implemented === undefined
+      ? {}
+      : { implemented: { call: inner.implemented.call, names: [...inner.implemented.names, ...names] } }),
+  };
 };
+
+/**
+ * The guards a chain's starting points install, the root's first.
+ *
+ * Installed on a starting point, which is a prefix of every chain begun from
+ * it: that is the scope, and the name it was installed on is how.
+ */
+const guardsBefore = (origin: Origin, dialect: ProcedureDialect, ctx: ExtractContext): EntryWrapping[] =>
+  origin.steps.flatMap((step) => guardsOn(step.links, dialect, 'prefix', step.name, ctx));
 
 /**
  * The guards one chain installs, described for the extractor to draw.
@@ -219,12 +274,173 @@ interface Procedure {
   inlineAt?: TsNode;
   /** The shape a caller sends, as it is spelled. */
   input?: string;
+  /** Where the input's schema is written, for the refusal of an input that does not match it (P58). */
+  inputSite?: Site;
+  /** The shape it answers with, as it is spelled, where a schema says so (P58). */
+  output?: string;
   /** What it takes and answers, as the schema and the resolver say (P35). */
   signature: StatedSignature;
   /** Everything installed in front of it, in the order it applies. */
   guards: EntryWrapping[];
+  /** The failures it declares it may answer with, by code (P58). */
+  errors: DeclaredError[];
+  /** Its own HTTP route, where one is written (P58). */
+  route?: ProcedureRoute;
+  /** The contract's member could not be followed, and what it is called (P58). */
+  contractUnread?: { site: Site; named: string };
   site: Site;
 }
+
+/** A failure a way in declares it may answer with (P58). */
+export interface DeclaredError {
+  code: string;
+  /** The status written in the declaration; absent where the framework's own table answers. */
+  status?: number;
+}
+
+/** The HTTP route a way in gives itself (P58). */
+export interface ProcedureRoute {
+  method?: string;
+  path?: string;
+}
+
+/** A string a reader can name, from a literal or a template with no holes. */
+const literalText = (node: TsNode | undefined): string | undefined => {
+  if (node === undefined) return undefined;
+  const value = unwrapValue(node);
+  return Node.isStringLiteral(value) || Node.isNoSubstitutionTemplateLiteral(value) ? value.getLiteralText() : undefined;
+};
+
+/** The value written under one key of an object literal, or nothing. */
+const propertyValue = (literal: TsNode, key: string): TsNode | undefined => {
+  if (!Node.isObjectLiteralExpression(literal)) return undefined;
+  const property = literal.getProperty(key);
+  return property !== undefined && Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+};
+
+/**
+ * The codes an errors link declares: the keys of its object literal, each with
+ * the `status` its definition writes, where it writes one as a number.
+ */
+const errorsDeclared = (links: readonly Link[], dialect: ProcedureDialect): DeclaredError[] => {
+  if (dialect.errorsMethod === undefined) return [];
+  const found: DeclaredError[] = [];
+  for (const link of links) {
+    if (link.method !== dialect.errorsMethod) continue;
+    const [argument] = link.args;
+    const literal = argument === undefined ? undefined : unwrapValue(argument);
+    if (literal === undefined || !Node.isObjectLiteralExpression(literal)) continue;
+    for (const property of literal.getProperties()) {
+      if (!Node.isPropertyAssignment(property) && !Node.isShorthandPropertyAssignment(property)) continue;
+      const code = property.getName().replace(/^['"]|['"]$/g, '');
+      const definition = Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+      const status = definition === undefined ? undefined : propertyValue(unwrapValue(definition), 'status');
+      const written = status !== undefined && Node.isNumericLiteral(unwrapValue(status)) ? Number(unwrapValue(status).getText()) : undefined;
+      found.push({ code, ...(written === undefined ? {} : { status: written }) });
+    }
+  }
+  return found;
+};
+
+/** The route a chain's route links write, the later link's word winning. */
+const routeWritten = (links: readonly Link[], dialect: ProcedureDialect, into: ProcedureRoute = {}): ProcedureRoute => {
+  if (dialect.routeMethod === undefined) return into;
+  let route = into;
+  for (const link of links) {
+    if (link.method !== dialect.routeMethod) continue;
+    const [argument] = link.args;
+    const literal = argument === undefined ? undefined : unwrapValue(argument);
+    if (literal === undefined) continue;
+    const method = literalText(propertyValue(literal, 'method'));
+    const path = literalText(propertyValue(literal, 'path'));
+    route = { ...route, ...(method === undefined ? {} : { method: method.toUpperCase() }), ...(path === undefined ? {} : { path }) };
+  }
+  return route;
+};
+
+/** Every declared failure once, the nearest declaration's status winning, by code. */
+const settleErrors = (errors: readonly DeclaredError[]): DeclaredError[] => {
+  const byCode = new Map<string, DeclaredError>();
+  for (const error of errors) byCode.set(error.code, { ...byCode.get(error.code), ...error });
+  return [...byCode.values()].sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
+};
+
+/** The links of a contract's member, and the route prefix the contract's trees above it add. */
+interface ContractMember {
+  links: Link[];
+  prefix: string;
+}
+
+/** How many names a contract is followed through before giving up. */
+const MOST_CONTRACT_STEPS = 16;
+
+/**
+ * The member of a contract a chain implements (P58).
+ *
+ * The contract is the first argument of the call that was handed it, followed
+ * through names and imports to an object literal - or to a call that assembles
+ * one, whose own prefix link is read on the way down - and each name is a key
+ * of the literal it reaches. The member is a chain, and its links are what the
+ * way in's input, output, errors and route are read from.
+ */
+const contractMemberOf = (
+  implemented: Implemented,
+  dialect: ProcedureDialect,
+  ctx: ExtractContext,
+): ContractMember | undefined => {
+  if (!Node.isCallExpression(implemented.call)) return undefined;
+  const [argument] = implemented.call.getArguments();
+  if (argument === undefined) return undefined;
+  let at: TsNode = unwrapValue(argument);
+  let prefix = '';
+  const literalOf = (value: TsNode): TsNode | undefined => {
+    let node = unwrapValue(value);
+    for (let step = 0; step < MOST_CONTRACT_STEPS; step += 1) {
+      if (Node.isObjectLiteralExpression(node)) return node;
+      if (Node.isIdentifier(node)) {
+        const declared = declaredValue(node);
+        if (declared === undefined) return undefined;
+        node = declared;
+        continue;
+      }
+      if (Node.isCallExpression(node)) {
+        const name = calleeName(node);
+        if (name === undefined || !dialect.assembledBy.includes(name)) return undefined;
+        const callee = node.getExpression();
+        if (Node.isPropertyAccessExpression(callee)) {
+          const { links } = chainOf(callee.getExpression());
+          prefix += routePrefixOf(links, dialect);
+        }
+        const [tree] = node.getArguments();
+        if (tree === undefined) return undefined;
+        node = unwrapValue(tree);
+        continue;
+      }
+      return undefined;
+    }
+    return undefined;
+  };
+  for (const name of implemented.names) {
+    const literal = literalOf(at);
+    if (literal === undefined || !Node.isObjectLiteralExpression(literal)) return undefined;
+    const property = literal.getProperty(name);
+    if (property === undefined) return undefined;
+    const member = memberOf(property, ctx);
+    if (member === undefined) return undefined;
+    at = valueOf(member, dialect);
+  }
+  const { links } = chainOf(at);
+  return links.length === 0 ? undefined : { links, prefix };
+};
+
+/** The prefix a tree's assembling chain writes for the routes under it. */
+const routePrefixOf = (links: readonly Link[], dialect: ProcedureDialect): string =>
+  dialect.prefixMethod === undefined
+    ? ''
+    : links
+        .filter((link) => link.method === dialect.prefixMethod)
+        .map((link) => literalText(link.args[0]) ?? '')
+        .join('');
 
 /** A chain that ends the way a way in does, and nothing about what answers it. */
 interface Ending {
@@ -293,13 +509,22 @@ const schemaOutput = (schema: TsNode): Type => {
 };
 
 /** A procedure's input, and what its resolver answers - the promise it returns settled by the collector. */
-const procedureSignature = (input: TsNode | undefined, resolver: TsNode): StatedSignature => {
-  const answered = resolver.getType().getCallSignatures()[0]?.getReturnType();
+const procedureSignature = (input: TsNode | undefined, resolver: TsNode, output?: TsNode): StatedSignature => {
+  // A schema the answer is checked against is what a caller gets, where one is
+  // written (P58); otherwise what the resolver returns.
+  const answered =
+    output === undefined
+      ? resolver.getType().getCallSignatures()[0]?.getReturnType()
+      : schemaOutput(output);
   return {
     params: input === undefined ? [] : [{ name: 'input', type: schemaOutput(input), site: input }],
-    ...(answered === undefined ? {} : { returns: { type: answered, site: resolver } }),
+    ...(answered === undefined ? {} : { returns: { type: answered, site: output ?? resolver } }),
   };
 };
+
+/** The first argument of the first link of a chain that is called this. */
+const argumentOf = (links: readonly Link[], method: string | undefined): TsNode | undefined =>
+  method === undefined ? undefined : links.find((link) => link.method === method)?.args[0];
 
 /** The way in a value is, with the code behind it and everything in front of it. */
 const procedureOf = (
@@ -311,14 +536,29 @@ const procedureOf = (
   if (ending === undefined) return undefined;
   const { call: node, kind, handlerArg } = ending;
   const { links, base } = chainOf(ending.receiver);
-  const input =
-    dialect.inputMethod === undefined
-      ? undefined
-      : links.find((link) => link.method === dialect.inputMethod)?.args[0];
+  const origin = originOf(base, dialect);
+  // A contract's member carries what the implementation leaves out (P58): its
+  // input, output, errors and route are read there, the chain's own winning.
+  const contract =
+    origin.implemented === undefined ? undefined : contractMemberOf(origin.implemented, dialect, ctx);
+  const contractLinks = contract?.links ?? [];
+  const input = argumentOf(links, dialect.inputMethod) ?? argumentOf(contractLinks, dialect.inputMethod);
+  const output = argumentOf(links, dialect.outputMethod) ?? argumentOf(contractLinks, dialect.outputMethod);
   const onChain =
     dialect.guardMethod === undefined
       ? []
       : guardsOn(links, dialect, 'route', `.${dialect.guardMethod}`, ctx);
+  const startingLinks = origin.steps.flatMap((step) => step.links);
+  const errors = settleErrors([
+    ...errorsDeclared(contractLinks, dialect),
+    ...errorsDeclared(startingLinks, dialect),
+    ...errorsDeclared(links, dialect),
+  ]);
+  const routed = routeWritten(links, dialect, routeWritten(startingLinks, dialect, routeWritten(contractLinks, dialect)));
+  const route =
+    routed.path !== undefined && contract !== undefined && contract.prefix !== ''
+      ? { ...routed, path: `${contract.prefix}${routed.path}` }
+      : routed;
 
   const named = repoFunctionOf(handlerArg);
   const returned = named === undefined ? handlerReturned(handlerArg, enclosingClass(node), ctx) : undefined;
@@ -332,9 +572,20 @@ const procedureOf = (
     ...(handler === undefined ? {} : { handler }),
     handlerVia: via,
     ...(via === 'inline' ? { inlineAt: handlerArg } : {}),
-    ...(input === undefined ? {} : { input: label(input) }),
-    signature: procedureSignature(input, handlerArg),
-    guards: [...guardsBefore(base, dialect, new Set(), ctx), ...onChain],
+    ...(input === undefined ? {} : { input: label(input), inputSite: siteOf(input, ctx) }),
+    ...(output === undefined ? {} : { output: label(output) }),
+    signature: procedureSignature(input, handlerArg, output),
+    guards: [...guardsBefore(origin, dialect, ctx), ...onChain],
+    errors,
+    ...(route.method === undefined && route.path === undefined ? {} : { route }),
+    ...(origin.implemented !== undefined && contract === undefined
+      ? {
+          contractUnread: {
+            site: siteOf(origin.implemented.call, ctx),
+            named: [label(origin.implemented.call), ...origin.implemented.names].join('.'),
+          },
+        }
+      : {}),
     site: siteOf(node, ctx),
   };
 };
@@ -343,6 +594,8 @@ const procedureOf = (
 interface Member {
   /** The key, when it was written as one a reader can name. */
   key?: string;
+  /** How a key nobody can name is written, `[section]`, for the row about it. */
+  computed?: string;
   value: TsNode;
   site: Site;
 }
@@ -354,6 +607,15 @@ interface Tree {
   /** How the call is written, for a reader looking for it again. */
   registration: string;
   members: Member[];
+  /**
+   * What the assembling call's own chain installs in front of every way in
+   * under it - `os.use(auth).router({...})` - the root's first (P58).
+   */
+  guards: EntryWrapping[];
+  /** What it declares every way in under it may fail with (P58). */
+  errors: DeclaredError[];
+  /** The prefix its chain writes for the HTTP route of every way in under it (P58). */
+  routePrefix: string;
 }
 
 /**
@@ -375,7 +637,7 @@ const memberOf = (property: TsNode, ctx: ExtractContext): Member | undefined => 
       ? nameNode.getText().replace(/^['"]|['"]$/g, '')
       : undefined;
   return {
-    ...(key === undefined ? {} : { key }),
+    ...(key === undefined ? { computed: nameNode.getText() } : { key }),
     value: initializer,
     site: siteOf(property, ctx),
   };
@@ -396,6 +658,8 @@ const treesIn = function* (
   dialect: ProcedureDialect,
   ctx: ExtractContext,
 ): Generator<Tree> {
+  /** The literals a call assembles, so a literal is never also a tree of its own. */
+  const assembled = new Set<TsNode>();
   for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
     const name = calleeName(call);
     if (name === undefined || !dialect.assembledBy.includes(name)) continue;
@@ -403,13 +667,54 @@ const treesIn = function* (
     if (argument === undefined) continue;
     const literal = unwrapValue(argument);
     if (!Node.isObjectLiteralExpression(literal)) continue;
-    const members: Member[] = [];
-    for (const property of literal.getProperties()) {
-      const member = memberOf(property, ctx);
-      if (member !== undefined) members.push(member);
-    }
-    yield { call, site: siteOf(call, ctx), registration: `${name}({ … })`, members };
+    assembled.add(literal);
+    const callee = call.getExpression();
+    // `os.use(auth).prefix('/orders').router({...})`: what the chain in front
+    // of the call installs applies to every member, and is read the way a
+    // procedure's own chain is (P58).
+    const { links, base } = Node.isPropertyAccessExpression(callee)
+      ? chainOf(callee.getExpression())
+      : { links: [] as Link[], base: callee };
+    const origin = originOf(base, dialect);
+    const guards =
+      dialect.guardMethod === undefined
+        ? []
+        : [...guardsBefore(origin, dialect, ctx), ...guardsOn(links, dialect, 'prefix', `${name}({ … })`, ctx)];
+    const errors = errorsDeclared([...origin.steps.flatMap((step) => step.links), ...links], dialect);
+    yield {
+      call,
+      site: siteOf(call, ctx),
+      registration: `${name}({ … })`,
+      members: membersOf(literal, ctx),
+      guards,
+      errors,
+      routePrefix: routePrefixOf(links, dialect),
+    };
   }
+  if (!dialect.plainTrees) return;
+  // A literal is a tree when its members say so (P58). Every one is a
+  // candidate, and the evidence the forest asks for decides.
+  for (const literal of sourceFile.getDescendantsOfKind(SyntaxKind.ObjectLiteralExpression)) {
+    if (assembled.has(literal)) continue;
+    // Handed to a call, a literal is the call's options rather than a tree
+    // somebody declared: `createRouterClient(router, { context })`.
+    const parent = literal.getParent();
+    if (parent !== undefined && (Node.isCallExpression(parent) || Node.isNewExpression(parent))) continue;
+    const members = membersOf(literal, ctx);
+    if (members.length === 0) continue;
+    yield { call: literal, site: siteOf(literal, ctx), registration: '{ … }', members, guards: [], errors: [], routePrefix: '' };
+  }
+};
+
+/** The members of one object literal a reader can see. */
+const membersOf = (literal: TsNode, ctx: ExtractContext): Member[] => {
+  if (!Node.isObjectLiteralExpression(literal)) return [];
+  const members: Member[] = [];
+  for (const property of literal.getProperties()) {
+    const member = memberOf(property, ctx);
+    if (member !== undefined) members.push(member);
+  }
+  return members;
 };
 
 /**
@@ -420,9 +725,37 @@ const treesIn = function* (
  * nothing that looks at a member cares which: a nested literal and an imported
  * one are the same fact spelled differently.
  */
-const valueOf = (member: Member): TsNode => {
+const valueOf = (member: Member, dialect?: ProcedureDialect): TsNode => {
   const written = unwrapValue(member.value);
-  return declaredValue(written) ?? written;
+  const value = declaredValue(written) ?? written;
+  return (dialect === undefined ? undefined : loadedTree(value, dialect)) ?? value;
+};
+
+/**
+ * The tree a member loads from a module when it is first asked for (P58):
+ * `lazy(() => import('./reports'))` is the default export of that module,
+ * found by asking the checker which module the `import()` names.
+ */
+const loadedTree = (value: TsNode, dialect: ProcedureDialect): TsNode | undefined => {
+  if (dialect.lazyBy.length === 0 || !Node.isCallExpression(value)) return undefined;
+  const name = calleeName(value);
+  if (name === undefined || !dialect.lazyBy.includes(name)) return undefined;
+  const [loader] = value.getArguments();
+  const fn = loader === undefined ? undefined : unwrapValue(loader);
+  if (fn === undefined || !(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) return undefined;
+  const loading = fn
+    .getDescendantsOfKind(SyntaxKind.CallExpression)
+    .find((call) => call.getExpression().getKind() === SyntaxKind.ImportKeyword);
+  const promised = loading?.getType().getTypeArguments()[0];
+  const module = promised?.getSymbol()?.getDeclarations()[0];
+  if (module === undefined || !Node.isSourceFile(module)) return undefined;
+  for (const declaration of module.getDefaultExportSymbol()?.getDeclarations() ?? []) {
+    if (Node.isExportAssignment(declaration)) {
+      const exported = unwrapValue(declaration.getExpression());
+      return declaredValue(exported) ?? exported;
+    }
+  }
+  return undefined;
 };
 
 /**
@@ -473,11 +806,11 @@ class Forest {
     for (const tree of this.#candidates.values()) {
       const members: Tree[] = [];
       for (const member of tree.members) {
-        const candidate = this.#candidates.get(valueOf(member));
+        const candidate = this.#candidates.get(valueOf(member, this.#dialect));
         if (candidate !== undefined) members.push(candidate);
       }
       nested.set(tree, members);
-      if (tree.members.some((member) => endingOf(valueOf(member), this.#dialect) !== undefined)) {
+      if (tree.members.some((member) => endingOf(valueOf(member, this.#dialect), this.#dialect) !== undefined)) {
         this.#trees.add(tree);
       }
     }
@@ -516,7 +849,10 @@ class Forest {
 
   /** How many calls looked like a tree, and how many turned out to be one. */
   get candidates(): number {
-    return this.#candidates.size;
+    // Calls only: a plain literal is a candidate of every repository that has
+    // one, and counting those would say "calls to a name the description lists"
+    // about literals nobody called anything (P58).
+    return [...this.#candidates.values()].filter((tree) => Node.isCallExpression(tree.call)).length;
   }
 
   get size(): number {
@@ -540,7 +876,87 @@ interface Mount {
   site: Site;
   tree?: Tree;
   named: string;
+  /** How the mount is written, for a reader looking for it again. */
+  registration: string;
+  /** What its protocol is called, where the description names it (P58). */
+  protocol?: string;
+  /** Whether it also answers each way in at its own HTTP route (P58). */
+  routes: boolean;
+  /**
+   * The addresses it answers under, as its `handle` calls give them; empty
+   * where it says none, which is the root (P58). Absent where the description
+   * says it is given one and none could be read.
+   */
+  prefixes?: string[];
+  /** Why no address could be read, where none could (P58). */
+  prefixUnread?: string;
 }
+
+/**
+ * The options object among a call's trailing arguments (P58), written in place
+ * or as a name bound to one. An adapter for one runtime hands the request
+ * alone, another the request and the response, so the position moves; a name
+ * that is a parameter is the request or the response and is passed over.
+ * Anything else may be the options and cannot be read.
+ */
+const optionsAmong = (args: readonly TsNode[]): { options: TsNode } | { unread: TsNode } | undefined => {
+  for (const argument of args) {
+    const value = unwrapValue(argument);
+    if (Node.isObjectLiteralExpression(value)) return { options: value };
+    if (Node.isIdentifier(value)) {
+      const declaration = (value.getSymbol()?.getAliasedSymbol() ?? value.getSymbol())?.getDeclarations()[0];
+      if (declaration !== undefined && Node.isParameterDeclaration(declaration)) continue;
+      const bound = declaredValue(value);
+      if (bound !== undefined && Node.isObjectLiteralExpression(bound)) return { options: bound };
+    }
+    return { unread: argument };
+  }
+  return undefined;
+};
+
+/**
+ * The addresses a mount built with `new` answers under (P58): the `key` option
+ * of every call of `method` on the value it was assigned to, in the file it is
+ * written in. A literal is an address; no option, or no options, is the root;
+ * anything else cannot be told, and neither can a mount nobody calls here.
+ */
+const prefixesOf = (
+  made: TsNode,
+  from: NonNullable<ProcedureMount['prefixFrom']>,
+): { prefixes: string[] } | { unread: string } => {
+  const holder = made.getParent();
+  if (holder === undefined || !Node.isVariableDeclaration(holder)) {
+    return { unread: 'it is not assigned to a name, so nothing here can be seen handing it a request' };
+  }
+  const symbol = holder.getNameNode().getSymbol();
+  const prefixes = new Set<string>();
+  let calls = 0;
+  for (const call of made.getSourceFile().getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    const callee = call.getExpression();
+    if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== from.method) continue;
+    const receiver = unwrapValue(callee.getExpression());
+    if (!Node.isIdentifier(receiver) || receiver.getSymbol() !== symbol) continue;
+    calls += 1;
+    const found = optionsAmong(call.getArguments().slice(from.arg));
+    if (found === undefined) {
+      prefixes.add('');
+      continue;
+    }
+    if ('unread' in found) return { unread: `its ${from.method} call is handed ${label(found.unread)}, whose ${from.key} cannot be read` };
+    const written = found.options;
+    if (!Node.isObjectLiteralExpression(written)) continue;
+    const property = written.getProperty(from.key);
+    if (property === undefined) {
+      prefixes.add('');
+      continue;
+    }
+    const text = Node.isPropertyAssignment(property) ? literalText(property.getInitializer()) : undefined;
+    if (text === undefined) return { unread: `its ${from.method} call is given ${from.key} as ${label(property)}, which is not written as text` };
+    prefixes.add(text.replace(/\/+$/, ''));
+  }
+  if (calls === 0) return { unread: `nothing in this file calls its ${from.method}, so the address it answers under is not written here` };
+  return { prefixes: [...prefixes].sort() };
+};
 
 const mountsIn = function* (
   sourceFile: SourceFile,
@@ -548,10 +964,20 @@ const mountsIn = function* (
   forest: Forest,
   ctx: ExtractContext,
 ): Generator<Mount> {
-  for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-    const name = calleeName(call);
+  const made = dialect.mounts.some((each) => each.constructed)
+    ? sourceFile.getDescendantsOfKind(SyntaxKind.NewExpression)
+    : [];
+  for (const call of [...sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression), ...made]) {
+    const callee = call.getExpression();
+    const name = Node.isNewExpression(call)
+      ? Node.isIdentifier(callee)
+        ? callee.getText()
+        : Node.isPropertyAccessExpression(callee)
+          ? callee.getName()
+          : undefined
+      : calleeName(call);
     if (name === undefined) continue;
-    const mount = dialect.mounts.find((each) => each.call === name);
+    const mount = dialect.mounts.find((each) => each.call === name && each.constructed === Node.isNewExpression(call));
     if (mount === undefined) continue;
     const args = call.getArguments();
     const at = args[mount.treeAt];
@@ -566,7 +992,16 @@ const mountsIn = function* (
     const value = keyed === undefined ? written : (memberOf(keyed, ctx)?.value ?? written);
     const resolved = unwrapValue(value);
     const tree = forest.at(resolved) ?? forest.at(declaredValue(resolved) ?? resolved);
-    yield { site: siteOf(call, ctx), ...(tree === undefined ? {} : { tree }), named: label(value) };
+    const answered = mount.prefixFrom === undefined ? undefined : prefixesOf(call, mount.prefixFrom);
+    yield {
+      site: siteOf(call, ctx),
+      ...(tree === undefined ? {} : { tree }),
+      named: label(value),
+      registration: Node.isNewExpression(call) ? `new ${name}(…)` : `${name}(…)`,
+      ...(mount.protocol === undefined ? {} : { protocol: mount.protocol }),
+      routes: mount.routes,
+      ...(answered === undefined ? {} : 'prefixes' in answered ? { prefixes: answered.prefixes } : { prefixUnread: answered.unread }),
+    };
   }
 };
 
@@ -734,6 +1169,26 @@ const supplyContexts = (
   }
 };
 
+/** What a walk carries down a tree from the trees above a member. */
+interface Along {
+  guards: EntryWrapping[];
+  errors: DeclaredError[];
+  routePrefix: string;
+  /** Every mount of a tree on the way down, and the address that tree is at. */
+  mounts: Array<{ mount: Mount; at: string }>;
+}
+
+/** Each guard once, where a tree and a chain built from one starting point both install it. */
+const onceEach = (guards: readonly EntryWrapping[]): EntryWrapping[] => {
+  const seen = new Set<string>();
+  return guards.filter((guard) => {
+    const key = `${guard.file ?? ''}:${guard.line ?? ''}:${guard.label}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 export interface ProcedureRoutersOptions {
   /**
    * Whether reading nothing is something somebody should act on.
@@ -797,13 +1252,13 @@ export const procedureRoutersAdapter = (
     for (const sourceFile of sources) {
       mounts.push(...mountsIn(sourceFile, dialect, forest, ctx));
     }
-    /** Which files serve each tree, so an entry can say where it is answered. */
-    const servedBy = new Map<Tree, string[]>();
+    /** Which mounts serve each tree, so an entry can say where it is answered. */
+    const mountsOf = new Map<Tree, Mount[]>();
     for (const mount of mounts) {
       if (mount.tree === undefined) continue;
-      const files = servedBy.get(mount.tree) ?? [];
-      files.push(mount.site.file);
-      servedBy.set(mount.tree, files);
+      const list = mountsOf.get(mount.tree) ?? [];
+      list.push(mount);
+      mountsOf.set(mount.tree, list);
     }
 
     const entries: EntryNode[] = [];
@@ -811,7 +1266,7 @@ export const procedureRoutersAdapter = (
     const unread: Array<{ site: Site; address: string; named: string }> = [];
     let members = 0;
 
-    const emit = (address: string, procedure: Procedure, served: readonly string[], tree: Tree): void => {
+    const emit = (address: string, procedure: Procedure, along: Along, tree: Tree): void => {
       const id = makeEntryId(ctx.repo, procedure.kind, address);
       if (seen.has(id)) return;
       seen.add(id);
@@ -830,16 +1285,43 @@ export const procedureRoutersAdapter = (
           ? undefined
           : inlineHandlerOf(procedure.inlineAt, address, ctx);
       const handler = procedure.handler ?? inline;
+      const guards = onceEach([...along.guards, ...procedure.guards]);
+      const errors = settleErrors([...along.errors, ...procedure.errors]);
+      const served = [...new Set(along.mounts.map(({ mount }) => mount.site.file))].sort();
+      const mounted = along.mounts.flatMap(({ mount }) =>
+        mount.protocol === undefined
+          ? []
+          : (mount.prefixes ?? [undefined]).map((prefix) => ({
+              protocol: mount.protocol as string,
+              ...(prefix === undefined ? {} : { prefix: prefix === '' ? '/' : prefix }),
+              file: mount.site.file,
+            })),
+      );
+      if (procedure.contractUnread !== undefined) {
+        ctx.builder.addUnresolved({
+          file: procedure.contractUnread.site.file,
+          line: procedure.contractUnread.site.line,
+          reason: 'procedure-contract-unread',
+          level: 'info',
+          message: `${address} implements ${procedure.contractUnread.named}, a member of a contract this could not follow, so its input, output, errors and route are only what the implementation itself writes.`,
+          hint: 'Write the contract as object literals of chains, in a file of this service or of a package it declares, so each member can be found by its keys.',
+          symbol: address,
+          adapter: dialect.name,
+        });
+      }
+      const common = {
+        ...(handler === undefined ? {} : { handler }),
+        file: procedure.site.file,
+        line: procedure.site.line,
+        ...(guards.length > 0 ? { wrapping: guards } : {}),
+        signature: procedure.signature,
+      };
       entries.push({
         id,
         kind: procedure.kind,
         label: `${procedure.kind} ${address}`,
         key: address,
-        ...(handler === undefined ? {} : { handler }),
-        file: procedure.site.file,
-        line: procedure.site.line,
-        ...(procedure.guards.length > 0 ? { wrapping: procedure.guards } : {}),
-        signature: procedure.signature,
+        ...common,
         meta: {
           // How a person names this way in, and the one string a caller of it
           // writes too: `viewer.bookings.get`.
@@ -850,30 +1332,80 @@ export const procedureRoutersAdapter = (
           call: procedure.call,
           registration: tree.registration,
           ...(procedure.input === undefined ? {} : { input: procedure.input }),
+          ...(procedure.inputSite === undefined ? {} : { inputAt: `${procedure.inputSite.file}:${procedure.inputSite.line}` }),
+          ...(procedure.output === undefined ? {} : { output: procedure.output }),
+          ...(errors.length === 0 ? {} : { errors }),
+          ...(procedure.route === undefined ? {} : { route: procedure.route }),
           // Read in full, mounts and all: the description says where a guard is
           // installed and the walk follows the name it was installed on, so an
           // audit that found none here really did look.
           middlewareRead: true,
           handlerVia: procedure.handlerVia,
-          ...(served.length > 0 ? { served: [...new Set(served)].sort() } : {}),
+          ...(served.length > 0 ? { served } : {}),
+          ...(mounted.length > 0 ? { mounted } : {}),
         },
       });
+
+      // A mount that answers each way in at its own route makes it an HTTP
+      // route as well (P58): the route the procedure writes under the prefixes
+      // of the trees above it, or its keys below the mounted tree posted to.
+      for (const { mount, at } of along.mounts) {
+        if (!mount.routes || mount.prefixes === undefined) continue;
+        const below = at === '' ? address : address.slice(at.length + dialect.separator.length);
+        const own =
+          procedure.route?.path === undefined
+            ? `/${below.split(dialect.separator).join('/')}`
+            : `${along.routePrefix}${procedure.route.path}`;
+        const method = procedure.route?.method ?? 'POST';
+        for (const prefix of mount.prefixes) {
+          const rawPath = `${prefix}${own}`.replace(/\/{2,}/g, '/');
+          const path = normalizePath(rawPath);
+          const routeId = makeEntryId(ctx.repo, 'http', makeHttpEntryKey(method, path));
+          if (seen.has(routeId)) continue;
+          seen.add(routeId);
+          entries.push({
+            id: routeId,
+            kind: 'http',
+            label: `${method} ${path}`,
+            key: makeHttpEntryKey(method, path),
+            ...common,
+            meta: {
+              method,
+              path,
+              rawPath,
+              adapter: dialect.name,
+              registration: mount.registration,
+              // The procedure this route answers for, so a request to either is a
+              // request to both (`dead`, the inventory).
+              procedure: address,
+              ...(procedure.input === undefined ? {} : { input: procedure.input }),
+              ...(procedure.inputSite === undefined ? {} : { inputAt: `${procedure.inputSite.file}:${procedure.inputSite.line}` }),
+              ...(errors.length === 0 ? {} : { errors }),
+              middlewareRead: true,
+              handlerVia: procedure.handlerVia,
+              served: [mount.site.file],
+            },
+          });
+        }
+      }
     };
 
     /**
      * Walks one tree, naming each member by every key above it.
      *
-     * `served` accumulates down the path rather than being the root's alone,
+     * What is carried down accumulates rather than being the root's alone,
      * because a repository may hang the whole tree in one file and each of its
      * branches in a file of its own — a scheduling app mounts twenty-nine — and a way in
-     * really is answered at all of them.
+     * really is answered at all of them. So does what a tree's own assembling
+     * chain installs, declares and prefixes (P58).
      */
-    const walk = (
-      tree: Tree,
-      prefix: string,
-      path: ReadonlySet<Tree>,
-      served: readonly string[],
-    ): void => {
+    const walk = (tree: Tree, prefix: string, path: ReadonlySet<Tree>, above: Along): void => {
+      const along: Along = {
+        guards: [...above.guards, ...tree.guards],
+        errors: [...above.errors, ...tree.errors],
+        routePrefix: `${above.routePrefix}${tree.routePrefix}`,
+        mounts: [...above.mounts, ...(mountsOf.get(tree) ?? []).map((mount) => ({ mount, at: prefix }))],
+      };
       for (const member of tree.members) {
         members += 1;
         if (member.key === undefined) {
@@ -882,16 +1414,16 @@ export const procedureRoutersAdapter = (
             line: member.site.line,
             reason: 'procedure-key-dynamic',
             hint: 'Write the key as a name or a string, so the way in under it can be named and joined to a caller.',
-            symbol: `${prefix === '' ? tree.registration : prefix}.${label(member.value)}`,
+            symbol: `${prefix === '' ? tree.registration : prefix}.${member.computed ?? label(member.value)}`,
             adapter: dialect.name,
           });
           continue;
         }
         const address = prefix === '' ? member.key : `${prefix}${dialect.separator}${member.key}`;
-        const value = valueOf(member);
+        const value = valueOf(member, dialect);
         const procedure = procedureOf(value, dialect, ctx);
         if (procedure !== undefined) {
-          emit(address, procedure, served, tree);
+          emit(address, procedure, along, tree);
           continue;
         }
         const nested = forest.at(value);
@@ -902,17 +1434,15 @@ export const procedureRoutersAdapter = (
         // A tree that holds itself, directly or through others. The framework
         // would not accept it; reading it would not stop.
         if (path.has(nested)) continue;
-        walk(nested, address, new Set([...path, nested]), [
-          ...served,
-          ...(servedBy.get(nested) ?? []),
-        ]);
+        walk(nested, address, new Set([...path, nested]), along);
       }
     };
 
     for (const root of forest.roots()) {
-      walk(root, '', new Set([root]), servedBy.get(root) ?? []);
+      walk(root, '', new Set([root]), { guards: [], errors: [], routePrefix: '', mounts: [] });
     }
 
+    reportUnreadPrefixes(ctx, mounts, dialect);
     reportUnmounted(ctx, mounts, dialect);
     if (unread.length > 0) reportUnreadMembers(ctx, unread, dialect);
     if (entries.length === 0) {
@@ -946,6 +1476,34 @@ const reportUnmounted = (
       reason: 'procedure-router-unread',
       message: `${mount.site.file} serves ${mount.named}, a tree of ways in that could not be followed from here, so nothing says which ways in this file answers.`,
       hint: MOUNT_HINT,
+      symbol: mount.named,
+      adapter: dialect.name,
+    });
+  }
+};
+
+/**
+ * A mount whose address could not be read (P58).
+ *
+ * The ways in it serves are read all the same; what is missing is where it
+ * answers them, which a mount that also answers each at its own route needs
+ * to say what those routes are, and a client's link needs to be checked
+ * against.
+ */
+const reportUnreadPrefixes = (
+  ctx: ExtractContext,
+  mounts: readonly Mount[],
+  dialect: ProcedureDialect,
+): void => {
+  for (const mount of mounts) {
+    if (mount.prefixUnread === undefined || mount.tree === undefined) continue;
+    ctx.builder.addUnresolved({
+      file: mount.site.file,
+      line: mount.site.line,
+      reason: 'procedure-prefix-unread',
+      ...(mount.routes ? {} : { level: 'info' as const }),
+      message: `${mount.site.file} serves ${mount.named}, and ${mount.prefixUnread}${mount.routes ? ', so none of the HTTP routes it answers is drawn' : ''}.`,
+      hint: 'Hand the request to the mount in the file that builds it, with the prefix written as text.',
       symbol: mount.named,
       adapter: dialect.name,
     });
@@ -1026,3 +1584,5 @@ const reportSilence = (
 };
 
 export const trpcProceduresAdapter = procedureRoutersAdapter(TRPC);
+
+export const orpcProceduresAdapter = procedureRoutersAdapter(ORPC);

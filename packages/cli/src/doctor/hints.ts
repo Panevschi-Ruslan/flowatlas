@@ -353,6 +353,13 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'A step of the path a procedure is asked for by is computed, so the procedure it reaches cannot be named and the call is joined to nothing. Write each step as a name.',
   'entry-procedures-description-inactive': () =>
     'Ordinary in a project of several repositories. If this is the one it was written for, check the spelling of its packages.',
+  // oRPC's links, mounts and contracts (P58)
+  'procedure-link-dynamic': () =>
+    'The link a client was made with works its address out when each request is sent, so nothing says which service it reaches; the join falls back to apiTarget. Write the URL as text, or as a setting followed by a path.',
+  'procedure-prefix-unread': () =>
+    'The mount that serves a tree is handed its requests somewhere this could not read the prefix of, so where it answers is unknown and, for an OpenAPI mount, none of the REST routes it answers is drawn. Hand the request to it in the file that builds it, with the prefix written as text.',
+  'procedure-contract-unread': () =>
+    'An implementation names a member of a contract this could not follow, so its input, output, errors and route are only what the implementation itself writes. Write the contract as object literals of chains the service can read, and check that the member exists.',
 
   // Bots (adapters-entry/nestjs-telegraf, telegraf-calls)
   'dynamic-bot-trigger': () =>
@@ -562,6 +569,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'More than one service the caller is configured to call declares this procedure. Leave only the one it talks to in its apiTarget.',
   'procedure-call-mismatch': () =>
     'The procedure is asked for as one kind of call and declared as another, and the server refuses a call of the kind it did not declare. Call it as declared.',
+  'procedure-link-unserved': () =>
+    'The client sends to an address where no mount of the protocol it speaks serves the tree, so nothing answers the request there. Point the link at the prefix the mount is handed, or mount the tree where the link sends.',
   'duplicate-node-id': () =>
     'Two repositories declared the same id. One of them was kept; rename the other, or split the shared file out into a package.',
 
@@ -768,6 +777,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'orphan-scene-decorator': ['scene handler outside a scene', 'scene handlers outside a scene'],
   'orphan-update-decorator': ['bot handler outside an update class', 'bot handlers outside an update class'],
   'procedure-call-mismatch': ['procedure called as the wrong kind', 'procedures called as the wrong kind'],
+  'procedure-link-unserved': ['procedure sent where nothing answers', 'procedures sent where nothing answers'],
   's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],
   'stream-no-writer': ['stream nothing writes to', 'streams nothing writes to'],
   'subscription-matches-nothing': ['rule nothing published matches', 'rules nothing published matches'],

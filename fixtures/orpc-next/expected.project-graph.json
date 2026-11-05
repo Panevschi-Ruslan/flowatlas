@@ -1,0 +1,1995 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-05T22:27:05.730Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#app/api/[[...rest]]/route.ts:handle",
+      "type": "function",
+      "label": "handle",
+      "repo": "api",
+      "file": "app/api/[[...rest]]/route.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "api#app/orders/page.tsx:OrdersPage",
+      "type": "ui_component",
+      "label": "OrdersPage",
+      "repo": "api",
+      "file": "app/orders/page.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "api#app/rpc/[[...rest]]/route.ts:handle",
+      "type": "function",
+      "label": "handle",
+      "repo": "api",
+      "file": "app/rpc/[[...rest]]/route.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "api#src/server/base.ts:requireUser",
+      "type": "middleware",
+      "label": "requireUser",
+      "repo": "api",
+      "file": "src/server/base.ts",
+      "line": 16,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ context, next }",
+              "type": "{context:type:api#Context;next:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "api#src/server/orders.ts:getOrder",
+      "type": "function",
+      "label": "getOrder",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 11
+    },
+    {
+      "id": "api#src/server/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 5
+    },
+    {
+      "id": "api#src/server/orders.ts:listOrders.handler@9",
+      "type": "function",
+      "label": "listOrders.handler@9",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "type:@orpc/server#HandlerOptions"
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number;status:string}[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/server/orders.ts:orders.get@15",
+      "type": "function",
+      "label": "orders.get@15",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input, errors }",
+              "type": "type:@orpc/server#HandlerOptions"
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number}"
+        }
+      }
+    },
+    {
+      "id": "api#src/server/orders.ts:placeOrder",
+      "type": "function",
+      "label": "placeOrder",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 21
+    },
+    {
+      "id": "api#src/server/orders.ts:placeOrder.handler@21",
+      "type": "function",
+      "label": "placeOrder.handler@21",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "type:@orpc/server#HandlerOptions"
+            }
+          ],
+          "returns": "{sku:string;quantity:number;id:'o-2'}"
+        }
+      }
+    },
+    {
+      "id": "api#src/server/reports.ts:reports.daily@4",
+      "type": "function",
+      "label": "reports.daily@4",
+      "repo": "api",
+      "file": "src/server/reports.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{day:string;total:number}[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/server/router.ts:audit",
+      "type": "middleware",
+      "label": "audit",
+      "repo": "api",
+      "file": "src/server/router.ts",
+      "line": 12,
+      "kind": "function"
+    },
+    {
+      "id": "api#src/server/router.ts:health@13",
+      "type": "function",
+      "label": "health@13",
+      "repo": "api",
+      "file": "src/server/router.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:true}"
+        }
+      }
+    },
+    {
+      "id": "api#src/server/store.ts:findOrder",
+      "type": "function",
+      "label": "findOrder",
+      "repo": "api",
+      "file": "src/server/store.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number}"
+        }
+      }
+    },
+    {
+      "id": "api#src/server/store.ts:findOrders",
+      "type": "function",
+      "label": "findOrders",
+      "repo": "api",
+      "file": "src/server/store.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "status",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number;status:string}[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/server/store.ts:storeOrder",
+      "type": "function",
+      "label": "storeOrder",
+      "repo": "api",
+      "file": "src/server/store.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "{sku:string;quantity:number;id:'o-2'}"
+        }
+      }
+    },
+    {
+      "id": "entry:api:http:DELETE:/api/*",
+      "type": "entry",
+      "label": "DELETE /api/*",
+      "repo": "api",
+      "file": "app/api/[[...rest]]/route.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/*",
+        "rawPath": "/api/:rest?",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/*",
+      "type": "entry",
+      "label": "GET /api/*",
+      "repo": "api",
+      "file": "app/api/[[...rest]]/route.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/*",
+        "rawPath": "/api/:rest?",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/v1/orders",
+      "type": "entry",
+      "label": "GET /api/v1/orders",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{status:'open'|'shipped'}"
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number}[]"
+        },
+        "method": "GET",
+        "path": "/api/v1/orders",
+        "rawPath": "/api/v1/orders",
+        "adapter": "orpc-procedures",
+        "registration": "new OpenAPIHandler(…)",
+        "procedure": "orders.list",
+        "input": "OrderQuery",
+        "inputAt": "src/server/orders.ts:7",
+        "errors": [
+          {
+            "code": "UNAUTHORIZED",
+            "status": 401
+          }
+        ],
+        "middlewareRead": true,
+        "handlerVia": "call",
+        "served": [
+          "app/api/[[...rest]]/route.ts"
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:api:http:GET:/api/v1/orders",
+            "file": "src/server/orders.ts",
+            "line": 7,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "ORPCError(UNAUTHORIZED)",
+            "at": "api#src/server/base.ts:requireUser",
+            "file": "src/server/base.ts",
+            "line": 12,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/v1/orders/:param",
+      "type": "entry",
+      "label": "GET /api/v1/orders/:param",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number}"
+        },
+        "method": "GET",
+        "path": "/api/v1/orders/:param",
+        "rawPath": "/api/v1/orders/{id}",
+        "adapter": "orpc-procedures",
+        "registration": "new OpenAPIHandler(…)",
+        "procedure": "orders.get",
+        "input": "OrderId",
+        "inputAt": "src/server/orders.ts:13",
+        "errors": [
+          {
+            "code": "NOT_FOUND",
+            "status": 404
+          },
+          {
+            "code": "RATE_LIMITED",
+            "status": 429
+          },
+          {
+            "code": "UNAUTHORIZED",
+            "status": 401
+          }
+        ],
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "app/api/[[...rest]]/route.ts"
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:api:http:GET:/api/v1/orders/:param",
+            "file": "src/server/orders.ts",
+            "line": 13,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "ORPCError(UNAUTHORIZED)",
+            "at": "api#src/server/base.ts:requireUser",
+            "file": "src/server/base.ts",
+            "line": 12,
+            "source": "throw"
+          },
+          {
+            "status": 404,
+            "exception": "errors.NOT_FOUND",
+            "at": "api#src/server/orders.ts:orders.get@15",
+            "file": "src/server/orders.ts",
+            "line": 17,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/rpc/*",
+      "type": "entry",
+      "label": "GET /rpc/*",
+      "repo": "api",
+      "file": "app/rpc/[[...rest]]/route.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/rpc/*",
+        "rawPath": "/rpc/:rest?",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/api/*",
+      "type": "entry",
+      "label": "POST /api/*",
+      "repo": "api",
+      "file": "app/api/[[...rest]]/route.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/*",
+        "rawPath": "/api/:rest?",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/api/health",
+      "type": "entry",
+      "label": "POST /api/health",
+      "repo": "api",
+      "file": "src/server/router.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:true}"
+        },
+        "method": "POST",
+        "path": "/api/health",
+        "rawPath": "/api/health",
+        "adapter": "orpc-procedures",
+        "registration": "new OpenAPIHandler(…)",
+        "procedure": "health",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "app/api/[[...rest]]/route.ts"
+        ]
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/api/orders/place",
+      "type": "entry",
+      "label": "POST /api/orders/place",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "{sku:string;quantity:number;id:'o-2'}"
+        },
+        "method": "POST",
+        "path": "/api/orders/place",
+        "rawPath": "/api/orders/place",
+        "adapter": "orpc-procedures",
+        "registration": "new OpenAPIHandler(…)",
+        "procedure": "orders.place",
+        "input": "NewOrder",
+        "inputAt": "src/server/orders.ts:21",
+        "errors": [
+          {
+            "code": "UNAUTHORIZED",
+            "status": 401
+          }
+        ],
+        "middlewareRead": true,
+        "handlerVia": "call",
+        "served": [
+          "app/api/[[...rest]]/route.ts"
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:api:http:POST:/api/orders/place",
+            "file": "src/server/orders.ts",
+            "line": 21,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "ORPCError(UNAUTHORIZED)",
+            "at": "api#src/server/base.ts:requireUser",
+            "file": "src/server/base.ts",
+            "line": 12,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ORPCError(CONFLICT)",
+            "at": "api#src/server/store.ts:storeOrder",
+            "file": "src/server/store.ts",
+            "line": 10,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/api/reports/daily",
+      "type": "entry",
+      "label": "POST /api/reports/daily",
+      "repo": "api",
+      "file": "src/server/reports.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{day:string;total:number}[]"
+        },
+        "method": "POST",
+        "path": "/api/reports/daily",
+        "rawPath": "/api/reports/daily",
+        "adapter": "orpc-procedures",
+        "registration": "new OpenAPIHandler(…)",
+        "procedure": "reports.daily",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "app/api/[[...rest]]/route.ts"
+        ]
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/rpc/*",
+      "type": "entry",
+      "label": "POST /rpc/*",
+      "repo": "api",
+      "file": "app/rpc/[[...rest]]/route.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/rpc/*",
+        "rawPath": "/rpc/:rest?",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:api:rpc:health",
+      "type": "entry",
+      "label": "rpc health",
+      "repo": "api",
+      "file": "src/server/router.ts",
+      "line": 13,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:true}"
+        },
+        "key": "health",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "{ … }",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "app/api/[[...rest]]/route.ts",
+          "app/rpc/[[...rest]]/route.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "openapi",
+            "prefix": "/api",
+            "file": "app/api/[[...rest]]/route.ts"
+          },
+          {
+            "protocol": "rpc",
+            "prefix": "/rpc",
+            "file": "app/rpc/[[...rest]]/route.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:api:rpc:orders.get",
+      "type": "entry",
+      "label": "rpc orders.get",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 11,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number}"
+        },
+        "key": "orders.get",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "router({ … })",
+        "input": "OrderId",
+        "inputAt": "src/server/orders.ts:13",
+        "errors": [
+          {
+            "code": "NOT_FOUND",
+            "status": 404
+          },
+          {
+            "code": "RATE_LIMITED",
+            "status": 429
+          },
+          {
+            "code": "UNAUTHORIZED",
+            "status": 401
+          }
+        ],
+        "route": {
+          "method": "GET",
+          "path": "/orders/{id}"
+        },
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "app/api/[[...rest]]/route.ts",
+          "app/rpc/[[...rest]]/route.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "openapi",
+            "prefix": "/api",
+            "file": "app/api/[[...rest]]/route.ts"
+          },
+          {
+            "protocol": "rpc",
+            "prefix": "/rpc",
+            "file": "app/rpc/[[...rest]]/route.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:api:rpc:orders.get",
+            "file": "src/server/orders.ts",
+            "line": 13,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "ORPCError(UNAUTHORIZED)",
+            "at": "api#src/server/base.ts:requireUser",
+            "file": "src/server/base.ts",
+            "line": 12,
+            "source": "throw"
+          },
+          {
+            "status": 404,
+            "exception": "errors.NOT_FOUND",
+            "at": "api#src/server/orders.ts:orders.get@15",
+            "file": "src/server/orders.ts",
+            "line": 17,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:api:rpc:orders.list",
+      "type": "entry",
+      "label": "rpc orders.list",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 5,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{status:'open'|'shipped'}"
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number}[]"
+        },
+        "key": "orders.list",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "router({ … })",
+        "input": "OrderQuery",
+        "inputAt": "src/server/orders.ts:7",
+        "output": "Orders",
+        "errors": [
+          {
+            "code": "UNAUTHORIZED",
+            "status": 401
+          }
+        ],
+        "route": {
+          "method": "GET",
+          "path": "/orders"
+        },
+        "middlewareRead": true,
+        "handlerVia": "call",
+        "served": [
+          "app/api/[[...rest]]/route.ts",
+          "app/rpc/[[...rest]]/route.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "openapi",
+            "prefix": "/api",
+            "file": "app/api/[[...rest]]/route.ts"
+          },
+          {
+            "protocol": "rpc",
+            "prefix": "/rpc",
+            "file": "app/rpc/[[...rest]]/route.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:api:rpc:orders.list",
+            "file": "src/server/orders.ts",
+            "line": 7,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "ORPCError(UNAUTHORIZED)",
+            "at": "api#src/server/base.ts:requireUser",
+            "file": "src/server/base.ts",
+            "line": 12,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:api:rpc:orders.place",
+      "type": "entry",
+      "label": "rpc orders.place",
+      "repo": "api",
+      "file": "src/server/orders.ts",
+      "line": 21,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{sku:string;quantity:number}"
+            }
+          ],
+          "returns": "{sku:string;quantity:number;id:'o-2'}"
+        },
+        "key": "orders.place",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "router({ … })",
+        "input": "NewOrder",
+        "inputAt": "src/server/orders.ts:21",
+        "errors": [
+          {
+            "code": "UNAUTHORIZED",
+            "status": 401
+          }
+        ],
+        "middlewareRead": true,
+        "handlerVia": "call",
+        "served": [
+          "app/api/[[...rest]]/route.ts",
+          "app/rpc/[[...rest]]/route.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "openapi",
+            "prefix": "/api",
+            "file": "app/api/[[...rest]]/route.ts"
+          },
+          {
+            "protocol": "rpc",
+            "prefix": "/rpc",
+            "file": "app/rpc/[[...rest]]/route.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:api:rpc:orders.place",
+            "file": "src/server/orders.ts",
+            "line": 21,
+            "source": "pipe"
+          },
+          {
+            "status": 401,
+            "exception": "ORPCError(UNAUTHORIZED)",
+            "at": "api#src/server/base.ts:requireUser",
+            "file": "src/server/base.ts",
+            "line": 12,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "ORPCError(CONFLICT)",
+            "at": "api#src/server/store.ts:storeOrder",
+            "file": "src/server/store.ts",
+            "line": 10,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:api:rpc:reports.daily",
+      "type": "entry",
+      "label": "rpc reports.daily",
+      "repo": "api",
+      "file": "src/server/reports.ts",
+      "line": 4,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{day:string;total:number}[]"
+        },
+        "key": "reports.daily",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "{ … }",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "app/api/[[...rest]]/route.ts",
+          "app/rpc/[[...rest]]/route.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "openapi",
+            "prefix": "/api",
+            "file": "app/api/[[...rest]]/route.ts"
+          },
+          {
+            "protocol": "rpc",
+            "prefix": "/rpc",
+            "file": "app/rpc/[[...rest]]/route.ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@orpc/server": 16,
+            "zod": 13,
+            "@orpc/openapi": 2
+          },
+          "functions": 18,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes",
+            "orpc-procedures"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 9,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {
+            "@tanstack/react-query": 3,
+            "@orpc/client": 1,
+            "@orpc/tanstack-query": 1
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/Orders.tsx:9:13",
+      "type": "ui_action",
+      "label": "onClick={() => place.mutate({ sku: 'sku-1', quantity: 1 })}",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 9,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => place.mutate({ sku: 'sku-1', quantity: 1 })",
+        "component": "web#src/Orders.tsx:Orders",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:api#app/orders/page.tsx:10:23",
+      "type": "ui_api_call",
+      "label": "rpc getOrder",
+      "repo": "api",
+      "file": "app/orders/page.tsx",
+      "line": 10,
+      "kind": "rpc",
+      "meta": {
+        "procedure": null,
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [
+          "id"
+        ],
+        "procedureAt": "src/server/orders.ts:11",
+        "inProcess": true,
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:api#app/orders/page.tsx:9:24",
+      "type": "ui_api_call",
+      "label": "rpc orders.list",
+      "repo": "api",
+      "file": "app/orders/page.tsx",
+      "line": 9,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.list",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [
+          "status"
+        ],
+        "procedureAt": "src/server/orders.ts:5",
+        "inProcess": true,
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:16:42",
+      "type": "ui_api_call",
+      "label": "rpc orders.get",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 16,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.get",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [
+          "id"
+        ],
+        "link": {
+          "protocol": "rpc",
+          "path": "/rpc",
+          "baseUrlEnv": "VITE_API_URL"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:19:44",
+      "type": "ui_api_call",
+      "label": "rpc orders.refund",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 19,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.refund",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [
+          "id"
+        ],
+        "link": {
+          "protocol": "rpc",
+          "path": "/rpc",
+          "baseUrlEnv": "VITE_API_URL"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:22:49",
+      "type": "ui_api_call",
+      "label": "rpc [section].list",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 22,
+      "kind": "rpc",
+      "meta": {
+        "procedure": null,
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "link": {
+          "protocol": "rpc",
+          "path": "/rpc",
+          "baseUrlEnv": "VITE_API_URL"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:25:43",
+      "type": "ui_api_call",
+      "label": "GET /api/v1/orders/:param",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/api/v1/orders/:param",
+        "path": "/api/v1/orders/:param",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:5:27",
+      "type": "ui_api_call",
+      "label": "rpc orders.list",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 5,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.list",
+        "call": "handler",
+        "operation": "queryOptions",
+        "client": "orpc-client",
+        "inputKeys": [
+          "status"
+        ],
+        "link": {
+          "protocol": "rpc",
+          "path": "/rpc",
+          "baseUrlEnv": "VITE_API_URL"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Orders.tsx:6:29",
+      "type": "ui_api_call",
+      "label": "rpc orders.place",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 6,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.place",
+        "call": "handler",
+        "operation": "mutationOptions",
+        "client": "orpc-client",
+        "link": {
+          "protocol": "rpc",
+          "path": "/rpc",
+          "baseUrlEnv": "VITE_API_URL"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/legacy.ts:10:29",
+      "type": "ui_api_call",
+      "label": "rpc health",
+      "repo": "web",
+      "file": "src/legacy.ts",
+      "line": 10,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "health",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "link": {
+          "protocol": "rpc",
+          "dynamic": true
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/legacy.ts:12:35",
+      "type": "ui_api_call",
+      "label": "rpc orders.list",
+      "repo": "web",
+      "file": "src/legacy.ts",
+      "line": 12,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.list",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [],
+        "link": {
+          "protocol": "rpc",
+          "path": "/api",
+          "baseUrlEnv": "VITE_API_URL"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "web#src/Orders.tsx:Orders",
+      "type": "ui_component",
+      "label": "Orders",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/Orders.tsx:fetchOrder",
+      "type": "function",
+      "label": "fetchOrder",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#src/Orders.tsx:listSection",
+      "type": "function",
+      "label": "listSection",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "section",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/Orders.tsx:refundOrder",
+      "type": "function",
+      "label": "refundOrder",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/Orders.tsx:showOrder",
+      "type": "function",
+      "label": "showOrder",
+      "repo": "web",
+      "file": "src/Orders.tsx",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/legacy.ts:health",
+      "type": "function",
+      "label": "health",
+      "repo": "web",
+      "file": "src/legacy.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#src/legacy.ts:legacyOrders",
+      "type": "function",
+      "label": "legacyOrders",
+      "repo": "web",
+      "file": "src/legacy.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#app/orders/page.tsx:OrdersPage",
+      "to": "ui_api_call:api#app/orders/page.tsx:10:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 10
+    },
+    {
+      "from": "api#app/orders/page.tsx:OrdersPage",
+      "to": "ui_api_call:api#app/orders/page.tsx:9:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 9
+    },
+    {
+      "from": "api#src/server/orders.ts:getOrder",
+      "to": "api#src/server/store.ts:findOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;sku:string;quantity:number}",
+      "file": "src/server/orders.ts",
+      "line": 16
+    },
+    {
+      "from": "api#src/server/orders.ts:listOrders",
+      "to": "api#src/server/store.ts:findOrders",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;sku:string;quantity:number;status:string}[]",
+      "file": "src/server/orders.ts",
+      "line": 9
+    },
+    {
+      "from": "api#src/server/orders.ts:listOrders.handler@9",
+      "to": "api#src/server/store.ts:findOrders",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;sku:string;quantity:number;status:string}[]",
+      "file": "src/server/orders.ts",
+      "line": 9
+    },
+    {
+      "from": "api#src/server/orders.ts:orders.get@15",
+      "to": "api#src/server/store.ts:findOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;sku:string;quantity:number}",
+      "file": "src/server/orders.ts",
+      "line": 16
+    },
+    {
+      "from": "api#src/server/orders.ts:placeOrder",
+      "to": "api#src/server/store.ts:storeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "returns": "{sku:string;quantity:number;id:'o-2'}",
+      "file": "src/server/orders.ts",
+      "line": 21
+    },
+    {
+      "from": "api#src/server/orders.ts:placeOrder.handler@21",
+      "to": "api#src/server/store.ts:storeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "returns": "{sku:string;quantity:number;id:'o-2'}",
+      "file": "src/server/orders.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:api:http:DELETE:/api/*",
+      "to": "api#app/api/[[...rest]]/route.ts:handle",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/[[...rest]]/route.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/*",
+      "to": "api#app/api/[[...rest]]/route.ts:handle",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/[[...rest]]/route.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/v1/orders",
+      "to": "api#src/server/base.ts:requireUser",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/base.ts",
+      "line": 16,
+      "meta": {
+        "order": 1,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "authed"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/v1/orders",
+      "to": "api#src/server/router.ts:audit",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/router.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "router({ … })"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/v1/orders",
+      "to": "api#src/server/store.ts:findOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/store.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:api:http:GET:/api/v1/orders/:param",
+      "to": "api#src/server/base.ts:requireUser",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/base.ts",
+      "line": 16,
+      "meta": {
+        "order": 1,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "authed"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/v1/orders/:param",
+      "to": "api#src/server/orders.ts:orders.get@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/orders.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:api:http:GET:/api/v1/orders/:param",
+      "to": "api#src/server/router.ts:audit",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/router.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "router({ … })"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/rpc/*",
+      "to": "api#app/rpc/[[...rest]]/route.ts:handle",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/rpc/[[...rest]]/route.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/*",
+      "to": "api#app/api/[[...rest]]/route.ts:handle",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/[[...rest]]/route.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/health",
+      "to": "api#src/server/router.ts:health@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/router.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:api:http:POST:/api/orders/place",
+      "to": "api#src/server/base.ts:requireUser",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/base.ts",
+      "line": 16,
+      "meta": {
+        "order": 1,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "authed"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/orders/place",
+      "to": "api#src/server/router.ts:audit",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/router.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "router({ … })"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/orders/place",
+      "to": "api#src/server/store.ts:storeOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/store.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:api:http:POST:/api/reports/daily",
+      "to": "api#src/server/reports.ts:reports.daily@4",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/reports.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:api:http:POST:/rpc/*",
+      "to": "api#app/rpc/[[...rest]]/route.ts:handle",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/rpc/[[...rest]]/route.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:rpc:health",
+      "to": "api#src/server/router.ts:health@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/router.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:api:rpc:orders.get",
+      "to": "api#src/server/base.ts:requireUser",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/base.ts",
+      "line": 16,
+      "meta": {
+        "order": 1,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "authed"
+      }
+    },
+    {
+      "from": "entry:api:rpc:orders.get",
+      "to": "api#src/server/orders.ts:orders.get@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/orders.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:api:rpc:orders.get",
+      "to": "api#src/server/router.ts:audit",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/router.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "router({ … })"
+      }
+    },
+    {
+      "from": "entry:api:rpc:orders.list",
+      "to": "api#src/server/base.ts:requireUser",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/base.ts",
+      "line": 16,
+      "meta": {
+        "order": 1,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "authed"
+      }
+    },
+    {
+      "from": "entry:api:rpc:orders.list",
+      "to": "api#src/server/router.ts:audit",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/router.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "router({ … })"
+      }
+    },
+    {
+      "from": "entry:api:rpc:orders.list",
+      "to": "api#src/server/store.ts:findOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/store.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:api:rpc:orders.place",
+      "to": "api#src/server/base.ts:requireUser",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/base.ts",
+      "line": 16,
+      "meta": {
+        "order": 1,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "authed"
+      }
+    },
+    {
+      "from": "entry:api:rpc:orders.place",
+      "to": "api#src/server/router.ts:audit",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server/router.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "router({ … })"
+      }
+    },
+    {
+      "from": "entry:api:rpc:orders.place",
+      "to": "api#src/server/store.ts:storeOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/store.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:api:rpc:reports.daily",
+      "to": "api#src/server/reports.ts:reports.daily@4",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/reports.ts",
+      "line": 4
+    },
+    {
+      "from": "ui_action:web#src/Orders.tsx:9:13",
+      "to": "web#src/Orders.tsx:Orders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 9
+    },
+    {
+      "from": "ui_api_call:api#app/orders/page.tsx:10:23",
+      "to": "entry:api:rpc:orders.get",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 10,
+      "meta": {
+        "via": "same-service",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:api#app/orders/page.tsx:9:24",
+      "to": "entry:api:rpc:orders.list",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/orders/page.tsx",
+      "line": 9,
+      "meta": {
+        "via": "same-service",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Orders.tsx:16:42",
+      "to": "entry:api:rpc:orders.get",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 16,
+      "meta": {
+        "via": "link-url",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Orders.tsx:25:43",
+      "to": "entry:api:http:GET:/api/v1/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 25,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Orders.tsx:5:27",
+      "to": "entry:api:rpc:orders.list",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 5,
+      "meta": {
+        "via": "link-url",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Orders.tsx:6:29",
+      "to": "entry:api:rpc:orders.place",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 6,
+      "meta": {
+        "via": "link-url",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/legacy.ts:10:29",
+      "to": "entry:api:rpc:health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/legacy.ts",
+      "line": 10,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/legacy.ts:12:35",
+      "to": "entry:api:rpc:orders.list",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/legacy.ts",
+      "line": 12,
+      "meta": {
+        "via": "link-url",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "web#src/Orders.tsx:Orders",
+      "to": "ui_api_call:web#src/Orders.tsx:5:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 5
+    },
+    {
+      "from": "web#src/Orders.tsx:Orders",
+      "to": "ui_api_call:web#src/Orders.tsx:6:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 6
+    },
+    {
+      "from": "web#src/Orders.tsx:fetchOrder",
+      "to": "ui_api_call:web#src/Orders.tsx:25:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 25
+    },
+    {
+      "from": "web#src/Orders.tsx:listSection",
+      "to": "ui_api_call:web#src/Orders.tsx:22:49",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/Orders.tsx",
+      "line": 22
+    },
+    {
+      "from": "web#src/Orders.tsx:refundOrder",
+      "to": "ui_api_call:web#src/Orders.tsx:19:44",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 19
+    },
+    {
+      "from": "web#src/Orders.tsx:showOrder",
+      "to": "ui_api_call:web#src/Orders.tsx:16:42",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Orders.tsx",
+      "line": 16
+    },
+    {
+      "from": "web#src/legacy.ts:health",
+      "to": "ui_api_call:web#src/legacy.ts:10:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/legacy.ts",
+      "line": 10
+    },
+    {
+      "from": "web#src/legacy.ts:legacyOrders",
+      "to": "ui_api_call:web#src/legacy.ts:12:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/legacy.ts",
+      "line": 12
+    }
+  ],
+  "types": {
+    "type:@orpc/server#HandlerOptions": {
+      "name": "HandlerOptions",
+      "kind": "external",
+      "declaredIn": "@orpc/server",
+      "structuralHash": "f774ac33e6a081ad",
+      "meta": {
+        "declKind": "external",
+        "package": "@orpc/server"
+      }
+    },
+    "type:api#Context": {
+      "name": "Context",
+      "kind": "object",
+      "declaredIn": "api#src/server/base.ts",
+      "structuralHash": "e9a6fefe0c7d9f16",
+      "fields": [
+        {
+          "name": "user",
+          "type": "{id:string}",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "app/orders/page.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "api"
+    },
+    {
+      "file": "src/server/orders.ts",
+      "line": 17,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "orders.get@15 -> errors.NOT_FOUND",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/server/router.ts",
+      "line": 15,
+      "reason": "procedure-key-dynamic",
+      "hint": "Write the key as a name or a string, so the way in under it can be named and joined to a caller.",
+      "symbol": "{ … }.[section]",
+      "adapter": "orpc-procedures",
+      "service": "api"
+    },
+    {
+      "file": "src/Orders.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/Orders.tsx",
+      "line": 19,
+      "reason": "procedure-not-found",
+      "message": "no procedure orders.refund in web or api",
+      "hint": "Renamed or removed? Check the tree this client is typed from, or add the service that declares it to services[] and name it in apiTarget.",
+      "symbol": "ui_api_call:web#src/Orders.tsx:19:44"
+    },
+    {
+      "file": "src/Orders.tsx",
+      "line": 22,
+      "reason": "procedure-path-dynamic",
+      "hint": "A step of the path is computed, so the procedure it reaches cannot be named. Write each step as a name.",
+      "symbol": "client[section].list()",
+      "service": "web"
+    },
+    {
+      "file": "src/legacy.ts",
+      "line": 10,
+      "reason": "procedure-link-dynamic",
+      "level": "info",
+      "message": "health is sent through a link whose address cannot be read: its url is worked out when each request is sent, so the service it reaches is the one apiTarget names.",
+      "hint": "Write the link URL as text, or as a setting followed by a path, where the link is built.",
+      "symbol": "createORPCClient<any>(new RPCLink({ url: () => `${window.location.origin}/rpc` }",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/legacy.ts",
+      "line": 12,
+      "reason": "procedure-link-unserved",
+      "message": "orders.list is sent to /api and served over rpc at /rpc",
+      "hint": "Nothing answers a request sent there. Point the link at /rpc, or mount the tree where the link sends.",
+      "symbol": "ui_api_call:web#src/legacy.ts:12:35"
+    }
+  ]
+}

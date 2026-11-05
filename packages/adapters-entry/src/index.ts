@@ -16,7 +16,7 @@ import { nitroRoutesAdapter } from './nuxt-routes.js';
 import { graphqlResolversAdapter } from './graphql-resolvers.js';
 import { reactRouterRoutesAdapter } from './route-config.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
-import { trpcProceduresAdapter } from './procedure-routers.js';
+import { orpcProceduresAdapter, trpcProceduresAdapter } from './procedure-routers.js';
 import { nestjsMicroserviceAdapter } from './nestjs-microservice.js';
 import { nestjsScheduleAdapter } from './nestjs-schedule.js';
 import { nestjsTelegrafAdapter } from './nestjs-telegraf/index.js';
@@ -48,6 +48,7 @@ export const entryAdapters: readonly EntryAdapter[] = [
   nestjsTelegrafAdapter,
   telegrafCallsAdapter,
   trpcProceduresAdapter,
+  orpcProceduresAdapter,
   entryRegistriesAdapter,
   configuredRoutesAdapter,
   configuredProceduresAdapter,
@@ -71,9 +72,9 @@ export {
   configuredProceduresAdapter,
 } from './configured-procedures.js';
 export type { ProcedureDialect, ProcedureMount } from './procedure-dialects.js';
-export { PROCEDURE_DIALECTS, TRPC, procedureDialectOf } from './procedure-dialects.js';
-export type { ProcedureRoutersOptions } from './procedure-routers.js';
-export { procedureRoutersAdapter, trpcProceduresAdapter } from './procedure-routers.js';
+export { ORPC, PROCEDURE_DIALECTS, TRPC, procedureDialectOf } from './procedure-dialects.js';
+export type { DeclaredError, ProcedureRoute, ProcedureRoutersOptions } from './procedure-routers.js';
+export { orpcProceduresAdapter, procedureRoutersAdapter, trpcProceduresAdapter } from './procedure-routers.js';
 export {
   callRoutesAdapter,
   expressRoutesAdapter,

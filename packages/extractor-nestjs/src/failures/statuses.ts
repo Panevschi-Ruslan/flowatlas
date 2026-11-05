@@ -137,3 +137,83 @@ export const ERROR_FACTORY_FRAMEWORKS: readonly string[] = ['nuxt', 'nitropack',
 export const ERROR_FACTORIES: readonly ErrorFactory[] = [
   { name: 'createError', packages: ['h3', 'nuxt/app', '#app', '#imports', 'nitropack/runtime'], statusKeys: ['statusCode', 'status'] },
 ];
+
+/**
+ * An error class a procedure framework throws, named by a code it is built
+ * with rather than by a class per status (P58): `new ORPCError('NOT_FOUND')`,
+ * `new TRPCError({ code: 'NOT_FOUND' })`. Read as a failure named after the
+ * class and the code, at the status the framework answers the code with.
+ */
+export interface CodedError {
+  readonly name: string;
+  /** The argument the code is written in. */
+  readonly codeAt: number;
+  /** The key of that argument holding the code, where it is an options object. */
+  readonly codeKey?: string;
+  /** The argument and key where a status of its own may be written. */
+  readonly statusAt?: number;
+  readonly statusKey?: string;
+  /** The status each code answers with. */
+  readonly statuses: ReadonlyMap<string, number>;
+  /** What a code the table does not name answers with. */
+  readonly fallback: number;
+}
+
+/** The codes both procedure frameworks share, with the statuses they answer them with. */
+const SHARED_CODES: ReadonlyArray<readonly [string, number]> = [
+  ['BAD_REQUEST', 400],
+  ['UNAUTHORIZED', 401],
+  ['FORBIDDEN', 403],
+  ['NOT_FOUND', 404],
+  ['METHOD_NOT_SUPPORTED', 405],
+  ['TIMEOUT', 408],
+  ['CONFLICT', 409],
+  ['PRECONDITION_FAILED', 412],
+  ['PAYLOAD_TOO_LARGE', 413],
+  ['UNSUPPORTED_MEDIA_TYPE', 415],
+  ['UNPROCESSABLE_CONTENT', 422],
+  ['TOO_MANY_REQUESTS', 429],
+  ['CLIENT_CLOSED_REQUEST', 499],
+  ['INTERNAL_SERVER_ERROR', 500],
+  ['NOT_IMPLEMENTED', 501],
+  ['BAD_GATEWAY', 502],
+  ['SERVICE_UNAVAILABLE', 503],
+  ['GATEWAY_TIMEOUT', 504],
+];
+
+/** oRPC's codes: the shared ones and `NOT_ACCEPTABLE`; any other code answers 500 unless it writes a status. */
+export const ORPC_CODES: ReadonlyMap<string, number> = new Map([...SHARED_CODES, ['NOT_ACCEPTABLE', 406]]);
+
+/** tRPC's codes: the shared ones, a parse error and a payment one. */
+export const TRPC_CODES: ReadonlyMap<string, number> = new Map([...SHARED_CODES, ['PARSE_ERROR', 400], ['PAYMENT_REQUIRED', 402]]);
+
+export const CODED_ERRORS: readonly CodedError[] = [
+  { name: 'ORPCError', codeAt: 0, statusAt: 1, statusKey: 'status', statuses: ORPC_CODES, fallback: UNKNOWN_ERROR_STATUS },
+  { name: 'TRPCError', codeAt: 0, codeKey: 'code', statuses: TRPC_CODES, fallback: UNKNOWN_ERROR_STATUS },
+];
+
+/**
+ * The failures a procedure declares are thrown through a helper its handler
+ * is handed (P58): `({ errors }) => { throw errors.NOT_FOUND() }`. The name of
+ * that member of the first parameter, and what a code answers with where the
+ * declaration writes no status of its own.
+ */
+export const DECLARED_ERRORS = { parameter: 'errors', statuses: ORPC_CODES, fallback: UNKNOWN_ERROR_STATUS } as const;
+
+/**
+ * Packages whose procedures' failures are read where nothing else here is
+ * (P58): their handlers answer a throw over HTTP with the status of its code,
+ * whatever framework the rest of the service is written in. Only those ways in
+ * are read.
+ */
+export const PROCEDURE_PACKAGES: readonly string[] = ['@orpc/server', '@trpc/server'];
+
+/**
+ * What each procedure reader's framework answers an input its schema refuses
+ * with, by the reader's name (P58): the check runs before the handler, as a
+ * pipe does.
+ */
+export const INPUT_REFUSALS: ReadonlyMap<string, Refusal> = new Map([
+  ['orpc-procedures', { status: 400, exception: 'ORPCError(BAD_REQUEST)' }],
+  ['trpc-procedures', { status: 400, exception: 'TRPCError(BAD_REQUEST)' }],
+]);

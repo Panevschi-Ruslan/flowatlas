@@ -826,6 +826,32 @@ export const entryProcedureMountSchema = z.strictObject({
   treeArg: z.number().int().min(0).default(0),
   /** The key of an options argument that carries the tree, when it is one. */
   treeKey: z.string().min(1).optional(),
+  /**
+   * The mount is a class built with `new` rather than a function called: a
+   * handler object made once and handed each request later.
+   */
+  constructed: z.boolean().default(false),
+  /**
+   * Whether the mount also answers each way in at its own HTTP route - the
+   * method and path its `routeMethod` link names, or the key path posted to
+   * where it names none - so a caller of that route reaches the way in too.
+   */
+  routes: z.boolean().default(false),
+  /**
+   * Where the address the mount answers under is written, when it is not the
+   * file's own: the key of an options argument of a method called on what the
+   * mount made - `handle` and `prefix` in `handler.handle(request, { prefix })`.
+   */
+  prefixFrom: z
+    .strictObject({
+      method: z.string().min(1),
+      key: z.string().min(1),
+      /** Which argument holds the options. */
+      arg: z.number().int().min(0).default(1),
+    })
+    .optional(),
+  /** What the mount's protocol is called in `meta.mounted`, so a caller's link can be checked against it. */
+  protocol: z.string().min(1).optional(),
 });
 
 /**
@@ -917,6 +943,39 @@ export const entryProcedureSchema = z.strictObject({
       key: z.string().min(1),
     })
     .optional(),
+  /**
+   * Whether an object literal is a tree in its own right, with no call around
+   * it (P58). Some frameworks of this family take any object whose values are
+   * ways in as a tree, and the assembling call only adds something to one. The
+   * same evidence decides as for a call: a literal is a tree only when a member
+   * is a way in or another tree, so an unrelated literal produces nothing.
+   */
+  plainTrees: z.boolean().default(false),
+  /**
+   * Functions that take a contract - a tree of declarations with no code - and
+   * hand back a builder whose property accesses name its members (P58):
+   * `implement(contract).orders.list.handler(fn)`. The member's own chain, in
+   * the contract, carries the input, output, errors and route.
+   */
+  implementedBy: z.array(z.string().min(1)).default([]),
+  /**
+   * Functions that load a tree from a module when it is first asked for, handed
+   * a function returning `import(...)` (P58): the tree is that module's default
+   * export.
+   */
+  lazyBy: z.array(z.string().min(1)).default([]),
+  /** The chain link carrying the shape a way in answers with. */
+  outputMethod: z.string().min(1).optional(),
+  /**
+   * The chain link declaring the failures a way in may answer with, as an
+   * object literal whose keys are their codes and whose values may write a
+   * `status`.
+   */
+  errorsMethod: z.string().min(1).optional(),
+  /** The chain link giving a way in an HTTP route of its own: `{ method, path }` in its first argument. */
+  routeMethod: z.string().min(1).optional(),
+  /** The chain link, on the call that assembles a tree, prefixing the HTTP route of every way in under it. */
+  prefixMethod: z.string().min(1).optional(),
   /** Where a tree is hung so that requests reach it. */
   mounts: z.array(entryProcedureMountSchema).default([]),
 });

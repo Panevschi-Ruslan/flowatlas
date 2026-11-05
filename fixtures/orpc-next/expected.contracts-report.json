@@ -1,0 +1,213 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-05T22:27:06.200Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:api#app/orders/page.tsx:10:23",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:api#app/orders/page.tsx:10:23|hits|entry:api:rpc:orders.get",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "api#app/orders/page.tsx:OrdersPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:api#app/orders/page.tsx:10:23",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:api#app/orders/page.tsx:10:23|hits|entry:api:rpc:orders.get",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/server/orders.ts:orders.get@15 declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:api#app/orders/page.tsx:9:24",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:api#app/orders/page.tsx:9:24|hits|entry:api:rpc:orders.list",
+      "direction": "request",
+      "reason": "procedure-input-by-name",
+      "message": "entry:api:rpc:orders.list takes OrderQuery, which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
+      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:api#app/orders/page.tsx:9:24",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:api#app/orders/page.tsx:9:24|hits|entry:api:rpc:orders.list",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:api:rpc:orders.list answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:16:42",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:16:42|hits|entry:api:rpc:orders.get",
+      "direction": "request",
+      "reason": "procedure-input-by-name",
+      "message": "entry:api:rpc:orders.get takes OrderId, which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
+      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:16:42",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:16:42|hits|entry:api:rpc:orders.get",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:api:rpc:orders.get answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:25:43",
+        "to": "entry:api:http:GET:/api/v1/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:25:43|hits|entry:api:http:GET:/api/v1/orders/:param",
+      "direction": "request",
+      "reason": "procedure-input-by-name",
+      "message": "entry:api:http:GET:/api/v1/orders/:param takes OrderId, which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
+      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:25:43",
+        "to": "entry:api:http:GET:/api/v1/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:25:43|hits|entry:api:http:GET:/api/v1/orders/:param",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:api:http:GET:/api/v1/orders/:param answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:5:27",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:5:27|hits|entry:api:rpc:orders.list",
+      "direction": "request",
+      "reason": "procedure-input-by-name",
+      "message": "entry:api:rpc:orders.list takes OrderQuery, which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
+      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:5:27",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:5:27|hits|entry:api:rpc:orders.list",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:api:rpc:orders.list answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:6:29",
+        "to": "entry:api:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:6:29|hits|entry:api:rpc:orders.place",
+      "direction": "request",
+      "reason": "procedure-input-by-name",
+      "message": "entry:api:rpc:orders.place takes NewOrder, which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
+      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:6:29",
+        "to": "entry:api:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:6:29|hits|entry:api:rpc:orders.place",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:api:rpc:orders.place answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/legacy.ts:10:29",
+        "to": "entry:api:rpc:health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/legacy.ts:10:29|hits|entry:api:rpc:health",
+      "direction": "request",
+      "reason": "procedure-input-by-name",
+      "message": "entry:api:rpc:health declares no input the procedure reader could name, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/legacy.ts:10:29",
+        "to": "entry:api:rpc:health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/legacy.ts:10:29|hits|entry:api:rpc:health",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:api:rpc:health answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/legacy.ts:12:35",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/legacy.ts:12:35|hits|entry:api:rpc:orders.list",
+      "direction": "request",
+      "reason": "procedure-input-by-name",
+      "message": "entry:api:rpc:orders.list takes OrderQuery, which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
+      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/legacy.ts:12:35",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/legacy.ts:12:35|hits|entry:api:rpc:orders.list",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:api:rpc:orders.list answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 16,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

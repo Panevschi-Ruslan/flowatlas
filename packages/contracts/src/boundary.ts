@@ -186,7 +186,13 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
   // the client by inference from the server's tree. Said per direction, so the
   // report names what is missing on each rather than putting the handler's
   // parameters — a context and an envelope — against what the caller sends.
-  if (typeof lookup.node(edge.from)?.meta?.['procedure'] === 'string') {
+  // A route that answers for a procedure (P58) is the same boundary reached by
+  // its address: its handler is handed the same envelope, and the route
+  // carries the procedure's input as the procedure does.
+  if (
+    typeof lookup.node(edge.from)?.meta?.['procedure'] === 'string' ||
+    typeof lookup.node(edge.to)?.meta?.['procedure'] === 'string'
+  ) {
     const input = lookup.node(edge.to)?.meta?.['input'];
     const callerParty = party(lookup, callerService, undefined, caller);
     const handlerParty = party(lookup, handlerService, undefined, handler);

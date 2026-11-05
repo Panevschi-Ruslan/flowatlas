@@ -386,6 +386,8 @@ to look for.
 | Fixture | What it shows |
 |---|---|
 | [`trpc-join`](../fixtures/trpc-join) | procedures on the server, and `trpc.orders.list.useQuery(…)` in a browser joined to them by path |
+| [`orpc-next`](../fixtures/orpc-next) | an oRPC router mounted for RPC and OpenAPI, its REST routes, and a client joined through its link's URL |
+| [`orpc-contract`](../fixtures/orpc-contract) | a contract-first oRPC service, its routes and failures read off the contract |
 | [`next-caller-application`](../fixtures/next-caller-application) | one service holding three Next.js applications, and a request reaching its own application's route |
 | [`nest-two-applications`](../fixtures/nest-two-applications) | an API and a worker in one repository, each serving `GET /health` |
 | [`socket-namespaces`](../fixtures/socket-namespaces) | socket.io read from both ends, with the namespace opened by `io.of(…)` |

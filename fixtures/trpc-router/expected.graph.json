@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "trpc-router",
-  "generatedAt": "2026-10-08T19:06:35.924Z",
+  "generatedAt": "2026-11-05T22:27:43.925Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -64,10 +64,21 @@
         "call": "mutation",
         "registration": "router({ … })",
         "input": "OrderBody",
+        "inputAt": "src/server/orders.ts:14",
         "middlewareRead": true,
         "handlerVia": "call",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:trpc-router:rpc:orders.create",
+            "file": "src/server/orders.ts",
+            "line": 14,
+            "source": "pipe"
+          }
         ]
       }
     },
@@ -94,10 +105,21 @@
         "call": "query",
         "registration": "router({ … })",
         "input": "OrderQuery",
+        "inputAt": "src/server/orders.ts:11",
         "middlewareRead": true,
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:trpc-router:rpc:orders.list",
+            "file": "src/server/orders.ts",
+            "line": 11,
+            "source": "pipe"
+          }
         ]
       }
     },
@@ -487,7 +509,7 @@
       "line": 14,
       "reason": "procedure-key-dynamic",
       "hint": "Write the key as a name or a string, so the way in under it can be named and joined to a caller.",
-      "symbol": "router({ … }).publicProcedure.query(() => [{ scope }])",
+      "symbol": "router({ … }).[scope]",
       "adapter": "trpc-procedures"
     },
     {

@@ -1,0 +1,981 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-05T22:27:04.115Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:orders:http:DELETE:/api/shop/orders/:param",
+      "type": "entry",
+      "label": "DELETE /api/shop/orders/:param",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:any}"
+        },
+        "method": "DELETE",
+        "path": "/api/shop/orders/:param",
+        "rawPath": "/api/shop/orders/{id}",
+        "adapter": "orpc-procedures",
+        "registration": "new OpenAPIHandler(…)",
+        "procedure": "orders.cancel",
+        "input": "z.object({ id: z.string() })",
+        "inputAt": "src/contract.ts:16",
+        "errors": [
+          {
+            "code": "ALREADY_SHIPPED",
+            "status": 409
+          },
+          {
+            "code": "NOT_FOUND",
+            "status": 404
+          }
+        ],
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:orders:http:DELETE:/api/shop/orders/:param",
+            "file": "src/contract.ts",
+            "line": 16,
+            "source": "pipe"
+          },
+          {
+            "status": 403,
+            "exception": "ORPCError(FORBIDDEN)",
+            "at": "orders#src/router.ts:requireStaff",
+            "file": "src/router.ts",
+            "line": 13,
+            "source": "throw"
+          },
+          {
+            "status": 404,
+            "exception": "errors.NOT_FOUND",
+            "at": "orders#src/router.ts:orders.cancel@22",
+            "file": "src/router.ts",
+            "line": 24,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "errors.ALREADY_SHIPPED",
+            "at": "orders#src/router.ts:orders.cancel@22",
+            "file": "src/router.ts",
+            "line": 25,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/api/shop/orders",
+      "type": "entry",
+      "label": "GET /api/shop/orders",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{sku:string}"
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number}[]"
+        },
+        "method": "GET",
+        "path": "/api/shop/orders",
+        "rawPath": "/api/shop/orders",
+        "adapter": "orpc-procedures",
+        "registration": "new OpenAPIHandler(…)",
+        "procedure": "orders.list",
+        "input": "z.object({ sku: z.string().optional() })",
+        "inputAt": "src/contract.ts:13",
+        "middlewareRead": true,
+        "handlerVia": "call",
+        "served": [
+          "src/server.ts"
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:orders:http:GET:/api/shop/orders",
+            "file": "src/contract.ts",
+            "line": 13,
+            "source": "pipe"
+          },
+          {
+            "status": 403,
+            "exception": "ORPCError(FORBIDDEN)",
+            "at": "orders#src/router.ts:requireStaff",
+            "file": "src/router.ts",
+            "line": 13,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "orders",
+      "file": "src/server.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/api/orders/refund",
+      "type": "entry",
+      "label": "POST /api/orders/refund",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{refunded:true}"
+        },
+        "method": "POST",
+        "path": "/api/orders/refund",
+        "rawPath": "/api/orders/refund",
+        "adapter": "orpc-procedures",
+        "registration": "new OpenAPIHandler(…)",
+        "procedure": "orders.refund",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ORPCError(FORBIDDEN)",
+            "at": "orders#src/router.ts:requireStaff",
+            "file": "src/router.ts",
+            "line": 13,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:rpc:orders.cancel",
+      "type": "entry",
+      "label": "rpc orders.cancel",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 22,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:any}"
+        },
+        "key": "orders.cancel",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "{ … }",
+        "input": "z.object({ id: z.string() })",
+        "inputAt": "src/contract.ts:16",
+        "errors": [
+          {
+            "code": "ALREADY_SHIPPED",
+            "status": 409
+          },
+          {
+            "code": "NOT_FOUND",
+            "status": 404
+          }
+        ],
+        "route": {
+          "method": "DELETE",
+          "path": "/shop/orders/{id}"
+        },
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "openapi",
+            "prefix": "/api",
+            "file": "src/server.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:orders:rpc:orders.cancel",
+            "file": "src/contract.ts",
+            "line": 16,
+            "source": "pipe"
+          },
+          {
+            "status": 403,
+            "exception": "ORPCError(FORBIDDEN)",
+            "at": "orders#src/router.ts:requireStaff",
+            "file": "src/router.ts",
+            "line": 13,
+            "source": "throw"
+          },
+          {
+            "status": 404,
+            "exception": "errors.NOT_FOUND",
+            "at": "orders#src/router.ts:orders.cancel@22",
+            "file": "src/router.ts",
+            "line": 24,
+            "source": "throw"
+          },
+          {
+            "status": 409,
+            "exception": "errors.ALREADY_SHIPPED",
+            "at": "orders#src/router.ts:orders.cancel@22",
+            "file": "src/router.ts",
+            "line": 25,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:rpc:orders.list",
+      "type": "entry",
+      "label": "rpc orders.list",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 21,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{sku:string}"
+            }
+          ],
+          "returns": "{id:string;sku:string;quantity:number}[]"
+        },
+        "key": "orders.list",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "{ … }",
+        "input": "z.object({ sku: z.string().optional() })",
+        "inputAt": "src/contract.ts:13",
+        "output": "z.array(Order)",
+        "route": {
+          "method": "GET",
+          "path": "/shop/orders"
+        },
+        "middlewareRead": true,
+        "handlerVia": "call",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "openapi",
+            "prefix": "/api",
+            "file": "src/server.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:orders:rpc:orders.list",
+            "file": "src/contract.ts",
+            "line": 13,
+            "source": "pipe"
+          },
+          {
+            "status": 403,
+            "exception": "ORPCError(FORBIDDEN)",
+            "at": "orders#src/router.ts:requireStaff",
+            "file": "src/router.ts",
+            "line": 13,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:rpc:orders.refund",
+      "type": "entry",
+      "label": "rpc orders.refund",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 29,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{refunded:true}"
+        },
+        "key": "orders.refund",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "{ … }",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "openapi",
+            "prefix": "/api",
+            "file": "src/server.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ORPCError(FORBIDDEN)",
+            "at": "orders#src/router.ts:requireStaff",
+            "file": "src/router.ts",
+            "line": 13,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#src/router.ts:orders.cancel@22",
+      "type": "function",
+      "label": "orders.cancel@22",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input, errors }",
+              "type": "object"
+            }
+          ],
+          "returns": "{id:any}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/router.ts:orders.refund@29",
+      "type": "function",
+      "label": "orders.refund@29",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{refunded:true}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/router.ts:requireStaff",
+      "type": "middleware",
+      "label": "requireStaff",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 17,
+      "kind": "function"
+    },
+    {
+      "id": "orders#src/router.ts:router.handler@21",
+      "type": "function",
+      "label": "router.handler@21",
+      "repo": "orders",
+      "file": "src/router.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ input }",
+              "type": "object"
+            }
+          ],
+          "returns": "{sku:string;quantity:number;shipped:boolean;id:string}[]"
+        }
+      }
+    },
+    {
+      "id": "orders#src/server.ts:GET /health@9",
+      "type": "function",
+      "label": "GET /health@9",
+      "repo": "orders",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        }
+      }
+    },
+    {
+      "id": "orders#src/store.ts:cancelOrder",
+      "type": "function",
+      "label": "cancelOrder",
+      "repo": "orders",
+      "file": "src/store.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "'cancelled'|'missing'|'shipped'"
+        }
+      }
+    },
+    {
+      "id": "orders#src/store.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "orders",
+      "file": "src/store.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "{sku:string;quantity:number;shipped:boolean;id:string}[]"
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes",
+            "orpc-procedures"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 3,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders.ts:cancelByRoute",
+      "type": "function",
+      "label": "cancelByRoute",
+      "repo": "shop",
+      "file": "src/orders.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders.ts:cancelOrder",
+      "type": "function",
+      "label": "cancelOrder",
+      "repo": "shop",
+      "file": "src/orders.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "shop",
+      "file": "src/orders.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/orders.ts:10:44",
+      "type": "ui_api_call",
+      "label": "rpc orders.cancel",
+      "repo": "shop",
+      "file": "src/orders.ts",
+      "line": 10,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.cancel",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [
+          "id"
+        ],
+        "link": {
+          "protocol": "openapi",
+          "path": "/api",
+          "baseUrlEnv": "VITE_ORDERS_URL"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/orders.ts:14:3",
+      "type": "ui_api_call",
+      "label": "DELETE /api/shop/orders/:param",
+      "repo": "shop",
+      "file": "src/orders.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "${VITE_ORDERS_URL}/api/shop/orders/:param",
+        "path": "/api/shop/orders/:param",
+        "baseUrlEnv": "VITE_ORDERS_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/orders.ts:8:45",
+      "type": "ui_api_call",
+      "label": "rpc orders.list",
+      "repo": "shop",
+      "file": "src/orders.ts",
+      "line": 8,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "orders.list",
+        "call": "handler",
+        "operation": "call",
+        "client": "orpc-client",
+        "inputKeys": [
+          "sku"
+        ],
+        "link": {
+          "protocol": "openapi",
+          "path": "/api",
+          "baseUrlEnv": "VITE_ORDERS_URL"
+        },
+        "targetService": "orders"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:orders:http:DELETE:/api/shop/orders/:param",
+      "to": "orders#src/router.ts:orders.cancel@22",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 22
+    },
+    {
+      "from": "entry:orders:http:DELETE:/api/shop/orders/:param",
+      "to": "orders#src/router.ts:requireStaff",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "staff"
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/api/shop/orders",
+      "to": "orders#src/router.ts:requireStaff",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "staff"
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/api/shop/orders",
+      "to": "orders#src/store.ts:listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/store.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:orders:http:GET:/health",
+      "to": "orders#src/server.ts:GET /health@9",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/api/orders/refund",
+      "to": "orders#src/router.ts:orders.refund@29",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 29
+    },
+    {
+      "from": "entry:orders:http:POST:/api/orders/refund",
+      "to": "orders#src/router.ts:requireStaff",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "staff"
+      }
+    },
+    {
+      "from": "entry:orders:rpc:orders.cancel",
+      "to": "orders#src/router.ts:orders.cancel@22",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 22
+    },
+    {
+      "from": "entry:orders:rpc:orders.cancel",
+      "to": "orders#src/router.ts:requireStaff",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "staff"
+      }
+    },
+    {
+      "from": "entry:orders:rpc:orders.list",
+      "to": "orders#src/router.ts:requireStaff",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "staff"
+      }
+    },
+    {
+      "from": "entry:orders:rpc:orders.list",
+      "to": "orders#src/store.ts:listOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/store.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:orders:rpc:orders.refund",
+      "to": "orders#src/router.ts:orders.refund@29",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 29
+    },
+    {
+      "from": "entry:orders:rpc:orders.refund",
+      "to": "orders#src/router.ts:requireStaff",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 17,
+      "meta": {
+        "order": 0,
+        "scope": "prefix",
+        "layer": "middleware",
+        "source": "staff"
+      }
+    },
+    {
+      "from": "orders#src/router.ts:orders.cancel@22",
+      "to": "orders#src/store.ts:cancelOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "'cancelled'|'missing'|'shipped'",
+      "file": "src/router.ts",
+      "line": 23
+    },
+    {
+      "from": "orders#src/router.ts:router.handler@21",
+      "to": "orders#src/store.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{sku:string;quantity:number;shipped:boolean;id:string}[]",
+      "file": "src/router.ts",
+      "line": 21
+    },
+    {
+      "from": "shop#src/orders.ts:cancelByRoute",
+      "to": "ui_api_call:shop#src/orders.ts:14:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 14
+    },
+    {
+      "from": "shop#src/orders.ts:cancelOrder",
+      "to": "ui_api_call:shop#src/orders.ts:10:44",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#src/orders.ts:listOrders",
+      "to": "ui_api_call:shop#src/orders.ts:8:45",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_api_call:shop#src/orders.ts:10:44",
+      "to": "entry:orders:rpc:orders.cancel",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 10,
+      "meta": {
+        "via": "link-url",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/orders.ts:14:3",
+      "to": "entry:orders:http:DELETE:/api/shop/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 14,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#src/orders.ts:8:45",
+      "to": "entry:orders:rpc:orders.list",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 8,
+      "meta": {
+        "via": "link-url",
+        "targetService": "orders"
+      }
+    }
+  ],
+  "types": {
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/router.ts",
+      "line": 9,
+      "reason": "procedure-contract-unread",
+      "level": "info",
+      "message": "orders.refund implements implement(contract).orders.refund, a member of a contract this could not follow, so its input, output, errors and route are only what the implementation itself writes.",
+      "hint": "Write the contract as object literals of chains, in a file of this service or of a package it declares, so each member can be found by its keys.",
+      "symbol": "orders.refund",
+      "adapter": "orpc-procedures",
+      "service": "orders"
+    },
+    {
+      "file": "src/router.ts",
+      "line": 24,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "orders.cancel@22 -> errors.NOT_FOUND",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/router.ts",
+                "line": 24,
+                "symbol": "orders.cancel@22 -> errors.NOT_FOUND"
+              },
+              {
+                "file": "src/router.ts",
+                "line": 25,
+                "symbol": "orders.cancel@22 -> errors.ALREADY_SHIPPED"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "orders"
+    }
+  ]
+}

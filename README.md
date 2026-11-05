@@ -11,7 +11,7 @@ One map of a project that lives in several repositories.
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
 Protocol.** It knows NestJS and Angular, React and Next.js, Vue and Nuxt, Svelte and SvelteKit, Remix, GraphQL,
-Express, Fastify, Koa and Hono, Medusa, tRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
+Express, Fastify, Koa and Hono, Medusa, tRPC, oRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
 Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka, RabbitMQ,
 BullMQ and socket.io; and OpenAPI and AsyncAPI documents for the services whose
 source you do not have.
@@ -817,7 +817,13 @@ prove, and the path is given so you can run it.
   addressed by the dotted path its callers write, with the guards inherited
   through the procedure it was built from (`fixtures/trpc-router`), and the
   client's `trpc.orders.list.useQuery(…)` is a request joined to it
-  (`fixtures/trpc-join`).
+  (`fixtures/trpc-join`). An oRPC router is read by the same walk: a plain
+  object or `os.router(…)` with the guards it installs, a contract-first
+  `implement(contract)` with its input, output, errors and route read off the
+  contract, and, under an `OpenAPIHandler`, each procedure's REST route too. A
+  client's `client.orders.list(input)` or `orpc.orders.list.queryOptions(…)`
+  joins it in the service its link's URL names (`fixtures/orpc-next`,
+  `fixtures/orpc-contract`).
 - **Applications.** Two applications in one service — a NestJS API and a worker,
   or a second Next.js application under `examples/` — serving the same path are
   two entries, and a request written inside one reaches its own

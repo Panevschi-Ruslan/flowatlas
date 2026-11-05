@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-08T19:06:35.137Z",
+  "builtAt": "2026-11-05T22:27:42.829Z",
   "services": [
     {
       "name": "api",
@@ -166,10 +166,21 @@
         "call": "mutation",
         "registration": "router({ … })",
         "input": "OrderBody",
+        "inputAt": "src/server/root.ts:21",
         "middlewareRead": true,
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:api:rpc:orders.create",
+            "file": "src/server/root.ts",
+            "line": 21,
+            "source": "pipe"
+          }
         ]
       }
     },
@@ -196,10 +207,21 @@
         "call": "query",
         "registration": "router({ … })",
         "input": "OrderQuery",
+        "inputAt": "src/server/root.ts:20",
         "middlewareRead": true,
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:api:rpc:orders.list",
+            "file": "src/server/root.ts",
+            "line": 20,
+            "source": "pipe"
+          }
         ]
       }
     },
