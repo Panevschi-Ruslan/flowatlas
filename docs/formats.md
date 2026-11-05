@@ -9,8 +9,8 @@ shape does, and the schema's name carries the version.
 
 | File | What it is | Version | Schema |
 |---|---|---|---|
-| `project-graph.json` | the whole graph: nodes, edges, types, what could not be read | `schemaVersion` | [`project-graph.v6`](../schema/project-graph.v6.schema.json) |
-| `services/<name>/graph.json` | one service's own graph, before it was joined | `schemaVersion` | [`repo-graph.v6`](../schema/repo-graph.v6.schema.json) |
+| `project-graph.json` | the whole graph: nodes, edges, types, what could not be read | `schemaVersion` | [`project-graph.v7`](../schema/project-graph.v7.schema.json) |
+| `services/<name>/graph.json` | one service's own graph, before it was joined | `schemaVersion` | [`repo-graph.v7`](../schema/repo-graph.v7.schema.json) |
 | `graph.db` | the same graph as SQLite, which every question reads | `schemaVersion` | — |
 | `link-report.json` | what joined and what did not | — | — |
 | `diff.json` | what `flowatlas diff` found | `diffFormatVersion` | [`diff.v5`](../schema/diff.v5.schema.json) |

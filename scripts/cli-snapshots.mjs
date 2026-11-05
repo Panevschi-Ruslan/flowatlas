@@ -446,6 +446,20 @@ const SOCKET_CASES = [
   ['expected.channel.updated.tree.txt', (io) => runChannel('orders/order:updated', { config: socketConfig, color: false, ascii: true, format: 'tree' }, io)],
 ];
 
+/**
+ * GraphQL, both halves (P232): the walk from a screen into the resolvers of
+ * another repository through the fields its operation selects, the walk back
+ * from a field resolver to both browsers' screens, and the field the schema
+ * does not have.
+ */
+const graphqlFixture = join(root, 'fixtures', 'graphql-gateway');
+const graphqlPlain = { config: join(graphqlFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const GRAPHQL_CASES = [
+  ['flow.orders-page.tree.txt', (io) => runFlow('web#src/orders/OrdersPage.tsx:OrdersPage', { ...graphqlPlain, format: 'tree' }, io)],
+  ['impact.order-customer.tree.txt', (io) => runImpact('entry:orders:graphql:Order.customer', { ...graphqlPlain, format: 'tree' }, io)],
+  ['contracts.txt', (io) => runContracts({ config: graphqlPlain.config }, io)],
+];
+
 const lambdaFixture = join(root, 'fixtures', 'multi-repo-lambda');
 const lambdaConfig = join(lambdaFixture, 'flowatlas.config.json');
 
@@ -1140,6 +1154,7 @@ const SUITES = [
   { dir: hollowFixture, owned: false, cases: HOLLOW_CASES },
   { dir: socketFixture, owned: false, cases: SOCKET_CASES },
   { dir: lambdaFixture, owned: false, cases: LAMBDA_CASES },
+  { dir: join(graphqlFixture, 'expected.cli'), owned: true, cases: GRAPHQL_CASES },
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },

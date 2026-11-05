@@ -106,6 +106,7 @@ const FINDINGS: readonly string[] = [
   'marker-reason-missing',
   // Two declarations where the framework takes one, or one it never serves
   'route-claimed-twice',
+  'graphql-field-resolved-twice',
   'route-file-not-served',
   'wizard-step-conflict',
   'workflow-name-duplicate',
@@ -172,6 +173,7 @@ const GAPS: readonly string[] = [
   'route-handler-anonymous',
   'route-handler-unread',
   'fs-route-handler-not-read',
+  'graphql-federation-not-read',
   'route-module-not-found',
   'route-verb-unread',
   'route-registry-unread',
@@ -220,6 +222,9 @@ const GAPS: readonly string[] = [
   'dynamic-http-url',
   // The browser (the front-end readers)
   'api-path-dynamic',
+  'graphql-document-dynamic',
+  'graphql-document-not-parsed',
+  'graphql-fragment-not-read',
   'api-method-dynamic',
   'api-base-override-unread',
   'api-base-unknown',
@@ -273,6 +278,7 @@ const GAPS: readonly string[] = [
   'unknown-base-url-env',
   'service-binding-unknown',
   'target-route-not-found',
+  'graphql-field-no-resolver',
   'ambiguous-route',
   'ambiguous-route-application',
   'ambiguous-route-api',
@@ -387,6 +393,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
     'wiring',
     [
       'route-claimed-twice',
+      'graphql-field-resolved-twice',
       'route-file-not-served',
       'wizard-step-conflict',
       'workflow-name-duplicate',

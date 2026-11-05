@@ -1,5 +1,5 @@
 {
-  "$id": "https://raw.githubusercontent.com/Panevschi-Ruslan/flowatlas/main/schema/repo-graph.v6.schema.json",
+  "$id": "https://raw.githubusercontent.com/Panevschi-Ruslan/flowatlas/main/schema/repo-graph.v7.schema.json",
   "title": "<output>/services/<name>/graph.json, one service's own graph",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",

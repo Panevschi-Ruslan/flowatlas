@@ -304,6 +304,18 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Describe the builder that made it, or declare the action as an exported function, so the way in and its callers are visible.',
   'route-module-not-found': () =>
     'A route config names a module that is not a source file of this project, so the address it declares has nothing behind it here. Name the module by its path relative to the app directory as it is spelled on disk, or add the file.',
+  'graphql-field-resolved-twice': () =>
+    'Two resolvers answer one GraphQL field; the server runs one of them. Remove one, or move it to the field it was meant for.',
+  'graphql-federation-not-read': () =>
+    'The service is one subgraph of a federated graph. Its own fields are joined; what an entity resolved in another subgraph reaches, and the router\'s plan, are not read yet.',
+  'graphql-field-no-resolver': () =>
+    'The operation asks the service for a field its schema has and no resolver of it answers, so the request stops at the endpoint. Resolve the field, or correct the operation.',
+  'graphql-document-dynamic': () =>
+    'The GraphQL document is built at run time or is not written where it is used, so the fields it asks for cannot be joined. Write it as a gql template, a graphql() call or a .graphql file.',
+  'graphql-document-not-parsed': () =>
+    'The document is not valid GraphQL, so nothing it asks for is joined; the server would refuse it too.',
+  'graphql-fragment-not-read': () =>
+    'The operation spreads a fragment that could not be read. Its root fields are joined; the fragment\'s fields are not compared with the schema.',
   'route-claimed-twice': () =>
     'Two route files resolve to one verb and address, so only the first is drawn. The framework refuses that or serves one of them; remove one, or move it to the address it was meant for.',
   'route-file-not-served': () =>
@@ -748,6 +760,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'marker-reason-missing': ['public marker with no reason', 'public markers with no reason'],
   'route-shadowed': ['route a worker answers first', 'routes a worker answers first'],
   'route-claimed-twice': ['route claimed twice', 'routes claimed twice'],
+  'graphql-field-resolved-twice': ['GraphQL field resolved twice', 'GraphQL fields resolved twice'],
   'route-file-not-served': ['route file served at no address', 'route files served at no address'],
   'wizard-step-conflict': ['wizard step numbered twice', 'wizard steps numbered twice'],
   'workflow-name-duplicate': ['workflow defined twice', 'workflows defined twice'],

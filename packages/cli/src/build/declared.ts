@@ -64,7 +64,9 @@ export const readDeclaredService = async (
 
   let raw: unknown;
   try {
-    raw = JSON.parse(await readFile(absolute, 'utf8'));
+    // JSON, or text for a document written in a language of its own: GraphQL's SDL (P232).
+    const text = await readFile(absolute, 'utf8');
+    raw = /^\s*[[{]/.test(text) ? JSON.parse(text) : text;
   } catch (cause) {
     throw new DocumentError(
       `${documentPath} could not be read: ${cause instanceof Error ? cause.message : String(cause)}`,

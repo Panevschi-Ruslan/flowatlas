@@ -13,6 +13,7 @@ import { nestjsHttpAdapter } from './nestjs-http.js';
 import { medusaRoutesAdapter } from './medusa-routes.js';
 import { remixRoutesAdapter, sveltekitRoutesAdapter } from './described-fs-routes.js';
 import { nitroRoutesAdapter } from './nuxt-routes.js';
+import { graphqlResolversAdapter } from './graphql-resolvers.js';
 import { reactRouterRoutesAdapter } from './route-config.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
 import { trpcProceduresAdapter } from './procedure-routers.js';
@@ -36,6 +37,7 @@ export const entryAdapters: readonly EntryAdapter[] = [
   sveltekitRoutesAdapter,
   remixRoutesAdapter,
   nitroRoutesAdapter,
+  graphqlResolversAdapter,
   reactRouterRoutesAdapter,
   honoRoutesAdapter,
   expressRoutesAdapter,
@@ -107,6 +109,7 @@ export type {
   VerbReading,
 } from './fs-routes.js';
 export { MEDUSA_API } from './medusa-routes.js';
+export { GRAPHQL_SERVER_PACKAGES, graphqlResolversAdapter } from './graphql-resolvers.js';
 export { NITRO_API, NITRO_REQUEST, NITRO_ROUTES, nitroAddressOf, nitroRoutesAdapter, NUXT_PAGES, SVELTEKIT_PAGES } from './nuxt-routes.js';
 export {
   fsRoutesAdapter,

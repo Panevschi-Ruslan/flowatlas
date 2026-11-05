@@ -1,0 +1,2030 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-05T17:52:18.471Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#src/app/order-customers.gql.ts:OrderCustomersGQL",
+      "type": "provider",
+      "label": "OrderCustomersGQL",
+      "repo": "admin",
+      "file": "src/app/order-customers.gql.ts",
+      "line": 4,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "admin#src/app/orders.component.ts:OrdersComponent",
+      "type": "ui_component",
+      "label": "OrdersComponent",
+      "repo": "admin",
+      "file": "src/app/orders.component.ts",
+      "line": 15,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-orders"
+      }
+    },
+    {
+      "id": "admin#src/app/orders.component.ts:OrdersComponent.refresh",
+      "type": "method",
+      "label": "OrdersComponent.refresh",
+      "repo": "admin",
+      "file": "src/app/orders.component.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/orders-client.ts:orderedCount",
+      "type": "function",
+      "label": "orderedCount",
+      "repo": "catalog",
+      "file": "src/orders-client.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/products.ts:findProduct",
+      "type": "function",
+      "label": "findProduct",
+      "repo": "catalog",
+      "file": "src/products.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:catalog#Product|undefined"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/products.ts:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "catalog",
+      "file": "src/products.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Product[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/products.ts:reviewsOf",
+      "type": "function",
+      "label": "reviewsOf",
+      "repo": "catalog",
+      "file": "src/products.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;stars:number}[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/resolvers.ts:Product.ordered@6",
+      "type": "function",
+      "label": "Product.ordered@6",
+      "repo": "catalog",
+      "file": "src/resolvers.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/resolvers.ts:Product.reviews@5",
+      "type": "function",
+      "label": "Product.reviews@5",
+      "repo": "catalog",
+      "file": "src/resolvers.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "product",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string;stars:number}[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/resolvers.ts:Query.product@12",
+      "type": "function",
+      "label": "Query.product@12",
+      "repo": "catalog",
+      "file": "src/resolvers.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_parent",
+              "type": "unknown"
+            },
+            {
+              "name": "args",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:catalog#Product|undefined"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/resolvers.ts:Query.products@11",
+      "type": "function",
+      "label": "Query.products@11",
+      "repo": "catalog",
+      "file": "src/resolvers.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:catalog#Product[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/resolvers.ts:productFields.ordered",
+      "type": "function",
+      "label": "productFields.ordered",
+      "repo": "catalog",
+      "file": "src/resolvers.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "config_key:catalog#ORDERS_URL",
+      "type": "config_key",
+      "label": "ORDERS_URL",
+      "repo": "catalog",
+      "file": "src/orders-client.ts",
+      "line": 14,
+      "meta": {
+        "key": "ORDERS_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Product.ordered",
+      "type": "entry",
+      "label": "Product.ordered",
+      "repo": "catalog",
+      "file": "src/resolvers.ts",
+      "line": 6,
+      "kind": "graphql",
+      "meta": {
+        "type": "Product",
+        "name": "ordered",
+        "field": true,
+        "returns": "Int!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Product.reviews",
+      "type": "entry",
+      "label": "Product.reviews",
+      "repo": "catalog",
+      "file": "src/resolvers.ts",
+      "line": 5,
+      "kind": "graphql",
+      "meta": {
+        "type": "Product",
+        "name": "reviews",
+        "field": true,
+        "returns": "[Review!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Query.product",
+      "type": "entry",
+      "label": "Query.product",
+      "repo": "catalog",
+      "file": "src/resolvers.ts",
+      "line": 12,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "product",
+        "returns": "Product",
+        "args": {
+          "id": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:catalog:graphql:Query.products",
+      "type": "entry",
+      "label": "Query.products",
+      "repo": "catalog",
+      "file": "src/resolvers.ts",
+      "line": 11,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "products",
+        "returns": "[Product!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/",
+      "type": "entry",
+      "label": "POST /",
+      "repo": "catalog",
+      "file": "src/index.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Product": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "price": {
+                    "type": "Float!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  },
+                  "ordered": {
+                    "type": "Int!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "products": {
+                    "type": "[Product!]!"
+                  },
+                  "product": {
+                    "type": "Product",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              },
+              "Review": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "stars": {
+                    "type": "Int!"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "entry:orders:graphql:Mutation.placeOrder",
+      "type": "entry",
+      "label": "Mutation.placeOrder",
+      "repo": "orders",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 27,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "placeOrder",
+        "returns": "Order!",
+        "args": {
+          "input": {
+            "type": "PlaceOrderInput!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:orders:graphql:Order.customer",
+      "type": "entry",
+      "label": "Order.customer",
+      "repo": "orders",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 32,
+      "kind": "graphql",
+      "meta": {
+        "type": "Order",
+        "name": "customer",
+        "field": true,
+        "returns": "Customer!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:orders:graphql:Query.order",
+      "type": "entry",
+      "label": "Query.order",
+      "repo": "orders",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 22,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "order",
+        "returns": "Order!",
+        "args": {
+          "id": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers",
+        "fails": [
+          {
+            "exception": "NotFoundException",
+            "at": "orders#src/orders/orders.service.ts:OrdersService.byId",
+            "file": "src/orders/orders.service.ts",
+            "line": 15,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:graphql:Query.orders",
+      "type": "entry",
+      "label": "Query.orders",
+      "repo": "orders",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 17,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "orders",
+        "returns": "[Order!]!",
+        "args": {
+          "status": {
+            "type": "String",
+            "required": false
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "orders",
+      "file": "src/app.module.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Customer": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Order": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "total": {
+                    "type": "Float!"
+                  },
+                  "note": {
+                    "type": "String"
+                  },
+                  "customer": {
+                    "type": "Customer!"
+                  }
+                }
+              },
+              "PlaceOrderInput": {
+                "kind": "input",
+                "fields": {
+                  "customerId": {
+                    "type": "ID!"
+                  },
+                  "total": {
+                    "type": "Float!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "orders": {
+                    "type": "[Order!]!",
+                    "args": {
+                      "status": {
+                        "type": "String",
+                        "required": false
+                      }
+                    }
+                  },
+                  "order": {
+                    "type": "Order!",
+                    "args": {
+                      "id": {
+                        "type": "String!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "placeOrder": {
+                    "type": "Order!",
+                    "args": {
+                      "input": {
+                        "type": "PlaceOrderInput!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "http_out:catalog#src/orders-client.ts:14:22",
+      "type": "http_out",
+      "label": "query OrderTotals /graphql",
+      "repo": "catalog",
+      "file": "src/orders-client.ts",
+      "line": 14,
+      "meta": {
+        "method": "POST",
+        "url": "${ORDERS_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "ORDERS_URL",
+        "responseType": null,
+        "bodyType": null,
+        "client": "graphql-request",
+        "graphql": {
+          "operation": "query",
+          "name": "OrderTotals",
+          "fields": [
+            {
+              "field": "orders",
+              "line": 5,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 6
+                },
+                {
+                  "field": "total",
+                  "line": 7
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/orders-client.ts",
+            "line": 4
+          },
+          "library": "graphql-request"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "orders#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "orders",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "OrdersResolver",
+          "OrdersService",
+          "CustomersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "orders#src/orders/customers.service.ts:CustomersService",
+      "type": "provider",
+      "label": "CustomersService",
+      "repo": "orders",
+      "file": "src/orders/customers.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/customers.service.ts:CustomersService.byId",
+      "type": "method",
+      "label": "CustomersService.byId",
+      "repo": "orders",
+      "file": "src/orders/customers.service.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:orders#Customer"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/gql-auth.guard.ts:GqlAuthGuard",
+      "type": "guard",
+      "label": "GqlAuthGuard",
+      "repo": "orders",
+      "file": "src/orders/gql-auth.guard.ts",
+      "line": 3
+    },
+    {
+      "id": "orders#src/orders/orders.resolver.ts:OrdersResolver",
+      "type": "provider",
+      "label": "OrdersResolver",
+      "repo": "orders",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.resolver.ts:OrdersResolver.customer",
+      "type": "method",
+      "label": "OrdersResolver.customer",
+      "repo": "orders",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:orders#Order"
+            }
+          ],
+          "returns": "type:orders#Customer"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.resolver.ts:OrdersResolver.findOne",
+      "type": "method",
+      "label": "OrdersResolver.findOne",
+      "repo": "orders",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:orders#Order"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.resolver.ts:OrdersResolver.orders",
+      "type": "method",
+      "label": "OrdersResolver.orders",
+      "repo": "orders",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "status",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "type:orders#Order[]"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.resolver.ts:OrdersResolver.placeOrder",
+      "type": "method",
+      "label": "OrdersResolver.placeOrder",
+      "repo": "orders",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "type:orders#PlaceOrderInput"
+            }
+          ],
+          "returns": "type:orders#Order"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.byId",
+      "type": "method",
+      "label": "OrdersService.byId",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:orders#Order"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.list",
+      "type": "method",
+      "label": "OrdersService.list",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "status",
+              "type": "string",
+              "optional": true
+            }
+          ],
+          "returns": "type:orders#Order[]"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/orders.service.ts:OrdersService.place",
+      "type": "method",
+      "label": "OrdersService.place",
+      "repo": "orders",
+      "file": "src/orders/orders.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "type:orders#PlaceOrderInput"
+            }
+          ],
+          "returns": "type:orders#Order"
+        }
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "templates": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 8,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "functions": 4,
+          "components": 3,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_action:admin#src/app/orders.component.ts:17:22",
+      "type": "ui_action",
+      "label": "click=\"refresh()\"",
+      "repo": "admin",
+      "file": "src/app/orders.component.ts",
+      "line": 17,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "refresh()",
+        "component": "admin#src/app/orders.component.ts:OrdersComponent",
+        "template": "src/app/orders.component.ts"
+      }
+    },
+    {
+      "id": "ui_action:web#src/orders/OrdersPage.tsx:12:15",
+      "type": "ui_action",
+      "label": "onClick={place}",
+      "repo": "web",
+      "file": "src/orders/OrdersPage.tsx",
+      "line": 12,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "place",
+        "component": "web#src/orders/OrdersPage.tsx:OrdersPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/orders.component.ts:26:5",
+      "type": "ui_api_call",
+      "label": "query OrderTotals /graphql",
+      "repo": "admin",
+      "file": "src/app/orders.component.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo-angular",
+        "client": "apollo-angular",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "OrderTotals",
+          "fields": [
+            {
+              "field": "orders",
+              "line": 8,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 9
+                },
+                {
+                  "field": "total",
+                  "line": 10
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/app/orders.component.ts",
+            "line": 7
+          },
+          "library": "apollo-angular"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/orders.component.ts:27:5",
+      "type": "ui_api_call",
+      "label": "query OrderCustomers /graphql",
+      "repo": "admin",
+      "file": "src/app/orders.component.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${apiUrl}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "apiUrl",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo-angular",
+        "client": "apollo-angular",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "OrderCustomers",
+          "fields": [
+            {
+              "field": "orders",
+              "line": 8,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 9
+                },
+                {
+                  "field": "customer",
+                  "line": 10,
+                  "selections": [
+                    {
+                      "field": "id",
+                      "line": 11
+                    },
+                    {
+                      "field": "name",
+                      "line": 12
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/app/order-customers.gql.ts",
+            "line": 7
+          },
+          "library": "apollo-angular"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/orders/OrderBadge.tsx:6:20",
+      "type": "ui_api_call",
+      "label": "query OrderBadge /graphql",
+      "repo": "web",
+      "file": "src/orders/OrderBadge.tsx",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "OrderBadge",
+          "fields": [
+            {
+              "field": "order",
+              "arguments": [
+                "id"
+              ],
+              "line": 24,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 25
+                },
+                {
+                  "field": "discount",
+                  "line": 26
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/orders/queries.ts",
+            "line": 23
+          },
+          "library": "apollo"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/orders/OrdersPage.tsx:7:20",
+      "type": "ui_api_call",
+      "label": "query Orders /graphql",
+      "repo": "web",
+      "file": "src/orders/OrdersPage.tsx",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Orders",
+          "fields": [
+            {
+              "field": "orders",
+              "line": 12,
+              "selections": [
+                {
+                  "field": "id",
+                  "on": "Order",
+                  "line": 13
+                },
+                {
+                  "field": "total",
+                  "on": "Order",
+                  "line": 13
+                },
+                {
+                  "field": "customer",
+                  "line": 14,
+                  "selections": [
+                    {
+                      "field": "name",
+                      "line": 15
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/orders/queries.ts",
+            "line": 11
+          },
+          "library": "apollo"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/orders/OrdersPage.tsx:8:24",
+      "type": "ui_api_call",
+      "label": "mutation PlaceOrder /graphql",
+      "repo": "web",
+      "file": "src/orders/OrdersPage.tsx",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "mutation",
+          "name": "PlaceOrder",
+          "fields": [
+            {
+              "field": "placeOrder",
+              "arguments": [
+                "input"
+              ],
+              "line": 4,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 4
+                },
+                {
+                  "field": "total",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/gql/graphql.ts",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/orders/Search.tsx:6:20",
+      "type": "ui_api_call",
+      "label": "POST /graphql",
+      "repo": "web",
+      "file": "src/orders/Search.tsx",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "web#src/orders/OrderBadge.tsx:OrderBadge",
+      "type": "ui_component",
+      "label": "OrderBadge",
+      "repo": "web",
+      "file": "src/orders/OrderBadge.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ id }",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/orders/OrdersPage.tsx:OrdersPage",
+      "type": "ui_component",
+      "label": "OrdersPage",
+      "repo": "web",
+      "file": "src/orders/OrdersPage.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/orders/Search.tsx:Search",
+      "type": "ui_component",
+      "label": "Search",
+      "repo": "web",
+      "file": "src/orders/Search.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ fields }",
+              "type": "{fields:string[]}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/orders/Search.tsx:buildQuery",
+      "type": "function",
+      "label": "buildQuery",
+      "repo": "web",
+      "file": "src/orders/Search.tsx",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "fields",
+              "type": "string[]"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "admin#src/app/orders.component.ts:OrdersComponent",
+      "to": "admin#src/app/order-customers.gql.ts:OrderCustomersGQL",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 22
+    },
+    {
+      "from": "admin#src/app/orders.component.ts:OrdersComponent.refresh",
+      "to": "ui_api_call:admin#src/app/orders.component.ts:26:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 26
+    },
+    {
+      "from": "admin#src/app/orders.component.ts:OrdersComponent.refresh",
+      "to": "ui_api_call:admin#src/app/orders.component.ts:27:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 27
+    },
+    {
+      "from": "catalog#src/orders-client.ts:orderedCount",
+      "to": "config_key:catalog#ORDERS_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders-client.ts",
+      "line": 14
+    },
+    {
+      "from": "catalog#src/orders-client.ts:orderedCount",
+      "to": "http_out:catalog#src/orders-client.ts:14:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders-client.ts",
+      "line": 14
+    },
+    {
+      "from": "catalog#src/resolvers.ts:Product.ordered@6",
+      "to": "catalog#src/orders-client.ts:orderedCount",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/resolvers.ts",
+      "line": 6
+    },
+    {
+      "from": "catalog#src/resolvers.ts:Product.reviews@5",
+      "to": "catalog#src/products.ts:reviewsOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;stars:number}[]",
+      "file": "src/resolvers.ts",
+      "line": 5
+    },
+    {
+      "from": "catalog#src/resolvers.ts:Query.product@12",
+      "to": "catalog#src/products.ts:findProduct",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:catalog#Product|undefined",
+      "file": "src/resolvers.ts",
+      "line": 13
+    },
+    {
+      "from": "catalog#src/resolvers.ts:Query.products@11",
+      "to": "catalog#src/products.ts:listProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:catalog#Product[]",
+      "file": "src/resolvers.ts",
+      "line": 11
+    },
+    {
+      "from": "catalog#src/resolvers.ts:productFields.ordered",
+      "to": "catalog#src/orders-client.ts:orderedCount",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "src/resolvers.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:catalog:graphql:Product.ordered",
+      "to": "catalog#src/resolvers.ts:Product.ordered@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/resolvers.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:catalog:graphql:Product.reviews",
+      "to": "catalog#src/resolvers.ts:Product.reviews@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/resolvers.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:catalog:graphql:Query.product",
+      "to": "catalog#src/resolvers.ts:Query.product@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/resolvers.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:catalog:graphql:Query.products",
+      "to": "catalog#src/resolvers.ts:Query.products@11",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/resolvers.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:orders:graphql:Mutation.placeOrder",
+      "to": "orders#src/orders/gql-auth.guard.ts:GqlAuthGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:orders:graphql:Mutation.placeOrder",
+      "to": "orders#src/orders/orders.resolver.ts:OrdersResolver.placeOrder",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#PlaceOrderInput"
+      ],
+      "returns": "type:orders#Order",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 27
+    },
+    {
+      "from": "entry:orders:graphql:Order.customer",
+      "to": "orders#src/orders/gql-auth.guard.ts:GqlAuthGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:orders:graphql:Order.customer",
+      "to": "orders#src/orders/orders.resolver.ts:OrdersResolver.customer",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:orders#Order"
+      ],
+      "returns": "type:orders#Customer",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 32
+    },
+    {
+      "from": "entry:orders:graphql:Query.order",
+      "to": "orders#src/orders/gql-auth.guard.ts:GqlAuthGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:orders:graphql:Query.order",
+      "to": "orders#src/orders/orders.resolver.ts:OrdersResolver.findOne",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#Order",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 22
+    },
+    {
+      "from": "entry:orders:graphql:Query.orders",
+      "to": "orders#src/orders/gql-auth.guard.ts:GqlAuthGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:orders:graphql:Query.orders",
+      "to": "orders#src/orders/orders.resolver.ts:OrdersResolver.orders",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#Order[]",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 17
+    },
+    {
+      "from": "http_out:catalog#src/orders-client.ts:14:22",
+      "to": "entry:orders:graphql:Query.orders",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/orders-client.ts",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "OrderTotals",
+          "field": "Query.orders"
+        }
+      }
+    },
+    {
+      "from": "http_out:catalog#src/orders-client.ts:14:22",
+      "to": "entry:orders:http:POST:/graphql",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/orders-client.ts",
+      "line": 14,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "orders#src/orders/orders.resolver.ts:OrdersResolver",
+      "to": "orders#src/orders/customers.service.ts:CustomersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 14
+    },
+    {
+      "from": "orders#src/orders/orders.resolver.ts:OrdersResolver",
+      "to": "orders#src/orders/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 13
+    },
+    {
+      "from": "orders#src/orders/orders.resolver.ts:OrdersResolver.customer",
+      "to": "orders#src/orders/customers.service.ts:CustomersService.byId",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#Customer",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 34
+    },
+    {
+      "from": "orders#src/orders/orders.resolver.ts:OrdersResolver.findOne",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.byId",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#Order",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 24
+    },
+    {
+      "from": "orders#src/orders/orders.resolver.ts:OrdersResolver.orders",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:orders#Order[]",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 19
+    },
+    {
+      "from": "orders#src/orders/orders.resolver.ts:OrdersResolver.placeOrder",
+      "to": "orders#src/orders/orders.service.ts:OrdersService.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:orders#PlaceOrderInput"
+      ],
+      "returns": "type:orders#Order",
+      "file": "src/orders/orders.resolver.ts",
+      "line": 29
+    },
+    {
+      "from": "ui_action:admin#src/app/orders.component.ts:17:22",
+      "to": "admin#src/app/orders.component.ts:OrdersComponent.refresh",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 17
+    },
+    {
+      "from": "ui_action:web#src/orders/OrdersPage.tsx:12:15",
+      "to": "web#src/orders/OrdersPage.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/OrdersPage.tsx",
+      "line": 12
+    },
+    {
+      "from": "ui_api_call:admin#src/app/orders.component.ts:26:5",
+      "to": "entry:orders:graphql:Query.orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "OrderTotals",
+          "field": "Query.orders"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/orders.component.ts:26:5",
+      "to": "entry:orders:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 26,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/orders.component.ts:27:5",
+      "to": "entry:orders:graphql:Order.customer",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/order-customers.gql.ts",
+      "line": 10,
+      "meta": {
+        "graphql": {
+          "operation": "OrderCustomers",
+          "field": "Order.customer"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/orders.component.ts:27:5",
+      "to": "entry:orders:graphql:Query.orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/order-customers.gql.ts",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "OrderCustomers",
+          "field": "Query.orders"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/orders.component.ts:27:5",
+      "to": "entry:orders:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/app/orders.component.ts",
+      "line": 27,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/orders/OrderBadge.tsx:6:20",
+      "to": "entry:orders:graphql:Query.order",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders/queries.ts",
+      "line": 24,
+      "meta": {
+        "graphql": {
+          "operation": "OrderBadge",
+          "field": "Query.order"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/orders/OrderBadge.tsx:6:20",
+      "to": "entry:orders:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders/OrderBadge.tsx",
+      "line": 6,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/orders/OrdersPage.tsx:7:20",
+      "to": "entry:orders:graphql:Order.customer",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders/queries.ts",
+      "line": 14,
+      "meta": {
+        "graphql": {
+          "operation": "Orders",
+          "field": "Order.customer"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/orders/OrdersPage.tsx:7:20",
+      "to": "entry:orders:graphql:Query.orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders/queries.ts",
+      "line": 12,
+      "meta": {
+        "graphql": {
+          "operation": "Orders",
+          "field": "Query.orders"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/orders/OrdersPage.tsx:7:20",
+      "to": "entry:orders:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders/OrdersPage.tsx",
+      "line": 7,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/orders/OrdersPage.tsx:8:24",
+      "to": "entry:orders:graphql:Mutation.placeOrder",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/gql/graphql.ts",
+      "line": 4,
+      "meta": {
+        "graphql": {
+          "operation": "PlaceOrder",
+          "field": "Mutation.placeOrder"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/orders/OrdersPage.tsx:8:24",
+      "to": "entry:orders:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders/OrdersPage.tsx",
+      "line": 8,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/orders/Search.tsx:6:20",
+      "to": "entry:orders:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders/Search.tsx",
+      "line": 6,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
+      "from": "web#src/orders/OrderBadge.tsx:OrderBadge",
+      "to": "ui_api_call:web#src/orders/OrderBadge.tsx:6:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/OrderBadge.tsx",
+      "line": 6
+    },
+    {
+      "from": "web#src/orders/OrdersPage.tsx:OrdersPage",
+      "to": "ui_api_call:web#src/orders/OrdersPage.tsx:7:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/OrdersPage.tsx",
+      "line": 7
+    },
+    {
+      "from": "web#src/orders/OrdersPage.tsx:OrdersPage",
+      "to": "ui_api_call:web#src/orders/OrdersPage.tsx:8:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/OrdersPage.tsx",
+      "line": 8
+    },
+    {
+      "from": "web#src/orders/Search.tsx:Search",
+      "to": "ui_api_call:web#src/orders/Search.tsx:6:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/Search.tsx",
+      "line": 6
+    },
+    {
+      "from": "web#src/orders/Search.tsx:Search",
+      "to": "web#src/orders/Search.tsx:buildQuery",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "string",
+      "file": "src/orders/Search.tsx",
+      "line": 6
+    }
+  ],
+  "types": {
+    "type:catalog#Product": {
+      "name": "Product",
+      "kind": "object",
+      "declaredIn": "catalog#src/products.ts",
+      "structuralHash": "8e45e62d54d4f2b3",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:orders#Customer": {
+      "name": "Customer",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/order.model.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:orders#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/order.model.ts",
+      "structuralHash": "d2b4cbe9e324155a",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "note",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:orders#PlaceOrderInput": {
+      "name": "PlaceOrderInput",
+      "kind": "object",
+      "declaredIn": "orders#src/orders/order.model.ts",
+      "structuralHash": "f01d0678ad28409a",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app/orders.component.ts",
+      "line": 21,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "OrdersComponent.constructor[0]",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "apollo-angular"
+      },
+      "service": "admin"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 10,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports GraphQLModule",
+      "service": "orders"
+    },
+    {
+      "file": "src/orders/OrderBadge.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/orders/OrdersPage.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/orders/Search.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/orders/Search.tsx",
+      "line": 6,
+      "reason": "graphql-document-dynamic",
+      "level": "action",
+      "message": "the document handed to graphql() is not a literal",
+      "hint": "Write the document as a gql template or a .graphql file, so the fields it asks for can be joined.",
+      "symbol": "useQuery",
+      "service": "web"
+    }
+  ]
+}

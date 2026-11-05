@@ -58,6 +58,11 @@ export const ENTRY_KINDS = [
   // `function` nodes with `kind: "state"`, so a walk needs nothing new to
   // follow one (P22).
   'workflow',
+  // A field of a GraphQL schema a resolver answers, keyed `Type.field`: a
+  // root field (`Query.orders`) is a way in, reached by a request's
+  // selection once the request has joined the endpoint; a field of another
+  // type (`Order.customer`) only through a selection under one (P232).
+  'graphql',
 ] as const;
 
 export type EntryKind = (typeof ENTRY_KINDS)[number];

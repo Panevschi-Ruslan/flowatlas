@@ -34,6 +34,7 @@ export { sqlOperation, sqlTables } from './sql.js';
 export { readConfig } from './leaves/config.js';
 export type { ConfigRead, ConfigSource } from './leaves/config.js';
 export { analyzeUrl } from './leaves/url.js';
+export { graphqlCallsPass } from './graphql-calls.js';
 export type { UrlInfo } from './leaves/url.js';
 export { dataLayerOf } from './leaves/silence.js';
 export type { DataLayer } from './leaves/silence.js';

@@ -10,7 +10,7 @@ One map of a project that lives in several repositories.
 **A command-line tool that reads several TypeScript repositories with the
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
-Protocol.** It knows NestJS and Angular, React and Next.js, Vue and Nuxt, Svelte and SvelteKit, Remix,
+Protocol.** It knows NestJS and Angular, React and Next.js, Vue and Nuxt, Svelte and SvelteKit, Remix, GraphQL,
 Express, Fastify, Koa and Hono, Medusa, tRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
 Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka, RabbitMQ,
 BullMQ and socket.io; and OpenAPI and AsyncAPI documents for the services whose
@@ -796,6 +796,13 @@ prove, and the path is given so you can run it.
   of one reading (`fixtures/react-next`, `fixtures/medusa-fs-router`,
   `fixtures/sveltekit-server-routes`, `fixtures/nuxt-full-stack`,
   `fixtures/remix-flat-routes`, `fixtures/react-router-config`).
+- **GraphQL, both halves.** A field a resolver answers is a way in, read from
+  NestJS and type-graphql resolvers, resolver maps and the schema; a client's
+  operation (Apollo Client, urql, graphql-request, apollo-angular) joins the
+  endpoint by its address and then the fields it selects, root fields and
+  field resolvers alike, `static`, at the line of the selection. Selections are
+  compared with the schema as a contract, and a service can be declared by its
+  SDL in place of its source (`fixtures/graphql-gateway`).
 - **Components in files of their own format.** A `.vue` or `.svelte` file's
   scripts are read by the checker as TypeScript, every position named by the
   component file at its own line, and the event bindings of its markup are the

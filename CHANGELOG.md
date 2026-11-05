@@ -20,6 +20,19 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **GraphQL, both halves (P232).** A field a resolver answers is an entry of
+  the new kind `graphql` (`Query.orders`, `Order.customer`), read from NestJS
+  and type-graphql resolvers, code-first and schema-first, from resolver maps
+  handed to Apollo Server, graphql-yoga or mercurius, and from the schema. A
+  client's operation - Apollo Client, urql, graphql-request, apollo-angular,
+  `fetch` - joins the endpoint by its address and then each field it selects,
+  nested field resolvers included, with the request's confidence, at the line
+  of the selection. `contracts` checks selections against the schema
+  (`graphql-field-unknown`, `graphql-arg-unknown`, `graphql-arg-required`),
+  `dead` lists root fields nothing selects, and a service can be declared by its
+  SDL or an introspection result (`document.kind: "graphql"`). A federated
+  subgraph is said, not joined across. The language is read by a parser of the
+  tool's own (`@flowatlas/graphql`), so nothing is installed. Schema version 7.
 - **Vue, Nuxt and Svelte (P233).** The three frameworks `init` used to name
   and leave out are read. A `.vue` or `.svelte` component's scripts are read by
   the checker as TypeScript, every position naming the component file at its

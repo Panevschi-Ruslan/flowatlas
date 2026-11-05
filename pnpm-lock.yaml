@@ -96,6 +96,9 @@ importers:
       '@flowatlas/extractor-nestjs':
         specifier: workspace:*
         version: link:../extractor-nestjs
+      '@flowatlas/graphql':
+        specifier: workspace:*
+        version: link:../graphql
       ts-morph:
         specifier: ^28.0.0
         version: 28.0.0
@@ -112,6 +115,9 @@ importers:
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
+      '@flowatlas/graphql':
+        specifier: workspace:*
+        version: link:../graphql
       '@flowatlas/stepfunctions':
         specifier: workspace:*
         version: link:../stepfunctions
@@ -133,6 +139,9 @@ importers:
       '@angular/compiler':
         specifier: ^19.2.0
         version: 19.2.25
+      '@flowatlas/graphql':
+        specifier: workspace:*
+        version: link:../graphql
       '@inquirer/prompts':
         specifier: ^8.7.2
         version: 8.7.2(@types/node@26.5.0)
@@ -203,6 +212,9 @@ importers:
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
+      '@flowatlas/graphql':
+        specifier: workspace:*
+        version: link:../graphql
       zod:
         specifier: ^4.5.4
         version: 4.5.4
@@ -239,6 +251,9 @@ importers:
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
+      '@flowatlas/graphql':
+        specifier: workspace:*
+        version: link:../graphql
       ts-morph:
         specifier: ^28.0.0
         version: 28.0.0
@@ -251,6 +266,9 @@ importers:
       '@flowatlas/extract-scopes':
         specifier: workspace:*
         version: link:../extract-scopes
+      '@flowatlas/graphql':
+        specifier: workspace:*
+        version: link:../graphql
       ts-morph:
         specifier: ^28.0.0
         version: 28.0.0
@@ -260,6 +278,18 @@ importers:
       '@flowatlas/adapters-entry':
         specifier: workspace:*
         version: link:../adapters-entry
+      '@flowatlas/core':
+        specifier: workspace:*
+        version: link:../core
+      '@flowatlas/graphql':
+        specifier: workspace:*
+        version: link:../graphql
+      ts-morph:
+        specifier: ^28.0.0
+        version: 28.0.0
+
+  packages/graphql:
+    dependencies:
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
@@ -275,6 +305,9 @@ importers:
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core
+      '@flowatlas/graphql':
+        specifier: workspace:*
+        version: link:../graphql
       better-sqlite3:
         specifier: ^13.0.3
         version: 13.0.3

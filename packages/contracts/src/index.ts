@@ -84,3 +84,4 @@ export {
   WIRE_RULES,
 } from './wire/index.js';
 export type { FieldView, WireOptions, WireRule } from './wire/index.js';
+export { GRAPHQL_RULES, graphqlFindings } from './graphql.js';

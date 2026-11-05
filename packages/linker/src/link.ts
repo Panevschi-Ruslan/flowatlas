@@ -50,6 +50,7 @@ import { joinReferences } from './reference-link.js';
 import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard, couldReach } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
+import { joinGraphqlFields } from './graphql-link.js';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
 import {
@@ -878,6 +879,9 @@ export const linkGraphs = (
   }
 
   found.push(...taken.values());
+
+  // The fields a GraphQL request selects, once the request has joined an endpoint (P232).
+  found.push(...joinGraphqlFields(nodes, edges));
 
   // Whatever names an entry by its deployed name alone, joined to the entry in
   // whichever service declares it.

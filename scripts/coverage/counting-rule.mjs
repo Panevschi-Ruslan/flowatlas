@@ -235,6 +235,13 @@ export const PROBES = [
     pattern: /(?:@click|v-on:click|on:click|\bonclick)(?=[\s.|=])|\{\s*onclick\s*\}/g,
   },
   {
+    name: 'graphql-resolver-field',
+    family: 'routes',
+    scope: 'line',
+    what: 'a GraphQL field a resolver method answers (`@Query`, `@Mutation`, `@Subscription`, `@ResolveField`), counted where it is written with a type, so a REST parameter decorator is not one',
+    pattern: /@(?:Query|Mutation|Subscription|ResolveField|FieldResolver)\s*\(\s*(?:\(\s*\)|[A-Za-z_$][\w$]*)\s*=>/g,
+  },
+  {
     name: 'nitro-route-file',
     family: 'routes',
     scope: 'file',

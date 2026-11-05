@@ -545,6 +545,9 @@ export const boundaries = (lookup: GraphLookup): Exchange[] => {
   const found: Exchange[] = [];
   for (const edge of lookup.allEdges()) {
     if (edge.type === 'http_calls' || edge.type === 'hits') {
+      // A GraphQL operation's contract is its selection against the schema
+      // (`graphql.ts`), not a body and an answer typed in code (P232).
+      if (lookup.node(edge.from)?.meta?.['graphql'] !== undefined) continue;
       found.push(...requestExchanges(lookup, edge));
     }
   }

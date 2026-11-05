@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "@flowatlas/core": "workspace:*",
+    "@flowatlas/graphql": "workspace:*",
     "zod": "^4.5.4"
   },
   "private": true

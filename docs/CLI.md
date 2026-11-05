@@ -277,6 +277,51 @@ joins to its own `server/api/orders.get.ts`. Neither framework needs to be
 installed (`fixtures/vue-spa`, `fixtures/nuxt-full-stack`,
 `fixtures/svelte-components`).
 
+**GraphQL (P232).** A field a resolver answers is a way in of kind `graphql`,
+keyed by its type and name: `entry:orders:graphql:Query.orders`, and
+`entry:orders:graphql:Order.customer` for a field of another type, which a
+request reaches only through a selection under it (`meta.field: true`). The
+server is read three ways: NestJS's and type-graphql's decorated resolvers,
+code-first (`@Resolver(() => Order)` with `@Query`, `@Mutation`,
+`@Subscription`, `@ResolveField`, a `name:` option, `@Args`) or schema-first
+(`@Query('orders')` beside the SDL); a resolver map handed to Apollo Server,
+graphql-yoga, mercurius or `makeExecutableSchema`, followed through constants,
+imports, spreads and arrays; and the schema, from `.graphql` files, `gql` type
+definitions and the classes a code-first server decorates. Guards on a
+resolver stand in front of its fields as on a controller. The endpoint the
+server answers at (`path` of `GraphQLModule`, `/` for a standalone Apollo
+Server, `/graphql` otherwise) is an ordinary `POST` route carrying the schema.
+
+A client's operation is a request to that endpoint, joined to a service by its
+address as every request is, and then each field it selects is joined to that
+service's entry: `hits` from a browser, `http_calls` from another server, with
+the request's confidence and `meta.graphql: { operation, field, alias? }`, at
+the line of the selection. Nested selections reach field resolvers, through
+the schema's types; fragments are put in place, from the document or
+interpolated into it. Documents are read from `gql` / `graphql` templates,
+`graphql(...)` (the codegen client preset, gql.tada), imported `.graphql`
+files and codegen's `…Document` constants; calls from Apollo Client (`useQuery`,
+`useMutation`, `useSubscription`, `client.query` / `mutate`), urql,
+graphql-request (`request`, `GraphQLClient#request`), apollo-angular
+(`this.apollo.query`, `watchQuery`, `mutate`, a `Query` service's `fetch` /
+`watch`) and `fetch` with a body holding `query`. A field is only ever looked
+for in the service the request reached, and nothing is joined by an
+operation's name.
+
+`contracts` compares every selection with the schema it is sent to:
+`graphql-field-unknown` (a field the type does not have, an error at its
+line), `graphql-arg-unknown` and `graphql-arg-required`. `dead` lists a root
+field no request selects; a field resolver is reached as soon as anything
+returning its type is. Rows: `graphql-document-dynamic` (a document built at
+run time, never guessed), `graphql-document-not-parsed`,
+`graphql-fragment-not-read`, `graphql-field-no-resolver`,
+`graphql-field-resolved-twice`, and `graphql-federation-not-read` once for a
+subgraph of a federated graph, whose entities across subgraphs are not joined
+yet. A service whose source is not here is declared by its schema:
+`{ "document": { "kind": "graphql", "path": "catalog.graphql" } }` gives the
+same root entries, `declared` (`fixtures/graphql-gateway`,
+`fixtures/graphql-declared`).
+
 **A file-system router is four values.** Where the address is the path of a file
 rather than an argument of a call, what differs between one router and another
 is the root directory, which file names declare a route, the prefix in front,
@@ -3846,7 +3891,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `tags` | string[] | `[]` | names an architecture rule can select the service by: `frontend`, `edge`, `domain:payments`. A tag is a name only; nothing is inferred from it ([`rules`](#rules)) |
 | `catalog` | object | none | what a software catalogue says of the service and the code cannot, for [`export`](#flowatlas-export-backstagestructurizr): `{ "owner", "lifecycle", "system", "description", "sourceUrl" }`, every key optional. Written as given; an owner or lifecycle nobody gave is `unknown`, and nothing is guessed from the code |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
-| `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi", "path": … }`, path relative to this file |
+| `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi" \| "graphql", "path": … }`, path relative to this file; a `graphql` document is SDL or an introspection result |
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
 | `apiDocuments` | object[] | none | API documents the repository commits by hand, each compared with the one written from the code by `contracts` and [`spec --against`](#flowatlas-spec---against-servicefile-a-committed-document-against-the-code): `[{ "kind": "openapi" \| "asyncapi", "path": …, "application"? }]`, path relative to this file. Nothing is taken from them; refused on a service a `document` declares |
 | `tsconfig` | string | found in the repository | which TypeScript configuration to parse with |

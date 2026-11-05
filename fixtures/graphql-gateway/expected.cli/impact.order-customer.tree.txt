@@ -1,0 +1,8 @@
+@  Order.customer                            orders/src/orders/orders.resolver.ts:32
+  => admin ^  query OrderCustomers /graphql  admin/src/app/orders.component.ts:27
+    -> OrdersComponent.refresh               admin/src/app/orders.component.ts:25
+      %  click="refresh()"                   admin/src/app/orders.component.ts:17
+  => web ^  query Orders /graphql            web/src/orders/OrdersPage.tsx:7
+    %  OrdersPage                            web/src/orders/OrdersPage.tsx:6
+      %  onClick={place}                     web/src/orders/OrdersPage.tsx:12
+Reachable from: no entry points. Also reaches admin, orders, web, where the chain stops before an entry point

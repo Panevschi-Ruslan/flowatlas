@@ -40,6 +40,7 @@ import { actionsPass } from './passes/actions.js';
 import { callsPass } from './passes/calls.js';
 import { entriesPass } from './passes/entries.js';
 import { functionsPass } from './passes/functions.js';
+import { graphqlPass } from './passes/graphql.js';
 import { httpPass } from './passes/http.js';
 import { markersPass } from './passes/markers.js';
 import { proceduresPass } from './passes/procedures.js';
@@ -129,6 +130,8 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   callsPass,
   actionsPass,
   httpPass,
+  // After the requests, so a `fetch` that sends an operation is one node (P232).
+  graphqlPass,
   proceduresPass,
   markersPass,
   entriesPass,

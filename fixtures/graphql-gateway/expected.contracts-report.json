@@ -1,0 +1,75 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-05T17:52:18.919Z",
+  "edges": [],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:web#src/orders/OrderBadge.tsx:6:20",
+        "to": "entry:orders:http:POST:/graphql",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders/OrderBadge.tsx:6:20|hits|entry:orders:http:POST:/graphql",
+      "direction": "response",
+      "sender": {
+        "service": "orders",
+        "typeId": null,
+        "symbol": "entry:orders:http:POST:/graphql"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": null,
+        "symbol": "ui_api_call:web#src/orders/OrderBadge.tsx:6:20"
+      },
+      "typeId": "graphql:orders#Order",
+      "field": "order.discount",
+      "expected": null,
+      "actual": "discount",
+      "rule": "graphql-field-unknown",
+      "message": "OrderBadge selects Order.discount at src/orders/queries.ts:26, and orders's Order has no such field; the server refuses the whole operation",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/orders/Search.tsx:6:20",
+        "to": "entry:orders:http:POST:/graphql",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders/Search.tsx:6:20|hits|entry:orders:http:POST:/graphql",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/orders/Search.tsx:Search declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/orders/Search.tsx:6:20",
+        "to": "entry:orders:http:POST:/graphql",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders/Search.tsx:6:20|hits|entry:orders:http:POST:/graphql",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "entry:orders:http:POST:/graphql declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 2,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

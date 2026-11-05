@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "nest-mikro-orm-knex-not-installed",
   "generatedAt": "2026-10-16T15:11:52.954Z",
   "nodes": [
