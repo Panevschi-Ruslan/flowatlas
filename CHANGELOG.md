@@ -6,6 +6,32 @@ only one of them moved.
 
 ## [Unreleased][unreleased]
 
+### Added
+
+- **`flowatlas path <from> <to>` (P229).** How one node reaches another, by
+  the shortest ways: directed along the edges `flow` walks, or `--undirected`
+  for "are these joined at all". It looks 6, then 12, then 24 steps unless
+  `--depth` says, prints every node on a shortest path once as a tree, and
+  says when nothing was found how far it looked and whether the other way
+  round holds. Exit 1 when there is no path. The search is the page's path
+  finder's, moved into core (`shortestWays`), so the page and the command find
+  the same paths.
+- **`flowatlas explain <name>` (P229).** Everything the graph knows about one
+  name, printed as the graph server's `describe_for_prompt` writes it,
+  character for character; `--scope`, `--max-steps`, `--max-chars`,
+  `--with-spec`, `--format json` for the tool's whole answer.
+- **`get_flow` takes `to` (P229).** The flow cut down to the shortest ways to
+  a node, from a way in or from any node, with `searched` and `reverse` when
+  there is none. No new tool: the list grew by one clause.
+
+### Changed
+
+- **One resolution for names (P229).** The command line's `impact` resolved a
+  name its own way, so `impact "POST /orders"` was refused while the
+  `impact` tool took it; it now resolves as every tool does, and `--service`
+  narrows a name for both. `event:`, `cron:`, `rpc:` and `workflow:` names,
+  which only the command line took, are taken by every tool too.
+
 ## [0.6.0][] - 2026-10-25
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0.

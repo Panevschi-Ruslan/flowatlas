@@ -447,7 +447,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain | `entry` (required), `depth` (8, one more per workflow step), `maxChars` |
+| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node | `entry` (required), `to`, `depth` (8, one more per workflow step), `maxChars` |
 | `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` (3; 16 at most), `service` |
 | `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required), `service`, `offset` |
 
@@ -455,6 +455,16 @@ Asked about a class, `who_calls` and `impact` answer for every method of it
 something calls (P95): calls point at methods, never at the class. Each
 `who_calls` caller says the method it calls under `calls`; `impact` says how
 many methods it answered for under `forMethods`.
+
+**How one node reaches another.** With `to`, `get_flow` keeps only the shortest
+ways from `entry` to that node (P229), and both may be any node, not only a way
+in: `get_flow({entry: "OrdersService.findOne", to: "table:orders#orders"})`. It
+is the search the page's path finder and `flowatlas path` make, along the edges
+a flow walks, looking 6, 12 and then 24 steps unless `depth` says. The answer is
+the tree `get_flow` always answers with, a node met twice written once, plus
+`pathsFound`, `length` and `searched`. With no path it says `none` with how far
+it looked, and `reverse` when `to` reaches `entry` instead, with `next` asking
+the right way round.
 
 `entry` can be named the way you would say it aloud. All three of these mean the
 same route:

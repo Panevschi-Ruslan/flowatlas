@@ -22,7 +22,11 @@
  * and gives back, `openAll` and `typeScriptOf` for all of it at once, and
  * `labelParts`, `middle` and `zoomLevel` for how a node is
  * written.
+ *
+ * Its one import is core's path search (P229): in the page the two share one
+ * script, so the command drops the line, as it drops a panel's imports.
  */
+import { shortestWays } from '../../../core/src/shortest-ways.js';
 
 /** Node fields, as packed. */
 export const FIELD = Object.freeze({ type: 0, label: 1, repo: 2, kind: 3, file: 4, line: 5, meta: 6 });
@@ -1823,9 +1827,6 @@ const asDrawing = (model, hood, parent, fold) => {
   return { ...drawing, nodes, layer, edges: [...edges], parent: parents };
 };
 
-/** Paths a search may be asked to look along. */
-export const PATH_DEPTHS = Object.freeze([6, 12, 24]);
-
 /**
  * The shortest way or ways from one node to another, as a drawing.
  *
@@ -1838,6 +1839,9 @@ export const PATH_DEPTHS = Object.freeze([6, 12, 24]);
  *
  * With no path within `depth` steps, says so and how many nodes it searched,
  * so "no path" reads as "none within what was searched".
+ *
+ * The search is core's `shortestWays` (P229), the one `flowatlas path` and
+ * `get_flow` with `to` ask, so the page and the command find the same paths.
  */
 export const shortestPath = (model, options) => {
   const from = options.from;
@@ -1860,95 +1864,38 @@ export const shortestPath = (model, options) => {
     if (!directed || !forward) look(model.incoming[u], EDGE.from);
     return found;
   };
-  const spread = (start, forward, limit, stopAt) => {
-    const dist = new Map([[start, 0]]);
-    let frontier = [start];
-    for (let d = 1; d <= limit && frontier.length > 0 && !dist.has(stopAt); d += 1) {
-      const next = [];
-      for (const u of frontier) {
-        for (const [v] of moves(u, forward)) {
-          if (dist.has(v)) continue;
-          dist.set(v, d);
-          next.push(v);
-        }
-      }
-      frontier = next;
-    }
-    return dist;
-  };
+  const named = byLabel(model);
+  const ways = shortestWays({ from, to, moves, named, depth, cap });
 
   const base = { focus: from, from, to, directed, depth, cap, more: new Map(), expandable: false };
-  const ahead = spread(from, true, depth, to);
-  if (!ahead.has(to)) {
+  if (!ways.found) {
     return asDrawing(model, {
       ...base,
       found: false,
       hops: depth,
-      searched: ahead.size,
+      searched: ways.searched,
       nodes: [from, to],
       layer: new Map([[from, 0], [to, 1]]),
       edges: [],
       left: 0,
-      reached: ahead.size,
+      reached: ways.searched,
       paths: 0,
       length: null,
     }, new Map(), options.fold);
   }
-
-  const length = ahead.get(to);
-  const behind = spread(to, false, length, -1);
-  const on = (v) => ahead.has(v) && behind.has(v) && ahead.get(v) + behind.get(v) === length;
-  const named = byLabel(model);
-  const onPath = [...ahead.keys()].filter(on).sort((a, b) => ahead.get(a) - ahead.get(b) || named(a, b));
-
-  // Edges along a shortest path, and the next nodes each node leads to.
-  const edges = new Set();
-  const next = new Map(onPath.map((v) => [v, new Set()]));
-  for (const u of onPath) {
-    for (const [v, k] of moves(u, true)) {
-      if (on(v) && ahead.get(v) === ahead.get(u) + 1) {
-        edges.add(k);
-        next.get(u).add(v);
-      }
-    }
-  }
-  const ways = new Map([[from, 1]]);
-  for (const u of onPath) for (const v of next.get(u)) ways.set(v, (ways.get(v) || 0) + (ways.get(u) || 0));
-
-  const drawn = [];
-  if (onPath.length > cap) {
-    // One whole path first, the first by label at every step.
-    for (let u = from; u !== undefined; u = [...next.get(u)].sort(named)[0]) drawn.push(u);
-  }
-  const placed = new Set(drawn);
-  for (const v of onPath) {
-    if (drawn.length >= cap) break;
-    if (!placed.has(v)) {
-      placed.add(v);
-      drawn.push(v);
-    }
-  }
-  // Each drawn node was reached from the first drawn node, by label, a step
-  // before it, so a hover lights one whole way back to the start.
-  const parent = new Map();
-  for (const u of drawn) {
-    for (const v of next.get(u)) {
-      if (placed.has(v) && (!parent.has(v) || named(u, parent.get(v)) < 0)) parent.set(v, u);
-    }
-  }
   return asDrawing(model, {
     ...base,
     found: true,
-    hops: length,
-    length,
-    paths: from === to ? 1 : ways.get(to) || 0,
-    searched: ahead.size,
-    nodes: drawn,
-    layer: new Map(drawn.map((v) => [v, ahead.get(v)])),
-    edges: [...edges].filter((k) => placed.has(model.edges[k][EDGE.from]) && placed.has(model.edges[k][EDGE.to])),
-    left: onPath.length - drawn.length,
-    reached: onPath.length,
-  }, parent, options.fold);
+    hops: ways.length,
+    length: ways.length,
+    paths: ways.paths,
+    searched: ways.searched,
+    nodes: ways.kept,
+    layer: ways.layer,
+    edges: ways.edges,
+    left: ways.left,
+    reached: ways.onPath.length,
+  }, ways.parent, options.fold);
 };
 
 /**

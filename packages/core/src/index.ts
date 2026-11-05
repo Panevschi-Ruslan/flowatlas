@@ -891,6 +891,8 @@ export {
   renderPrompt,
 } from './prompt-text.js';
 export { REMEDIES, remediesOf, remedyLinesOf } from './remedies.js';
+export { DEFAULT_PATH_CAP, DEFAULT_PATH_DEPTH, PATH_DEPTHS, shortestWays } from './shortest-ways.js';
+export type { ShortestWays, ShortestWaysOptions, WayStep } from './shortest-ways.js';
 export type {
   PromptAccess,
   PromptCheckPlace,

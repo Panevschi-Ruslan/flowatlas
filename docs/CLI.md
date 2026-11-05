@@ -588,7 +588,7 @@ the whole graph has no walk to bound, so it is not offered `--depth`.
 
 ### Shared by the walking commands
 
-`flow`, `impact`, `channel`:
+`flow`, `impact`, `channel`, `path`:
 
 | Flag | Default | Does |
 |---|---|---|
@@ -703,6 +703,78 @@ be a node id or a name close enough to identify one.
 | Extra flag | Does |
 |---|---|
 | `--entries-only` | list the entry points instead of the whole chain |
+
+### `flowatlas path <from> <to>`
+
+How one node reaches another, by the shortest ways (P229). Both ends are named
+the ways `impact` takes a symbol: a node id, a route said aloud, a unique
+`Class.method`, `event:order.created`, `workflow:loan-approval`.
+
+```sh
+flowatlas path "POST /orders" "table:billing#invoices"
+flowatlas path "GET /orders/:id" "POST /orders" --undirected
+flowatlas path "POST /orders" "InvoicesService.create" --format sequence
+```
+
+Directed by default: along the edges `flow` walks, the way the calls run, so the
+answer is how a request gets from one to the other, through other services,
+channels and workflows. `--undirected` walks an edge either way, which answers
+whether the two are joined at all. Without `--depth` it looks 6 steps, then 12,
+then 24, so a near path costs a near search.
+
+Every node on a shortest path is printed once, as a tree from `from` in call
+order; a node two paths share is written under the first and is a `↺` line under
+the other. Past `--max-nodes` one whole path is printed first, so a cut never
+leaves a gap, and the last line says how many nodes were left out. The footer
+says how many shortest paths there are, of how many steps, and
+`unresolved on this path`, counted as `flow` counts it.
+
+With no path, it says how far it looked and how many nodes it reached, and exits
+1. Asking the wrong way round is the common mistake, so it then looks the other
+way: `entry:orders:http:POST:/orders reaches table:orders#orders instead, in 4
+steps: flowatlas path …`. A name that means several nodes, or none, stops with
+the candidates or the nearest names (exit 1). Exit codes are the same table as
+every command's; `--format json` says `state: found` or `none` beside them.
+
+| Extra flag | Does |
+|---|---|
+| `--undirected` | walk an edge either way |
+| `--sequence-detail <level>` | with `--format sequence`, one participant per `service` or per `class` |
+
+The search is the page's path finder's (`shortestWays` in core): the page, this
+command and `get_flow` with `to` find the same paths.
+
+### `flowatlas explain <name>`
+
+Everything the graph knows about one name (P229): where it is, what reaches it
+and what it reaches, its shapes, failures, guards, gaps, the pages that describe
+it, what traffic saw, and the calls to make next. The text is the graph server's
+`describe_for_prompt`, character for character, and the page's *Copy as prompt*:
+one renderer for every surface, so the terminal never says something an
+assistant is told differently.
+
+```sh
+flowatlas explain "POST /orders"
+flowatlas explain OrdersService --scope class
+flowatlas explain billing --scope service
+flowatlas explain "gap:orders|src/orders/orders.service.ts|unknown-base-url-env"
+```
+
+It takes every name `describe_for_prompt` takes: a node id, a route said aloud,
+a channel, a gap id, a `file:line`, and with `--scope` a class, a file
+(`service#path`) or a service. Markdown is printed as it is, in a pipe too, since
+it is read or handed on as it is (`flowatlas explain "POST /orders" | pbcopy`).
+
+| Flag | Default | Does |
+|---|---|---|
+| `--scope <scope>` | `node` | `node`, `method`, `class`, `file` or `service` |
+| `--max-steps <n>` | `40` | most chain steps written |
+| `--max-chars <n>` | `8000` | most characters written |
+| `--with-spec` | off | add the route's or channel's part of the written API document |
+| `--format <name>` | `markdown` | `markdown`, or `json` for the tool's whole answer, `next` included |
+
+A name that means several things stops with the candidates, and one nothing has
+says so (exit 1); a scope the node does not have names the ones it has (exit 2).
 
 ### `flowatlas channel <name>`
 

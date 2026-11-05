@@ -521,9 +521,21 @@ describe('naming an entry the way a person would', () => {
         label: 'GET /orders/latest',
         meta: { method: 'GET', path: '/orders/latest' },
       }),
+      entry('entry:billing:event:order.created', {
+        repo: 'billing',
+        kind: 'event',
+        label: 'event order.created',
+        meta: { pattern: 'order.created' },
+      }),
+      entry('entry:orders:workflow:loan-approval', {
+        kind: 'workflow',
+        label: 'loan-approval',
+        meta: { key: 'loan-approval' },
+      }),
       node('orders#src/orders.service.ts:OrdersService.create', { label: 'OrdersService.create' }),
       node('orders#src/orders.service.ts:OrdersService.cancel', { label: 'OrdersService.cancel' }),
       node('orders#src/carts.service.ts:CartsService.cancel', { label: 'CartsService.cancel' }),
+      node('gateway#src/orders.service.ts:OrdersService.create', { repo: 'gateway', label: 'OrdersService.create' }),
     ],
     edges: [],
   });
@@ -571,6 +583,14 @@ describe('naming an entry the way a person would', () => {
     ]);
   });
 
+  it('accepts a kind and the key it is registered under, as the command line always did (P229)', () => {
+    const event = resolveEntryRef(db, 'event:order.created');
+    expect(isResolved(event) && event.id).toBe('entry:billing:event:order.created');
+    const workflow = resolveEntryRef(db, 'workflow:loan-approval');
+    expect(isResolved(workflow) && workflow.id).toBe('entry:orders:workflow:loan-approval');
+    expect(isResolved(resolveEntryRef(db, 'cron:loan-approval'))).toBe(false);
+  });
+
   it('comes back empty rather than guessing', () => {
     const found = resolveEntryRef(db, 'PUT /nowhere');
     expect(!isResolved(found) && found.candidates).toEqual([]);
@@ -589,8 +609,20 @@ describe('naming an entry the way a person would', () => {
     });
 
     it('takes a name that is the only best match', () => {
-      const found = resolveSymbol(db, 'OrdersService.create');
-      expect(isResolved(found) && found.id).toBe('orders#src/orders.service.ts:OrdersService.create');
+      const found = resolveSymbol(db, 'OrdersService.cancel');
+      expect(isResolved(found) && found.id).toBe('orders#src/orders.service.ts:OrdersService.cancel');
+    });
+
+    it('gives both services for a name each holds, and narrows to one when told which (P229)', () => {
+      const both = resolveSymbol(db, 'OrdersService.create');
+      expect(!isResolved(both) && both.candidates.map((node) => node.repo).sort()).toEqual(['gateway', 'orders']);
+      const one = resolveSymbol(db, 'OrdersService.create', 'gateway');
+      expect(isResolved(one) && one.id).toBe('gateway#src/orders.service.ts:OrdersService.create');
+      const route = resolveSymbol(db, 'GET /orders/9', 'gateway');
+      expect(isResolved(route) && route.id).toBe('entry:gateway:http:GET:/orders/:param');
+      // A full id already says which node it means.
+      const id = resolveSymbol(db, 'orders#src/orders.service.ts:OrdersService.create', 'gateway');
+      expect(isResolved(id) && id.node.repo).toBe('orders');
     });
 
     it('gives the candidates for a name that means more than one', () => {
