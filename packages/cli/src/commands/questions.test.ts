@@ -3,7 +3,7 @@ import { questionsPathFor, readQuestions, recordQuestion, type QuestionEntry } f
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { QueryIo } from '../query/answer.js';
 import { sinceOf, summariseQuestions } from '../report/questions.js';
-import { buildTestProject } from '../test-graph.js';
+import { writeTestProject } from '../test-graph.js';
 import { runCantFollowCommand } from './doctor.js';
 import { runExplain } from './explain.js';
 import { runFlow } from './flow.js';
@@ -14,7 +14,7 @@ import { runStats } from './stats.js';
 let dbPath: string;
 
 beforeAll(() => {
-  dbPath = buildTestProject('questions').dbPath;
+  dbPath = writeTestProject('questions');
 });
 beforeEach(() => {
   rmSync(questionsPathFor(dbPath), { force: true });

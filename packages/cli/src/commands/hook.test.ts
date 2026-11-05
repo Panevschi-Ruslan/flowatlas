@@ -1,12 +1,13 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { BLOCK_END, BLOCK_START, hookBlock, hookStatus, installHooks, removeHooks, withBlock, withoutBlock } from './hook.js';
 
-// Real, as git names it: a temporary directory is often behind a link (macOS's /var).
-const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'flowatlas-hook-')));
+// Real, as git names it: a temporary directory is often behind a link (macOS's /var), or on
+// Windows under a short name (RUNNER~1) only the native call spells out long.
+const scratch = realpathSync.native(mkdtempSync(join(tmpdir(), 'flowatlas-hook-')));
 afterAll(() => rmSync(scratch, { recursive: true, force: true }));
 
 const git = (cwd: string, ...args: string[]): string => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
@@ -60,7 +61,9 @@ describe('installing, checking and removing the hooks', () => {
     writeFileSync(join(hooks('api'), 'post-merge'), '#!/bin/sh\necho theirs\n');
     const first = installHooks({ config });
     expect(first.changes.map((change) => change.state)).toEqual(['installed', 'installed', 'installed', 'installed', 'installed', 'installed']);
-    expect(statSync(join(hooks('web'), 'post-checkout')).mode & 0o111).not.toBe(0);
+    // Windows has no executable bit; Git for Windows runs a hook by its `#!` line.
+    if (process.platform !== 'win32') expect(statSync(join(hooks('web'), 'post-checkout')).mode & 0o111).not.toBe(0);
+    expect(readFileSync(join(hooks('web'), 'post-checkout'), 'utf8')).toMatch(/^#!\/bin\/sh\n/);
     expect(readFileSync(join(hooks('api'), 'post-merge'), 'utf8')).toMatch(/^#!\/bin\/sh\necho theirs\n# flowatlas:hook\n/);
     expect(installHooks({ config }).changes.every((change) => change.state === 'unchanged')).toBe(true);
     expect(hookStatus({ config }).changes.every((change) => change.state === 'installed')).toBe(true);
@@ -76,6 +79,16 @@ describe('installing, checking and removing the hooks', () => {
     expect(installHooks({ config, dryRun: true }).changes).toHaveLength(6);
     expect(existsSync(join(hooks('api'), 'post-checkout'))).toBe(false);
     expect(installHooks({ config, on: 'commit', repo: 'api' }).changes.map((change) => change.file)).toEqual([join(hooks('api'), 'post-commit')]);
+  });
+
+  it('names each hook as git does, whatever name the configuration reaches the repository by', () => {
+    // A link stands in for a second name of one directory: a Windows short name, a link in a temporary path.
+    const { hooks } = project('linked');
+    const alias = join(scratch, 'linked-alias');
+    symlinkSync(join(scratch, 'linked'), alias, 'junction');
+    const files = installHooks({ config: join(alias, 'flowatlas.config.json'), dryRun: true }).changes.map((change) => change.file);
+    expect(files).toHaveLength(6);
+    expect(files.every((file) => file.startsWith(join(hooks('api'), '')) || file.startsWith(join(hooks('web'), '')))).toBe(true);
   });
 
   it('writes nothing where another tool keeps the hooks, and says the line to add', () => {

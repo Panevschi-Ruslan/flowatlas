@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { isAbsolute, resolve, sep } from 'node:path';
+import { readFileSync, realpathSync } from 'node:fs';
+import { isAbsolute, posix, resolve, win32 } from 'node:path';
 import { NAMES_FORMAT_VERSION, type IndexedName, type NamesIndex } from './names.js';
 
 /**
@@ -164,12 +164,23 @@ const matches = (name: IndexedName, literal: string): boolean => {
   return literal === name.text || (literal.startsWith(name.text) && !/[\w$]/.test(literal[name.text.length] ?? ''));
 };
 
+/**
+ * A directory as it is compared: resolved on the platform's terms, and on
+ * Windows, whose paths ignore case, in one case, so `c:/p/orders` and
+ * `C:\p\orders` are one place.
+ */
+const placeOf = (dir: string, platform: NodeJS.Platform): string => (platform === 'win32' ? win32.resolve(dir).toLowerCase() : posix.resolve(dir));
+
 /** The service a working directory is in: the deepest service directory holding it. */
-const serviceAt = (index: NamesIndex, cwd: string): string | undefined => {
+const serviceAt = (index: NamesIndex, cwd: string, platform: NodeJS.Platform): string | undefined => {
+  const sep = platform === 'win32' ? win32.sep : posix.sep;
+  const here = placeOf(cwd, platform);
   let best: string | undefined;
   let length = -1;
-  for (const [service, dir] of Object.entries(index.services)) {
-    const inside = cwd === dir || cwd.startsWith(dir.endsWith(sep) ? dir : `${dir}${sep}`);
+  for (const [service, given] of Object.entries(index.services)) {
+    // Both sides resolved alike: the index's directory is as configured, the working directory as the shell has it.
+    const dir = placeOf(given, platform);
+    const inside = here === dir || here.startsWith(dir.endsWith(sep) ? dir : `${dir}${sep}`);
     if (inside && dir.length > length) {
       best = service;
       length = dir.length;
@@ -200,12 +211,11 @@ const sentenceFor = (name: IndexedName, here: string | undefined): string | unde
 
 /**
  * The context to add after a search, or undefined for none. Pure: the call,
- * the index, and nothing read.
+ * the index, and nothing read; `platform` says how their paths compare.
  */
-export const contextFor = (call: HookCall, index: NamesIndex | undefined): string | undefined => {
+export const contextFor = (call: HookCall, index: NamesIndex | undefined, platform: NodeJS.Platform = process.platform): string | undefined => {
   if (index === undefined || index.namesFormatVersion !== NAMES_FORMAT_VERSION) return undefined;
-  const cwd = typeof call.cwd === 'string' ? resolve(call.cwd) : undefined;
-  const here = cwd === undefined ? undefined : serviceAt(index, cwd);
+  const here = typeof call.cwd === 'string' ? serviceAt(index, call.cwd, platform) : undefined;
   if (here === undefined) return undefined;
   const literals = patternsOf(call).map(longestLiteral).filter((literal) => literal.length >= MIN_LITERAL);
   if (literals.length === 0) return undefined;
@@ -240,6 +250,30 @@ const readIndex = (path: string): NamesIndex | undefined => {
   }
 };
 
+/**
+ * A directory by the name the file system gives it, or as given when it is
+ * not there. One directory can have several names: through a link (a
+ * temporary directory on macOS), and on Windows a short name (`RUNNER~1`)
+ * beside the long one. The index has the configured name, the call the one
+ * the assistant's shell is in.
+ */
+const realOf = (dir: string): string => {
+  try {
+    return realpathSync.native(dir);
+  } catch {
+    return dir;
+  }
+};
+
+/** The call and the index with every directory by its real name, so the two compare. */
+const withRealPlaces = (call: HookCall, index: NamesIndex | undefined): { call: HookCall; index: NamesIndex | undefined } => ({
+  call: typeof call.cwd === 'string' ? { ...call, cwd: realOf(call.cwd) } : call,
+  index:
+    index === undefined || typeof index.services !== 'object' || index.services === null
+      ? index
+      : { ...index, services: Object.fromEntries(Object.entries(index.services).map(([service, dir]) => [service, realOf(dir)])) },
+});
+
 /** Where the index is: `--names <path>`, absolute, or relative to the project the assistant has open. */
 const namesPathOf = (argv: readonly string[], projectDir: string | undefined): string | undefined => {
   const at = argv.indexOf('--names');
@@ -264,7 +298,8 @@ export const runSearchHook = async (
     const env = io.env ?? process.env;
     const path = namesPathOf(argv, env['CLAUDE_PROJECT_DIR'] ?? (typeof call.cwd === 'string' ? call.cwd : undefined));
     if (path === undefined) return;
-    const context = contextFor(call, readIndex(path));
+    const real = withRealPlaces(call, readIndex(path));
+    const context = contextFor(real.call, real.index);
     if (context !== undefined) (io.write ?? ((text: string) => void process.stdout.write(text)))(hookOutput(context));
   } catch {
     // Silence: a hook that fails a search would be the one thing worse than none.

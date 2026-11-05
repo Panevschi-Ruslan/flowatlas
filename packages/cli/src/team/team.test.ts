@@ -7,7 +7,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { runPublish, runPull } from '../commands/team.js';
 import { CliError, EXIT } from '../exit.js';
 import type { QueryIo } from '../query/answer.js';
-import { buildTestProject } from '../test-graph.js';
+import { writeTestProject } from '../test-graph.js';
 import { readTarGz, readZip, writeTarGz } from './archive.js';
 import { openBundle, PULLED_DIR } from './bundle.js';
 import { fetchBundle } from './fetch.js';
@@ -90,7 +90,7 @@ const projects = () => {
   writeFileSync(join(ci, 'flowatlas.config.json'), JSON.stringify({ services }));
   const out = join(ci, '.flowatlas');
   mkdirSync(out, { recursive: true });
-  copyFileSync(buildTestProject(`team-${root.slice(-6)}`).dbPath, join(out, 'graph.db'));
+  copyFileSync(writeTestProject(`team-${root.slice(-6)}`), join(out, 'graph.db'));
   writeFileSync(join(out, 'link-report.json'), JSON.stringify({ builtAt: '2026-11-05T10:00:00.000Z', services: [] }));
   writeFileSync(join(out, 'project-graph.json'), JSON.stringify({ nodes: [], edges: [] }));
   const laptop = join(root, 'laptop');

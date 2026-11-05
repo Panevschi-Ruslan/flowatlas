@@ -3,13 +3,13 @@ import type { GraphEdge, GraphNode } from '@flowatlas/core';
 import { createFlowatlasServer, DbHandle, OVERVIEW_URI } from '@flowatlas/mcp';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { docsIn } from '../commands/docs.js';
 import { REPORT_FILE, runReport, sectionsOf } from '../commands/report.js';
 import { sharedStoreRows } from '../doctor/shared-store.js';
 import { CliError } from '../exit.js';
 import type { QueryIo } from '../query/answer.js';
-import { buildTestProject } from '../test-graph.js';
+import { buildTestProject, type TestProject } from '../test-graph.js';
 import { overviewFingerprint, overviewOf, type Overview } from './overview.js';
 import { renderOverview } from './render.js';
 
@@ -21,8 +21,18 @@ const quiet = (): QueryIo & { stdout: string } => {
   return io;
 };
 
-/** The test project, and the same with a table its gateway writes as well as its orders service. */
-const shared = (): { plain: ReturnType<typeof buildTestProject>; both: ReturnType<typeof buildTestProject> } => {
+/**
+ * The test project, and the same with a table its gateway writes as well as its orders service.
+ * Written once and closed after the file: writing one again while a test's handle is open
+ * fails on Windows, where a file held open cannot be removed.
+ */
+let built: { plain: TestProject; both: TestProject } | undefined;
+afterAll(() => {
+  built?.plain.db.close();
+  built?.both.db.close();
+});
+const shared = (): { plain: TestProject; both: TestProject } => {
+  if (built !== undefined) return built;
   const node = (id: string, over: Partial<GraphNode>): GraphNode => ({ id, type: 'db_query', label: 'write Order', ...over }) as GraphNode;
   const edge = (from: string, to: string): GraphEdge => ({ from, to, type: 'queries', confidence: 'static' }) as GraphEdge;
   const nodes = [
@@ -30,10 +40,11 @@ const shared = (): { plain: ReturnType<typeof buildTestProject>; both: ReturnTyp
     node('db_query:orders#src/orders/orders.repo.ts:9:2', { repo: 'orders', file: 'src/orders/orders.repo.ts', line: 9, meta: { op: 'write' } }),
     node('db_query:gateway#src/admin/fix.ts:3:2', { repo: 'gateway', file: 'src/admin/fix.ts', line: 3, meta: { op: 'write' } }),
   ];
-  return {
+  built = {
     plain: buildTestProject('overview-plain', { nodes: nodes.slice(0, 2), edges: [edge(nodes[1]!.id, nodes[0]!.id)] }),
     both: buildTestProject('overview-shared', { nodes, edges: [edge(nodes[1]!.id, nodes[0]!.id), edge(nodes[2]!.id, nodes[0]!.id)] }),
   };
+  return built;
 };
 
 describe('the page a person reads first (P228)', () => {
@@ -70,6 +81,7 @@ describe('the page a person reads first (P228)', () => {
     const { plain, both } = shared();
     const handle = new DbHandle({ dbPath: both.dbPath });
     const overview = overviewOf(both.db, handle);
+    handle.close();
     expect(overview.secondLook.find((item) => item.kind === 'shared-store')).toEqual({
       kind: 'shared-store',
       says: 'Order is written by gateway and orders: a boundary two services share',
@@ -85,7 +97,9 @@ describe('the page a person reads first (P228)', () => {
   });
 
   it('keeps its fingerprint when only a count moves, and changes it when what crosses changes', () => {
-    const base = overviewOf(buildTestProject('overview-fingerprint').db, undefined, { structureOnly: true });
+    const { db } = buildTestProject('overview-fingerprint');
+    const base = overviewOf(db, undefined, { structureOnly: true });
+    db.close();
     const more: Overview = { ...base, crossings: base.crossings.map((crossing) => ({ ...crossing, requests: crossing.requests === 0 ? 0 : crossing.requests + 3 })) };
     expect(overviewFingerprint(more)).toBe(overviewFingerprint(base));
     const another: Overview = { ...base, crossings: [...base.crossings, { from: 'billing', to: 'gateway', requests: 1, messages: 0, stores: 0, guessed: 0 }] };

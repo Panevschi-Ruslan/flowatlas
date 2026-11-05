@@ -4,14 +4,14 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { CliError, EXIT } from '../exit.js';
 import type { QueryIo } from '../query/answer.js';
 import { resolveSymbol } from '../query/refs.js';
-import { buildTestProject } from '../test-graph.js';
+import { writeTestProject } from '../test-graph.js';
 import { runExplain } from './explain.js';
 import { runPath } from './path.js';
 
 let dbPath: string;
 
 beforeAll(() => {
-  dbPath = buildTestProject('path-explain').dbPath;
+  dbPath = writeTestProject('path-explain');
 });
 
 interface Capture extends QueryIo {

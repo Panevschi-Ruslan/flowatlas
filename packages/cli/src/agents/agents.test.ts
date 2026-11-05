@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { AGENT_QUESTIONS, agentQuestionsLine, type GraphEdge, type GraphNode } from '@flowatlas/core';
@@ -162,6 +162,33 @@ describe('the names a search hook can say something about', () => {
     expect(grep('/orders/', '/p/gateway')).toBeUndefined();
     expect(grep('TODO', '/p/orders')).toBeUndefined();
     expect(grep('/orders/', '/elsewhere')).toBeUndefined();
+  });
+
+  it('finds the service on Windows terms: a drive, either slash, either case, the index as configured', () => {
+    const grep = (cwd: string, services: Record<string, string>) =>
+      contextFor({ tool_name: 'Grep', tool_input: { pattern: '/orders/' }, cwd }, { ...index, services }, 'win32');
+    // The index's directories as written, the working directory as resolved: what failed on a Windows runner.
+    expect(grep('/p/orders/src', index.services)).toContain('callers in gateway (1)');
+    expect(grep('c:/p/Orders/src', { gateway: 'C:\\p\\gateway', orders: 'C:\\p\\orders' })).toContain('callers in gateway (1)');
+    expect(grep('C:\\p\\orders-old', { gateway: 'C:\\p\\gateway', orders: 'C:\\p\\orders' })).toBeUndefined();
+  });
+
+  it('finds the service when the index and the shell name one directory two ways', async () => {
+    // A link stands in for a second name of one directory: macOS's temporary directory, a Windows short name.
+    const real = join(scratch, 'real');
+    mkdirSync(join(real, 'orders'), { recursive: true });
+    mkdirSync(join(real, 'gateway'), { recursive: true });
+    const named = join(scratch, 'named');
+    symlinkSync(real, named, 'junction');
+    const path = join(scratch, 'names-linked.json');
+    writeFileSync(path, JSON.stringify({ ...index, services: { gateway: join(named, 'gateway'), orders: join(named, 'orders') } }));
+    const out: string[] = [];
+    await runSearchHook(['--names', path], {
+      stdin: async () => JSON.stringify({ tool_name: 'Grep', tool_input: { pattern: '/orders/' }, cwd: realpathSync.native(join(real, 'orders')) }),
+      write: (text) => void out.push(text),
+    });
+    expect(out).toHaveLength(1);
+    expect(out[0]).toContain('callers in gateway (1)');
   });
 
   it('writes what Claude Code reads after a tool call', () => {
