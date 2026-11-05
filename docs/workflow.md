@@ -20,6 +20,7 @@ examples use the demo project in `fixtures/multi-repo` (`web`, `gateway`,
 flowatlas init                 # finds the repositories beside each other and writes flowatlas.config.json
 flowatlas build                # reads and joins them into graph.db
 flowatlas doctor               # what it could not follow, grouped by cause
+flowatlas hook install         # optional: rebuild in the background after every checkout and merge
 ```
 
 `doctor` is the to-do list for the map itself. Work it top to bottom:
@@ -76,6 +77,10 @@ across services.
 flowatlas build --watch        # rebuilds what changed; also sees a new folder or a config edit
 flowatlas visualise            # graph.html: reopen it after a rebuild
 ```
+
+Without a watch running, an answer still says when it is behind: one that cites
+a file you changed since the last build says so, on stderr in a terminal and as
+`stale` to an assistant, and names the file.
 
 If the repository keeps architecture notes, tie them to the graph so they cannot
 drift:

@@ -20,6 +20,22 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **Answers say when the code moved since the build (P230).** Every build
+  writes `freshness.json`: each service's checkout and every file it read. An
+  answer citing a file that changed since says so, `stale` on the graph
+  server's answers and the commands' JSON and one line on stderr; a `touch` is
+  not a change. `start_here` says `moved` and `doctor` an info row
+  (`checkout-moved`) for a checkout on another commit or branch.
+- **One build at a time (P230).** A build holds `<output>/build.lock`; a second
+  says which one is running and exits 2, or waits with `--wait <seconds>`, and
+  a lock a crashed build left is taken over. `build --background` returns at
+  once and coalesces requests into one more build.
+- **`flowatlas hook install | status | remove` (P230).** Git hooks that rebuild
+  in the background after a checkout, a merge or a rebase, written as a marked
+  block beside what a hook already holds; a repository whose hooks another tool
+  keeps gets the line to add instead. `init --git-hooks` installs them.
+- **`mcp.rebuild: "on-change"` (P230).** The graph server starts a background
+  build when an answer finds its files changed. Off by default.
 - **`get_flow` takes `to` (P229).** The flow cut down to the shortest ways to
   a node, from a way in or from any node, with `searched` and `reverse` when
   there is none. No new tool: the list grew by one clause.

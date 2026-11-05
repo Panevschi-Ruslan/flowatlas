@@ -25,6 +25,12 @@ export interface DbHandleOptions {
  */
 export class DbHandle implements SourceRoots {
   readonly path: string;
+  /**
+   * Called when an answer finds files it cites changed since the build, when
+   * the server was told to rebuild then (`mcp.rebuild: on-change`, P230);
+   * returns whether a rebuild was started or is under way.
+   */
+  onStale: (() => boolean) | undefined;
   readonly config: FlowatlasConfig | undefined;
   /** The configuration file read, when one was: what a configuration error names. */
   readonly configPath: string | undefined;

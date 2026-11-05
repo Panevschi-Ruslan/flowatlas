@@ -84,6 +84,8 @@ const NOTES: readonly string[] = [
   // spelling as well, since a stored row may still carry it.
   'document-age',
   'openapi-document-age',
+  // A checkout that moved since the build (cli/doctor/checkout.ts, P230): the graph is of another commit.
+  'checkout-moved',
   // A declared failure no request answered in the observed window (cli/doctor/runtime.ts, P106):
   // evidence beside the code, nothing missed.
   'failure-declared-unseen',

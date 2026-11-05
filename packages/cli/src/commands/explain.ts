@@ -1,8 +1,8 @@
-import { describeAnswer, PROMPT_LIMITS, PROMPT_SCOPES, type PromptScopeName } from '@flowatlas/mcp';
+import { describeAnswer, PROMPT_LIMITS, PROMPT_SCOPES, staleFor, type PromptScopeName } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { handleFor, type DbOptions } from '../db.js';
 import { cannotRun, notFound } from '../exit.js';
-import { processIo, type QueryIo } from '../query/answer.js';
+import { processIo, staleLine, type QueryIo } from '../query/answer.js';
 
 /** What `explain` writes: the Markdown itself, or the answer the graph server's tool returns. */
 export const EXPLAIN_FORMATS = ['markdown', 'json'] as const;
@@ -89,7 +89,10 @@ export const runExplain = (name: string, options: ExplainOptions, io: QueryIo = 
       if (answer.scopes !== undefined) throw cannotRun(answer.error, [`scopes it has: ${answer.scopes.join(', ')}`]);
       throw notFound(answer.error);
     }
-    io.out(format === 'json' ? `${JSON.stringify(answer, null, 2)}\n` : `${(answer.markdown ?? '').trimEnd()}\n`);
+    // The tool's answer says it in `stale` (P230); the Markdown alone does not, so the terminal hears it on stderr.
+    const stale = staleFor(handle.path, answer);
+    if (stale !== undefined) io.err(`${staleLine(stale)}\n`);
+    io.out(format === 'json' ? `${JSON.stringify(stale === undefined ? answer : { ...answer, stale }, null, 2)}\n` : `${(answer.markdown ?? '').trimEnd()}\n`);
   } finally {
     opened.db.close();
   }

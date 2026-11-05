@@ -146,7 +146,7 @@ saying what it needs, not a crash:
 The `mcp` block of `flowatlas.config.json` changes the choice:
 
 ```json
-{ "mcp": { "tools": "auto", "include": ["check_rules"], "exclude": ["get_spec"] } }
+{ "mcp": { "tools": "auto", "include": ["check_rules"], "exclude": ["get_spec"], "rebuild": "off" } }
 ```
 
 `tools` is `auto` (the default: by what each needs) or `all` (every tool).
@@ -920,6 +920,23 @@ timestamp changes. So a rebuild is picked up without restarting anything:
 flowatlas build            # after pulling, or after your own change
 flowatlas build --watch    # rebuild on every save, project held open
 ```
+
+**When the graph is behind.** An answer whose files changed since the build says
+so in `stale`: how many of the files it cites changed, the first of them, when
+the graph was built, and `fix: "run flowatlas build"`. A fresh answer has no
+`stale`, so it costs nothing until it matters. `start_here` says under `moved`
+which checkouts are on another commit or branch than the one the graph was built
+on (`web: built on main@4f1c2a9, now feature-x@91be03d`).
+
+Three ways to keep it from falling behind, from least to most automatic:
+
+- `flowatlas build --watch` while you work: rebuilds on every save.
+- `flowatlas hook install`: git hooks that rebuild in the background after a
+  checkout, a merge or a rebase ([CLI](CLI.md#flowatlas-hook-install--status--remove)).
+- `"mcp": { "rebuild": "on-change" }` in the configuration: an answer that finds
+  its files changed starts a background build, and says `rebuilding: true` in its
+  `stale`; the server reopens the new graph when it is written. Off by default,
+  since work that starts on its own is a surprise unless somebody chose it.
 
 A rebuild with nothing moved reads only what changed, so it is a fraction of a
 cold build; the [README](../README.md#measured-on-the-demo-project) has both

@@ -318,6 +318,7 @@ export const PAGE_WORDS = Object.freeze({
     'di-token-ambiguous': 'token provided twice',
     'di-token-unknown': 'token nothing provides',
     'di-type-unresolved': 'injected type not resolved',
+    'checkout-moved': 'checkout moved since the build',
     'document-age': 'how old the document is',
     'duplicate-node-id': 'one id in two repositories',
     'dynamic-bot-trigger': 'bot trigger computed',

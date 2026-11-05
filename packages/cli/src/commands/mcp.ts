@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -269,6 +269,12 @@ export const registerMcp = (program: Command): void => {
             return 'error' in opened ? undefined : opened.db;
           }),
           patternTester: patternTesterFor(options.config),
+          // A background build, for `mcp.rebuild: on-change` (P230); the server decides when.
+          rebuild: () => {
+            const configPath = handle.configPath;
+            if (configPath === undefined) return;
+            spawn(process.execPath, [binPath(), 'build', '--background', '--config', configPath], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+          },
           ...missingCandidatesFor(options.config),
           ...(options.allTools === true ? { allTools: true } : {}),
         });

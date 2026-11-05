@@ -84,7 +84,17 @@ export interface ServerOptions extends DbHandleOptions {
   allTools?: boolean;
   /** How often, in ms, a connected server looks for a graph, observed file or diff that changed; 0 never. */
   toolsPollMs?: number;
+  /**
+   * Starts a background build, from the command line, which this package
+   * cannot run (P230): called when an answer finds its files changed and the
+   * configuration says `mcp.rebuild: on-change`, at most once every
+   * `REBUILD_EVERY_MS`.
+   */
+  rebuild?: () => void;
 }
+
+/** The shortest time between two background builds the server starts: `build --background` coalesces the rest. */
+export const REBUILD_EVERY_MS = 10_000;
 
 /**
  * The server, with every tool registered and those the project can answer
@@ -99,6 +109,18 @@ export interface ServerOptions extends DbHandleOptions {
  */
 export const createFlowatlasServer = (options: ServerOptions = {}): McpServer => {
   const handle = new DbHandle(options);
+  const rebuild = options.rebuild;
+  if (rebuild !== undefined && handle.config?.mcp?.rebuild === 'on-change') {
+    let last = 0;
+    handle.onStale = () => {
+      const now = Date.now();
+      if (now - last >= REBUILD_EVERY_MS) {
+        last = now;
+        rebuild();
+      }
+      return true;
+    };
+  }
   const settings = listingSettingsOf(handle.config?.mcp, {
     ...(options.allTools === undefined ? {} : { allTools: options.allTools }),
     ...(handle.configPath === undefined ? {} : { configPath: handle.configPath }),

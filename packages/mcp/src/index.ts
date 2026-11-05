@@ -31,6 +31,8 @@ export {
 } from './query/flow.js';
 export type { CrossingLeft, FlowOptions, FlowResult } from './query/flow.js';
 export { DEFAULT_PATH_NODES, findPath } from './query/path.js';
+export { checkoutLines, freshnessBeside, staleFor, withStale } from './query/fresh.js';
+export type { StaleRef } from './query/fresh.js';
 export type { PathOptions, PathResult, ReversePath } from './query/path.js';
 export { projectDetail, projectEdge, truncate, clampDetail, CLAMP_NOTE, MAX_DETAIL } from './query/detail.js';
 export type { Truncated } from './query/detail.js';

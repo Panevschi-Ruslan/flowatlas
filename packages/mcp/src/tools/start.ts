@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { nextFor, withNext } from '../query/next.js';
 import { blindSpotsBeside } from '../query/observed.js';
 import { staleDocsCount } from '../query/docs.js';
+import { checkoutLines } from '../query/fresh.js';
 import { START_LIMITS, summariseProject, type StartSummary } from '../query/start.js';
 import { nextOutput, nodeOutput, READ_ONLY, serviceInput, withDb, type ToolContext } from './common.js';
 import { checksBeside } from './changes.js';
@@ -62,6 +63,12 @@ export const startOutput = {
    * every tool is listed.
    */
   hidden: z.string().optional(),
+  /**
+   * The services whose checkout moved since the build, as one line
+   * (`web: built on main@4f1c2a9, now feature-x@91be03d`, P230): the graph
+   * describes the commit it was built on. Absent when none moved.
+   */
+  moved: z.string().optional(),
   next: nextOutput,
 };
 
@@ -151,6 +158,7 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
         const checks = checksBeside(ctx.handle.path);
         const blocked = Object.keys(checks).find((environment) => checks[environment] === 'not deployable');
         const hidden = ctx.listing?.hiddenLine();
+        const moved = checkoutLines(ctx.handle.path).filter((line) => input.service === undefined || line.startsWith(`${input.service}:`));
         return withNext(
           {
             ...summary,
@@ -159,6 +167,7 @@ export const registerStart = (server: McpServer, ctx: ToolContext): void => {
             ...(rules === undefined ? {} : { rules }),
             ...(Object.keys(checks).length === 0 ? {} : { checks: Object.entries(checks).map(([environment, verdict]) => `${environment}: ${verdict}`).join(' · ') }),
             ...(hidden === undefined ? {} : { hidden }),
+            ...(moved.length === 0 ? {} : { moved: moved.join(' · ') }),
           },
           [
             ...(blocked === undefined ? [] : [`what_changed({file: ${JSON.stringify(`check.${blocked}.json`)}, verdict: true})`]),

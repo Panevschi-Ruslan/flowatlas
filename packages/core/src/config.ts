@@ -1085,6 +1085,12 @@ export const mcpSettingsSchema = z.strictObject({
   tools: z.enum(['auto', 'all']).default('auto'),
   include: z.array(toolNameSchema).default([]),
   exclude: z.array(toolNameSchema).default([]),
+  /**
+   * `on-change`: an answer that finds the files it cites changed since the
+   * build starts a background build (P230), and says `rebuilding`. Off unless
+   * asked: work starting on its own is a surprise unless somebody chose it.
+   */
+  rebuild: z.enum(['off', 'on-change']).default('off'),
 });
 
 export type McpSettings = z.infer<typeof mcpSettingsSchema>;

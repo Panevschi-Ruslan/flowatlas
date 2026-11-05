@@ -14,7 +14,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { ConfigInvalidError, loadConfig, readAccepted, type AcceptedProblem, type StoredKindRow, type Unresolved } from '@flowatlas/core';
+import { checkoutsMoved, ConfigInvalidError, loadConfig, readAccepted, readFreshness, type AcceptedProblem, type StoredKindRow, type Unresolved } from '@flowatlas/core';
 import type { RulesReport } from '@flowatlas/linker';
 import type { CheckOptions } from '@flowatlas/contracts';
 import { acceptedSplitOf, withAnsweredDemoted, type GraphDb, type KindOfStoredRow, type MissingService } from '@flowatlas/linker';
@@ -23,6 +23,7 @@ import { openProjectDb } from '../analysis/open.js';
 import { dbPathFor } from '../db.js';
 import { CliError, EXIT } from '../exit.js';
 import { documentAgeRows, gitAgeReader, type DeclaredDocument } from '../doctor/age.js';
+import { checkoutRows } from '../doctor/checkout.js';
 import { expandReasons, isKnownReason, KNOWN_REASONS, nearestReasons } from '../doctor/hints.js';
 import { runtimeFailureRows } from '../doctor/runtime.js';
 import { blindSpotRows, withConfirmedGuesses } from '../doctor/traffic.js';
@@ -599,9 +600,11 @@ export const runDoctorCommand = (options: DoctorOptions, io: QueryIo = processIo
     // What traffic reached that no reader drew, one info row per service and
     // kind, and the best guesses it went through (P110): the row explaining a
     // guess is left out while traffic confirms it.
+    // A checkout that moved since the build (P230), asked now as the ages are.
+    const moved = checkoutRows(checkoutsMoved(readFreshness(dbPathFor(options))));
     const observed = readObservedBeside(dbPathFor(options)).observed;
     const runtime = [...runtimeFailureRows(db, observed), ...blindSpotRows(observed)];
-    const guesses = withConfirmedGuesses(db, observed, [...raw, ...age, ...runtime], options.service);
+    const guesses = withConfirmedGuesses(db, observed, [...raw, ...age, ...moved, ...runtime], options.service);
     const split = acceptedSplitOf(db, guesses.rows, readAccepted(dbPathFor(options)));
     const rows = split.fresh;
     const reasons = reasonsFor(options, rows);

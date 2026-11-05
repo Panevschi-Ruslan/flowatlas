@@ -556,6 +556,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'document-age': () =>
     'Nothing here can check a document against the running service, so how recently the document was updated is the only evidence there is that it is still true. Fetch the current one from whoever owns the service if it is behind.',
 
+  // A checkout that moved since the build (doctor/checkout.ts, P230), asked at doctor time.
+  'checkout-moved': () =>
+    'The graph describes the commit each repository was on when it was built. Run flowatlas build after a checkout or a merge, or flowatlas hook install to have it rebuilt in the background every time.',
+
   // What traffic answered beside what the code declares (doctor/runtime.ts, P106).
   // Asked of the observed file at doctor time, never stored in the graph.
   'failure-seen-undeclared': () =>

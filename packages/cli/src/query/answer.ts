@@ -1,10 +1,11 @@
 import type { GraphDb } from '@flowatlas/linker';
-import type { FlowNode, SourceRoots } from '@flowatlas/mcp';
+import { staleFor, type FlowNode, type SourceRoots, type StaleRef } from '@flowatlas/mcp';
 import { querySettings, type Format, type QueryOptions, type QuerySettings } from '../options.js';
 import { getRenderer } from '../render/index.js';
 import type { RenderOptions } from '../render/types.js';
 import { repoPalette } from '../render/color.js';
 import { collectSource, collectTypes } from './detail.js';
+import { dbPathFor } from '../db.js';
 
 /** Where a command's two streams go, so a test can hold them. */
 export interface QueryIo {
@@ -57,6 +58,21 @@ export interface Answer {
   sequenceDetail?: RenderOptions['sequenceDetail'];
 }
 
+/** The line a command says when its answer cites files that changed since the build (P230). */
+export const staleLine = (stale: StaleRef): string =>
+  `built before ${stale.files} of the ${stale.of} files this answer cites changed (${stale.first}${stale.files > 1 ? ' and others' : ''}): run flowatlas build`;
+
+/** Whether an answer's files moved since the build; undefined when they did not, or when nothing can say. */
+const staleOfAnswer = (settings: QuerySettings, answer: Answer): StaleRef | undefined => {
+  let dbPath: string;
+  try {
+    dbPath = dbPathFor(settings);
+  } catch {
+    return undefined;
+  }
+  return staleFor(dbPath, { tree: answer.tree });
+};
+
 /** Formats that carry no code, whatever level was asked for. */
 const CODELESS = new Set(['mermaid', 'sequence']);
 
@@ -75,6 +91,11 @@ export const present = (
   roots?: SourceRoots,
 ): void => {
   const notes = [...(answer.notes ?? [])];
+  // Built before the code it cites moved (P230): said on stderr, so a pipe
+  // still gets clean data, and carried in the data as the tools carry it.
+  const stale = staleOfAnswer(settings, answer);
+  if (stale !== undefined) notes.push(staleLine(stale));
+  const extra = stale === undefined ? answer.extra : { ...answer.extra, stale };
   const codeless = CODELESS.has(settings.format);
   if (settings.detail >= 3 && codeless) notes.push(`source omitted for ${settings.format}`);
 
@@ -92,7 +113,7 @@ export const present = (
     types: collectTypes(db, answer.tree, settings.detail),
     source,
     ...(answer.footer === undefined ? {} : { footer: answer.footer }),
-    ...(answer.extra === undefined ? {} : { extra: answer.extra }),
+    ...(extra === undefined ? {} : { extra }),
     ...(answer.truncated === undefined ? {} : { truncated: answer.truncated }),
     ...(answer.siteOf === undefined ? {} : { siteOf: answer.siteOf }),
     ...(answer.stopOf === undefined ? {} : { stopOf: answer.stopOf }),

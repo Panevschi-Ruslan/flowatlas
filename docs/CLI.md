@@ -333,6 +333,7 @@ the repositories it reads:
   link-report.json     what joined and what did not
   graph.db             the same graph as SQLite
   cache.json           the file hashes the next build compares against
+  freshness.json       each service's checkout and every file read, for answers to say when the code moved
   stand-ins.json       the package sources and shape files worked out once for every reader
   services/<name>/
     graph.json         one service's own graph, reused when it has not changed
@@ -371,6 +372,8 @@ the build after that is incremental again.
 | `--service <name>` | every service | read only this one and take the rest from the cache. Repeatable |
 | `--no-cache` | off | ignore the recorded file hashes and read everything again |
 | `--watch` | off | keep running, rebuilding after every change |
+| `--wait <seconds>` | `0` | wait this long for a build that is running before stopping |
+| `--background` | off | build in a process of its own and return at once; what it says goes to `<output>/build.log` |
 | `--timing` | off | print how long each phase took, as JSON |
 | `--skip-frontend` | off | leave out the services a frontend extractor reads |
 | `--heap <megabytes>` | a share of the machine | heap limit for each repository read |
@@ -535,6 +538,61 @@ wherever they sit: a member inside the service's directory is read even though
 the service's own code is read from `src/` only, and a member it does not
 declare is not (`fixtures/lambda-workspace-root`). A workspace root that
 declares none of its members is read as it always was.
+
+**One build at a time.** A build holds `<output>/build.lock` while it reads and
+writes, so a watch, a build in another terminal and a hook never write one
+database at once. A second build says which one is running and exits 2, or waits
+with `--wait`; `--watch` holds the lock for each rebuild, not for as long as it
+runs. A lock left by a build that is not running any more (a crash, a closed
+terminal) is taken over, and the build says whose it was. A lock taken on another
+machine, on a shared disk, is respected and named, since only that machine can
+say whether its build is still running.
+
+**In the background.** `--background` returns at once and builds in a process of
+its own, waiting for the lock if a build holds it: what a git hook needs, since a
+checkout must not wait for a build. When one is already waiting, a second request
+is that one's too, so ten checkouts during one build earn one more build, not
+ten. `<output>/build.log` holds what it said, moved aside to `build.1.log` past
+1 MB.
+
+**Whether the graph is behind.** Every build writes `freshness.json` beside the
+database: the commit and branch each service's checkout was on, whether its files
+differed from that commit, and the size, time and hash of every file it read. The
+asking commands and the graph server's tools compare an answer's files with it:
+an answer citing a file that changed since says so, on stderr for a person
+(`built before 1 of the 4 files this answer cites changed
+(orders/src/orders/orders.service.ts): run flowatlas build`) and as `stale` in
+the JSON. A file whose time moved and whose text did not, a `touch`, is not a
+change. `doctor` says which checkouts moved to another commit or branch since the
+build (`checkout-moved`, an info row that decides no exit code), and the graph
+server's `start_here` says the same under `moved`.
+
+### `flowatlas hook install | status | remove`
+
+Git hooks that rebuild the graph in the background, so it follows a checkout or a
+merge without anyone running anything.
+
+```sh
+flowatlas hook install              # every repository of the project
+flowatlas hook install --dry-run    # say what would change
+flowatlas hook install --repo web --on checkout,merge
+flowatlas hook status
+flowatlas hook remove
+```
+
+They are `post-checkout` (a branch checkout only, not `git checkout -- file`),
+`post-merge` and `post-rewrite` (a rebase), each running
+`flowatlas build --background` and returning at once. `--on commit` adds
+`post-commit`, which is not the default: a commit changes no file on disk, and an
+answer already says when a file it cites moved.
+
+What is written is a marked block (`# flowatlas:hook` … `# /flowatlas:hook`), so
+a hook a repository already has keeps every line of its own and `remove` gives it
+back as it was. A hook that is not a shell script is left alone and named. A
+repository whose hooks another tool keeps (`core.hooksPath`: husky, lefthook, a
+team's folder) is not written into at all; the line to add there is printed. A
+repository holding several services gets one set of hooks, and worktrees share
+their repository's. `init` prints the command; `init --git-hooks` runs it.
 
 ### `flowatlas extract <repo>`
 

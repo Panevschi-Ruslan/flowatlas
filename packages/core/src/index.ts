@@ -1015,3 +1015,18 @@ export {
   writeDeployed,
 } from './deployed.js';
 export type { Deployed, Pin, PinSource } from './deployed.js';
+export {
+  checkoutLine,
+  checkoutsMoved,
+  citedFiles,
+  contentHash,
+  FRESHNESS_FILE,
+  FRESHNESS_FORMAT_VERSION,
+  freshnessPathFor,
+  freshnessSchema,
+  headOf,
+  MAX_CITED_FILES,
+  readFreshness,
+  staleOf,
+} from './freshness.js';
+export type { Checkout, CheckoutMoved, CitedFile, Freshness, FreshnessService, Stale } from './freshness.js';
