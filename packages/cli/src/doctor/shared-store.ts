@@ -12,7 +12,11 @@ import type { GraphDb } from '@flowatlas/linker';
  */
 export const SHARED_STORE_REASON = 'store-shared';
 
-/** One row per write, by a service other than the store's first writer, to a store more than one service writes. */
+/**
+ * One row per service that writes a store more than one service writes, every
+ * writer included, at the first place it writes it: no writer is the owner
+ * until a rule says so (docs/CLI.md, "one row per writer").
+ */
 export const sharedStoreRows = (db: GraphDb, service?: string): Unresolved[] => {
   const writers = new Map<string, Map<string, { file: string; line: number }>>();
   for (const query of db.nodesByType('db_query')) {

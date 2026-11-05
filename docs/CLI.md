@@ -3437,8 +3437,13 @@ tools read, every edge with how sure the graph is of it.
 
 `--level service|class|node` draws each service as one node (the edges between
 two summed, as sure as the least sure of them), each class, or every node.
-`--from <entry>` (repeatable) keeps only what those ways in reach, `--max-nodes`
-(400) bounding each walk; `--service` keeps one service. `--check` works as it
+`--from <entry>` (repeatable) keeps only what those ways in reach, walked as
+`flow` walks them: the same edges, and as deep as `flow` goes from that entry
+(eight hops, and one more per step of a workflow) unless `--depth <n>` says.
+`--max-nodes` (400) bounds each walk. What either bound left out is counted in
+nodes, each once however many walks cut it, on the line the run prints (`; 12
+more past --max-nodes and 4 more past --depth left out`) and in each file, as
+a comment (a `<desc>` in GraphML). `--service` keeps one service. `--check` works as it
 does for the other kinds. How to load each is in [the files flowatlas
 writes](formats.md), with the JSON Schemas of its own files.
 

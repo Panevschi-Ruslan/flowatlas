@@ -433,6 +433,6 @@ export { yamlDocument, yamlDocuments, yamlScalar } from './export/yaml.js';
 export type { YamlValue } from './export/yaml.js';
 export { catalogEntityProblems, catalogProblems, dslProblems } from './export/checks.js';
 export { atLevel, GRAPH_FORMATS, GRAPH_LEVELS, graphFiles, toCsv, toCypher, toDot, toGraphML } from './export/graph-formats.js';
-export type { GraphFormat, GraphLevel, SelectedGraph } from './export/graph-formats.js';
+export type { GraphFormat, GraphLevel, SelectedGraph, WalkLeft } from './export/graph-formats.js';
 export { PUBLISHED_SCHEMAS } from './json-schemas.js';
 export type { PublishedSchema } from './json-schemas.js';

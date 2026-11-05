@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, readFileSync, renameSync, statSync } from 'node:fs';
+import { appendFileSync, readFileSync, renameSync, statSync, unlinkSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { gapIdOf, type FlowatlasConfig } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
@@ -121,11 +121,49 @@ export const questionOf = (
   };
 };
 
-/** Appends one question, moving the log aside past `maxBytes`. A log that cannot be written is silence. */
+let rotations = 0;
+
+/**
+ * Moves a log past `maxBytes` aside to `questions.1.jsonl`. Several servers
+ * can share one output directory, and each may see the same full log: it is
+ * first taken under a name only this process uses, so one writer wins and the
+ * others find it gone, which means it has been moved already. A file taken
+ * that is no longer full is a log another writer has just started; its lines
+ * go back to the live log rather than over the older one.
+ */
+const rotate = (path: string, maxBytes: number): void => {
+  try {
+    if (statSync(path).size <= maxBytes) return;
+  } catch {
+    return;
+  }
+  const taken = join(dirname(path), `${QUESTIONS_FILE}.${process.pid}.${(rotations += 1)}.rotating`);
+  try {
+    renameSync(path, taken);
+  } catch {
+    return;
+  }
+  try {
+    if (statSync(taken).size > maxBytes) {
+      renameSync(taken, join(dirname(path), OLDER_QUESTIONS_FILE));
+      return;
+    }
+    appendFileSync(path, readFileSync(taken, 'utf8'), 'utf8');
+    unlinkSync(taken);
+  } catch {
+    // Left under its own name, the file is kept; the live log goes on regardless.
+  }
+};
+
+/**
+ * Appends one question, moving the log aside past `maxBytes`. A log that
+ * cannot be moved is still appended to; only a line that cannot be written
+ * makes this false.
+ */
 export const recordQuestion = (dbPath: string, entry: QuestionEntry, maxBytes = DEFAULT_QUESTIONS_BYTES): boolean => {
   const path = questionsPathFor(dbPath);
+  rotate(path, maxBytes);
   try {
-    if (existsSync(path) && statSync(path).size > maxBytes) renameSync(path, join(dirname(path), OLDER_QUESTIONS_FILE));
     appendFileSync(path, `${JSON.stringify(entry)}\n`, 'utf8');
     return true;
   } catch {

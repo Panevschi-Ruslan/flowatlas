@@ -18,11 +18,17 @@ export type GraphFormat = (typeof GRAPH_FORMATS)[number];
 export const GRAPH_LEVELS = ['service', 'class', 'node'] as const;
 export type GraphLevel = (typeof GRAPH_LEVELS)[number];
 
+/** The nodes the walks of a selection left out, each counted once, by the bound that left it out. */
+export interface WalkLeft {
+  maxNodes: number;
+  depth: number;
+}
+
 export interface SelectedGraph {
   nodes: GraphNode[];
   edges: GraphEdge[];
-  /** Nodes a walk left out under its bound, said in each file. */
-  left?: number;
+  /** Nodes a walk left out under its bounds, said in each file. */
+  left?: WalkLeft;
 }
 
 /** A node drawn at a level: its key, label, service and type. */
@@ -95,8 +101,15 @@ const dotString = (text: string): string => `"${text.replace(/\\/g, '\\\\').repl
 
 const DOT_STYLE: Record<string, string> = { heuristic: 'dashed', marker: 'dotted', declared: 'dotted' };
 
-const leftNote = (graph: SelectedGraph): string | undefined =>
-  graph.left === undefined || graph.left === 0 ? undefined : `${graph.left} more nodes past the walk's bound were left out (raise --max-nodes)`;
+const leftNote = ({ left }: SelectedGraph): string | undefined => {
+  const parts = [
+    ...(left !== undefined && left.maxNodes > 0 ? [{ said: `${left.maxNodes} past --max-nodes`, flag: '--max-nodes' }] : []),
+    ...(left !== undefined && left.depth > 0 ? [{ said: `${left.depth} past --depth`, flag: '--depth' }] : []),
+  ];
+  if (parts.length === 0) return undefined;
+  const count = (left?.maxNodes ?? 0) + (left?.depth ?? 0);
+  return `${count} more ${count === 1 ? 'node was' : 'nodes were'} left out of the walk: ${parts.map((part) => part.said).join(' and ')} (raise ${parts.map((part) => part.flag).join(' or ')})`;
+};
 
 /** Graphviz: one cluster per service below the service level, a line style per confidence. */
 export const toDot = (graph: SelectedGraph, level: GraphLevel, name = 'flowatlas'): ExportFile[] => {
@@ -126,7 +139,19 @@ export const toDot = (graph: SelectedGraph, level: GraphLevel, name = 'flowatlas
   return [{ path: `graph.${level}.dot`, text: `${lines.join('\n')}\n` }];
 };
 
-const xml = (text: string): string => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+/**
+ * Text as XML 1.0 holds it: escaped, and with every character its `Char`
+ * production leaves out (the control characters but tab, newline and return, a
+ * lone surrogate, U+FFFE and U+FFFF) written as U+FFFD, where a parser would
+ * otherwise refuse the whole file.
+ */
+const xml = (text: string): string =>
+  text
+    .replace(/[^\t\n\r\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/gu, '\uFFFD')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 
 /** GraphML: keys declared once, every node and edge with its attributes. */
 export const toGraphML = (graph: SelectedGraph, level: GraphLevel): ExportFile[] => {
@@ -147,7 +172,8 @@ export const toGraphML = (graph: SelectedGraph, level: GraphLevel): ExportFile[]
     `  <graph id="flowatlas" edgedefault="directed">`,
   ];
   const note = leftNote(graph);
-  if (note !== undefined) lines.push(`    <!-- ${xml(note)} -->`);
+  // A description, not a comment: the note names `--max-nodes`, and XML allows no `--` inside a comment.
+  if (note !== undefined) lines.push(`    <desc>${xml(note)}</desc>`);
   for (const unit of units) {
     lines.push(
       `    <node id="${xml(unit.id)}"><data key="n_label">${xml(unit.label)}</data><data key="n_type">${xml(unit.type)}</data><data key="n_service">${xml(unit.service)}</data></node>`,

@@ -38,7 +38,9 @@ import {
   type GraphFormat,
   type GraphLevel,
   type SelectedGraph,
+  type WalkLeft,
 } from '@flowatlas/linker';
+import { buildFlowTree, defaultFlowDepth, flatten } from '@flowatlas/mcp';
 import type { Command } from 'commander';
 import { openProjectDb } from '../analysis/open.js';
 import { CliError, EXIT } from '../exit.js';
@@ -80,6 +82,8 @@ export interface ExportCommandOptions {
   from?: string[];
   /** Most nodes a `--from` walk keeps. */
   maxNodes?: string;
+  /** Hops a `--from` walk follows; as far as `flow` walks the entry when absent. */
+  depth?: string;
 }
 
 export interface ExportFileState {
@@ -264,13 +268,17 @@ export const runExport = (kindAsked: string, options: ExportCommandOptions, io: 
   const { db, close } = openProjectDb({ ...(options.config === undefined ? {} : { config: options.config }), ...(options.db === undefined ? {} : { db: options.db }) });
   let backstage: BackstageExport | undefined;
   let structurizr: StructurizrExport | undefined;
-  let open: { files: ExportFile[]; nodes: number; edges: number; level: GraphLevel; left?: number } | undefined;
+  let open: { files: ExportFile[]; nodes: number; edges: number; level: GraphLevel; left?: WalkLeft } | undefined;
   try {
     const graph = { nodes: db.allNodes(), edges: db.allEdges() };
     if ((GRAPH_FORMATS as readonly string[]).includes(kind)) {
       // The graph in an open format (P237): every edge with how sure it is, at the level asked.
       const level = oneOf(options.level, GRAPH_LEVELS, kind === 'dot' ? 'service' : 'node', '--level');
-      const selected = selectionOf(db, graph, only, options.from ?? [], whole(options.maxNodes, EXPORT_WALK_NODES, '--max-nodes'));
+      const bounds = {
+        maxNodes: whole(options.maxNodes, EXPORT_WALK_NODES, '--max-nodes'),
+        ...(options.depth === undefined ? {} : { depth: whole(options.depth, 1, '--depth') }),
+      };
+      const selected = selectionOf(db, graph, only, options.from ?? [], bounds);
       open = { files: graphFiles(kind as GraphFormat, selected, level, project), nodes: selected.nodes.length, edges: selected.edges.length, level, ...(selected.left === undefined ? {} : { left: selected.left }) };
     } else if (kind === 'backstage') {
       const documents = writeSpecs(db, services, { ...specOptionsOf(loaded.config, { depth: DEFAULT_SPEC_DEPTH }), kind: 'both' }).map((spec) => ({
@@ -348,7 +356,7 @@ export const runExport = (kindAsked: string, options: ExportCommandOptions, io: 
     const lines: string[] = [];
     if (open !== undefined) {
       lines.push(
-        `${kind}: ${plural(open.nodes, 'node')} and ${plural(open.edges, 'edge')} at the ${open.level} level, in ${plural(written.length, 'file')} -> ${shownDir}${open.left === undefined || open.left === 0 ? '' : `; ${open.left} more past --max-nodes left out`}`,
+        `${kind}: ${plural(open.nodes, 'node')} and ${plural(open.edges, 'edge')} at the ${open.level} level, in ${plural(written.length, 'file')} -> ${shownDir}${leftSaid(open.left)}`,
       );
     }
     if (backstage !== undefined) {
@@ -379,31 +387,60 @@ export const runExport = (kindAsked: string, options: ExportCommandOptions, io: 
   return { kind, outDir, files, text, exitCode, ...(backstage === undefined ? {} : { backstage }), ...(structurizr === undefined ? {} : { structurizr }) };
 };
 
+/** What the run says after the counts when a `--from` walk was cut: how many nodes, past which bound. */
+const leftSaid = (left: WalkLeft | undefined): string => {
+  const parts = [
+    ...(left !== undefined && left.maxNodes > 0 ? [`${left.maxNodes} more past --max-nodes`] : []),
+    ...(left !== undefined && left.depth > 0 ? [`${left.depth} more past --depth`] : []),
+  ];
+  return parts.length === 0 ? '' : `; ${parts.join(' and ')} left out`;
+};
+
+/** The node ids a walk from one way in reaches, as `flow` walks it. */
+const reachedBy = (db: GraphDb, entryId: string, depth: number, maxNodes: number): Set<string> =>
+  new Set(flatten(buildFlowTree(db, entryId, { depth, maxNodes, detail: 0 }).root).map((row) => row.node.id));
+
 /**
  * What a graph format draws (P237): every node and edge, or those of the
  * services asked, or what a walk from each way in asked reaches, bounded.
+ *
+ * A walk is the one `flow` takes: the same edges, as deep as `flow` goes
+ * from that entry unless `--depth` says, each node once. What a bound left
+ * out is counted in nodes, each once however many walks cut it and none that
+ * another walk kept: past `--max-nodes` what the same depth reaches beyond the
+ * nodes kept, past `--depth` what a walk with no depth reaches beyond that.
  */
 const selectionOf = (
   db: GraphDb,
   graph: { nodes: GraphNode[]; edges: GraphEdge[] },
   only: readonly string[] | undefined,
   from: readonly string[],
-  maxNodes: number,
+  bounds: { maxNodes: number; depth?: number },
 ): SelectedGraph => {
   let keep: Set<string> | undefined;
-  let left: number | undefined;
+  let left: WalkLeft | undefined;
   if (from.length > 0) {
     keep = new Set();
+    const pastNodes = new Set<string>();
+    const pastDepth = new Set<string>();
     for (const ref of from) {
-      const walk = db.forwardReach(resolveEntry(db, ref).id, { maxNodes });
-      for (const row of walk.rows) keep.add(row.id);
-      if (walk.truncated) left = (left ?? 0) + 1;
+      const entryId = resolveEntry(db, ref).id;
+      const depth = bounds.depth ?? defaultFlowDepth(db.node(entryId));
+      const kept = reachedBy(db, entryId, depth, bounds.maxNodes);
+      const deep = reachedBy(db, entryId, depth, Number.MAX_SAFE_INTEGER);
+      const all = reachedBy(db, entryId, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+      for (const id of kept) keep.add(id);
+      for (const id of deep) if (!kept.has(id)) pastNodes.add(id);
+      for (const id of all) if (!deep.has(id)) pastDepth.add(id);
     }
+    const known = new Set(graph.nodes.map((node) => node.id));
+    const counted = (ids: Set<string>): number => [...ids].filter((id) => known.has(id) && !keep?.has(id)).length;
+    left = { maxNodes: counted(pastNodes), depth: counted(new Set([...pastDepth].filter((id) => !pastNodes.has(id)))) };
   }
   const nodes = graph.nodes.filter((node) => (keep === undefined || keep.has(node.id)) && (only === undefined || only.includes(node.repo ?? '')));
   const ids = new Set(nodes.map((node) => node.id));
   const edges = graph.edges.filter((edge) => ids.has(edge.from) && ids.has(edge.to));
-  return { nodes, edges, ...(left === undefined ? {} : { left }) };
+  return { nodes, edges, ...(left === undefined || (left.maxNodes === 0 && left.depth === 0) ? {} : { left }) };
 };
 
 const withCommonOptions = (command: Command): Command =>
@@ -440,6 +477,7 @@ export const registerExport = (program: Command): void => {
       .option('--level <level>', `${GRAPH_LEVELS.join(', ')} (default ${format === 'dot' ? 'service' : 'node'})`)
       .option('--from <entry>', 'only what this way in reaches, repeatable', collect, [])
       .option('--max-nodes <n>', `most nodes a --from walk keeps (default ${EXPORT_WALK_NODES})`)
+      .option('--depth <n>', 'hops a --from walk follows (default: as far as flow walks that entry)')
       .action(finish(format));
   }
 };

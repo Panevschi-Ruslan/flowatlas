@@ -49,6 +49,24 @@ describe('the graph in open formats (P237)', () => {
     expect(file?.text).toContain('<data key="e_confidence">heuristic</data>');
   });
 
+  it('writes GraphML that XML 1.0 can hold: a control character in a label is replaced, tab, newline and return kept', () => {
+    const odd = { nodes: [node('web#a.ts:Cart.\u0001save\u000b￾\uD800', 'web'), node('web#a.ts:Cart.\tload\n\r', 'web')], edges: [] };
+    const text = toGraphML(odd, 'node')[0]?.text ?? '';
+    expect(text).not.toMatch(/[\u0000-\u0008\u000b\u000c\u000e-\u001f￾￿]/);
+    expect(text).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/);
+    expect(text).toContain('Cart.�save���');
+    expect(text).toContain('Cart.\tload\n\r');
+  });
+
+  it('says in each file how many nodes a walk left out, past which bound, without a -- inside an XML comment', () => {
+    const cut = { ...GRAPH, left: { maxNodes: 4, depth: 1 } };
+    const graphml = toGraphML(cut, 'node')[0]?.text ?? '';
+    expect(graphml).toContain('<desc>5 more nodes were left out of the walk: 4 past --max-nodes and 1 past --depth (raise --max-nodes or --depth)</desc>');
+    expect(graphml).not.toContain('<!--');
+    expect(toDot({ ...GRAPH, left: { maxNodes: 0, depth: 1 } }, 'service')[0]?.text).toContain('// 1 more node was left out of the walk: 1 past --depth (raise --depth)');
+    expect(toCypher({ ...GRAPH, left: { maxNodes: 0, depth: 0 } }, 'node')[0]?.text).not.toContain('left out');
+  });
+
   it('writes Cypher that MERGEs, so running it twice changes nothing', () => {
     const [file] = toCypher(GRAPH, 'node', 2);
     expect(file?.text).toContain('CREATE CONSTRAINT flowatlas_id IF NOT EXISTS');

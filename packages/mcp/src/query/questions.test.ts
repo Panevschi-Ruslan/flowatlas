@@ -1,6 +1,8 @@
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFile } from 'node:child_process';
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
@@ -9,6 +11,10 @@ import { loggedCall, questionLogSettings, questionsByGap, questionsPathFor, read
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const FIXTURE = join(ROOT, 'fixtures', 'multi-repo', '.flowatlas');
+
+/** Three writers this many lines each, rotating every few lines: the race the old rotation lost. */
+const RACE_CALLS = 4000;
+const RACE_BYTES = 2000;
 
 const dirs: string[] = [];
 const clients: Client[] = [];
@@ -122,6 +128,30 @@ describe('the question log (P235)', () => {
     expect(entries.length).toBeGreaterThan(3);
     expect(entries.map((line) => line.ms)).toEqual([...entries.map((line) => line.ms)].sort((a, b) => a - b));
     expect(existsSync(join(dbPath, '..', 'questions.1.jsonl'))).toBe(true);
+  });
+
+  it('keeps writing when several processes move the log aside at once, and never moves a fresh log over the older one', async () => {
+    const dbPath = fixtureCopy();
+    const dir = join(dbPath, '..');
+    const child = join(dir, 'writer.mjs');
+    const built = pathToFileURL(join(ROOT, 'packages', 'mcp', 'dist', 'query', 'questions.js')).href;
+    writeFileSync(
+      child,
+      [
+        `import { recordQuestion } from ${JSON.stringify(built)};`,
+        `const line = ${JSON.stringify(entry())};`,
+        'let refused = 0;',
+        `for (let index = 0; index < ${RACE_CALLS}; index += 1) if (!recordQuestion(${JSON.stringify(dbPath)}, line, ${RACE_BYTES})) refused += 1;`,
+        'process.stdout.write(String(refused));',
+      ].join('\n'),
+    );
+    const run = (): Promise<string> =>
+      new Promise((done, fail) => {
+        execFile(process.execPath, [child], { encoding: 'utf8' }, (error, stdout) => (error === null ? done(stdout) : fail(error)));
+      });
+    expect(await Promise.all([run(), run(), run()])).toEqual(['0', '0', '0']);
+    expect(statSync(join(dir, 'questions.1.jsonl')).size).toBeGreaterThan(RACE_BYTES);
+    expect(readdirSync(dir).filter((name) => name.endsWith('.rotating'))).toEqual([]);
   });
 
   it('counts a line it cannot read and goes on', () => {

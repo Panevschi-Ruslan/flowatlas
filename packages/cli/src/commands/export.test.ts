@@ -1,8 +1,10 @@
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 import { catalogProblems, dslProblems } from '@flowatlas/linker';
+import { buildFlowTree, flatten } from '@flowatlas/mcp';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
+import { openProjectDb } from '../analysis/open.js';
 import { CliError, EXIT } from '../exit.js';
 import { buildProject } from './build.js';
 import { runExport } from './export.js';
@@ -20,17 +22,21 @@ const shop = join(scratch, 'multi-repo');
 const library = join(scratch, 'multi-repo-events');
 const shopConfig = join(shop, 'flowatlas.catalog.json');
 const libraryConfig = join(library, 'flowatlas.config.json');
+const analytics = join(scratch, 'multi-repo-analytics');
+const analyticsConfig = join(analytics, 'flowatlas.config.json');
 const quiet = { out(): void {}, err(): void {}, tty: false };
 
 beforeAll(async () => {
   for (const [name, dir] of [
     ['multi-repo', shop],
     ['multi-repo-events', library],
+    ['multi-repo-analytics', analytics],
   ] as const) {
     cpSync(join(ROOT, 'fixtures', name), dir, { recursive: true, filter: (from) => !from.split(sep).includes('.flowatlas') && !from.split(sep).some((part) => part.startsWith('expected')) });
   }
   await buildProject({ config: shopConfig, builtAt: FIXED });
   await buildProject({ config: libraryConfig, builtAt: FIXED });
+  await buildProject({ config: analyticsConfig, builtAt: FIXED });
 }, 300_000);
 
 afterAll(() => rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
@@ -163,6 +169,44 @@ describe('flowatlas export structurizr (P119)', () => {
     const bounded = runExport('structurizr', { config: shopConfig, out: join(scratch, 'shop-bounded'), maxFlows: '2' }, quiet);
     expect(bounded.structurizr!.model.views).toHaveLength(2);
     expect(bounded.text).toMatch(/\d+ more flows? crossed containers, past --max-flows 2/);
+  });
+});
+
+describe('flowatlas export dot|graphml|cypher|csv --from (P237)', () => {
+  const SYNC = 'entry:admin:cron:SyncJob.hourly';
+  /** The node ids the node-level GraphML a run wrote draws. */
+  const drawn = (out: string): string[] =>
+    [...readFileSync(join(out, 'graph.node.graphml'), 'utf8').matchAll(/<node id="([^"]+)"/g)].map((match) => match[1]!).sort();
+  /** The node ids `flowatlas flow` shows for the same entry. */
+  const flowIds = (): string[] => {
+    const { db, close } = openProjectDb({ config: analyticsConfig });
+    try {
+      return [...new Set(flatten(buildFlowTree(db, SYNC, { maxNodes: 400 }).root).map((row) => row.node.id))].sort();
+    } finally {
+      close();
+    }
+  };
+  const graphml = (name: string, options: { depth?: string; maxNodes?: string; from?: string[] } = {}) => {
+    const out = join(scratch, name);
+    const run = runExport('graphml', { config: analyticsConfig, out, from: [SYNC], ...options }, quiet);
+    return { run, out, ids: drawn(out) };
+  };
+
+  it('walks as deep as flow does, and says how many nodes the depth left out', () => {
+    const asFlow = graphml('analytics-graphml');
+    expect(asFlow.ids).toEqual(flowIds());
+    expect(asFlow.ids.length).toBeGreaterThan(8);
+    const past = graphml('analytics-graphml-deep', { depth: '40' }).ids.length - asFlow.ids.length;
+    expect(past).toBeGreaterThan(0);
+    expect(asFlow.run.text).toContain(`; ${past} more past --depth left out`);
+    expect(readFileSync(join(asFlow.out, 'graph.node.graphml'), 'utf8')).toContain(`<desc>${past} more nodes were left out of the walk: ${past} past --depth (raise --depth)</desc>`);
+  });
+
+  it('counts the nodes --max-nodes left out, each once however many walks cut it, not the walks', () => {
+    const all = graphml('analytics-all', { depth: '40' }).ids;
+    const two = graphml('analytics-two', { depth: '40', maxNodes: '2', from: [SYNC, SYNC] });
+    expect(two.ids).toHaveLength(2);
+    expect(two.run.text).toContain(`; ${all.length - 2} more past --max-nodes left out`);
   });
 });
 
