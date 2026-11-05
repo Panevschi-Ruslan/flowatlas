@@ -1009,6 +1009,14 @@ Three ways to keep it from falling behind, from least to most automatic:
   `stale`; the server reopens the new graph when it is written. Off by default,
   since work that starts on its own is a surprise unless somebody chose it.
 
+- `"log": { "questions": true }` in the configuration, or
+  `FLOWATLAS_LOG_QUESTIONS=1`: every tool call adds a line to
+  `<output>/questions.jsonl` with the tool, the ids it was given, whether they
+  resolved, the size of the answer and the gaps on it. Ids and counts only,
+  kept on this machine; `flowatlas stats --questions` summarises it and
+  `doctor --unresolved` puts the gaps asked about first
+  ([the question log](CLI.md#the-question-log)).
+
 A rebuild with nothing moved reads only what changed, so it is a fraction of a
 cold build; the [README](../README.md#measured-on-the-demo-project) has both
 timed on the demo project. The tools listed follow too: a build that first reads

@@ -1108,6 +1108,21 @@ export const remoteSettingsSchema = z.strictObject({
 
 export type RemoteSettings = z.infer<typeof remoteSettingsSchema>;
 
+/**
+ * What the MCP server and the asking commands keep of each question (P235):
+ * nothing unless `questions` is true (or `FLOWATLAS_LOG_QUESTIONS=1` is set),
+ * then one line per question in `<output>/questions.jsonl`, on this machine
+ * only. `text` also keeps a search's words; `maxBytes` is where the log is
+ * moved aside, so at most two files are kept.
+ */
+export const logSettingsSchema = z.strictObject({
+  questions: z.boolean().default(false),
+  text: z.boolean().default(false),
+  maxBytes: z.number().int().positive().optional(),
+});
+
+export type LogSettings = z.infer<typeof logSettingsSchema>;
+
 export type McpSettings = z.infer<typeof mcpSettingsSchema>;
 
 export const flowatlasConfigSchema = z
@@ -1436,6 +1451,7 @@ export const flowatlasConfigSchema = z
      */
     mcp: mcpSettingsSchema.optional(),
     remote: remoteSettingsSchema.optional(),
+    log: logSettingsSchema.optional(),
   })
   .superRefine((config, ctx) => {
     // A tool both listed whatever it needs and never listed says nothing (P201).

@@ -18,6 +18,7 @@ shape does, and the schema's name carries the version.
 | `docs.json` | the doc blocks and mentions `flowatlas docs` read | `docsFormatVersion` | [`docs.v2`](../schema/docs.v2.schema.json) |
 | `freshness.json` | each service's checkout and every file a build read, for answers to say when the code moved | `freshnessFormatVersion` | [`freshness.v1`](../schema/freshness.v1.schema.json) |
 | `names.json` | the names the search hook can say something about | `namesFormatVersion` | — |
+| `questions.jsonl` | what was asked, one line per question, when the [question log](CLI.md#the-question-log) is on; never sent anywhere | — | — |
 | `observed.json` | what traffic was seen, from `flowatlas observe` | `observedFormatVersion` | — |
 | `cache.json`, `stand-ins.json` | what the next build compares against | — | — |
 | `pulled/` | the team's graph, from `flowatlas pull` | the bundle's manifest | — |

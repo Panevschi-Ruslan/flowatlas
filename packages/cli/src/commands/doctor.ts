@@ -71,6 +71,7 @@ import {
   type DoctorReport,
   type Section,
 } from '../doctor/schema.js';
+import { questionsByGap, readQuestions } from '@flowatlas/mcp';
 
 export const FORMATS = ['text', 'json', 'github', 'sarif'] as const;
 export type DoctorFormat = (typeof FORMATS)[number];
@@ -847,10 +848,13 @@ export const runCantFollowCommand = (options: DoctorOptions, io: QueryIo = proce
   // total here is still the report's under the same `--reason`.
   const reasons = reasonsFor(options, fresh);
   const kept = reasons === undefined ? fresh : fresh.filter((row) => reasons.includes(row.reason));
+  // What assistants asked (P235), when a question log is beside the graph: the causes they ran into first.
+  const { entries: questions } = readQuestions(dbPathFor(options));
   {
     const report = cantFollowReport(kept, {
       top,
       samples,
+      ...(questions.length === 0 ? {} : { asked: questionsByGap(questions), questions: questions.length }),
       ...(reasons === undefined ? {} : { reasons: reasonsTyped(options) ?? [] }),
       ...(options.service === undefined ? {} : { service: options.service }),
       ...(options.cause === undefined ? {} : { cause: options.cause }),

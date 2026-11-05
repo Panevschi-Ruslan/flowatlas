@@ -171,6 +171,7 @@ export {
   loadConfig,
   mcpSettingsSchema,
   remoteSettingsSchema,
+  logSettingsSchema,
   builtInShapesFor,
   packageSourcesFor,
   parseConfig,

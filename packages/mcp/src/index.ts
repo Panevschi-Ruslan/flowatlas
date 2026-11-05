@@ -33,6 +33,18 @@ export type { CrossingLeft, FlowOptions, FlowResult } from './query/flow.js';
 export { DEFAULT_PATH_NODES, findPath } from './query/path.js';
 export { checkoutLines, freshnessBeside, pulledLine, staleFor, withStale } from './query/fresh.js';
 export type { StaleRef } from './query/fresh.js';
+export {
+  DEFAULT_QUESTIONS_BYTES,
+  QUESTIONS_FILE,
+  loggedCall,
+  questionLogSettings,
+  questionOf,
+  questionsByGap,
+  questionsPathFor,
+  readQuestions,
+  recordQuestion,
+} from './query/questions.js';
+export type { QuestionEntry, QuestionLogSettings } from './query/questions.js';
 export type { PathOptions, PathResult, ReversePath } from './query/path.js';
 export { projectDetail, projectEdge, truncate, clampDetail, CLAMP_NOTE, MAX_DETAIL } from './query/detail.js';
 export type { Truncated } from './query/detail.js';

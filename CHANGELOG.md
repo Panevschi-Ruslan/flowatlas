@@ -20,6 +20,15 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **What assistants asked, kept on this machine (P235).** With `"log":
+  { "questions": true }` or `FLOWATLAS_LOG_QUESTIONS=1`, every MCP tool call and
+  every `flow`, `impact`, `channel`, `path` and `explain` adds a line to
+  `<output>/questions.jsonl`: the ids asked about, whether they resolved, how
+  big the answer was and what cut it, and the gaps on it. Off by default; ids
+  and counts, not prompts; nothing is sent anywhere. `flowatlas stats
+  --questions [--since 7d]` summarises it by tool, with the names that matched
+  nothing and the gaps the most questions ran into, and `doctor --unresolved`
+  puts the causes asked about first.
 - **The graph in open formats, and JSON Schemas (P237).** `flowatlas export
   dot | graphml | cypher | csv` writes the graph for Graphviz, Gephi and yEd,
   Neo4j and Memgraph, or any loader, at the service, class or node level, from

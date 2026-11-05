@@ -3,6 +3,7 @@ import type { Command } from 'commander';
 import { handleFor, type DbOptions } from '../db.js';
 import { cannotRun, notFound } from '../exit.js';
 import { processIo, staleLine, type QueryIo } from '../query/answer.js';
+import { askedCommand, noteAnswer } from '../query/asked.js';
 
 /** What `explain` writes: the Markdown itself, or the answer the graph server's tool returns. */
 export const EXPLAIN_FORMATS = ['markdown', 'json'] as const;
@@ -56,7 +57,7 @@ const candidateLine = (candidate: unknown): string => {
  * too, since it is read or handed on as it is; `--format json` is the tool's
  * whole answer, `next` included.
  */
-export const runExplain = (name: string, options: ExplainOptions, io: QueryIo = processIo): void => {
+const answerExplain = (name: string, options: ExplainOptions, io: QueryIo = processIo): void => {
   const format = formatOf(options.format);
   const scope = scopeOf(options.scope);
   const input = {
@@ -92,11 +93,17 @@ export const runExplain = (name: string, options: ExplainOptions, io: QueryIo = 
     // The tool's answer says it in `stale` (P230); the Markdown alone does not, so the terminal hears it on stderr.
     const stale = staleFor(handle.path, answer);
     if (stale !== undefined) io.err(`${staleLine(stale)}\n`);
-    io.out(format === 'json' ? `${JSON.stringify(stale === undefined ? answer : { ...answer, stale }, null, 2)}\n` : `${(answer.markdown ?? '').trimEnd()}\n`);
+    const text = format === 'json' ? `${JSON.stringify(stale === undefined ? answer : { ...answer, stale }, null, 2)}\n` : `${(answer.markdown ?? '').trimEnd()}\n`;
+    io.out(text);
+    noteAnswer(stale === undefined ? answer : { ...answer, stale }, text.length);
   } finally {
     opened.db.close();
   }
 };
+
+/** explain, logged when the question log is on (P235). */
+export const runExplain = (name: string, options: ExplainOptions, io: QueryIo = processIo): void =>
+  askedCommand('explain', { id: name }, options, () => answerExplain(name, options, io));
 
 export const registerExplain = (program: Command): void => {
   program

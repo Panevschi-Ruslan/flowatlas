@@ -8,6 +8,7 @@ import { present, processIo, settingsFor, type QueryIo } from '../query/answer.j
 import { resolveSymbol } from '../query/refs.js';
 import { SEQUENCE_WALK_DETAIL, sitesFrom, stopsIn } from '../query/sequence.js';
 import { sequenceDetailOf } from './flow.js';
+import { askedCommand } from '../query/asked.js';
 
 export interface PathOptions extends QueryOptions {
   undirected?: boolean;
@@ -40,7 +41,7 @@ const said = (id: string): string => (/^[\w:./@#-]+$/.test(id) ? id : JSON.strin
  * resolve as every command and tool resolves them; a name that means several
  * nodes, or none, stops with the candidates or the nearest names (exit 1).
  */
-export const runPath = (fromRef: string, toRef: string, options: PathOptions, io: QueryIo = processIo): PathRun => {
+const answerPath = (fromRef: string, toRef: string, options: PathOptions, io: QueryIo = processIo): PathRun => {
   const settings = settingsFor(options, io, FLOW_FORMATS);
   const db = openDbFromOptions(settings);
   // Closed when the answer is out (P199): on Windows an open database can
@@ -100,6 +101,10 @@ export const runPath = (fromRef: string, toRef: string, options: PathOptions, io
     db.close();
   }
 };
+
+/** path, logged when the question log is on (P235). */
+export const runPath = (fromRef: string, toRef: string, options: PathOptions, io: QueryIo = processIo): PathRun =>
+  askedCommand('path', { symbol: fromRef, to: toRef, service: options.service }, options, () => answerPath(fromRef, toRef, options, io));
 
 export const registerPath = (program: Command): void => {
   withQueryOptions(

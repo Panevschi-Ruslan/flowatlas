@@ -4,6 +4,7 @@ import { openDbFromOptions, sourceRootsFor } from '../db.js';
 import { withQueryOptions, type QueryOptions } from '../options.js';
 import { present, processIo, settingsFor, type QueryIo } from '../query/answer.js';
 import { resolveChannel } from '../query/refs.js';
+import { askedCommand } from '../query/asked.js';
 
 /** A heading in the tree, so producers and consumers are not one flat list. */
 const group = (id: string, label: string, children: FlowNode[]): FlowNode => ({
@@ -19,7 +20,7 @@ const group = (id: string, label: string, children: FlowNode[]): FlowNode => ({
  * with nothing on it is the interesting case and is called out rather than
  * shown as an empty list.
  */
-export const runChannel = (name: string, options: QueryOptions, io: QueryIo = processIo): void => {
+const answerChannel = (name: string, options: QueryOptions, io: QueryIo = processIo): void => {
   const settings = settingsFor(options, io);
   const db = openDbFromOptions(settings);
   // Closed when the answer is out (P199): on Windows an open database can
@@ -83,6 +84,10 @@ export const runChannel = (name: string, options: QueryOptions, io: QueryIo = pr
     db.close();
   }
 };
+
+/** channel, logged when the question log is on (P235). */
+export const runChannel = (name: string, options: QueryOptions, io: QueryIo = processIo): void =>
+  askedCommand('channel', { channel: name }, options, () => answerChannel(name, options, io));
 
 export const registerChannel = (program: Command): void => {
   withQueryOptions(

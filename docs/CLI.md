@@ -1011,6 +1011,37 @@ query per item and are bounded on purpose, by why (P89).
 | `--format <name>` | `tree` on a terminal | `json` or `tree` |
 | `--detail <0-3>` | `1` | how much of each row to show |
 | `--service <name>` | every service | narrow to one |
+| `--questions` | off | what the [question log](#the-question-log) says was asked, instead of what the graph holds |
+| `--since <when>` | the whole log | with `--questions`: from a date (`2026-11-01`) or a span back from now (`24h`, `7d`, `2w`) |
+
+#### The question log
+
+Off by default. With `"log": { "questions": true }` in the configuration, or
+`FLOWATLAS_LOG_QUESTIONS=1`, every MCP tool call and every `flow`, `impact`,
+`channel`, `path` and `explain` appends one line to
+`<output>/questions.jsonl` (P235): the tool, the ids and names it was given,
+whether a name matched nothing or several things, how many rows came back and
+whether a limit cut them, the gaps on the answer's nodes by the ids `accept`
+takes, whether the answer was stale, and how long it took. What an assistant was
+asked never reaches the server and is not in the log; a search's words are kept
+only with `"text": true`. The file stays on this machine: nothing in the tool
+sends it anywhere. Past `maxBytes` (5 MB) it is moved to `questions.1.jsonl`, so
+at most two are kept.
+
+`stats --questions` reads it: each tool with how often it was asked, came back
+empty, was cut short (and by which limit), was given a name that matched nothing
+or several things, its median and p95 time and its median size; how many answers
+were stale; the names asked for that matched nothing; the gaps the most
+questions ran into, each with the command that lists its rows, or `fixed since`
+when the graph no longer has it; the slowest questions. A line the log cannot
+parse, as a crash can leave, is skipped and counted. A log that cannot be
+written is said once on stderr and then left alone; answers are unaffected. `doctor --unresolved` reads it
+too: with a log beside the graph, each cause says how many questions ran into
+it, and the causes asked about come first.
+
+```json
+{ "log": { "questions": true, "text": false, "maxBytes": 5242880 } }
+```
 
 ### Shared by the reporting commands
 
@@ -2397,7 +2428,10 @@ report's `sites`. Most places first, each cause with what to do and a few
 `file:line` to open, then the packages on their own: "install this one" is a
 question about a package. Accepted gaps are left out and counted apart, as in
 the report. `--json` prints the same as data (`cantFollowFormatVersion: 1`;
-`reasons` is the `--reason` list it was narrowed to, or `null`).
+`reasons` is the `--reason` list it was narrowed to, or `null`). With a
+[question log](#the-question-log) beside the graph, each cause carries `asked`,
+how many logged questions ran into its rows, and the causes asked about most
+come first: the gaps people run into are the ones worth fixing first.
 
 **The repository that is probably missing.** The commonest reason for a request
 no service claims, a package nobody installed and a channel with one end is one

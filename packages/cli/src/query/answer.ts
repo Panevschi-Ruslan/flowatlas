@@ -6,6 +6,7 @@ import type { RenderOptions } from '../render/types.js';
 import { repoPalette } from '../render/color.js';
 import { collectSource, collectTypes } from './detail.js';
 import { dbPathFor } from '../db.js';
+import { noteAnswer } from './asked.js';
 
 /** Where a command's two streams go, so a test can hold them. */
 export interface QueryIo {
@@ -122,4 +123,5 @@ export const present = (
 
   for (const note of notes) io.err(`${note}\n`);
   io.out(text);
+  noteAnswer({ tree: answer.tree, ...extra, ...(answer.truncated === undefined ? {} : { truncated: answer.truncated }) }, text.length);
 };
