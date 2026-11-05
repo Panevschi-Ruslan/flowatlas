@@ -3491,6 +3491,30 @@ once. `ls`, `prune` or `clear`.
 | `--max <n>` | all | most rows to print |
 | `--json` | off | print the answer as JSON |
 
+### Mentions and notes
+
+Beside its blocks, `flowatlas docs` reads the names a page mentions in code
+(P234): every code span, and every line of a fence with no language or `text`.
+One that names exactly one node - a route said aloud, an id, a channel, a
+deployed function, a dotted label - links the page to the node, with the heading
+above it. One that is clearly the graph's and names nothing - a route said
+aloud, an id of a kind the graph writes, `Class.method` of a class the project
+has - is a page naming what was renamed or removed, and is counted. Prose is
+never read, and neither is a fence tagged with a language, whose names are an
+example's.
+
+| Flag | Does |
+|---|---|
+| `--mentions` | with `--list`, every mention and every dead one, with the nearest names; with `--check`, also exit 1 on a dead one; with `--format github`, an annotation per dead one |
+
+A comment directly above a declaration whose first word is a tag - `WHY:`,
+`NOTE:`, `DECISION:`, `HACK:`, `SEE:` (`docs.commentTags` sets others) - is kept
+on that node's `meta.notes`, three at most, each up to 300 characters, over the
+decorators between them; `@see page.md` in a doc comment is `SEE: page.md`, and
+links the page. `flowatlas explain` and `describe_for_prompt` write them under
+**Why**. `build` refreshes `docs.json` when the configuration has `docs`, so the
+tools name mentioned pages without a separate run.
+
 ### `flowatlas report`
 
 The page a person reads first (P228): what the project is, written from the

@@ -159,5 +159,7 @@ export {
   staleDocsCount,
   stopsIn,
   withDocs,
+  resolveMention,
+  MAX_MENTIONS,
 } from './query/docs.js';
 export type { DocAsk, DocCheck, DocRef, DocSubject, DocTarget } from './query/docs.js';

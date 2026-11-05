@@ -14,7 +14,8 @@ import { z } from 'zod';
 import { DOC_KINDS, DOC_STATES, DOC_VIEWS } from './blocks.js';
 
 export const DOCS_FILE = 'docs.json';
-export const DOCS_FORMAT_VERSION = 1;
+/** 2 adds `mentions` and `deadMentions` (P234); a version 1 index is still read, as one that lists none. */
+export const DOCS_FORMAT_VERSION = 2;
 
 const optionsSchema = z.strictObject({
   depth: z.number().int().optional(),
@@ -43,8 +44,29 @@ export const docsEntrySchema = z.strictObject({
   candidates: z.array(z.string()).optional(),
 });
 
+/** A page that names a node in code (P234): where, what it said, the node, the heading above it. */
+export const docsMentionSchema = z.strictObject({
+  file: z.string().min(1),
+  line: z.number().int().min(1),
+  text: z.string(),
+  node: z.string(),
+  /** `mention`: a code span or a plain fence's line; `see`: an `@see` in a doc comment, naming the page. */
+  kind: z.enum(['mention', 'see']),
+  heading: z.string().optional(),
+});
+
+/** A page that names something the graph does not hold any more: a route renamed, a method removed. */
+export const docsDeadMentionSchema = z.strictObject({
+  file: z.string().min(1),
+  line: z.number().int().min(1),
+  text: z.string(),
+  near: z.array(z.string()),
+});
+
 export const docsIndexSchema = z.strictObject({
-  docsFormatVersion: z.literal(DOCS_FORMAT_VERSION),
+  docsFormatVersion: z.union([z.literal(1), z.literal(DOCS_FORMAT_VERSION)]),
+  mentions: z.array(docsMentionSchema).default([]),
+  deadMentions: z.array(docsDeadMentionSchema).default([]),
   /** Markdown files read, relative like `file`, whether or not they hold a block. */
   files: z.array(z.string()),
   blocks: z.array(docsEntrySchema),
@@ -53,6 +75,8 @@ export const docsIndexSchema = z.strictObject({
 });
 
 export type DocsEntry = z.infer<typeof docsEntrySchema>;
+export type DocsMention = z.infer<typeof docsMentionSchema>;
+export type DocsDeadMention = z.infer<typeof docsDeadMentionSchema>;
 export type DocsIndex = z.infer<typeof docsIndexSchema>;
 
 /** The index at a path, or why there is none: missing, unreadable, or of another version. */

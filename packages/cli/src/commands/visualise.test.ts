@@ -183,8 +183,9 @@ describe('the page made of its parts (P103)', () => {
     expect(orders.querySelectorAll('#g-details .fail-chip.is-seen').map(textOf)).toContain('404 seen ×1');
     const described = await bootAt(html, `#graph/${at('entry:orders:http:POST:/orders')}`, 'page-observed-orders');
     const panel = described.getElementById('g-details')!;
-    expect(panel.querySelectorAll('section h4').map(textOf)).toContain('Described in · 2');
-    expect(panel.querySelectorAll('.doc-list .tag').map(textOf)).toEqual(['up to date', 'stale: the flow changed']);
+    expect(panel.querySelectorAll('section h4').map(textOf)).toContain('Described in · 3');
+    // Two blocks, and the decision record that names it in code (P234).
+    expect(panel.querySelectorAll('.doc-list .tag').map(textOf)).toEqual(['up to date', 'stale: the flow changed', 'mentions it']);
     // The way in picked is drawn on the Ways in list with what traffic answered beside its failures.
     const row = described.querySelector(`#entries button.row[data-entry="${at('entry:orders:http:POST:/orders')}"]`)!;
     expect(row.querySelectorAll('.fail-chip').map(textOf)).toContain('500 ×1 not declared');

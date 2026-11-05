@@ -24,6 +24,7 @@ import {
   type PackageJson,
   type RepoGraph,
   type ServiceConfig,
+  projectText,
 } from '@flowatlas/core';
 import type { Project } from 'ts-morph';
 import { addressingFindings, findBootstrapFile, readBootstrap } from './bootstrap.js';
@@ -237,6 +238,11 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const builder = new GraphBuilder({
     repo,
     ...(options.generatedAt === undefined ? {} : { generatedAt: options.generatedAt }),
+    // The tagged comments above declarations (P234), from the files this reading parsed.
+    notesFrom: {
+      text: projectText(project, rootDir),
+      ...(options.config?.docs?.commentTags === undefined ? {} : { tags: options.config.docs.commentTags }),
+    },
   });
 
   const base: ExtractContext = {

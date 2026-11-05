@@ -1,4 +1,5 @@
 import { CAUSE_META, CAUSES_META, CauseTally, PACKAGE_META } from './cant-follow.js';
+import { attachNotes, type SourceText } from './notes.js';
 import { DanglingEdgeError, DuplicateTypeError } from './errors.js';
 import type { GraphEdge } from './model/edges.js';
 import { strongerConfidence } from './model/edges.js';
@@ -13,6 +14,11 @@ export interface GraphBuilderOptions {
   /** Fixed timestamp, for reproducible output. Defaults to now at `build()`. */
   generatedAt?: string;
   meta?: Record<string, unknown>;
+  /**
+   * Where each file's text is, for the notes a tagged comment above a
+   * declaration keeps (P234): read once per file, at `build()`.
+   */
+  notesFrom?: { text: SourceText; tags?: readonly string[] };
 }
 
 export interface GraphCounts {
@@ -107,11 +113,13 @@ export class GraphBuilder {
   readonly #unresolved = new Map<string, Unresolved>();
   readonly #generatedAt: string | undefined;
   readonly #meta: Record<string, unknown> | undefined;
+  readonly #notesFrom: GraphBuilderOptions['notesFrom'];
 
   constructor(options: GraphBuilderOptions) {
     this.repo = options.repo;
     this.#generatedAt = options.generatedAt;
     this.#meta = options.meta;
+    this.#notesFrom = options.notesFrom;
   }
 
   /**
@@ -269,6 +277,8 @@ export class GraphBuilder {
     const types: TypeRegistry = Object.fromEntries(
       [...this.#types.entries()].sort((a, b) => cmp(a[0], b[0])),
     );
+    // What a comment above each declaration says about why (P234), last, once every node is in.
+    if (this.#notesFrom !== undefined) attachNotes(this.#nodes.values(), this.#notesFrom.text, this.#notesFrom.tags);
 
     const graph: RepoGraph = {
       schemaVersion: SCHEMA_VERSION,

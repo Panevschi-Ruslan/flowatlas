@@ -13,6 +13,13 @@
       "line": 63,
       "kind": "flow",
       "state": "changed"
+    },
+    {
+      "file": "docs/adr/0001-orders-are-idempotent.md",
+      "line": 5,
+      "kind": "mention",
+      "state": "ok",
+      "heading": "Decision"
     }
   ],
   "next": [

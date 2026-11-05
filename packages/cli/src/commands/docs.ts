@@ -14,7 +14,7 @@
  */
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
-import { expandGlob, isGlob } from '@flowatlas/core';
+import { expandGlob, isGlob, NOTES_META } from '@flowatlas/core';
 import {
   DOC_STATES,
   DOCS_FORMAT_VERSION,
@@ -28,8 +28,11 @@ import {
   type DocsIndex,
   type DocState,
   type GraphDb,
+  mentionsOf,
+  type DocsMention,
+  type DocsDeadMention,
 } from '@flowatlas/linker';
-import { checkDocBlock, DbHandle, docsPathFor, type DocCheck } from '@flowatlas/mcp';
+import { checkDocBlock, DbHandle, docsPathFor, resolveMention, type DocCheck } from '@flowatlas/mcp';
 import { OVERVIEW_SECTIONS, overviewFingerprint, overviewOf, type OverviewSection } from '../overview/overview.js';
 import { renderOverview } from '../overview/render.js';
 import type { Command } from 'commander';
@@ -52,6 +55,12 @@ export interface DocsOptions {
   write?: boolean;
   /** Every block with its id, view and state. */
   list?: boolean;
+  /**
+   * The pages that name a node in code (P234): with `--list` every mention,
+   * with `--check` also exit 1 on one that names something the graph does not
+   * hold any more.
+   */
+  mentions?: boolean;
   format?: string;
   /** Where relative paths on the command line are read from; the working directory unless a test says. */
   cwd?: string;
@@ -271,8 +280,14 @@ const summaryOf = (run: Pick<DocsRun, 'results' | 'problems' | 'written' | 'inde
   );
 };
 
-const renderText = (run: Pick<DocsRun, 'results' | 'problems' | 'written' | 'index'>, list: boolean): string => {
+const renderText = (run: Pick<DocsRun, 'results' | 'problems' | 'written' | 'index'>, list: boolean, mentions = false): string => {
   const lines: string[] = [];
+  if (list && mentions) {
+    for (const mention of run.index.mentions) lines.push(`${mention.file}:${mention.line}  ${mention.kind} \`${mention.text}\` → ${mention.node}${mention.heading === undefined ? '' : `  (under ${mention.heading})`}`);
+  }
+  if (mentions) {
+    for (const dead of run.index.deadMentions) lines.push(`${dead.file}:${dead.line}  names \`${dead.text}\`, which the graph does not hold${dead.near.length === 0 ? '' : `; nearest: ${dead.near.join(', ')}`}`);
+  }
   for (const result of run.results) {
     if (list) {
       lines.push(`${headOf(result)}  ${result.check.state}`);
@@ -284,14 +299,25 @@ const renderText = (run: Pick<DocsRun, 'results' | 'problems' | 'written' | 'ind
   }
   for (const problem of run.problems) lines.push(`${problem.file}:${problem.line}  not read: ${problem.message}`);
   lines.push(summaryOf(run));
+  if (run.index.mentions.length > 0 || run.index.deadMentions.length > 0) {
+    const dead = run.index.deadMentions.length;
+    lines.push(
+      `${run.index.mentions.length} mention${run.index.mentions.length === 1 ? '' : 's'} of a node in code${dead === 0 ? '' : `; ${dead} name${dead === 1 ? 's' : ''} something the graph does not hold${mentions ? '' : ' (--mentions lists them)'}`}`,
+    );
+  }
   return `${lines.join('\n')}\n`;
 };
 
 /** `%`, CR and LF as a workflow command spells them, so a message stays one annotation. */
 const ghEscape = (text: string): string => text.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
 
-const renderGithub = (run: Pick<DocsRun, 'results' | 'problems' | 'written' | 'index'>): string => {
+const renderGithub = (run: Pick<DocsRun, 'results' | 'problems' | 'written' | 'index'>, mentions = false): string => {
   const lines: string[] = [];
+  if (mentions) {
+    for (const dead of run.index.deadMentions) {
+      lines.push(`::warning file=${dead.file},line=${dead.line},title=flowatlas docs::${ghEscape(`names ${dead.text}, which the graph does not hold${dead.near.length === 0 ? '' : `; nearest: ${dead.near.join(', ')}`}`)}`);
+    }
+  }
   for (const result of run.results) {
     if (result.check.state === 'ok') continue;
     const detail = detailLines(result);
@@ -360,6 +386,8 @@ export const runDocs = (paths: readonly string[], options: DocsOptions, io: Quer
       ...(handle.config?.docs?.files === undefined ? {} : { configured: handle.config.docs.files }),
     });
     const results: DocResult[] = [];
+    const mentions: DocsMention[] = [];
+    const deadMentions: DocsDeadMention[] = [];
     const problems: DocsProblem[] = missing.map((file) => ({ file, line: 0, message: 'no such file' }));
     const written: string[] = [];
     for (const path of files) {
@@ -376,14 +404,34 @@ export const runDocs = (paths: readonly string[], options: DocsOptions, io: Quer
       });
       results.push(...read.results);
       problems.push(...read.problems);
+      // The names it mentions in code (P234), linked where they name exactly one node.
+      for (const mention of mentionsOf(markdown)) {
+        const found = resolveMention(db, mention.text);
+        if (found === undefined) continue;
+        if ('node' in found) mentions.push({ file, line: mention.line, text: mention.text, node: found.node.id, kind: 'mention', ...(mention.heading === undefined ? {} : { heading: mention.heading }) });
+        else deadMentions.push({ file, line: mention.line, text: mention.text, near: found.near });
+      }
       if (read.text !== markdown) {
         writeFileSync(path, read.text, 'utf8');
         written.push(file);
       }
     }
 
+    // A doc comment's `@see page.md` (P234): the node names the page, which is one of these files or is not there.
+    const read = new Set(files.map(rel));
+    for (const node of db.allNodes()) {
+      for (const note of (node.meta?.[NOTES_META] as unknown[] | undefined) ?? []) {
+        const see = typeof note === 'string' ? /^SEE:\s*(\S+\.md)\b/.exec(note)?.[1] : undefined;
+        if (see === undefined) continue;
+        const named = [...read].find((page) => page === see || page.endsWith(`/${see.replace(/^\.?\//, '')}`));
+        if (named !== undefined) mentions.push({ file: named, line: 1, text: see, node: node.id, kind: 'see' });
+        else deadMentions.push({ file: `${node.repo}/${node.file ?? ''}`, line: node.line ?? 1, text: see, near: [] });
+      }
+    }
     const index: DocsIndex = docsIndexSchema.parse({
       docsFormatVersion: DOCS_FORMAT_VERSION,
+      mentions,
+      deadMentions,
       files: files.map(rel),
       blocks: results.map(entryOf),
       problems,
@@ -393,10 +441,15 @@ export const runDocs = (paths: readonly string[], options: DocsOptions, io: Quer
     writeFileSync(indexPath, `${JSON.stringify(index, null, 2)}\n`, 'utf8');
 
     const run = { index, results, problems, written };
-    const text = format === 'json' ? renderJson(run) : format === 'github' ? renderGithub(run) : renderText(run, options.list === true);
+    const text =
+      format === 'json'
+        ? renderJson(run)
+        : format === 'github'
+          ? renderGithub(run, options.mentions === true)
+          : renderText(run, options.list === true, options.mentions === true);
     io.out(text);
 
-    const stale = results.some((result) => result.check.state !== 'ok');
+    const stale = results.some((result) => result.check.state !== 'ok') || (options.mentions === true && deadMentions.length > 0);
     const exitCode: ExitCode = options.check !== true ? EXIT.ok : problems.length > 0 ? EXIT.cannotRun : stale ? EXIT.failed : EXIT.ok;
     return { ...run, text, exitCode, indexPath };
   } finally {
@@ -412,6 +465,7 @@ export const registerDocs = (program: Command): void => {
     .option('--check', 'exit 1 when a block no longer says what the graph says, 2 when a marker cannot be read')
     .option('--write', 'regenerate the content between the markers of every block, in place')
     .option('--list', 'every block with its id, view and state')
+    .option('--mentions', 'also the pages that name a node in code: with --list every one, with --check fail on one that names what is gone')
     .option('--format <name>', `one of ${DOCS_FORMATS.join(', ')}`)
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--db <path>', 'database to read (default: the configured one)')

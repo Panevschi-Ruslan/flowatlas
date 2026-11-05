@@ -20,6 +20,16 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **Pages and comments that say why (P234).** A page that names a node in
+  code is linked to it with no block written: `docs` on `get_flow`,
+  `describe_for_prompt` and `impact` lists it (`kind: "mention"`, with the
+  heading above), and the page's "Described in" too. A name that is clearly
+  the graph's and names nothing - a renamed route, a removed method - is
+  counted by `flowatlas docs`, and `--check --mentions` fails on it. A
+  comment above a declaration tagged `WHY:`, `NOTE:`, `DECISION:`, `HACK:` or
+  `SEE:` is kept on the node and written under **Why** by `explain` and
+  `describe_for_prompt`. Exact names only; prose is never read. `docs.json`
+  is format 2.
 - **One graph for the team (P236).** `flowatlas publish` writes the graph just
   built as one checked bundle, never source; `flowatlas pull` fetches it from a
   CI artifact (`gh:owner/repo/name`), an `https://` address or a file, checks

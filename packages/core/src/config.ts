@@ -1410,6 +1410,11 @@ export const flowatlasConfigSchema = z
     docs: z
       .strictObject({
         files: z.array(z.string().min(1)).optional(),
+        /**
+         * The tags a comment above a declaration starts with to be kept on its
+         * node (P234): `WHY`, `NOTE`, `DECISION`, `HACK` and `SEE` unless set.
+         */
+        commentTags: z.array(z.string().regex(/^[A-Za-z]+$/)).optional(),
       })
       .optional(),
     /**

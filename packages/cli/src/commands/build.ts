@@ -1289,6 +1289,17 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
   // What this graph was read from, for an answer to say when the code moved
   // since (P230); about the graph that is there, so not written over a kept one.
   if (!keeping) writeFreshness(outputDir, result.project.builtAt, next, (name) => loaded.repoDir(name));
+  // The pages that describe or mention a node (P120, P234), read again against the graph just
+  // written, so the tools name them without a separate run. Read-only: nothing in a page changes.
+  if (!keeping && loaded.config.docs !== undefined) {
+    try {
+      const { runDocs } = await import('./docs.js');
+      runDocs([], { config: loaded.configPath, cwd: loaded.rootDir }, { out: () => {}, err: () => {} });
+    } catch {
+      // A page that cannot be read is `flowatlas docs`'s to say; a build is not stopped by one.
+    }
+  }
+
   // The names a search hook can say something about (P227), from the graph just written.
   if (!keeping) {
     writeNames(outputDir, namesOf(result.project, Object.fromEntries(loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]))));

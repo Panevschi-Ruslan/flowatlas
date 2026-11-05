@@ -57,7 +57,8 @@ export function createDetails(page) {
     if (!list || list.length === 0) return '';
     return `<section><h4>Described in &middot; ${list.length}</h4><ul class="doc-list">` +
       list.map(([file, line, kind, state]) => {
-        const [tone, say] = DOC_STATE_SAYS[state] || ['warn', state];
+        // A page that only names the node says nothing that can go stale (P234).
+        const [tone, say] = kind === 'mention' || kind === 'see' ? ['good', 'mentions it'] : DOC_STATE_SAYS[state] || ['warn', state];
         return `<li><span class="g-place">${esc(file)}:${line}</span> <span class="hint">${esc(kind)}</span> ` +
           `<span class="tag is-${tone}">${esc(say)}</span></li>`;
       }).join('') + '</ul></section>';

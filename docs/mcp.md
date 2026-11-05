@@ -906,6 +906,16 @@ which line; `flowatlas docs --write` regenerates it. `start_here` says
 `service`, the blocks about its nodes). Without an index, neither appears. No
 tool is added for it.
 
+**Pages that mention a node, and comments that say why** (P234). A page needs
+no block to be found: a decision record or a README that names a node in code -
+`` `POST /orders` ``, `` `order.created` ``, `` `OrdersService.create` `` - is
+listed in the same `docs`, with `kind: "mention"` and the `heading` above it, at
+most five per answer; a doc comment's `@see docs/adr/0007.md` is `kind: "see"`.
+A comment above a declaration that starts with `WHY:`, `NOTE:`, `DECISION:`,
+`HACK:` or `SEE:` is kept on its node and written by `describe_for_prompt` under
+**Why**, in the author's words. Only exact names are linked, by the rules a
+block's id is resolved by; a word in prose never is.
+
 ### Prompts and resources
 
 Three prompts write out the calls a common review takes, with the ids already

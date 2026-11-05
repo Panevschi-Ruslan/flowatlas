@@ -19,4 +19,6 @@ export type { FingerprintTree } from './fingerprint.js';
 export { NOTE_SLOT, ORPHANED_HEADING, renderTour, STEPS_END, tourNotesOf } from './tour.js';
 export type { TourNote, TourStep } from './tour.js';
 export { DOCS_FILE, DOCS_FORMAT_VERSION, docsEntrySchema, docsIndexSchema, readDocsIndex } from './index-file.js';
-export type { DocsEntry, DocsIndex } from './index-file.js';
+export type { DocsDeadMention, DocsEntry, DocsIndex, DocsMention } from './index-file.js';
+export { MIN_MENTION, mentionsOf } from './mentions.js';
+export type { Mention } from './mentions.js';

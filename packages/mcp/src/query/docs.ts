@@ -124,6 +124,42 @@ export const resolveDocTarget = (db: GraphDb, block: Pick<DocAsk, 'kind' | 'id' 
   return gone();
 };
 
+/** A route said aloud, an id of a kind flowatlas writes, or `Class.method`: a name that is clearly the graph's. */
+const ROUTE_SAID = /^[A-Z]+\s+\/\S*$/;
+const ID_SAID = /^(entry|channel|invoke|workflow|event|cron|table|db_query|http_out|consumer|producer):\S+$/;
+const MEMBER_SAID = /^([A-Z][\w$]*)\.([\w$]+)\(?\)?$/;
+
+/**
+ * What a page's mention names (P234), by the strict rules a block's id is
+ * resolved by (no fuzzy step, I3): a route said aloud, an id, a channel
+ * name, a deployed function's name, or a dotted label that is exactly one
+ * node's. Anything else - a command, a value, a word - names nothing and is
+ * not a mention at all. A name that is clearly the graph's and names nothing
+ * here is `dead`: a route said aloud, an id of a kind the graph writes, or a
+ * `Class.method` whose class the graph holds and whose method it does not -
+ * a page naming what was renamed or removed. `Class.method` of a class the
+ * project does not have (`JSON.parse`) is neither.
+ */
+export const resolveMention = (db: GraphDb, said: string): { node: GraphNode } | { dead: true; near: string[] } | undefined => {
+  const text = said.trim().replace(/\(\)$/, '');
+  const exact = db.node(text) ?? db.node(`channel:${text}`);
+  if (exact !== undefined) return { node: exact };
+  const asEntry = resolveEntryRef(db, ROUTE_SAID.test(text) ? text : /^(event|cron|rpc|workflow|bot|invoke):/.test(text) ? text : `invoke:${text}`);
+  if (isResolved(asEntry)) return { node: asEntry.node };
+  if (text.includes('.') && !/\s/.test(text)) {
+    const named = db.search(text, { limit: 50 }).filter((node) => node.label === text);
+    if (named.length === 1) return { node: named[0] as GraphNode };
+    if (named.length > 1) return undefined;
+  }
+  const member = MEMBER_SAID.exec(text);
+  const classHeld = member !== null && db.search(`${member[1]}.`, { limit: 50 }).some((node) => node.label.startsWith(`${member[1]}.`));
+  if (ROUTE_SAID.test(text) || ID_SAID.test(text) || classHeld) {
+    const pool = ROUTE_SAID.test(text) ? db.nodesByType('entry') : db.search(member?.[1] ?? text, { limit: 200 });
+    return { dead: true, near: nearNames(pool, saidAsLabel(text), NEAR).map((node) => node.id) };
+  }
+  return undefined;
+};
+
 /** Why a walk cannot see past a row: the reason of its first gap row by line (P116's `stopsIn`). */
 export const stopsIn =
   (db: GraphDb) =>
@@ -386,9 +422,23 @@ export const loadDocsIndex = (dbPath: string): DocsIndex | undefined => {
 export interface DocRef {
   file: string;
   line: number;
-  kind: DocsEntry['kind'];
+  /** A block's kind, or `mention` and `see` for a page that names the node (P234). */
+  kind: DocsEntry['kind'] | 'mention' | 'see';
   state: DocState;
+  /** For a mention: the heading above it, so a reader picks the right one of many. */
+  heading?: string;
 }
+
+/** Most pages that mention a node an answer names; the rest are counted by `docs --list --mentions`. */
+export const MAX_MENTIONS = 5;
+
+/** The mentions of the index about a node, a page's own `@see` first. */
+const mentionsAbout = (index: DocsIndex, nodeId: string): DocRef[] =>
+  index.mentions
+    .filter((mention) => mention.node === nodeId)
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'see' ? -1 : 1))
+    .slice(0, MAX_MENTIONS)
+    .map((mention) => ({ file: mention.file, line: mention.line, kind: mention.kind, state: 'ok' as const, ...(mention.heading === undefined ? {} : { heading: mention.heading }) }));
 
 /** States worked out against one open database, so a second question about the same node walks nothing. */
 const states = new WeakMap<GraphDb, { index: DocsIndex; byRow: Map<number, DocState> }>();
@@ -424,9 +474,12 @@ const stateNow = (db: GraphDb, index: DocsIndex, row: number): DocState => {
 export const docsAbout = (db: GraphDb, dbPath: string, nodeId: string): DocRef[] => {
   const index = loadDocsIndex(dbPath);
   if (index === undefined) return [];
-  return index.blocks.flatMap((entry, row) =>
-    entry.node === nodeId ? [{ file: entry.file, line: entry.line, kind: entry.kind, state: stateNow(db, index, row) }] : [],
-  );
+  return [
+    ...index.blocks.flatMap((entry, row) =>
+      entry.node === nodeId ? [{ file: entry.file, line: entry.line, kind: entry.kind, state: stateNow(db, index, row) }] : [],
+    ),
+    ...mentionsAbout(index, nodeId),
+  ];
 };
 
 /**
@@ -445,9 +498,12 @@ export const staleDocsCount = (db: GraphDb, dbPath: string, service?: string): n
 export const docsNow = (db: GraphDb, dbPath: string): Array<DocRef & { node: string }> => {
   const index = loadDocsIndex(dbPath);
   if (index === undefined) return [];
-  return index.blocks.flatMap((entry, row) =>
-    entry.node === undefined ? [] : [{ node: entry.node, file: entry.file, line: entry.line, kind: entry.kind, state: stateNow(db, index, row) }],
-  );
+  return [
+    ...index.blocks.flatMap((entry, row) =>
+      entry.node === undefined ? [] : [{ node: entry.node, file: entry.file, line: entry.line, kind: entry.kind, state: stateNow(db, index, row) }],
+    ),
+    ...index.mentions.map((mention) => ({ node: mention.node, file: mention.file, line: mention.line, kind: mention.kind, state: 'ok' as const })),
+  ];
 };
 
 /** `docs` on an answer, only when a block is about it. */

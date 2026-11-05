@@ -24,6 +24,7 @@ import {
   type PackageJson,
   type RepoGraph,
   type ServiceConfig,
+  projectText,
 } from '@flowatlas/core';
 import { createReactContext } from './context.js';
 import { declaresReact } from './framework.js';
@@ -230,6 +231,11 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const builder = new GraphBuilder({
     repo,
     ...(options.generatedAt === undefined ? {} : { generatedAt: options.generatedAt }),
+    // The tagged comments above declarations (P234), from the files this reading parsed.
+    notesFrom: {
+      text: projectText(project, rootDir),
+      ...(config?.docs?.commentTags === undefined ? {} : { tags: config.docs.commentTags }),
+    },
   });
 
   const base: ExtractContext = {
