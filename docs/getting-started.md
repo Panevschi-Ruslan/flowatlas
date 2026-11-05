@@ -510,7 +510,15 @@ flowatlas mcp --install       # register in every repository, merging what is th
 flowatlas mcp --install --dry-run
 ```
 
-After that, `claude mcp list` shows `flowatlas`.
+After that, `claude mcp list` shows `flowatlas`. To tell each assistant which
+questions to ask the graph rather than search for, and to have a search that
+names another repository's route say what it could not see:
+
+```sh
+flowatlas agents install --hook
+```
+
+([Tell the assistant when to ask](mcp.md#tell-the-assistant-when-to-ask).)
 
 ---
 

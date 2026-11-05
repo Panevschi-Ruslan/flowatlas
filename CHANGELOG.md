@@ -20,6 +20,15 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **`flowatlas agents install | status | remove` (P227).** Tells each
+  assistant when to ask the graph rather than search the files: a Claude Code
+  skill and a Cursor rule by default, a marked block in `AGENTS.md`,
+  `CLAUDE.md` and Copilot's instructions with `--instructions`. One list of
+  questions behind them all, which the graph server's instructions now name
+  too. `--hook` adds a Claude Code hook that, after a search naming a route,
+  channel or handler another repository calls, publishes or handles, says
+  which and the call that lists them; it never refuses a search and is silent
+  otherwise. `build` writes the `names.json` it reads. `init --agents`.
 - **Answers say when the code moved since the build (P230).** Every build
   writes `freshness.json`: each service's checkout and every file it read. An
   answer citing a file that changed since says so, `stale` on the graph

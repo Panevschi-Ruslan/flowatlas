@@ -81,6 +81,63 @@ and let it talk on stdin and stdout.
 The server answers `initialize` as `flowatlas`, with the version of the command
 you installed as `serverInfo.version` (`flowatlas --version` prints the same).
 
+### Tell the assistant when to ask
+
+Registering the server tells an assistant it is there, and nothing about when
+to choose it over a search. An assistant in the `web` checkout asked who calls
+`GET /orders/:id` greps `web`, finds the browser's call, and answers from half
+the project: the other callers are in checkouts it cannot see.
+
+```sh
+flowatlas agents install                   # the guide, in the files each assistant reads
+flowatlas agents install --instructions    # and a marked block in AGENTS.md, CLAUDE.md, Copilot's file
+flowatlas agents install --hook            # and the Claude Code search hook
+flowatlas agents status
+flowatlas agents remove                    # takes out what install wrote, and nothing else
+```
+
+The guide is one short page: the project's services, the questions the graph
+answers better than a search with the tool and the command for each (who calls,
+what breaks, follow a request, who handles a message, how A reaches B, is it
+dead, why a flow stops, is a branch safe), and the rules from
+[Using it well](#using-it-well). The server's instructions name the same
+questions. Nothing in it changes with a build; counts and gaps come from
+`start_here`.
+
+| Where | Read by | Written |
+|---|---|---|
+| `.claude/skills/flowatlas/SKILL.md` | Claude Code, loaded when its description fits the question | by default |
+| `.cursor/rules/flowatlas.mdc` | Cursor, as a rule it applies when its description fits | by default |
+| `AGENTS.md` | Codex, Cursor, Copilot's agent and others; Claude Code where there is no `CLAUDE.md` | `--instructions`, made where there is none |
+| `CLAUDE.md` | Claude Code | `--instructions`, only where there is one |
+| `.github/copilot-instructions.md` | Copilot | `--instructions`, only where there is one |
+
+The first two are flowatlas's own files and are rewritten whole. One edited by
+hand is kept and named (`edited by hand`), and a file of that name that is not
+flowatlas's is left alone (`not flowatlas`); `--force` replaces either. In a
+team's own file the guide is a marked block (`<!-- flowatlas:agents -->`), and
+nothing outside it is touched. `init` prints the command; `init --agents`, with
+`--instructions`, `--hook` and `--shared`, does it.
+
+**The search hook.** With `--hook`, Claude Code runs a hook after a `Grep`, or a
+`grep`, `rg`, `ag` or `git grep` in the shell. When the pattern names a route,
+channel, deployed function or handler that something in another repository
+calls, publishes or handles, it adds a few lines beside the search's result:
+
+```
+flowatlas: this search covered the web checkout only; the project's graph sees the other repositories too.
+- `GET /orders/:param`, in orders: callers in billing (1), gateway (1). who_calls({symbol: "entry:orders:http:GET:/orders/:param"}) lists them (…)
+```
+
+Otherwise it says nothing: a search for a string, a local helper or a `TODO`
+gets no word. It never refuses a search, since a search is the way to read what
+the graph could not, and a missing index, an input it cannot read or anything
+slower than 300 ms is silence. It reads `<output>/names.json`, which `build`
+writes, and not the database, so a search pays about one process start. It goes
+into `.claude/settings.local.json`, which is yours, naming this machine's
+files; `--shared` puts it in `.claude/settings.json` for the team, as
+`flowatlas agents search-hook` with a path relative to the repository.
+
 ---
 
 ## The tools

@@ -479,6 +479,12 @@ flowatlas mcp --install       # register in every repository of the project
 flowatlas mcp                 # serve over stdio, which the editor does for you
 ```
 
+`flowatlas agents install` tells each assistant when to ask the graph rather
+than search: a skill for Claude Code, a rule for Cursor, and with
+`--instructions` a block in `AGENTS.md`; `--hook` adds a Claude Code hook that,
+after a search naming a route another repository calls, says which repositories
+call it ([the graph server](docs/mcp.md#tell-the-assistant-when-to-ask)).
+
 `--install` writes `.mcp.json` into each repository, merging rather than
 overwriting so any servers already there survive. After that, `claude mcp list`
 shows `flowatlas`, and a session has these twenty-six tools, beside three

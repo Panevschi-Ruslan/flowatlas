@@ -1,3 +1,4 @@
+import { agentQuestionsLine } from '@flowatlas/core';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { registerPrompts } from './prompts.js';
@@ -36,6 +37,8 @@ export const SERVER_NAME = 'flowatlas';
  */
 export const INSTRUCTIONS = [
   'A map of every repository in this project, already joined. Ask it what reaches what instead of reading files.',
+  // The same questions the files `flowatlas agents install` writes list (P227).
+  agentQuestionsLine(),
   'Begin with start_here: counts per service, the most common gaps, and entry ids to start from.',
   'Every row carries an `id` that the next tool accepts as it is, and every answer ends with `next`, the calls that take those ids. The chains:',
   '- entry: list_entries -> get_flow({entry: id}) -> get_source({symbol: id}) on the step that matters.',

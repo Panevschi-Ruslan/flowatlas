@@ -567,6 +567,28 @@ change. `doctor` says which checkouts moved to another commit or branch since th
 build (`checkout-moved`, an info row that decides no exit code), and the graph
 server's `start_here` says the same under `moved`.
 
+### `flowatlas agents install | status | remove`
+
+Tells each assistant in the project's repositories when to ask the graph rather
+than search the files, and with `--hook` adds a Claude Code hook that says, after
+a search, what lies in the repositories it could not see (P227). The files, the
+hook and what each says are in the
+[graph server guide](mcp.md#tell-the-assistant-when-to-ask).
+
+| Flag | Does |
+|---|---|
+| `--instructions` | also a marked block in `AGENTS.md` (made where there is none), `CLAUDE.md` and `.github/copilot-instructions.md` (where they are) |
+| `--hook` | also the search hook, in `.claude/settings.local.json` |
+| `--shared` | the hook in `.claude/settings.json`, committed, instead |
+| `--force` | replace a guide edited by hand, or a file of that name that is not flowatlas's |
+| `--repo <name>` | only this service's repository |
+| `--dry-run` | say what would change and write nothing |
+
+`status` says, for each file, `installed`, `out of date` (the services changed
+since it was written), `missing`, `edited by hand` or `not flowatlas`. `remove`
+takes out what `install` wrote and nothing else, and keeps a guide edited by
+hand unless `--force`.
+
 ### `flowatlas hook install | status | remove`
 
 Git hooks that rebuild the graph in the background, so it follows a checkout or a

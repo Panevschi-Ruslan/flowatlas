@@ -1030,3 +1030,5 @@ export {
   staleOf,
 } from './freshness.js';
 export type { Checkout, CheckoutMoved, CitedFile, Freshness, FreshnessService, Stale } from './freshness.js';
+export { AGENT_QUESTIONS, AGENT_RULES, agentQuestionsLine } from './agent-guide.js';
+export type { AgentQuestion } from './agent-guide.js';

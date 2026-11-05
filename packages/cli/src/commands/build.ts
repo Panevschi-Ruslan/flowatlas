@@ -88,6 +88,7 @@ import { isIncremental, type ServiceSession } from '../build/session.js';
 import { spliceRepoGraph } from '../build/splice.js';
 import { EXIT } from '../exit.js';
 import { writeFreshness } from '../build/freshness.js';
+import { namesOf, writeNames } from '../agents/names.js';
 import { acquireBuildLock, BuildBusyError, claimAgain, leaveQueue, queueAgain, rotateBuildLog, type LockHolder } from '../build/lock.js';
 import { waysInByService, waysInTotal } from '../doctor/ways-in.js';
 import { BUILD_STAMP, VERSION } from '../version.js';
@@ -1263,6 +1264,10 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
   // What this graph was read from, for an answer to say when the code moved
   // since (P230); about the graph that is there, so not written over a kept one.
   if (!keeping) writeFreshness(outputDir, result.project.builtAt, next, (name) => loaded.repoDir(name));
+  // The names a search hook can say something about (P227), from the graph just written.
+  if (!keeping) {
+    writeNames(outputDir, namesOf(result.project, Object.fromEntries(loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]))));
+  }
   pruneServiceDirs(outputDir, loaded.config.services);
   const leftovers = leftoverRepoOutputs(
     readable.map((service) => loaded.repoDir(service)),
