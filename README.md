@@ -149,6 +149,20 @@ node -e 'const g=require("./.flowatlas/project-graph.json"),r=new Map(g.nodes.ma
 `flowatlas stats` and `flowatlas doctor` print the same figures for your own
 project.
 
+### Measured with an assistant
+
+Whether an assistant answers questions about a multi-repository project better
+with flowatlas than without it is measured by a benchmark in this repository:
+a generated project with its own answer key, four arms (with and without the
+graph, from one repository and from all of them), the questions where the
+graph should not help asked beside the ones where it should, and the
+expectations written down before the first run ([docs/benchmark.md](docs/benchmark.md)).
+
+<!-- benchmark:start -->
+No run has been recorded yet; the figures appear here, quoted from the report,
+after the first full run.
+<!-- benchmark:end -->
+
 ---
 
 ## Install
@@ -1128,7 +1142,8 @@ configuration key. `docs/run-time.md` adds run time from an end-to-end test
 run in five minutes. `docs/mcp.md` is the graph server. `docs/ci.md` is how to run
 it in a build. `docs/coverage.md` is how this tool is measured against
 repositories nobody here wrote, by one counting rule; the list of repositories and
-the reports stay on the machine that measures. The [fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
+the reports stay on the machine that measures. `docs/benchmark.md` is whether an
+assistant answers better with it, measured against a key it did not write. The [fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists every fixture and what it proves, generated from their READMEs.
 `PUBLISHING.md` is the release runbook. `scripts/demo/record.sh` remakes every terminal
 recording in the walkthrough from `fixtures/multi-repo`, and `scripts/demo/page-tour.mjs`

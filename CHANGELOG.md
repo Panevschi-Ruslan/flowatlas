@@ -20,6 +20,16 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **Does it help an assistant, measured (P238).** `scripts/bench-agent/`
+  generates an eight-repository TypeScript project from a seed, with traps and
+  an answer key written from the generator's own model, asks Claude Code 30
+  fixed questions about it in four arms (one repository or all of them, with
+  the graph or without), and marks the answers against the key. A pilot of 32
+  sessions estimates a full run, which starts only after it; a run stopped by a
+  usage limit resumes. The expectations are committed before any run and the
+  report (`docs/benchmark.md`) checks every one, and lists each question where
+  the graph did worse. `run.mjs --dry` - the generator, the key, the scorers and
+  the graph held to the key, with no assistant - is part of `pnpm check`.
 - **What assistants asked, kept on this machine (P235).** With `"log":
   { "questions": true }` or `FLOWATLAS_LOG_QUESTIONS=1`, every MCP tool call and
   every `flow`, `impact`, `channel`, `path` and `explain` adds a line to

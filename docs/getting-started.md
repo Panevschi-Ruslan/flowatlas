@@ -536,6 +536,8 @@ flowatlas agents install --hook
   and timings on the map.
 - [Coverage](coverage.md) — how the tool is measured against repositories nobody
   here wrote.
+- [The benchmark](benchmark.md) — whether an assistant answers better with it,
+  with and without the graph, against a key the tool did not write.
 - [The README](../README.md) — how the joining works, what it reads, and what it
   still cannot.
 
