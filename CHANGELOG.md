@@ -92,7 +92,9 @@ only one of them moved.
   so. `build --on-pulled` reads what is checked out and takes the rest from
   the team's; `diff --pulled` compares a branch with main as CI built it. The
   action's `publish: true` uploads the bundle, and `mcp.pull: on-start` pulls
-  when the server starts. A token is never sent to another host.
+  when the server starts. A token is never sent to another origin nor down to
+  plain http, and `gh:` takes only an artifact from a successful push to the
+  default branch, never one a fork's pull request made.
 - **A GitHub Action, and `diff --format comment` (P231).** The action in
   `action/` fetches the other repositories a configuration names, caches the
   base graphs under the base commit, and keeps one pull request comment up to
@@ -131,10 +133,12 @@ only one of them moved.
   server's answers and the commands' JSON and one line on stderr; a `touch` is
   not a change. `start_here` says `moved` and `doctor` an info row
   (`checkout-moved`) for a checkout on another commit or branch.
-- **One build at a time (P230).** A build holds `<output>/build.lock`; a second
-  says which one is running and exits 2, or waits with `--wait <seconds>`, and
-  a lock a crashed build left is taken over. `build --background` returns at
-  once and coalesces requests into one more build.
+- **One build at a time (P230).** A build holds `<output>/build.lock`, put in
+  place whole, so of builds started at the same moment only one takes it; a
+  second says which one is running and exits 2, or waits with
+  `--wait <seconds>`, and a lock a crashed build left is taken over by one
+  build only. `build --background` returns at once and coalesces requests into
+  one more build.
 - **`flowatlas hook install | status | remove` (P230).** Git hooks that rebuild
   in the background after a checkout, a merge or a rebase, written as a marked
   block beside what a hook already holds; a repository whose hooks another tool

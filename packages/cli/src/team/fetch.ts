@@ -7,12 +7,14 @@ import { readZip } from './archive.js';
  * Where a team's graph comes from (P236), fetched with nothing but `fetch`.
  *
  * - `gh:owner/repo/artifact-name`: the newest artifact of that name from a
- *   successful run on the repository's default branch, through the GitHub
- *   API, with `GITHUB_TOKEN`, `GH_TOKEN` or the `gh` command's own token. The
- *   way the maintainer chose to keep a team's graph: private with the code.
+ *   successful run of a push to the repository's default branch - its own
+ *   code, never a fork's pull request - through the GitHub API, with
+ *   `GITHUB_TOKEN`, `GH_TOKEN` or the `gh` command's own token. The way the
+ *   maintainer chose to keep a team's graph: private with the code.
  * - `https://…`: any address, with `Authorization: Bearer <token>` when one is
- *   given. A redirect to another host is followed without it (D3), as a
- *   release asset's redirect to storage is.
+ *   given. A redirect to another origin is followed without it (D3), as a
+ *   release asset's redirect to storage is; one to plain http off this
+ *   machine is refused.
  * - anything else: a file.
  *
  * A source that has not changed since the last pull is a conditional request
@@ -44,20 +46,30 @@ const ghTokenOf = (): string | undefined => {
   }
 };
 
-/** Follows redirects by hand, so the token goes only to the host it was given for (D3). */
+/** Whether an address is plain http to this machine: the one place a graph may come from without https. */
+const isLocalHttp = (url: URL): boolean => url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+
+/**
+ * Follows redirects by hand, so the token goes only to the origin it was
+ * given for - scheme, host and port (D3) - and never down to plain http: a
+ * redirect to http off this machine is refused, as an http source is.
+ */
 const get = async (fetchImpl: typeof fetch, url: string, headers: Record<string, string>, token: string | undefined): Promise<Response> => {
-  const origin = new URL(url).host;
+  const origin = new URL(url).origin;
   let at = url;
   for (let hop = 0; hop < 10; hop += 1) {
-    const sameHost = new URL(at).host === origin;
+    const sameOrigin = new URL(at).origin === origin;
     const response = await fetchImpl(at, {
       redirect: 'manual',
-      headers: { ...headers, ...(token !== undefined && sameHost ? { Authorization: `Bearer ${token}` } : {}) },
+      headers: { ...headers, ...(token !== undefined && sameOrigin ? { Authorization: `Bearer ${token}` } : {}) },
     });
     if (response.status >= 300 && response.status < 400 && response.status !== 304) {
       const next = response.headers.get('location');
       if (next === null) return response;
-      at = new URL(next, at).toString();
+      const to = new URL(next, at);
+      // Named by its origin only: a signed address carries its signature in the query.
+      if (to.protocol !== 'https:' && !isLocalHttp(to)) throw new Error(`${url}: redirected to ${to.origin}, which is not https`);
+      at = to.toString();
       continue;
     }
     return response;
@@ -67,6 +79,36 @@ const get = async (fetchImpl: typeof fetch, url: string, headers: Record<string,
 
 const failed = (url: string, response: Response): Error =>
   new Error(`${url} answered ${response.status}${response.status === 401 || response.status === 403 ? ': the token is missing or cannot read it' : response.status === 404 ? ': nothing there' : ''}`);
+
+/** An Actions artifact as the listing gives it. */
+interface Artifact {
+  id: number;
+  expired: boolean;
+  created_at: string;
+  archive_download_url: string;
+  workflow_run?: { id?: number; head_branch?: string; repository_id?: number; head_repository_id?: number };
+}
+
+/** The run an artifact came from, as `actions/runs/{id}` gives it. */
+interface WorkflowRun {
+  event?: string;
+  conclusion?: string | null;
+  head_branch?: string;
+  repository?: { id?: number };
+  head_repository?: { id?: number };
+}
+
+/** Whether a run built this repository's own code, not a fork's. */
+const isOwnRun = (run: Artifact['workflow_run']): boolean =>
+  typeof run?.id === 'number' && typeof run.repository_id === 'number' && run.head_repository_id === run.repository_id;
+
+/** Whether a run is a push to `branch` of this repository's own code that succeeded. */
+const isPushThatPassed = (run: WorkflowRun, branch: string): boolean =>
+  run.event === 'push' &&
+  run.conclusion === 'success' &&
+  run.head_branch === branch &&
+  typeof run.repository?.id === 'number' &&
+  run.head_repository?.id === run.repository.id;
 
 const viaGitHub = async (spec: string, options: FetchOptions, fetchImpl: typeof fetch): Promise<Fetched> => {
   const match = /^gh:([\w.-]+)\/([\w.-]+)\/(.+)$/.exec(spec);
@@ -81,13 +123,23 @@ const viaGitHub = async (spec: string, options: FetchOptions, fetchImpl: typeof 
     return (await response.json()) as T;
   };
   const { default_branch: branch } = await api<{ default_branch: string }>(`/repos/${owner}/${repo}`);
-  const { artifacts } = await api<{
-    artifacts: Array<{ id: number; expired: boolean; created_at: string; archive_download_url: string; workflow_run?: { head_branch?: string } }>;
-  }>(`/repos/${owner}/${repo}/actions/artifacts?name=${encodeURIComponent(name)}&per_page=100`);
-  const newest = artifacts
-    .filter((artifact) => !artifact.expired && artifact.workflow_run?.head_branch === branch)
-    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))[0];
-  if (newest === undefined) throw new Error(`${owner}/${repo} has no artifact named ${name} from ${branch} that has not expired`);
+  const { artifacts } = await api<{ artifacts: Artifact[] }>(`/repos/${owner}/${repo}/actions/artifacts?name=${encodeURIComponent(name)}&per_page=100`);
+  // A pull request from a fork runs on its own head branch, which may be
+  // named as the default branch is: only a run of this repository's own code
+  // counts, so a stranger's pull request cannot hand the team its graph.
+  const candidates = artifacts
+    .filter((artifact) => !artifact.expired && artifact.workflow_run?.head_branch === branch && isOwnRun(artifact.workflow_run))
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  let newest: Artifact | undefined;
+  for (const artifact of candidates) {
+    // The listing says neither how the run started nor how it ended: its run does.
+    const run = await api<WorkflowRun>(`/repos/${owner}/${repo}/actions/runs/${artifact.workflow_run?.id}`);
+    if (isPushThatPassed(run, branch)) {
+      newest = artifact;
+      break;
+    }
+  }
+  if (newest === undefined) throw new Error(`${owner}/${repo} has no artifact named ${name} from a successful push to ${branch} that has not expired`);
   const from = `${owner}/${repo} artifact ${name} #${newest.id} (${newest.created_at})`;
   if (options.etag === String(newest.id)) return { etag: String(newest.id), from };
   const response = await get(fetchImpl, newest.archive_download_url, headers, token);
@@ -103,9 +155,9 @@ export const fetchBundle = async (source: string, options: FetchOptions = {}, cw
   const fetchImpl = options.fetchImpl ?? fetch;
   if (source.startsWith('gh:')) return viaGitHub(source, options, fetchImpl);
   if (/^https?:\/\//.test(source)) {
-    if (source.startsWith('http://') && !/^http:\/\/(localhost|127\.0\.0\.1|\[::1\])[:/]/.test(source)) {
-      throw new Error(`${source}: only https, or http on this machine`);
-    }
+    // The host as parsed, not the text: `http://localhost:1@elsewhere.test/` goes elsewhere.
+    const url = new URL(source);
+    if (url.protocol === 'http:' && !isLocalHttp(url)) throw new Error(`${source}: only https, or http on this machine`);
     const response = await get(fetchImpl, source, options.etag === undefined ? {} : { 'If-None-Match': options.etag }, options.token);
     if (response.status === 304) return { ...(options.etag === undefined ? {} : { etag: options.etag }), from: source };
     if (!response.ok) throw failed(source, response);

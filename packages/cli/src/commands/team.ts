@@ -75,14 +75,14 @@ export const runPull = async (source: string | undefined, options: PullOptions, 
     io.err(`the team's graph is unchanged since ${last?.pulledAt ?? 'the last pull'} (${fetched.from})\n`);
     return { state: 'unchanged', from: fetched.from };
   }
+  const repoDirs = new Map(loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]));
   let bundle;
   try {
     bundle = openBundle(fetched.archive);
+    installBundle(loaded.outputDir, bundle, { source: from, ...(fetched.etag === undefined ? {} : { etag: fetched.etag }) }, (name) => repoDirs.get(name));
   } catch (cause) {
-    throw cannotRun(cause instanceof BundleError ? cause.message : `could not read ${fetched.from}: ${String(cause)}`);
+    throw cannotRun(cause instanceof BundleError ? cause.message : `could not install ${fetched.from}: ${cause instanceof Error ? cause.message : String(cause)}`);
   }
-  const repoDirs = new Map(loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]));
-  installBundle(loaded.outputDir, bundle, { source: from, ...(fetched.etag === undefined ? {} : { etag: fetched.etag }) }, (name) => repoDirs.get(name));
   const commits = bundle.manifest.services.map((service) => `${service.name}@${service.commit === null ? 'no commit' : service.commit.slice(0, 7)}`);
   io.err(`pulled the team's graph, built ${bundle.manifest.builtAt} by flowatlas ${bundle.manifest.flowatlasVersion}: ${commits.join(', ')}\n`);
   return { state: 'installed', from: fetched.from, manifest: bundle.manifest };

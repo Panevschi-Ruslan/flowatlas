@@ -90,11 +90,18 @@ is nothing here to compare it with.
 
 | `remote.url` | Reads |
 |---|---|
-| `gh:owner/repo/name` | the newest artifact of that name from a successful run on the repository's default branch, through the GitHub API, with `GITHUB_TOKEN`, `GH_TOKEN` or the `gh` command's own login; it downloads as a zip, and the bundle inside is used |
-| `https://…` | any address, a release asset or an object store; with `remote.tokenEnv` naming a variable, its token is sent as `Authorization: Bearer`, and never to another host after a redirect |
+| `gh:owner/repo/name` | the newest artifact of that name from a run that a push to the repository's default branch started and that succeeded, through the GitHub API, with `GITHUB_TOKEN`, `GH_TOKEN` or the `gh` command's own login; it downloads as a zip, and the bundle inside is used |
+| `https://…` | any address, a release asset or an object store; with `remote.tokenEnv` naming a variable, its token is sent as `Authorization: Bearer`, and never to another origin (scheme, host and port) after a redirect |
 | a path or `file:` | a file, on a shared disk or downloaded by hand |
 
-`http://` is refused except on this machine.
+`http://` is refused except on this machine, and so is a redirect to it.
+
+A `gh:` source reads only the repository's own code: an artifact from a
+pull request is never taken, not from a fork's branch that happens to be named
+like the default one, and not from a `pull_request_target` run, which reports
+the default branch but is started by the request. So the workflow that
+uploads the graph has to run on `push`, as the one above does; an artifact from
+a run started by hand or on a schedule is not read either.
 
 ## What is in it
 

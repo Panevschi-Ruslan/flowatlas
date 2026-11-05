@@ -176,28 +176,40 @@ export const installBundle = (
   const target = join(outputDir, PULLED_DIR);
   const staging = `${target}.incoming`;
   rmSync(staging, { recursive: true, force: true });
-  mkdirSync(join(staging, 'services'), { recursive: true });
-  for (const file of bundle.files) {
-    if (file.name.includes('..') || file.name.startsWith('/')) throw new BundleError(`the bundle names a path outside itself: ${file.name}`);
-    const path = join(staging, file.name);
-    mkdirSync(dirname(path), { recursive: true });
-    writeFileSync(path, file.data);
-  }
-  const freshnessPath = join(staging, FRESHNESS_FILE);
-  if (existsSync(freshnessPath)) {
-    const freshness = JSON.parse(readFileSync(freshnessPath, 'utf8')) as Freshness;
-    for (const [name, service] of Object.entries(freshness.services)) {
-      const here = dirOf(name);
-      if (here !== undefined) service.dir = here;
+  try {
+    mkdirSync(join(staging, 'services'), { recursive: true });
+    for (const file of bundle.files) {
+      if (file.name.includes('..') || file.name.startsWith('/')) throw new BundleError(`the bundle names a path outside itself: ${file.name}`);
+      const path = join(staging, file.name);
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, file.data);
     }
-    writeFileSync(freshnessPath, `${JSON.stringify(freshness)}\n`);
+    const freshnessPath = join(staging, FRESHNESS_FILE);
+    if (existsSync(freshnessPath)) {
+      const freshness = JSON.parse(readFileSync(freshnessPath, 'utf8')) as Freshness;
+      for (const [name, service] of Object.entries(freshness.services)) {
+        const here = dirOf(name);
+        if (here !== undefined) service.dir = here;
+      }
+      writeFileSync(freshnessPath, `${JSON.stringify(freshness)}\n`);
+    }
+    const record: PulledSource = { ...source, pulledAt: new Date().toISOString(), manifest: bundle.manifest };
+    writeFileSync(join(staging, SOURCE_FILE), `${JSON.stringify(record, null, 2)}\n`);
+  } catch (cause) {
+    // Refused halfway: nothing of it is left, and the graph pulled before stands.
+    rmSync(staging, { recursive: true, force: true });
+    throw cause;
   }
-  const record: PulledSource = { ...source, pulledAt: new Date().toISOString(), manifest: bundle.manifest };
-  writeFileSync(join(staging, SOURCE_FILE), `${JSON.stringify(record, null, 2)}\n`);
   const old = `${target}.previous`;
   rmSync(old, { recursive: true, force: true });
   if (existsSync(target)) renameSync(target, old);
-  renameSync(staging, target);
+  try {
+    renameSync(staging, target);
+  } catch (cause) {
+    if (existsSync(old)) renameSync(old, target);
+    rmSync(staging, { recursive: true, force: true });
+    throw cause;
+  }
   rmSync(old, { recursive: true, force: true });
   return target;
 };

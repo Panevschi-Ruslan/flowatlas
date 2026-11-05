@@ -1698,6 +1698,27 @@ const BACKGROUND_WAIT_SECONDS = 1800;
  * build earn one more pass, not ten (D4). What it says goes to
  * `<output>/build.log`.
  */
+/**
+ * The arguments the build `--background` starts is given: every choice of
+ * what to read and how that the request made, then the wait and the queue.
+ */
+export const backgroundArgs = (settings: BuildOptions, configPath: string, outputDir: string, queuedBy: number): string[] => [
+  'build',
+  '--config',
+  configPath,
+  ...(settings.out === undefined ? [] : ['--out', outputDir]),
+  ...(settings.service ?? []).flatMap((name) => ['--service', name]),
+  ...(settings.concurrency === undefined ? [] : ['--concurrency', String(settings.concurrency)]),
+  ...(settings.heap === undefined ? [] : ['--heap', String(settings.heap)]),
+  ...(settings.skipFrontend === true ? ['--skip-frontend'] : []),
+  ...(settings.cache === false ? ['--no-cache'] : []),
+  ...(settings.onPulled === true ? ['--on-pulled'] : []),
+  '--wait',
+  String(BACKGROUND_WAIT_SECONDS),
+  '--queued-by',
+  String(queuedBy),
+];
+
 const startInBackground = (settings: BuildOptions): void => {
   const loaded = loadConfig(settings.config ?? process.cwd());
   const outputDir = settings.out === undefined ? loaded.outputDir : resolve(settings.out);
@@ -1714,22 +1735,7 @@ const startInBackground = (settings: BuildOptions): void => {
   }
   const log = rotateBuildLog(outputDir);
   const fd = openSync(log, 'a');
-  const args = [
-    binPath(),
-    'build',
-    '--config',
-    loaded.configPath,
-    ...(settings.out === undefined ? [] : ['--out', outputDir]),
-    ...(settings.service ?? []).flatMap((name) => ['--service', name]),
-    ...(settings.concurrency === undefined ? [] : ['--concurrency', String(settings.concurrency)]),
-    ...(settings.heap === undefined ? [] : ['--heap', String(settings.heap)]),
-    ...(settings.skipFrontend === true ? ['--skip-frontend'] : []),
-    ...(settings.cache === false ? ['--no-cache'] : []),
-    '--wait',
-    String(BACKGROUND_WAIT_SECONDS),
-    '--queued-by',
-    String(process.pid),
-  ];
+  const args = [binPath(), ...backgroundArgs(settings, loaded.configPath, outputDir, process.pid)];
   const child = spawn(process.execPath, args, { detached: true, stdio: ['ignore', fd, fd], windowsHide: true });
   closeSync(fd);
   if (child.pid !== undefined) claimAgain(outputDir, process.pid, child.pid);
