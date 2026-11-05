@@ -1,4 +1,4 @@
-import { forEachCall, makeLeafId } from '@flowatlas/core';
+import { forEachCall, makeLeafId, normalizeFilePath } from '@flowatlas/core';
 import { definePass, scopesOf, type NestExtractContext, type NestExtractorPass } from '@flowatlas/extractor-nestjs';
 import { clientEndpointIn, documentOf, GRAPHQL_META, graphqlCallOf, operationMeta, operationsOf } from '@flowatlas/graphql';
 import type { CallExpression } from 'ts-morph';
@@ -29,7 +29,7 @@ export const graphqlCallsPass: NestExtractorPass = definePass('graphql-calls', (
       const id = makeLeafId('http_out', ctx.repo, scope.file, site.line, site.column);
       const reading = documentOf(found.document);
       const operation = reading.kind === 'read' ? operationsOf(reading.document, reading.fragments)[0] : undefined;
-      const graphql = reading.kind === 'read' && operation !== undefined ? operationMeta(operation, reading, ctx.fileOf(reading.sourceFile as never), found.library, found.transport) : undefined;
+      const graphql = reading.kind === 'read' && operation !== undefined ? operationMeta(operation, reading, (path) => normalizeFilePath(path, ctx.repoDir), found.library, found.transport) : undefined;
       if (reading.kind !== 'read') {
         ctx.builder.addUnresolved({
           file: scope.file,

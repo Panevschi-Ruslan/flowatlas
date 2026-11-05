@@ -2,6 +2,22 @@ import { isNullable, typeText, type Document, type FragmentDefinition, type Oper
 import { namedTypeIn, type SchemaSummary } from './schema.js';
 
 /**
+ * Where a document's text is written, as its reader names it: the file, and
+ * the line of an offset into the text.
+ */
+export interface Written {
+  readonly path: string;
+  readonly lineAt: (offset: number) => number;
+}
+
+/**
+ * A fragment another document defines, handed to the one that spreads it,
+ * with where that document is written: its fields are at their own lines of
+ * their own file, not at offsets into the operation's text.
+ */
+export type HandedFragment = FragmentDefinition & { readonly written?: Written };
+
+/**
  * What an operation asks for (P232): the root fields it selects and, under
  * each, the fields selected from what that returns - fragments put in place,
  * so the tree is what reaches the server whatever was spelled as a fragment.
@@ -13,8 +29,10 @@ export interface SelectedField {
   readonly arguments: readonly string[];
   /** The type a fragment or an inline fragment narrowed this selection to. */
   readonly on?: string;
-  /** Offset into the document's text. */
+  /** Offset into the document's text, or into the text of the fragment it came from. */
   readonly at: number;
+  /** Where that fragment is written, when it came from another document. */
+  readonly written?: Written;
   readonly selections: readonly SelectedField[];
 }
 
@@ -28,7 +46,14 @@ export interface Operation {
   readonly missingFragments: readonly string[];
 }
 
-const flatten = (selections: readonly Selection[], fragments: ReadonlyMap<string, FragmentDefinition>, missing: Set<string>, on: string | undefined, depth: number): SelectedField[] => {
+const flatten = (
+  selections: readonly Selection[],
+  fragments: ReadonlyMap<string, HandedFragment>,
+  missing: Set<string>,
+  on: string | undefined,
+  written: Written | undefined,
+  depth: number,
+): SelectedField[] => {
   if (depth > 32) return [];
   return selections.flatMap((selection): SelectedField[] => {
     if (selection.kind === 'field') {
@@ -39,29 +64,31 @@ const flatten = (selections: readonly Selection[], fragments: ReadonlyMap<string
           arguments: selection.arguments.map((arg) => arg.name),
           ...(on === undefined ? {} : { on }),
           at: selection.at,
-          selections: flatten(selection.selections, fragments, missing, undefined, depth + 1),
+          ...(written === undefined ? {} : { written }),
+          selections: flatten(selection.selections, fragments, missing, undefined, written, depth + 1),
         },
       ];
     }
-    if (selection.kind === 'inline') return flatten(selection.selections, fragments, missing, selection.on ?? on, depth + 1);
+    if (selection.kind === 'inline') return flatten(selection.selections, fragments, missing, selection.on ?? on, written, depth + 1);
     const fragment = fragments.get(selection.name);
     if (fragment === undefined) {
       missing.add(selection.name);
       return [];
     }
-    return flatten(fragment.selections, fragments, missing, fragment.on, depth + 1);
+    // A fragment of the operation's own document is written where the operation is.
+    return flatten(fragment.selections, fragments, missing, fragment.on, fragment.written, depth + 1);
   });
 };
 
 /** Every operation of a document, with its own fragments and the ones handed in put in place. */
-export const operationsOf = (document: Document, extra: readonly FragmentDefinition[] = []): Operation[] => {
-  const fragments = new Map<string, FragmentDefinition>(extra.map((fragment) => [fragment.name, fragment]));
+export const operationsOf = (document: Document, extra: readonly HandedFragment[] = []): Operation[] => {
+  const fragments = new Map<string, HandedFragment>(extra.map((fragment) => [fragment.name, fragment]));
   for (const definition of document.definitions) if (definition.kind === 'fragment') fragments.set(definition.name, definition);
   return document.definitions
     .filter((definition): definition is OperationDefinition => definition.kind === 'operation')
     .map((definition) => {
       const missing = new Set<string>();
-      const fields = flatten(definition.selections, fragments, missing, undefined, 0);
+      const fields = flatten(definition.selections, fragments, missing, undefined, undefined, 0);
       return {
         operation: definition.operation,
         ...(definition.name === undefined ? {} : { name: definition.name }),

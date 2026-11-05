@@ -1,4 +1,4 @@
-import { forEachCall, makeLeafId, siteOf } from '@flowatlas/core';
+import { forEachCall, makeLeafId, normalizeFilePath, siteOf } from '@flowatlas/core';
 import { clientEndpointIn, documentOf, GRAPHQL_META, graphqlCallOf, operationMeta, operationsOf, type GraphqlCall } from '@flowatlas/graphql';
 import type { CallExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
@@ -48,7 +48,7 @@ export const graphqlPass = definePass('graphql', (ctx: ReactExtractContext) => {
       if (operation === undefined) {
         ctx.report({ file, line: at.line, reason: 'graphql-document-dynamic', level: 'action', message: 'the document holds no operation', hint: 'Hand the call a document with a query, a mutation or a subscription.', symbol: call.getExpression().getText() });
       } else {
-        graphql = { ...operationMeta(operation, reading, ctx.fileOf(reading.sourceFile), found.library, found.transport) };
+        graphql = { ...operationMeta(operation, reading, (path) => normalizeFilePath(path, ctx.repoDir), found.library, found.transport) };
         if (operation.missingFragments.length > 0 || reading.unread > 0) {
           ctx.report({
             file,

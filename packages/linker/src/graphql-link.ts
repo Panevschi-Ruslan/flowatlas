@@ -42,7 +42,7 @@ export const joinGraphqlFields = (nodes: ReadonlyMap<string, GraphNode>, edges: 
           to: entryId,
           type: edge.type,
           confidence: edge.confidence,
-          ...(call.file === undefined ? {} : { file: operation.document.file }),
+          ...(call.file === undefined ? {} : { file: field.file ?? operation.document.file }),
           line: field.line,
           meta: { [GRAPHQL_META]: { operation: named, field: `${owner}.${field.field}`, ...(field.alias === undefined ? {} : { alias: field.alias }) } },
         };
@@ -52,7 +52,7 @@ export const joinGraphqlFields = (nodes: ReadonlyMap<string, GraphNode>, edges: 
         // does not have is the contract's to say (`graphql-field-unknown`).
         rows.push({
           service: call.repo,
-          file: operation.document.file,
+          file: field.file ?? operation.document.file,
           line: field.line,
           reason: 'graphql-field-no-resolver',
           level: 'action',

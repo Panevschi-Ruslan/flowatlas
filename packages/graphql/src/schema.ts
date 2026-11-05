@@ -76,6 +76,21 @@ export const schemaOf = (documents: readonly Document[]): SchemaSummary => {
   };
 };
 
+/**
+ * The fields of a type two readings declare, the second's over the first's -
+ * but a field the second declares with no arguments keeps the first's: a
+ * resolver whose code names no arguments does not take away the ones the SDL
+ * declares.
+ */
+const mergeFields = (a: SchemaType['fields'], b: SchemaType['fields']): Record<string, SchemaField> => {
+  const fields: Record<string, SchemaField> = { ...a, ...b };
+  for (const [name, field] of Object.entries(b ?? {})) {
+    const args = a?.[name]?.args;
+    if (field.args === undefined && args !== undefined) fields[name] = { ...field, args };
+  }
+  return fields;
+};
+
 /** Two summaries as one: the second's fields added to the first's types. */
 export const mergeSchemas = (a: SchemaSummary, b: SchemaSummary): SchemaSummary => {
   const types: Record<string, SchemaType> = { ...a.types };
@@ -86,7 +101,7 @@ export const mergeSchemas = (a: SchemaSummary, b: SchemaSummary): SchemaSummary 
         ? type
         : {
             ...known,
-            fields: { ...known.fields, ...type.fields },
+            fields: mergeFields(known.fields, type.fields),
             ...(known.possible === undefined && type.possible === undefined ? {} : { possible: [...new Set([...(known.possible ?? []), ...(type.possible ?? [])])].sort() }),
           };
   }

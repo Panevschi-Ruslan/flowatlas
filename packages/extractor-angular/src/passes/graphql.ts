@@ -1,4 +1,4 @@
-import { forEachCall, makeLeafId, methodBodies, siteOf } from '@flowatlas/core';
+import { forEachCall, makeLeafId, methodBodies, normalizeFilePath, siteOf } from '@flowatlas/core';
 import {
   clientEndpointIn,
   documentOf,
@@ -50,7 +50,7 @@ export const graphqlPass = definePass('graphql', (ctx: AngularExtractContext) =>
     const id = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
     const reading = documentOf(found.document);
     const operation = reading.kind === 'read' ? operationsOf(reading.document, reading.fragments)[0] : undefined;
-    const graphql = reading.kind === 'read' && operation !== undefined ? operationMeta(operation, reading, ctx.fileOf(reading.sourceFile as never), found.library, found.transport) : undefined;
+    const graphql = reading.kind === 'read' && operation !== undefined ? operationMeta(operation, reading, (path) => normalizeFilePath(path, ctx.repoDir), found.library, found.transport) : undefined;
     if (reading.kind !== 'read') {
       ctx.report({
         file,

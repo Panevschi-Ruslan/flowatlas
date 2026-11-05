@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T17:52:18.471Z",
+  "builtAt": "2026-11-05T20:17:36.657Z",
   "configHash": "bc4a4584505a",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 806,
+      "durationMs": 0,
       "packages": {
         "name": "graphql-admin",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 11,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 730,
+      "durationMs": 0,
       "packages": {
         "name": "graphql-catalog",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 14,
       "types": 3,
       "unresolved": 1,
-      "durationMs": 931,
+      "durationMs": 0,
       "packages": {
         "name": "graphql-orders",
         "runtime": [
@@ -71,11 +71,11 @@
       "repo": "./web",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 10,
-      "edges": 6,
+      "nodes": 12,
+      "edges": 7,
       "types": 0,
-      "unresolved": 4,
-      "durationMs": 722,
+      "unresolved": 5,
+      "durationMs": 0,
       "packages": {
         "name": "graphql-web",
         "runtime": [
@@ -98,8 +98,8 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 6,
-    "resolved": 6,
+    "total": 7,
+    "resolved": 7,
     "unresolved": 0,
     "byReason": {}
   },
@@ -123,13 +123,13 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 53,
-    "edges": 50,
+    "nodes": 55,
+    "edges": 54,
     "types": 4,
-    "missed": 6,
-    "sites": 6,
+    "missed": 7,
+    "sites": 7,
     "notes": 0,
     "findings": 0,
-    "unresolved": 6
+    "unresolved": 7
   }
 }

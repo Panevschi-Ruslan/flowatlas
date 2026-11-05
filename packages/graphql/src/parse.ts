@@ -122,6 +122,13 @@ export class GraphqlSyntaxError extends Error {
 
 type Token = { kind: 'punct' | 'name' | 'number' | 'string' | 'eof'; value: string; at: number };
 
+/**
+ * How deep selections, values and types may nest: far past anything written
+ * by hand or generated. Deeper is refused as a syntax error, not read until
+ * the stack runs out.
+ */
+const MAX_NESTING = 512;
+
 const PUNCT = new Set(['!', '$', '&', '(', ')', ':', '=', '@', '[', ']', '{', '|', '}']);
 
 const tokenize = (text: string): Token[] => {
@@ -163,7 +170,9 @@ const tokenize = (text: string): Token[] => {
     if (char === '"') {
       const start = at;
       if (text.startsWith('"""', at)) {
-        const close = text.indexOf('"""', at + 3);
+        // `\"""` is the one escape a block string has: three quotes inside it.
+        let close = text.indexOf('"""', at + 3);
+        while (close !== -1 && text[close - 1] === '\\') close = text.indexOf('"""', close + 3);
         if (close === -1) throw new GraphqlSyntaxError('unterminated block string', at);
         at = close + 3;
       } else {
@@ -188,6 +197,7 @@ const tokenize = (text: string): Token[] => {
 class Parser {
   readonly #tokens: Token[];
   #at = 0;
+  #depth = 0;
 
   constructor(text: string) {
     this.#tokens = tokenize(text);
@@ -224,6 +234,17 @@ class Parser {
     if (token.kind !== 'name') throw new GraphqlSyntaxError(`expected a name, found ${token.value || 'the end'}`, token.at);
     this.#at += 1;
     return token;
+  }
+
+  /** One level further into a selection set, a value or a type. */
+  #nested<T>(read: () => T): T {
+    if (this.#depth >= MAX_NESTING) throw new GraphqlSyntaxError(`nested more than ${MAX_NESTING} deep`, this.#token.at);
+    this.#depth += 1;
+    try {
+      return read();
+    } finally {
+      this.#depth -= 1;
+    }
   }
 
   document(): Document {
@@ -287,10 +308,12 @@ class Parser {
   }
 
   #selectionSet(): Selection[] {
-    this.#expect('{');
-    const found: Selection[] = [];
-    while (!this.#skip('}')) found.push(this.#selection());
-    return found;
+    return this.#nested(() => {
+      this.#expect('{');
+      const found: Selection[] = [];
+      while (!this.#skip('}')) found.push(this.#selection());
+      return found;
+    });
   }
 
   #selection(): Selection {
@@ -337,6 +360,10 @@ class Parser {
 
   /** A value, as written, and the variable it is when it is one. */
   #value(): { text: string; variable?: string } {
+    return this.#nested(() => this.#valueHere());
+  }
+
+  #valueHere(): { text: string; variable?: string } {
     const token = this.#token;
     if (this.#skip('$')) {
       const name = this.#name().value;
@@ -371,6 +398,10 @@ class Parser {
   }
 
   #type(): TypeRef {
+    return this.#nested(() => this.#typeHere());
+  }
+
+  #typeHere(): TypeRef {
     let type: TypeRef;
     if (this.#skip('[')) {
       const of = this.#type();

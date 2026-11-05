@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T17:52:18.471Z",
+  "builtAt": "2026-11-05T20:17:36.657Z",
   "services": [
     {
       "name": "orders",
@@ -428,7 +428,7 @@
         "returns": "Order!",
         "args": {
           "id": {
-            "type": "String!",
+            "type": "ID!",
             "required": true
           }
         },
@@ -543,7 +543,7 @@
                     "type": "Order!",
                     "args": {
                       "id": {
-                        "type": "String!",
+                        "type": "ID!",
                         "required": true
                       }
                     }
@@ -900,11 +900,11 @@
       "repo": "web",
       "meta": {
         "stats": {
-          "files": 6,
-          "filesRead": 6,
+          "files": 7,
+          "filesRead": 7,
           "filesUnreadable": 0,
-          "functions": 4,
-          "components": 3,
+          "functions": 5,
+          "components": 4,
           "hooks": 0,
           "skippedExternalCalls": {}
         },
@@ -1107,6 +1107,72 @@
       }
     },
     {
+      "id": "ui_api_call:web#src/orders/OrderSummary.tsx:6:20",
+      "type": "ui_api_call",
+      "label": "query OrderSummary /graphql",
+      "repo": "web",
+      "file": "src/orders/OrderSummary.tsx",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "OrderSummary",
+          "fields": [
+            {
+              "field": "order",
+              "arguments": [
+                "id"
+              ],
+              "line": 2,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 3
+                },
+                {
+                  "field": "total",
+                  "line": 4
+                },
+                {
+                  "field": "customer",
+                  "line": 5,
+                  "selections": [
+                    {
+                      "field": "name",
+                      "line": 6
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/orders/order-summary.graphql",
+            "line": 1
+          },
+          "library": "apollo"
+        },
+        "targetService": "orders"
+      }
+    },
+    {
       "id": "ui_api_call:web#src/orders/OrdersPage.tsx:7:20",
       "type": "ui_api_call",
       "label": "query Orders /graphql",
@@ -1135,12 +1201,12 @@
                 {
                   "field": "id",
                   "on": "Order",
-                  "line": 13
+                  "line": 5
                 },
                 {
                   "field": "total",
                   "on": "Order",
-                  "line": 13
+                  "line": 6
                 },
                 {
                   "field": "customer",
@@ -1242,6 +1308,26 @@
       "label": "OrderBadge",
       "repo": "web",
       "file": "src/orders/OrderBadge.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ id }",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/orders/OrderSummary.tsx:OrderSummary",
+      "type": "ui_component",
+      "label": "OrderSummary",
+      "repo": "web",
+      "file": "src/orders/OrderSummary.tsx",
       "line": 5,
       "kind": "function",
       "meta": {
@@ -1741,6 +1827,46 @@
       }
     },
     {
+      "from": "ui_api_call:web#src/orders/OrderSummary.tsx:6:20",
+      "to": "entry:orders:graphql:Order.customer",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders/order-summary.graphql",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "OrderSummary",
+          "field": "Order.customer"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/orders/OrderSummary.tsx:6:20",
+      "to": "entry:orders:graphql:Query.order",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders/order-summary.graphql",
+      "line": 2,
+      "meta": {
+        "graphql": {
+          "operation": "OrderSummary",
+          "field": "Query.order"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/orders/OrderSummary.tsx:6:20",
+      "to": "entry:orders:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/orders/OrderSummary.tsx",
+      "line": 6,
+      "meta": {
+        "via": "api-target",
+        "targetService": "orders"
+      }
+    },
+    {
       "from": "ui_api_call:web#src/orders/OrdersPage.tsx:7:20",
       "to": "entry:orders:graphql:Order.customer",
       "type": "hits",
@@ -1824,6 +1950,14 @@
       "type": "calls",
       "confidence": "static",
       "file": "src/orders/OrderBadge.tsx",
+      "line": 6
+    },
+    {
+      "from": "web#src/orders/OrderSummary.tsx:OrderSummary",
+      "to": "ui_api_call:web#src/orders/OrderSummary.tsx:6:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/OrderSummary.tsx",
       "line": 6
     },
     {
@@ -1994,6 +2128,14 @@
     },
     {
       "file": "src/orders/OrderBadge.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/orders/OrderSummary.tsx",
       "line": 5,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",

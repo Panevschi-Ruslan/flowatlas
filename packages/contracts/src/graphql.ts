@@ -36,7 +36,8 @@ export const graphqlFindings = (lookup: GraphLookup): ContractFinding[] => {
     const rootType = schema.roots[operation.operation];
     if (rootType === undefined) continue;
     const named = operation.name ?? operation.operation;
-    const at = (line: number): string => `${operation.document.file}:${line}`;
+    // A field from a fragment written in another file is at its line there.
+    const at = (field: MetaField): string => `${field.file ?? operation.document.file}:${field.line}`;
     const finding = (rule: (typeof GRAPHQL_RULES)[number], field: string, owner: string, message: string, kind: ContractFinding['kind'], direction: ContractFinding['direction'], actual: string | null, expected: string | null): ContractFinding => ({
       severity: 'error',
       kind,
@@ -63,19 +64,19 @@ export const graphqlFindings = (lookup: GraphLookup): ContractFinding[] => {
         const path = above === '' ? (field.alias ?? field.field) : `${above}.${field.alias ?? field.field}`;
         const declared = schema.types[owner]?.fields?.[field.field];
         if (schema.types[owner] !== undefined && declared === undefined) {
-          findings.push(finding('graphql-field-unknown', path, owner, `${named} selects ${owner}.${field.field} at ${at(field.line)}, and ${endpoint.repo}'s ${owner} has no such field; the server refuses the whole operation`, 'missing_required', 'response', field.field, null));
+          findings.push(finding('graphql-field-unknown', path, owner, `${named} selects ${owner}.${field.field} at ${at(field)}, and ${endpoint.repo}'s ${owner} has no such field; the server refuses the whole operation`, 'missing_required', 'response', field.field, null));
           continue;
         }
         if (declared === undefined) continue;
         const written = new Set(field.arguments ?? []);
         for (const name of written) {
           if (declared.args?.[name] === undefined) {
-            findings.push(finding('graphql-arg-unknown', `${path}(${name})`, owner, `${named} hands ${owner}.${field.field} an argument ${name} at ${at(field.line)}, which the field does not take`, 'extra_field', 'request', name, null));
+            findings.push(finding('graphql-arg-unknown', `${path}(${name})`, owner, `${named} hands ${owner}.${field.field} an argument ${name} at ${at(field)}, which the field does not take`, 'extra_field', 'request', name, null));
           }
         }
         for (const [name, arg] of Object.entries(declared.args ?? {})) {
           if (arg.required && !written.has(name)) {
-            findings.push(finding('graphql-arg-required', `${path}(${name})`, owner, `${named} selects ${owner}.${field.field} at ${at(field.line)} without ${name}: ${arg.type}, which the field requires`, 'missing_required', 'request', null, arg.type));
+            findings.push(finding('graphql-arg-required', `${path}(${name})`, owner, `${named} selects ${owner}.${field.field} at ${at(field)} without ${name}: ${arg.type}, which the field requires`, 'missing_required', 'request', null, arg.type));
           }
         }
         if (field.selections !== undefined) walk(namedTypeIn(declared.type), field.selections, path, depth + 1);

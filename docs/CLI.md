@@ -283,7 +283,8 @@ keyed by its type and name: `entry:orders:graphql:Query.orders`, and
 request reaches only through a selection under it (`meta.field: true`). The
 server is read three ways: NestJS's and type-graphql's decorated resolvers,
 code-first (`@Resolver(() => Order)` with `@Query`, `@Mutation`,
-`@Subscription`, `@ResolveField`, a `name:` option, `@Args`) or schema-first
+`@Subscription`, `@ResolveField`, a `name:` option, `@Args` by name or with
+its options - `name`, `type: () => ID`, `nullable`) or schema-first
 (`@Query('orders')` beside the SDL); a resolver map handed to Apollo Server,
 graphql-yoga, mercurius or `makeExecutableSchema`, followed through constants,
 imports, spreads and arrays; and the schema, from `.graphql` files, `gql` type
@@ -296,11 +297,12 @@ A client's operation is a request to that endpoint, joined to a service by its
 address as every request is, and then each field it selects is joined to that
 service's entry: `hits` from a browser, `http_calls` from another server, with
 the request's confidence and `meta.graphql: { operation, field, alias? }`, at
-the line of the selection. Nested selections reach field resolvers, through
+the line of the selection - in the file a fragment is written in, when it is
+another. Nested selections reach field resolvers, through
 the schema's types; fragments are put in place, from the document or
 interpolated into it. Documents are read from `gql` / `graphql` templates,
 `graphql(...)` (the codegen client preset, gql.tada), imported `.graphql`
-files and codegen's `…Document` constants; calls from Apollo Client (`useQuery`,
+files (with the fragments they `#import`) and codegen's `…Document` constants; calls from Apollo Client (`useQuery`,
 `useMutation`, `useSubscription`, `client.query` / `mutate`), urql,
 graphql-request (`request`, `GraphQLClient#request`), apollo-angular
 (`this.apollo.query`, `watchQuery`, `mutate`, a `Query` service's `fetch` /

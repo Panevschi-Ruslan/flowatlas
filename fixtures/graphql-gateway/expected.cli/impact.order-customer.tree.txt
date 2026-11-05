@@ -2,6 +2,8 @@
   => admin ^  query OrderCustomers /graphql  admin/src/app/orders.component.ts:27
     -> OrdersComponent.refresh               admin/src/app/orders.component.ts:25
       %  click="refresh()"                   admin/src/app/orders.component.ts:17
+  => web ^  query OrderSummary /graphql      web/src/orders/OrderSummary.tsx:6
+    %  OrderSummary                          web/src/orders/OrderSummary.tsx:5
   => web ^  query Orders /graphql            web/src/orders/OrdersPage.tsx:7
     %  OrdersPage                            web/src/orders/OrdersPage.tsx:6
       %  onClick={place}                     web/src/orders/OrdersPage.tsx:12

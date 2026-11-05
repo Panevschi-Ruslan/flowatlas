@@ -86,9 +86,13 @@ const typeArgument = (argument: TsNode | undefined): { name: string; list: boole
 const optionsOf = (decorator: Decorator): ObjectLiteralExpression | undefined =>
   decorator.getArguments().find((argument): argument is ObjectLiteralExpression => Node.isObjectLiteralExpression(argument));
 
-const stringOption = (options: ObjectLiteralExpression | undefined, key: string): string | undefined => {
+const option = (options: ObjectLiteralExpression | undefined, key: string): TsNode | undefined => {
   const property = options?.getProperty(key);
-  const value = property !== undefined && Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+  return property !== undefined && Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+};
+
+const stringOption = (options: ObjectLiteralExpression | undefined, key: string): string | undefined => {
+  const value = option(options, key);
   return value !== undefined && Node.isStringLiteral(value) ? value.getLiteralValue() : undefined;
 };
 
@@ -134,21 +138,32 @@ const codeFirstTypes = (sources: readonly SourceFile[]): { names: Map<string, st
   return { names, schema: { roots: { query: 'Query', mutation: 'Mutation', subscription: 'Subscription' }, types } };
 };
 
-/** The arguments a resolver method takes: `@Args('id') id`, `@Arg('id')`, or every field of an `@ArgsType` class. */
-const argumentsOf = (method: MethodDeclaration, argsTypes: ReadonlyMap<string, ClassDeclaration>): Record<string, { type: string; required: boolean }> => {
+/**
+ * The arguments a resolver method takes: `@Args('id') id`, `@Arg('id')`, with
+ * the options written after the name (`@Args('take', { type: () => Int })`,
+ * type-graphql's `@Arg('id', () => ID)`) or in place of it
+ * (`@Args({ name: 'id', type: () => ID, nullable: true })`); or every field of
+ * an `@ArgsType` class. A type the options name is the argument's type over
+ * the one TypeScript writes: a `number` is a `Float` unless it says `Int`.
+ */
+const argumentsOf = (method: MethodDeclaration, argsTypes: ReadonlyMap<string, ClassDeclaration>, names: ReadonlyMap<string, string>): Record<string, { type: string; required: boolean }> => {
   const found: Record<string, { type: string; required: boolean }> = {};
   for (const parameter of method.getParameters()) {
     const decorator = graphqlDecorator(parameter, ['Args', 'Arg']);
     if (decorator === undefined) continue;
-    const [first] = decorator.getArguments();
+    const [first, second] = decorator.getArguments();
+    const options = optionsOf(decorator);
+    const typeFunction = second !== undefined && (Node.isArrowFunction(second) || Node.isFunctionExpression(second)) ? second : undefined;
+    const typed = typeArgument(option(options, 'type') ?? typeFunction);
     const written = parameter.getTypeNode()?.getText() ?? 'String';
-    if (first !== undefined && Node.isStringLiteral(first)) {
-      const options = optionsOf(decorator);
+    const name = first !== undefined && Node.isStringLiteral(first) ? first.getLiteralValue() : stringOption(options, 'name');
+    if (name !== undefined) {
       const nullable = booleanOption(options, 'nullable') || parameter.hasQuestionToken() || parameter.hasInitializer();
-      found[first.getLiteralValue()] = { type: graphqlTypeOf(written, false, nullable), required: !nullable };
+      const type = typed === undefined ? graphqlTypeOf(written, false, nullable) : graphqlTypeOf(names.get(typed.name) ?? typed.name, typed.list, nullable);
+      found[name] = { type, required: !nullable };
       continue;
     }
-    const argsType = argsTypes.get(written);
+    const argsType = argsTypes.get(typed?.name ?? written);
     for (const member of argsType?.getProperties() ?? []) {
       const field = graphqlDecorator(member, ['Field']);
       if (field === undefined) continue;
@@ -182,7 +197,7 @@ const decoratedFields = (sources: readonly SourceFile[], names: ReadonlyMap<stri
         const nullable = booleanOption(options, 'nullable');
         const type = root === undefined ? parent : ROOTS.get(root.getName());
         if (type === undefined) continue;
-        const args = argumentsOf(method, argsTypes);
+        const args = argumentsOf(method, argsTypes, names);
         found.push({
           type,
           field: named,

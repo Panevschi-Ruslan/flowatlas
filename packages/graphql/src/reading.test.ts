@@ -1,14 +1,37 @@
 import { Project, SyntaxKind, type CallExpression } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { graphqlCallOf } from './calls.js';
-import { documentOf, lineInFile } from './documents.js';
+import { documentOf, lineInFile, type DocumentReading } from './documents.js';
+import { operationMeta, type MetaField } from './meta.js';
 import { operationsOf } from './operations.js';
 import { readGraphqlServer } from './servers.js';
 
+/** A project of these files; a `.graphql` file is only on its file system, as it is beside real code. */
 const project = (files: Record<string, string>): Project => {
   const made = new Project({ useInMemoryFileSystem: true, compilerOptions: { experimentalDecorators: true, jsx: 4 } });
-  for (const [path, text] of Object.entries(files)) made.createSourceFile(path, text);
+  for (const [path, text] of Object.entries(files)) {
+    if (/\.(graphql|gql)$/.test(path)) made.getFileSystem().writeFileSync(path, text);
+    else made.createSourceFile(path, text);
+  }
   return made;
+};
+
+/** What the document handed to the first call of a callee is read as. */
+const readAt = (made: Project, file: string, callee: string): Extract<DocumentReading, { kind: 'read' }> => {
+  const reading = documentOf(callsIn(made, file, callee)[0]?.getArguments()[0]);
+  if (reading.kind !== 'read') throw new Error(`not read: ${reading.why}`);
+  return reading;
+};
+
+/** Every field of an operation's meta, depth first, as `field file:line`. */
+const placed = (fields: readonly MetaField[] | undefined, document: string): string[] =>
+  (fields ?? []).flatMap((field) => [`${field.field} ${field.file ?? document}:${field.line}`, ...placed(field.selections, document)]);
+
+/** The meta of the first operation of a reading, with each path named from the root. */
+const metaOf = (reading: Extract<DocumentReading, { kind: 'read' }>) => {
+  const [operation] = operationsOf(reading.document, reading.fragments);
+  if (operation === undefined) throw new Error('no operation');
+  return operationMeta(operation, reading, (path) => path.replace(/^\//, ''), 'apollo');
 };
 
 /** The calls of a file, by the text of their callee. */
@@ -37,6 +60,67 @@ describe('documents written in TypeScript (P232)', () => {
     const [operation] = operationsOf(reading.document, reading.fragments);
     expect(operation?.fields[0]?.selections.map((field) => field.field)).toEqual(['id', 'total']);
     expect(lineInFile(reading, operation?.fields[0]?.at ?? 0)).toBe(5);
+  });
+
+  it('puts a field of an interpolated fragment at its own line, whatever space the hole is written with', () => {
+    const made = project({
+      'queries.ts': [
+        "import { gql } from '@apollo/client';",
+        'const FIELDS = gql`',
+        '  fragment F on Order {',
+        '    id',
+        '  }',
+        '`;',
+        'export const ORDERS = gql`',
+        '  query Orders {',
+        '    orders { ...F total }',
+        '  }',
+        '  ${ FIELDS }',
+        '`;',
+        'useQuery(ORDERS);',
+      ].join('\n'),
+    });
+    const meta = metaOf(readAt(made, 'queries.ts', 'useQuery'));
+    expect(placed(meta.fields, meta.document.file)).toEqual(['orders queries.ts:9', 'id queries.ts:4', 'total queries.ts:9']);
+  });
+
+  it('puts a field of a fragment written in another file in that file, at its line there', () => {
+    const made = project({
+      'fragments.ts': ["import { gql } from '@apollo/client';", '', 'export const ORDER_FIELDS = gql`', '  fragment OrderFields on Order {', '    id', '    customer { name }', '  }', '`;'].join('\n'),
+      'queries.ts': ["import { gql } from '@apollo/client';", "import { ORDER_FIELDS } from './fragments';", 'useQuery(gql`', '  query Orders { orders { ...OrderFields } }', '  ${ORDER_FIELDS}', '`);'].join('\n'),
+    });
+    const meta = metaOf(readAt(made, 'queries.ts', 'useQuery'));
+    expect(meta.document).toEqual({ file: 'queries.ts', line: 4 });
+    expect(placed(meta.fields, meta.document.file)).toEqual(['orders queries.ts:4', 'id fragments.ts:5', 'customer fragments.ts:6', 'name fragments.ts:6']);
+  });
+
+  it('reads a .graphql file an import names, at its own lines, whether or not TypeScript knows the module', () => {
+    const orders = ['#import "./fields.graphql"', '', 'query Orders {', '  orders {', '    ...OrderFields', '  }', '}', '', 'query Order($id: ID!) {', '  order(id: $id) { id }', '}'].join('\n');
+    const fields = ['fragment OrderFields on Order {', '  id', '  total', '}'].join('\n');
+    const unknown = project({ 'orders.graphql': orders, 'fields.graphql': fields, 'page.ts': "import OrdersDoc from './orders.graphql';\nuseQuery(OrdersDoc);" });
+    const declared = project({
+      'orders.graphql': orders,
+      'fields.graphql': fields,
+      'graphql.d.ts': "declare module '*.graphql' { const document: unknown; export default document; }",
+      'page.ts': "import OrdersDoc from './orders.graphql';\nuseQuery(OrdersDoc);",
+    });
+    for (const made of [unknown, declared]) {
+      const reading = readAt(made, 'page.ts', 'useQuery');
+      const meta = metaOf(reading);
+      expect(meta.document).toEqual({ file: 'orders.graphql', line: 3 });
+      expect(placed(meta.fields, meta.document.file)).toEqual(['orders orders.graphql:4', 'id fields.graphql:2', 'total fields.graphql:3']);
+      expect(operationsOf(reading.document, reading.fragments)[0]?.missingFragments).toEqual([]);
+    }
+  });
+
+  it('reads a name imported from a .graphql file as the operation of that name', () => {
+    const made = project({
+      'orders.graphql': 'query Orders { orders { id } }\nquery Order($id: ID!) { order(id: $id) { id } }',
+      'page.ts': "import { Order } from './orders.graphql';\nuseQuery(Order);",
+    });
+    const reading = readAt(made, 'page.ts', 'useQuery');
+    expect(operationsOf(reading.document).map((operation) => operation.name)).toEqual(['Order']);
+    expect(metaOf(reading).document).toEqual({ file: 'orders.graphql', line: 2 });
   });
 
   it('reads a document codegen generated, printed back from its AST, casts and all', () => {
@@ -124,6 +208,49 @@ describe('what a server declares (P232)', () => {
     expect(reading.fields[0]?.args).toEqual({ status: { type: 'String', required: false } });
     expect(reading.endpoint).toBe('/api/graphql');
     expect(reading.schema.types['Order']?.fields?.['id']?.type).toBe('String!');
+  });
+
+  it('reads the name, type and nullability an argument\'s options give, before or after its name', () => {
+    const made = project({
+      'order.ts': "import { Field, ObjectType, ID } from '@nestjs/graphql';\n@ObjectType()\nexport class Order {\n  @Field(() => ID)\n  id: string;\n}",
+      'orders.resolver.ts': [
+        "import { Args, Query, Resolver, ID, Int } from '@nestjs/graphql';",
+        "import { Order } from './order';",
+        '@Resolver(() => Order)',
+        'export class OrdersResolver {',
+        '  @Query(() => Order)',
+        "  order(@Args({ name: 'id', type: () => ID }) id: string) { return null; }",
+        '  @Query(() => [Order])',
+        "  orders(@Args('take', { type: () => Int }) take: number, @Args({ name: 'tags', type: () => [String], nullable: true }) tags?: string[]) { return []; }",
+        '  @Query(() => [Order])',
+        "  recent(@Arg('since', () => Int) since: number) { return []; }",
+        '}',
+      ].join('\n'),
+    });
+    const reading = readGraphqlServer(made.getSourceFiles(), { schemaFiles: [], dependencies: new Set(['@nestjs/graphql']) });
+    expect(reading.schema.types['Query']?.fields).toEqual({
+      order: { type: 'Order!', args: { id: { type: 'ID!', required: true } } },
+      orders: { type: '[Order!]!', args: { take: { type: 'Int!', required: true }, tags: { type: '[String!]', required: false } } },
+      recent: { type: '[Order!]!', args: { since: { type: 'Int!', required: true } } },
+    });
+  });
+
+  it('keeps the arguments the SDL declares for a root field whose resolver names none', () => {
+    const made = project({
+      'orders.resolver.ts': [
+        "import { Args, Query, Resolver } from '@nestjs/graphql';",
+        "const typeDefs = gql`type Order { id: ID! } type Query { order(id: ID!): Order }`;",
+        'new ApolloServer({ typeDefs });',
+        '@Resolver()',
+        'export class OrdersResolver {',
+        '  @Query(() => Order)',
+        '  order(@Context() context: unknown) { return null; }',
+        '}',
+      ].join('\n'),
+    });
+    const reading = readGraphqlServer(made.getSourceFiles(), { schemaFiles: [], dependencies: new Set(['@nestjs/graphql']) });
+    expect(reading.schema.types['Query']?.fields?.['order']).toEqual({ type: 'Order!', args: { id: { type: 'ID!', required: true } } });
+    expect(reading.fields[0]?.args).toEqual({ id: { type: 'ID!', required: true } });
   });
 
   it('follows a resolver map through constants, spreads and imports, with the SDL beside it', () => {

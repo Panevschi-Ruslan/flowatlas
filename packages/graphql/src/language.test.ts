@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { operationsOf, reachedFields } from './operations.js';
-import { GraphqlSyntaxError, parseDocument, typeText } from './parse.js';
+import { GraphqlSyntaxError, parseDocument, tryParse, typeText } from './parse.js';
 import { schemaOf } from './schema.js';
 
 const SDL = `
@@ -89,6 +89,26 @@ describe('the GraphQL language, read (P232)', () => {
     expect(() => parseDocument('query { orders { id }')).toThrow(GraphqlSyntaxError);
     // SQL handed to a client's `query` is not mistaken for a document: it stops at the first character GraphQL has no use for.
     expect(() => parseDocument('SELECT * FROM orders')).toThrow(expect.objectContaining({ at: 7 }));
+  });
+
+  it('reads a block string holding three quotes escaped, as a description and as a value', () => {
+    const document = parseDocument('"""Say \\""" twice."""\ntype Query { note(text: String): String }\nquery { note(text: """a \\""" b""") }');
+    expect(document.definitions.map((definition) => definition.kind)).toEqual(['type', 'operation']);
+    const query = document.definitions[1];
+    const note = query?.kind === 'operation' ? query.selections[0] : undefined;
+    // A value is kept as written.
+    expect(note?.kind === 'field' ? note.arguments[0] : undefined).toMatchObject({ name: 'text', value: '"""a \\""" b"""' });
+    expect(() => parseDocument('type Query { a: Int } """open \\"""')).toThrow(GraphqlSyntaxError);
+  });
+
+  it('refuses nesting deeper than any document is written as a syntax error, not a stack overflow', () => {
+    const deep = 20_000;
+    expect(tryParse(`query ${'{ a '.repeat(deep)}${'}'.repeat(deep)}`)).toBeUndefined();
+    expect(tryParse(`query { a(x: ${'['.repeat(deep)}${']'.repeat(deep)}) }`)).toBeUndefined();
+    expect(tryParse(`query ($x: ${'['.repeat(deep)}Int${']'.repeat(deep)}) { a }`)).toBeUndefined();
+    expect(tryParse(`type Query { a: ${'['.repeat(deep)}Int${']'.repeat(deep)} }`)).toBeUndefined();
+    // Nesting a person writes still reads.
+    expect(tryParse(`query ${'{ a '.repeat(100)}${'}'.repeat(100)}`)).toBeDefined();
   });
 
   it('writes a type back as GraphQL does', () => {

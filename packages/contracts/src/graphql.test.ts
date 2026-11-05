@@ -38,6 +38,11 @@ describe('a GraphQL operation against the schema it is sent to (P232)', () => {
     expect(report.summary.errors).toBe(1);
   });
 
+  it('names a field a fragment in another file selects at its line there', () => {
+    const report = checkContracts(graphWith([{ field: 'order', arguments: ['id'], line: 3, selections: [{ field: 'discount', file: 'src/fragments.ts', line: 7 }] }], SCHEMA));
+    expect(report.findings[0]?.message).toContain('src/fragments.ts:7');
+  });
+
   it('is an error to leave out an argument the field requires, or to hand it one it does not take', () => {
     const report = checkContracts(graphWith([{ field: 'order', arguments: ['first'], line: 3, selections: [{ field: 'id', line: 4 }] }], SCHEMA));
     expect(report.findings.map((finding) => [finding.rule, finding.field, finding.kind]).sort()).toEqual([

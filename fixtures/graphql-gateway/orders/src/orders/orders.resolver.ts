@@ -1,5 +1,5 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { Args, ID, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 
 import { CustomersService } from './customers.service';
 import { GqlAuthGuard } from './gql-auth.guard';
@@ -20,7 +20,7 @@ export class OrdersResolver {
   }
 
   @Query(() => Order, { name: 'order' })
-  findOne(@Args('id') id: string): Order {
+  findOne(@Args({ name: 'id', type: () => ID }) id: string): Order {
     return this.orders.byId(id);
   }
 
