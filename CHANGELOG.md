@@ -20,6 +20,14 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **The graph in open formats, and JSON Schemas (P237).** `flowatlas export
+  dot | graphml | cypher | csv` writes the graph for Graphviz, Gephi and yEd,
+  Neo4j and Memgraph, or any loader, at the service, class or node level, from
+  every node or only what some ways in reach; every edge carries how sure the
+  graph is. `schema/` holds JSON Schemas of `project-graph.json`, a service's
+  `graph.json`, `diff.json`, `docs.json` and `freshness.json`, generated from
+  the readers' own schemas and checked by the gates; `docs/formats.md` lists
+  every file the tool writes.
 - **Pages and comments that say why (P234).** A page that names a node in
   code is linked to it with no block written: `docs` on `get_flow`,
   `describe_for_prompt` and `impact` lists it (`kind: "mention"`, with the

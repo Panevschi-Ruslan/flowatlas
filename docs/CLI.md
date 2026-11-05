@@ -3295,6 +3295,23 @@ head, message, place, callers, public, note, confidence, key }`, `key`
 
 ### `flowatlas export backstage|structurizr`
 
+Also `dot`, `graphml`, `cypher` and `csv` (P237): the graph in the formats graph
+tools read, every edge with how sure the graph is of it.
+
+| Kind | Writes | Default `--level` |
+|---|---|---|
+| `dot` | `graph.<level>.dot`, for Graphviz: a line style per confidence (dashed a best guess, dotted an annotation, bold seen at run time), one cluster per service below the service level | `service` |
+| `graphml` | `graph.<level>.graphml`, for Gephi and yEd: `type`, `service`, `confidence`, `count`, `observed` declared as keys | `node` |
+| `cypher` | `graph.<level>.cypher`, for Neo4j and Memgraph: a constraint, then nodes and edges `MERGE`d in batches, so it is safe to run twice | `node` |
+| `csv` | `nodes.<level>.csv` and `edges.<level>.csv` in `neo4j-admin import`'s header form, which any loader reads | `node` |
+
+`--level service|class|node` draws each service as one node (the edges between
+two summed, as sure as the least sure of them), each class, or every node.
+`--from <entry>` (repeatable) keeps only what those ways in reach, `--max-nodes`
+(400) bounding each walk; `--service` keeps one service. `--check` works as it
+does for the other kinds. How to load each is in [the files flowatlas
+writes](formats.md), with the JSON Schemas of its own files.
+
 Writes the map into the tools that already hold one: a
 [Backstage](https://backstage.io/docs/features/software-catalog/descriptor-format)
 catalogue whose relations are the joins the graph made, or a

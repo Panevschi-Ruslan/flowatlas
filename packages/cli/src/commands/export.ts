@@ -13,7 +13,7 @@
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import { loadConfig, serviceDirOf, toPosixPath, type LoadedConfig } from '@flowatlas/core';
+import { loadConfig, serviceDirOf, toPosixPath, type GraphEdge, type GraphNode, type LoadedConfig } from '@flowatlas/core';
 import {
   BACKSTAGE_LOCATION_FILE,
   DEFAULT_EXPORT_FLOWS,
@@ -32,6 +32,12 @@ import {
   type GraphDb,
   type StructurizrExport,
   type StructurizrSummary,
+  GRAPH_FORMATS,
+  GRAPH_LEVELS,
+  graphFiles,
+  type GraphFormat,
+  type GraphLevel,
+  type SelectedGraph,
 } from '@flowatlas/linker';
 import type { Command } from 'commander';
 import { openProjectDb } from '../analysis/open.js';
@@ -44,7 +50,8 @@ import { renderSpecFile, specFileName } from '../report/spec.js';
 import { collect, oneOf, whole } from './diff.js';
 import { wanted } from './spec.js';
 
-export const EXPORT_KINDS = ['backstage', 'structurizr'] as const;
+/** The catalogue and model exports, and the graph in open formats (P237). */
+export const EXPORT_KINDS = ['backstage', 'structurizr', ...GRAPH_FORMATS] as const;
 export type ExportKind = (typeof EXPORT_KINDS)[number];
 
 /** Where the files go under the output directory when `--out` is not given: `<output>/export/<kind>/`. */
@@ -67,6 +74,12 @@ export interface ExportCommandOptions {
   check?: boolean;
   /** Print the entities (or the model) as JSON. */
   json?: boolean;
+  /** A graph format's level: `service`, `class` or `node` (P237). */
+  level?: string;
+  /** A graph format drawn from these ways in only, repeatable (P237). */
+  from?: string[];
+  /** Most nodes a `--from` walk keeps. */
+  maxNodes?: string;
 }
 
 export interface ExportFileState {
@@ -251,9 +264,15 @@ export const runExport = (kindAsked: string, options: ExportCommandOptions, io: 
   const { db, close } = openProjectDb({ ...(options.config === undefined ? {} : { config: options.config }), ...(options.db === undefined ? {} : { db: options.db }) });
   let backstage: BackstageExport | undefined;
   let structurizr: StructurizrExport | undefined;
+  let open: { files: ExportFile[]; nodes: number; edges: number; level: GraphLevel; left?: number } | undefined;
   try {
     const graph = { nodes: db.allNodes(), edges: db.allEdges() };
-    if (kind === 'backstage') {
+    if ((GRAPH_FORMATS as readonly string[]).includes(kind)) {
+      // The graph in an open format (P237): every edge with how sure it is, at the level asked.
+      const level = oneOf(options.level, GRAPH_LEVELS, kind === 'dot' ? 'service' : 'node', '--level');
+      const selected = selectionOf(db, graph, only, options.from ?? [], whole(options.maxNodes, EXPORT_WALK_NODES, '--max-nodes'));
+      open = { files: graphFiles(kind as GraphFormat, selected, level, project), nodes: selected.nodes.length, edges: selected.edges.length, level, ...(selected.left === undefined ? {} : { left: selected.left }) };
+    } else if (kind === 'backstage') {
       const documents = writeSpecs(db, services, { ...specOptionsOf(loaded.config, { depth: DEFAULT_SPEC_DEPTH }), kind: 'both' }).map((spec) => ({
         service: spec.service,
         kind: spec.kind,
@@ -277,7 +296,7 @@ export const runExport = (kindAsked: string, options: ExportCommandOptions, io: 
   } finally {
     close();
   }
-  const written: ExportFile[] = (backstage ?? structurizr)?.files ?? [];
+  const written: ExportFile[] = open?.files ?? (backstage ?? structurizr)?.files ?? [];
 
   let files: ExportFileState[];
   if (options.check === true) {
@@ -291,7 +310,11 @@ export const runExport = (kindAsked: string, options: ExportCommandOptions, io: 
     // Only a file flowatlas wrote counts; a hand-kept entity beside the export is the team's.
     const writing = new Set(written.map(({ path }) => path));
     const ours = (name: string): boolean =>
-      kind === 'backstage' ? name.endsWith('.yaml') && readFileSync(join(outDir, name), 'utf8').includes('flowatlas') : name === STRUCTURIZR_FILE;
+      kind === 'backstage'
+        ? name.endsWith('.yaml') && readFileSync(join(outDir, name), 'utf8').includes('flowatlas')
+        : kind === 'structurizr'
+          ? name === STRUCTURIZR_FILE
+          : /^(graph|nodes|edges)\.(service|class|node)\./.test(name);
     if (existsSync(outDir)) {
       for (const name of readdirSync(outDir).sort()) {
         if (!ours(name) || writing.has(name)) continue;
@@ -323,6 +346,11 @@ export const runExport = (kindAsked: string, options: ExportCommandOptions, io: 
     )}\n`;
   } else {
     const lines: string[] = [];
+    if (open !== undefined) {
+      lines.push(
+        `${kind}: ${plural(open.nodes, 'node')} and ${plural(open.edges, 'edge')} at the ${open.level} level, in ${plural(written.length, 'file')} -> ${shownDir}${open.left === undefined || open.left === 0 ? '' : `; ${open.left} more past --max-nodes left out`}`,
+      );
+    }
     if (backstage !== undefined) {
       const { summary } = backstage;
       lines.push(
@@ -351,6 +379,33 @@ export const runExport = (kindAsked: string, options: ExportCommandOptions, io: 
   return { kind, outDir, files, text, exitCode, ...(backstage === undefined ? {} : { backstage }), ...(structurizr === undefined ? {} : { structurizr }) };
 };
 
+/**
+ * What a graph format draws (P237): every node and edge, or those of the
+ * services asked, or what a walk from each way in asked reaches, bounded.
+ */
+const selectionOf = (
+  db: GraphDb,
+  graph: { nodes: GraphNode[]; edges: GraphEdge[] },
+  only: readonly string[] | undefined,
+  from: readonly string[],
+  maxNodes: number,
+): SelectedGraph => {
+  let keep: Set<string> | undefined;
+  let left: number | undefined;
+  if (from.length > 0) {
+    keep = new Set();
+    for (const ref of from) {
+      const walk = db.forwardReach(resolveEntry(db, ref).id, { maxNodes });
+      for (const row of walk.rows) keep.add(row.id);
+      if (walk.truncated) left = (left ?? 0) + 1;
+    }
+  }
+  const nodes = graph.nodes.filter((node) => (keep === undefined || keep.has(node.id)) && (only === undefined || only.includes(node.repo ?? '')));
+  const ids = new Set(nodes.map((node) => node.id));
+  const edges = graph.edges.filter((edge) => ids.has(edge.from) && ids.has(edge.to));
+  return { nodes, edges, ...(left === undefined ? {} : { left }) };
+};
+
 const withCommonOptions = (command: Command): Command =>
   command
     .option('--config <path>', 'configuration file (default: found from the working directory)')
@@ -362,7 +417,7 @@ const withCommonOptions = (command: Command): Command =>
     .option('--json', 'print what would be written as data');
 
 export const registerExport = (program: Command): void => {
-  const command = program.command('export').description('the map as a Backstage catalogue or a Structurizr workspace, written from the graph');
+  const command = program.command('export').description('the map as a Backstage catalogue, a Structurizr workspace, or the graph as DOT, GraphML, Cypher or CSV');
   const finish = (kind: ExportKind) => (options: ExportCommandOptions) => {
     const run = runExport(kind, options);
     if (run.exitCode !== EXIT.ok) throw new CliError(`${plural(run.files.filter((file) => file.state !== 'same').length, 'file')} there ${run.files.filter((file) => file.state !== 'same').length === 1 ? 'is' : 'are'} not what would be written now`, EXIT.failed);
@@ -373,4 +428,18 @@ export const registerExport = (program: Command): void => {
     .option('--max-flows <n>', `most dynamic views (default ${DEFAULT_EXPORT_FLOWS})`)
     .option('--max-labels <n>', `labels a relationship lists before "+N more" (default ${DEFAULT_MAX_LABELS})`)
     .action(finish('structurizr'));
+  // The graph in open formats (P237): every edge with how sure it is.
+  const GRAPH_SAYS: Record<GraphFormat, string> = {
+    dot: 'Graphviz: services by default, a line style per confidence',
+    graphml: 'GraphML, for Gephi and yEd: every node and edge with its attributes',
+    cypher: 'Cypher, for Neo4j and Memgraph: MERGE statements, safe to run twice',
+    csv: "nodes.csv and edges.csv in neo4j-admin import's header form",
+  };
+  for (const format of GRAPH_FORMATS) {
+    withCommonOptions(command.command(format).description(GRAPH_SAYS[format]))
+      .option('--level <level>', `${GRAPH_LEVELS.join(', ')} (default ${format === 'dot' ? 'service' : 'node'})`)
+      .option('--from <entry>', 'only what this way in reaches, repeatable', collect, [])
+      .option('--max-nodes <n>', `most nodes a --from walk keeps (default ${EXPORT_WALK_NODES})`)
+      .action(finish(format));
+  }
 };

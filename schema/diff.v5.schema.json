@@ -1,0 +1,2909 @@
+{
+  "$id": "https://raw.githubusercontent.com/Panevschi-Ruslan/flowatlas/main/schema/diff.v5.schema.json",
+  "title": "<output>/diff.json, what flowatlas diff found",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "diffFormatVersion": {
+      "type": "number",
+      "const": 5
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "generatedAt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "base": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "services": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "sha": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ref": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cached": {
+                "type": "boolean"
+              },
+              "nodeModules": {
+                "type": "string",
+                "enum": [
+                  "linked",
+                  "present",
+                  "missing"
+                ]
+              }
+            },
+            "required": [
+              "sha",
+              "ref",
+              "cached",
+              "nodeModules"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "ref",
+        "services"
+      ],
+      "additionalProperties": false
+    },
+    "head": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "services": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "sha": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ref": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cached": {
+                "type": "boolean"
+              },
+              "nodeModules": {
+                "type": "string",
+                "enum": [
+                  "linked",
+                  "present",
+                  "missing"
+                ]
+              }
+            },
+            "required": [
+              "sha",
+              "ref",
+              "cached",
+              "nodeModules"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "ref",
+        "services"
+      ],
+      "additionalProperties": false
+    },
+    "nodes": {
+      "type": "object",
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "changed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "service": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "id",
+              "service",
+              "label",
+              "fields"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "changed",
+        "moved"
+      ],
+      "additionalProperties": false
+    },
+    "edges": {
+      "type": "object",
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "type"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "type"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "changed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "key",
+              "from",
+              "to",
+              "type",
+              "fields"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "changed"
+      ],
+      "additionalProperties": false
+    },
+    "types": {
+      "type": "object",
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "changed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string"
+              },
+              "baseHash": {
+                "type": "string"
+              },
+              "headHash": {
+                "type": "string"
+              },
+              "fieldDiff": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "string"
+                    },
+                    "change": {
+                      "type": "string",
+                      "enum": [
+                        "added",
+                        "removed",
+                        "type",
+                        "optionality"
+                      ]
+                    },
+                    "optional": {
+                      "type": "boolean"
+                    },
+                    "base": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "head": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "rule": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "message": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "field",
+                    "change",
+                    "optional",
+                    "base",
+                    "head",
+                    "rule",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "baseHash",
+              "headHash",
+              "fieldDiff"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "changed"
+      ],
+      "additionalProperties": false
+    },
+    "counts": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": "object",
+          "properties": {
+            "nodes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "edges": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "types": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "unresolved": {
+              "type": "object",
+              "properties": {
+                "rows": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "sites": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "rows",
+                "sites"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "nodes",
+            "edges",
+            "types",
+            "unresolved"
+          ],
+          "additionalProperties": false
+        },
+        "head": {
+          "type": "object",
+          "properties": {
+            "nodes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "edges": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "types": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "unresolved": {
+              "type": "object",
+              "properties": {
+                "rows": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "sites": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "rows",
+                "sites"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "nodes",
+            "edges",
+            "types",
+            "unresolved"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "base",
+        "head"
+      ],
+      "additionalProperties": false
+    },
+    "impact": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "node": {
+            "type": "string",
+            "minLength": 1
+          },
+          "service": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "head",
+              "base"
+            ]
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "service": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "file": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "line": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "depth": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "confidence": {
+                  "type": "string",
+                  "enum": [
+                    "static",
+                    "marker",
+                    "declared",
+                    "heuristic",
+                    "runtime"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "service",
+                "kind",
+                "type",
+                "label",
+                "file",
+                "line",
+                "depth",
+                "confidence"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "counts": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "truncated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "servicesWithoutEntry": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reached": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "partial": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "node",
+          "service",
+          "label",
+          "side",
+          "entries",
+          "counts",
+          "truncated",
+          "services",
+          "servicesWithoutEntry",
+          "reached",
+          "partial"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "properties": {
+        "new": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "missing_required",
+                  "type_mismatch",
+                  "optionality_mismatch",
+                  "extra_field"
+                ]
+              },
+              "edge": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "to": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              "edgeKey": {
+                "type": "string",
+                "minLength": 1
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "request",
+                  "response",
+                  "payload"
+                ]
+              },
+              "sender": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "typeId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "symbol": {
+                    "type": "string"
+                  },
+                  "writes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "writesEvery": {
+                    "type": "boolean"
+                  },
+                  "declaredBy": {
+                    "type": "string"
+                  },
+                  "claimed": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "service",
+                  "typeId",
+                  "symbol"
+                ],
+                "additionalProperties": false
+              },
+              "receiver": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "typeId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "symbol": {
+                    "type": "string"
+                  },
+                  "writes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "writesEvery": {
+                    "type": "boolean"
+                  },
+                  "declaredBy": {
+                    "type": "string"
+                  },
+                  "claimed": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "service",
+                  "typeId",
+                  "symbol"
+                ],
+                "additionalProperties": false
+              },
+              "typeId": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "expected": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "actual": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rule": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "impact": {
+                "type": "string",
+                "enum": [
+                  "stored",
+                  "unread",
+                  "unknown",
+                  "none"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ignored": {
+                "type": "boolean"
+              },
+              "ignoredBy": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "severity",
+              "kind",
+              "edge",
+              "edgeKey",
+              "direction",
+              "sender",
+              "receiver",
+              "typeId",
+              "field",
+              "expected",
+              "actual",
+              "rule",
+              "message",
+              "ignored",
+              "ignoredBy"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "fixed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "missing_required",
+                  "type_mismatch",
+                  "optionality_mismatch",
+                  "extra_field"
+                ]
+              },
+              "edge": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "to": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              "edgeKey": {
+                "type": "string",
+                "minLength": 1
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "request",
+                  "response",
+                  "payload"
+                ]
+              },
+              "sender": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "typeId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "symbol": {
+                    "type": "string"
+                  },
+                  "writes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "writesEvery": {
+                    "type": "boolean"
+                  },
+                  "declaredBy": {
+                    "type": "string"
+                  },
+                  "claimed": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "service",
+                  "typeId",
+                  "symbol"
+                ],
+                "additionalProperties": false
+              },
+              "receiver": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "typeId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "symbol": {
+                    "type": "string"
+                  },
+                  "writes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "writesEvery": {
+                    "type": "boolean"
+                  },
+                  "declaredBy": {
+                    "type": "string"
+                  },
+                  "claimed": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "service",
+                  "typeId",
+                  "symbol"
+                ],
+                "additionalProperties": false
+              },
+              "typeId": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "expected": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "actual": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rule": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "impact": {
+                "type": "string",
+                "enum": [
+                  "stored",
+                  "unread",
+                  "unknown",
+                  "none"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ignored": {
+                "type": "boolean"
+              },
+              "ignoredBy": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "severity",
+              "kind",
+              "edge",
+              "edgeKey",
+              "direction",
+              "sender",
+              "receiver",
+              "typeId",
+              "field",
+              "expected",
+              "actual",
+              "rule",
+              "message",
+              "ignored",
+              "ignoredBy"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "preexisting": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "missing_required",
+                  "type_mismatch",
+                  "optionality_mismatch",
+                  "extra_field"
+                ]
+              },
+              "edge": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "to": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              "edgeKey": {
+                "type": "string",
+                "minLength": 1
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "request",
+                  "response",
+                  "payload"
+                ]
+              },
+              "sender": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "typeId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "symbol": {
+                    "type": "string"
+                  },
+                  "writes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "writesEvery": {
+                    "type": "boolean"
+                  },
+                  "declaredBy": {
+                    "type": "string"
+                  },
+                  "claimed": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "service",
+                  "typeId",
+                  "symbol"
+                ],
+                "additionalProperties": false
+              },
+              "receiver": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "typeId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "symbol": {
+                    "type": "string"
+                  },
+                  "writes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "writesEvery": {
+                    "type": "boolean"
+                  },
+                  "declaredBy": {
+                    "type": "string"
+                  },
+                  "claimed": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "service",
+                  "typeId",
+                  "symbol"
+                ],
+                "additionalProperties": false
+              },
+              "typeId": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "expected": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "actual": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rule": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "impact": {
+                "type": "string",
+                "enum": [
+                  "stored",
+                  "unread",
+                  "unknown",
+                  "none"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ignored": {
+                "type": "boolean"
+              },
+              "ignoredBy": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "severity",
+              "kind",
+              "edge",
+              "edgeKey",
+              "direction",
+              "sender",
+              "receiver",
+              "typeId",
+              "field",
+              "expected",
+              "actual",
+              "rule",
+              "message",
+              "ignored",
+              "ignoredBy"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "ignored": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "missing_required",
+                  "type_mismatch",
+                  "optionality_mismatch",
+                  "extra_field"
+                ]
+              },
+              "edge": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "to": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              "edgeKey": {
+                "type": "string",
+                "minLength": 1
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "request",
+                  "response",
+                  "payload"
+                ]
+              },
+              "sender": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "typeId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "symbol": {
+                    "type": "string"
+                  },
+                  "writes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "writesEvery": {
+                    "type": "boolean"
+                  },
+                  "declaredBy": {
+                    "type": "string"
+                  },
+                  "claimed": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "service",
+                  "typeId",
+                  "symbol"
+                ],
+                "additionalProperties": false
+              },
+              "receiver": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "typeId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "symbol": {
+                    "type": "string"
+                  },
+                  "writes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "writesEvery": {
+                    "type": "boolean"
+                  },
+                  "declaredBy": {
+                    "type": "string"
+                  },
+                  "claimed": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "service",
+                  "typeId",
+                  "symbol"
+                ],
+                "additionalProperties": false
+              },
+              "typeId": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "expected": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "actual": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rule": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "impact": {
+                "type": "string",
+                "enum": [
+                  "stored",
+                  "unread",
+                  "unknown",
+                  "none"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ignored": {
+                "type": "boolean"
+              },
+              "ignoredBy": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "severity",
+              "kind",
+              "edge",
+              "edgeKey",
+              "direction",
+              "sender",
+              "receiver",
+              "typeId",
+              "field",
+              "expected",
+              "actual",
+              "rule",
+              "message",
+              "ignored",
+              "ignoredBy"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "new",
+        "fixed",
+        "preexisting",
+        "ignored"
+      ],
+      "additionalProperties": false
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "ref-not-found",
+              "not-a-git-repo",
+              "node-modules-missing",
+              "node-modules-linked",
+              "base-extract-failed",
+              "dirty-working-tree",
+              "impact-truncated",
+              "flows-truncated"
+            ]
+          },
+          "service": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hint": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "service",
+          "message",
+          "hint"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "timing": {
+      "type": "object",
+      "properties": {
+        "baseMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "headMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "diffMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "totalMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "baseMs",
+        "headMs",
+        "diffMs",
+        "totalMs"
+      ],
+      "additionalProperties": false
+    },
+    "unresolved": {
+      "type": "object",
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "gap",
+                  "finding"
+                ]
+              },
+              "service": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "node": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sites": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "kept": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "service",
+              "file",
+              "reason",
+              "sites"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "gap",
+                  "finding"
+                ]
+              },
+              "service": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "node": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sites": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "kept": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "service",
+              "file",
+              "reason",
+              "sites"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "added",
+        "removed"
+      ],
+      "additionalProperties": false
+    },
+    "joins": {
+      "type": "object",
+      "properties": {
+        "lost": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "target-gone",
+                  "no-producer",
+                  "no-consumer"
+                ]
+              },
+              "caller": {
+                "type": "string",
+                "minLength": 1
+              },
+              "target": {
+                "type": "string",
+                "minLength": 1
+              },
+              "edge": {
+                "type": "string",
+                "minLength": 1
+              },
+              "service": {
+                "type": "string"
+              },
+              "targetService": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "now": {
+                "type": "string",
+                "minLength": 1
+              },
+              "targetRemoved": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "caller",
+              "target",
+              "edge",
+              "service",
+              "targetService",
+              "now",
+              "targetRemoved"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "lost"
+      ],
+      "additionalProperties": false
+    },
+    "flows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entry": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "both",
+              "head",
+              "base"
+            ]
+          },
+          "reaches": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "caller",
+                    "service",
+                    "class",
+                    "channel",
+                    "table",
+                    "store",
+                    "external"
+                  ]
+                },
+                "service": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "kind"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "same",
+                    "added",
+                    "removed",
+                    "changed"
+                  ]
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "enters",
+                    "calls",
+                    "http_calls",
+                    "hits",
+                    "emits",
+                    "consumes",
+                    "queries",
+                    "caches",
+                    "triggers",
+                    "stop"
+                  ]
+                },
+                "from": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "to": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string"
+                },
+                "confidence": {
+                  "type": "string",
+                  "enum": [
+                    "static",
+                    "marker",
+                    "declared",
+                    "heuristic",
+                    "runtime"
+                  ]
+                },
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "params": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "returns": {
+                  "type": "string"
+                },
+                "takes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "group": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "loop",
+                        "par"
+                      ]
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "branch": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "id",
+                    "label"
+                  ],
+                  "additionalProperties": false
+                },
+                "note": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "status",
+                "kind",
+                "from",
+                "to",
+                "label",
+                "confidence"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "same": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "added": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "removed": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "changed": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "same",
+              "added",
+              "removed",
+              "changed"
+            ],
+            "additionalProperties": false
+          },
+          "truncated": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "entry",
+          "label",
+          "service",
+          "side",
+          "reaches",
+          "participants",
+          "steps",
+          "counts"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rules": {
+      "type": "object",
+      "properties": {
+        "new": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string",
+                "minLength": 1
+              },
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "forbid",
+                  "only",
+                  "tags",
+                  "reachable"
+                ]
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              },
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fromService": {
+                "type": "string"
+              },
+              "toService": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "via": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "from": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "to": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "static",
+                        "marker",
+                        "declared",
+                        "heuristic",
+                        "runtime"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "from",
+                    "to",
+                    "type",
+                    "confidence"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "at": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "service",
+                  "file"
+                ],
+                "additionalProperties": false
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "static",
+                  "marker",
+                  "declared",
+                  "heuristic",
+                  "runtime"
+                ]
+              },
+              "heuristic": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "partial": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "excusedBy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "shape",
+              "severity",
+              "key",
+              "from",
+              "to",
+              "fromService",
+              "toService",
+              "via",
+              "path",
+              "confidence",
+              "heuristic",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "fixed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string",
+                "minLength": 1
+              },
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "forbid",
+                  "only",
+                  "tags",
+                  "reachable"
+                ]
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              },
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fromService": {
+                "type": "string"
+              },
+              "toService": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "via": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "from": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "to": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "static",
+                        "marker",
+                        "declared",
+                        "heuristic",
+                        "runtime"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "from",
+                    "to",
+                    "type",
+                    "confidence"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "at": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "service",
+                  "file"
+                ],
+                "additionalProperties": false
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "static",
+                  "marker",
+                  "declared",
+                  "heuristic",
+                  "runtime"
+                ]
+              },
+              "heuristic": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "partial": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "excusedBy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "shape",
+              "severity",
+              "key",
+              "from",
+              "to",
+              "fromService",
+              "toService",
+              "via",
+              "path",
+              "confidence",
+              "heuristic",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "existing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string",
+                "minLength": 1
+              },
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "forbid",
+                  "only",
+                  "tags",
+                  "reachable"
+                ]
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              },
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fromService": {
+                "type": "string"
+              },
+              "toService": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "via": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "from": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "to": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "static",
+                        "marker",
+                        "declared",
+                        "heuristic",
+                        "runtime"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "from",
+                    "to",
+                    "type",
+                    "confidence"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "at": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "service",
+                  "file"
+                ],
+                "additionalProperties": false
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "static",
+                  "marker",
+                  "declared",
+                  "heuristic",
+                  "runtime"
+                ]
+              },
+              "heuristic": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "partial": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "excusedBy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "shape",
+              "severity",
+              "key",
+              "from",
+              "to",
+              "fromService",
+              "toService",
+              "via",
+              "path",
+              "confidence",
+              "heuristic",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "excused": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string",
+                "minLength": 1
+              },
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "forbid",
+                  "only",
+                  "tags",
+                  "reachable"
+                ]
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              },
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fromService": {
+                "type": "string"
+              },
+              "toService": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "via": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "from": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "to": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "static",
+                        "marker",
+                        "declared",
+                        "heuristic",
+                        "runtime"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "from",
+                    "to",
+                    "type",
+                    "confidence"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "at": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "string"
+                  },
+                  "line": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "service",
+                  "file"
+                ],
+                "additionalProperties": false
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "static",
+                  "marker",
+                  "declared",
+                  "heuristic",
+                  "runtime"
+                ]
+              },
+              "heuristic": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "partial": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "excusedBy": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "shape",
+              "severity",
+              "key",
+              "from",
+              "to",
+              "fromService",
+              "toService",
+              "via",
+              "path",
+              "confidence",
+              "heuristic",
+              "message"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "new",
+        "fixed",
+        "existing",
+        "excused"
+      ],
+      "additionalProperties": false
+    },
+    "spec": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "specDiffFormatVersion": {
+              "type": "number",
+              "const": 1
+            },
+            "documents": {
+              "type": "object",
+              "properties": {
+                "base": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "head": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "base",
+                "head"
+              ],
+              "additionalProperties": false
+            },
+            "changes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "endpoint-removed",
+                      "method-removed",
+                      "path-param-added",
+                      "request-property-became-required",
+                      "request-property-added-required",
+                      "request-property-type-changed",
+                      "response-property-removed",
+                      "response-property-type-changed",
+                      "response-property-became-optional",
+                      "response-status-removed",
+                      "channel-removed",
+                      "message-property-removed",
+                      "message-property-type-changed",
+                      "message-property-became-optional",
+                      "request-property-removed",
+                      "response-status-added",
+                      "security-added",
+                      "channel-consumer-removed",
+                      "endpoint-added",
+                      "optional-property-added",
+                      "description-changed"
+                    ]
+                  },
+                  "level": {
+                    "type": "string",
+                    "enum": [
+                      "error",
+                      "warning",
+                      "info"
+                    ]
+                  },
+                  "document": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "openapi",
+                      "asyncapi"
+                    ]
+                  },
+                  "service": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "operation": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "field": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "base": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "head": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "message": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "place": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "side": {
+                            "type": "string",
+                            "enum": [
+                              "base",
+                              "head"
+                            ]
+                          },
+                          "file": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "line": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "side",
+                          "file"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "callers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "service": {
+                          "type": "string"
+                        },
+                        "file": {
+                          "type": "string"
+                        },
+                        "line": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "confidence": {
+                          "type": "string",
+                          "enum": [
+                            "static",
+                            "marker",
+                            "declared",
+                            "heuristic",
+                            "runtime"
+                          ]
+                        },
+                        "via": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "service",
+                        "confidence",
+                        "via"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "public": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "note": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "confidence": {
+                    "type": "string",
+                    "enum": [
+                      "static",
+                      "marker",
+                      "declared",
+                      "heuristic",
+                      "runtime"
+                    ]
+                  },
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "kind",
+                  "level",
+                  "document",
+                  "format",
+                  "service",
+                  "operation",
+                  "field",
+                  "base",
+                  "head",
+                  "message",
+                  "place",
+                  "callers",
+                  "public",
+                  "note",
+                  "confidence",
+                  "key"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "summary": {
+              "type": "object",
+              "properties": {
+                "errors": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "warnings": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "infos": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "breaking": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "uncalled": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "errors",
+                "warnings",
+                "infos",
+                "breaking",
+                "uncalled"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "specDiffFormatVersion",
+            "documents",
+            "changes",
+            "summary"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "diffFormatVersion",
+    "schemaVersion",
+    "generatedAt",
+    "base",
+    "head",
+    "nodes",
+    "edges",
+    "types",
+    "counts",
+    "impact",
+    "contracts",
+    "warnings",
+    "timing",
+    "unresolved",
+    "joins",
+    "flows",
+    "rules",
+    "spec"
+  ],
+  "additionalProperties": false
+}
