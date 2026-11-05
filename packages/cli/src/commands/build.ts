@@ -89,6 +89,7 @@ import { spliceRepoGraph } from '../build/splice.js';
 import { EXIT } from '../exit.js';
 import { writeFreshness } from '../build/freshness.js';
 import { namesOf, writeNames } from '../agents/names.js';
+import { PULLED_DIR, pulledServiceGraphPath } from '../team/bundle.js';
 import { acquireBuildLock, BuildBusyError, claimAgain, leaveQueue, queueAgain, rotateBuildLog, type LockHolder } from '../build/lock.js';
 import { waysInByService, waysInTotal } from '../doctor/ways-in.js';
 import { BUILD_STAMP, VERSION } from '../version.js';
@@ -168,6 +169,12 @@ export interface BuildOptions {
    * from then on earns one more pass.
    */
   queuedBy?: number;
+  /**
+   * Read only the services checked out here, and take every other one's own
+   * graph from the team's, pulled with `flowatlas pull` (P236): your branch of
+   * one repository against everyone's main.
+   */
+  onPulled?: boolean;
 }
 
 /** How long each phase of one build took, in milliseconds. */
@@ -289,6 +296,8 @@ interface Extracted {
   service: ServiceConfig;
   graph?: RepoGraph;
   report: ServiceReport;
+  /** Taken from the team's pulled graph rather than read (P236): never cached as read here. */
+  pulled?: true;
   /** File hashes, imports and global files, for the next build to compare against. */
   facts?: FileFacts;
 }
@@ -1113,7 +1122,18 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
   // A declared service has no source to survey: there are no files to hash, no
   // tsconfig to find and nothing for an incremental plan to decide. It is read
   // in full on every build, which for one document costs nothing.
-  const readable = loaded.config.services.filter((service) => !isDeclared(service));
+  // The services the team's graph stands in for (P236): not checked out here, and in the bundle.
+  const pulledFor = new Map<string, string>();
+  if (options.onPulled === true) {
+    for (const service of loaded.config.services) {
+      const path = pulledServiceGraphPath(outputDir, service.name);
+      if (!existsSync(loaded.repoDir(service)) && existsSync(path)) pulledFor.set(service.name, path);
+    }
+    if (pulledFor.size === 0 && !existsSync(join(outputDir, PULLED_DIR))) {
+      throw new BuildInputError('--on-pulled, and nothing is pulled', 'Run flowatlas pull first.');
+    }
+  }
+  const readable = loaded.config.services.filter((service) => !isDeclared(service) && !pulledFor.has(service.name));
   const surveys = readable.map((service) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
@@ -1169,7 +1189,12 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
   const standInsPath = readApart ? join(outputDir, STAND_INS_FILENAME) : undefined;
   if (standInsPath !== undefined) await writeJson(standInsPath, standIns);
 
-  const extracted = await inPools(loaded.config.services, limit, (service, signal) => {
+  const extracted = await inPools(loaded.config.services, limit, async (service, signal) => {
+    const pulledPath = pulledFor.get(service.name);
+    if (pulledPath !== undefined) {
+      const graph = await readGraph(pulledPath);
+      return { service, graph, report: { ...emptyReport(service, EXTRACTORS.get(service.type) ?? null), ...repoCountsOf(graph) }, pulled: true } satisfies Extracted;
+    }
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
     const surveyed = surveys.find((entry) => entry.service === service.name);
@@ -1323,7 +1348,7 @@ const nextCache = (
   const cache = emptyCache(expected, builtAt);
   for (const item of extracted) {
     const survey = surveys.find((entry) => entry.service === item.service.name);
-    if (survey === undefined || survey.extractor === null || item.graph === undefined) continue;
+    if (item.pulled === true || survey === undefined || survey.extractor === null || item.graph === undefined) continue;
     const carried = item.facts;
     // What stood in, for the names this reading wanted (P83): answered from
     // the index the build handed it, with the shape files as the survey hashed
@@ -1597,6 +1622,7 @@ export const registerBuild = (program: Command): void => {
     .option('--json', 'print the report as JSON')
     .option('--wait <seconds>', 'wait this long for a build that is running, then stop (default: stop at once)')
     .option('--background', 'build in a process of its own and return at once; the log is <output>/build.log')
+    .option('--on-pulled', "read the repositories checked out here, and take the others from the team's pulled graph")
     .addOption(new Option('--queued-by <pid>', 'set on the build --background starts').hideHelp().argParser(Number))
     .action(async (dir: string | undefined, options: BuildOptions & { watch?: boolean; background?: boolean }) => {
       const settings: BuildOptions = {

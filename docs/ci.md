@@ -302,6 +302,10 @@ The action lives in this repository's `action/` folder and is tagged with the
 command, so the action and the flowatlas it installs never drift apart. It is
 not in the Marketplace; listing it there would only change the `uses:` line.
 
+**Publishing the team's graph.** On the main branch, `publish: true` builds the
+graph and uploads it as the artifact `flowatlas-graph`, for `flowatlas pull
+gh:owner/repo/flowatlas-graph` ([one graph for the team](team.md)).
+
 ### By hand
 
 `flowatlas diff` answers the question a reviewer has, which is not which lines

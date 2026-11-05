@@ -991,6 +991,9 @@ Three ways to keep it from falling behind, from least to most automatic:
 - `flowatlas build --watch` while you work: rebuilds on every save.
 - `flowatlas hook install`: git hooks that rebuild in the background after a
   checkout, a merge or a rebase ([CLI](CLI.md#flowatlas-hook-install--status--remove)).
+- `"mcp": { "pull": "on-start" }` with a `remote` ([one graph for the team](team.md)):
+  the server pulls the team's graph when it starts; `start_here` says `pulled`,
+  with where it came from and when it was built.
 - `"mcp": { "rebuild": "on-change" }` in the configuration: an answer that finds
   its files changed starts a background build, and says `rebuilding: true` in its
   `stale`; the server reopens the new graph when it is written. Off by default,

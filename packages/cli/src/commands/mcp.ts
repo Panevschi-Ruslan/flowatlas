@@ -243,6 +243,9 @@ export const registerMcp = (program: Command): void => {
           return;
         }
 
+        // The team's graph first, when the configuration asks (P236): a failed pull
+        // never stops the server, which answers from what it has and says why.
+        await pullOnStart(options.config);
         const { DbHandle, startStdioServer } = await import('@flowatlas/mcp');
         // Loaded here, not at the top: the finder reaches `init`, which reaches this file.
         const { missingCandidatesFor } = await import('../doctor/missing.js');
@@ -284,4 +287,25 @@ export const registerMcp = (program: Command): void => {
         });
       },
     );
+};
+
+/**
+ * `mcp.pull: on-start` (P236): the team's graph, pulled before the server
+ * starts, a conditional request when nothing is new. What it says goes to
+ * stderr, which a client keeps as the server's log; stdout is the protocol's.
+ */
+const pullOnStart = async (config: string | undefined): Promise<void> => {
+  let loaded: LoadedConfig;
+  try {
+    loaded = loadConfig(config ?? process.cwd());
+  } catch {
+    return;
+  }
+  if (loaded.config.mcp?.pull !== 'on-start' || loaded.config.remote === undefined) return;
+  const { runPull } = await import('./team.js');
+  try {
+    await runPull(undefined, { config: loaded.configPath }, { out: () => {}, err: (text) => void process.stderr.write(text) });
+  } catch (cause) {
+    process.stderr.write(`flowatlas: could not pull the team's graph: ${cause instanceof Error ? cause.message : String(cause)}\n`);
+  }
 };

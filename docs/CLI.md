@@ -589,6 +589,23 @@ since it was written), `missing`, `edited by hand` or `not flowatlas`. `remove`
 takes out what `install` wrote and nothing else, and keeps a guide edited by
 hand unless `--force`.
 
+### `flowatlas publish` and `flowatlas pull [source]`
+
+One graph for the team (P236): CI builds and `publish`es the project's graph as
+one file, and anybody `pull`s it to ask the whole project from a checkout of one
+repository. The whole guide is [One graph for the team](team.md).
+
+| Command | Does |
+|---|---|
+| `flowatlas publish [--output <file>]` | writes the graph just built, each service's own graph, and what is read beside them, with a manifest and checksums, as `<output>/flowatlas-graph.tgz`; never source |
+| `flowatlas pull [source]` | fetches `source` or the configuration's `remote.url` (`gh:owner/repo/artifact`, `https://…`, a file), checks it, and installs it in `<output>/pulled/`; `--force` pulls even when nothing changed |
+| `flowatlas build --on-pulled` | reads the repositories checked out here, and takes every other one from the pulled graph |
+| `flowatlas diff --pulled [head-ref]` | compares this checkout with the pulled graph, which is read rather than built |
+
+With a `remote` in the configuration, a service whose repository is not checked
+out is allowed, and every question reads the pulled graph when none was built
+here.
+
 ### `flowatlas hook install | status | remove`
 
 Git hooks that rebuild the graph in the background, so it follows a checkout or a

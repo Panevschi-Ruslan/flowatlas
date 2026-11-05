@@ -15,7 +15,7 @@
  * (P193): each service at its pin, read the way `check --env` reads it, and
  * the same document `check` carries under its verdict, without the verdict.
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 import { checkContracts, type CheckOptions } from '@flowatlas/contracts';
@@ -43,6 +43,7 @@ import { processIo, type QueryIo } from '../query/answer.js';
 import { environmentLead } from '../report/check-render.js';
 import { classifyContracts, contractBreaks } from '../report/contract-delta.js';
 import { DIFF_MARKDOWN_DEFAULTS, DIFF_SECTIONS, renderDiffMarkdown, summariseDiff } from '../report/diff-markdown.js';
+import { pulledSide } from '../team/pulled-side.js';
 import { COMMENT_FILE, commentFacts, commentMarker, renderDiffComment } from '../report/diff-comment.js';
 
 /** What a comment's marker and verdict take of `--max-chars`. */
@@ -76,6 +77,8 @@ export const DIFF_FILE = 'diff.json';
 /** `--pin`, `--pins` and `FLOWATLAS_PIN_*` count only with `--env`, as in `check`. */
 export interface DiffOptions extends PinFlags {
   config?: string;
+  /** The base side is the team's pulled graph (P236): main as CI built it, read rather than built. */
+  pulled?: boolean;
   /**
    * Repositories to compare. Every other one is the same on both sides: its
    * head, or with `--env` what the environment runs.
@@ -434,14 +437,49 @@ const environmentSides = async (
   return { head: read.sides.candidate, base: read.sides.deployed, said };
 };
 
-/** What the base side is: a ref every repository is read at, or what an environment runs. */
-type BaseSide = { kind: 'ref'; ref: string } | { kind: 'environment'; environment: string };
+/**
+ * Both sides of `diff --pulled` (P236): the base is the team's pulled graph,
+ * read and not built; the head reads the repositories checked out here and
+ * takes every other one from it, as `build --on-pulled` does.
+ */
+const pulledSides = async (
+  loaded: LoadedConfig,
+  headRef: string | null,
+  shared: Omit<BuildAtRefOptions, 'side'>,
+): Promise<{ head: BuildAtRefResult; base: BuildAtRefResult }> => {
+  let base: BuildAtRefResult;
+  try {
+    base = pulledSide(loaded);
+  } catch (cause) {
+    throw cannotRun(cause instanceof Error ? cause.message : String(cause));
+  }
+  const here = loaded.config.services.filter((service) => existsSync(loaded.repoDir(service))).map((service) => service.name);
+  const head = await buildAtRef(loaded, headRef, {
+    ...shared,
+    side: 'head',
+    services: here,
+    inherit: Object.fromEntries(Object.entries(base.repoGraphs).filter(([name]) => !here.includes(name))),
+    inheritSources: Object.fromEntries(Object.entries(base.sources).filter(([name]) => !here.includes(name))),
+  });
+  return { head, base };
+};
+
+/** What the base side is: a ref every repository is read at, what an environment runs, or the team's pulled graph (P236). */
+type BaseSide = { kind: 'ref'; ref: string } | { kind: 'environment'; environment: string } | { kind: 'pulled' };
 
 /**
  * The base side the arguments name. `<base-ref>` and `--env` are exclusive;
  * the pins flags say what an environment runs, so they need one.
  */
 const baseSideOf = (baseRef: string | undefined, options: DiffOptions): BaseSide => {
+  if (options.pulled === true) {
+    if (baseRef !== undefined || options.env !== undefined) {
+      throw cannotRun('--pulled is the base side: the team\'s graph as CI built it, so it takes no base ref and no --env', [
+        'Name the head alone: flowatlas diff --pulled [head-ref].',
+      ]);
+    }
+    return { kind: 'pulled' };
+  }
   if (options.env !== undefined) {
     const environment = environmentNameOf(options.env);
     if (baseRef !== undefined) {
@@ -507,7 +545,9 @@ export const runDiff = async (
 
   try {
     const sides =
-      against.kind === 'ref'
+      against.kind === 'pulled'
+        ? { ...(await pulledSides(loaded, head, shared)), said: undefined }
+        : against.kind === 'ref'
         ? { ...(await buildSides(loaded, against.ref, head, services, shared)), said: undefined }
         : await environmentSides(loaded, against.environment, head, (options.service ?? []).length > 0 ? services : undefined, options, shared);
     const { head: builtHead, base: builtBase, said } = sides;
@@ -519,7 +559,7 @@ export const runDiff = async (
       loaded,
       base: builtBase,
       head: builtHead,
-      baseRef: against.kind === 'ref' ? against.ref : against.environment,
+      baseRef: against.kind === 'ref' ? against.ref : against.kind === 'pulled' ? 'pulled' : against.environment,
       headRef: head,
       limits: { maxEntries, maxNodes, maxFlows },
       sequenceDetail,
@@ -637,6 +677,7 @@ export const registerDiff = (program: Command): void => {
     .argument('[head-ref]', 'the ref to compare (default: the working tree)')
     .option('--config <path>', 'configuration file (default: found from the working directory)')
     .option('--env <name>', 'compare with what this environment runs, each service at its pin, in place of a base ref')
+    .option('--pulled', "compare with the team's pulled graph (flowatlas pull) in place of a base ref; nothing is built for it")
     .option('--pin <service=ref>', 'with --env: the ref a service runs, over the pins file, repeatable', collect, [])
     .option('--pins <path>', 'with --env: the pins file (default: deployed.file, or flowatlas.deployed.json beside the configuration)')
     .option('--service <name>', 'compare only this repository, repeatable (with --env: the ones that move)', collect, [])

@@ -1,4 +1,6 @@
-import { statSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
+import { PULLED_DIR } from './db.js';
 import { checkoutLine, checkoutsMoved, citedFiles, freshnessPathFor, readFreshness, staleOf, type Freshness, type Stale } from '@flowatlas/core';
 
 /** What the server knows of one database's freshness file, read again when the file changes. */
@@ -57,3 +59,22 @@ export const withStale = (handle: { path: string; onStale?: (() => boolean) | un
 
 /** One line per service whose checkout moved since the build: another commit, or another branch. */
 export const checkoutLines = (dbPath: string): string[] => checkoutsMoved(freshnessBeside(dbPath)).map(checkoutLine);
+
+/**
+ * When the graph asked is the team's (P236), where it came from and when it
+ * was built, in one line: an answer from CI's main is never passed off as one
+ * from this checkout. Undefined for a graph built here.
+ */
+export const pulledLine = (dbPath: string): string | undefined => {
+  if (basename(dirname(dbPath)) !== PULLED_DIR) return undefined;
+  try {
+    const source = JSON.parse(readFileSync(join(dirname(dbPath), 'source.json'), 'utf8')) as {
+      source: string;
+      pulledAt: string;
+      manifest?: { builtAt?: string; flowatlasVersion?: string };
+    };
+    return `the team's graph, pulled from ${source.source} ${source.pulledAt.slice(0, 16).replace('T', ' ')}, built ${source.manifest?.builtAt?.slice(0, 16).replace('T', ' ') ?? 'at an unknown time'}`;
+  } catch {
+    return "the team's graph (flowatlas pull)";
+  }
+};

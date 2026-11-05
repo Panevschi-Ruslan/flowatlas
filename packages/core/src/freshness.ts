@@ -155,7 +155,8 @@ export const staleOf = (freshness: Freshness | undefined, cited: readonly CitedF
   for (const { service, file } of cited) {
     const known = freshness.services[service];
     const stamp = known?.files[file];
-    if (known === undefined || stamp === undefined) continue;
+    // A service not checked out here (a pulled graph, P236) is not stale: nothing here says what it is now.
+    if (known === undefined || stamp === undefined || !existsSync(known.dir)) continue;
     of += 1;
     const path = isAbsolute(file) ? file : resolve(known.dir, file);
     const [size, mtimeMs, hash] = stamp;
@@ -283,6 +284,8 @@ export const checkoutsMoved = (
       now = head(built.dir);
       asked.set(built.dir, now);
     }
+    // Not a checkout here, as a pulled graph's other services are (P236): nothing to compare.
+    if (now.commit === null && !existsSync(built.dir)) continue;
     if (now.commit !== built.commit || now.branch !== built.branch) {
       moved.push({ service, built: { commit: built.commit, branch: built.branch }, now });
     }

@@ -210,12 +210,18 @@ describe('the tools a session is offered', () => {
    * meaning said once in the instructions. 13,192 read and 32,711 in all (19
    * tools: 10,140 and 28,602), and the ceilings move
    * to the next 50 above, here and below.
+   *
+   * P230 and P236 gave `start_here`'s output schema `moved` (a checkout on
+   * another commit than the graph) and `pulled` (the graph is the team's): one
+   * line each, which a client checks answers against and no model reads.
+   * 13,192 read as before; 32,764 and 28,655 in all, the full ceilings to the
+   * next 50.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
     expect(read.length).toBeLessThan(13200);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(32750);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(32800);
   });
 
   /**
@@ -236,7 +242,7 @@ describe('the tools a session is offered', () => {
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
       expect(read.length).toBeLessThan(10150);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(28650);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(28700);
     } finally {
       await plain.close();
     }

@@ -1091,7 +1091,22 @@ export const mcpSettingsSchema = z.strictObject({
    * asked: work starting on its own is a surprise unless somebody chose it.
    */
   rebuild: z.enum(['off', 'on-change']).default('off'),
+  /** `on-start`: the server pulls the team's graph (`remote`) when it starts, a conditional request when nothing is new (P236). */
+  pull: z.enum(['off', 'on-start']).default('off'),
 });
+
+/**
+ * Where a team's graph is pulled from (P236): a bundle `flowatlas publish`
+ * wrote, as a CI artifact (`gh:owner/repo/artifact-name`), an `https://`
+ * address, or a path. `tokenEnv` names the variable holding a token for it;
+ * the token is never written anywhere and never sent to another host.
+ */
+export const remoteSettingsSchema = z.strictObject({
+  url: z.string().min(1),
+  tokenEnv: z.string().min(1).optional(),
+});
+
+export type RemoteSettings = z.infer<typeof remoteSettingsSchema>;
 
 export type McpSettings = z.infer<typeof mcpSettingsSchema>;
 
@@ -1415,6 +1430,7 @@ export const flowatlasConfigSchema = z
      * any it does not have.
      */
     mcp: mcpSettingsSchema.optional(),
+    remote: remoteSettingsSchema.optional(),
   })
   .superRefine((config, ctx) => {
     // A tool both listed whatever it needs and never listed says nothing (P201).
@@ -1655,7 +1671,9 @@ export const loadConfig = (
         const key = service.openapi === undefined ? 'document.path' : 'openapi';
         return isFile(path) ? [] : [`services.${service.name}.${key}: ${written} is not a file`];
       }
-      return isDirectory(repoDirOf(service))
+      // With a team's graph to pull (P236), a repository not checked out here is
+      // the point, not a mistake: its graph comes from the team's.
+      return isDirectory(repoDirOf(service)) || config.remote !== undefined
         ? []
         : [`services.${service.name}.repo: ${service.repo} is not a directory`];
     });

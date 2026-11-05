@@ -170,6 +170,7 @@ export {
   infraModuleSchema,
   loadConfig,
   mcpSettingsSchema,
+  remoteSettingsSchema,
   builtInShapesFor,
   packageSourcesFor,
   parseConfig,

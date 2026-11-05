@@ -16,7 +16,8 @@ const output = (name, value) => appendFileSync(process.env.GITHUB_OUTPUT ?? '/de
 const configPath = resolve(input('config') || 'flowatlas.config.json');
 const token = input('token');
 const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH ?? '', 'utf8') || '{}');
-const base = input('base') || event.pull_request?.base?.sha || '';
+const publishing = input('publish') === 'true';
+const base = input('base') || event.pull_request?.base?.sha || (publishing ? 'HEAD' : '');
 if (base === '') {
   console.log('::error::no base: run on a pull request, or give the base input');
   process.exit(1);
@@ -28,10 +29,12 @@ const version = versionOf(input('version'), process.env.GITHUB_ACTION_REF);
 if (version !== 'installed') run('npm', ['install', '--global', '--no-fund', '--no-audit', `@flowatlas/cli@${version}`]);
 
 // The base commit of this repository: a checkout fetches one commit unless told otherwise.
-try {
-  run('git', ['fetch', '--no-tags', '--depth=1', 'origin', base]);
-} catch {
-  console.log(`::warning::could not fetch ${base}; diff reads what the checkout has`);
+if (!publishing) {
+  try {
+    run('git', ['fetch', '--no-tags', '--depth=1', 'origin', base]);
+  } catch {
+    console.log(`::warning::could not fetch ${base}; diff reads what the checkout has`);
+  }
 }
 
 // The other repositories, where the configuration expects them.

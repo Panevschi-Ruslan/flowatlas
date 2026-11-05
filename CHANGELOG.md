@@ -20,6 +20,16 @@ only one of them moved.
   name, printed as the graph server's `describe_for_prompt` writes it,
   character for character; `--scope`, `--max-steps`, `--max-chars`,
   `--with-spec`, `--format json` for the tool's whole answer.
+- **One graph for the team (P236).** `flowatlas publish` writes the graph just
+  built as one checked bundle, never source; `flowatlas pull` fetches it from a
+  CI artifact (`gh:owner/repo/name`), an `https://` address or a file, checks
+  every file and the schema, and installs it, a conditional request when
+  nothing is new. With a `remote` in the configuration, a repository not
+  checked out is allowed, and every question reads the pulled graph and says
+  so. `build --on-pulled` reads what is checked out and takes the rest from
+  the team's; `diff --pulled` compares a branch with main as CI built it. The
+  action's `publish: true` uploads the bundle, and `mcp.pull: on-start` pulls
+  when the server starts. A token is never sent to another host.
 - **A GitHub Action, and `diff --format comment` (P231).** The action in
   `action/` fetches the other repositories a configuration names, caches the
   base graphs under the base commit, and keeps one pull request comment up to

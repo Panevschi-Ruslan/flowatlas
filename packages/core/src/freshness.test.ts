@@ -78,6 +78,12 @@ describe('whether they changed since the build', () => {
     });
   });
 
+  it('says nothing of a service not checked out here, as a pulled graph has them (P236)', () => {
+    const away: Freshness = { ...freshness, services: { far: { dir: join(scratch, 'not-here'), commit: SHA_A, branch: 'main', dirty: false, files: { 'a.ts': [1, 1, 'sha1:x'] } } } };
+    expect(staleOf(away, [{ service: 'far', file: 'a.ts' }])).toBeUndefined();
+    expect(checkoutsMoved(away)).toEqual([]);
+  });
+
   it('says nothing without a freshness file', () => {
     expect(staleOf(undefined, cite('b.ts'))).toBeUndefined();
   });

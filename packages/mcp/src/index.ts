@@ -11,7 +11,7 @@ export { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS } from './tool-nee
 export type { Need, NeedSource, ToolFacts, ToolName } from './tool-needs.js';
 export { LISTING_POLL_MS, listingSettingsOf, ToolListing } from './tool-listing.js';
 export type { ListingOptions, ListingSettings } from './tool-listing.js';
-export { DbHandle } from './query/db.js';
+export { DbHandle, PULLED_DIR } from './query/db.js';
 export { ruleBreaksAt, rulesReportOf, violatedHops } from './tools/rules.js';
 export type { DbHandleOptions, SourceRoots } from './query/db.js';
 export { resolveEntryRef, resolveSymbol, isResolved } from './query/entry-ref.js';
@@ -31,7 +31,7 @@ export {
 } from './query/flow.js';
 export type { CrossingLeft, FlowOptions, FlowResult } from './query/flow.js';
 export { DEFAULT_PATH_NODES, findPath } from './query/path.js';
-export { checkoutLines, freshnessBeside, staleFor, withStale } from './query/fresh.js';
+export { checkoutLines, freshnessBeside, pulledLine, staleFor, withStale } from './query/fresh.js';
 export type { StaleRef } from './query/fresh.js';
 export type { PathOptions, PathResult, ReversePath } from './query/path.js';
 export { projectDetail, projectEdge, truncate, clampDetail, CLAMP_NOTE, MAX_DETAIL } from './query/detail.js';

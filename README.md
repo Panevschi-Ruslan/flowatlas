@@ -269,6 +269,7 @@ read again and the others come from the cache.
 | `flowatlas channel <name>` | who publishes to a channel and who handles it |
 | `flowatlas path <from> <to>` | how one node reaches another, by the shortest ways, across services; says when it is the other way round |
 | `uses: Panevschi-Ruslan/flowatlas/action@v0.7.0` | the GitHub Action: one pull request comment, kept up to date, saying what the change reaches across the repositories and whether it breaks a contract or a rule ([CI](docs/ci.md#the-action)) |
+| `flowatlas publish` / `flowatlas pull` | one graph for the team: CI publishes it, anybody pulls it and asks the whole project from one checkout; `build --on-pulled` and `diff --pulled` put your branch against everyone's main ([guide](docs/team.md)) |
 | `flowatlas report` | the page to read first: the services, what crosses between them, what most depends on, what is worth a second look, what was not read, and questions to ask; `--output .` writes ARCHITECTURE.md |
 | `flowatlas explain <name>` | everything the graph knows about one name, in the Markdown the graph server and the page's *Copy as prompt* write |
 | `flowatlas types [--drift]` | the type registry, and names two repositories disagree about |

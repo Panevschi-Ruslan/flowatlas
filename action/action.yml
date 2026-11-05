@@ -44,6 +44,15 @@ inputs:
   max-chars:
     description: The most characters the comment holds (a GitHub comment holds 65,536).
     default: '60000'
+  publish:
+    description: |
+      `true` on the main branch: build the graph and upload the team's bundle as the
+      artifact `flowatlas-graph`, for `flowatlas pull gh:owner/repo/flowatlas-graph`.
+      No comment is written.
+    default: 'false'
+  retention-days:
+    description: How long the published artifact is kept; a run on every push keeps a fresh one.
+    default: '30'
 
 outputs:
   verdict:
@@ -75,6 +84,7 @@ runs:
       shell: bash
       run: node "$GITHUB_ACTION_PATH/src/prepare.mjs"
       env:
+        INPUT_PUBLISH: ${{ inputs.publish }}
         INPUT_CONFIG: ${{ inputs.config }}
         INPUT_BASE: ${{ inputs.base }}
         INPUT_REPOSITORIES: ${{ inputs.repositories }}
@@ -82,11 +92,26 @@ runs:
         INPUT_INSTALL: ${{ inputs.install }}
         INPUT_VERSION: ${{ inputs.version }}
         GITHUB_ACTION_REF: ${{ github.action_ref }}
-    - uses: actions/cache@v4
+    - if: ${{ inputs.publish != 'true' }}
+      uses: actions/cache@v4
       with:
         path: ${{ steps.prepare.outputs.cache-path }}
         key: ${{ steps.prepare.outputs.cache-key }}
+    - id: publish
+      if: ${{ inputs.publish == 'true' }}
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/src/publish.mjs"
+      env:
+        FLOWATLAS_CONFIG: ${{ steps.prepare.outputs.config }}
+    - if: ${{ inputs.publish == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: flowatlas-graph
+        path: ${{ steps.publish.outputs.bundle-path }}
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: error
     - id: run
+      if: ${{ inputs.publish != 'true' }}
       shell: bash
       run: node "$GITHUB_ACTION_PATH/src/run.mjs"
       env:
