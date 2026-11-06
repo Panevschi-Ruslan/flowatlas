@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
-import { dirname, extname, join, relative, resolve } from 'node:path';
+import { dirname, extname, isAbsolute, join, relative, resolve } from 'node:path';
 import {
   ConfigPath,
   NotLiteral,
@@ -320,7 +320,8 @@ const placeLayer = (
   const text = entry instanceof ConfigPath ? fromRepo(root, entry.path) : entry;
   if (typeof entry === 'string' && REMOTE_LAYER.test(entry)) return { text, why: 'remote' };
   let dir: string;
-  if (entry instanceof ConfigPath || entry.startsWith('.') || entry.startsWith('/')) {
+  // A path is absolute as the OS spells one, so a drive letter on Windows is a path, not a package name.
+  if (entry instanceof ConfigPath || entry.startsWith('.') || isAbsolute(entry)) {
     dir = entry instanceof ConfigPath ? entry.path : resolve(from.dir, entry);
   } else {
     const placed = packageLayer(root, from.dir, entry);
