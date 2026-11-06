@@ -1,0 +1,4000 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-06T18:14:51.039Z",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "media",
+      "repo": "./media",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "accounts",
+      "repo": "./accounts",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "legacy",
+      "repo": "./legacy",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "router",
+      "repo": "router",
+      "type": "declared",
+      "extractor": "graphql-document"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "accounts#src/accounts.resolver.ts:AccountsResolver",
+      "type": "provider",
+      "label": "AccountsResolver",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "accounts#src/accounts.resolver.ts:AccountsResolver.me",
+      "type": "method",
+      "label": "AccountsResolver.me",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:accounts#User"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.resolver.ts:AccountsResolver.wishItem",
+      "type": "method",
+      "label": "AccountsResolver.wishItem",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:accounts#WishItem"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.resolver.ts:UserResolver",
+      "type": "provider",
+      "label": "UserResolver",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 20,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "accounts#src/accounts.resolver.ts:UserResolver.currency",
+      "type": "method",
+      "label": "UserResolver.currency",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "user",
+              "type": "type:accounts#User"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.resolver.ts:UserResolver.email",
+      "type": "method",
+      "label": "UserResolver.email",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "user",
+              "type": "type:accounts#User"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.resolver.ts:UserResolver.resolveReference",
+      "type": "method",
+      "label": "UserResolver.resolveReference",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reference",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:accounts#User"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.resolver.ts:UserResolver.wishlist",
+      "type": "method",
+      "label": "UserResolver.wishlist",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "user",
+              "type": "type:accounts#User"
+            }
+          ],
+          "returns": "type:accounts#WishItem[]"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.resolver.ts:WishItemResolver",
+      "type": "provider",
+      "label": "WishItemResolver",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 46,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "accounts#src/accounts.resolver.ts:WishItemResolver.price",
+      "type": "method",
+      "label": "WishItemResolver.price",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 51,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "type:accounts#WishItem"
+            },
+            {
+              "name": "currency",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.service.ts:AccountsService",
+      "type": "provider",
+      "label": "AccountsService",
+      "repo": "accounts",
+      "file": "src/accounts.service.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "accounts#src/accounts.service.ts:AccountsService.current",
+      "type": "method",
+      "label": "AccountsService.current",
+      "repo": "accounts",
+      "file": "src/accounts.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:accounts#User"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.service.ts:AccountsService.item",
+      "type": "method",
+      "label": "AccountsService.item",
+      "repo": "accounts",
+      "file": "src/accounts.service.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:accounts#WishItem"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.service.ts:AccountsService.price",
+      "type": "method",
+      "label": "AccountsService.price",
+      "repo": "accounts",
+      "file": "src/accounts.service.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            },
+            {
+              "name": "currency",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.service.ts:AccountsService.user",
+      "type": "method",
+      "label": "AccountsService.user",
+      "repo": "accounts",
+      "file": "src/accounts.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:accounts#User"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/accounts.service.ts:AccountsService.wishlist",
+      "type": "method",
+      "label": "AccountsService.wishlist",
+      "repo": "accounts",
+      "file": "src/accounts.service.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:accounts#WishItem[]"
+        }
+      }
+    },
+    {
+      "id": "accounts#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "accounts",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "AccountsService",
+          "AccountsResolver",
+          "UserResolver",
+          "WishItemResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "accounts#src/main.ts:bootstrap",
+      "type": "function",
+      "label": "bootstrap",
+      "repo": "accounts",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "config_key:accounts#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "accounts",
+      "file": "src/main.ts",
+      "line": 7,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:accounts:graphql:Query.me",
+      "type": "entry",
+      "label": "Query.me",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 9,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "me",
+        "returns": "User",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:accounts:graphql:Query.wishItem",
+      "type": "entry",
+      "label": "Query.wishItem",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 14,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "wishItem",
+        "returns": "WishItem",
+        "args": {
+          "id": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:accounts:graphql:User.__resolveReference",
+      "type": "entry",
+      "label": "User.__resolveReference",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 24,
+      "kind": "graphql",
+      "meta": {
+        "type": "User",
+        "name": "__resolveReference",
+        "field": true,
+        "reference": true,
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:accounts:graphql:User.currency",
+      "type": "entry",
+      "label": "User.currency",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 30,
+      "kind": "graphql",
+      "meta": {
+        "type": "User",
+        "name": "currency",
+        "field": true,
+        "returns": "String!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:accounts:graphql:User.email",
+      "type": "entry",
+      "label": "User.email",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 35,
+      "kind": "graphql",
+      "meta": {
+        "type": "User",
+        "name": "email",
+        "field": true,
+        "returns": "String!",
+        "adapter": "graphql-resolvers",
+        "access": {
+          "guards": [
+            {
+              "id": "router#router/supergraph.graphql:@policy(account:owner | support & staff)",
+              "name": "@policy(account:owner | support & staff)",
+              "layer": "guard",
+              "where": "route",
+              "via": "@policy on User.email, checked by router",
+              "file": "router/supergraph.graphql",
+              "line": 88
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:accounts:graphql:User.wishlist",
+      "type": "entry",
+      "label": "User.wishlist",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 40,
+      "kind": "graphql",
+      "meta": {
+        "type": "User",
+        "name": "wishlist",
+        "field": true,
+        "returns": "[WishItem!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:accounts:graphql:WishItem.price",
+      "type": "entry",
+      "label": "WishItem.price",
+      "repo": "accounts",
+      "file": "src/accounts.resolver.ts",
+      "line": 51,
+      "kind": "graphql",
+      "meta": {
+        "type": "WishItem",
+        "name": "price",
+        "field": true,
+        "returns": "Float!",
+        "args": {
+          "currency": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:accounts:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "accounts",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "me": {
+                    "type": "User"
+                  },
+                  "wishItem": {
+                    "type": "WishItem",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              },
+              "User": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "currency": {
+                    "type": "String!"
+                  },
+                  "email": {
+                    "type": "String!",
+                    "federation": {
+                      "auth": [
+                        {
+                          "kind": "policy",
+                          "any": [
+                            [
+                              "account:owner"
+                            ],
+                            [
+                              "support",
+                              "staff"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "wishlist": {
+                    "type": "[WishItem!]!"
+                  }
+                },
+                "directives": [
+                  "context",
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ],
+                  "contexts": [
+                    "viewer"
+                  ]
+                }
+              },
+              "WishItem": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "price": {
+                    "type": "Float!",
+                    "args": {
+                      "currency": {
+                        "type": "String",
+                        "required": false
+                      }
+                    },
+                    "federation": {
+                      "fromContext": {
+                        "currency": {
+                          "context": "viewer",
+                          "selection": "currency"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "federation": 2
+          },
+          "subgraph": {
+            "federation": 2
+          },
+          "listen": [
+            {
+              "port": 4003,
+              "file": "src/main.ts",
+              "line": 7,
+              "setting": "PORT"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:gateway:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "gateway",
+      "file": "src/index.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "gateway": {
+            "subgraphs": [
+              {
+                "name": "media",
+                "file": "src/index.ts",
+                "line": 10,
+                "url": "http://localhost:4001/graphql",
+                "host": "localhost:4001",
+                "path": "/graphql"
+              },
+              {
+                "name": "reviews",
+                "file": "src/index.ts",
+                "line": 11,
+                "url": "http://localhost:4002/graphql",
+                "host": "localhost:4002",
+                "path": "/graphql"
+              },
+              {
+                "name": "accounts",
+                "file": "src/index.ts",
+                "line": 12,
+                "url": "http://localhost:4003/graphql",
+                "host": "localhost:4003",
+                "path": "/graphql"
+              },
+              {
+                "name": "inventory",
+                "file": "src/index.ts",
+                "line": 13,
+                "url": "http://inventory:4004/graphql",
+                "host": "inventory:4004",
+                "path": "/graphql"
+              }
+            ]
+          },
+          "listen": [
+            {
+              "port": 4000,
+              "file": "src/index.ts",
+              "line": 24
+            }
+          ],
+          "schema": {
+            "roots": {
+              "query": "Query"
+            },
+            "types": {
+              "Book": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  },
+                  "author": {
+                    "type": "String!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  },
+                  "rating": {
+                    "type": "Float"
+                  }
+                }
+              },
+              "Media": {
+                "kind": "interface",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  },
+                  "rating": {
+                    "type": "Float"
+                  }
+                },
+                "possible": [
+                  "Book",
+                  "Movie"
+                ]
+              },
+              "Movie": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  },
+                  "director": {
+                    "type": "String!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  },
+                  "rating": {
+                    "type": "Float"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "me": {
+                    "type": "User"
+                  },
+                  "wishItem": {
+                    "type": "WishItem",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  },
+                  "stock": {
+                    "type": "Int",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  },
+                  "media": {
+                    "type": "[Media!]!"
+                  },
+                  "topRated": {
+                    "type": "[Media!]!"
+                  }
+                }
+              },
+              "Review": {
+                "kind": "object",
+                "fields": {
+                  "score": {
+                    "type": "Int!"
+                  },
+                  "body": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "User": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "currency": {
+                    "type": "String!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  },
+                  "wishlist": {
+                    "type": "[WishItem!]!"
+                  }
+                }
+              },
+              "WishItem": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "price": {
+                    "type": "Float!"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "entry:inventory:graphql:Query.stock",
+      "type": "entry",
+      "label": "Query.stock",
+      "repo": "inventory",
+      "file": "src/index.ts",
+      "line": 18,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "stock",
+        "returns": "Int",
+        "args": {
+          "id": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:inventory:http:POST:/",
+      "type": "entry",
+      "label": "POST /",
+      "repo": "inventory",
+      "file": "src/index.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "stock": {
+                    "type": "Int",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "federation": 2
+          },
+          "subgraph": {
+            "federation": 2
+          },
+          "listen": [
+            {
+              "port": 4004,
+              "file": "src/index.ts",
+              "line": 22
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:legacy:graphql:Query.stock",
+      "type": "entry",
+      "label": "Query.stock",
+      "repo": "legacy",
+      "file": "src/server.ts",
+      "line": 14,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "stock",
+        "returns": "Int",
+        "args": {
+          "id": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:legacy:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "legacy",
+      "file": "src/server.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "stock": {
+                    "type": "Int",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 4004,
+              "file": "src/server.ts",
+              "line": 20
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:media:graphql:Media.__resolveReference",
+      "type": "entry",
+      "label": "Media.__resolveReference",
+      "repo": "media",
+      "file": "src/index.ts",
+      "line": 16,
+      "kind": "graphql",
+      "meta": {
+        "type": "Media",
+        "name": "__resolveReference",
+        "field": true,
+        "reference": true,
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:media:graphql:Movie.director",
+      "type": "entry",
+      "label": "Movie.director",
+      "repo": "media",
+      "file": "src/index.ts",
+      "line": 19,
+      "kind": "graphql",
+      "meta": {
+        "type": "Movie",
+        "name": "director",
+        "field": true,
+        "returns": "String!",
+        "adapter": "graphql-resolvers",
+        "access": {
+          "guards": [
+            {
+              "id": "router#router/supergraph.graphql:@requiresScopes(media:staff)",
+              "name": "@requiresScopes(media:staff)",
+              "layer": "guard",
+              "where": "route",
+              "via": "@requiresScopes on Movie.director, checked by router",
+              "file": "router/supergraph.graphql",
+              "line": 75
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:media:graphql:Query.media",
+      "type": "entry",
+      "label": "Query.media",
+      "repo": "media",
+      "file": "src/index.ts",
+      "line": 12,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "media",
+        "returns": "[Media!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:media:http:POST:/",
+      "type": "entry",
+      "label": "POST /",
+      "repo": "media",
+      "file": "src/index.ts",
+      "line": 23,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Book": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  },
+                  "author": {
+                    "type": "String!",
+                    "federation": {
+                      "directives": [
+                        "audited"
+                      ]
+                    }
+                  }
+                },
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ]
+                }
+              },
+              "Media": {
+                "kind": "interface",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  }
+                },
+                "possible": [
+                  "Book",
+                  "Movie"
+                ],
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ]
+                }
+              },
+              "Movie": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  },
+                  "director": {
+                    "type": "String!",
+                    "federation": {
+                      "auth": [
+                        {
+                          "kind": "scopes",
+                          "any": [
+                            [
+                              "media:staff"
+                            ]
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                "directives": [
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ]
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "media": {
+                    "type": "[Media!]!"
+                  }
+                }
+              }
+            },
+            "federation": 2,
+            "composeDirectives": [
+              {
+                "name": "audited",
+                "url": "https://example.dev/audit/v1.0",
+                "defined": true
+              }
+            ]
+          },
+          "subgraph": {
+            "federation": 2
+          },
+          "listen": [
+            {
+              "port": 4001,
+              "file": "src/index.ts",
+              "line": 27
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:reviews:graphql:Media.__resolveReference",
+      "type": "entry",
+      "label": "Media.__resolveReference",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 33,
+      "kind": "graphql",
+      "meta": {
+        "type": "Media",
+        "name": "__resolveReference",
+        "field": true,
+        "reference": true,
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:reviews:graphql:Media.rating",
+      "type": "entry",
+      "label": "Media.rating",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 35,
+      "kind": "graphql",
+      "meta": {
+        "type": "Media",
+        "name": "rating",
+        "field": true,
+        "returns": "Float",
+        "adapter": "graphql-resolvers",
+        "access": {
+          "guards": [
+            {
+              "id": "router#router/supergraph.graphql:@authenticated",
+              "name": "@authenticated",
+              "layer": "guard",
+              "where": "route",
+              "via": "@authenticated on Media.rating, checked by router",
+              "file": "router/supergraph.graphql",
+              "line": 61
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:reviews:graphql:Media.reviews",
+      "type": "entry",
+      "label": "Media.reviews",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 34,
+      "kind": "graphql",
+      "meta": {
+        "type": "Media",
+        "name": "reviews",
+        "field": true,
+        "returns": "[Review!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:reviews:graphql:Query.topRated",
+      "type": "entry",
+      "label": "Query.topRated",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 30,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "topRated",
+        "returns": "[Media!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:reviews:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 39,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Media": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  },
+                  "rating": {
+                    "type": "Float",
+                    "federation": {
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "directives": [
+                  "interfaceObject",
+                  "key"
+                ],
+                "federation": {
+                  "keys": [
+                    {
+                      "fields": "id"
+                    }
+                  ],
+                  "interfaceObject": true
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "topRated": {
+                    "type": "[Media!]!"
+                  }
+                }
+              },
+              "Review": {
+                "kind": "object",
+                "fields": {
+                  "score": {
+                    "type": "Int!"
+                  },
+                  "body": {
+                    "type": "String!"
+                  }
+                }
+              }
+            },
+            "federation": 2
+          },
+          "subgraph": {
+            "federation": 2
+          },
+          "listen": [
+            {
+              "port": 4002,
+              "file": "src/index.ts",
+              "line": 45
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:router:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "router",
+      "file": "router/supergraph.graphql",
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-schema",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "gateway": {
+            "subgraphs": [
+              {
+                "name": "accounts",
+                "file": "router/supergraph.graphql",
+                "line": 43,
+                "url": "http://localhost:4003/graphql",
+                "host": "localhost:4003",
+                "path": "/graphql"
+              },
+              {
+                "name": "inventory",
+                "file": "router/supergraph.graphql",
+                "line": 44,
+                "url": "http://localhost:4004/graphql",
+                "host": "localhost:4004",
+                "path": "/graphql"
+              },
+              {
+                "name": "media",
+                "file": "router/supergraph.graphql",
+                "line": 45,
+                "url": "http://localhost:4001/graphql",
+                "host": "localhost:4001",
+                "path": "/graphql"
+              },
+              {
+                "name": "reviews",
+                "file": "router/supergraph.graphql",
+                "line": 46,
+                "url": "http://localhost:4002/graphql",
+                "host": "localhost:4002",
+                "path": "/graphql"
+              }
+            ],
+            "composition": {
+              "roots": {
+                "query": "Query"
+              },
+              "subgraphs": [
+                "accounts",
+                "inventory",
+                "media",
+                "reviews"
+              ],
+              "types": {
+                "Book": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "type": "ID!",
+                      "owners": [
+                        {
+                          "subgraph": "media"
+                        },
+                        {
+                          "subgraph": "reviews",
+                          "as": "Media"
+                        }
+                      ],
+                      "line": 65
+                    },
+                    "title": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "media"
+                        }
+                      ],
+                      "line": 66
+                    },
+                    "author": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "media"
+                        }
+                      ],
+                      "line": 67,
+                      "directives": [
+                        "audited"
+                      ]
+                    },
+                    "reviews": {
+                      "type": "[Review!]!",
+                      "owners": [
+                        {
+                          "subgraph": "reviews",
+                          "as": "Media"
+                        }
+                      ],
+                      "line": 68
+                    },
+                    "rating": {
+                      "type": "Float",
+                      "owners": [
+                        {
+                          "subgraph": "reviews",
+                          "as": "Media"
+                        }
+                      ],
+                      "line": 69,
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    }
+                  },
+                  "keys": {
+                    "media": [
+                      "id"
+                    ]
+                  }
+                },
+                "Media": {
+                  "kind": "interface",
+                  "fields": {
+                    "id": {
+                      "type": "ID!",
+                      "owners": [
+                        {
+                          "subgraph": "media"
+                        },
+                        {
+                          "subgraph": "reviews"
+                        }
+                      ],
+                      "line": 58
+                    },
+                    "title": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "media"
+                        }
+                      ],
+                      "line": 59
+                    },
+                    "reviews": {
+                      "type": "[Review!]!",
+                      "owners": [
+                        {
+                          "subgraph": "reviews"
+                        }
+                      ],
+                      "line": 60
+                    },
+                    "rating": {
+                      "type": "Float",
+                      "owners": [
+                        {
+                          "subgraph": "reviews"
+                        }
+                      ],
+                      "line": 61,
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    }
+                  },
+                  "keys": {
+                    "media": [
+                      "id"
+                    ],
+                    "reviews": [
+                      "id"
+                    ]
+                  },
+                  "possible": [
+                    "Book",
+                    "Movie"
+                  ],
+                  "interfaceObjects": [
+                    "reviews"
+                  ]
+                },
+                "Movie": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "type": "ID!",
+                      "owners": [
+                        {
+                          "subgraph": "media"
+                        },
+                        {
+                          "subgraph": "reviews",
+                          "as": "Media"
+                        }
+                      ],
+                      "line": 73
+                    },
+                    "title": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "media"
+                        }
+                      ],
+                      "line": 74
+                    },
+                    "director": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "media"
+                        }
+                      ],
+                      "line": 75,
+                      "auth": [
+                        {
+                          "kind": "scopes",
+                          "any": [
+                            [
+                              "media:staff"
+                            ]
+                          ]
+                        }
+                      ]
+                    },
+                    "reviews": {
+                      "type": "[Review!]!",
+                      "owners": [
+                        {
+                          "subgraph": "reviews",
+                          "as": "Media"
+                        }
+                      ],
+                      "line": 76
+                    },
+                    "rating": {
+                      "type": "Float",
+                      "owners": [
+                        {
+                          "subgraph": "reviews",
+                          "as": "Media"
+                        }
+                      ],
+                      "line": 77,
+                      "auth": [
+                        {
+                          "kind": "authenticated"
+                        }
+                      ]
+                    }
+                  },
+                  "keys": {
+                    "media": [
+                      "id"
+                    ]
+                  }
+                },
+                "Query": {
+                  "kind": "object",
+                  "fields": {
+                    "me": {
+                      "type": "User",
+                      "owners": [
+                        {
+                          "subgraph": "accounts"
+                        }
+                      ],
+                      "line": 50
+                    },
+                    "wishItem": {
+                      "type": "WishItem",
+                      "args": {
+                        "id": {
+                          "type": "ID!",
+                          "required": true
+                        }
+                      },
+                      "owners": [
+                        {
+                          "subgraph": "accounts"
+                        }
+                      ],
+                      "line": 51
+                    },
+                    "stock": {
+                      "type": "Int",
+                      "args": {
+                        "id": {
+                          "type": "ID!",
+                          "required": true
+                        }
+                      },
+                      "owners": [
+                        {
+                          "subgraph": "inventory"
+                        }
+                      ],
+                      "line": 52
+                    },
+                    "media": {
+                      "type": "[Media!]!",
+                      "owners": [
+                        {
+                          "subgraph": "media"
+                        }
+                      ],
+                      "line": 53
+                    },
+                    "topRated": {
+                      "type": "[Media!]!",
+                      "owners": [
+                        {
+                          "subgraph": "reviews"
+                        }
+                      ],
+                      "line": 54
+                    }
+                  }
+                },
+                "Review": {
+                  "kind": "object",
+                  "fields": {
+                    "score": {
+                      "type": "Int!",
+                      "owners": [
+                        {
+                          "subgraph": "reviews"
+                        }
+                      ],
+                      "line": 81
+                    },
+                    "body": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "reviews"
+                        }
+                      ],
+                      "line": 82
+                    }
+                  }
+                },
+                "User": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "type": "ID!",
+                      "owners": [
+                        {
+                          "subgraph": "accounts"
+                        }
+                      ],
+                      "line": 86
+                    },
+                    "currency": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "accounts"
+                        }
+                      ],
+                      "line": 87
+                    },
+                    "email": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "accounts"
+                        }
+                      ],
+                      "line": 88,
+                      "auth": [
+                        {
+                          "kind": "policy",
+                          "any": [
+                            [
+                              "account:owner"
+                            ],
+                            [
+                              "support",
+                              "staff"
+                            ]
+                          ]
+                        }
+                      ]
+                    },
+                    "wishlist": {
+                      "type": "[WishItem!]!",
+                      "owners": [
+                        {
+                          "subgraph": "accounts"
+                        }
+                      ],
+                      "line": 89
+                    }
+                  },
+                  "keys": {
+                    "accounts": [
+                      "id"
+                    ]
+                  },
+                  "contexts": [
+                    "accounts__viewer"
+                  ]
+                },
+                "WishItem": {
+                  "kind": "object",
+                  "fields": {
+                    "id": {
+                      "type": "ID!",
+                      "owners": [
+                        {
+                          "subgraph": "accounts"
+                        }
+                      ],
+                      "line": 93
+                    },
+                    "name": {
+                      "type": "String!",
+                      "owners": [
+                        {
+                          "subgraph": "accounts"
+                        }
+                      ],
+                      "line": 94
+                    },
+                    "price": {
+                      "type": "Float!",
+                      "args": {
+                        "currency": {
+                          "type": "String",
+                          "required": false
+                        }
+                      },
+                      "owners": [
+                        {
+                          "subgraph": "accounts",
+                          "context": [
+                            {
+                              "argument": "currency",
+                              "context": "accounts__viewer",
+                              "selection": "currency"
+                            }
+                          ]
+                        }
+                      ],
+                      "line": 95
+                    }
+                  }
+                }
+              },
+              "directives": {
+                "audited": {
+                  "url": "https://example.dev/audit/v1.0"
+                }
+              }
+            },
+            "from": "router/supergraph.graphql"
+          },
+          "schema": {
+            "roots": {
+              "query": "Query"
+            },
+            "types": {
+              "Book": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  },
+                  "author": {
+                    "type": "String!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  },
+                  "rating": {
+                    "type": "Float"
+                  }
+                }
+              },
+              "Media": {
+                "kind": "interface",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  },
+                  "rating": {
+                    "type": "Float"
+                  }
+                },
+                "possible": [
+                  "Book",
+                  "Movie"
+                ]
+              },
+              "Movie": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  },
+                  "director": {
+                    "type": "String!"
+                  },
+                  "reviews": {
+                    "type": "[Review!]!"
+                  },
+                  "rating": {
+                    "type": "Float"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "me": {
+                    "type": "User"
+                  },
+                  "wishItem": {
+                    "type": "WishItem",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  },
+                  "stock": {
+                    "type": "Int",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  },
+                  "media": {
+                    "type": "[Media!]!"
+                  },
+                  "topRated": {
+                    "type": "[Media!]!"
+                  }
+                }
+              },
+              "Review": {
+                "kind": "object",
+                "fields": {
+                  "score": {
+                    "type": "Int!"
+                  },
+                  "body": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "User": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "currency": {
+                    "type": "String!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  },
+                  "wishlist": {
+                    "type": "[WishItem!]!"
+                  }
+                }
+              },
+              "WishItem": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  },
+                  "price": {
+                    "type": "Float!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "declaredBy": "router/supergraph.graphql"
+      }
+    },
+    {
+      "id": "inventory#src/index.ts:Query.stock@18",
+      "type": "function",
+      "label": "Query.stock@18",
+      "repo": "inventory",
+      "file": "src/index.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_parent",
+              "type": "unknown"
+            },
+            {
+              "name": "args",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "kiosk#src/ItemCard.tsx:ItemCard",
+      "type": "ui_component",
+      "label": "ItemCard",
+      "repo": "kiosk",
+      "file": "src/ItemCard.tsx",
+      "line": 12,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ id }",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "kiosk#src/MovieCard.tsx:MovieCard",
+      "type": "ui_component",
+      "label": "MovieCard",
+      "repo": "kiosk",
+      "file": "src/MovieCard.tsx",
+      "line": 14,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "kiosk#src/WishlistPage.tsx:WishlistPage",
+      "type": "ui_component",
+      "label": "WishlistPage",
+      "repo": "kiosk",
+      "file": "src/WishlistPage.tsx",
+      "line": 15,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "legacy#src/server.ts:Query.stock@14",
+      "type": "function",
+      "label": "Query.stock@14",
+      "repo": "legacy",
+      "file": "src/server.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "media#src/catalog.ts:allMedia",
+      "type": "function",
+      "label": "allMedia",
+      "repo": "media",
+      "file": "src/catalog.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:media#Item[]"
+        }
+      }
+    },
+    {
+      "id": "media#src/catalog.ts:directorOf",
+      "type": "function",
+      "label": "directorOf",
+      "repo": "media",
+      "file": "src/catalog.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "media#src/catalog.ts:mediaById",
+      "type": "function",
+      "label": "mediaById",
+      "repo": "media",
+      "file": "src/catalog.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:media#Item"
+        }
+      }
+    },
+    {
+      "id": "media#src/index.ts:Media.__resolveReference@16",
+      "type": "function",
+      "label": "Media.__resolveReference@16",
+      "repo": "media",
+      "file": "src/index.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reference",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:media#Item"
+        }
+      }
+    },
+    {
+      "id": "media#src/index.ts:Movie.director@19",
+      "type": "function",
+      "label": "Movie.director@19",
+      "repo": "media",
+      "file": "src/index.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "movie",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "media#src/index.ts:Query.media@12",
+      "type": "function",
+      "label": "Query.media@12",
+      "repo": "media",
+      "file": "src/index.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:media#Item[]"
+        }
+      }
+    },
+    {
+      "id": "repo:accounts",
+      "type": "repo",
+      "label": "accounts",
+      "repo": "accounts",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers",
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:inventory",
+      "type": "repo",
+      "label": "inventory",
+      "repo": "inventory",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:kiosk",
+      "type": "repo",
+      "label": "kiosk",
+      "repo": "kiosk",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "functions": 3,
+          "components": 3,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:legacy",
+      "type": "repo",
+      "label": "legacy",
+      "repo": "legacy",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:media",
+      "type": "repo",
+      "label": "media",
+      "repo": "media",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:reviews",
+      "type": "repo",
+      "label": "reviews",
+      "repo": "reviews",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "graphql-resolvers",
+            "express-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 2,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "reviews#src/index.ts:Media.__resolveReference@33",
+      "type": "function",
+      "label": "Media.__resolveReference@33",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reference",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "reviews#src/index.ts:Media.rating@35",
+      "type": "function",
+      "label": "Media.rating@35",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "media",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "reviews#src/index.ts:Media.reviews@34",
+      "type": "function",
+      "label": "Media.reviews@34",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "media",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:reviews#Review[]"
+        }
+      }
+    },
+    {
+      "id": "reviews#src/index.ts:Query.topRated@30",
+      "type": "function",
+      "label": "Query.topRated@30",
+      "repo": "reviews",
+      "file": "src/index.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string}[]"
+        }
+      }
+    },
+    {
+      "id": "reviews#src/reviews.ts:ratingOf",
+      "type": "function",
+      "label": "ratingOf",
+      "repo": "reviews",
+      "file": "src/reviews.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "reviews#src/reviews.ts:reviewsOf",
+      "type": "function",
+      "label": "reviewsOf",
+      "repo": "reviews",
+      "file": "src/reviews.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:reviews#Review[]"
+        }
+      }
+    },
+    {
+      "id": "reviews#src/reviews.ts:topRated",
+      "type": "function",
+      "label": "topRated",
+      "repo": "reviews",
+      "file": "src/reviews.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string}[]"
+        }
+      }
+    },
+    {
+      "id": "router#router/supergraph.graphql:@authenticated",
+      "type": "guard",
+      "label": "@authenticated",
+      "repo": "router",
+      "file": "router/supergraph.graphql",
+      "line": 61,
+      "kind": "directive",
+      "meta": {
+        "graphql": {
+          "gateway": "router",
+          "requirement": {
+            "kind": "authenticated"
+          }
+        }
+      }
+    },
+    {
+      "id": "router#router/supergraph.graphql:@policy(account:owner | support & staff)",
+      "type": "guard",
+      "label": "@policy(account:owner | support & staff)",
+      "repo": "router",
+      "file": "router/supergraph.graphql",
+      "line": 88,
+      "kind": "directive",
+      "meta": {
+        "graphql": {
+          "gateway": "router",
+          "requirement": {
+            "kind": "policy",
+            "any": [
+              [
+                "account:owner"
+              ],
+              [
+                "support",
+                "staff"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "router#router/supergraph.graphql:@requiresScopes(media:staff)",
+      "type": "guard",
+      "label": "@requiresScopes(media:staff)",
+      "repo": "router",
+      "file": "router/supergraph.graphql",
+      "line": 75,
+      "kind": "directive",
+      "meta": {
+        "graphql": {
+          "gateway": "router",
+          "requirement": {
+            "kind": "scopes",
+            "any": [
+              [
+                "media:staff"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#src/ItemCard.tsx:13:20",
+      "type": "ui_api_call",
+      "label": "query Item /graphql",
+      "repo": "kiosk",
+      "file": "src/ItemCard.tsx",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_ROUTER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_ROUTER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Item",
+          "fields": [
+            {
+              "field": "wishItem",
+              "arguments": [
+                "id"
+              ],
+              "line": 5,
+              "selections": [
+                {
+                  "field": "name",
+                  "line": 6
+                },
+                {
+                  "field": "price",
+                  "line": 7
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "ID!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/ItemCard.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "router"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#src/MovieCard.tsx:15:20",
+      "type": "ui_api_call",
+      "label": "query Movies /graphql",
+      "repo": "kiosk",
+      "file": "src/MovieCard.tsx",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_ROUTER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_ROUTER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Movies",
+          "fields": [
+            {
+              "field": "topRated",
+              "line": 5,
+              "selections": [
+                {
+                  "field": "director",
+                  "on": "Movie",
+                  "line": 7
+                },
+                {
+                  "field": "rating",
+                  "on": "Movie",
+                  "line": 8
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/MovieCard.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "router"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
+      "type": "ui_api_call",
+      "label": "query Wishlist /graphql",
+      "repo": "kiosk",
+      "file": "src/WishlistPage.tsx",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_ROUTER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_ROUTER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Wishlist",
+          "fields": [
+            {
+              "field": "me",
+              "line": 5,
+              "selections": [
+                {
+                  "field": "email",
+                  "line": 6
+                },
+                {
+                  "field": "wishlist",
+                  "line": 7,
+                  "selections": [
+                    {
+                      "field": "name",
+                      "line": 8
+                    },
+                    {
+                      "field": "price",
+                      "line": 9
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/WishlistPage.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "router"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/ShelfPage.tsx:22:20",
+      "type": "ui_api_call",
+      "label": "query Shelf /graphql",
+      "repo": "web",
+      "file": "src/ShelfPage.tsx",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Shelf",
+          "fields": [
+            {
+              "field": "media",
+              "line": 5,
+              "selections": [
+                {
+                  "field": "title",
+                  "line": 6
+                },
+                {
+                  "field": "reviews",
+                  "line": 7,
+                  "selections": [
+                    {
+                      "field": "score",
+                      "line": 8
+                    }
+                  ]
+                },
+                {
+                  "field": "author",
+                  "on": "Book",
+                  "line": 11
+                },
+                {
+                  "field": "rating",
+                  "on": "Book",
+                  "line": 12
+                },
+                {
+                  "field": "director",
+                  "on": "Movie",
+                  "line": 15
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/ShelfPage.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/TopRated.tsx:16:20",
+      "type": "ui_api_call",
+      "label": "query Top /graphql",
+      "repo": "web",
+      "file": "src/TopRated.tsx",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "apollo",
+        "client": "apollo",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Top",
+          "fields": [
+            {
+              "field": "topRated",
+              "line": 5,
+              "selections": [
+                {
+                  "field": "rating",
+                  "line": 6
+                },
+                {
+                  "field": "title",
+                  "line": 7
+                },
+                {
+                  "field": "author",
+                  "on": "Book",
+                  "line": 9
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/TopRated.tsx",
+            "line": 4
+          },
+          "library": "apollo"
+        },
+        "targetService": "gateway"
+      }
+    },
+    {
+      "id": "web#src/ShelfPage.tsx:ShelfPage",
+      "type": "ui_component",
+      "label": "ShelfPage",
+      "repo": "web",
+      "file": "src/ShelfPage.tsx",
+      "line": 21,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/TopRated.tsx:TopRated",
+      "type": "ui_component",
+      "label": "TopRated",
+      "repo": "web",
+      "file": "src/TopRated.tsx",
+      "line": 15,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "accounts#src/accounts.resolver.ts:AccountsResolver",
+      "to": "accounts#src/accounts.service.ts:AccountsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/accounts.resolver.ts",
+      "line": 7
+    },
+    {
+      "from": "accounts#src/accounts.resolver.ts:AccountsResolver.me",
+      "to": "accounts#src/accounts.service.ts:AccountsService.current",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:accounts#User",
+      "file": "src/accounts.resolver.ts",
+      "line": 11
+    },
+    {
+      "from": "accounts#src/accounts.resolver.ts:AccountsResolver.wishItem",
+      "to": "accounts#src/accounts.service.ts:AccountsService.item",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:accounts#WishItem",
+      "file": "src/accounts.resolver.ts",
+      "line": 16
+    },
+    {
+      "from": "accounts#src/accounts.resolver.ts:UserResolver",
+      "to": "accounts#src/accounts.service.ts:AccountsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/accounts.resolver.ts",
+      "line": 22
+    },
+    {
+      "from": "accounts#src/accounts.resolver.ts:UserResolver.resolveReference",
+      "to": "accounts#src/accounts.service.ts:AccountsService.user",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:accounts#User",
+      "file": "src/accounts.resolver.ts",
+      "line": 26
+    },
+    {
+      "from": "accounts#src/accounts.resolver.ts:UserResolver.wishlist",
+      "to": "accounts#src/accounts.service.ts:AccountsService.wishlist",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:accounts#WishItem[]",
+      "file": "src/accounts.resolver.ts",
+      "line": 42
+    },
+    {
+      "from": "accounts#src/accounts.resolver.ts:WishItemResolver",
+      "to": "accounts#src/accounts.service.ts:AccountsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/accounts.resolver.ts",
+      "line": 48
+    },
+    {
+      "from": "accounts#src/accounts.resolver.ts:WishItemResolver.price",
+      "to": "accounts#src/accounts.service.ts:AccountsService.price",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/accounts.resolver.ts",
+      "line": 53
+    },
+    {
+      "from": "accounts#src/main.ts:bootstrap",
+      "to": "config_key:accounts#PORT",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:accounts:graphql:Query.me",
+      "to": "accounts#src/accounts.resolver.ts:AccountsResolver.me",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:accounts#User",
+      "file": "src/accounts.resolver.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:accounts:graphql:Query.wishItem",
+      "to": "accounts#src/accounts.resolver.ts:AccountsResolver.wishItem",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:accounts#WishItem",
+      "file": "src/accounts.resolver.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:accounts:graphql:User.__resolveReference",
+      "to": "accounts#src/accounts.resolver.ts:UserResolver.resolveReference",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "type:accounts#User",
+      "file": "src/accounts.resolver.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:accounts:graphql:User.currency",
+      "to": "accounts#src/accounts.resolver.ts:UserResolver.currency",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:accounts#User"
+      ],
+      "returns": "string",
+      "file": "src/accounts.resolver.ts",
+      "line": 30
+    },
+    {
+      "from": "entry:accounts:graphql:User.email",
+      "to": "accounts#src/accounts.resolver.ts:UserResolver.email",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:accounts#User"
+      ],
+      "returns": "string",
+      "file": "src/accounts.resolver.ts",
+      "line": 35
+    },
+    {
+      "from": "entry:accounts:graphql:User.email",
+      "to": "router#router/supergraph.graphql:@policy(account:owner | support & staff)",
+      "type": "guarded_by",
+      "confidence": "declared",
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "@policy on User.email, checked by router",
+        "through": "router",
+        "graphql": {
+          "gateway": "router",
+          "field": "User.email"
+        }
+      }
+    },
+    {
+      "from": "entry:accounts:graphql:User.wishlist",
+      "to": "accounts#src/accounts.resolver.ts:UserResolver.wishlist",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:accounts#User"
+      ],
+      "returns": "type:accounts#WishItem[]",
+      "file": "src/accounts.resolver.ts",
+      "line": 40
+    },
+    {
+      "from": "entry:accounts:graphql:WishItem.price",
+      "to": "accounts#src/accounts.resolver.ts:WishItemResolver.price",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "type:accounts#WishItem",
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/accounts.resolver.ts",
+      "line": 51
+    },
+    {
+      "from": "entry:gateway:http:POST:/graphql",
+      "to": "entry:accounts:http:POST:/graphql",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 12,
+      "meta": {
+        "graphql": {
+          "subgraph": "accounts"
+        },
+        "targetService": "accounts"
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/graphql",
+      "to": "entry:inventory:http:POST:/",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 13,
+      "meta": {
+        "graphql": {
+          "subgraph": "inventory"
+        },
+        "targetService": "inventory"
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/graphql",
+      "to": "entry:media:http:POST:/",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 10,
+      "meta": {
+        "graphql": {
+          "subgraph": "media"
+        },
+        "targetService": "media"
+      }
+    },
+    {
+      "from": "entry:gateway:http:POST:/graphql",
+      "to": "entry:reviews:http:POST:/graphql",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 11,
+      "meta": {
+        "graphql": {
+          "subgraph": "reviews"
+        },
+        "targetService": "reviews"
+      }
+    },
+    {
+      "from": "entry:inventory:graphql:Query.stock",
+      "to": "inventory#src/index.ts:Query.stock@18",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:legacy:graphql:Query.stock",
+      "to": "legacy#src/server.ts:Query.stock@14",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:media:graphql:Media.__resolveReference",
+      "to": "media#src/index.ts:Media.__resolveReference@16",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:media:graphql:Movie.director",
+      "to": "media#src/index.ts:Movie.director@19",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:media:graphql:Movie.director",
+      "to": "router#router/supergraph.graphql:@requiresScopes(media:staff)",
+      "type": "guarded_by",
+      "confidence": "declared",
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "@requiresScopes on Movie.director, checked by router",
+        "through": "router",
+        "graphql": {
+          "gateway": "router",
+          "field": "Movie.director"
+        }
+      }
+    },
+    {
+      "from": "entry:media:graphql:Query.media",
+      "to": "media#src/index.ts:Query.media@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:reviews:graphql:Media.__resolveReference",
+      "to": "reviews#src/index.ts:Media.__resolveReference@33",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 33
+    },
+    {
+      "from": "entry:reviews:graphql:Media.rating",
+      "to": "reviews#src/index.ts:Media.rating@35",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 35
+    },
+    {
+      "from": "entry:reviews:graphql:Media.rating",
+      "to": "router#router/supergraph.graphql:@authenticated",
+      "type": "guarded_by",
+      "confidence": "declared",
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "@authenticated on Media.rating, checked by router",
+        "through": "router",
+        "graphql": {
+          "gateway": "router",
+          "field": "Media.rating"
+        }
+      }
+    },
+    {
+      "from": "entry:reviews:graphql:Media.reviews",
+      "to": "reviews#src/index.ts:Media.reviews@34",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 34
+    },
+    {
+      "from": "entry:reviews:graphql:Query.topRated",
+      "to": "reviews#src/index.ts:Query.topRated@30",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 30
+    },
+    {
+      "from": "entry:router:http:POST:/graphql",
+      "to": "entry:accounts:http:POST:/graphql",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "router/supergraph.graphql",
+      "line": 43,
+      "meta": {
+        "graphql": {
+          "subgraph": "accounts"
+        },
+        "targetService": "accounts"
+      }
+    },
+    {
+      "from": "entry:router:http:POST:/graphql",
+      "to": "entry:media:http:POST:/",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "router/supergraph.graphql",
+      "line": 45,
+      "meta": {
+        "graphql": {
+          "subgraph": "media"
+        },
+        "targetService": "media"
+      }
+    },
+    {
+      "from": "entry:router:http:POST:/graphql",
+      "to": "entry:reviews:http:POST:/graphql",
+      "type": "http_calls",
+      "confidence": "declared",
+      "file": "router/supergraph.graphql",
+      "line": 46,
+      "meta": {
+        "graphql": {
+          "subgraph": "reviews"
+        },
+        "targetService": "reviews"
+      }
+    },
+    {
+      "from": "kiosk#src/ItemCard.tsx:ItemCard",
+      "to": "ui_api_call:kiosk#src/ItemCard.tsx:13:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ItemCard.tsx",
+      "line": 13
+    },
+    {
+      "from": "kiosk#src/MovieCard.tsx:MovieCard",
+      "to": "ui_api_call:kiosk#src/MovieCard.tsx:15:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/MovieCard.tsx",
+      "line": 15
+    },
+    {
+      "from": "kiosk#src/WishlistPage.tsx:WishlistPage",
+      "to": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/WishlistPage.tsx",
+      "line": 16
+    },
+    {
+      "from": "media#src/index.ts:Media.__resolveReference@16",
+      "to": "media#src/catalog.ts:mediaById",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:media#Item",
+      "file": "src/index.ts",
+      "line": 16
+    },
+    {
+      "from": "media#src/index.ts:Movie.director@19",
+      "to": "media#src/catalog.ts:directorOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "src/index.ts",
+      "line": 19
+    },
+    {
+      "from": "media#src/index.ts:Query.media@12",
+      "to": "media#src/catalog.ts:allMedia",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:media#Item[]",
+      "file": "src/index.ts",
+      "line": 12
+    },
+    {
+      "from": "reviews#src/index.ts:Media.rating@35",
+      "to": "reviews#src/reviews.ts:ratingOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "number",
+      "file": "src/index.ts",
+      "line": 35
+    },
+    {
+      "from": "reviews#src/index.ts:Media.reviews@34",
+      "to": "reviews#src/reviews.ts:reviewsOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:reviews#Review[]",
+      "file": "src/index.ts",
+      "line": 34
+    },
+    {
+      "from": "reviews#src/index.ts:Query.topRated@30",
+      "to": "reviews#src/reviews.ts:topRated",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{id:string}[]",
+      "file": "src/index.ts",
+      "line": 30
+    },
+    {
+      "from": "reviews#src/reviews.ts:ratingOf",
+      "to": "reviews#src/reviews.ts:reviewsOf",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:reviews#Review[]",
+      "file": "src/reviews.ts",
+      "line": 11
+    },
+    {
+      "from": "ui_api_call:kiosk#src/ItemCard.tsx:13:20",
+      "to": "entry:accounts:graphql:Query.wishItem",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/ItemCard.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Item",
+          "gateway": "router",
+          "subgraph": "accounts",
+          "field": "Query.wishItem"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/ItemCard.tsx:13:20",
+      "to": "entry:accounts:graphql:WishItem.price",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/ItemCard.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Item",
+          "gateway": "router",
+          "subgraph": "accounts",
+          "field": "WishItem.price"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/ItemCard.tsx:13:20",
+      "to": "entry:router:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/ItemCard.tsx",
+      "line": 13,
+      "meta": {
+        "via": "api-target",
+        "targetService": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/MovieCard.tsx:15:20",
+      "to": "entry:media:graphql:Media.__resolveReference",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/MovieCard.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Movies",
+          "gateway": "router",
+          "subgraph": "media",
+          "field": "Media.__resolveReference",
+          "hop": {
+            "entity": "Media",
+            "from": "reviews",
+            "for": "Media.__typename"
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/MovieCard.tsx:15:20",
+      "to": "entry:media:graphql:Movie.director",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/MovieCard.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Movies",
+          "gateway": "router",
+          "subgraph": "media",
+          "field": "Movie.director",
+          "hop": {
+            "entity": "Media",
+            "from": "reviews"
+          }
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/MovieCard.tsx:15:20",
+      "to": "entry:reviews:graphql:Media.rating",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/MovieCard.tsx",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "Movies",
+          "gateway": "router",
+          "subgraph": "reviews",
+          "field": "Movie.rating",
+          "as": "Media"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/MovieCard.tsx:15:20",
+      "to": "entry:reviews:graphql:Query.topRated",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/MovieCard.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Movies",
+          "gateway": "router",
+          "subgraph": "reviews",
+          "field": "Query.topRated"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/MovieCard.tsx:15:20",
+      "to": "entry:router:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/MovieCard.tsx",
+      "line": 15,
+      "meta": {
+        "via": "api-target",
+        "targetService": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
+      "to": "entry:accounts:graphql:Query.me",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/WishlistPage.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Wishlist",
+          "gateway": "router",
+          "subgraph": "accounts",
+          "field": "Query.me"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
+      "to": "entry:accounts:graphql:User.currency",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/WishlistPage.tsx",
+      "line": 9,
+      "meta": {
+        "graphql": {
+          "operation": "Wishlist",
+          "gateway": "router",
+          "subgraph": "accounts",
+          "requiredBy": "WishItem.price",
+          "fromContext": "viewer",
+          "field": "User.currency"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
+      "to": "entry:accounts:graphql:User.email",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/WishlistPage.tsx",
+      "line": 6,
+      "meta": {
+        "graphql": {
+          "operation": "Wishlist",
+          "gateway": "router",
+          "subgraph": "accounts",
+          "field": "User.email"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
+      "to": "entry:accounts:graphql:User.wishlist",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/WishlistPage.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Wishlist",
+          "gateway": "router",
+          "subgraph": "accounts",
+          "field": "User.wishlist"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
+      "to": "entry:accounts:graphql:WishItem.price",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/WishlistPage.tsx",
+      "line": 9,
+      "meta": {
+        "graphql": {
+          "operation": "Wishlist",
+          "gateway": "router",
+          "subgraph": "accounts",
+          "field": "WishItem.price"
+        },
+        "through": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
+      "to": "entry:router:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/WishlistPage.tsx",
+      "line": 16,
+      "meta": {
+        "via": "api-target",
+        "targetService": "router"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/ShelfPage.tsx:22:20",
+      "to": "entry:gateway:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/ShelfPage.tsx",
+      "line": 22,
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/ShelfPage.tsx:22:20",
+      "to": "entry:media:graphql:Movie.director",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/ShelfPage.tsx",
+      "line": 15,
+      "meta": {
+        "graphql": {
+          "operation": "Shelf",
+          "gateway": "gateway",
+          "subgraph": "media",
+          "field": "Movie.director"
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/ShelfPage.tsx:22:20",
+      "to": "entry:media:graphql:Query.media",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/ShelfPage.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Shelf",
+          "gateway": "gateway",
+          "subgraph": "media",
+          "field": "Query.media"
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/ShelfPage.tsx:22:20",
+      "to": "entry:reviews:graphql:Media.__resolveReference",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/ShelfPage.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Shelf",
+          "gateway": "gateway",
+          "subgraph": "reviews",
+          "field": "Media.__resolveReference",
+          "hop": {
+            "entity": "Media",
+            "from": "media",
+            "for": "Media.reviews"
+          }
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/ShelfPage.tsx:22:20",
+      "to": "entry:reviews:graphql:Media.rating",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/ShelfPage.tsx",
+      "line": 12,
+      "meta": {
+        "graphql": {
+          "operation": "Shelf",
+          "gateway": "gateway",
+          "subgraph": "reviews",
+          "field": "Book.rating",
+          "as": "Media",
+          "hop": {
+            "entity": "Media",
+            "from": "media"
+          }
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/ShelfPage.tsx:22:20",
+      "to": "entry:reviews:graphql:Media.reviews",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/ShelfPage.tsx",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Shelf",
+          "gateway": "gateway",
+          "subgraph": "reviews",
+          "field": "Media.reviews",
+          "hop": {
+            "entity": "Media",
+            "from": "media"
+          }
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/TopRated.tsx:16:20",
+      "to": "entry:gateway:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/TopRated.tsx",
+      "line": 16,
+      "meta": {
+        "via": "api-target",
+        "targetService": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/TopRated.tsx:16:20",
+      "to": "entry:media:graphql:Media.__resolveReference",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/TopRated.tsx",
+      "line": 9,
+      "meta": {
+        "graphql": {
+          "operation": "Top",
+          "gateway": "gateway",
+          "subgraph": "media",
+          "field": "Media.__resolveReference",
+          "hop": {
+            "entity": "Media",
+            "from": "reviews",
+            "for": "Media.__typename"
+          }
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/TopRated.tsx:16:20",
+      "to": "entry:reviews:graphql:Media.rating",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/TopRated.tsx",
+      "line": 6,
+      "meta": {
+        "graphql": {
+          "operation": "Top",
+          "gateway": "gateway",
+          "subgraph": "reviews",
+          "field": "Media.rating"
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/TopRated.tsx:16:20",
+      "to": "entry:reviews:graphql:Query.topRated",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/TopRated.tsx",
+      "line": 5,
+      "meta": {
+        "graphql": {
+          "operation": "Top",
+          "gateway": "gateway",
+          "subgraph": "reviews",
+          "field": "Query.topRated"
+        },
+        "through": "gateway"
+      }
+    },
+    {
+      "from": "web#src/ShelfPage.tsx:ShelfPage",
+      "to": "ui_api_call:web#src/ShelfPage.tsx:22:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ShelfPage.tsx",
+      "line": 22
+    },
+    {
+      "from": "web#src/TopRated.tsx:TopRated",
+      "to": "ui_api_call:web#src/TopRated.tsx:16:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/TopRated.tsx",
+      "line": 16
+    }
+  ],
+  "types": {
+    "type:accounts#User": {
+      "name": "User",
+      "kind": "object",
+      "declaredIn": "accounts#src/accounts.service.ts",
+      "structuralHash": "0418cf0931869530",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:accounts#WishItem": {
+      "name": "WishItem",
+      "kind": "object",
+      "declaredIn": "accounts#src/accounts.service.ts",
+      "structuralHash": "39411c6367ff1bcb",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "cents",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:media#Item": {
+      "name": "Item",
+      "kind": "object",
+      "declaredIn": "media#src/catalog.ts",
+      "structuralHash": "8df81e38394f3672",
+      "fields": [
+        {
+          "name": "__typename",
+          "type": "'Book'|'Movie'",
+          "optional": false
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:reviews#Review": {
+      "name": "Review",
+      "kind": "object",
+      "declaredIn": "reviews#src/reviews.ts",
+      "structuralHash": "db512c142cc79be0",
+      "fields": [
+        {
+          "name": "score",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 9,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports GraphQLModule",
+      "service": "accounts"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-routes-unmatched",
+      "level": "info",
+      "message": "2 calls are written on a type the express-routes reader names, and none of them spelled a verb and a path this could read.",
+      "hint": "The types match and the routes do not: routes here are declared through something written around express rather than on it, and no reader here knows that shape.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "gateway"
+    },
+    {
+      "service": "gateway",
+      "file": "src/index.ts",
+      "line": 18,
+      "symbol": "entry:gateway:http:POST:/graphql",
+      "reason": "graphql-auth-not-checked",
+      "level": "action",
+      "message": "gateway composes 3 fields the router's authorization directives guard (Media.rating @authenticated, Movie.director @requiresScopes(media:staff), User.email @policy(account:owner | support & staff)), and gateway is an Apollo Gateway, which does not check them: a request through it reaches them unchecked",
+      "hint": "Serve the graph with a router that checks the directives, or check who is asking in the subgraph's resolvers; on a gateway the directive alone guards nothing.",
+      "meta": {
+        "fields": [
+          "Media.rating @authenticated",
+          "Movie.director @requiresScopes(media:staff)",
+          "User.email @policy(account:owner | support & staff)"
+        ]
+      }
+    },
+    {
+      "service": "kiosk",
+      "file": "src/ItemCard.tsx",
+      "line": 7,
+      "reason": "graphql-context-not-reached",
+      "level": "info",
+      "message": "Item selects WishItem.price, whose argument currency the router fills from the context viewer, and no type above it in this selection sets viewer; what the argument needs is not planned",
+      "hint": "Select WishItem.price under a field that returns the type with @context(name: \"viewer\"), or pass the argument some other way; the router fills it only from an ancestor that sets the context.",
+      "symbol": "ui_api_call:kiosk#src/ItemCard.tsx:13:20",
+      "meta": {
+        "field": "WishItem.price",
+        "argument": "currency",
+        "context": "viewer"
+      }
+    },
+    {
+      "file": "src/ItemCard.tsx",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "kiosk"
+    },
+    {
+      "file": "src/MovieCard.tsx",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "kiosk"
+    },
+    {
+      "file": "src/WishlistPage.tsx",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "kiosk"
+    },
+    {
+      "file": "package.json",
+      "line": 1,
+      "reason": "entry-http-routes-unmatched",
+      "level": "info",
+      "message": "2 calls are written on a type the express-routes reader names, and none of them spelled a verb and a path this could read.",
+      "hint": "The types match and the routes do not: routes here are declared through something written around express rather than on it, and no reader here knows that shape.",
+      "symbol": "express-routes",
+      "adapter": "express-routes",
+      "service": "reviews"
+    },
+    {
+      "service": "router",
+      "file": "router/supergraph.graphql",
+      "line": 44,
+      "reason": "graphql-subgraph-not-joined",
+      "level": "action",
+      "message": "router sends the subgraph inventory to http://localhost:4004/graphql, and port 4004 on this machine is where inventory (src/index.ts:22) and legacy (src/server.ts:20) each listen, so it is not one service; the fields it resolves are not joined",
+      "hint": "Add localhost:4004 to services[].hosts of the service that is the subgraph inventory, or add that service to the project.",
+      "symbol": "entry:router:http:POST:/graphql"
+    },
+    {
+      "file": "src/ShelfPage.tsx",
+      "line": 21,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/TopRated.tsx",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    }
+  ]
+}

@@ -129,6 +129,8 @@ const FINDINGS: readonly string[] = [
   // A federated graph its composition refuses, or a supergraph its subgraphs moved past (P241)
   'graphql-composition-conflict',
   'graphql-supergraph-drift',
+  // The router's authorization directives composed by a gateway that does not check them (P245)
+  'graphql-auth-not-checked',
   'route-file-not-served',
   'wizard-step-conflict',
   'workflow-name-duplicate',
@@ -265,6 +267,8 @@ const GAPS: readonly string[] = [
   'graphql-fragment-not-read',
   // A subgraph a gateway names whose address reaches no service (P241)
   'graphql-subgraph-not-joined',
+  // An argument the router fills from a context no type above the field sets (P245)
+  'graphql-context-not-reached',
   'api-method-dynamic',
   'api-base-override-unread',
   'api-client-base-unread',
@@ -436,7 +440,7 @@ export const RISK_NAMES = ['auth', 'performance', 'wiring'] as const;
 export type Risk = (typeof RISK_NAMES)[number];
 
 const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
-  ['auth', ['route-unguarded', 'route-shadowed', 'marker-reason-missing']],
+  ['auth', ['route-unguarded', 'route-shadowed', 'marker-reason-missing', 'graphql-auth-not-checked']],
   ['performance', ['query-in-loop']],
   [
     'wiring',

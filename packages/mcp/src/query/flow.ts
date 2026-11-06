@@ -263,12 +263,25 @@ const inCallOrder = (a: GraphEdge, b: GraphEdge): number =>
   (a.line ?? Number.MAX_SAFE_INTEGER) - (b.line ?? Number.MAX_SAFE_INTEGER) ||
   (a.to < b.to ? -1 : a.to > b.to ? 1 : 0);
 
-const guardsOf = (db: GraphDb, id: string, detail: DetailLevel): GuardRef[] => {
+/** The service a request came through to reach a node, where the edge says (`meta.through`, P245). */
+const throughOf = (edge: GraphEdge): string | null => (typeof edge.meta?.['through'] === 'string' ? edge.meta['through'] : null);
+
+/**
+ * The checks in front of a node, in the order they run.
+ *
+ * A check one service runs for the requests that come through it - a
+ * router's in front of a subgraph's field (`meta.through` on the
+ * `guarded_by` edge, P245) - is in front of a step only where the request
+ * came through that service; the node a walk starts from shows every check.
+ */
+const guardsOf = (db: GraphDb, id: string, detail: DetailLevel, arrived?: string | null): GuardRef[] => {
   // Where each check was put, as the reader of the framework wrote it on the
   // entry (P76); matched on the node the edge points at.
   const said = new Map((accessOf(db.node(id))?.guards ?? []).map((guard) => [guard.id, guard]));
+  const repo = db.node(id)?.repo;
   return db
     .edgesFrom(id, [GUARD_EDGE])
+    .filter((edge) => arrived === undefined || throughOf(edge) === null || throughOf(edge) === arrived)
     .sort((a, b) => orderOf(a) - orderOf(b))
     .map((edge, index) => {
       const node = db.node(edge.to);
@@ -281,6 +294,7 @@ const guardsOf = (db: GraphDb, id: string, detail: DetailLevel): GuardRef[] => {
         ...(detail >= 2 && node?.file !== undefined ? { loc: `${node.file}:${node.line ?? 0}` } : {}),
         ...(access === undefined ? {} : { where: access.where, via: access.via }),
         ...(access?.skippedBy === undefined ? {} : { skippedBy: access.skippedBy }),
+        ...(node === undefined || repo === undefined || node.repo === repo ? {} : { service: node.repo }),
       };
     });
 };
@@ -399,7 +413,7 @@ export const buildFlowTree = (db: GraphDb, entryId: string, options: FlowOptions
       edge: projectEdge(edge, detail),
       children: [],
     };
-    const guards = guardsOf(db, edge.to, detail);
+    const guards = guardsOf(db, edge.to, detail, throughOf(edge));
     if (guards.length > 0) row.guards = guards;
     const fails = failsOf(target, detail);
     if (fails.length > 0) row.fails = fails;

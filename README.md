@@ -806,7 +806,12 @@ prove, and the path is given so you can run it.
   gateway or router, each field is planned into the subgraph that resolves it,
   entity hops to the owner's reference resolver included, from a supergraph
   file or from the subgraphs `IntrospectAndCompose` names
-  (`fixtures/graphql-federation`, `fixtures/graphql-federation-composed`).
+  (`fixtures/graphql-federation`, `fixtures/graphql-federation-composed`);
+  an entity interface and the `@interfaceObject` that adds to it, an argument
+  a `@fromContext` fills, and a subgraph found by the port its server listens
+  on are planned too, and the router's `@authenticated`, `@requiresScopes`
+  and `@policy` are checks in front of the fields they guard
+  (`fixtures/graphql-federation-interfaces`).
 - **Components in files of their own format.** A `.vue` or `.svelte` file's
   scripts are read by the checker as TypeScript, every position named by the
   component file at its own line, and the event bindings of its markup are the

@@ -1,0 +1,11 @@
+{
+  "name": "interfaces-gateway",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@apollo/gateway": "^2.9.0",
+    "@apollo/server": "^4.11.0",
+    "express": "^4.21.0",
+    "graphql": "^16.9.0"
+  }
+}

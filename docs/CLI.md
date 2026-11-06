@@ -453,6 +453,56 @@ screens.
   schema in the registry (`graphref`), a subgraph no gateway in the project
   names (`fixtures/graphql-federation`, `fixtures/graphql-federation-composed`).
 
+**Federation, further (P245).** What federation 2 adds beside fields and keys
+is planned the same way (`fixtures/graphql-federation-interfaces`).
+
+- *Entity interfaces.* An `interface Media @key(fields: "id")` one subgraph
+  owns, and a `type Media @interfaceObject @key(fields: "id")` another adds
+  fields to: composed from the subgraphs, or read from a supergraph
+  (`@join__type(isInterfaceObject: true)`, `@join__implements`, a bare
+  `@join__field`), every implementation has the interface object's fields,
+  which that subgraph resolves as the interface's (`meta.graphql.as` on the
+  plan edge). A field it adds is an entity hop to its `Media.__resolveReference`
+  and `Media.<field>`; where it fetched the parent, a fragment on one of the
+  interface's types (`... on Book`) or `__typename` is an entity hop to the
+  interface's owner, whose `Media.__resolveReference` says which type the item
+  is. Code-first `@InterfaceType()` with `@Directive('@key(...)')` and
+  `@ObjectType({ implements: () => [Media] })` are read too.
+- *Contexts.* A type that sets `@context(name: "viewer")` and an argument
+  filled by `@fromContext(field: "$viewer { currency }")` - or, in a
+  supergraph, `@join__field(contextArguments:)`: the fields the argument needs
+  are planned from the nearest type above the field that sets the context, by
+  the subgraph that fetched it (`meta.graphql.requiredBy`, `fromContext`). The
+  argument is the router's to fill, so it is not in the composed schema a
+  selection is compared with. Where nothing above the field sets the context,
+  the step says so: `graphql-context-not-reached` (a gap, info).
+- *The router's checks.* `@authenticated`, `@requiresScopes(scopes:)` and
+  `@policy(policies:)` on a field, its type or the type it returns, from a
+  subgraph's SDL (under the name `@link(import:)` gives them), code-first
+  `@Directive(...)`, or a supergraph's links (`as:` included): through a
+  router, each is a `guard` node of the router - `@requiresScopes(read:orders &
+  staff | admin)` - with a `guarded_by` edge from every subgraph entry that
+  resolves the field, and the check on the entry's `meta.access`, so `flow`
+  and `explain` show it. The edge says `through: <router>`, and `flow` shows
+  the check only on a step a request took through that router. Apollo Gateway
+  in code does not check them: `graphql-auth-not-checked` (a finding, auth)
+  names the fields it composes unchecked.
+- *Composed directives.* `@composeDirective(name: "@audited")` with the
+  `@link` that imports it is kept in the composition (`directives`, and on the
+  fields and types that carry it); one the subgraph never defines nor
+  imports, or one two subgraphs take from different specifications, is a
+  `graphql-composition-conflict`.
+- *A subgraph's own port.* Where a gateway names a subgraph at
+  `http://localhost:4001/graphql`, the service whose GraphQL server listens on
+  4001 is the subgraph, `static`, with no `services[].hosts`: read from
+  `startStandaloneServer(server, { listen: { port } })` (4000 where it names
+  none), `app.listen(4002)`, `app.listen({ port })`, and a setting's fallback
+  (`process.env.PORT ?? 4003`, `Number(process.env.PORT) || 4003`,
+  `config.get('PORT', 4003)`); the endpoint carries it as
+  `meta.graphql.listen`. A host `services[].hosts` names wins; two services on
+  one port - by their code, or one by the port its setting files give it - is
+  `graphql-subgraph-not-joined`, naming both.
+
 **A file-system router is four values.** Where the address is the path of a file
 rather than an argument of a call, what differs between one router and another
 is the root directory, which file names declare a route, the prefix in front,

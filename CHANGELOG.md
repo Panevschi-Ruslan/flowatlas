@@ -90,6 +90,26 @@ only one of them moved.
   probe counts the functions a template declares (`sam-function-resource`).
   `deployment-unread` now names SST and Architect.
 
+- **Federation's entity interfaces, `@interfaceObject` and the router's own
+  directives (P245).** An entity interface and the `@interfaceObject` that adds
+  fields to it are composed - from the subgraphs or from a supergraph
+  (`isInterfaceObject`, `@join__implements`) - so a field it adds is planned
+  into that subgraph as the interface's, after its reference resolver, and a
+  fragment on a concrete type it cannot tell is an entity hop to the
+  interface's owner. An argument `@fromContext` fills plans the fields it
+  needs from the nearest type above that sets the `@context`, and is left out
+  of the composed schema; where nothing above sets it, the new
+  `graphql-context-not-reached` says so. The router's `@authenticated`,
+  `@requiresScopes` and `@policy` are `guard` nodes of the router in front of
+  the subgraph entries that resolve the field (`guarded_by`, `meta.access`,
+  shown by `flow` on a step through that router only), and an Apollo Gateway
+  that composes them unchecked is the new `graphql-auth-not-checked`.
+  `@composeDirective` is read, with a conflict for a directive never defined
+  or taken from two specifications. A gateway's `http://localhost:4001/graphql`
+  joins the service whose server listens on 4001 (`startStandaloneServer`'s
+  `listen`, `app.listen(...)`, a setting's fallback), `static`; two services
+  on one port is a row. Plan edges now carry `meta.through` (the gateway), and
+  subgraph endpoints `meta.graphql.listen`.
 - **GraphQL federation, one graph across subgraphs (P241).** A request to a
   federation gateway is planned the way the router plans it, statically: each
   selected field goes to the subgraph that resolves it, and a field of an

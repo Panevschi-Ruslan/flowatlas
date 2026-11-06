@@ -21,7 +21,8 @@ import { edgeKey } from './order.js';
  * goes to the subgraph the composition gives it to, through the routes the
  * gateway's plan holds (`routeGateways`), with an entity hop to the owner's
  * reference resolver where the field lives in another subgraph than its
- * parent.
+ * parent - for an interface object's field, or a type the subgraph fetching
+ * the parent cannot tell, the interface's (P245).
  */
 export const joinGraphqlFields = (nodes: ReadonlyMap<string, GraphNode>, edges: Map<string, GraphEdge>, plans: ReadonlyMap<string, GatewayPlan> = new Map()): Unresolved[] => {
   const rows: Unresolved[] = [];
@@ -106,7 +107,8 @@ const joinPlanned = (
   const gateway = plan.gateway.repo;
   const said = new Set<string>();
   const draw = (to: string, confidence: Confidence, line: number, file: string, graphql: Record<string, unknown>): void => {
-    const joined: GraphEdge = { from: call.id, to, type: edge.type, confidence, ...(call.file === undefined ? {} : { file }), line, meta: { [GRAPHQL_META]: graphql } };
+    // `through`: the service the request comes through, whose own checks are in front of the step (P245).
+    const joined: GraphEdge = { from: call.id, to, type: edge.type, confidence, ...(call.file === undefined ? {} : { file }), line, meta: { [GRAPHQL_META]: graphql, through: gateway } };
     // The first selection that reaches an entry is the one the edge names.
     if (!edges.has(edgeKey(joined))) edges.set(edgeKey(joined), joined);
   };
@@ -116,6 +118,22 @@ const joinPlanned = (
     const file = step.selected.file ?? operation.document.file;
     const line = step.selected.line;
     const choice = step.subgraphs.length > 1;
+    // An argument the router fills from a context nothing above the field sets on this path (P245).
+    for (const unset of step.unset ?? []) {
+      if (said.has(`${field}(${unset.argument})`)) continue;
+      said.add(`${field}(${unset.argument})`);
+      rows.push({
+        service: call.repo,
+        file,
+        line,
+        reason: 'graphql-context-not-reached',
+        level: 'info',
+        message: `${named} selects ${field}, whose argument ${unset.argument} the router fills from the context ${unset.context}, and no type above it in this selection sets ${unset.context}; what the argument needs is not planned`,
+        hint: `Select ${field} under a field that returns the type with @context(name: "${unset.context}"), or pass the argument some other way; the router fills it only from an ancestor that sets the context.`,
+        symbol: call.id,
+        meta: { field, argument: unset.argument, context: unset.context },
+      });
+    }
     if (choice && !step.underChoice && !said.has(field)) {
       said.add(field);
       rows.push({
@@ -140,14 +158,23 @@ const joinPlanned = (
         subgraph,
         ...(choice ? { choice: step.subgraphs } : {}),
         ...(step.requiredBy === undefined ? {} : { requiredBy: step.requiredBy }),
+        ...(step.fromContext === undefined ? {} : { fromContext: step.fromContext }),
       };
       if (step.hop !== undefined) {
         const reference = makeEntryId(route.service, 'graphql', `${step.hop.entity}.${REFERENCE_FIELD}`);
         if (nodes.has(reference)) draw(reference, confidence, line, file, { ...graphql, field: `${step.hop.entity}.${REFERENCE_FIELD}`, hop: { entity: step.hop.entity, from: step.hop.from, for: field } });
       }
-      const entryId = makeEntryId(route.service, 'graphql', field);
+      // An interface object resolves an implementation's field as the interface's (P245).
+      const resolvedAs = step.as?.[subgraph];
+      const entryId = makeEntryId(route.service, 'graphql', resolvedAs === undefined ? field : `${resolvedAs}.${step.field}`);
       if (nodes.has(entryId)) {
-        draw(entryId, confidence, line, file, { ...graphql, field, ...(step.selected.alias === undefined ? {} : { alias: step.selected.alias }), ...(step.hop === undefined ? {} : { hop: { entity: step.hop.entity, from: step.hop.from } }) });
+        draw(entryId, confidence, line, file, {
+          ...graphql,
+          field,
+          ...(resolvedAs === undefined ? {} : { as: resolvedAs }),
+          ...(step.selected.alias === undefined ? {} : { alias: step.selected.alias }),
+          ...(step.hop === undefined ? {} : { hop: { entity: step.hop.entity, from: step.hop.from } }),
+        });
       } else if (rootTypes.has(step.type) && step.hop === undefined && step.requiredBy === undefined && !said.has(`${field} ${subgraph}`)) {
         said.add(`${field} ${subgraph}`);
         rows.push({

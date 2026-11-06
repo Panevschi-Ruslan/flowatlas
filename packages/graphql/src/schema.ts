@@ -1,4 +1,4 @@
-import { argumentOf, isNullable, namedTypeOf, stringsOf, typeText, type AppliedDirective, type Document, type TypeDefinition } from './parse.js';
+import { argumentOf, isNullable, namedTypeOf, stringsOf, typeText, type AppliedDirective, type Document, type InputValue, type TypeDefinition, type Value } from './parse.js';
 
 /**
  * A schema, as the graph keeps it (P232): its root types and each type's
@@ -10,7 +10,76 @@ export interface SchemaSummary {
   readonly types: Readonly<Record<string, SchemaType>>;
   /** The federation version the schema is a subgraph of, when it is one (P241). */
   readonly federation?: 1 | 2;
+  /**
+   * The directives of its own a subgraph asks composition to keep in the
+   * supergraph (`@composeDirective(name: "@audited")`), with the
+   * specification it links them from and whether it defines them (P245).
+   */
+  readonly composeDirectives?: readonly ComposedDirective[];
 }
+
+/** A directive a subgraph composes into the supergraph (P245). */
+export interface ComposedDirective {
+  /** Its name, without the `@`. */
+  readonly name: string;
+  /** The specification `@link(url:)` imports it from, where one does. */
+  readonly url?: string;
+  /** Whether the schema defines it (`directive @audited … on …`) or imports it from a linked specification. */
+  readonly defined: boolean;
+}
+
+/**
+ * One of the router's authorization directives (P245): `@authenticated`, or
+ * `@requiresScopes(scopes:)` / `@policy(policies:)`, whose argument is a list
+ * of alternatives, each a list of names all of which are needed -
+ * `[["read:orders", "staff"], ["admin"]]` is both of the first two, or the
+ * third.
+ */
+export type AuthRequirement =
+  | { readonly kind: 'authenticated' }
+  | { readonly kind: 'scopes' | 'policy'; readonly any: ReadonlyArray<readonly string[]> };
+
+/** A requirement as a check is named: `@authenticated`, `@requiresScopes(read:orders & staff | admin)`. */
+export const authLabel = (requirement: AuthRequirement): string =>
+  requirement.kind === 'authenticated'
+    ? '@authenticated'
+    : `@${requirement.kind === 'scopes' ? 'requiresScopes' : 'policy'}(${requirement.any.map((all) => all.join(' & ')).join(' | ')})`;
+
+/** Requirements together, each once, in the order first met. */
+export const mergeAuth = (...lists: ReadonlyArray<readonly AuthRequirement[] | undefined>): AuthRequirement[] => {
+  const found = new Map<string, AuthRequirement>();
+  for (const list of lists) for (const requirement of list ?? []) if (!found.has(authLabel(requirement))) found.set(authLabel(requirement), requirement);
+  return [...found.values()];
+};
+
+/** `[["a", "b"], ["c"]]`; a single list or a name is coerced the way GraphQL coerces input, each item an alternative. */
+const alternativesOf = (value: Value | undefined): string[][] => {
+  if (value === undefined) return [];
+  if (value.kind === 'string') return [[value.value]];
+  if (value.kind !== 'list') return [];
+  return value.items.map((item) => stringsOf(item)).filter((all) => all.length > 0);
+};
+
+/** The requirement one directive writes, by its canonical name, or nothing. */
+export const authOf = (name: string, directive: AppliedDirective): AuthRequirement | undefined => {
+  if (name === 'authenticated') return { kind: 'authenticated' };
+  if (name === 'requiresScopes') return { kind: 'scopes', any: alternativesOf(argumentOf(directive, 'scopes')) };
+  if (name === 'policy') return { kind: 'policy', any: alternativesOf(argumentOf(directive, 'policies')) };
+  return undefined;
+};
+
+/** A selection written in braces as the fields inside them: `{ currency { id } }` is `currency { id }`. */
+export const selectionText = (written: string): string => {
+  const trimmed = written.trim();
+  return trimmed.startsWith('{') && trimmed.endsWith('}') ? trimmed.slice(1, -1).trim() : trimmed;
+};
+
+/** What `@fromContext(field:)` asks for: `$userContext { currency }` is the context `userContext` and `currency`. */
+export const contextFieldOf = (written: string): { context: string; selection: string } | undefined => {
+  const match = /^\s*\$([_A-Za-z][_0-9A-Za-z]*)\s*([\s\S]*)$/.exec(written);
+  if (match === null) return undefined;
+  return { context: match[1] as string, selection: selectionText(match[2] as string) };
+};
 
 export interface SchemaType {
   readonly kind: TypeDefinition['of'];
@@ -44,6 +113,14 @@ export interface TypeFederation {
   readonly extension?: true;
   readonly shareable?: true;
   readonly inaccessible?: true;
+  /** `@interfaceObject`: an interface another subgraph owns, to which this one adds fields as if it were an object (P245). */
+  readonly interfaceObject?: true;
+  /** `@context(name:)`: the contexts it sets for the fields below it (P245). */
+  readonly contexts?: readonly string[];
+  /** The router's authorization directives written on it (P245). */
+  readonly auth?: readonly AuthRequirement[];
+  /** The directives it carries that the subgraph composes (`@composeDirective`), by name (P245). */
+  readonly directives?: readonly string[];
 }
 
 /**
@@ -58,10 +135,33 @@ export interface FieldFederation {
   readonly shareable?: true;
   readonly override?: { readonly from: string; readonly label?: string };
   readonly inaccessible?: true;
+  /** The router's authorization directives written on it (P245). */
+  readonly auth?: readonly AuthRequirement[];
+  /** Arguments the router fills from an ancestor (`@fromContext(field: "$ctx { … }")`), by argument (P245). */
+  readonly fromContext?: Readonly<Record<string, { readonly context: string; readonly selection: string }>>;
+  /** The directives it carries that the subgraph composes, by name (P245). */
+  readonly directives?: readonly string[];
 }
 
 /** The directives federation defines, by the name its specification gives them. */
-const FEDERATION_DIRECTIVES = new Set(['key', 'external', 'requires', 'provides', 'shareable', 'override', 'inaccessible', 'extends', 'interfaceObject', 'tag', 'composeDirective']);
+const FEDERATION_DIRECTIVES = new Set([
+  'key',
+  'external',
+  'requires',
+  'provides',
+  'shareable',
+  'override',
+  'inaccessible',
+  'extends',
+  'interfaceObject',
+  'tag',
+  'composeDirective',
+  'context',
+  'fromContext',
+  'authenticated',
+  'requiresScopes',
+  'policy',
+]);
 
 /** Whether a URL is federation 2's specification, linked by `extend schema @link(url: …)`. */
 const FEDERATION_SPEC = /specs\.apollo\.dev\/federation\/v2/;
@@ -73,17 +173,34 @@ const FEDERATION_SPEC = /specs\.apollo\.dev\/federation\/v2/;
  * or under the prefix the link gives it) is the one it names. A schema that
  * links nothing is federation 1, where the names are the plain ones.
  */
-export const federationNamesOf = (documents: readonly Document[]): { version?: 1 | 2; canonical: (name: string) => string } => {
+export const federationNamesOf = (
+  documents: readonly Document[],
+): { version?: 1 | 2; canonical: (name: string) => string; composed: ReadonlySet<string>; composeDirectives: ComposedDirective[] } => {
   const renamed = new Map<string, string>();
   const prefixes = new Set<string>();
+  /** What every other specification a schema links imports, by the name it is used under: a composed directive's URL (P245). */
+  const linkedFrom = new Map<string, string>();
+  const asked: AppliedDirective[] = [];
+  const defined = new Set<string>();
   let linked = false;
   for (const document of documents) {
     for (const definition of document.definitions) {
+      if (definition.kind === 'directive') defined.add(definition.name);
       if (definition.kind !== 'schema') continue;
       for (const link of definition.directives) {
-        if (link.name !== 'link') continue;
+        if (link.name !== 'link') {
+          asked.push(link);
+          continue;
+        }
         const url = stringsOf(argumentOf(link, 'url'))[0] ?? '';
-        if (!FEDERATION_SPEC.test(url)) continue;
+        if (!FEDERATION_SPEC.test(url)) {
+          const imports = argumentOf(link, 'import');
+          for (const item of imports?.kind === 'list' ? imports.items : []) {
+            const name = item.kind === 'string' ? item.value : item.kind === 'object' ? stringsOf(item.fields['as'] ?? item.fields['name'])[0] : undefined;
+            if (name !== undefined) linkedFrom.set(name.replace(/^@/, ''), url);
+          }
+          continue;
+        }
         linked = true;
         prefixes.add(stringsOf(argumentOf(link, 'as'))[0] ?? 'federation');
         const imports = argumentOf(link, 'import');
@@ -104,7 +221,14 @@ export const federationNamesOf = (documents: readonly Document[]): { version?: 1
     for (const prefix of prefixes) if (name.startsWith(`${prefix}__`)) return name.slice(prefix.length + 2);
     return name;
   };
-  if (linked) return { version: 2, canonical };
+  // `@composeDirective(name: "@audited")`, under whatever name it is imported as (P245).
+  const names = asked.filter((directive) => canonical(directive.name) === 'composeDirective').flatMap((directive) => stringsOf(argumentOf(directive, 'name')).map((name) => name.replace(/^@/, '')));
+  const composeDirectives = [...new Set(names)].map((name): ComposedDirective => {
+    const url = linkedFrom.get(name);
+    return { name, ...(url === undefined ? {} : { url }), defined: defined.has(name) || url !== undefined };
+  });
+  const composed = new Set(composeDirectives.map((directive) => directive.name));
+  if (linked) return { version: 2, canonical, composed, composeDirectives };
   const federated = documents.some((document) =>
     document.definitions.some(
       (definition) =>
@@ -112,17 +236,31 @@ export const federationNamesOf = (documents: readonly Document[]): { version?: 1
         (definition.applied.some((directive) => FEDERATION_DIRECTIVES.has(directive.name)) || definition.fields.some((field) => field.directives.some((directive) => FEDERATION_DIRECTIVES.has(directive.name)))),
     ),
   );
-  return { ...(federated ? { version: 1 as const } : {}), canonical };
+  return { ...(federated ? { version: 1 as const } : {}), canonical, composed, composeDirectives };
 };
 
 /** What a type's own directives say of it under federation, or nothing. */
-export const typeFederationOf = (applied: readonly AppliedDirective[], extend: boolean, canonical: (name: string) => string): TypeFederation | undefined => {
+export const typeFederationOf = (
+  applied: readonly AppliedDirective[],
+  extend: boolean,
+  canonical: (name: string) => string,
+  composed: ReadonlySet<string> = new Set(),
+): TypeFederation | undefined => {
   const keys: Array<{ fields: string; resolvable?: false }> = [];
   let extension = false;
   let shareable = false;
   let inaccessible = false;
+  let interfaceObject = false;
+  const contexts: string[] = [];
+  const auth: AuthRequirement[] = [];
+  const directives: string[] = [];
   for (const directive of applied) {
     const name = canonical(directive.name);
+    if (composed.has(directive.name) && !directives.includes(directive.name)) directives.push(directive.name);
+    if (name === 'interfaceObject') interfaceObject = true;
+    if (name === 'context') contexts.push(...stringsOf(argumentOf(directive, 'name')));
+    const requirement = authOf(name, directive);
+    if (requirement !== undefined) auth.push(requirement);
     if (name === 'key') {
       const fields = stringsOf(argumentOf(directive, 'fields'))[0];
       const resolvable = argumentOf(directive, 'resolvable');
@@ -133,20 +271,44 @@ export const typeFederationOf = (applied: readonly AppliedDirective[], extend: b
     if (name === 'inaccessible') inaccessible = true;
   }
   if (keys.length > 0 && extend) extension = true;
-  if (keys.length === 0 && !extension && !shareable && !inaccessible) return undefined;
+  if (keys.length === 0 && !extension && !shareable && !inaccessible && !interfaceObject && contexts.length === 0 && auth.length === 0 && directives.length === 0) return undefined;
   return {
     ...(keys.length === 0 ? {} : { keys }),
     ...(extension ? { extension: true as const } : {}),
     ...(shareable ? { shareable: true as const } : {}),
     ...(inaccessible ? { inaccessible: true as const } : {}),
+    ...(interfaceObject ? { interfaceObject: true as const } : {}),
+    ...(contexts.length === 0 ? {} : { contexts }),
+    ...(auth.length === 0 ? {} : { auth: mergeAuth(auth) }),
+    ...(directives.length === 0 ? {} : { directives }),
   };
 };
 
 /** What a field's own directives say of it under federation, or nothing. */
-export const fieldFederationOf = (applied: readonly AppliedDirective[], canonical: (name: string) => string): FieldFederation | undefined => {
+export const fieldFederationOf = (
+  applied: readonly AppliedDirective[],
+  canonical: (name: string) => string,
+  composed: ReadonlySet<string> = new Set(),
+  args: readonly InputValue[] = [],
+): FieldFederation | undefined => {
   const found: { -readonly [K in keyof FieldFederation]: FieldFederation[K] } = {};
+  const auth: AuthRequirement[] = [];
+  const directives: string[] = [];
+  // An argument the router fills from an ancestor's fields, not one a client passes (P245).
+  const fromContext: Record<string, { context: string; selection: string }> = {};
+  for (const arg of args) {
+    for (const directive of arg.directives) {
+      if (canonical(directive.name) !== 'fromContext') continue;
+      const field = contextFieldOf(stringsOf(argumentOf(directive, 'field'))[0] ?? '');
+      if (field !== undefined) fromContext[arg.name] = field;
+    }
+  }
+  if (Object.keys(fromContext).length > 0) found.fromContext = fromContext;
   for (const directive of applied) {
     const name = canonical(directive.name);
+    if (composed.has(directive.name) && !directives.includes(directive.name)) directives.push(directive.name);
+    const requirement = authOf(name, directive);
+    if (requirement !== undefined) auth.push(requirement);
     if (name === 'external') found.external = true;
     if (name === 'shareable') found.shareable = true;
     if (name === 'inaccessible') found.inaccessible = true;
@@ -160,6 +322,8 @@ export const fieldFederationOf = (applied: readonly AppliedDirective[], canonica
       if (from !== undefined) found.override = { from, ...(label === undefined ? {} : { label }) };
     }
   }
+  if (auth.length > 0) found.auth = mergeAuth(auth);
+  if (directives.length > 0) found.directives = directives;
   return Object.keys(found).length === 0 ? undefined : found;
 };
 
@@ -167,7 +331,17 @@ export const fieldFederationOf = (applied: readonly AppliedDirective[], canonica
 const mergeTypeFederation = (a: TypeFederation | undefined, b: TypeFederation | undefined): TypeFederation | undefined => {
   if (a === undefined || b === undefined) return a ?? b;
   const keys = [...(a.keys ?? []), ...(b.keys ?? [])].filter((key, index, all) => all.findIndex((other) => other.fields === key.fields) === index);
-  return { ...a, ...b, ...(keys.length === 0 ? {} : { keys }) };
+  const auth = mergeAuth(a.auth, b.auth);
+  const contexts = [...new Set([...(a.contexts ?? []), ...(b.contexts ?? [])])];
+  const directives = [...new Set([...(a.directives ?? []), ...(b.directives ?? [])])];
+  return {
+    ...a,
+    ...b,
+    ...(keys.length === 0 ? {} : { keys }),
+    ...(auth.length === 0 ? {} : { auth }),
+    ...(contexts.length === 0 ? {} : { contexts }),
+    ...(directives.length === 0 ? {} : { directives }),
+  };
 };
 
 const ROOT_DEFAULTS = { query: 'Query', mutation: 'Mutation', subscription: 'Subscription' } as const;
@@ -183,12 +357,12 @@ export const schemaOf = (documents: readonly Document[]): SchemaSummary => {
       if (definition.kind !== 'type') continue;
       const type = (types[definition.name] ??= { kind: definition.of, fields: {}, possible: new Set(), directives: new Set() });
       for (const directive of definition.directives) type.directives.add(names.canonical(directive));
-      const typeFederation = names.version === undefined ? undefined : typeFederationOf(definition.applied, definition.extend, names.canonical);
+      const typeFederation = names.version === undefined ? undefined : typeFederationOf(definition.applied, definition.extend, names.canonical, names.composed);
       const merged = mergeTypeFederation(type.federation, typeFederation);
       if (merged !== undefined) type.federation = merged;
       for (const field of definition.fields) {
         const args = Object.fromEntries(field.arguments.map((arg) => [arg.name, { type: typeText(arg.type), required: !isNullable(arg.type) && !arg.hasDefault }]));
-        const federation = names.version === undefined ? undefined : fieldFederationOf(field.directives, names.canonical);
+        const federation = names.version === undefined ? undefined : fieldFederationOf(field.directives, names.canonical, names.composed, field.arguments);
         type.fields[field.name] = { type: typeText(field.type), ...(field.arguments.length === 0 ? {} : { args }), ...(federation === undefined ? {} : { federation }) };
       }
       for (const input of definition.inputs) type.fields[input.name] = { type: typeText(input.type) };
@@ -210,6 +384,7 @@ export const schemaOf = (documents: readonly Document[]): SchemaSummary => {
   return {
     roots: { query, ...(mutation === undefined ? {} : { mutation }), ...(subscription === undefined ? {} : { subscription }) },
     ...(names.version === undefined ? {} : { federation: names.version }),
+    ...(names.composeDirectives.length === 0 ? {} : { composeDirectives: names.composeDirectives }),
     types: Object.fromEntries(
       Object.entries(types)
         .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
@@ -260,7 +435,13 @@ export const mergeSchemas = (a: SchemaSummary, b: SchemaSummary): SchemaSummary 
           };
   }
   const federation = a.federation === undefined || b.federation === undefined ? (a.federation ?? b.federation) : Math.max(a.federation, b.federation);
-  return { roots: { ...b.roots, ...a.roots }, types, ...(federation === undefined ? {} : { federation: federation as 1 | 2 }) };
+  const composeDirectives = [...(a.composeDirectives ?? []), ...(b.composeDirectives ?? []).filter((directive) => !(a.composeDirectives ?? []).some((known) => known.name === directive.name))];
+  return {
+    roots: { ...b.roots, ...a.roots },
+    types,
+    ...(federation === undefined ? {} : { federation: federation as 1 | 2 }),
+    ...(composeDirectives.length === 0 ? {} : { composeDirectives }),
+  };
 };
 
 /** The named type a field's type is: `[Order!]!` is `Order`. */

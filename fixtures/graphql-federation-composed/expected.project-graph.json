@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:21:37.706Z",
+  "builtAt": "2026-11-06T18:14:57.482Z",
   "services": [
     {
       "name": "gateway",
@@ -283,6 +283,13 @@
               }
             ]
           },
+          "listen": [
+            {
+              "port": 4000,
+              "file": "src/main.ts",
+              "line": 7
+            }
+          ],
           "schema": {
             "roots": {
               "query": "Query"
@@ -494,7 +501,14 @@
           },
           "subgraph": {
             "federation": 1
-          }
+          },
+          "listen": [
+            {
+              "port": 4001,
+              "file": "src/index.ts",
+              "line": 42
+            }
+          ]
         }
       }
     },
@@ -1270,7 +1284,8 @@
             "from": "orders",
             "for": "Customer.name"
           }
-        }
+        },
+        "through": "router"
       }
     },
     {
@@ -1286,7 +1301,8 @@
           "gateway": "router",
           "subgraph": "orders",
           "field": "Customer.orders"
-        }
+        },
+        "through": "router"
       }
     },
     {
@@ -1302,7 +1318,8 @@
           "gateway": "router",
           "subgraph": "orders",
           "field": "Order.customer"
-        }
+        },
+        "through": "router"
       }
     },
     {
@@ -1318,7 +1335,8 @@
           "gateway": "router",
           "subgraph": "orders",
           "field": "Query.orders"
-        }
+        },
+        "through": "router"
       }
     },
     {
@@ -1346,7 +1364,8 @@
           "gateway": "gateway",
           "subgraph": "customers",
           "field": "Query.customer"
-        }
+        },
+        "through": "gateway"
       }
     },
     {
@@ -1378,7 +1397,8 @@
             "entity": "Customer",
             "from": "customers"
           }
-        }
+        },
+        "through": "gateway"
       }
     },
     {
@@ -1398,7 +1418,8 @@
             "orders"
           ],
           "field": "Query.status"
-        }
+        },
+        "through": "gateway"
       }
     },
     {
@@ -1430,7 +1451,8 @@
             "orders"
           ],
           "field": "Query.status"
-        }
+        },
+        "through": "gateway"
       }
     },
     {

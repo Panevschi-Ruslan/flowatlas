@@ -1,9 +1,24 @@
-import { CONFIDENCE_RANK, type Confidence, type GraphEdge, type GraphNode, type Unresolved } from '@flowatlas/core';
+import {
+  ACCESS_META,
+  accessOf,
+  CONFIDENCE_RANK,
+  makeEntryId,
+  makeSymbolId,
+  type AccessGuard,
+  type Confidence,
+  type GraphEdge,
+  type GraphNode,
+  type Unresolved,
+} from '@flowatlas/core';
 import {
   apiSchemaOf,
+  authLabel,
   composeSubgraphs,
   GRAPHQL_META,
+  mergeAuth,
+  namedTypeIn,
   unreachableOwners,
+  type AuthRequirement,
   type Composition,
   type CompositionConflict,
   type GatewayMeta,
@@ -31,7 +46,15 @@ import { cmp, edgeKey } from './order.js';
  *    refuse is a row (D3, D4). The gateway's endpoint is given the composed
  *    API schema, so the contract compares a selection through it with what
  *    the composition has (D8).
- * 3. **Subgraphs no gateway names**, said once each.
+ * 3. **The router's checks** (P245). A field the router's authorization
+ *    directives guard (`@authenticated`, `@requiresScopes`, `@policy`, on the
+ *    field, its type or the type it returns) gets a `guarded_by` edge from
+ *    each subgraph entry that resolves it to the check, a `guard` node of the
+ *    router, and the check on the entry's `meta.access` - the shape every
+ *    other reader gives a check in front of a way in. Only a router checks
+ *    them: composed by an Apollo Gateway in code they guard nothing, and that
+ *    is a row.
+ * 4. **Subgraphs no gateway names**, said once each.
  */
 
 /** Where a subgraph's address goes: a service, with how sure the join is, or why none. */
@@ -54,6 +77,33 @@ export interface GatewayPlan {
   readonly confidence: Confidence;
   readonly routes: ReadonlyMap<string, SubgraphRoute>;
 }
+
+/** One port a GraphQL server listens on, and where its code says so (P245). */
+export interface Listening {
+  readonly service: string;
+  readonly file: string;
+  readonly line: number;
+  readonly setting?: string;
+}
+
+/**
+ * Every port the GraphQL servers of the project listen on, as their code
+ * writes it (P245): where a gateway names a subgraph at `localhost:4001`,
+ * the service that listens on 4001 is the subgraph, with no host configured.
+ */
+export const listeningAt = (nodes: ReadonlyMap<string, GraphNode>): Map<number, Listening[]> => {
+  const found = new Map<number, Listening[]>();
+  for (const node of nodes.values()) {
+    if (node.type !== 'entry' || node.kind !== 'http') continue;
+    const listen = (node.meta?.[GRAPHQL_META] as { listen?: ReadonlyArray<{ port: number; file: string; line: number; setting?: string }> } | undefined)?.listen;
+    for (const port of listen ?? []) {
+      const list = found.get(port.port) ?? [];
+      if (!list.some((each) => each.service === node.repo)) list.push({ service: node.repo, file: port.file, line: port.line, ...(port.setting === undefined ? {} : { setting: port.setting }) });
+      found.set(port.port, list.sort((a, b) => cmp(a.service, b.service)));
+    }
+  }
+  return found;
+};
 
 /** The weakest of some confidences: an edge is no surer than what it rests on. */
 export const weakest = (...levels: readonly Confidence[]): Confidence =>
@@ -121,7 +171,10 @@ const driftOf = (composition: Composition, subgraph: string, schema: SchemaSumma
   const found: Drift[] = [];
   for (const [name, type] of Object.entries(composition.types)) {
     for (const [field, composed] of Object.entries(type.fields)) {
-      if (!composed.owners.some((owner) => owner.subgraph === subgraph)) continue;
+      const owner = composed.owners.find((each) => each.subgraph === subgraph);
+      if (owner === undefined) continue;
+      // An interface object's field is declared on the interface it stands for (P245).
+      if (owner.as !== undefined && owner.as !== name) continue;
       // A type the subgraph's source does not declare at all was not read, and is not said to be missing.
       const fields = declared.get(name);
       if (fields !== undefined && fields.size > 0 && !fields.has(field)) found.push({ field: `${name}.${field}`, missing: 'source', ...(composed.line === undefined ? {} : { line: composed.line }) });
@@ -139,10 +192,109 @@ const driftOf = (composition: Composition, subgraph: string, schema: SchemaSumma
 const conflictSentence = (conflict: CompositionConflict): string =>
   conflict.kind === 'shared'
     ? `${conflict.type}.${conflict.field} is resolved by ${conflict.subgraphs.join(' and ')}, and not every one of them marks it @shareable; composition refuses two owners of one field`
-    : `${conflict.subgraphs[0] ?? '?'} resolves ${conflict.type}.${conflict.field} but declares no key ${conflict.type} can be fetched by there, so an entity call from another subgraph cannot reach it`;
+    : conflict.kind === 'directive'
+      ? conflict.urls === undefined
+        ? `${conflict.subgraphs[0] ?? '?'} composes ${conflict.type} into the supergraph (@composeDirective), and neither defines it nor imports it from a linked specification; composition refuses a directive it cannot find`
+        : `${conflict.subgraphs.join(' and ')} compose ${conflict.type} from different specifications (${conflict.urls.join(', ')}); composition keeps one definition of a directive, and refuses two`
+      : `${conflict.subgraphs[0] ?? '?'} resolves ${conflict.type}.${conflict.field} but declares no key ${conflict.type} can be fetched by there, so an entity call from another subgraph cannot reach it`;
+
+const conflictHint = (conflict: CompositionConflict): string =>
+  conflict.kind === 'shared'
+    ? `Mark ${conflict.type}.${conflict.field} @shareable in every subgraph that resolves it, or move it to one of them with @override(from:).`
+    : conflict.kind === 'directive'
+      ? conflict.urls === undefined
+        ? `Define ${conflict.type} in ${conflict.subgraphs[0] ?? 'the subgraph'} (directive ${conflict.type}(...) on ...), or import it with @link(url:, import: ["${conflict.type}"]).`
+        : `Link ${conflict.type} from one specification, at one major version, in every subgraph that composes it.`
+      : `Declare @key on ${conflict.type} in ${conflict.subgraphs[0] ?? 'the subgraph'}, or move the field to a subgraph that does.`;
+
+/** What the router asks of a request for a field: written on the field, on its type, or on the type it returns (P245). */
+const authOfField = (composition: Composition, type: string, field: string): AuthRequirement[] => {
+  const composed = composition.types[type]?.fields[field];
+  if (composed === undefined) return [];
+  return mergeAuth(composed.auth, composition.types[type]?.auth, composition.types[namedTypeIn(composed.type)]?.auth);
+};
+
+/** A check's kind, as a person names it: `@requiresScopes` of `@requiresScopes(read:orders)`. */
+const directiveOf = (label: string): string => label.replace(/\(.*$/, '');
+
+/**
+ * The router's checks in front of the fields they guard (P245): one `guard`
+ * node of the router per requirement, a `guarded_by` edge to it from each
+ * subgraph entry that resolves a guarded field, in the order written, and
+ * the check on the entry's `meta.access`. An entry two fields reach (an
+ * interface object's field, under the interface and each implementation) is
+ * guarded once by each requirement.
+ */
+const guardFields = (
+  nodes: Map<string, GraphNode>,
+  edges: Map<string, GraphEdge>,
+  gateway: GraphNode,
+  meta: GatewayMeta,
+  composition: Composition,
+  routes: ReadonlyMap<string, SubgraphRoute>,
+  confidence: Confidence,
+): void => {
+  const file = meta.from ?? gateway.file ?? '';
+  if (file === '') return;
+  const perEntry = new Map<string, Map<string, { requirement: AuthRequirement; field: string; line: number; confidence: Confidence }>>();
+  // The interface's own field first, so a check is said where the entry has it, and an implementation's copy adds only what it adds.
+  const owned = Object.entries(composition.types).flatMap(([typeName, type]) =>
+    Object.entries(type.fields).flatMap(([field, composed]) => composed.owners.map((owner) => ({ typeName, field, composed, owner, copy: owner.as !== undefined && owner.as !== typeName }))),
+  );
+  for (const { typeName, field, composed, owner } of [...owned.filter((one) => !one.copy), ...owned.filter((one) => one.copy)]) {
+    const required = authOfField(composition, typeName, field);
+    const route = routes.get(owner.subgraph);
+    if (required.length === 0 || route === undefined) continue;
+    const resolved = `${owner.as ?? typeName}.${field}`;
+    const entryId = makeEntryId(route.service, 'graphql', resolved);
+    if (!nodes.has(entryId)) continue;
+    const list = perEntry.get(entryId) ?? new Map();
+    perEntry.set(entryId, list);
+    for (const requirement of required) {
+      if (list.has(authLabel(requirement))) continue;
+      list.set(authLabel(requirement), { requirement, field: owner.as === undefined ? resolved : `${typeName}.${field}`, line: composed.line ?? gateway.line ?? 1, confidence: weakest(route.confidence, confidence) });
+    }
+  }
+  for (const [entryId, list] of [...perEntry.entries()].sort(([a], [b]) => cmp(a, b))) {
+    const entry = nodes.get(entryId) as GraphNode;
+    const before = [...edges.values()].filter((edge) => edge.from === entryId && edge.type === 'guarded_by').length;
+    const guards: AccessGuard[] = [];
+    [...list.values()].forEach((one, index) => {
+      const label = authLabel(one.requirement);
+      const id = makeSymbolId(gateway.repo, file, label);
+      if (!nodes.has(id)) {
+        nodes.set(id, { id, type: 'guard', label, repo: gateway.repo, file, line: one.line, kind: 'directive', meta: { [GRAPHQL_META]: { gateway: gateway.repo, requirement: one.requirement } } });
+      }
+      const via = `${directiveOf(label)} on ${one.field}, checked by ${gateway.repo}`;
+      const edge: GraphEdge = {
+        from: entryId,
+        to: id,
+        type: 'guarded_by',
+        confidence: one.confidence,
+        // The router checks the requests that come through it, and no other (`through`).
+        meta: { order: before + index, scope: 'route', layer: 'guard', source: via, through: gateway.repo, [GRAPHQL_META]: { gateway: gateway.repo, field: one.field } },
+      };
+      edges.set(edgeKey(edge), edge);
+      guards.push({ id, name: label, layer: 'guard', where: 'route', via, file, line: one.line });
+    });
+    const access = accessOf(entry);
+    entry.meta = { ...entry.meta, [ACCESS_META]: { ...access, guards: [...(access?.guards ?? []), ...guards] } };
+  }
+};
+
+/** The fields a composition's authorization directives guard, as a row names them: `Media.rating @authenticated`. */
+const guardedFields = (composition: Composition): string[] =>
+  Object.entries(composition.types).flatMap(([typeName, type]) =>
+    Object.keys(type.fields).flatMap((field) => {
+      const required = authOfField(composition, typeName, field);
+      // An implementation's copy of an interface object's field is the interface's, said once there.
+      const copied = type.fields[field]?.owners.every((owner) => owner.as !== undefined && owner.as !== typeName) === true;
+      return required.length === 0 || copied ? [] : [`${typeName}.${field} ${required.map(authLabel).join(' ')}`];
+    }),
+  );
 
 export const routeGateways = (
-  nodes: ReadonlyMap<string, GraphNode>,
+  nodes: Map<string, GraphNode>,
   edges: Map<string, GraphEdge>,
   serviceOfRoute: (route: GatewayRouteMeta, gateway: GraphNode) => RouteAnswer,
 ): { plans: Map<string, GatewayPlan>; rows: Unresolved[] } => {
@@ -239,11 +391,24 @@ export const routeGateways = (
         reason: 'graphql-composition-conflict',
         level: 'action',
         message: `${conflictSentence(conflict)}`,
-        hint:
-          conflict.kind === 'shared'
-            ? `Mark ${conflict.type}.${conflict.field} @shareable in every subgraph that resolves it, or move it to one of them with @override(from:).`
-            : `Declare @key on ${conflict.type} in ${conflict.subgraphs[0] ?? 'the subgraph'}, or move the field to a subgraph that does.`,
+        hint: conflictHint(conflict),
       });
+    }
+    // The router checks its authorization directives; an Apollo Gateway in code does not (P245).
+    if (declared) guardFields(nodes, edges, gateway, meta, composition, routes, confidence);
+    else {
+      const guarded = guardedFields(composition);
+      if (guarded.length > 0) {
+        const shown = guarded.slice(0, 4).join(', ');
+        rows.push({
+          ...site,
+          reason: 'graphql-auth-not-checked',
+          level: 'action',
+          message: `${gateway.repo} composes ${guarded.length === 1 ? 'a field' : `${guarded.length} fields`} the router's authorization directives guard (${shown}${guarded.length > 4 ? `, and ${guarded.length - 4} more` : ''}), and ${gateway.repo} is an Apollo Gateway, which does not check them: a request through it reaches ${guarded.length === 1 ? 'it' : 'them'} unchecked`,
+          hint: 'Serve the graph with a router that checks the directives, or check who is asking in the subgraph\'s resolvers; on a gateway the directive alone guards nothing.',
+          meta: { fields: guarded },
+        });
+      }
     }
     // The contract compares a selection through the gateway with what the composition has (D8).
     gateway.meta = { ...gateway.meta, [GRAPHQL_META]: { ...servedOf(gateway), schema: apiSchemaOf(composition) } };

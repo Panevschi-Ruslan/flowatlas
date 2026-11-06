@@ -335,6 +335,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Composition refuses this graph: two subgraphs resolve one field and not every one marks it @shareable, or a subgraph resolves a field of an entity it declares no key for. The field is drawn to each owner as a choice; mark it @shareable, move it with @override(from:), or declare the key.',
   'graphql-supergraph-drift': () =>
     'The supergraph the router plans by and a subgraph\'s source disagree: a field it gives the subgraph is gone, or a root field the subgraph added is not in it. Compose the supergraph again and commit it.',
+  'graphql-auth-not-checked': () =>
+    'The subgraphs mark fields with the router\'s authorization directives (@authenticated, @requiresScopes, @policy), and the gateway that composes them is an Apollo Gateway, which does not check them: a request through it reaches those fields unchecked. Serve the graph with a router that checks them, or check who is asking in the subgraph\'s resolvers.',
+  'graphql-context-not-reached': () =>
+    'A field takes an argument the router fills from a context (@fromContext), and no type above it in the selection sets that context (@context), so what the argument needs is not planned. Select the field under the type that sets the context, or pass the argument another way.',
   'graphql-shareable-choice': () =>
     'More than one subgraph resolves the field and none is the one that fetched its parent, so the router chooses by cost at run time. Each is drawn, heuristic. Nothing to do here.',
   'graphql-field-no-resolver': () =>
@@ -822,6 +826,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'graphql-field-resolved-twice': ['GraphQL field resolved twice', 'GraphQL fields resolved twice'],
   'graphql-composition-conflict': ['federated field composition refuses', 'federated fields composition refuses'],
   'graphql-supergraph-drift': ['supergraph field out of date', 'supergraph fields out of date'],
+  'graphql-auth-not-checked': ['gateway that checks no authorization directive', 'gateways that check no authorization directive'],
   'route-file-not-served': ['route file served at no address', 'route files served at no address'],
   'wizard-step-conflict': ['wizard step numbered twice', 'wizard steps numbered twice'],
   'workflow-name-duplicate': ['workflow defined twice', 'workflows defined twice'],

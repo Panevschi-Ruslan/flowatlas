@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import {
   CONFIDENCE_RANK,
   ENVIRONMENT_META,
+  hostOf,
   namesGivenTo,
   SCHEMA_VERSION,
   serviceNamesOf,
@@ -51,7 +52,7 @@ import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard, couldReach } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
 import { joinGraphqlFields } from './graphql-link.js';
-import { routeGateways, type RouteAnswer } from './graphql-federation.js';
+import { listeningAt, routeGateways, type Listening, type RouteAnswer } from './graphql-federation.js';
 import type { GatewayRouteMeta } from '@flowatlas/graphql';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
@@ -542,10 +543,30 @@ const aimOf = (outcome: CallOutcome): string | undefined => {
  * the setting's claimant, then the values it is given. Never by the name the
  * gateway gives the subgraph.
  */
-const subgraphServiceOf = (route: GatewayRouteMeta, gateway: GraphNode, index: RouteIndex, hosts: HostIndex): RouteAnswer => {
+const subgraphServiceOf = (
+  route: GatewayRouteMeta,
+  gateway: GraphNode,
+  index: RouteIndex,
+  hosts: { readonly all: HostIndex; readonly configured: HostIndex; readonly listening: ReadonlyMap<number, readonly Listening[]> },
+): RouteAnswer => {
   if (route.unread !== undefined) return { why: route.unread === '' ? 'no address is written for it' : `its address (${route.unread}) is built at run time` };
   if (route.baseUrlEnv === undefined) {
-    const at = route.url === undefined ? undefined : servicesAt(route.url, hosts);
+    const at = route.url === undefined ? undefined : servicesAt(route.url, hosts.all);
+    // A port on this machine is the service whose server listens on it (P245);
+    // a host the configuration names wins, and two services on one port are no answer.
+    const port = route.url === undefined ? undefined : localPortOf(route.url);
+    const listening = port === undefined ? [] : (hosts.listening.get(port) ?? []);
+    if (port !== undefined && listening.length > 0) {
+      const configured = servicesAt(route.url as string, hosts.configured);
+      if (Array.isArray(configured) && configured.length === 1) return { service: configured[0] as string, confidence: 'static' };
+      const services = [...new Set([...(Array.isArray(at) ? at : []), ...listening.map((each) => each.service)])].sort(cmp);
+      if (services.length === 1) return { service: services[0] as string, confidence: 'static' };
+      const said = services.map((service) => {
+        const where = listening.find((each) => each.service === service);
+        return where === undefined ? `${service} (its setting files)` : `${service} (${where.file}:${where.line})`;
+      });
+      return { why: `port ${port} on this machine is where ${said.join(' and ')} each listen, so it is not one service` };
+    }
     if (Array.isArray(at) && at.length === 1) return { service: at[0] as string, confidence: 'static' };
     if (Array.isArray(at)) return { why: `its host names ${at.join(' and ')}, not one service` };
     return { why: `no configured service is reached at ${route.host ?? route.url ?? 'that address'}` };
@@ -563,6 +584,17 @@ const subgraphServiceOf = (route: GatewayRouteMeta, gateway: GraphNode, index: R
   const service = aimOf(outcome);
   if (service === undefined) return { why: findingFor(outcome)?.message ?? `nothing says which service ${route.baseUrlEnv} is` };
   return { service, confidence: baseUrl === undefined || baseUrl.deployed ? 'static' : 'heuristic' };
+};
+
+/** The hosts an address on this machine is written with, and nothing else. */
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]', '::1']);
+
+/** The port an address names on this machine: `http://localhost:4001/graphql` is 4001. */
+const localPortOf = (address: string): number | undefined => {
+  const host = hostOf(address);
+  if (host === undefined || !LOCAL_HOSTNAMES.has(host.hostname)) return undefined;
+  const port = /:(\d+)$/.exec(host.host)?.[1];
+  return port === undefined ? undefined : Number(port);
 };
 
 const emptyHttpOut = (): LinkReport['httpOut'] => ({
@@ -1082,7 +1114,7 @@ export const linkGraphs = (
 
   // A federation gateway's routes to its subgraphs and its composition, before
   // any request is planned through it (P241).
-  const hosts = hostIndexOf(config, settings);
+  const hosts = { all: hostIndexOf(config, settings), configured: hostIndexOf(config, {}), listening: listeningAt(nodes) };
   const routing = routeGateways(nodes, edges, (route, gateway) => subgraphServiceOf(route, gateway, index, hosts));
   found.push(...routing.rows);
 

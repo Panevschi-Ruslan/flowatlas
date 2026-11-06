@@ -117,6 +117,32 @@ describe('walking outward from an entry', () => {
     db.close();
   });
 
+  it('shows a check one service runs only on a step a request took through that service (P245)', () => {
+    const db = buildTestDb({
+      nodes: [
+        node('web#src/Shelf.tsx:Shelf', { repo: 'web', label: 'Shelf' }),
+        node('ui_api_call:web#src/Shelf.tsx:5:1', { type: 'ui_api_call', repo: 'web', label: 'query Shelf' }),
+        node('ui_api_call:web#src/Shelf.tsx:9:1', { type: 'ui_api_call', repo: 'web', label: 'query Shelf' }),
+        entry('entry:reviews:graphql:Media.rating', { kind: 'graphql', repo: 'reviews', label: 'Media.rating' }),
+        node('router#router/supergraph.graphql:@authenticated', { type: 'guard', repo: 'router', label: '@authenticated', file: 'router/supergraph.graphql', line: 20 }),
+      ],
+      edges: [
+        edge('web#src/Shelf.tsx:Shelf', 'ui_api_call:web#src/Shelf.tsx:5:1', { line: 5 }),
+        edge('web#src/Shelf.tsx:Shelf', 'ui_api_call:web#src/Shelf.tsx:9:1', { line: 9 }),
+        edge('ui_api_call:web#src/Shelf.tsx:5:1', 'entry:reviews:graphql:Media.rating', { type: 'hits', meta: { through: 'router' } }),
+        edge('ui_api_call:web#src/Shelf.tsx:9:1', 'entry:reviews:graphql:Media.rating', { type: 'hits', meta: { through: 'gateway' } }),
+        edge('entry:reviews:graphql:Media.rating', 'router#router/supergraph.graphql:@authenticated', { type: 'guarded_by', meta: { order: 0, through: 'router' } }),
+      ],
+    });
+    const { root } = buildFlowTree(db, 'web#src/Shelf.tsx:Shelf', { depth: 4, detail: 2 });
+    const [viaRouter, viaGateway] = root.children.map((call) => call.children[0]);
+    expect(viaRouter?.guards?.map((guard) => [guard.label, guard.service, (guard as { loc?: string }).loc])).toEqual([['@authenticated', 'router', 'router/supergraph.graphql:20']]);
+    expect(viaGateway?.guards).toBeUndefined();
+    // Walked from the field itself, every check in front of it is said.
+    expect(buildFlowTree(db, 'entry:reviews:graphql:Media.rating', {}).root.guards?.map((guard) => guard.label)).toEqual(['@authenticated']);
+    db.close();
+  });
+
   it('walks a bot callback exactly as it walks a route', () => {
     const asRoute = buildTestDb(straightLine('http', 'GET /orders'));
     const asCallback = buildTestDb(straightLine('bot_callback', 'order_confirm'));

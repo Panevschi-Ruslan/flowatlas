@@ -481,6 +481,19 @@ const COMPOSED_CASES = [
   ['flow.orders-board.tree.txt', (io) => runFlow('kiosk#src/OrdersBoard.tsx:OrdersBoard', { ...composedPlain, format: 'tree' }, io)],
   ['impact.customer-orders.tree.txt', (io) => runImpact('entry:orders:graphql:Customer.orders', { ...composedPlain, format: 'tree' }, io)],
 ];
+/**
+ * Entity interfaces, contexts and the router's checks (P245): a screen through
+ * the gateway hops into the interface object; one through the router meets
+ * the router's checks on the subgraph fields and plans what a context fills.
+ */
+const interfacesFixture = join(root, 'fixtures', 'graphql-federation-interfaces');
+const interfacesPlain = { config: join(interfacesFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const INTERFACES_CASES = [
+  ['flow.shelf-page.tree.txt', (io) => runFlow('web#src/ShelfPage.tsx:ShelfPage', { ...interfacesPlain, format: 'tree' }, io)],
+  ['flow.movie-card.tree.txt', (io) => runFlow('kiosk#src/MovieCard.tsx:MovieCard', { ...interfacesPlain, format: 'tree' }, io)],
+  ['flow.wishlist-page.tree.txt', (io) => runFlow('kiosk#src/WishlistPage.tsx:WishlistPage', { ...interfacesPlain, format: 'tree' }, io)],
+  ['impact.media-rating.tree.txt', (io) => runImpact('entry:reviews:graphql:Media.rating', { ...interfacesPlain, format: 'tree' }, io)],
+];
 
 const lambdaFixture = join(root, 'fixtures', 'multi-repo-lambda');
 const lambdaConfig = join(lambdaFixture, 'flowatlas.config.json');
@@ -1198,6 +1211,7 @@ const SUITES = [
   { dir: join(graphqlFixture, 'expected.cli'), owned: true, cases: GRAPHQL_CASES },
   { dir: join(federationFixture, 'expected.cli'), owned: true, cases: FEDERATION_CASES },
   { dir: join(composedFixture, 'expected.cli'), owned: true, cases: COMPOSED_CASES },
+  { dir: join(interfacesFixture, 'expected.cli'), owned: true, cases: INTERFACES_CASES },
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },

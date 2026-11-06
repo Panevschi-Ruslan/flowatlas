@@ -439,6 +439,8 @@ export const PAGE_WORDS = Object.freeze({
     'graphql-composition-conflict': 'composition refuses the field',
     'graphql-supergraph-drift': 'supergraph out of date',
     'graphql-shareable-choice': 'router chooses the subgraph',
+    'graphql-auth-not-checked': 'gateway does not check the directive',
+    'graphql-context-not-reached': 'context not set above the field',
     'route-config-unread': 'route configuration not read',
     'route-file-not-served': 'route file not served',
     'route-guard-skipped': 'guard switched off',

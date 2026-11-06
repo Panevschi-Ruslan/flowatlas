@@ -24,10 +24,23 @@ export type {
   TypeDefinition,
   TypeRef,
 } from './parse.js';
-export { federationNamesOf, fieldFederationOf, mergeSchemas, namedTypeIn, rootTypeOf, schemaOf, typeFederationOf } from './schema.js';
-export type { FieldFederation, SchemaField, SchemaSummary, SchemaType, TypeFederation } from './schema.js';
-export { apiSchemaOf, composeSubgraphs, fieldSetNames, isSupergraph, supergraphComposition, unreachableOwners } from './federation.js';
-export type { ComposedField, ComposedType, Composition, CompositionConflict, FieldOwner, SubgraphSchema, SupergraphGraph } from './federation.js';
+export {
+  authLabel,
+  authOf,
+  contextFieldOf,
+  federationNamesOf,
+  fieldFederationOf,
+  mergeAuth,
+  mergeSchemas,
+  namedTypeIn,
+  rootTypeOf,
+  schemaOf,
+  selectionText,
+  typeFederationOf,
+} from './schema.js';
+export type { AuthRequirement, ComposedDirective, FieldFederation, SchemaField, SchemaSummary, SchemaType, TypeFederation } from './schema.js';
+export { apiSchemaOf, composeSubgraphs, contextName, fieldSetNames, isSupergraph, supergraphComposition, unreachableOwners } from './federation.js';
+export type { ComposedField, ComposedType, Composition, CompositionConflict, ContextArgument, FieldOwner, SubgraphSchema, SupergraphGraph } from './federation.js';
 export { planSelection } from './plan.js';
 export type { PlanStep } from './plan.js';
 export { addressOf, addressOfText, besideFile, readGraphqlGateway, readRouterConfig, readRoverConfig, routeAddress } from './gateway.js';
@@ -39,5 +52,5 @@ export type { DocumentReading } from './documents.js';
 export { clientEndpointIn, fetchedDocument, graphqlCallOf, SERVICE_SENDS, serviceDocumentOf } from './calls.js';
 export type { GraphqlCall, GraphqlLibrary } from './calls.js';
 export { readGraphqlServer, REFERENCE_FIELD } from './servers.js';
-export type { ResolvedField, ServerReading } from './servers.js';
+export type { ListenPort, ResolvedField, ServerReading } from './servers.js';
 export { GRAPHQL_META, operationMeta, type GraphqlCallMeta, type MetaField } from './meta.js';

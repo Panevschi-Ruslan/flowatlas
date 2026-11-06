@@ -108,7 +108,7 @@ describe('a federation gateway, joined (P241)', () => {
     );
     const hop = joined.edges.find((edge) => edge.to === 'entry:customers:graphql:Customer.__resolveReference');
     expect(hop?.type).toBe('http_calls');
-    expect(hop?.meta).toEqual({ graphql: { operation: 'Orders', gateway: 'gateway', subgraph: 'customers', field: 'Customer.__resolveReference', hop: { entity: 'Customer', from: 'orders', for: 'Customer.email' } } });
+    expect(hop?.meta).toEqual({ graphql: { operation: 'Orders', gateway: 'gateway', subgraph: 'customers', field: 'Customer.__resolveReference', hop: { entity: 'Customer', from: 'orders', for: 'Customer.email' } }, through: 'gateway' });
   });
 
   it('draws a shareable root field to every owner as a choice, and says so', () => {

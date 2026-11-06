@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T20:17:36.657Z",
+  "builtAt": "2026-11-06T18:00:00.925Z",
   "services": [
     {
       "name": "orders",
@@ -373,7 +373,14 @@
                 }
               }
             }
-          }
+          },
+          "listen": [
+            {
+              "port": 4001,
+              "file": "src/index.ts",
+              "line": 10
+            }
+          ]
         }
       }
     },
@@ -565,7 +572,14 @@
                 }
               }
             }
-          }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 7
+            }
+          ]
         }
       }
     },

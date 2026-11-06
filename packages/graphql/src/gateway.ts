@@ -68,7 +68,7 @@ const property = (options: ObjectLiteralExpression, key: string): TsNode | undef
 };
 
 /** What a name is bound to, through constants and imports, or the node itself. */
-const followed = (node: TsNode | undefined, depth = 0): TsNode | undefined => {
+export const followed = (node: TsNode | undefined, depth = 0): TsNode | undefined => {
   if (node === undefined || depth > 6) return node;
   if (Node.isAsExpression(node) || Node.isSatisfiesExpression(node) || Node.isParenthesizedExpression(node)) return followed(node.getExpression(), depth + 1);
   if (!Node.isIdentifier(node)) return node;
@@ -83,7 +83,7 @@ const followed = (node: TsNode | undefined, depth = 0): TsNode | undefined => {
 };
 
 /** `process.env.NAME` or `process.env['NAME']`: the setting it reads. */
-const settingRead = (node: TsNode): string | undefined => {
+export const settingRead = (node: TsNode): string | undefined => {
   if (Node.isPropertyAccessExpression(node) && node.getExpression().getText() === 'process.env') return node.getName();
   if (Node.isElementAccessExpression(node) && node.getExpression().getText() === 'process.env') {
     const argument = node.getArgumentExpression();

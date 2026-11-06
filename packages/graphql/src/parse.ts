@@ -95,6 +95,8 @@ export interface InputValue {
   readonly name: string;
   readonly type: TypeRef;
   readonly hasDefault: boolean;
+  /** The directives written on it: `@fromContext(field: …)` on an argument (P245). */
+  readonly directives: readonly AppliedDirective[];
   readonly at: number;
 }
 
@@ -586,8 +588,8 @@ class Parser {
       const type = this.#type();
       const hasDefault = this.#skip('=');
       if (hasDefault) this.#value();
-      this.#directives();
-      found.push({ name: name.value, type, hasDefault, at: name.at });
+      const directives = this.#directives();
+      found.push({ name: name.value, type, hasDefault, directives, at: name.at });
     }
     return found;
   }

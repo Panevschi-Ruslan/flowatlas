@@ -108,7 +108,7 @@ export const renderTree = (tree: FlowNode, options: RenderOptions): string => {
       push(
         depth + 1,
         `${cell(guardPrefixFor(guard.kind, ascii))}${paint(guard.label)}`,
-        at === undefined ? '' : `${service === undefined ? '' : `${service}/`}${at}`,
+        at === undefined ? '' : `${(guard.service ?? service) === undefined ? '' : `${guard.service ?? service}/`}${at}`,
       );
     }
 
