@@ -67,6 +67,11 @@ const NOTES: readonly string[] = [
   'aliases-from-convention',
   'aliases-from-config',
   'implicit-imports-from-convention',
+  // The parts a framework builds an application from (P243): which were read,
+  // and a name, page or route one part gives in place of another
+  'implicit-import-overridden',
+  'framework-layer-read',
+  'framework-layer-overridden',
   // The project's own extraction patterns (core/patterns, P121): a rule a
   // written description won over, and one nothing in its services matches
   'pattern-shadowed',
@@ -146,6 +151,9 @@ const GAPS: readonly string[] = [
   'implicit-import-ambiguous',
   'framework-layer-unread',
   'framework-setting-dynamic',
+  // An import a layer writes for its own code that the framework resolves in
+  // the application (P243)
+  'framework-layer-alias',
   // What traffic reached and no reader drew (core/blind-spots.ts, P110): asked
   // of the observed file at read time, at info, never stored in the graph.
   'seen-not-in-code',

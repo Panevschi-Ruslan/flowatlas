@@ -228,7 +228,15 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'implicit-import-ambiguous': () =>
     'The name is used with no import, and two files the framework imports names from both export it, so the call is not joined to either. Rename one of them, or import the name from the file meant.',
   'framework-layer-unread': () =>
-    "The application extends a layer, and nothing of the layer is read: its pages, routes, composables and aliases are missing from the graph. Read the layer as a service of its own, or import what the application uses from it with an import line.",
+    "The application extends a layer that is not read - one downloaded when the application builds, installed from a registry, named in code, or outside the repository and its workspace - so its pages, routes, composables and aliases are missing from the graph. Extend it by its path in the repository, or read it as a service of its own.",
+  'framework-layer-read': () =>
+    "The application is built with these layers, and each was read as part of it: its pages, routes, composables and aliases are the application's. Nothing to do.",
+  'framework-layer-overridden': () =>
+    'Two parts of the application give this page or route, and the framework uses the one of the higher-ranked part; the lower one is read as code, and not as a page or route. Nothing to do, unless the lower one was meant to be used.',
+  'framework-layer-alias': () =>
+    "A layer imports its own code with `~` or `@`, which the framework resolves against the application in every layer, and the application has no such file, so the import is not joined. Import it with a relative path, or through the layer's named alias.",
+  'implicit-import-overridden': () =>
+    'More than one part of the application exports this name, and the framework imports it from the higher-ranked one, which is the one joined. Nothing to do; rename the other to use both.',
   'framework-setting-dynamic': () =>
     "A setting of the framework's configuration is written as code rather than as a literal, so its default was read in its place. Write it as a literal, or name what it sets in the tsconfig's paths.",
   'package-version-differs': () =>

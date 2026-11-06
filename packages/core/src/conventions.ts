@@ -4,11 +4,12 @@ import type { Project, SourceFile } from 'ts-morph';
 import { ts } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
 import { bindingNames, exportedNamesOf, parseSyntax } from './config-literal.js';
-import { toPosixPath } from './ids.js';
+import { isWithinDir, toPosixPath } from './ids.js';
 import { readResolvedPackageJson, type PackageJson } from './adapters/manifest.js';
 import type { AdapterRegistry } from './adapters/registry.js';
 import type { FlowatlasConfig } from './config.js';
 import type { Unresolved } from './model/graph.js';
+import { widenServiceExtent } from './workspace.js';
 
 /**
  * What a framework's own build writes for the compiler, said by a reader for a
@@ -40,6 +41,12 @@ export interface ImplicitImportSource {
   readonly file: string;
   /** Each name a file may use, and the export it is: its own name, or `default`. */
   readonly names: ReadonlyArray<{ readonly name: string; readonly export: string }>;
+  /**
+   * Where the file stands when another gives the same name (P243): the lowest
+   * rank is the one imported, and each one below it is said as a note. Two
+   * files of the one rank giving a name are ambiguous. `0` when unsaid.
+   */
+  readonly rank?: number;
 }
 
 /** Names the files of some directories use with no import, and where each is from. */
@@ -98,6 +105,17 @@ export interface ProjectConventions {
   readonly rows?: readonly Unresolved[];
   /** Repo-relative files the conventions were read from: a change to one changes every file's reading. */
   readonly files?: readonly string[];
+  /**
+   * Absolute directories outside the root that the framework builds into the
+   * application as its own code (P243): read as part of the service, as a
+   * workspace package it declares is (`widenServiceExtent`).
+   */
+  readonly extent?: readonly string[];
+  /**
+   * How the reader ranks the files that give one name, as a row says it
+   * (P243): `the order of its layers: the application, layers/base`.
+   */
+  readonly precedence?: string;
 }
 
 /** How a reader states a framework's conventions for one repository, or says it has none. */
@@ -115,7 +133,10 @@ export const conventionsFor = (
 ): ProjectConventions[] => {
   if (registry === undefined) return [];
   const pkg = readResolvedPackageJson(rootDir) ?? {};
-  return registry.conventions(pkg, rootDir, config?.adapters.auto === true ? config.adapters.force : {}, config);
+  const stated = registry.conventions(pkg, rootDir, config?.adapters.auto === true ? config.adapters.force : {}, config);
+  // Before anything asks what the service is (P243).
+  widenServiceExtent(rootDir, stated.flatMap((convention) => convention.extent ?? []));
+  return stated;
 };
 
 // ---------------------------------------------------------------------------
@@ -437,23 +458,47 @@ export const implicitNamesUsed = (
   return [...used].filter((name) => !declared.has(name)).sort();
 };
 
-/** One group, with each name to the one file that gives it, or to every file when more than one does. */
+/** A file that gives a name, the export it is, and where the file stands among the others that give it. */
+interface ImplicitGiver {
+  readonly file: string;
+  readonly export: string;
+  readonly rank: number;
+}
+
+/** One group, with each name to every file that gives it, best ranked first. */
 interface ImplicitTable {
   readonly group: ImplicitImports;
   readonly convention: ProjectConventions;
-  readonly names: ReadonlyMap<string, readonly { readonly file: string; readonly export: string }[]>;
+  readonly names: ReadonlyMap<string, readonly ImplicitGiver[]>;
 }
 
 const tableOf = (convention: ProjectConventions, group: ImplicitImports): ImplicitTable => {
-  const names = new Map<string, { file: string; export: string }[]>();
+  const names = new Map<string, ImplicitGiver[]>();
   for (const source of group.sources) {
     for (const each of source.names) {
       const known = names.get(each.name) ?? [];
-      if (!known.some((other) => other.file === source.file)) known.push({ file: source.file, export: each.export });
+      if (!known.some((other) => other.file === source.file)) known.push({ file: source.file, export: each.export, rank: source.rank ?? 0 });
       names.set(each.name, known);
     }
   }
+  // Stable, so files of one rank keep the order the reader gave them.
+  for (const givers of names.values()) givers.sort((a, b) => a.rank - b.rank);
   return { group, convention, names };
+};
+
+/**
+ * Which file a name is imported from (P243): the one of the best rank, when
+ * one file holds it, with the files it is preferred to; none when two of the
+ * best rank give it.
+ */
+const chosenGiver = (
+  givers: readonly ImplicitGiver[],
+): { readonly chosen?: ImplicitGiver; readonly over: readonly ImplicitGiver[]; readonly ambiguous: boolean } => {
+  const [best] = givers;
+  if (best === undefined) return { over: [], ambiguous: false };
+  const tied = givers.filter((giver) => giver.rank === best.rank);
+  if (tied.length > 1) return { over: [], ambiguous: true };
+  return { chosen: best, over: givers.slice(1), ambiguous: false };
 };
 
 const isUnder = (file: string, dir: string): boolean => dir === '' || dir === '.' || file === dir || file.startsWith(`${dir.replace(/\/+$/, '')}/`);
@@ -468,6 +513,10 @@ interface ConventionState {
   readonly injected: Map<string, readonly string[]>;
   /** Name -> the first place that used it unimported, where more than one file gives it. */
   readonly ambiguous: Map<string, { readonly file: string; readonly line: number; readonly table: ImplicitTable }>;
+  /** Name -> the file imported and those it was preferred to, where files of more than one rank give it (P243). */
+  readonly overridden: Map<string, { readonly table: ImplicitTable; readonly chosen: ImplicitGiver; readonly over: readonly ImplicitGiver[] }>;
+  /** Absolute directories outside the root whose files are the application's (P243). */
+  readonly extent: readonly string[];
 }
 
 const STATE = new WeakMap<Project, ConventionState>();
@@ -479,10 +528,15 @@ const MODULES = new WeakMap<Project, ReadonlySet<string>>();
 export const isConventionModule = (project: Project, filePath: string): boolean =>
   MODULES.get(project)?.has(toPosixPath(filePath)) === true;
 
-/** The repo-relative path of an absolute one, or undefined outside the root. */
-const insideRoot = (rootDir: string, path: string): string | undefined => {
+/**
+ * The repo-relative path of an absolute one, or undefined outside the root and
+ * every directory the framework builds into it (P243).
+ */
+const insideRoot = (rootDir: string, path: string, extent: readonly string[] = []): string | undefined => {
   const rel = toPosixPath(relative(rootDir, path));
-  return rel.startsWith('..') || rel === '' ? undefined : rel;
+  if (rel === '') return undefined;
+  if (!rel.startsWith('..')) return rel;
+  return extent.some((dir) => isWithinDir(path, dir)) ? rel : undefined;
 };
 
 const tableFor = (state: ConventionState, file: string): ImplicitTable | undefined =>
@@ -514,13 +568,13 @@ export const implicitImportsFor = (project: Project, file: string, text: string,
   const bySource = new Map<string, string[]>();
   const names: string[] = [];
   for (const name of used) {
-    const sources = table.names.get(name) ?? [];
-    if (sources.length > 1) {
+    const { chosen: source, over, ambiguous } = chosenGiver(table.names.get(name) ?? []);
+    if (ambiguous) {
       if (!state.ambiguous.has(name)) state.ambiguous.set(name, { file, line: lineOfName(text, name), table });
       continue;
     }
-    const [source] = sources;
     if (source === undefined || source.file === file || !isOpened(project, state.rootDir, source.file)) continue;
+    if (over.length > 0 && !state.overridden.has(name)) state.overridden.set(name, { table, chosen: source, over });
     const specifier = specifierOf(state.rootDir, source.file);
     bySource.set(specifier, [...(bySource.get(specifier) ?? []), source.export === name ? name : `${source.export} as ${name}`]);
     names.push(name);
@@ -534,7 +588,7 @@ export const implicitImportsFor = (project: Project, file: string, text: string,
 export const addImplicitImports = (project: Project, sourceFile: SourceFile): void => {
   const state = STATE.get(project);
   if (state === undefined) return;
-  const file = insideRoot(state.rootDir, sourceFile.getFilePath());
+  const file = insideRoot(state.rootDir, sourceFile.getFilePath(), state.extent);
   if (file === undefined) return;
   const added = implicitImportsFor(project, file, sourceFile.getFullText());
   if (added !== '') sourceFile.insertText(sourceFile.getEnd(), added);
@@ -544,8 +598,8 @@ export const addImplicitImports = (project: Project, sourceFile: SourceFile): vo
 const moduleText = (rootDir: string, table: ImplicitTable): string => {
   const bySource = new Map<string, string[]>();
   for (const [name, sources] of [...table.names].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
-    const [source] = sources;
-    if (source === undefined || sources.length > 1) continue;
+    const { chosen: source } = chosenGiver(sources);
+    if (source === undefined) continue;
     const specifier = specifierOf(rootDir, source.file);
     bySource.set(specifier, [...(bySource.get(specifier) ?? []), source.export === name ? name : `${source.export} as ${name}`]);
   }
@@ -566,7 +620,8 @@ export const installConventions = (
 ): void => {
   if (conventions.length === 0 && aliases.supplied.length === 0) return;
   const tables = conventions.flatMap((convention) => (convention.implicit ?? []).map((group) => tableOf(convention, group)));
-  STATE.set(project, { rootDir, tables, aliases: aliases.supplied, conventions, injected: new Map(), ambiguous: new Map() });
+  const extent = conventions.flatMap((convention) => convention.extent ?? []).map((dir) => toPosixPath(resolve(dir)));
+  STATE.set(project, { rootDir, tables, aliases: aliases.supplied, conventions, injected: new Map(), ambiguous: new Map(), overridden: new Map(), extent });
   const modules = new Set<string>();
   for (const made of aliases.modules) {
     const group = made.convention.implicit?.[made.implicit];
@@ -580,6 +635,13 @@ export const installConventions = (
 
 /** The conventions a project was opened with. */
 export const conventionsOf = (project: Project): readonly ProjectConventions[] => STATE.get(project)?.conventions ?? [];
+
+/**
+ * The directories outside the root a project's framework builds into it
+ * (P243), absolute and POSIX: a file in one is the application's own, though
+ * its repo-relative path climbs out.
+ */
+export const conventionExtentOf = (project: Project): readonly string[] => STATE.get(project)?.extent ?? [];
 
 /**
  * The package that provides a module a framework names and no file is, when
@@ -617,6 +679,7 @@ export const ALIASES_FROM_CONVENTION_REASON = 'aliases-from-convention';
 export const ALIASES_FROM_CONFIG_REASON = 'aliases-from-config';
 export const IMPLICIT_IMPORTS_REASON = 'implicit-imports-from-convention';
 export const IMPLICIT_IMPORT_AMBIGUOUS_REASON = 'implicit-import-ambiguous';
+export const IMPLICIT_IMPORT_OVERRIDDEN_REASON = 'implicit-import-overridden';
 
 /** `~ -> app, ~~ -> .`: the keys that are not a wildcard of another, with their first target. */
 const aliasList = (paths: Readonly<Record<string, readonly string[]>>): string =>
@@ -705,10 +768,37 @@ export const reportConventions = (context: ConventionContext): void => {
         meta: { cause: IMPLICIT_IMPORTS_REASON, names: [...names].sort(), files: files.length },
       });
     }
+    // Names more than one file gives, one of them ranked first (P243): one
+    // note, every name in it.
+    const preferred = [...state.overridden]
+      .filter(([, { table }]) => table.convention === convention)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    const [firstPreferred] = preferred;
+    if (firstPreferred !== undefined) {
+      builder.addUnresolved({
+        file: convention.file,
+        line: 1,
+        reason: IMPLICIT_IMPORT_OVERRIDDEN_REASON,
+        level: 'info',
+        symbol: firstPreferred[0],
+        message: `${preferred
+          .map(([name, { chosen, over }]) => `${name} is imported from ${chosen.file}, not ${inWords(over.map((giver) => giver.file))}`)
+          .join('; ')}, by ${convention.precedence ?? `the order ${convention.by} gives them`}`,
+        hint: `Nothing to do. This is the file ${convention.by} imports; rename the other to use both.`,
+        adapter: convention.adapter,
+        meta: {
+          cause: IMPLICIT_IMPORT_OVERRIDDEN_REASON,
+          names: preferred.map(([name]) => name),
+          chosen: Object.fromEntries(preferred.map(([name, { chosen }]) => [name, chosen.file])),
+        },
+      });
+    }
     for (const row of convention.rows ?? []) builder.addUnresolved(row);
   }
   for (const [name, { file, line, table }] of [...state.ambiguous].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
-    const givers = (table.names.get(name) ?? []).map((source) => source.file);
+    const all = table.names.get(name) ?? [];
+    // Only the files of the best rank: one below them is no part of the choice.
+    const givers = all.filter((source) => source.rank === all[0]?.rank).map((source) => source.file);
     builder.addUnresolved({
       file,
       line,

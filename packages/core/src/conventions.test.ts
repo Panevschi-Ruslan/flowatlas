@@ -1,11 +1,12 @@
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { Node } from 'ts-morph';
 import { afterAll, describe, expect, it } from 'vitest';
 import { GraphBuilder } from './builder.js';
 import { ConfigPath, NotLiteral, configValueAt, exportedNamesOf, readConfigLiteral } from './config-literal.js';
 import {
+  conventionExtentOf,
   conventionFiles,
   implicitNamesUsed,
   implicitSourcesOf,
@@ -15,7 +16,8 @@ import {
 } from './conventions.js';
 import { addEmbeddedScripts, type EmbeddedFormat } from './embedded.js';
 import { causeOfTypeNode } from './follow-cause.js';
-import { createProject, countSources } from './project.js';
+import { createProject, countSources, listRepoSources } from './project.js';
+import { serviceSourceDirs } from './workspace.js';
 
 const roots: string[] = [];
 afterAll(() => {
@@ -40,7 +42,7 @@ const declarationCalled = (root: string, project: ReturnType<typeof createProjec
     if (call.getExpression().getText() !== callee) continue;
     const symbol = call.getExpression().getSymbol();
     const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
-    return declaration?.getSourceFile().getFilePath().slice(root.length + 1);
+    return declaration === undefined ? undefined : relative(root, declaration.getSourceFile().getFilePath());
   }
   return undefined;
 };
@@ -230,6 +232,71 @@ describe('a project opened with a framework conventions (P240)', () => {
     const root = repo(files);
     const project = createProject({ rootDir: root, conventions: [FRAMEWORK(root)] });
     expect(conventionFiles(project)).toEqual(['app/composables/orders.ts', 'app/composables/useCart.ts', 'framework.config.ts']);
+  });
+});
+
+describe('a framework that builds code in from more than one place (P243)', () => {
+  /** An application at `web/`, a part of it beside at `ui/`, each giving `formatMoney`. */
+  const layered = (): { top: string; root: string; conventions: ProjectConventions } => {
+    const top = repo({
+      'web/tsconfig.json': JSON.stringify({ compilerOptions: { strict: false } }),
+      'web/app/utils/money.ts': 'export const formatMoney = () => 1;\n',
+      'web/app/pages/index.ts': 'export const page = () => { formatMoney(); formatPrice(); useCatalog(); };\n',
+      'ui/utils/money.ts': 'export const formatMoney = () => 2;\n',
+      'ui/utils/price.ts': 'export const formatPrice = () => 1;\n',
+      'ui/composables/price.ts': 'export const formatPrice = () => 2;\n',
+      'ui/composables/useCatalog.ts': "export const useCatalog = () => fetch('/api/products');\n",
+      'ui/pages/catalog.ts': 'export const catalog = () => useCatalog();\n',
+    });
+    const root = join(top, 'web');
+    const ranked = (files: string[], rank: number) => implicitSourcesOf(root, files, () => undefined).map((source) => ({ ...source, rank }));
+    const conventions: ProjectConventions = {
+      by: 'Framework',
+      adapter: 'framework-routes',
+      file: 'framework.config.ts',
+      implicit: [
+        {
+          label: 'the application',
+          within: [''],
+          from: ['app/utils/', '../ui/utils/', '../ui/composables/'],
+          sources: [
+            ...ranked(['app/utils/money.ts'], 0),
+            ...ranked(['../ui/utils/money.ts', '../ui/utils/price.ts', '../ui/composables/price.ts', '../ui/composables/useCatalog.ts'], 1),
+          ],
+        },
+      ],
+      extent: [join(top, 'ui')],
+      precedence: 'the order of its parts: the application, then ../ui',
+    };
+    return { top, root, conventions };
+  };
+
+  it('imports a name from the best-ranked file that gives it, and says which it was preferred to', () => {
+    const { root, conventions } = layered();
+    const project = createProject({ rootDir: root, conventions: [conventions] });
+    expect(declarationCalled(root, project, 'app/pages/index.ts', 'formatMoney')).toBe('app/utils/money.ts');
+    const builder = new GraphBuilder({ repo: 'web' });
+    reportConventions({ project, builder });
+    const rows = builder.build().unresolved;
+    expect(rows.find((row) => row.reason === 'implicit-import-overridden')).toMatchObject({
+      level: 'info',
+      symbol: 'formatMoney',
+      message: 'formatMoney is imported from app/utils/money.ts, not ../ui/utils/money.ts, by the order of its parts: the application, then ../ui',
+      meta: { names: ['formatMoney'], chosen: { formatMoney: 'app/utils/money.ts' } },
+    });
+    // Two files of one rank: neither, and only those two named.
+    expect(declarationCalled(root, project, 'app/pages/index.ts', 'formatPrice')).toBeUndefined();
+    expect(rows.find((row) => row.reason === 'implicit-import-ambiguous')?.meta).toMatchObject({ candidates: ['../ui/utils/price.ts', '../ui/composables/price.ts'] });
+  });
+
+  it("opens a directory it builds in from outside the root as the service's own, with the imports it adds", () => {
+    const { top, root, conventions } = layered();
+    const project = createProject({ rootDir: root, conventions: [conventions] });
+    expect(project.getSourceFile(join(top, 'ui/pages/catalog.ts'))).toBeDefined();
+    expect(declarationCalled(root, project, '../ui/pages/catalog.ts', 'useCatalog')).toBe('../ui/composables/useCatalog.ts');
+    expect(conventionExtentOf(project)).toEqual([join(top, 'ui')]);
+    expect(serviceSourceDirs(root)).toEqual([root, join(top, 'ui')]);
+    expect(listRepoSources(root)).toContain('../ui/pages/catalog.ts');
   });
 });
 

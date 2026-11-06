@@ -4,16 +4,19 @@ import {
   makeEntryId,
   makeHttpEntryKey,
   normalizeFilePath,
+  normalizePath,
   type EntryAdapter,
   type EntryNode,
   type EntryWrapping,
   type ExtractContext,
+  type PackageJson,
   type RequestReadingDescription,
+  type Unresolved,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { nuxtConventions, nuxtLayoutOf } from './framework-conventions.js';
-import { routeAddressOfFile, type FsRouter } from './fs-routes.js';
+import { keptByLayer, nuxtConventions, nuxtLayerOf, nuxtLayersOf, withinLayer, type LayerClaim } from './framework-conventions.js';
+import { routeAddressOfFile, routePathOfFile, type FsRouter } from './fs-routes.js';
 import { readingOf } from './request-readings.js';
 import { inlineHandlerOf, repoSources } from './shared.js';
 
@@ -57,6 +60,32 @@ export const nitroAddressOf = (file: string, serverDir = 'server'): { path: stri
     if (address !== null) return { ...address, method: suffix === null ? 'ALL' : (suffix[1] as string).toUpperCase() };
   }
   return null;
+};
+
+/**
+ * The screens of every part of a Nuxt application (P243): a component file
+ * under its part's `pages/`, at the address of its file there, by file. A
+ * page two parts give is the higher part's; the lower one stays a component
+ * that is no screen, and is said as a note.
+ */
+export const nuxtPagesOf = (
+  repoDir: string,
+  pkg: PackageJson,
+  files: readonly string[],
+): { readonly routes: ReadonlyMap<string, string>; readonly rows: readonly Unresolved[] } => {
+  const { layers } = nuxtLayersOf(repoDir, pkg);
+  const claims: LayerClaim[] = [];
+  for (const file of files) {
+    const layer = nuxtLayerOf(layers, file);
+    if (layer === undefined) continue;
+    const src = withinLayer(layer, layer.layout.srcDir);
+    const router = src === '' ? NUXT_PAGES : { ...NUXT_PAGES, root: `${src}/${NUXT_PAGES.root}` };
+    // The router reads a script's name; a page's ending is the component format's.
+    const path = routePathOfFile(withinLayer(layer, file).replace(/\.vue$/, '.ts'), router);
+    if (path !== null) claims.push({ key: normalizePath(path), label: path, file, layer, rank: layers.indexOf(layer) });
+  }
+  const { kept, rows } = keptByLayer(claims, 'shows');
+  return { routes: new Map(kept.map((claim) => [claim.file, claim.label])), rows };
 };
 
 /** The functions that make a handler of the function they are handed. */
@@ -119,15 +148,24 @@ export const nitroRoutesAdapter: EntryAdapter = {
     const request = readingOf(NITRO_REQUEST);
     const wrapping = middlewareOf(ctx);
     const entries: EntryNode[] = [];
-    const serverDir = hasAnyDependency(ctx.pkg, ['nuxt']) ? nuxtLayoutOf(ctx.repoDir, ctx.pkg).serverDir : 'server';
+    // Every part of a Nuxt application serves the routes of its server
+    // (P243); Nitro on its own is one part, its server in `server/`.
+    const layers = hasAnyDependency(ctx.pkg, ['nuxt']) ? nuxtLayersOf(ctx.repoDir, ctx.pkg).layers : [];
+    const claims: Array<LayerClaim & { sourceFile: SourceFile; address: { path: string; rawPath: string; method: string } }> = [];
     for (const sourceFile of repoSources(ctx)) {
       const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
-      const address = nitroAddressOf(file, serverDir);
+      const layer = nuxtLayerOf(layers, file);
+      const address = layer === undefined ? nitroAddressOf(file) : nitroAddressOf(withinLayer(layer, file), withinLayer(layer, layer.layout.serverDir));
       if (address === null) continue;
-      const handlerNode = defaultHandlerOf(sourceFile);
       const label = `${address.method} ${address.path}`;
+      claims.push({ key: makeHttpEntryKey(address.method, address.path), label, file, layer, rank: layer === undefined ? 0 : layers.indexOf(layer), sourceFile, address });
+    }
+    // A route two parts serve is the higher one's, as Nuxt ranks its layers.
+    const { kept, rows } = keptByLayer(claims, 'serves');
+    for (const row of rows) ctx.builder.addUnresolved(row);
+    for (const { sourceFile, file, address, label, key } of kept) {
+      const handlerNode = defaultHandlerOf(sourceFile);
       const handler = inlineHandlerOf(handlerNode, label, ctx);
-      const key = makeHttpEntryKey(address.method, address.path);
       if (handler === undefined) {
         ctx.builder.addUnresolved({
           file,

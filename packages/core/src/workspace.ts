@@ -351,6 +351,34 @@ export const forgetWorkspaces = (): void => {
   patternsByRoot.clear();
   memberDirsByRoot.clear();
   extentByService.clear();
+  builtInByService.clear();
+};
+
+/** Directories a framework builds into a service from outside it, by service (P243). */
+const builtInByService = new Map<string, readonly string[]>();
+
+/**
+ * Takes into a service's extent directories its framework builds into it from
+ * outside its own directory (P243): a layer an application extends by a path
+ * that climbs out of it, which no manifest declares and the framework still
+ * compiles as the application's own code.
+ *
+ * Said by a reader that knows the framework, before the project is opened
+ * (`conventionsFor`), and remembered beside the extent: every reader that asks
+ * what the service is - which files to open, which to list for the build,
+ * whose functions are the service's - then gets the one answer. A directory
+ * already in the extent, one inside the service, or one the service is inside
+ * of adds nothing.
+ */
+export const widenServiceExtent = (repoDir: string, dirs: readonly string[]): void => {
+  const own = resolve(repoDir);
+  const known = builtInByService.get(own) ?? [];
+  const added = [...new Set(dirs.map((dir) => resolve(dir)))].filter(
+    (dir) => !known.includes(dir) && !isWithinDir(own, dir) && !isWithinDir(dir, own),
+  );
+  if (added.length === 0) return;
+  builtInByService.set(own, [...known, ...added]);
+  extentByService.delete(own);
 };
 
 
@@ -478,6 +506,11 @@ export const serviceExtent = (repoDir: string): readonly ExtentPackage[] => {
       }
       found.push({ dir: at, role, declares });
     }
+  }
+  // What the service's framework builds into it from outside (P243), as a
+  // member that declares nothing of its own.
+  for (const dir of builtInByService.get(own) ?? []) {
+    if (!found.some((pkg) => pkg.dir === dir)) found.push({ dir, role: 'member', declares: [] });
   }
   extentByService.set(own, found);
   return found;

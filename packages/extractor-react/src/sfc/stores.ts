@@ -1,4 +1,4 @@
-import { normalizeFilePath, startLineOf, type NamedFunction } from '@flowatlas/core';
+import { conventionExtentOf, isWithinDir, normalizeFilePath, startLineOf, type NamedFunction } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -195,6 +195,14 @@ export const storeCallsIn = (body: TsNode, stores: StoreIndex): Array<{ call: Ca
   return found;
 };
 
+/**
+ * Whether a file is outside what this reading reads as the application's own:
+ * outside the repository, and outside every directory its framework builds
+ * into it (a Nuxt layer beside it, P243).
+ */
+export const isOutsideReading = (ctx: ReactExtractContext, filePath: string): boolean =>
+  normalizeFilePath(filePath, ctx.repoDir).startsWith('../') && !conventionExtentOf(ctx.project).some((dir) => isWithinDir(filePath, dir));
+
 /** The repository's own files a store may be declared in: not a package's. */
 export const repoFiles = (ctx: ReactExtractContext): SourceFile[] =>
-  ctx.project.getSourceFiles().filter((sourceFile) => !sourceFile.getFilePath().includes('/node_modules/') && !normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir).startsWith('../'));
+  ctx.project.getSourceFiles().filter((sourceFile) => !sourceFile.getFilePath().includes('/node_modules/') && !isOutsideReading(ctx, sourceFile.getFilePath()));

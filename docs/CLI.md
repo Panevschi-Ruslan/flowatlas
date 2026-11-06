@@ -317,11 +317,41 @@ Each reading is said once per repository, as a note: `aliases-from-convention`
 tsconfig's projects, a Vite configuration) and
 `implicit-imports-from-convention` (how many names, in how many files). A
 setting written as code is a row naming it, with the default read in its place
-(`framework-setting-dynamic`), and a Nuxt layer - `extends`, or a directory of
-`layers/` - is a row and is not read (`framework-layer-unread`).
+(`framework-setting-dynamic`).
 Next.js, Remix and React Router write their aliases in the tsconfig they
 scaffold, so nothing is generated there to miss (`fixtures/nuxt-full-stack`,
 `fixtures/nuxt4-layout`, `fixtures/svelte-components`, `fixtures/vue-spa`).
+
+**Nuxt layers (P243).** A Nuxt application is also every layer it is built
+with, and each local one is read as part of it: a directory of `layers/`
+(registered by itself since Nuxt 3.12), and each `extends` entry the
+repository holds - a path (`'./base'`, `'../ui-layer'`, `['./theme', { meta }]`)
+inside the repository or the workspace the application is in, or a package of
+that workspace by its name - with the layers each of those extends in turn.
+Every layer is read under the application's version, so a layer's code is in
+its own `app/` on Nuxt 4 where it has one, and its server beside it. Its
+`pages/` are screens, its `server/api` and `server/routes` are routes,
+`server/middleware` stands in front of them, its `composables/`, `utils/`,
+`stores/`, `imports.dirs` and `shared/` give the names the application uses
+unimported, and its `alias` entries are the application's. A layer outside the
+application's directory is part of the service as a package it declares is,
+and its files are named from the application: `../ui-layer/pages/catalog.vue`.
+
+Two parts that give one page address, one route or one name follow Nuxt's
+order: the application first, then `layers/` from Z to A, then each `extends`
+entry followed by what it extends. The higher one's is used and the other is
+a note (`framework-layer-overridden` for a page or a route,
+`implicit-import-overridden` for a name); two files of one part that give one
+name stay `implicit-import-ambiguous`. `#layers/<name>` aliases a directory of
+`layers/`. In a layer as in the application, `~` and `@` are the
+application's code, as Nuxt resolves them: an import a layer writes with one
+for a file only the layer has is a row (`framework-layer-alias`), not a join
+to the layer's file. Which layers were read is one note
+(`framework-layer-read`). A layer that is not read is a row saying why
+(`framework-layer-unread`, `meta.why`): `remote` (`github:`, `gh:`, `gitlab:`,
+a URL), `dynamic` (`extends` written as code), `installed` (a package from a
+registry under `node_modules`), `not-installed`, `missing`, `outside` the
+repository and its workspace (`fixtures/nuxt-layers`).
 
 **GraphQL (P232).** A field a resolver answers is a way in of kind `graphql`,
 keyed by its type and name: `entry:orders:graphql:Query.orders`, and
@@ -2985,6 +3015,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread`, `api-client-base-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |
+| The layers a framework builds an application from (P243) | `framework-layer-read` (info), `framework-layer-overridden` (info), `implicit-import-overridden` (info), `framework-layer-alias` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop) |
 | Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |

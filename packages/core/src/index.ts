@@ -431,6 +431,8 @@ export {
   workspaceGlobs,
   workspacePackages,
   workspaceRootOf,
+  workspaceRootsAbove,
+  widenServiceExtent,
 } from './workspace.js';
 export type { ExtentPackage, WorkspacePackage } from './workspace.js';
 
@@ -1049,8 +1051,10 @@ export {
   ALIASES_FROM_CONFIG_REASON,
   ALIASES_FROM_CONVENTION_REASON,
   IMPLICIT_IMPORT_AMBIGUOUS_REASON,
+  IMPLICIT_IMPORT_OVERRIDDEN_REASON,
   IMPLICIT_IMPORTS_REASON,
   addImplicitImports,
+  conventionExtentOf,
   conventionFiles,
   conventionsFor,
   frameworkModuleOf,

@@ -48,6 +48,25 @@ only one of them moved.
   branches agree, and a hook proxy handed no link sends where the repository's
   chains all send. New row `procedure-link-socket` for a request sent over a
   `wsLink`; a link whose address cannot be read stays `procedure-link-dynamic`.
+- **Nuxt layers read as part of the application (P243).** Each local layer -
+  a directory of `layers/`, an `extends` entry written as a path in the
+  repository or its workspace (`'../ui-layer'`, `['./theme', { meta }]`), or a
+  package of the workspace by its name - and the layers it extends in turn,
+  cycle-safe, is read under the application's version: its `pages/` are
+  screens, its `server/api` and `server/routes` routes, its `composables/`,
+  `utils/`, `stores/`, `imports.dirs` and `shared/` the names the application
+  uses unimported, its `alias` entries the application's, and `#layers/<name>`
+  a directory of `layers/`. A layer beside the application is part of the
+  service, as a workspace package it declares is, so a click in the
+  application reaching a layer's composable reaches the route the layer serves.
+  A page, route or name two parts give follows Nuxt's order (the application,
+  `layers/` from Z to A, then `extends` in order) and the lower one is a note,
+  `framework-layer-overridden` or `implicit-import-overridden`; which layers
+  were read is the note `framework-layer-read`. An import a layer writes with
+  `~` or `@` for a file only the layer has is the row `framework-layer-alias`,
+  since Nuxt resolves both against the application. `framework-layer-unread`
+  now says why a layer is not read (`meta.why`: `remote`, `dynamic`,
+  `installed`, `not-installed`, `missing`, `outside`).
 - **GraphQL federation, one graph across subgraphs (P241).** A request to a
   federation gateway is planned the way the router plans it, statically: each
   selected field goes to the subgraph that resolves it, and a field of an

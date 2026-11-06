@@ -120,9 +120,9 @@ export type {
 } from './fs-routes.js';
 export { MEDUSA_API } from './medusa-routes.js';
 export { GRAPHQL_SERVER_PACKAGES, graphqlResolversAdapter } from './graphql-resolvers.js';
-export { NITRO_API, NITRO_REQUEST, NITRO_ROUTES, nitroAddressOf, nitroRoutesAdapter, NUXT_PAGES, SVELTEKIT_PAGES } from './nuxt-routes.js';
-export { nuxtConventions, nuxtLayoutOf, sveltekitConventions } from './framework-conventions.js';
-export type { NuxtLayout } from './framework-conventions.js';
+export { NITRO_API, NITRO_REQUEST, NITRO_ROUTES, nitroAddressOf, nitroRoutesAdapter, nuxtPagesOf, NUXT_PAGES, SVELTEKIT_PAGES } from './nuxt-routes.js';
+export { keptByLayer, nuxtConventions, nuxtLayerOf, nuxtLayersOf, nuxtLayoutOf, sveltekitConventions, withinLayer } from './framework-conventions.js';
+export type { LayerClaim, NuxtLayer, NuxtLayers, NuxtLayout } from './framework-conventions.js';
 export {
   fsRoutesAdapter,
   REMIX_ROUTES,

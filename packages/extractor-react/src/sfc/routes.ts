@@ -80,7 +80,13 @@ const fullPath = (route: ObjectLiteralExpression): string | undefined => {
 export const routedComponents = (
   sources: readonly SourceFile[],
   componentFiles: readonly string[],
-  options: { repoDir: string; extensions: readonly string[]; pages: readonly FsRouter[] },
+  options: {
+    repoDir: string;
+    extensions: readonly string[];
+    pages: readonly FsRouter[];
+    /** Files a framework's own reading has placed already, at their address (P243). */
+    placed?: ReadonlyMap<string, string>;
+  },
 ): Map<string, Set<string>> => {
   const routed = new Map<string, Set<string>>();
   const claim = (file: string, path: string): void => {
@@ -96,6 +102,7 @@ export const routedComponents = (
       if (file !== undefined && path !== undefined) claim(file, path);
     });
   }
+  for (const [file, path] of options.placed ?? []) claim(file, path);
   for (const router of options.pages) {
     for (const file of componentFiles) {
       // The router reads a script's name; a page's ending is the component format's.

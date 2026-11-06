@@ -1,5 +1,5 @@
 import { hasDependency, makeLeafId, makeSymbolId, startLineOf, type EmbeddedFile, type NamedFunction } from '@flowatlas/core';
-import { NUXT_PAGES, SVELTEKIT_PAGES, nuxtLayoutOf, type FsRouter } from '@flowatlas/adapters-entry';
+import { SVELTEKIT_PAGES, nuxtPagesOf } from '@flowatlas/adapters-entry';
 import type { Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -9,7 +9,7 @@ import { positionAt, topLevelBlocks } from './blocks.js';
 import { svelteMarkupEvents, vueTemplateEvents, type TemplateEvent, type TemplateHandler } from './events.js';
 import { COMPONENT_TAIL_NAME, componentNameOf, scriptSourceOf } from './formats.js';
 import { routedComponents } from './routes.js';
-import { adoptAs, functionsOf, indexStores, repoFiles, storeCallsIn, storeHookOf, type StoreIndex } from './stores.js';
+import { adoptAs, functionsOf, indexStores, isOutsideReading, repoFiles, storeCallsIn, storeHookOf, type StoreIndex } from './stores.js';
 
 /**
  * Vue and Svelte components (P233), read from the files the core made up for
@@ -105,22 +105,22 @@ const targetOf = (ctx: ReactExtractContext, scope: ComponentScope, handler: Temp
   return undefined;
 };
 
-/** Nuxt's pages, in the directory its application keeps its code in. */
-const nuxtPages = (srcDir: string): FsRouter => (srcDir === '' ? NUXT_PAGES : { ...NUXT_PAGES, root: `${srcDir}/${NUXT_PAGES.root}` });
-
 export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
   if (ctx.embedded.length === 0) return;
   const sources = repoFiles(ctx);
   const stores = indexStores(ctx, sources);
   const extensions = [...new Set(ctx.embedded.map((made) => made.format.extension))];
-  const routed = routedComponents(sources, ctx.embedded.map((made) => made.file), {
+  const files = ctx.embedded.map((made) => made.file);
+  // Nuxt's pages under `app/` from Nuxt 4, under `srcDir` where the
+  // configuration names one (P240), in every layer of the application, the
+  // higher layer's where two give one address (P243).
+  const nuxt = hasDependency(ctx.pkg, 'nuxt') ? nuxtPagesOf(ctx.repoDir, ctx.pkg, files) : undefined;
+  for (const row of nuxt?.rows ?? []) ctx.report(row);
+  const routed = routedComponents(sources, files, {
     repoDir: ctx.repoDir,
     extensions,
-    pages: [
-      // Under `app/` from Nuxt 4, under `srcDir` where the configuration names one (P240).
-      ...(hasDependency(ctx.pkg, 'nuxt') ? [nuxtPages(nuxtLayoutOf(ctx.repoDir, ctx.pkg).srcDir)] : []),
-      ...(hasDependency(ctx.pkg, '@sveltejs/kit') ? [SVELTEKIT_PAGES] : []),
-    ],
+    pages: hasDependency(ctx.pkg, '@sveltejs/kit') ? [SVELTEKIT_PAGES] : [],
+    ...(nuxt === undefined ? {} : { placed: nuxt.routes }),
   });
 
   const scopes: ComponentScope[] = [];
@@ -169,7 +169,7 @@ export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
   // call to what a composable handed back - `const { load } = useOrders()`,
   // then `load()` - is a call into the composable, whose code it runs.
   for (const indexed of [...ctx.functions.all()]) {
-    if (indexed.file.startsWith('../')) continue;
+    if (isOutsideReading(ctx, indexed.fn.body.getSourceFile().getFilePath())) continue;
     const calls = [...storeCallsIn(indexed.fn.body, stores), ...composableCallsIn(ctx, indexed.fn.body)];
     for (const { call, target } of calls) {
       if (target.id === indexed.id) continue;

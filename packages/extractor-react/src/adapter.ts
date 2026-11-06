@@ -1,5 +1,5 @@
 import { hasDependency, type AdapterRegistry, type FrontendAdapter } from '@flowatlas/core';
-import { nuxtLayoutOf } from '@flowatlas/adapters-entry';
+import { nuxtLayersOf } from '@flowatlas/adapters-entry';
 import { extractBrowser, extractReact, type BrowserReading } from './extract-repo.js';
 import { declaresReact, declaresSvelte, declaresVue } from './framework.js';
 import { SVELTE_FORMAT, VUE_FORMAT } from './sfc/formats.js';
@@ -32,8 +32,9 @@ export const reactFrontendAdapter: FrontendAdapter = {
 export const VUE_READING: BrowserReading = {
   declares: declaresVue,
   formats: [VUE_FORMAT],
-  // Where the server is, as the Nuxt version and configuration say (P240).
-  elsewhere: (base) => (hasDependency(base.pkg, 'nuxt') ? [nuxtLayoutOf(base.repoDir, base.pkg).serverDir] : []),
+  // Where the server is, as the Nuxt version and configuration say (P240), in
+  // the application and in each of its layers (P243).
+  elsewhere: (base) => (hasDependency(base.pkg, 'nuxt') ? nuxtLayersOf(base.repoDir, base.pkg).layers.map((layer) => layer.layout.serverDir) : []),
 };
 
 /** Svelte (P233): components in `.svelte` files, SvelteKit's among them. */

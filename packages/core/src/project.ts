@@ -31,6 +31,7 @@ import { isTestDirectory, isTestName } from './test-files.js';
 import {
   serviceExtent,
   serviceSourceDirs,
+  widenServiceExtent,
   workspaceGlobs,
   workspacePackages,
   workspaceRootsAbove,
@@ -984,6 +985,11 @@ export const createProject = (options: CreateProjectOptions): Project => {
     skipped.set(key, [...(skipped.get(key) ?? []), ...files.map(toPosixPath)]);
   });
   const tsConfigFilePath = findTsconfig(rootDir, tsconfig);
+  const conventions = options.conventions ?? [];
+  // What the framework builds in from outside the root is part of the extent
+  // before the extent is asked (P243). `conventionsFor` has said so already
+  // for every reader that asked it, and saying it twice changes nothing.
+  widenServiceExtent(rootDir, conventions.flatMap((convention) => convention.extent ?? []));
   // Every package of the extent, one nested in the service's directory too: a
   // package whose files may be opened is one whose aliases are honoured (R115).
   const packages = extentMembers(rootDir);
@@ -1006,7 +1012,6 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // framework's build would have written. Merged under the tsconfig's own,
   // every target absolute, so the base each was written against does not matter.
   const own = compilerOptionsAt(tsConfigFilePath);
-  const conventions = options.conventions ?? [];
   const supplied = conventionAliases(rootDir, tsConfigFilePath, own.paths, conventions);
   const extraPaths =
     Object.keys(supplied.paths).length === 0
@@ -1058,8 +1063,15 @@ export const createProject = (options: CreateProjectOptions): Project => {
   for (const file of sourceFilesUnder(rootDir, tests, roots)) {
     opened.push(project.addSourceFileAtPath(join(rootDir, file)));
   }
+  const builtIn = conventions.flatMap((convention) => convention.extent ?? []).map((dir) => resolve(dir));
   for (const dir of membersBeyond(rootDir, roots)) {
-    for (const file of sourceFilesUnder(dir, tests)) project.addSourceFileAtPath(join(dir, file));
+    // A directory the framework builds in is the application's code, and gets
+    // the imports the framework adds to it (P243); a package it declares does not.
+    const application = builtIn.some((at) => isWithinDir(dir, at));
+    for (const file of sourceFilesUnder(dir, tests)) {
+      const added = project.addSourceFileAtPath(join(dir, file));
+      if (application) opened.push(added);
+    }
   }
   // Once every file is open, so an import is added for a name only where the
   // file that gives it is read (P240).

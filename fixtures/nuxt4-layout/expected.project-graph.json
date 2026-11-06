@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:29:58.666Z",
+  "builtAt": "2026-11-06T18:11:12.335Z",
   "services": [
     {
       "name": "shop",
@@ -660,13 +660,14 @@
       "file": "nuxt.config.ts",
       "line": 1,
       "reason": "framework-layer-unread",
-      "message": "github:example/storefront-base is a Nuxt layer of this application, and nothing of it is read: its pages, routes, composables and aliases are not in the graph",
-      "hint": "Read the layer as a service of its own, or import what the application uses from it with an import line.",
+      "message": "github:example/storefront-base is a Nuxt layer the application downloads when it builds, so nothing of it is read: its pages, routes, composables and aliases are not in the graph",
+      "hint": "Check the layer out beside the application and extend it by its path, or read it as a service of its own.",
       "symbol": "github:example/storefront-base",
       "adapter": "nitro-routes",
       "meta": {
         "cause": "framework-layer-unread",
-        "layer": "github:example/storefront-base"
+        "layer": "github:example/storefront-base",
+        "why": "remote"
       },
       "service": "shop"
     },

@@ -163,13 +163,16 @@ const GATED = {
       'entry-procedures-description-inactive',
       'procedure-prefix-unread',
       'procedure-contract-unread',
+      // A route a lower layer of the application serves, which the higher one's
+      // takes the place of (P243).
+      'framework-layer-overridden',
     ],
     perFile: true,
   },
   screens: {
     types: ['ui_component'],
     edges: [],
-    reasons: ['route-config-unread', 'route-loader-unread'],
+    reasons: ['route-config-unread', 'route-loader-unread', 'framework-layer-overridden'],
     perFile: true,
   },
   clicks: {

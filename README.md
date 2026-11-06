@@ -818,7 +818,11 @@ prove, and the path is given so you can run it.
   Nuxt's `~`, `@` and `#shared`, SvelteKit's `$lib` and `kit.alias`, Nuxt 4's
   `app/` layout, and the composables and utilities Nuxt imports for a file that
   uses them with no import line, each said once as a note
-  (`fixtures/nuxt4-layout`). A verb a helper built, aliased or re-exported is
+  (`fixtures/nuxt4-layout`). A Nuxt layer in the repository or its workspace -
+  a directory of `layers/`, or an `extends` entry by path or workspace package,
+  nested ones too - is read as part of the application: its pages, routes,
+  composables and aliases, the higher layer's where two give one, said as a
+  note (`fixtures/nuxt-layers`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
   `zsa` is a boundary with its callers (`fixtures/next-actions`).
@@ -1013,8 +1017,10 @@ Known gaps in what it can read:
 - What a framework adds beyond its documented defaults. SvelteKit's `$lib`
   and Nuxt's `~` are read as each documents them when `.svelte-kit/` and
   `.nuxt/` are not there, and the names Nuxt imports from `composables/` and
-  `utils/` as imports; a Nuxt layer (`extends`) is a row and is not read, an
-  alias or a directory a module adds at build time is not known, and a
+  `utils/` as imports; a Nuxt layer fetched when the application builds
+  (`github:`, a URL), installed from a registry or named in code is a row and
+  is not read, an alias or a directory a module adds at build time is not
+  known, and a
   setting written as code is read as its default and named in a row.
 - A file-system router nobody has described — `@fastify/autoload`, or a
   convention of the repository's own. The reader says it cannot tell such a
