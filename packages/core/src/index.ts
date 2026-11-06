@@ -53,6 +53,8 @@ export {
   makeStateId,
   makeSymbolId,
   makeUnnamedInvokeKey,
+  generatedName,
+  isGeneratedName,
   makeUnnamedWorkflowKey,
   makeTypeId,
   makeWorkflowEntryKey,
@@ -306,6 +308,7 @@ export {
   shifted,
 } from './positioned-document.js';
 export type { DefinitionFormat, PathStep, PositionedDocument } from './positioned-document.js';
+export { readExpressionDocument, UnreadMember } from './positioned-expression.js';
 
 export {
   applicationOfFile,

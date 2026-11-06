@@ -1,0 +1,1493 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-06T09:34:24.496Z",
+  "services": [
+    {
+      "name": "members",
+      "repo": "./members",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/default/club.accounts/MemberLapsed",
+      "type": "channel",
+      "label": "eventbridge/default/club.accounts/MemberLapsed",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 121,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:s3/club-notices-archive",
+      "type": "channel",
+      "label": "s3/club-notices-archive",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 50,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-s3"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/accounts-prod-lapsed",
+      "type": "channel",
+      "label": "sns/accounts-prod-lapsed",
+      "repo": "members",
+      "file": "services/accounts/serverless.ts",
+      "line": 21,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@resources.Resources.NoticesQueue",
+      "type": "channel",
+      "label": "sqs/${…}@resources.Resources.NoticesQueue",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 34,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/notices-prod-failed",
+      "type": "channel",
+      "label": "sqs/notices-prod-failed",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 40,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "config_key:members#NOTICES_QUEUE_URL",
+      "type": "config_key",
+      "label": "NOTICES_QUEUE_URL",
+      "repo": "members",
+      "file": "services/notices/src/notices/digest.ts",
+      "line": 7,
+      "meta": {
+        "key": "NOTICES_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:members#services/accounts/serverless.ts:functions.lapse.events[0]",
+      "type": "consumer",
+      "label": "subscription functions.lapse.events[0]",
+      "repo": "members",
+      "file": "services/accounts/serverless.ts",
+      "line": 21,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "functions.lapse.events[0]",
+        "deployedBy": "serverless",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:members#services/notices/serverless.yml:functions.archive-notice.events[0]",
+      "type": "consumer",
+      "label": "notification functions.archive-notice.events[0]",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 50,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "functions.archive-notice.events[0]",
+        "deployedBy": "serverless",
+        "takes": {
+          "kinds": [
+            "s3:ObjectCreated:*"
+          ],
+          "by": {
+            "field": "Key",
+            "suffix": ".json"
+          }
+        }
+      }
+    },
+    {
+      "id": "consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]",
+      "type": "consumer",
+      "label": "mapping functions.send-notice.events[0]",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 34,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "functions.send-notice.events[0]",
+        "deployedBy": "serverless",
+        "unmatched": {
+          "filter": [
+            "{\"body\":{\"kind\":[\"reminder\"]}}"
+          ]
+        },
+        "notMatchedOn": [
+          "filter"
+        ],
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:members#services/notices/serverless.yml:resources.Resources.LapsedRule.Targets[0]",
+      "type": "consumer",
+      "label": "rule resources.Resources.LapsedRule.Targets[0]",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 121,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "resources.Resources.LapsedRule.Targets[0]",
+        "deployedBy": "serverless",
+        "rule": "resources.Resources.LapsedRule",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "entry:members:cron:functions.digest.events[0]",
+      "type": "entry",
+      "label": "cron functions.digest.events[0]",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 45,
+      "kind": "cron",
+      "meta": {
+        "key": "functions.digest.events[0]",
+        "by": "schedule",
+        "declaredAs": "functions.digest.events[0]",
+        "deployedBy": "serverless",
+        "schedule": "rate(1 day)",
+        "nameRead": false,
+        "function": "notices-prod-digest",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:cron:stepFunctions.stateMachines.remind.events[0]",
+      "type": "entry",
+      "label": "cron stepFunctions.stateMachines.remind.events[0]",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 92,
+      "kind": "cron",
+      "meta": {
+        "key": "stepFunctions.stateMachines.remind.events[0]",
+        "by": "schedule",
+        "declaredAs": "stepFunctions.stateMachines.remind.events[0]",
+        "deployedBy": "serverless",
+        "schedule": "rate(1 hour)",
+        "nameRead": false,
+        "reaches": [
+          "workflow:${…}@stepFunctions.stateMachines.remind"
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:event:cognito/club-members/post_confirmation",
+      "type": "entry",
+      "label": "event cognito/club-members/post_confirmation",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 59,
+      "kind": "event",
+      "meta": {
+        "key": "cognito/club-members/post_confirmation",
+        "by": "trigger",
+        "declaredAs": "functions.welcome.events[0]",
+        "deployedBy": "serverless",
+        "service": "cognito",
+        "name": "post_confirmation",
+        "pool": "club-members",
+        "trigger": "post_confirmation",
+        "function": "notices-prod-welcome",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:http:POST:/members",
+      "type": "entry",
+      "label": "POST /members",
+      "repo": "members",
+      "file": "services/accounts/serverless.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/members",
+        "rawPath": "/members",
+        "deployedBy": "serverless",
+        "api": "club-accounts",
+        "function": "accounts-prod-join",
+        "declaredAs": "functions.join.events[0]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:http:PUT:/members/:param/renewal",
+      "type": "entry",
+      "label": "PUT /members/:param/renewal",
+      "repo": "members",
+      "file": "services/accounts/serverless.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/members/:param/renewal",
+        "rawPath": "/members/{id}/renewal",
+        "deployedBy": "serverless",
+        "api": "club-accounts",
+        "function": "accounts-prod-renew",
+        "declaredAs": "functions.renew.events[0]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:${…}@functions.audit",
+      "type": "entry",
+      "label": "functions.audit (name not read)",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 64,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@functions.audit",
+        "deployedBy": "serverless",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.audit",
+        "stageFrom": "option",
+        "nameUnread": "ssm: values are read from the deployed account or a service, which the files do not hold",
+        "handler": "src/notices/audit.handler",
+        "sourceDirectory": "services/notices",
+        "handlerVia": "function",
+        "environment": {
+          "NOTICES_QUEUE_URL": {
+            "written": "!Ref NoticesQueue",
+            "value": "${…}@resources.Resources.NoticesQueue",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:accounts-prod-join",
+      "type": "entry",
+      "label": "accounts-prod-join",
+      "repo": "members",
+      "file": "services/accounts/serverless.ts",
+      "line": 21,
+      "kind": "invoke",
+      "meta": {
+        "key": "accounts-prod-join",
+        "deployedBy": "serverless",
+        "name": "accounts-prod-join",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.join",
+        "stageFrom": "option",
+        "handler": "src/accounts/join.handler",
+        "sourceDirectory": "services/accounts",
+        "handlerVia": "function",
+        "environment": {
+          "LAPSED_TOPIC_ARN": {
+            "written": "!Ref LapsedTopic",
+            "value": "accounts-prod-lapsed",
+            "kind": "topic"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:accounts-prod-lapse",
+      "type": "entry",
+      "label": "accounts-prod-lapse",
+      "repo": "members",
+      "file": "services/accounts/serverless.ts",
+      "line": 21,
+      "kind": "invoke",
+      "meta": {
+        "key": "accounts-prod-lapse",
+        "deployedBy": "serverless",
+        "name": "accounts-prod-lapse",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.lapse",
+        "stageFrom": "option",
+        "handler": "src/accounts/lapse.handler",
+        "sourceDirectory": "services/accounts",
+        "handlerVia": "function",
+        "environment": {
+          "LAPSED_TOPIC_ARN": {
+            "written": "!Ref LapsedTopic",
+            "value": "accounts-prod-lapsed",
+            "kind": "topic"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SNSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:accounts-prod-renew",
+      "type": "entry",
+      "label": "accounts-prod-renew",
+      "repo": "members",
+      "file": "services/accounts/serverless.ts",
+      "line": 21,
+      "kind": "invoke",
+      "meta": {
+        "key": "accounts-prod-renew",
+        "deployedBy": "serverless",
+        "name": "accounts-prod-renew",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.renew",
+        "stageFrom": "option",
+        "handler": "src/accounts/renew.handler",
+        "sourceDirectory": "services/accounts",
+        "handlerVia": "function",
+        "environment": {
+          "LAPSED_TOPIC_ARN": {
+            "written": "!Ref LapsedTopic",
+            "value": "accounts-prod-lapsed",
+            "kind": "topic"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:notices-prod-archive-notice",
+      "type": "entry",
+      "label": "notices-prod-archive-notice",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 47,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-prod-archive-notice",
+        "deployedBy": "serverless",
+        "name": "notices-prod-archive-notice",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.archive-notice",
+        "stageFrom": "option",
+        "handler": "src/notices/archive-notice.handler",
+        "sourceDirectory": "services/notices",
+        "handlerVia": "function",
+        "environment": {
+          "NOTICES_QUEUE_URL": {
+            "written": "!Ref NoticesQueue",
+            "value": "${…}@resources.Resources.NoticesQueue",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#S3Event"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:notices-prod-digest",
+      "type": "entry",
+      "label": "notices-prod-digest",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 42,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-prod-digest",
+        "deployedBy": "serverless",
+        "name": "notices-prod-digest",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.digest",
+        "stageFrom": "option",
+        "handler": "src/notices/digest.handler",
+        "sourceDirectory": "services/notices",
+        "handlerVia": "function",
+        "environment": {
+          "NOTICES_QUEUE_URL": {
+            "written": "!Ref NoticesQueue",
+            "value": "${…}@resources.Resources.NoticesQueue",
+            "kind": "queue"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:notices-prod-door",
+      "type": "entry",
+      "label": "notices-prod-door",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 71,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-prod-door",
+        "deployedBy": "serverless",
+        "name": "notices-prod-door",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.door",
+        "stageFrom": "option",
+        "handler": "src/notices/door.handler",
+        "sourceDirectory": "services/notices",
+        "handlerVia": "function",
+        "environment": {
+          "NOTICES_QUEUE_URL": {
+            "written": "!Ref NoticesQueue",
+            "value": "${…}@resources.Resources.NoticesQueue",
+            "kind": "queue"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:notices-prod-renderer",
+      "type": "entry",
+      "label": "notices-prod-renderer",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 84,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-prod-renderer",
+        "deployedBy": "serverless",
+        "name": "notices-prod-renderer",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.renderer",
+        "stageFrom": "option",
+        "environment": {
+          "NOTICES_QUEUE_URL": {
+            "written": "!Ref NoticesQueue",
+            "value": "${…}@resources.Resources.NoticesQueue",
+            "kind": "queue"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:notices-prod-report",
+      "type": "entry",
+      "label": "notices-prod-report",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 80,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-prod-report",
+        "deployedBy": "serverless",
+        "name": "notices-prod-report",
+        "runtime": "python3.12",
+        "declaredAs": "functions.report",
+        "stageFrom": "option",
+        "environment": {
+          "NOTICES_QUEUE_URL": {
+            "written": "!Ref NoticesQueue",
+            "value": "${…}@resources.Resources.NoticesQueue",
+            "kind": "queue"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:notices-prod-send-notice",
+      "type": "entry",
+      "label": "notices-prod-send-notice",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 31,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-prod-send-notice",
+        "deployedBy": "serverless",
+        "name": "notices-prod-send-notice",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.send-notice",
+        "stageFrom": "option",
+        "handler": "src/notices/send-notice.handler",
+        "sourceDirectory": "services/notices",
+        "handlerVia": "function",
+        "environment": {
+          "NOTICES_QUEUE_URL": {
+            "written": "!Ref NoticesQueue",
+            "value": "${…}@resources.Resources.NoticesQueue",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:invoke:notices-prod-welcome",
+      "type": "entry",
+      "label": "notices-prod-welcome",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 56,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-prod-welcome",
+        "deployedBy": "serverless",
+        "name": "notices-prod-welcome",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.welcome",
+        "stageFrom": "option",
+        "handler": "src/notices/welcome.handler",
+        "sourceDirectory": "services/notices",
+        "handlerVia": "function",
+        "environment": {
+          "NOTICES_QUEUE_URL": {
+            "written": "!Ref NoticesQueue",
+            "value": "${…}@resources.Resources.NoticesQueue",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "{userName:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:members:workflow:${…}@stepFunctions.stateMachines.remind",
+      "type": "entry",
+      "label": "workflow stepFunctions.stateMachines.remind",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 93,
+      "kind": "workflow",
+      "meta": {
+        "key": "${…}@stepFunctions.stateMachines.remind",
+        "name": "stepFunctions.stateMachines.remind",
+        "nameFrom": "deployment",
+        "startAt": "Send",
+        "states": 1,
+        "queryLanguage": "JSONPath",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "serverless",
+        "declaredAs": "stepFunctions.stateMachines.remind",
+        "nameGenerated": true,
+        "declaredIn": "services/notices/serverless.yml:90",
+        "nameRead": false
+      }
+    },
+    {
+      "id": "members#services/accounts/src/accounts/join.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "services/accounts/src/accounts/join.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "members#services/accounts/src/accounts/lapse.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "services/accounts/src/accounts/lapse.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SNSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "members#services/accounts/src/accounts/renew.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "services/accounts/src/accounts/renew.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "members#services/notices/serverless.yml:stepFunctions.stateMachines.remind/Send",
+      "type": "function",
+      "label": "Send [Task lambda:invoke]",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 96,
+      "kind": "state",
+      "meta": {
+        "workflow": "stepFunctions.stateMachines.remind",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "notices-prod-send-notice"
+        },
+        "reaches": [
+          "invoke:notices-prod-send-notice"
+        ],
+        "parameters": {
+          "FunctionName": "${ref0}",
+          "Payload.$": "$"
+        }
+      }
+    },
+    {
+      "id": "members#services/notices/src/notices/archive-notice.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "services/notices/src/notices/archive-notice.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#S3Event"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "archived",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "members#services/notices/src/notices/audit.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "services/notices/src/notices/audit.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "audited",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "members#services/notices/src/notices/digest.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "services/notices/src/notices/digest.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "members#services/notices/src/notices/door.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "services/notices/src/notices/door.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{statusCode:number;body:string}"
+        }
+      }
+    },
+    {
+      "id": "members#services/notices/src/notices/send-notice.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "services/notices/src/notices/send-notice.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "notice",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "members#services/notices/src/notices/welcome.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "members",
+      "file": "services/notices/src/notices/welcome.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{userName:string}"
+            }
+          ],
+          "returns": "{userName:string}"
+        }
+      }
+    },
+    {
+      "id": "producer:members#services/accounts/src/accounts/lapse.ts:8:9",
+      "type": "producer",
+      "label": "event eventbridge/default/club.accounts/MemberLapsed",
+      "repo": "members",
+      "file": "services/accounts/src/accounts/lapse.ts",
+      "line": 8,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:members#services/notices/serverless.yml:functions.send-notice.destinations.onFailure",
+      "type": "producer",
+      "label": "message sqs/notices-prod-failed",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 40,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "functions.send-notice.destinations.onFailure",
+        "deployedBy": "serverless",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "producer:members#services/notices/src/notices/digest.ts:7:9",
+      "type": "producer",
+      "label": "message sqs/${…}@resources.Resources.NoticesQueue",
+      "repo": "members",
+      "file": "services/notices/src/notices/digest.ts",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "NOTICES_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{kind:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:members#services/notices/src/notices/welcome.ts:7:9",
+      "type": "producer",
+      "label": "message sqs/${…}@resources.Resources.NoticesQueue",
+      "repo": "members",
+      "file": "services/notices/src/notices/welcome.ts",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "NOTICES_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{kind:string;member:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:members",
+      "type": "repo",
+      "label": "members",
+      "repo": "members",
+      "meta": {
+        "stats": {
+          "files": 11,
+          "filesRead": 11,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-eventbridge": 1,
+            "@aws-sdk/client-sqs": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:eventbridge/default/club.accounts/MemberLapsed",
+      "to": "consumer:members#services/notices/serverless.yml:resources.Resources.LapsedRule.Targets[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 121,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:s3/club-notices-archive",
+      "to": "consumer:members#services/notices/serverless.yml:functions.archive-notice.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 50,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:sns/accounts-prod-lapsed",
+      "to": "consumer:members#services/accounts/serverless.ts:functions.lapse.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "services/accounts/serverless.ts",
+      "line": 21,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/${…}@resources.Resources.NoticesQueue",
+      "to": "consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 34,
+      "meta": {
+        "by": "mapping",
+        "notMatchedOn": [
+          "filter"
+        ]
+      }
+    },
+    {
+      "from": "consumer:members#services/accounts/serverless.ts:functions.lapse.events[0]",
+      "to": "entry:members:invoke:accounts-prod-lapse",
+      "type": "calls",
+      "confidence": "static",
+      "file": "services/accounts/serverless.ts",
+      "line": 21,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:members#services/notices/serverless.yml:functions.archive-notice.events[0]",
+      "to": "entry:members:invoke:notices-prod-archive-notice",
+      "type": "calls",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 50,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]",
+      "to": "entry:members:invoke:notices-prod-send-notice",
+      "type": "calls",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 34,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:members#services/notices/serverless.yml:resources.Resources.LapsedRule.Targets[0]",
+      "to": "entry:members:invoke:notices-prod-digest",
+      "type": "calls",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 121,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:members:cron:functions.digest.events[0]",
+      "to": "members#services/notices/src/notices/digest.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/notices/src/notices/digest.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:members:cron:stepFunctions.stateMachines.remind.events[0]",
+      "to": "entry:members:workflow:${…}@stepFunctions.stateMachines.remind",
+      "type": "calls",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 92,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:${…}@stepFunctions.stateMachines.remind"
+      }
+    },
+    {
+      "from": "entry:members:event:cognito/club-members/post_confirmation",
+      "to": "members#services/notices/src/notices/welcome.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/notices/src/notices/welcome.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:members:http:POST:/members",
+      "to": "members#services/accounts/src/accounts/join.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/accounts/src/accounts/join.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:members:http:PUT:/members/:param/renewal",
+      "to": "members#services/accounts/src/accounts/renew.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{renewed?:string}",
+      "file": "services/accounts/src/accounts/renew.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:members:invoke:${…}@functions.audit",
+      "to": "members#services/notices/src/notices/audit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/notices/src/notices/audit.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:accounts-prod-join",
+      "to": "members#services/accounts/src/accounts/join.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/accounts/src/accounts/join.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:accounts-prod-lapse",
+      "to": "members#services/accounts/src/accounts/lapse.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/accounts/src/accounts/lapse.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:members:invoke:accounts-prod-renew",
+      "to": "members#services/accounts/src/accounts/renew.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/accounts/src/accounts/renew.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:notices-prod-archive-notice",
+      "to": "members#services/notices/src/notices/archive-notice.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/notices/src/notices/archive-notice.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:notices-prod-digest",
+      "to": "members#services/notices/src/notices/digest.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/notices/src/notices/digest.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:members:invoke:notices-prod-door",
+      "to": "members#services/notices/src/notices/door.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/notices/src/notices/door.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:members:invoke:notices-prod-send-notice",
+      "to": "members#services/notices/src/notices/send-notice.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/notices/src/notices/send-notice.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:members:invoke:notices-prod-send-notice",
+      "to": "producer:members#services/notices/serverless.yml:functions.send-notice.destinations.onFailure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 40,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:members:invoke:notices-prod-welcome",
+      "to": "members#services/notices/src/notices/welcome.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/notices/src/notices/welcome.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:members:workflow:${…}@stepFunctions.stateMachines.remind",
+      "to": "members#services/notices/serverless.yml:stepFunctions.stateMachines.remind/Send",
+      "type": "handles",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 94
+    },
+    {
+      "from": "members#services/accounts/src/accounts/lapse.ts:handler",
+      "to": "producer:members#services/accounts/src/accounts/lapse.ts:8:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "services/accounts/src/accounts/lapse.ts",
+      "line": 8
+    },
+    {
+      "from": "members#services/notices/serverless.yml:stepFunctions.stateMachines.remind/Send",
+      "to": "entry:members:invoke:notices-prod-send-notice",
+      "type": "calls",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 96,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:notices-prod-send-notice"
+      }
+    },
+    {
+      "from": "members#services/notices/src/notices/digest.ts:handler",
+      "to": "config_key:members#NOTICES_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "services/notices/src/notices/digest.ts",
+      "line": 7,
+      "meta": {
+        "setBy": [
+          {
+            "function": "notices-prod-digest",
+            "written": "!Ref NoticesQueue",
+            "value": "${…}@resources.Resources.NoticesQueue"
+          }
+        ]
+      }
+    },
+    {
+      "from": "members#services/notices/src/notices/digest.ts:handler",
+      "to": "producer:members#services/notices/src/notices/digest.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "services/notices/src/notices/digest.ts",
+      "line": 7
+    },
+    {
+      "from": "members#services/notices/src/notices/welcome.ts:handler",
+      "to": "config_key:members#NOTICES_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "services/notices/src/notices/welcome.ts",
+      "line": 7,
+      "meta": {
+        "setBy": [
+          {
+            "function": "notices-prod-welcome",
+            "written": "!Ref NoticesQueue",
+            "value": "${…}@resources.Resources.NoticesQueue"
+          }
+        ]
+      }
+    },
+    {
+      "from": "members#services/notices/src/notices/welcome.ts:handler",
+      "to": "producer:members#services/notices/src/notices/welcome.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "services/notices/src/notices/welcome.ts",
+      "line": 7
+    },
+    {
+      "from": "producer:members#services/accounts/src/accounts/lapse.ts:8:9",
+      "to": "channel:eventbridge/default/club.accounts/MemberLapsed",
+      "type": "emits",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "file": "services/accounts/src/accounts/lapse.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:members#services/notices/serverless.yml:functions.send-notice.destinations.onFailure",
+      "to": "channel:sqs/notices-prod-failed",
+      "type": "emits",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 40,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:members#services/notices/src/notices/digest.ts:7:9",
+      "to": "channel:sqs/${…}@resources.Resources.NoticesQueue",
+      "type": "emits",
+      "confidence": "static",
+      "file": "services/notices/src/notices/digest.ts",
+      "line": 7,
+      "params": [
+        "{kind:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "NOTICES_QUEUE_URL"
+        ],
+        "functions": [
+          "notices-prod-digest"
+        ]
+      }
+    },
+    {
+      "from": "producer:members#services/notices/src/notices/welcome.ts:7:9",
+      "to": "channel:sqs/${…}@resources.Resources.NoticesQueue",
+      "type": "emits",
+      "confidence": "static",
+      "file": "services/notices/src/notices/welcome.ts",
+      "line": 7,
+      "params": [
+        "{kind:string;member:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "NOTICES_QUEUE_URL"
+        ],
+        "functions": [
+          "notices-prod-welcome"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEventV2": {
+      "name": "APIGatewayProxyEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#S3Event": {
+      "name": "S3Event",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "debc039fb07befd0",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SNSEvent": {
+      "name": "SNSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "17e8e52b989c5abe",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "services/notices/serverless.yml",
+      "line": 34,
+      "reason": "deployed-name-generated",
+      "level": "info",
+      "sites": 2,
+      "message": "resources.Resources.NoticesQueue is a queue with no name of its own, so it is named by where it is declared; what this file points at it by joins to it, and nothing outside this deployment can",
+      "hint": "Give it a name of its own where other repositories reach it.",
+      "symbol": "resources.Resources.NoticesQueue",
+      "adapter": "aws-lambda",
+      "service": "members"
+    },
+    {
+      "file": "services/notices/serverless.yml",
+      "line": 64,
+      "reason": "function-name-unread",
+      "message": "the name of functions.audit is not read: ssm: values are read from the deployed account or a service, which the files do not hold",
+      "hint": "Give ${ssm:/club/audit-function-name} a value the files settle.",
+      "symbol": "entry:members:invoke:${…}@functions.audit",
+      "adapter": "aws-lambda",
+      "meta": {
+        "variable": "ssm:/club/audit-function-name"
+      },
+      "service": "members"
+    },
+    {
+      "file": "services/notices/serverless.yml",
+      "line": 68,
+      "reason": "subscription-source-unread",
+      "message": "the queue functions.audit.events[0] reads is not read: the value is imported from another stack, whose outputs are not read",
+      "hint": "Write it as the ARN of the resource, or a Ref or Fn::GetAtt of a resource under resources.Resources; a value from another stack or the account is not read.",
+      "symbol": "functions.audit.events[0]",
+      "adapter": "aws-lambda",
+      "service": "members"
+    },
+    {
+      "file": "services/notices/serverless.yml",
+      "line": 74,
+      "reason": "invoker-not-read",
+      "level": "info",
+      "message": "notices-prod-door is run by alb events, which are not read, so nothing drawn reaches it that way",
+      "hint": "Events of this kind run the function outside anything this reads. Nothing to fix; the function is still in the graph under its name.",
+      "symbol": "functions.door.events[0]",
+      "adapter": "aws-lambda",
+      "service": "members"
+    },
+    {
+      "file": "services/notices/serverless.yml",
+      "line": 80,
+      "reason": "function-runtime-unread",
+      "level": "info",
+      "message": "notices-prod-report runs on python3.12; only Node.js handlers are read, so its body is not",
+      "hint": "The function is still in the graph under its name, and whatever invokes it still joins to it.",
+      "symbol": "entry:members:invoke:notices-prod-report",
+      "adapter": "aws-lambda",
+      "service": "members"
+    },
+    {
+      "file": "services/notices/serverless.yml",
+      "line": 84,
+      "reason": "function-image-unread",
+      "level": "info",
+      "message": "notices-prod-renderer is deployed as a container image, whose handler is set inside the image",
+      "hint": "The function is in the graph under its name; the code it runs is not pointed at.",
+      "symbol": "entry:members:invoke:notices-prod-renderer",
+      "adapter": "aws-lambda",
+      "service": "members"
+    },
+    {
+      "file": "services/notices/serverless.yml",
+      "line": 104,
+      "reason": "deployment-plugin-unread",
+      "message": "services/notices/serverless.yml declares constructs, which a plugin turns into functions, queues and routes, and which are not read",
+      "hint": "Declare them under functions and resources, or expect them missing from the map.",
+      "symbol": "constructs",
+      "adapter": "aws-lambda",
+      "service": "members"
+    }
+  ]
+}

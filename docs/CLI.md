@@ -6054,6 +6054,127 @@ taken (`fixtures/sqs-environment-fallback`).
 modules (`fixtures/eventbridge-terraform`, `fixtures/sqs-sns-terraform`,
 `fixtures/multi-repo-events`).
 
+### Functions declared with the Serverless Framework
+
+A `serverless.yml`, `serverless.yaml`, `serverless.json`, `serverless.ts` or
+`serverless.js` is read into exactly what the Terraform reader gives for the
+same deployment: the functions, the routes, the subscribers, the streams and
+the workflows, which the same adapter draws and the same linker joins (P57). A
+repository may hold one service at its top or one per directory below it
+(`services/orders/serverless.yml`); each is read, its handlers relative to its
+own directory. `init` and `link` propose the `lambda` type for such a
+repository. Nothing is run: no `serverless print`, no plugin, no account.
+
+**Variables are resolved where the files settle them**, innermost first:
+`${self:...}`, `${sls:stage}`, `${opt:<name>}` from `services[].infra.options`
+or its fallback, `${env:NAME}` from `.env` and `.env.<stage>` where the service
+loads them (`useDotenv`, or version 4), `${file(./x.yml):a.b}`,
+`${param:name}` from `params.<stage>` then `params.default`, `${aws:region}` and
+`${strToBool(...)}`. The stage is the option, else `provider.stage`, else the
+framework's own `dev`; the region likewise, else `us-east-1`. A value read from
+the deployed account - `${ssm:...}`, `${cf:...}`, `${s3:...}`,
+`${aws:accountId}` - is never read; a name that holds one is not a name, and
+the row names the variable. An ARN whose account is unread still names its
+resource.
+
+```json
+{ "name": "orders", "repo": "./orders", "type": "lambda", "infra": { "options": { "stage": "prod" } } }
+```
+
+**Functions** are named `name`, or `<service>-<stage>-<key>` as the framework
+names them; `provider.environment` and the function's own `environment` are
+its values, each a `!Ref` or `!GetAtt` naming the resource it is. A
+`package.artifact` leaves the directory unread, and the handler is searched for
+by name, `heuristic`, as for a zip Terraform does not build.
+
+| Written as | Read as |
+|---|---|
+| `http: POST orders`, `http: { method, path, authorizer, private }` | a route of the REST API `provider.apiName`, or `<stage>-<service>` |
+| `httpApi: 'GET /orders'`, `httpApi: '*'` | a route of the HTTP API `provider.httpApi.name`, or `<stage>-<service>`; `*` is `ALL /{proxy+}` |
+| `url: true` | the function URL, `ALL /*` |
+| `websocket: $connect`, `websocket: { route }` | a way in of `provider.websocketsApiName`, or `<stage>-<service>-websockets` |
+| `sqs`, `stream` | a mapping from the queue, the table's stream or the Kinesis stream the ARN, `!GetAtt` or `!Ref` names; `filterPatterns` recorded, not matched |
+| `sns: <name>`, `sns: { arn, topicName, filterPolicy }` | a subscription; a name that is not an ARN is a topic the framework creates |
+| `schedule: rate(...)`, `schedule: { rate: [...], name }` | a schedule per expression, its entry keyed by `name` |
+| `eventBridge: { eventBus, pattern }`, `cloudwatchEvent` | a rule on the bus, the default one where none is named |
+| `s3: <bucket>`, `s3: { bucket, event, rules }` | a notification of the bucket, its prefix and suffix |
+| `cognitoUserPool: { pool, trigger }` | `cognito/<pool>/<trigger>`, the trigger spelled as Terraform spells it |
+| `destinations: { onSuccess, onFailure }` | what a run ends in, onto a function by its key, a queue, a topic or a bus |
+| any other event: `alb`, `iot`, `kafka`, ... | an `invoker-not-read` row at `info` |
+
+`resources.Resources` is read as CloudFormation: queues and their
+`RedrivePolicy`, topics and subscriptions, tables and their
+`StreamSpecification`, Kinesis streams, buses, rules and their `Targets`,
+buckets and their `NotificationConfiguration`, mappings and state machines.
+`Ref`, `Fn::GetAtt`, `Fn::Sub` and `Fn::Join` are followed to what they name,
+the framework's own logical ids (`PlaceDashorderLambdaFunction`) included;
+`Fn::ImportValue` is another stack's, and a row. **A resource with no physical
+name** is named by its declaration - `sqs/${…}@resources.Resources.NoticesQueue`
+- because CloudFormation names it when the stack is created: everything in the
+service that points at it spells it that way and joins, `static`, and nothing
+outside can (`deployed-name-generated`, a note).
+
+The `serverless-step-functions` plugin's `stepFunctions.stateMachines` are
+workflows: the definition is the file's own value, each state drawn at its
+line, and `Fn::GetAtt` of a function by its key or its logical id fills the
+step that invokes it. Their `schedule` and `eventBridge` events start them; an
+`http` event is a `route-target-unread` row, as a route onto a workflow is in
+Terraform. Another plugin's section that declares functions or queues
+(`constructs`) is a `deployment-plugin-unread` row (`fixtures/serverless-orders`,
+`fixtures/serverless-shapes`).
+
+### Functions declared in an AWS CDK app
+
+A CDK app in TypeScript is read the way it runs, without running it: from the
+entry its `cdk.json` names (`npx ts-node bin/app.ts`), statement by statement,
+with `this` the construct being built, each construct of the app's own made
+with what it is handed, helpers called with their arguments, constants and
+imports followed across files, `for ... of`, `.forEach` and `.map` over a list
+the files settle taken once per element, and an `if` the files settle decided
+(P57). `aws-cdk-lib` need not be installed: what a construct is comes from the
+module it is imported from - `aws-cdk-lib/aws-lambda`, `{ aws_lambda as
+lambda } from 'aws-cdk-lib'`, version 1's `@aws-cdk/aws-lambda`, the `-alpha`
+modules. `cdk.json`'s `context` answers `tryGetContext`, under
+`services[].infra.options` (what `--context stage=prod` would be). Every
+construct's address is its path in the tree (`OrdersStack/Api/Rest`), and a
+construct a helper of the same file makes is placed at the helper's call.
+
+| Written as | Read as |
+|---|---|
+| `new lambda.Function(...)` | a function: `functionName`, the handler in the directory `Code.fromAsset` names (compiled output mapped back to its source), `runtime`, `environment` and `addEnvironment` |
+| `new NodejsFunction(...)` | its `entry` and `handler`, or the construct's default, `<file>.<id>.ts` beside the file that makes it |
+| `Function.fromFunctionName`, `Queue.fromQueueArn`, ... | a construct named, joined wherever it is deployed |
+| `RestApi`, `LambdaRestApi` | routes by the resource tree, `root.addResource(...).addMethod(verb, new LambdaIntegration(fn))`, `addProxy`, `proxy: true`; the API named `restApiName`, else its id, as the CDK names it; `authorizer` and `authorizationType` as guards |
+| `HttpApi.addRoutes`, `new HttpRoute`, `WebSocketApi` | HTTP routes, and socket routes from `connectRouteOptions`, `disconnectRouteOptions`, `defaultRouteOptions` and `addRoute` |
+| `fn.addFunctionUrl()`, `new FunctionUrl` | the function URL |
+| `addEventSource(new SqsEventSource(q))`, `SnsEventSource`, `DynamoEventSource`, `KinesisEventSource`, `S3EventSource`, `new EventSourceMapping` | mappings, subscriptions and notifications onto the function |
+| `topic.addSubscription(new LambdaSubscription(fn))`, `SqsSubscription` | subscriptions |
+| `new events.Rule({ eventPattern, schedule, targets })`, `addTarget` | rules, the pattern's `detailType` as `detail-type` and `Match.prefix(...)` as a content filter; `Schedule.cron({ hour: '2' })` is `cron(* 2 * * ? *)` as the CDK writes it |
+| `new scheduler.Schedule({ schedule, target })` | a schedule onto its target |
+| `deadLetterQueue: { queue }` | a redrive |
+| `bucket.addEventNotification(...)`, `eventBridgeEnabled` | notifications, and the bucket's events on the default bus |
+| `Table({ stream })`, `TableV2({ dynamoStream })`, `kinesis.Stream` | streams a write in code publishes onto |
+| `UserPool({ lambdaTriggers })`, `addTrigger` | `cognito/<pool>/<trigger>` |
+| `onSuccess`, `onFailure` | what a run ends in |
+| `new sfn.StateMachine({ definitionBody })` | a workflow: a chain of `Pass`, `Wait`, `Choice`, `Parallel`, `Map`, `Succeed`, `Fail` and the tasks (`LambdaInvoke`, `SqsSendMessage`, `SnsPublish`, `EventBridgePutEvents`, `StepFunctionsStartExecution`, `Dynamo*`, `CallAwsService`) written out as the States Language the CDK synthesises; `DefinitionBody.fromFile` with `definitionSubstitutions`; `fromString` |
+
+**A construct with no name of its own** - a queue with no `queueName`, a
+function with no `functionName` - is named by its path,
+`sqs/${…}@OrdersStack.Inbox`: the function that sends to it through
+`environment: { INBOX_URL: inbox.queueUrl }`, the mapping that reads it and the
+step that sends to it all spell it that way and join, `static`
+(`deployed-name-generated`, a note). **What the files do not settle is a row**:
+a construct per element of a list read at run time is read once
+(`construct-repeated-unread`; a function's is `function-repeated-unread`); one
+under a condition the files do not settle is read and what reaches it drawn
+`heuristic` (`construct-conditional`); a stack the app declares and never makes
+is `construct-unreached`; a token the deployment fills in - `Aws.ACCOUNT_ID`,
+`Fn.importValue`, a parameter looked up - is unread where a value needs it; a
+construct of a module nothing reads that is handed a function is
+`invoker-not-read`; and a `cdk.json` whose app is not a TypeScript file of the
+repository is `deployment-app-unread`, with every stack read on its own and what
+it is handed unread (`fixtures/cdk-orders`, `fixtures/cdk-shapes`).
+
 ### Procedures
 
 A tRPC server's ways in are not routes: each procedure is a key in a tree of

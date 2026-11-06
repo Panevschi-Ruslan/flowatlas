@@ -98,6 +98,8 @@
     "@flowatlas/linker": "workspace:*",
     "@flowatlas/mcp": "workspace:*",
     "@flowatlas/terraform": "workspace:*",
-    "@flowatlas/stepfunctions": "workspace:*"
+    "@flowatlas/stepfunctions": "workspace:*",
+    "@flowatlas/serverless": "workspace:*",
+    "@flowatlas/cdk": "workspace:*"
   }
 }

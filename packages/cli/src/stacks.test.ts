@@ -289,8 +289,21 @@ describe('what a repository looks like', () => {
   };
 
   it('names a deployment tool nothing reads before anything in the manifest', () => {
-    const dir = repository({ 'serverless.yml': 'service: holds\n', 'package.json': { dependencies: { astro: '4.16.0' } } });
-    expect(looksLike(dir, 'nestjs')).toBe('its functions are declared for the Serverless Framework, which nothing here reads yet');
+    const dir = repository({
+      'template.yaml': 'Transform: AWS::Serverless-2016-10-31\n',
+      'package.json': { dependencies: { astro: '4.16.0' } },
+    });
+    expect(looksLike(dir, 'nestjs')).toBe('its functions are declared for AWS SAM, which nothing here reads yet');
+  });
+
+  // The Serverless Framework and the CDK were named as unread until P57 read them.
+  it('names the lambda type for a deployment that is read, whatever the manifest says', () => {
+    expect(looksLike(repository({ 'serverless.yml': 'service: holds\nprovider:\n  name: aws\n', 'package.json': {} }), 'nestjs')).toBe(
+      'it looks like lambda rather than nestjs; set its type to "lambda"',
+    );
+    expect(looksLike(repository({ 'cdk.json': { app: 'npx ts-node bin/app.ts' }, 'package.json': {} }), 'nestjs')).toBe(
+      'it looks like lambda rather than nestjs; set its type to "lambda"',
+    );
   });
 
   it('names a framework nothing reads', () => {

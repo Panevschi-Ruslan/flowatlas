@@ -209,8 +209,18 @@ const serviceEntrySchema = z.strictObject({
    * A word about what is being chosen rather than the tool that reads it,
    * because this schema names no technology (I1); the reader that understands
    * variable files is the one that reads them.
+   *
+   * `options` are the values a deployment is run with that no file holds: what
+   * a command line would pass as a stage, a region or a context value (P57).
+   * Without one, a reader takes what the deployment's own files fall back to,
+   * and otherwise says the value is not read.
    */
-  infra: z.strictObject({ vars: z.array(z.string().min(1)).default([]) }).optional(),
+  infra: z
+    .strictObject({
+      vars: z.array(z.string().min(1)).default([]),
+      options: z.record(z.string().min(1), z.string()).optional(),
+    })
+    .optional(),
 });
 
 /** The directory part of a configured path, in the spelling it was written in. */

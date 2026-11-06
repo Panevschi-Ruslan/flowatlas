@@ -25,6 +25,8 @@ import {
   toPosixPath,
 } from '@flowatlas/core';
 import { ENVELOPES, GATEWAY_REQUEST } from '@flowatlas/aws';
+import { cdkReader } from '@flowatlas/cdk';
+import { serverlessReader } from '@flowatlas/serverless';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
 import { Node, ts, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
 import { drawDeliveries, drawRouteSends, environmentMeta } from './deployed-channels.js';
@@ -39,10 +41,12 @@ export const DEPLOYED_FUNCTIONS = 'aws-lambda';
  * The readers of deployment descriptions, in the order they are asked.
  *
  * The adapter below is written against `DeploymentReader`, which names no
- * format, so a second reader - a SAM template, a Serverless Framework file, a
- * CDK synthesis - is a row here and nothing else. Only Terraform is read today.
+ * format, so a reader of another format is a row here and nothing else:
+ * Terraform, a Serverless Framework service file and an AWS CDK app (P57). A
+ * repository may hold more than one, and each is read; a SAM template is the
+ * one deployment named and not read yet.
  */
-export const DEPLOYMENT_READERS: readonly DeploymentReader[] = [terraformReader];
+export const DEPLOYMENT_READERS: readonly DeploymentReader[] = [terraformReader, serverlessReader, cdkReader];
 
 /** Packages a repository of Lambda handlers declares, any one of which gives it away. */
 export const LAMBDA_PACKAGES: readonly string[] = ['@types/aws-lambda', 'aws-lambda', '@middy/core'];
@@ -583,7 +587,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
           tool === undefined
             ? 'this repository declares Lambda packages and no deployment description this tool reads, so no function is an entry'
             : `this repository's functions are declared with ${tool}, which is not read yet, so no function is an entry`,
-        hint: 'Functions and routes are read from Terraform. The handlers are still read as code; nothing reaches them.',
+        hint: 'Functions and routes are read from Terraform, a Serverless Framework file or an AWS CDK app. The handlers are still read as code; nothing reaches them.',
         adapter: DEPLOYED_FUNCTIONS,
       });
       return [];
@@ -619,7 +623,10 @@ export const deployedFunctionsAdapter: EntryAdapter = {
         entries.push({
           id,
           kind: 'invoke',
-          label: fn.name ?? `${fn.address} (name not read)`,
+          // A name the platform generates is not a name not read: nothing
+          // could have read it, and the function is still reached inside its
+          // deployment by its declaration (P57).
+          label: fn.name ?? `${fn.address} (${fn.meta?.['nameGenerated'] === true ? 'name generated when deployed' : 'name not read'})`,
           key,
           ...(reading.handler === undefined ? {} : { handler: reading.handler }),
           ...(reading.confidence === undefined ? {} : { handlerConfidence: reading.confidence }),

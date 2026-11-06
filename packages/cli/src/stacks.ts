@@ -1,7 +1,8 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { allDependencies, readPackageJson, type PackageJson } from '@flowatlas/core';
-import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
+import { deploymentReadersFor } from '@flowatlas/adapters-entry';
+import { unreadDeploymentOf } from '@flowatlas/terraform';
 import { halfOf, rowsInHalf, type ReaderRow } from './readers.js';
 
 /**
@@ -241,8 +242,11 @@ export const nestedManifests = (dir: string, depth = 4): PackageJson[] => {
 /** The type a deployment description gives a repository away as, when one does. */
 const DEPLOYED_TYPE = 'lambda';
 
-/** Whether a directory holds infrastructure that declares a function or a route. */
-export const declaresDeployment = (dir: string): boolean => terraformReader.declares(dir);
+/**
+ * Whether a directory holds a deployment description any reader reads: Terraform,
+ * a Serverless Framework service file, an AWS CDK app (P57).
+ */
+export const declaresDeployment = (dir: string): boolean => deploymentReadersFor(dir).length > 0;
 
 /**
  * The type to suggest for a directory, asking more than its manifest.

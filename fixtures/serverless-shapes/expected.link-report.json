@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-06T09:34:24.496Z",
+  "configHash": "c3d849be9f85",
+  "services": [
+    {
+      "name": "members",
+      "repo": "./members",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 42,
+      "edges": 30,
+      "types": 5,
+      "unresolved": 8,
+      "durationMs": 1608,
+      "packages": {
+        "name": "club-members",
+        "runtime": [
+          "@aws-sdk/client-eventbridge",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@serverless/typescript",
+          "@types/aws-lambda",
+          "serverless",
+          "serverless-esbuild",
+          "serverless-lift",
+          "serverless-step-functions"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 2,
+    "noConsumers": [
+      "channel:sqs/notices-prod-failed"
+    ],
+    "noProducers": [
+      "channel:s3/club-notices-archive",
+      "channel:sns/accounts-prod-lapsed"
+    ]
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:members:http:POST:/members",
+      "entry:members:http:PUT:/members/:param/renewal"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 42,
+    "edges": 34,
+    "types": 5,
+    "missed": 6,
+    "sites": 6,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 6
+  }
+}

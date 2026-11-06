@@ -1,0 +1,37 @@
+unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 2 to act on · missed: 2 · notes: 3 · findings: 1
+  1 finding: 1 rule nothing published matches
+  construct-repeated-unread: 1 row
+    Write the collection out, or as a constant, and each is read under its own name.
+      club/lib/club-stack.ts:54  ClubStack/lib/club-stack.ts:54
+  reference-not-found: 1 row
+    Add the repository that deploys it to the configuration, so this step reaches its code.
+      club/lib/club-stack.ts:75  rule ClubStack/MemberJoined/Target0 reaches the function club-billing-charge, which no configured service declares
+  deployed-name-generated (note): 1 row over 4 places
+    Give it a name of its own where other repositories reach it.
+      club/lib/club-stack.ts:30  ClubStack/Inbox
+  construct-conditional (note): 1 row
+    Set the value the condition reads under services[].infra.options, or in the app.
+      club/lib/club-stack.ts:67  ClubStack/Audit
+  construct-unreached (note): 1 row
+    Nothing to do unless it is deployed some other way.
+      club/lib/archive-stack.ts:6  ArchiveStack
+  subscription-matches-nothing (finding): 1 row
+    A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.
+      club/lib/club-stack.ts:67  rule ClubStack/Audit/Target0 takes events by a pattern that no publisher in the configured services matches
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 7 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 2 now, +2)
+  no baseline at <root>/fixtures/cdk-shapes/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  construct-repeated-unread: 0 → 1 (+1)
+  reference-not-found: 0 → 1 (+1)
+  new (2):
+    club|lib/club-stack.ts|ClubStack/lib/club-stack.ts:54|construct-repeated-unread
+    club|lib/club-stack.ts|consumer:club#lib/club-stack.ts:ClubStack/MemberJoined/Target0|reference-not-found

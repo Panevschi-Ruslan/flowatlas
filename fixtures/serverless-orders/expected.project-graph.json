@@ -1,0 +1,2486 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-06T09:34:17.888Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:dynamodb/orders-dev-orders",
+      "type": "channel",
+      "label": "dynamodb/orders-dev-orders",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 158,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb",
+          "aws-dynamodb-document"
+        ],
+        "declaredBy": "resources.Resources.OrdersTable",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/orders-dev/orders.service/OrderCancelled",
+      "type": "channel",
+      "label": "eventbridge/orders-dev/orders.service/OrderCancelled",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 88,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/orders-dev/orders.service/OrderPlaced",
+      "type": "channel",
+      "label": "eventbridge/orders-dev/orders.service/OrderPlaced",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 126,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:s3/orders-dev-invoices",
+      "type": "channel",
+      "label": "s3/orders-dev-invoices",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 106,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-s3"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/orders-dev-shipped",
+      "type": "channel",
+      "label": "sns/orders-dev-shipped",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 81,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/orders-dev-placed",
+      "type": "channel",
+      "label": "sqs/orders-dev-placed",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 68,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/orders-dev-placed-dlq",
+      "type": "channel",
+      "label": "sqs/orders-dev-placed-dlq",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 177,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "config_key:orders#INVOICES_BUCKET",
+      "type": "config_key",
+      "label": "INVOICES_BUCKET",
+      "repo": "orders",
+      "file": "src/shipping/ship-order.ts",
+      "line": 16,
+      "meta": {
+        "key": "INVOICES_BUCKET",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders#ORDERS_BUS_NAME",
+      "type": "config_key",
+      "label": "ORDERS_BUS_NAME",
+      "repo": "orders",
+      "file": "src/orders/cancel-order.ts",
+      "line": 12,
+      "meta": {
+        "key": "ORDERS_BUS_NAME",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders#ORDERS_QUEUE_URL",
+      "type": "config_key",
+      "label": "ORDERS_QUEUE_URL",
+      "repo": "orders",
+      "file": "src/orders/place-order.ts",
+      "line": 20,
+      "meta": {
+        "key": "ORDERS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders#ORDERS_TABLE",
+      "type": "config_key",
+      "label": "ORDERS_TABLE",
+      "repo": "orders",
+      "file": "src/orders/get-order.ts",
+      "line": 8,
+      "meta": {
+        "key": "ORDERS_TABLE",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders#SHIPPED_TOPIC_ARN",
+      "type": "config_key",
+      "label": "SHIPPED_TOPIC_ARN",
+      "repo": "orders",
+      "file": "src/shipping/ship-order.ts",
+      "line": 17,
+      "meta": {
+        "key": "SHIPPED_TOPIC_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:orders#serverless.yml:functions.index-invoice.events[0]",
+      "type": "consumer",
+      "label": "notification functions.index-invoice.events[0]",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 106,
+      "kind": "object",
+      "meta": {
+        "kind": "object",
+        "adapter": "aws-s3",
+        "by": "notification",
+        "declaredAs": "functions.index-invoice.events[0]",
+        "deployedBy": "serverless",
+        "existing": true,
+        "takes": {
+          "kinds": [
+            "s3:ObjectCreated:*"
+          ],
+          "by": {
+            "field": "Key",
+            "prefix": "invoices/",
+            "suffix": ".pdf"
+          }
+        }
+      }
+    },
+    {
+      "id": "consumer:orders#serverless.yml:functions.notify-customer.events[0]",
+      "type": "consumer",
+      "label": "subscription functions.notify-customer.events[0]",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 81,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "functions.notify-customer.events[0]",
+        "deployedBy": "serverless",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:orders#serverless.yml:functions.order-changed.events[0]",
+      "type": "consumer",
+      "label": "mapping functions.order-changed.events[0]",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 57,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "functions.order-changed.events[0]",
+        "deployedBy": "serverless"
+      }
+    },
+    {
+      "id": "consumer:orders#serverless.yml:functions.refund-order.events[0]",
+      "type": "consumer",
+      "label": "rule functions.refund-order.events[0]",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 88,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "functions.refund-order.events[0]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:orders#serverless.yml:functions.ship-order.events[0]",
+      "type": "consumer",
+      "label": "mapping functions.ship-order.events[0]",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 68,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "functions.ship-order.events[0]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:orders#serverless.yml:stepFunctions.stateMachines.shipping.events[0]",
+      "type": "consumer",
+      "label": "rule stepFunctions.stateMachines.shipping.events[0]",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 126,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "stepFunctions.stateMachines.shipping.events[0]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        },
+        "reaches": [
+          "workflow:orders-dev-shipping"
+        ]
+      }
+    },
+    {
+      "id": "entry:orders:cron:orders-dev-nightly-report",
+      "type": "entry",
+      "label": "cron orders-dev-nightly-report",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 99,
+      "kind": "cron",
+      "meta": {
+        "key": "orders-dev-nightly-report",
+        "by": "schedule",
+        "declaredAs": "functions.nightly-report.events[0]",
+        "deployedBy": "serverless",
+        "schedule": "cron(0 2 * * ? *)",
+        "function": "orders-dev-nightly-report",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:event:dynamodb/orders-dev-orders",
+      "type": "entry",
+      "label": "event dynamodb/orders-dev-orders",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 57,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/orders-dev-orders",
+        "by": "mapping",
+        "declaredAs": "functions.order-changed.events[0]",
+        "deployedBy": "serverless",
+        "changesOf": "table",
+        "name": "orders-dev-orders",
+        "function": "orders-dev-order-changed",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:event:websocket/dev-orders-websockets/$connect",
+      "type": "entry",
+      "label": "event websocket/dev-orders-websockets/$connect",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 117,
+      "kind": "event",
+      "meta": {
+        "key": "websocket/dev-orders-websockets/$connect",
+        "by": "route",
+        "declaredAs": "functions.live-socket.events[0]",
+        "deployedBy": "serverless",
+        "api": "dev-orders-websockets",
+        "route": "$connect",
+        "function": "orders-dev-live-socket",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:event:websocket/dev-orders-websockets/subscribe",
+      "type": "entry",
+      "label": "event websocket/dev-orders-websockets/subscribe",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 119,
+      "kind": "event",
+      "meta": {
+        "key": "websocket/dev-orders-websockets/subscribe",
+        "by": "route",
+        "declaredAs": "functions.live-socket.events[1]",
+        "deployedBy": "serverless",
+        "api": "dev-orders-websockets",
+        "route": "subscribe",
+        "function": "orders-dev-live-socket",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:http:ALL:/*@orders-dev-receipt",
+      "type": "entry",
+      "label": "ALL /*",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 52,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/*",
+        "rawPath": "/*",
+        "deployedBy": "serverless",
+        "function": "orders-dev-receipt",
+        "declaredAs": "functions.receipt.url",
+        "by": "function-url",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:http:DELETE:/orders/:param",
+      "type": "entry",
+      "label": "DELETE /orders/:param",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 41,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/orders/:param",
+        "rawPath": "orders/{id}",
+        "deployedBy": "serverless",
+        "api": "dev-orders",
+        "function": "orders-dev-cancel-order",
+        "declaredAs": "functions.cancel-order.events[0]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 48,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "deployedBy": "serverless",
+        "api": "dev-orders",
+        "function": "orders-dev-list-orders",
+        "declaredAs": "functions.list-orders.events[0]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "orders/{id}",
+        "deployedBy": "serverless",
+        "api": "dev-orders",
+        "function": "orders-dev-get-order",
+        "declaredAs": "functions.get-order.events[0]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "orders",
+        "deployedBy": "serverless",
+        "api": "dev-orders",
+        "function": "orders-dev-place-order",
+        "declaredAs": "functions.place-order.events[0]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-cancel-order",
+      "type": "entry",
+      "label": "orders-dev-cancel-order",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 35,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-cancel-order",
+        "deployedBy": "serverless",
+        "name": "orders-dev-cancel-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.cancel-order",
+        "stageFrom": "file",
+        "handler": "src/orders/cancel-order.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_BUS_NAME": {
+            "written": "!Ref OrdersBus",
+            "value": "orders-dev",
+            "kind": "bus"
+          },
+          "ORDERS_TABLE": {
+            "written": "\"orders-dev-orders\"",
+            "value": "orders-dev-orders"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-charge-payment",
+      "type": "entry",
+      "label": "orders-dev-charge-payment",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 75,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-charge-payment",
+        "deployedBy": "serverless",
+        "name": "orders-dev-charge-payment",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.charge-payment",
+        "stageFrom": "file",
+        "handler": "src/shipping/charge-payment.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:orders#Order&{reserved:boolean}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-get-order",
+      "type": "entry",
+      "label": "orders-dev-get-order",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 30,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-get-order",
+        "deployedBy": "serverless",
+        "name": "orders-dev-get-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.get-order",
+        "stageFrom": "file",
+        "handler": "src/orders/get-order.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-index-invoice",
+      "type": "entry",
+      "label": "orders-dev-index-invoice",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 103,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-index-invoice",
+        "deployedBy": "serverless",
+        "name": "orders-dev-index-invoice",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.index-invoice",
+        "stageFrom": "file",
+        "handler": "src/invoices/index-invoice.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#S3Event"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-list-orders",
+      "type": "entry",
+      "label": "orders-dev-list-orders",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 45,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-list-orders",
+        "deployedBy": "serverless",
+        "name": "orders-dev-list-orders",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.list-orders",
+        "stageFrom": "file",
+        "handler": "src/orders/list-orders.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-live-socket",
+      "type": "entry",
+      "label": "orders-dev-live-socket",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 114,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-live-socket",
+        "deployedBy": "serverless",
+        "name": "orders-dev-live-socket",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.live-socket",
+        "stageFrom": "file",
+        "handler": "src/live/live-socket.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-nightly-report",
+      "type": "entry",
+      "label": "orders-dev-nightly-report",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 96,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-nightly-report",
+        "deployedBy": "serverless",
+        "name": "orders-dev-nightly-report",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.nightly-report",
+        "stageFrom": "file",
+        "handler": "src/reports/nightly-report.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#ScheduledEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-notify-customer",
+      "type": "entry",
+      "label": "orders-dev-notify-customer",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 78,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-notify-customer",
+        "deployedBy": "serverless",
+        "name": "orders-dev-notify-customer",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.notify-customer",
+        "stageFrom": "file",
+        "handler": "src/notices/notify-customer.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SNSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-order-changed",
+      "type": "entry",
+      "label": "orders-dev-order-changed",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 54,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-order-changed",
+        "deployedBy": "serverless",
+        "name": "orders-dev-order-changed",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.order-changed",
+        "stageFrom": "file",
+        "handler": "src/orders/order-changed.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#DynamoDBStreamEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-place-order",
+      "type": "entry",
+      "label": "orders-dev-place-order",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 20,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-place-order",
+        "deployedBy": "serverless",
+        "name": "orders-dev-place-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.place-order",
+        "stageFrom": "file",
+        "handler": "src/orders/place-order.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_BUS_NAME": {
+            "written": "!Ref OrdersBus",
+            "value": "orders-dev",
+            "kind": "bus"
+          },
+          "ORDERS_QUEUE_URL": {
+            "written": "!Ref PlacedQueue",
+            "value": "orders-dev-placed",
+            "kind": "queue"
+          },
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-receipt",
+      "type": "entry",
+      "label": "orders-dev-receipt",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 50,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-receipt",
+        "deployedBy": "serverless",
+        "name": "orders-dev-receipt",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.receipt",
+        "stageFrom": "file",
+        "handler": "src/orders/receipt.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-refund-order",
+      "type": "entry",
+      "label": "orders-dev-refund-order",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 85,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-refund-order",
+        "deployedBy": "serverless",
+        "name": "orders-dev-refund-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.refund-order",
+        "stageFrom": "file",
+        "handler": "src/refunds/refund-order.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#EventBridgeEvent<'OrderCancelled',{orderId:string}>",
+          "detail": "{orderId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-reserve-stock",
+      "type": "entry",
+      "label": "orders-dev-reserve-stock",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 72,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-reserve-stock",
+        "deployedBy": "serverless",
+        "name": "orders-dev-reserve-stock",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.reserve-stock",
+        "stageFrom": "file",
+        "handler": "src/shipping/reserve-stock.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "type:orders#Order"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-dev-ship-order",
+      "type": "entry",
+      "label": "orders-dev-ship-order",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 62,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-dev-ship-order",
+        "deployedBy": "serverless",
+        "name": "orders-dev-ship-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.ship-order",
+        "stageFrom": "file",
+        "handler": "src/shipping/ship-order.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "INVOICES_BUCKET": {
+            "written": "!Ref InvoicesBucket",
+            "value": "orders-dev-invoices",
+            "kind": "bucket"
+          },
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders",
+            "kind": "table"
+          },
+          "SHIPPED_TOPIC_ARN": {
+            "written": "!Ref ShippedTopic",
+            "value": "orders-dev-shipped",
+            "kind": "topic"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "type:orders#Order"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:workflow:orders-dev-shipping",
+      "type": "entry",
+      "label": "workflow orders-dev-shipping",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 133,
+      "kind": "workflow",
+      "meta": {
+        "key": "orders-dev-shipping",
+        "name": "orders-dev-shipping",
+        "nameFrom": "deployment",
+        "startAt": "ReserveStock",
+        "states": 3,
+        "queryLanguage": "JSONPath",
+        "comment": "Reserves the stock of a placed order, then charges for it.",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "serverless",
+        "declaredAs": "stepFunctions.stateMachines.shipping",
+        "declaredIn": "serverless.yml:123"
+      }
+    },
+    {
+      "id": "orders#serverless.yml:orders-dev-shipping/ChargePayment",
+      "type": "function",
+      "label": "ChargePayment [Task lambda:invoke]",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 145,
+      "kind": "state",
+      "meta": {
+        "workflow": "orders-dev-shipping",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "orders-dev-charge-payment"
+        },
+        "reaches": [
+          "invoke:orders-dev-charge-payment"
+        ],
+        "parameters": {
+          "FunctionName": "${ref1}",
+          "Payload.$": "$"
+        },
+        "outputPath": "$.Payload"
+      }
+    },
+    {
+      "id": "orders#serverless.yml:orders-dev-shipping/Done",
+      "type": "function",
+      "label": "Done [Succeed]",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 153,
+      "kind": "state",
+      "meta": {
+        "workflow": "orders-dev-shipping",
+        "stateType": "Succeed",
+        "end": true
+      }
+    },
+    {
+      "id": "orders#serverless.yml:orders-dev-shipping/ReserveStock",
+      "type": "function",
+      "label": "ReserveStock [Task lambda:invoke]",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 137,
+      "kind": "state",
+      "meta": {
+        "workflow": "orders-dev-shipping",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "orders-dev-reserve-stock"
+        },
+        "reaches": [
+          "invoke:orders-dev-reserve-stock"
+        ],
+        "parameters": {
+          "FunctionName": "${ref0}",
+          "Payload.$": "$"
+        },
+        "outputPath": "$.Payload"
+      }
+    },
+    {
+      "id": "orders#src/invoices/index-invoice.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/invoices/index-invoice.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#S3Event"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "indexed",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#src/live/live-socket.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/live/live-socket.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#src/notices/notify-customer.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/notices/notify-customer.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SNSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "shipped",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#src/orders/cancel-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/orders/cancel-order.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/get-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/orders/get-order.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/list-orders.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/orders/list-orders.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/order-changed.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/orders/order-changed.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#DynamoDBStreamEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/place-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/orders/place-order.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "orders#src/orders/receipt.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/orders/receipt.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEventV2"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResultV2"
+        }
+      }
+    },
+    {
+      "id": "orders#src/refunds/refund-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/refunds/refund-order.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#EventBridgeEvent<'OrderCancelled',{orderId:string}>"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "refund",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#src/reports/nightly-report.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/reports/nightly-report.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_event",
+              "type": "type:@types/aws-lambda#ScheduledEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "orders",
+            "at": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders#src/shipping/charge-payment.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/shipping/charge-payment.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:orders#Order&{reserved:boolean}"
+            }
+          ],
+          "returns": "{orderId:string;charged:boolean}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/shipping/reserve-stock.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/shipping/reserve-stock.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:orders#Order"
+            }
+          ],
+          "returns": "type:orders#Order&{reserved:boolean}"
+        }
+      }
+    },
+    {
+      "id": "orders#src/shipping/ship-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/shipping/ship-order.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:orders#serverless.yml:resources.Resources.PlacedQueue",
+      "type": "producer",
+      "label": "message sqs/orders-dev-placed-dlq",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 177,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "redrive",
+        "declaredAs": "resources.Resources.PlacedQueue",
+        "deployedBy": "serverless",
+        "maxReceiveCount": 3
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/cancel-order.ts:10:9",
+      "type": "producer",
+      "label": "event eventbridge/orders-dev/orders.service/OrderCancelled",
+      "repo": "orders",
+      "file": "src/orders/cancel-order.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "eventbridge",
+              {
+                "environment": "ORDERS_BUS_NAME",
+                "forms": [
+                  "^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$"
+                ]
+              },
+              "orders.service",
+              "OrderCancelled"
+            ],
+            "payload": "{orderId:string}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/place-order.ts:19:9",
+      "type": "producer",
+      "label": "write dynamodb/orders-dev-orders",
+      "repo": "orders",
+      "file": "src/orders/place-order.ts",
+      "line": 19,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb-document",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "dynamodb",
+              {
+                "environment": "ORDERS_TABLE",
+                "forms": [
+                  "^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)$"
+                ]
+              }
+            ],
+            "payload": "type:orders#Order"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static",
+        "whereDeclared": true
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/place-order.ts:20:9",
+      "type": "producer",
+      "label": "message sqs/orders-dev-placed",
+      "repo": "orders",
+      "file": "src/orders/place-order.ts",
+      "line": 20,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "ORDERS_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "type:orders#Order"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:orders#src/orders/place-order.ts:21:9",
+      "type": "producer",
+      "label": "event eventbridge/orders-dev/orders.service/OrderPlaced",
+      "repo": "orders",
+      "file": "src/orders/place-order.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "eventbridge",
+              {
+                "environment": "ORDERS_BUS_NAME",
+                "forms": [
+                  "^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$"
+                ]
+              },
+              "orders.service",
+              "OrderPlaced"
+            ],
+            "payload": "type:orders#Order"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:orders#src/shipping/ship-order.ts:16:9",
+      "type": "producer",
+      "label": "s3:ObjectCreated:Put s3/orders-dev-invoices",
+      "repo": "orders",
+      "file": "src/shipping/ship-order.ts",
+      "line": 16,
+      "kind": "s3:ObjectCreated:Put",
+      "meta": {
+        "kind": "s3:ObjectCreated:Put",
+        "adapter": "aws-s3",
+        "channelVia": "environment",
+        "method": "send",
+        "recorded": {
+          "Key": [
+            "invoices/*.pdf"
+          ]
+        },
+        "awaiting": [
+          {
+            "parts": [
+              "s3",
+              {
+                "environment": "INVOICES_BUCKET",
+                "forms": [
+                  "^arn:[^:]+:s3:::([^/:]+)$"
+                ]
+              }
+            ]
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:orders#src/shipping/ship-order.ts:17:9",
+      "type": "producer",
+      "label": "message sns/orders-dev-shipped",
+      "repo": "orders",
+      "file": "src/shipping/ship-order.ts",
+      "line": 17,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "SHIPPED_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{status:string;orderId:string;customerId:string;items:string[]}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 15,
+          "filesRead": 15,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/lib-dynamodb": 4,
+            "@aws-sdk/client-sqs": 1,
+            "@aws-sdk/client-eventbridge": 2,
+            "@aws-sdk/client-s3": 1,
+            "@aws-sdk/client-sns": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:dynamodb/orders-dev-orders",
+      "to": "consumer:orders#serverless.yml:functions.order-changed.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 57,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:eventbridge/orders-dev/orders.service/OrderCancelled",
+      "to": "consumer:orders#serverless.yml:functions.refund-order.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 88,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:eventbridge/orders-dev/orders.service/OrderPlaced",
+      "to": "consumer:orders#serverless.yml:stepFunctions.stateMachines.shipping.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 126,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:s3/orders-dev-invoices",
+      "to": "consumer:orders#serverless.yml:functions.index-invoice.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 106,
+      "meta": {
+        "by": "notification"
+      }
+    },
+    {
+      "from": "channel:sns/orders-dev-shipped",
+      "to": "consumer:orders#serverless.yml:functions.notify-customer.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 81,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/orders-dev-placed",
+      "to": "consumer:orders#serverless.yml:functions.ship-order.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 68,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/orders-dev-placed",
+      "to": "producer:orders#serverless.yml:resources.Resources.PlacedQueue",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 177,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#serverless.yml:functions.index-invoice.events[0]",
+      "to": "entry:orders:invoke:orders-dev-index-invoice",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 106,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#serverless.yml:functions.notify-customer.events[0]",
+      "to": "entry:orders:invoke:orders-dev-notify-customer",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 81,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#serverless.yml:functions.order-changed.events[0]",
+      "to": "entry:orders:event:dynamodb/orders-dev-orders",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 57,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#serverless.yml:functions.refund-order.events[0]",
+      "to": "entry:orders:invoke:orders-dev-refund-order",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 88,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#serverless.yml:functions.ship-order.events[0]",
+      "to": "entry:orders:invoke:orders-dev-ship-order",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 68,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#serverless.yml:stepFunctions.stateMachines.shipping.events[0]",
+      "to": "entry:orders:workflow:orders-dev-shipping",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 126,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:orders-dev-shipping"
+      }
+    },
+    {
+      "from": "entry:orders:cron:orders-dev-nightly-report",
+      "to": "orders#src/reports/nightly-report.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reports/nightly-report.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:orders:event:dynamodb/orders-dev-orders",
+      "to": "orders#src/orders/order-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/order-changed.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:orders:event:websocket/dev-orders-websockets/$connect",
+      "to": "orders#src/live/live-socket.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/live-socket.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:event:websocket/dev-orders-websockets/subscribe",
+      "to": "orders#src/live/live-socket.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/live-socket.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:http:ALL:/*@orders-dev-receipt",
+      "to": "orders#src/orders/receipt.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/receipt.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:DELETE:/orders/:param",
+      "to": "orders#src/orders/cancel-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/cancel-order.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders",
+      "to": "orders#src/orders/list-orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/list-orders.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders/:param",
+      "to": "orders#src/orders/get-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/get-order.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders",
+      "to": "orders#src/orders/place-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:orders#Order",
+      "file": "src/orders/place-order.ts",
+      "line": 16,
+      "meta": {
+        "requestRead": true,
+        "body": "{customerId:string;items:string[]}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-cancel-order",
+      "to": "orders#src/orders/cancel-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/cancel-order.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-charge-payment",
+      "to": "orders#src/shipping/charge-payment.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/shipping/charge-payment.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-get-order",
+      "to": "orders#src/orders/get-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/get-order.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-index-invoice",
+      "to": "orders#src/invoices/index-invoice.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/invoices/index-invoice.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-list-orders",
+      "to": "orders#src/orders/list-orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/list-orders.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-live-socket",
+      "to": "orders#src/live/live-socket.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/live/live-socket.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-nightly-report",
+      "to": "orders#src/reports/nightly-report.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reports/nightly-report.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-notify-customer",
+      "to": "orders#src/notices/notify-customer.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/notices/notify-customer.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-order-changed",
+      "to": "orders#src/orders/order-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/order-changed.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-place-order",
+      "to": "orders#src/orders/place-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-receipt",
+      "to": "orders#src/orders/receipt.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/receipt.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-refund-order",
+      "to": "orders#src/refunds/refund-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/refunds/refund-order.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-reserve-stock",
+      "to": "orders#src/shipping/reserve-stock.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/shipping/reserve-stock.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:invoke:orders-dev-ship-order",
+      "to": "orders#src/shipping/ship-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/shipping/ship-order.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:orders:workflow:orders-dev-shipping",
+      "to": "orders#serverless.yml:orders-dev-shipping/ReserveStock",
+      "type": "handles",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 135
+    },
+    {
+      "from": "orders#serverless.yml:orders-dev-shipping/ChargePayment",
+      "to": "entry:orders:invoke:orders-dev-charge-payment",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 145,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:orders-dev-charge-payment"
+      }
+    },
+    {
+      "from": "orders#serverless.yml:orders-dev-shipping/ChargePayment",
+      "to": "orders#serverless.yml:orders-dev-shipping/Done",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 152,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#serverless.yml:orders-dev-shipping/ReserveStock",
+      "to": "entry:orders:invoke:orders-dev-reserve-stock",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 137,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:orders-dev-reserve-stock"
+      }
+    },
+    {
+      "from": "orders#serverless.yml:orders-dev-shipping/ReserveStock",
+      "to": "orders#serverless.yml:orders-dev-shipping/ChargePayment",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 144,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/orders/cancel-order.ts:handler",
+      "to": "config_key:orders#ORDERS_BUS_NAME",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/cancel-order.ts",
+      "line": 12,
+      "meta": {
+        "setBy": [
+          {
+            "function": "orders-dev-cancel-order",
+            "written": "!Ref OrdersBus",
+            "value": "orders-dev"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/orders/cancel-order.ts:handler",
+      "to": "producer:orders#src/orders/cancel-order.ts:10:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/cancel-order.ts",
+      "line": 10
+    },
+    {
+      "from": "orders#src/orders/get-order.ts:handler",
+      "to": "config_key:orders#ORDERS_TABLE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/get-order.ts",
+      "line": 8,
+      "meta": {
+        "setBy": [
+          {
+            "function": "orders-dev-get-order",
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/orders/list-orders.ts:handler",
+      "to": "config_key:orders#ORDERS_TABLE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/list-orders.ts",
+      "line": 10,
+      "meta": {
+        "setBy": [
+          {
+            "function": "orders-dev-list-orders",
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/orders/place-order.ts:handler",
+      "to": "config_key:orders#ORDERS_BUS_NAME",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 23,
+      "meta": {
+        "setBy": [
+          {
+            "function": "orders-dev-place-order",
+            "written": "!Ref OrdersBus",
+            "value": "orders-dev"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/orders/place-order.ts:handler",
+      "to": "config_key:orders#ORDERS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 20,
+      "meta": {
+        "setBy": [
+          {
+            "function": "orders-dev-place-order",
+            "written": "!Ref PlacedQueue",
+            "value": "orders-dev-placed"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/orders/place-order.ts:handler",
+      "to": "config_key:orders#ORDERS_TABLE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 19,
+      "meta": {
+        "setBy": [
+          {
+            "function": "orders-dev-place-order",
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/orders/place-order.ts:handler",
+      "to": "producer:orders#src/orders/place-order.ts:19:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 19
+    },
+    {
+      "from": "orders#src/orders/place-order.ts:handler",
+      "to": "producer:orders#src/orders/place-order.ts:20:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 20
+    },
+    {
+      "from": "orders#src/orders/place-order.ts:handler",
+      "to": "producer:orders#src/orders/place-order.ts:21:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 21
+    },
+    {
+      "from": "orders#src/reports/nightly-report.ts:handler",
+      "to": "config_key:orders#ORDERS_TABLE",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/reports/nightly-report.ts",
+      "line": 8,
+      "meta": {
+        "setBy": [
+          {
+            "function": "orders-dev-nightly-report",
+            "written": "!Ref OrdersTable",
+            "value": "orders-dev-orders"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/shipping/ship-order.ts:handler",
+      "to": "config_key:orders#INVOICES_BUCKET",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/shipping/ship-order.ts",
+      "line": 16,
+      "meta": {
+        "setBy": [
+          {
+            "function": "orders-dev-ship-order",
+            "written": "!Ref InvoicesBucket",
+            "value": "orders-dev-invoices"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/shipping/ship-order.ts:handler",
+      "to": "config_key:orders#SHIPPED_TOPIC_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/shipping/ship-order.ts",
+      "line": 17,
+      "meta": {
+        "setBy": [
+          {
+            "function": "orders-dev-ship-order",
+            "written": "!Ref ShippedTopic",
+            "value": "orders-dev-shipped"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/shipping/ship-order.ts:handler",
+      "to": "producer:orders#src/shipping/ship-order.ts:16:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/shipping/ship-order.ts",
+      "line": 16
+    },
+    {
+      "from": "orders#src/shipping/ship-order.ts:handler",
+      "to": "producer:orders#src/shipping/ship-order.ts:17:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/shipping/ship-order.ts",
+      "line": 17
+    },
+    {
+      "from": "producer:orders#serverless.yml:resources.Resources.PlacedQueue",
+      "to": "channel:sqs/orders-dev-placed-dlq",
+      "type": "emits",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 177,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:orders#src/orders/cancel-order.ts:10:9",
+      "to": "channel:eventbridge/orders-dev/orders.service/OrderCancelled",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/cancel-order.ts",
+      "line": 10,
+      "params": [
+        "{orderId:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ORDERS_BUS_NAME"
+        ],
+        "functions": [
+          "orders-dev-cancel-order"
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#src/orders/place-order.ts:19:9",
+      "to": "channel:dynamodb/orders-dev-orders",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 19,
+      "params": [
+        "type:orders#Order"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ORDERS_TABLE"
+        ],
+        "functions": [
+          "orders-dev-place-order"
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#src/orders/place-order.ts:20:9",
+      "to": "channel:sqs/orders-dev-placed",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 20,
+      "params": [
+        "type:orders#Order"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ORDERS_QUEUE_URL"
+        ],
+        "functions": [
+          "orders-dev-place-order"
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#src/orders/place-order.ts:21:9",
+      "to": "channel:eventbridge/orders-dev/orders.service/OrderPlaced",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/orders/place-order.ts",
+      "line": 21,
+      "params": [
+        "type:orders#Order"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ORDERS_BUS_NAME"
+        ],
+        "functions": [
+          "orders-dev-place-order"
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#src/shipping/ship-order.ts:16:9",
+      "to": "channel:s3/orders-dev-invoices",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/shipping/ship-order.ts",
+      "line": 16,
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "INVOICES_BUCKET"
+        ],
+        "functions": [
+          "orders-dev-ship-order"
+        ],
+        "takenBy": [
+          "consumer:orders#serverless.yml:functions.index-invoice.events[0]"
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#src/shipping/ship-order.ts:17:9",
+      "to": "channel:sns/orders-dev-shipped",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/shipping/ship-order.ts",
+      "line": 17,
+      "params": [
+        "{status:string;orderId:string;customerId:string;items:string[]}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "SHIPPED_TOPIC_ARN"
+        ],
+        "functions": [
+          "orders-dev-ship-order"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyEventV2": {
+      "name": "APIGatewayProxyEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "d1b9db28fad35c91",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResultV2": {
+      "name": "APIGatewayProxyResultV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0a2dc33db8681605",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyWebsocketEventV2": {
+      "name": "APIGatewayProxyWebsocketEventV2",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2c155b64277516dc",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#DynamoDBStreamEvent": {
+      "name": "DynamoDBStreamEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "426b6e41a64d2ec9",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#EventBridgeEvent<'OrderCancelled',{orderId:string}>": {
+      "name": "EventBridgeEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "927920068f37d58d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#S3Event": {
+      "name": "S3Event",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "debc039fb07befd0",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SNSEvent": {
+      "name": "SNSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "17e8e52b989c5abe",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#ScheduledEvent": {
+      "name": "ScheduledEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "7e19b21586cc2fef",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:orders#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "orders#src/lib/orders.ts",
+      "structuralHash": "db8e61ce882a9ae1",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "items",
+          "type": "string[]",
+          "optional": false
+        },
+        {
+          "name": "status",
+          "type": "'cancelled'|'placed'|'shipped'",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": []
+}

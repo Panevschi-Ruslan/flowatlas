@@ -1,0 +1,9 @@
+@  workflow orders-dev-shipping            orders/serverless.yml:133
+  -> ReserveStock [Task lambda:invoke]     orders/serverless.yml:137
+    @  orders-dev-reserve-stock            orders/serverless.yml:72
+      -> handler                           orders/src/shipping/reserve-stock.ts:4
+    -> ChargePayment [Task lambda:invoke]  orders/serverless.yml:145
+      @  orders-dev-charge-payment         orders/serverless.yml:75
+        -> handler                         orders/src/shipping/charge-payment.ts:4
+      -> Done [Succeed]                    orders/serverless.yml:153
+unresolved on this path: 0

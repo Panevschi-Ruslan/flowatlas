@@ -1,0 +1,251 @@
+import { DEFAULT_EVENT_BUS, deployedNameIn, eventPatternOf } from '@flowatlas/aws';
+import type { DeliverySource } from '@flowatlas/core';
+import { intrinsicOf, RESOURCE_KINDS, type Deployed, type Resource } from './cloudformation.js';
+import type { FileReading } from './reading.js';
+import { isRecord, textOf, Unread } from './variables.js';
+
+/**
+ * What the resources of a template declare besides themselves (P57): a
+ * table's stream, a queue's redrive, a topic's subscriptions, a rule's
+ * targets, a mapping, a bucket's notifications. Each is the delivery or the
+ * stream Terraform's reading of the same resource gives, in the same shape, so
+ * the adapter draws one as it draws the other.
+ *
+ * One reader per resource type, in a table (Strategy); a type nothing here
+ * reads is skipped, because most of a template is roles and policies.
+ */
+
+type ResourceReader = (resource: Resource, reading: FileReading) => void;
+
+const pathOf = (resource: Resource): string[] => ['resources', 'Resources', resource.logicalId];
+
+/** The deployed thing a resource itself declares. */
+const own = (resource: Resource, reading: FileReading): Deployed | Unread | undefined => reading.template.named(resource.logicalId);
+
+/** A row about a resource, at the resource. */
+const resourceRow = (reading: FileReading, resource: Resource, reason: string, message: string, hint: string, level?: 'info'): void =>
+  reading.row(pathOf(resource), resource.address, { reason, message, hint, ...(level === undefined ? {} : { level }) });
+
+/** A resource whose name the platform generates says so once, wherever it is first met. */
+const declared = (resource: Resource, reading: FileReading): Deployed | undefined => {
+  const found = own(resource, reading);
+  if (found === undefined || found instanceof Unread) return undefined;
+  reading.generatedRow(found, pathOf(resource));
+  return found;
+};
+
+const pushDelivery = (reading: FileReading, resource: Resource, address: string, by: Parameters<FileReading['parts']['deliveries']['push']>[0]['by'], from: DeliverySource, target: unknown, what: string, meta: Record<string, unknown> = {}, name?: string): void => {
+  const to = reading.targetOf(reading.template.deployedOf(target), pathOf(resource), address, what);
+  reading.parts.deliveries.push({
+    ...reading.siteOf(pathOf(resource)),
+    address,
+    by,
+    ...(name === undefined ? {} : { name }),
+    from,
+    ...(to === undefined ? {} : { to }),
+    ...(Object.keys(meta).length === 0 ? {} : { meta }),
+  });
+};
+
+/** A table with a stream, and a Kinesis stream: what a write in code publishes onto (P51). */
+const readTable: ResourceReader = (resource, reading) => {
+  const found = declared(resource, reading);
+  const specification = resource.properties['StreamSpecification'];
+  const hasStream = isRecord(specification) && textOf(specification['StreamViewType']) !== undefined;
+  if (found === undefined || !hasStream) return;
+  reading.parts.streams.push({ ...reading.siteOf(pathOf(resource)), address: resource.address, of: 'table', name: found.name });
+};
+
+const readKinesis: ResourceReader = (resource, reading) => {
+  const found = declared(resource, reading);
+  if (found === undefined) return;
+  reading.parts.streams.push({ ...reading.siteOf(pathOf(resource)), address: resource.address, of: 'stream', name: found.name });
+};
+
+/** A queue: its name, and the dead-letter queue its redrive policy hands failures to. */
+const readQueue: ResourceReader = (resource, reading) => {
+  const found = declared(resource, reading);
+  const policy = resource.properties['RedrivePolicy'];
+  if (!isRecord(policy) || found === undefined) return;
+  const receives = policy['maxReceiveCount'];
+  pushDelivery(
+    reading,
+    resource,
+    resource.address,
+    'redrive',
+    { kind: 'queue', name: found.name },
+    policy['deadLetterTargetArn'],
+    `the dead-letter queue of ${resource.address}`,
+    typeof receives === 'number' ? { maxReceiveCount: receives } : {},
+  );
+};
+
+/** Protocols a subscription delivers to something this reading follows. */
+const FOLLOWED = new Set(['lambda', 'sqs']);
+
+const subscription = (reading: FileReading, resource: Resource, address: string, topic: string, protocol: string | undefined, endpoint: unknown, policy: unknown): void => {
+  const meta = {
+    ...(protocol === undefined ? {} : { protocol }),
+    ...(policy === undefined ? {} : { unmatched: { filter_policy: JSON.stringify(policy) } }),
+  };
+  if (protocol === undefined || !FOLLOWED.has(protocol)) {
+    resourceRow(reading, resource, 'subscription-target-unread', `${address} delivers by ${protocol ?? 'a protocol not read'}, which nothing here follows`, 'An e-mail, an HTTP endpoint or a phone is outside the map. Nothing to fix.', 'info');
+    reading.parts.deliveries.push({ ...reading.siteOf(pathOf(resource)), address, by: 'subscription', from: { kind: 'topic', name: topic }, meta });
+    return;
+  }
+  pushDelivery(reading, resource, address, 'subscription', { kind: 'topic', name: topic }, endpoint, `what ${address} delivers to`, meta);
+};
+
+/** A topic, and the subscriptions written inside it. */
+const readTopic: ResourceReader = (resource, reading) => {
+  const found = declared(resource, reading);
+  const inline = resource.properties['Subscription'];
+  if (found === undefined || !Array.isArray(inline)) return;
+  inline.forEach((item, index) => {
+    if (!isRecord(item)) return;
+    subscription(reading, resource, `${resource.address}.Subscription[${index}]`, found.name, textOf(item['Protocol']), item['Endpoint'], undefined);
+  });
+};
+
+const readSubscription: ResourceReader = (resource, reading) => {
+  const topic = reading.template.deployedOf(resource.properties['TopicArn']);
+  if (topic === undefined || topic instanceof Unread || topic.kind !== 'topic') {
+    resourceRow(reading, resource, 'subscription-source-unread', `the topic ${resource.address} subscribes to is not read${topic instanceof Unread ? `: ${topic.text}` : ''}`, 'Write TopicArn as a Ref of a topic the file declares, or its ARN.');
+    return;
+  }
+  subscription(reading, resource, resource.address, topic.name, textOf(resource.properties['Protocol']), resource.properties['Endpoint'], resource.properties['FilterPolicy']);
+};
+
+/** A rule: a pattern on a bus or a schedule, and a delivery per target. */
+const readRule: ResourceReader = (resource, reading) => {
+  const { properties } = resource;
+  const name = textOf(properties['Name']);
+  const schedule = textOf(properties['ScheduleExpression']);
+  let from: DeliverySource;
+  if (schedule !== undefined) {
+    from = { kind: 'schedule', expression: schedule };
+  } else {
+    const written = properties['EventBusName'];
+    const text = textOf(written);
+    const found = text === undefined && written !== undefined ? reading.template.deployedOf(written) : undefined;
+    const bus = written === undefined ? DEFAULT_EVENT_BUS : (text !== undefined ? (deployedNameIn(text)?.name ?? text) : found !== undefined && !(found instanceof Unread) ? found.name : undefined);
+    if (bus === undefined) {
+      resourceRow(reading, resource, 'subscription-source-unread', `the bus ${resource.address} takes events from is not read`, 'Write EventBusName as the bus name, or a Ref of a bus the file declares.');
+      return;
+    }
+    const pattern = eventPatternOf(properties['EventPattern']);
+    if ('reason' in pattern) {
+      resourceRow(reading, resource, 'event-pattern-unread', `the EventPattern of ${resource.address} is not read: ${pattern.text}`, 'Write the pattern as a mapping of fields to lists of values.');
+      return;
+    }
+    from = { kind: 'bus', name: bus, pattern };
+  }
+  const targets = Array.isArray(properties['Targets']) ? properties['Targets'] : [];
+  targets.forEach((target, index) => {
+    if (!isRecord(target)) return;
+    const transformed = ['Input', 'InputPath', 'InputTransformer'].some((key) => target[key] !== undefined);
+    pushDelivery(
+      reading,
+      resource,
+      `${resource.address}.Targets[${index}]`,
+      from.kind === 'schedule' ? 'schedule' : 'rule',
+      from,
+      target['Arn'],
+      `the target of ${resource.address}`,
+      { rule: resource.address, ...(textOf(properties['State']) === 'DISABLED' ? { disabled: true } : {}), ...(transformed ? { transformed: true } : {}) },
+      name,
+    );
+  });
+};
+
+/** A mapping from a queue or a stream to a function, written as a resource of its own. */
+const readMapping: ResourceReader = (resource, reading) => {
+  const source = reading.template.deployedOf(resource.properties['EventSourceArn']);
+  if (source === undefined || source instanceof Unread) {
+    resourceRow(reading, resource, 'subscription-source-unread', `what ${resource.address} reads is not read${source instanceof Unread ? `: ${source.text}` : ''}`, 'Write EventSourceArn as an Fn::GetAtt of a queue or a stream the file declares, or its ARN.');
+    return;
+  }
+  const from: DeliverySource | undefined =
+    source.kind === 'queue'
+      ? { kind: 'queue', name: source.name }
+      : source.kind === 'stream' || (source.kind === 'table' && source.changes === true)
+        ? { kind: 'changes', of: source.kind === 'stream' ? 'stream' : 'table', name: source.name }
+        : undefined;
+  if (from === undefined) {
+    resourceRow(reading, resource, 'subscription-source-unread', `${resource.address} reads ${source.name}, which is not read from in order`, 'A mapping reads a queue or a stream.', 'info');
+    return;
+  }
+  const fn = resource.properties['FunctionName'];
+  const text = textOf(fn);
+  const target = text !== undefined && deployedNameIn(text) === undefined ? { kind: 'function' as const, name: text } : reading.template.deployedOf(fn);
+  const to = reading.targetOf(target, pathOf(resource), resource.address, `the function ${resource.address} hands its batches to`);
+  reading.parts.deliveries.push({
+    ...reading.siteOf(pathOf(resource)),
+    address: resource.address,
+    by: 'mapping',
+    from,
+    ...(to === undefined ? {} : { to }),
+    ...(resource.properties['Enabled'] === false ? { meta: { disabled: true } } : {}),
+  });
+};
+
+/** The configurations of a bucket's notification, and the property naming each target. */
+const NOTIFICATIONS: ReadonlyArray<readonly [list: string, target: string]> = [
+  ['LambdaConfigurations', 'Function'],
+  ['QueueConfigurations', 'Queue'],
+  ['TopicConfigurations', 'Topic'],
+];
+
+const readBucket: ResourceReader = (resource, reading) => {
+  const found = declared(resource, reading);
+  const configuration = resource.properties['NotificationConfiguration'];
+  if (found === undefined || !isRecord(configuration)) return;
+  for (const [list, property] of NOTIFICATIONS) {
+    const items = Array.isArray(configuration[list]) ? (configuration[list] as unknown[]) : [];
+    items.forEach((item, index) => {
+      if (!isRecord(item)) return;
+      const event = textOf(item['Event']);
+      const filter = isRecord(item['Filter']) && isRecord(item['Filter']['S3Key']) ? item['Filter']['S3Key']['Rules'] : undefined;
+      const rules = Array.isArray(filter) ? filter.filter(isRecord) : [];
+      const ruleOf = (name: string) => textOf(rules.find((rule) => textOf(rule['Name'])?.toLowerCase() === name)?.['Value']);
+      const prefix = ruleOf('prefix');
+      const suffix = ruleOf('suffix');
+      if (event === undefined) {
+        resourceRow(reading, resource, 'bucket-notification-unread', `the event of ${resource.address}.${list}[${index}] is not read`, 'Write the Event so the file settles it.');
+        return;
+      }
+      pushDelivery(
+        reading,
+        resource,
+        `${resource.address}.${list}[${index}]`,
+        'notification',
+        { kind: 'bucket', name: found.name, events: [event], ...(prefix === undefined ? {} : { prefix }), ...(suffix === undefined ? {} : { suffix }) },
+        item[property],
+        `what ${resource.address}.${list}[${index}] notifies`,
+      );
+    });
+  }
+};
+
+const READERS: ReadonlyMap<string, ResourceReader> = new Map<string, ResourceReader>([
+  ['AWS::DynamoDB::Table', readTable],
+  ['AWS::DynamoDB::GlobalTable', readTable],
+  ['AWS::Kinesis::Stream', readKinesis],
+  ['AWS::SQS::Queue', readQueue],
+  ['AWS::SNS::Topic', readTopic],
+  ['AWS::SNS::Subscription', readSubscription],
+  ['AWS::Events::Rule', readRule],
+  ['AWS::Lambda::EventSourceMapping', readMapping],
+  ['AWS::S3::Bucket', readBucket],
+]);
+
+/** Every resource of a template, through the reader for its type. */
+export const readResources = (reading: FileReading): void => {
+  for (const resource of reading.template.resources.values()) {
+    const read = READERS.get(resource.type);
+    if (read !== undefined) read(resource, reading);
+    else if (RESOURCE_KINDS.has(resource.type)) declared(resource, reading);
+  }
+};
+
+export { intrinsicOf };

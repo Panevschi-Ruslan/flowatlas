@@ -1,0 +1,12 @@
+@  accounts-prod-lapse                                              members/services/accounts/serverless.ts:21
+  -> handler                                                        members/services/accounts/src/accounts/lapse.ts:7
+    ~  event eventbridge/default/club.accounts/MemberLapsed         members/services/accounts/src/accounts/lapse.ts:8
+      ~  eventbridge/default/club.accounts/MemberLapsed             services/notices/serverless.yml:121
+        ~  rule resources.Resources.LapsedRule.Targets[0]           members/services/notices/serverless.yml:121
+          @  notices-prod-digest                                    members/services/notices/serverless.yml:42
+            -> handler                                              members/services/notices/src/notices/digest.ts:6
+              $  NOTICES_QUEUE_URL                                  members/services/notices/src/notices/digest.ts:7
+              ~  message sqs/${…}@resources.Resources.NoticesQueue  members/services/notices/src/notices/digest.ts:7
+                ~  sqs/${…}@resources.Resources.NoticesQueue        services/notices/serverless.yml:34
+... truncated: ≥1 more nodes (raise --depth)
+unresolved on this path: 0

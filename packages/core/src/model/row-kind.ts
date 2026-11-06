@@ -79,6 +79,12 @@ const NOTES: readonly string[] = [
   'route-mount-assumed-empty',
   'stream-filter-not-matched',
   'workflow-named-by-file',
+  // A deployment read as far as its files go (P57): a name the platform
+  // generates, stood in for by its declaration; a declaration under a
+  // condition the files do not settle; one the program never reaches.
+  'deployed-name-generated',
+  'construct-conditional',
+  'construct-unreached',
   // The route audit, where the source says what was decided
   'route-checked-in-body',
   'route-guard-skipped',
@@ -285,6 +291,10 @@ const GAPS: readonly string[] = [
   'event-pattern-unread',
   'api-body-unread',
   'deployment-unread',
+  // A deployment read by interpreting the program that declares it (P57)
+  'deployment-app-unread',
+  'deployment-plugin-unread',
+  'construct-repeated-unread',
   // Workflows written down as state machine definitions
   'workflow-definition-unreadable',
   'workflow-target-dynamic',

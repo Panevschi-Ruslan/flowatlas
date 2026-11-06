@@ -1,4 +1,5 @@
-import type { DeliverySource, DeliveryTarget } from '@flowatlas/core';
+import { destinationOf } from '@flowatlas/aws';
+import type { DeliverySource } from '@flowatlas/core';
 import type { Instance, Value } from '../eval/values.js';
 import { blockOrArgument, entryOf, siteOf, unreadRow } from './arguments.js';
 import { deployedOfValue, isBecause, targetOf } from './deployed.js';
@@ -24,18 +25,6 @@ const OUTCOMES: ReadonlyMap<string, When> = new Map([
   ['on_failure', 'failure'],
 ]);
 
-/**
- * What an invocation result put on a bus is named by: the platform's own source
- * and detail type, so a rule taking them by name joins it.
- */
-const RESULT_DETAIL_TYPES: Readonly<Record<When, string>> = {
-  success: 'Lambda Function Invocation Result - Success',
-  failure: 'Lambda Function Invocation Result - Failure',
-};
-
-/** A destination as a target; a result put on a bus is the event the platform names. */
-const destinationOf = (to: DeliveryTarget | undefined, when: When): DeliveryTarget | undefined =>
-  to?.kind === 'bus' ? { ...to, fields: { source: 'lambda', 'detail-type': RESULT_DETAIL_TYPES[when] } } : to;
 
 /** Each outcome a `destination_config` hands on, and the value naming where. */
 const destinationsIn = (owner: Instance, at: string): (readonly [string, When, Value])[] => {

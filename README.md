@@ -924,6 +924,17 @@ prove, and the path is given so you can run it.
   start in one call and starts it by id in the next as well - so a route leads
   into the workflow it starts (`fixtures/start-workflow-sdk`,
   `fixtures/start-workflow-helper`, `fixtures/start-workflow-by-record`).
+- **Serverless on AWS, declared with the Serverless Framework or the CDK.** A
+  `serverless.yml` (or `.yaml`, `.json`, `.ts`, `.js`) and a CDK app in
+  TypeScript are read into the same functions, routes, subscribers, streams and
+  workflows the Terraform reader gives - one deployment written all three ways
+  reads as one graph (`fixtures/terraform-orders`, `fixtures/serverless-orders`,
+  `fixtures/cdk-orders`). The framework's variables are resolved where the files
+  settle them; the CDK app is followed from the entry `cdk.json` names, through
+  its constructs, helpers, loops and conditions, without being run or
+  installed. A queue or a function the platform names when it is deployed is
+  named by its declaration, so everything in the deployment that points at it
+  joins (`fixtures/serverless-shapes`, `fixtures/cdk-shapes`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —

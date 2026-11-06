@@ -81,6 +81,21 @@ describe('a verb exported where a router serves it', () => {
   });
 });
 
+describe('a function a CDK app makes (P57)', () => {
+  it('counts one made with a scope and an id, however the class is imported', () => {
+    const text = [
+      "const a = new NodejsFunction(this, 'PlaceOrder', { entry });",
+      "const b = new lambda.Function(scope, 'Sender', { handler: 'send.handler' });",
+      "const c = new cdk.aws_lambda.DockerImageFunction(this, 'Renderer', {});",
+    ].join('\n');
+    assert.deepEqual(sitesIn('lib/orders-stack.ts', text), { routes: 3 });
+  });
+
+  it("does not count the language's own Function constructor", () => {
+    assert.deepEqual(sitesIn('src/sandbox.ts', "const run = new Function('a', 'return a + 1');\n"), {});
+  });
+});
+
 describe('a test file, by the definition the tool reads by', () => {
   const tests = [
     'packages/features/credentials/handleDeleteCredential.integration-test.ts',

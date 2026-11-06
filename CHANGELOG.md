@@ -28,6 +28,26 @@ only one of them moved.
   `graphql-federation-not-read` now says what could not be read: managed
   federation, a supergraph built at start or not committed, a registry schema,
   a subgraph no gateway names.
+- **Lambdas declared with the Serverless Framework or the AWS CDK (P57).** A
+  `serverless.yml` (`.yaml`, `.json`, `.ts`, `.js`) and a CDK app in TypeScript
+  are read into the functions, routes, subscribers, streams and workflows the
+  Terraform reader gives, through the same `DeploymentReader` shape, so the
+  linker, `flow`, `impact`, `dead` and the page read them unchanged; one
+  deployment written all three ways reads as one graph
+  (`scripts/deployments-agree.mjs`). The framework's variables (`self`, `opt`,
+  `sls`, `env` with `.env`, `file()`, `param`, `aws:region`) are resolved where
+  the files settle them, `resources.Resources` is read as CloudFormation with
+  its intrinsic functions, and the step-functions plugin's state machines are
+  workflows. The CDK app is followed from the entry `cdk.json` names - its
+  constructs, helpers, loops over settled lists and settled conditions -
+  without being run or installed, and a chain of states is written out as the
+  States Language. A queue or a function the platform names when it is
+  deployed is named by its declaration (`generatedName`), so what points at it
+  in the same deployment joins. `services[].infra.options` gives what a
+  command line would (`stage`, a context value). New rows:
+  `deployed-name-generated`, `construct-conditional` and `construct-unreached`
+  (notes), `construct-repeated-unread`, `deployment-app-unread` and
+  `deployment-plugin-unread`. `deployment-unread` now names only AWS SAM.
 - **`flowatlas path <from> <to>` (P229).** How one node reaches another, by
   the shortest ways: directed along the edges `flow` walks, or `--undirected`
   for "are these joined at all". It looks 6, then 12, then 24 steps unless

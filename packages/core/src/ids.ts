@@ -336,8 +336,36 @@ export const makeInvokeEntryKey = (name: string): string => required('name', nam
  * starts with `UNREAD_SPAN`, which no deployed name can contain, so it can never
  * be mistaken for one and `wasRead` says no to it.
  */
-export const makeUnnamedInvokeKey = (declaration: string): string =>
-  `${UNREAD_SPAN}@${required('declaration', declaration)}`;
+export const makeUnnamedInvokeKey = (declaration: string): string => `${UNREAD_SPAN}@${standIn(declaration)}`;
+
+/**
+ * A declaration spelled so it can stand where a name goes: a construct path's
+ * slashes and a site's colon, which a channel's name and an ARN are split on,
+ * are dots (P57). An address with neither is spelled as it is.
+ */
+const standIn = (declaration: string): string => required('declaration', declaration).replace(/[/:]/g, '.');
+
+/**
+ * The name a deployment gives something whose name it generates when it is
+ * deployed: a queue, a topic, a table or a function declared with no name of
+ * its own (P57).
+ *
+ * No file holds such a name, and guessing the platform's spelling of it would
+ * be a guess (I3). So it is stood in for by where it is declared, in the
+ * spelling an unnamed function's key already has: everything in the one
+ * deployment that refers to the declaration - a value a function is deployed
+ * with, a subscriber, a step - spells it the same way and joins to it, and
+ * nothing outside the deployment can, because no deployed name contains
+ * `UNREAD_SPAN` and `wasRead` says no to it.
+ */
+export const generatedName = (declaration: string): string => makeUnnamedInvokeKey(declaration);
+
+/**
+ * Whether a name is one {@link generatedName} stood in for: a reader that
+ * checks what a deployed name may be made of lets it through, because it is
+ * the one spelling every part of its deployment agrees on.
+ */
+export const isGeneratedName = (name: string): boolean => name.startsWith(`${UNREAD_SPAN}@`) && name.length > UNREAD_SPAN.length + 1;
 
 /**
  * The `key` half of a `workflow` entry id: the name the workflow is deployed
@@ -354,8 +382,7 @@ export const makeWorkflowEntryKey = (name: string): string => required('name', n
  * reason {@link makeUnnamedInvokeKey} gives: the steps are still worth drawing,
  * and nothing may join to them by a name made of the parts that were read.
  */
-export const makeUnnamedWorkflowKey = (declaration: string): string =>
-  `${UNREAD_SPAN}@${required('declaration', declaration)}`;
+export const makeUnnamedWorkflowKey = (declaration: string): string => `${UNREAD_SPAN}@${standIn(declaration)}`;
 
 /**
  * `<repo>#<file>:<workflow>/<state>` — one step of a workflow.

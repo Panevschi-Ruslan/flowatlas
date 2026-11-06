@@ -259,6 +259,16 @@ export const PROBES = [
     pattern: /@ResolveReference\s*\(|\b__resolveReference\s*[(:]/g,
   },
   {
+    // A function a CDK app deploys is a way in, as a route is: the platform
+    // runs it (P57). Counted where it is made with a scope and an id, so the
+    // language's own `new Function('return 1')` is not one.
+    name: 'cdk-function-construct',
+    family: 'routes',
+    scope: 'line',
+    what: 'a Lambda function an AWS CDK app makes (`new NodejsFunction(this, ...)`, `new lambda.Function(scope, ...)`)',
+    pattern: /\bnew\s+(?:[A-Za-z_$][\w$]*\.)*(?:NodejsFunction|Function|DockerImageFunction|SingletonFunction)\s*\(\s*(?:this|[A-Za-z_$][\w$]*)\s*,/g,
+  },
+  {
     name: 'nitro-route-file',
     family: 'routes',
     scope: 'file',

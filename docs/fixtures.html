@@ -66,9 +66,9 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>179 fixtures</span>
-    <span>450 snapshot files</span>
-    <span>13 areas</span>
+    <span>184 fixtures</span>
+    <span>470 snapshot files</span>
+    <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
   <section data-area>
@@ -370,7 +370,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, wired in Terraform <span class="count" data-total="24">24</span></h2>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="25">25</span></h2>
     <ul>
       <li class="fixture" data-search="eventbridge-terraform serverless, wired in terraform a lending library's circulation service: lambda functions behind an http api that talk to each other over an eventbridge bus.">
         <div class="head">
@@ -562,6 +562,51 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A lending library's returns service: Lambda functions behind a REST API, joined by SQS queues and an SNS topic.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="terraform-orders serverless, wired in terraform a small shop's orders service as lambda functions, deployed with terraform.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/terraform-orders">terraform-orders</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A small shop's orders service as Lambda functions, deployed with Terraform.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+    </ul>
+  </section>
+  <section data-area>
+    <h2>Serverless, declared with the Serverless Framework or the CDK <span class="count" data-total="4">4</span></h2>
+    <ul>
+      <li class="fixture" data-search="cdk-orders serverless, declared with the serverless framework or the cdk the deployment of `terraform-orders`, written as an aws cdk app in typescript over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/cdk-orders">cdk-orders</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>The deployment of <code>terraform-orders</code>, written as an AWS CDK app in TypeScript over the same handlers, and read as the same graph (P57; <code>scripts/deployments-agree.mjs</code>).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="cdk-shapes serverless, declared with the serverless framework or the cdk a members' club deployed with an aws cdk app (p57): the shapes a cdk app is written in, read by following the app from its entry, and what is not read, said as a row.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/cdk-shapes">cdk-shapes</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A members' club deployed with an AWS CDK app (P57): the shapes a CDK app is written in, read by following the app from its entry, and what is not read, said as a row.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="serverless-orders serverless, declared with the serverless framework or the cdk the deployment of `terraform-orders`, written as a serverless framework service (`orders/serverless.yml`) over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/serverless-orders">serverless-orders</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>The deployment of <code>terraform-orders</code>, written as a Serverless Framework service (<code>orders/serverless.yml</code>) over the same handlers, and read as the same graph (P57; <code>scripts/deployments-agree.mjs</code>).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="serverless-shapes serverless, declared with the serverless framework or the cdk two serverless framework services of a members' club in one repository, read with `services[].infra.options: { &quot;stage&quot;: &quot;prod&quot; }` (p57): `accounts` written as `serverless.ts`, `notices` as `serverless.yml`.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/serverless-shapes">serverless-shapes</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>Two Serverless Framework services of a members' club in one repository, read with <code>services[].infra.options: { &quot;stage&quot;: &quot;prod&quot; }</code> (P57): <code>accounts</code> written as <code>serverless.ts</code>, <code>notices</code> as <code>serverless.yml</code>.</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
     </ul>

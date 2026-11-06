@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -9,13 +9,10 @@ import { join } from 'node:path';
  * that is (R18): a repository whose functions are declared this way is told
  * which tool its deployment is written for, rather than reading as a repository
  * with nothing in it. Each is a row here, and becomes a reader of its own by
- * implementing `DeploymentReader`.
+ * implementing `DeploymentReader`: the Serverless Framework and the AWS CDK
+ * were rows until P57 read them.
  */
 export const UNREAD_DEPLOYMENTS: ReadonlyArray<readonly [name: string, test: (repoDir: string) => boolean]> = [
-  [
-    'the Serverless Framework',
-    (dir) => ['serverless.yml', 'serverless.yaml', 'serverless.ts', 'serverless.js'].some((file) => existsSync(join(dir, file))),
-  ],
   [
     'AWS SAM',
     (dir) =>
@@ -27,7 +24,6 @@ export const UNREAD_DEPLOYMENTS: ReadonlyArray<readonly [name: string, test: (re
         }
       }),
   ],
-  ['the AWS CDK', (dir) => existsSync(join(dir, 'cdk.json'))],
 ];
 
 /** The deployment tool a repository's functions are declared with, when nothing here reads it. */

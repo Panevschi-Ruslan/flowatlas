@@ -1137,6 +1137,21 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.return-item.tree.txt', 'invoke:library-lending-return-item'],
   ]),
   terraformShape('lambda-terraform-shared-paths', [['flow.status-board.tree.txt', 'invoke:library-branch-kiosk-status-board']]),
+  // One deployment written three ways (P57): the same walks, from each format's files.
+  ...['terraform-orders', 'serverless-orders', 'cdk-orders'].map((name) =>
+    terraformShape(name, [
+      ['flow.post-orders.tree.txt', 'POST /orders'],
+      ['flow.shipping.tree.txt', 'workflow:orders-dev-shipping'],
+    ]),
+  ),
+  terraformShape('serverless-shapes', [
+    ['flow.welcome.tree.txt', 'event:cognito/club-members/post_confirmation'],
+    ['flow.lapse.tree.txt', 'invoke:accounts-prod-lapse'],
+  ]),
+  terraformShape('cdk-shapes', [
+    ['flow.renewals.tree.txt', 'workflow:${…}@ClubStack.Renewals'],
+    ['flow.lapses.tree.txt', 'workflow:club-dev-lapses'],
+  ]),
   terraformShape('lambda-terraform-bucket-module', [
     ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
     ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],

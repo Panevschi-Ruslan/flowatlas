@@ -529,7 +529,19 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'api-body-unread': () =>
     'An API is created from an OpenAPI body that is not read, so none of its routes are drawn. Write the body as templatefile(), file(), jsonencode() or a heredoc, with a path the files settle and text that is JSON or YAML with paths.',
   'deployment-unread': () =>
-    'The repository declares Lambda packages and no deployment description this reads. Functions are read from Terraform; the handlers are still read as code, and nothing reaches them.',
+    'The repository declares Lambda packages and no deployment description this reads. Functions are read from Terraform, a Serverless Framework file or an AWS CDK app in TypeScript; the handlers are still read as code, and nothing reaches them.',
+  'deployment-app-unread': () =>
+    'The program that declares the deployment was not read from its start - no cdk.json, an app that is not TypeScript, or a bound on how far it is followed - so what its stacks are handed is not known. Name a TypeScript app in cdk.json; the stacks are still read on their own.',
+  'deployment-plugin-unread': () =>
+    'A plugin of the deployment declares functions, queues or routes in a section of its own, which is not read. Declare them under functions and resources, or expect them missing from the map.',
+  'construct-repeated-unread': () =>
+    'Something is declared once per element of a collection the files do not settle, so neither how many there are nor their names are known; one is read in their place. Write the collection out, or as a constant, and each is read under its own name.',
+  'deployed-name-generated': () =>
+    'The platform names this when it is deployed, so no file holds its name. It is named by where it is declared, which everything in the same deployment joins to; nothing outside it can. Give it a name of its own if other repositories reach it.',
+  'construct-conditional': () =>
+    'This is declared under a condition the files do not settle. It is read as declared, and what reaches it is drawn heuristic. Set the value the condition reads under services[].infra.options, or in the files.',
+  'construct-unreached': () =>
+    'This stack or construct is declared and never created by the program that deploys the others, so it is not read. Nothing to do unless it is deployed some other way.',
 
   // Joining the repositories (linker)
   'route-root-not-found': () =>
