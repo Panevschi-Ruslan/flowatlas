@@ -1,4 +1,5 @@
 import { normalizePath, type GraphNode } from '@flowatlas/core';
+import type { FoundValue } from './base-url-value.js';
 import type { Finding } from './http-link.js';
 import { cmp } from './order.js';
 
@@ -22,7 +23,29 @@ export interface ProcedureIndex {
   targetOf?(service: string, env: string): string | undefined;
   /** The services that claim a settings key as their own base (P58). */
   claimantsOf?(env: string): readonly string[];
+  /**
+   * The service a request's link sends to, as the address machinery every
+   * request is joined by finds it (P242): a setting's claimant, the values the
+   * setting is given, the hosts services are reached at. Nothing where the
+   * link names no address this can place, and the request is then joined as
+   * one with no link is.
+   */
+  addressOf?(call: GraphNode): ProcedureAddress | undefined;
 }
+
+/** Where a link's address goes, as the linker's address reading says (P242). */
+export type ProcedureAddress =
+  | {
+      readonly kind: 'service';
+      readonly service: string;
+      /** `heuristic` where the service was taken from a value the deployment does not give. */
+      readonly confidence: 'static' | 'heuristic';
+      /** The value the address was taken from, where a setting's value decided it (P77). */
+      readonly baseUrl?: FoundValue;
+    }
+  | { readonly kind: 'external'; readonly host?: string; readonly baseUrl?: FoundValue }
+  /** The address is read and names no service: the row the address machinery gives says why. */
+  | { readonly kind: 'unplaced'; readonly finding: Finding };
 
 /**
  * Whether an entry is a procedure, by what it says about itself.
@@ -56,9 +79,17 @@ interface Details {
     mismatch?: { asked: string; declared: string };
     /** The link sends to an address no mount of its protocol serves the procedure at (P58). */
     unserved?: { path: string; protocol: string; served: readonly string[] };
+    /** Below `static` where the link's service was taken from a value the deployment does not give (P242). */
+    confidence?: 'heuristic';
+    /** The value the link's address was taken from, where a setting's value decided it (P242). */
+    baseUrl?: FoundValue;
   };
   /** The path was not read; the extractor already said where. */
   dynamic: Record<never, never>;
+  /** The link sends to a host no configured service is reached at (P242). */
+  external: { host?: string; baseUrl?: FoundValue };
+  /** The link's address is read and names no service; the address machinery's row says why (P242). */
+  unplaced: { finding: Finding };
   /** Nothing the caller may reach declares it. */
   noProcedure: {
     procedure: string;
@@ -93,6 +124,11 @@ export type ProcedureOutcome = {
  * never speak. Where some unconfigured service does declare the path, the
  * finding names it, so the fix is one line of configuration away rather than an
  * edge the tool made up.
+ *
+ * Between the two sits what the client's link says (P58, P242): the service
+ * its address names, found by the same reading every request's address gets.
+ * A server's client is told where it sends by nothing else, so for a request
+ * made between services this is the step that decides.
  */
 export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): ProcedureOutcome => {
   const procedure = call.meta?.['procedure'];
@@ -100,7 +136,12 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
   const asked = typeof call.meta?.['call'] === 'string' ? (call.meta['call'] as string) : undefined;
   const link = linkOf(call);
 
-  const linked = (entry: GraphNode, targetService: string, via: ProcedureVia): ProcedureOutcome => {
+  const linked = (
+    entry: GraphNode,
+    targetService: string,
+    via: ProcedureVia,
+    address?: Extract<ProcedureAddress, { kind: 'service' }>,
+  ): ProcedureOutcome => {
     const declared = entry.meta?.['call'];
     const unserved = link === undefined ? undefined : unservedBy(link, entry);
     return {
@@ -112,8 +153,15 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
         ? { mismatch: { asked, declared } }
         : {}),
       ...(unserved === undefined ? {} : { unserved }),
+      ...(address?.confidence === 'heuristic' ? { confidence: 'heuristic' as const } : {}),
+      ...(address?.baseUrl === undefined ? {} : { baseUrl: address.baseUrl }),
     };
   };
+  const elsewhereThan = (asking: readonly string[], path: string): string[] =>
+    index
+      .services()
+      .filter((other) => !asking.includes(other) && index.proceduresOf(other).has(path))
+      .sort(cmp);
 
   // A procedure the caller named by its value, in its own service: the
   // declaration is exact where the path may be relative to a tree below the
@@ -126,6 +174,21 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
 
   const own = index.proceduresOf(call.repo).get(procedure);
   if (own !== undefined) return linked(own, call.repo, 'same-service');
+
+  // The link's address, placed the way any request's address is (P242): the
+  // service it names is asked and no other, a third party is one, and an
+  // address that names nobody is said with the row its address would get.
+  const address = index.addressOf?.(call);
+  if (address?.kind === 'service' && address.service !== call.repo) {
+    const entry = index.proceduresOf(address.service).get(procedure);
+    if (entry !== undefined) return linked(entry, address.service, 'link-url', address);
+    const asking = [call.repo, address.service];
+    return { kind: 'noProcedure', procedure, asked: asking, elsewhere: elsewhereThan(asking, procedure) };
+  }
+  if (address?.kind === 'external') {
+    return { kind: 'external', ...(address.host === undefined ? {} : { host: address.host }), ...(address.baseUrl === undefined ? {} : { baseUrl: address.baseUrl }) };
+  }
+  if (address?.kind === 'unplaced') return { kind: 'unplaced', finding: address.finding };
 
   // The link says where it sends, by a settings key the configuration maps to
   // a service; that service is asked and no other (P58).
@@ -216,6 +279,8 @@ const FINDINGS: {
           }
         : undefined,
   dynamic: null,
+  external: null,
+  unplaced: ({ finding }) => finding,
   noProcedure: ({ procedure, asked, elsewhere }, call) => ({
     reason: 'procedure-not-found',
     message: `no procedure ${procedure} in ${asked.join(' or ')}`,

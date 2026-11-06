@@ -75,6 +75,15 @@ export type { ProcedureDialect, ProcedureMount } from './procedure-dialects.js';
 export { ORPC, PROCEDURE_DIALECTS, TRPC, procedureDialectOf } from './procedure-dialects.js';
 export type { DeclaredError, ProcedureRoute, ProcedureRoutersOptions } from './procedure-routers.js';
 export { orpcProceduresAdapter, procedureRoutersAdapter, trpcProceduresAdapter } from './procedure-routers.js';
+export type {
+  ProcedureCaller,
+  ProcedureClient,
+  ProcedureLink,
+  ProcedureOperation,
+} from './procedure-clients.js';
+export { ORPC_CLIENT, PROCEDURE_CLIENTS, TRPC_CLIENT } from './procedure-clients.js';
+export type { LinkAddress, ProcedureCallHolder, ProcedureCallReading, ReadProcedureCall } from './procedure-calls.js';
+export { readProcedureCalls } from './procedure-calls.js';
 export {
   callRoutesAdapter,
   expressRoutesAdapter,

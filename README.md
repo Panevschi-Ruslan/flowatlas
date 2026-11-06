@@ -832,7 +832,11 @@ prove, and the path is given so you can run it.
   contract, and, under an `OpenAPIHandler`, each procedure's REST route too. A
   client's `client.orders.list(input)` or `orpc.orders.list.queryOptions(…)`
   joins it in the service its link's URL names (`fixtures/orpc-next`,
-  `fixtures/orpc-contract`).
+  `fixtures/orpc-contract`). A server's own oRPC or tRPC client - a NestJS
+  provider's, a worker's - is read the same way: each call is a request
+  between services, joined to the procedure of the service its link's setting
+  or host names, and tRPC's `links: [...]` chains are read in a browser too
+  (`fixtures/rpc-server-to-server`).
 - **Applications.** Two applications in one service — a NestJS API and a worker,
   or a second Next.js application under `examples/` — serving the same path are
   two entries, and a request written inside one reaches its own

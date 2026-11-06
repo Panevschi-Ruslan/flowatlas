@@ -369,14 +369,17 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Nothing here is assembled by any of the names that reader looks for. Ordinary in a repository that only calls procedures; check assembledBy if this is the one that declares them.',
   'procedure-members-unmatched': () =>
     'Calls to the assembling name were found and no member of any of them ended a chain the way a way in does, so none of them was read as a tree. Check terminators on that description.',
-  // Callers of procedures (extractor-react/passes/procedures)
+  // Callers of procedures (adapters-entry/procedure-calls, in a browser and in a server)
   'procedure-path-dynamic': () =>
     'A step of the path a procedure is asked for by is computed, so the procedure it reaches cannot be named and the call is joined to nothing. Write each step as a name.',
   'entry-procedures-description-inactive': () =>
     'Ordinary in a project of several repositories. If this is the one it was written for, check the spelling of its packages.',
   // oRPC's links, mounts and contracts (P58)
   'procedure-link-dynamic': () =>
-    'The link a client was made with works its address out when each request is sent, so nothing says which service it reaches; the join falls back to apiTarget. Write the URL as text, or as a setting followed by a path.',
+    'The link a client was made with works its address out when each request is sent, or is not one this reads, so nothing says which service it reaches; the join falls back to apiTarget. Write the URL as text, or as a setting followed by a path.',
+  // A client's WebSocket link (P242)
+  'procedure-link-socket': () =>
+    'The request is sent over a WebSocket link, whose address belongs to the socket client and is not read, so the join falls back to the caller’s own service and apiTarget. Nothing is wrong; name the service the socket connects to in services[].apiTarget.',
   'procedure-prefix-unread': () =>
     'The mount that serves a tree is handed its requests somewhere this could not read the prefix of, so where it answers is unknown and, for an OpenAPI mount, none of the REST routes it answers is drawn. Hand the request to it in the file that builds it, with the prefix written as text.',
   'procedure-contract-unread': () =>

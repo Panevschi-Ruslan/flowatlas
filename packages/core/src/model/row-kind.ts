@@ -216,6 +216,8 @@ const GAPS: readonly string[] = [
   'entry-procedures-description-inactive',
   // A link, a mount's prefix and a contract's member nobody could read (P58)
   'procedure-link-dynamic',
+  // A link that sends over a socket whose address is not read (P242)
+  'procedure-link-socket',
   'procedure-prefix-unread',
   'procedure-contract-unread',
   // Bots

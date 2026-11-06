@@ -2,8 +2,8 @@
  * The ways a client asks for a procedure by its path, described rather than
  * implemented.
  *
- * The other half of `procedure-dialects.ts` in the entry adapters, and shaped
- * after it for the same reason: a tree of procedures names a way in by the keys
+ * The other half of `procedure-dialects.ts` beside it, and shaped after it for
+ * the same reason: a tree of procedures names a way in by the keys
  * above it, and a client of that tree names it by the same keys, written as
  * property accesses on a proxy — `trpc.orders.list.useQuery(input)`. There is no
  * URL anywhere in that sentence, so nothing in `clients.ts` can describe it: every
@@ -16,6 +16,12 @@
  * are the path, and that the last link decides what the call does. What is in
  * the row is every name: which factories make a proxy, which trailing methods end
  * a chain and what each one does on the other side.
+ *
+ * Here rather than in the browser reader since P242, because a server is a
+ * client of another server's tree as often as a browser is: the browser reader
+ * and the server's request pass read one description with one reader
+ * (`procedure-calls.ts`), each handing it the bodies it walks and the way it
+ * reads an address.
  */
 
 /** One trailing method, and what it asks the procedure to do. */
@@ -43,14 +49,31 @@ export interface ProcedureOperation {
  * `new`, handed to the factory that made the proxy, whose options carry the URL.
  */
 export interface ProcedureLink {
-  /** The class built: `RPCLink`. */
+  /** The class built, `RPCLink`, or the function called, `httpBatchLink`. */
   readonly name: string;
   /** The protocol it speaks, as a server's mount names it in `meta.mounted`. */
   readonly protocol: string;
-  /** The argument of the constructor holding the options. */
+  /**
+   * How it is made: built with `new` (the default), or returned by a call,
+   * `httpBatchLink({ url })` (P242).
+   */
+  readonly made?: 'new' | 'call';
+  /** The argument of the constructor or the call holding the options. */
   readonly optionsAt: number;
-  /** The key of the options holding the URL. */
-  readonly urlKey: string;
+  /** The key of the options holding the URL. A link that names none carries no address. */
+  readonly urlKey?: string;
+  /**
+   * For a link that sends nothing itself and hands each request to one of
+   * others: the keys of its options holding them, `splitLink({ true, false })`
+   * (P242). Each is a link or a chain of links.
+   */
+  readonly branches?: readonly string[];
+  /**
+   * For a link that sends over a WebSocket (P242), `wsLink({ client })`: the
+   * socket is opened elsewhere, at an address this does not read, so a request
+   * sent through it is joined the way one through no link is, and says so.
+   */
+  readonly socket?: boolean;
 }
 
 /**
@@ -99,6 +122,23 @@ export interface ProcedureClient {
   readonly inProcess?: readonly string[];
   /** The links a proxy factory may be handed, where the address is written (P58). */
   readonly links?: readonly ProcedureLink[];
+  /**
+   * The key of a factory's options holding a chain of links, the last of which
+   * sends: `createTRPCClient({ links: [loggerLink(), httpBatchLink({ url })] })`
+   * (P242). A chain is also read where no factory is handed it - in the
+   * options a provider's client is made with - for the proxies whose factory
+   * takes no link at all.
+   */
+  readonly linksKey?: string;
+  /**
+   * Proxies whose operations name the path as an argument rather than as
+   * property accesses (P242): `createTRPCUntypedClient(…)` and
+   * `client.query('orders.list', input)`.
+   */
+  readonly untyped?: {
+    readonly proxies: readonly string[];
+    readonly operations: Readonly<Record<string, ProcedureOperation & { readonly pathAt: number }>>;
+  };
   /** Functions handed a procedure by its value (P58). */
   readonly callers?: readonly ProcedureCaller[];
 }
@@ -108,6 +148,16 @@ const MUTATION_NOW: ProcedureOperation = { call: 'mutation', inputAt: 0 };
 /** A mutation whose input is handed over later, to what the hook returns. */
 const MUTATION_LATER: ProcedureOperation = { call: 'mutation' };
 const SUBSCRIPTION: ProcedureOperation = { call: 'subscription', inputAt: 0 };
+
+/** tRPC's links that send a request over HTTP to the URL they are given (P242). */
+const TRPC_HTTP_LINKS = [
+  'httpBatchLink',
+  'httpLink',
+  'httpBatchStreamLink',
+  'httpSubscriptionLink',
+  'unstable_httpBatchStreamLink',
+  'unstable_httpSubscriptionLink',
+] as const;
 
 /**
  * tRPC, whose client this was written to fit.
@@ -126,6 +176,14 @@ const SUBSCRIPTION: ProcedureOperation = { call: 'subscription', inputAt: 0 };
  * also React's own hook and a name that means two things cannot be a marker of
  * either; and a server-side caller (`router.createCaller(ctx)`), whose chain ends
  * in the procedure itself being called with no trailing method at all.
+ *
+ * The address is in the chain of links the client is made with (P242): the
+ * last one sends, `httpBatchLink({ url })` or one of its siblings, and
+ * `splitLink` hands each request to one of two chains. `loggerLink` and the
+ * other links in front pass a request on and say nothing about where it goes,
+ * so they are not listed. `wsLink` sends over a socket whose address is the
+ * WebSocket client's, which is not read. The untyped client names the path as
+ * text, `client.query('orders.list', input)`, and is a row of its own.
  */
 export const TRPC_CLIENT: ProcedureClient = {
   name: 'trpc-client',
@@ -167,6 +225,20 @@ export const TRPC_CLIENT: ProcedureClient = {
     fetchInfinite: QUERY,
     prefetchInfinite: QUERY,
     ensureData: QUERY,
+  },
+  links: [
+    ...TRPC_HTTP_LINKS.map((name): ProcedureLink => ({ name, protocol: 'trpc', made: 'call', optionsAt: 0, urlKey: 'url' })),
+    { name: 'splitLink', protocol: 'trpc', made: 'call', optionsAt: 0, branches: ['true', 'false'] },
+    { name: 'wsLink', protocol: 'websocket', made: 'call', optionsAt: 0, socket: true },
+  ],
+  linksKey: 'links',
+  untyped: {
+    proxies: ['createTRPCUntypedClient'],
+    operations: {
+      query: { call: 'query', pathAt: 0, inputAt: 1 },
+      mutation: { call: 'mutation', pathAt: 0, inputAt: 1 },
+      subscription: { call: 'subscription', pathAt: 0, inputAt: 1 },
+    },
   },
 };
 

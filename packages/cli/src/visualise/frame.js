@@ -409,6 +409,7 @@ export const PAGE_WORDS = Object.freeze({
     'procedure-input-by-name': 'procedure input known by name',
     'procedure-key-dynamic': 'procedure key computed',
     'procedure-link-dynamic': 'client link address computed',
+    'procedure-link-socket': 'client link sends over a socket',
     'procedure-link-unserved': 'client link sends where nothing answers',
     'procedure-members-unmatched': 'procedure description matched nothing',
     'procedure-not-found': 'procedure not found',

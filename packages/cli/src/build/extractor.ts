@@ -8,7 +8,7 @@ import {
   type SourceRootOptions,
 } from '@flowatlas/core';
 import { brokersPass, registerBrokerAdapters } from '@flowatlas/adapters-broker';
-import { graphqlCallsPass, leavesPass, registerDbAdapters } from '@flowatlas/adapters-db';
+import { graphqlCallsPass, leavesPass, procedureCallsPass, registerDbAdapters } from '@flowatlas/adapters-db';
 import { deployedSourceDirectories, registerEntryAdapters } from '@flowatlas/adapters-entry';
 import {
   ANGULAR_SOURCE_ROOTS,
@@ -57,8 +57,10 @@ export const isFrontend = (type: string): boolean => halfOf(type) === 'browser';
  *
  * `workflowsPass` reads the state machine definitions a repository keeps beside
  * its code, so any service a server reader reads has its workflows drawn too.
+ * `procedureCallsPass` reads the procedures a server asks another service for
+ * through an oRPC or tRPC client (P242).
  */
-export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, brokersPass, workflowsPass];
+export const EXTRA_PASSES: readonly NestExtractorPass[] = [leavesPass, graphqlCallsPass, procedureCallsPass, brokersPass, workflowsPass];
 
 /** Every adapter the command line knows how to offer an extractor. */
 export const createRegistry = (): AdapterRegistry => {

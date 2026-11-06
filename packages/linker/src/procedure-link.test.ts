@@ -256,3 +256,87 @@ describe('the routes a procedure is answered at (P58)', () => {
   });
 });
 
+describe("a server's request for another service's procedure (P242)", () => {
+  const servers = (): FlowatlasConfig =>
+    parseConfig({
+      services: [
+        { name: 'orders', repo: './orders', type: 'express', baseUrlEnv: ['ORDERS_URL'] },
+        { name: 'billing', repo: './billing', type: 'express', hosts: ['billing.internal'] },
+        { name: 'worker', repo: './worker', type: 'nestjs' },
+      ],
+    } as Parameters<typeof parseConfig>[0]);
+
+  /** A worker's request through a client whose link sends where `link` says. */
+  const sent = (path: string, link: Record<string, unknown>, call = 'handler'): GraphNode => ({
+    id: `http_out:worker#src/clients.ts:${path.length}:5`,
+    type: 'http_out',
+    kind: 'rpc',
+    label: `rpc ${path}`,
+    repo: 'worker',
+    file: 'src/clients.ts',
+    line: path.length,
+    meta: { procedure: path, call, operation: 'call', client: 'orpc-client', link },
+  });
+
+  const linked = (nodes: GraphNode[], settings = {}) =>
+    linkGraphs(
+      [
+        graph('orders', [procedure('orders', 'orders.place', 'handler')]),
+        graph('billing', [procedure('billing', 'invoices.create', 'mutation')]),
+        graph('worker', nodes),
+      ],
+      servers(),
+      { builtAt: FIXED, settings },
+    );
+
+  it("joins the procedure of the service its link's setting is claimed by, and counts it a call out", () => {
+    const { project, report } = linked([sent('orders.place', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ORDERS_URL' })]);
+    expect(project.edges.filter((edge) => edge.type === 'hits')).toMatchObject([
+      { to: 'entry:orders:rpc:orders.place', confidence: 'static', meta: { via: 'link-url', targetService: 'orders' } },
+    ]);
+    expect(report.httpOut).toMatchObject({ total: 1, linked: 1 });
+    expect(report.unresolved).toEqual([]);
+  });
+
+  it('joins the service a written host is reached at', () => {
+    const { project } = linked([sent('invoices.create', { protocol: 'trpc', path: '/trpc', host: 'billing.internal' }, 'mutation')]);
+    expect(project.edges.filter((edge) => edge.type === 'hits')).toMatchObject([
+      { to: 'entry:billing:rpc:invoices.create', confidence: 'static', meta: { via: 'link-url', targetService: 'billing' } },
+    ]);
+  });
+
+  it("takes a setting nobody claims as the service its own files' value names, as a guess, and says so", () => {
+    const settings = {
+      worker: { values: { PAYMENTS_URL: [{ value: 'http://billing.internal:4000', file: '.env.example' }] }, namedOnly: {}, hosts: [] },
+    };
+    const { project, report } = linked(
+      [sent('invoices.create', { protocol: 'trpc', path: '/trpc', baseUrlEnv: 'PAYMENTS_URL' }, 'mutation')],
+      settings,
+    );
+    expect(project.edges.filter((edge) => edge.type === 'hits')).toMatchObject([
+      { to: 'entry:billing:rpc:invoices.create', confidence: 'heuristic', meta: { via: 'link-url', baseUrlFrom: '.env.example' } },
+    ]);
+    expect(report.unresolved.map((row) => row.reason)).toEqual(['base-url-from-files']);
+  });
+
+  it('says a setting nothing places with the row any request rooted at it gets, and joins nothing', () => {
+    const { project, report } = linked([sent('orders.place', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'LEGACY_URL' })]);
+    expect(project.edges.filter((edge) => edge.type === 'hits')).toEqual([]);
+    expect(report.unresolved.map((row) => row.reason)).toEqual(['unknown-base-url-env']);
+    expect(report.httpOut).toMatchObject({ total: 1, linked: 0, unknownEnv: 1 });
+  });
+
+  it('draws a host no service is reached at as a third party', () => {
+    const { project, report } = linked([sent('entries.record', { protocol: 'trpc', path: '/trpc', host: 'ledger.partner.example' }, 'mutation')]);
+    expect(project.edges.filter((edge) => edge.to.startsWith('external_api:'))).toHaveLength(1);
+    expect(report.httpOut).toMatchObject({ external: 1 });
+    expect(report.unresolved).toEqual([]);
+  });
+
+  it('asks only the service the link names, and names the two it asked', () => {
+    const { report } = linked([sent('invoices.create', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ORDERS_URL' })]);
+    expect(report.unresolved).toMatchObject([{ reason: 'procedure-not-found', message: 'no procedure invoices.create in worker or orders' }]);
+    expect(report.httpOut).toMatchObject({ noRoute: 1 });
+  });
+});
+

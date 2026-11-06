@@ -32,6 +32,22 @@ only one of them moved.
   and the condition and prefix readers Angular's interceptor base used moved to
   the core so both front-end readers share them
   (`fixtures/client-interceptor-base`).
+- **A server's own oRPC or tRPC client joins the procedure it calls (P242).** A
+  NestJS, Express, Hono or plain Node service, or a worker, that builds an oRPC
+  client (`createORPCClient(new RPCLink({ url }))`, `OpenAPILink`) or a tRPC
+  client (`createTRPCClient`, `createTRPCProxyClient`, the untyped
+  `createTRPCUntypedClient` whose path is text) and calls a procedure through
+  it gets an `http_out` of kind `rpc`, joined to the procedure of the service
+  its link's address names by the address reading every request between
+  services gets: a setting's claimant, the values it is given (`heuristic`,
+  with `base-url-from-files`), the hosts services are reached at, a third
+  party. A client kept on a class member, set in place or in the constructor,
+  is read. The browser reader and the server's pass share one description and
+  one reader (now in the entry adapters), so tRPC's `links: [...]` chains are
+  read in a browser too: the last link sends, `splitLink` sends where its
+  branches agree, and a hook proxy handed no link sends where the repository's
+  chains all send. New row `procedure-link-socket` for a request sent over a
+  `wsLink`; a link whose address cannot be read stays `procedure-link-dynamic`.
 - **GraphQL federation, one graph across subgraphs (P241).** A request to a
   federation gateway is planned the way the router plans it, statically: each
   selected field goes to the subgraph that resolves it, and a field of an

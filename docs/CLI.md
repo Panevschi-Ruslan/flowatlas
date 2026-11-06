@@ -2981,7 +2981,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `middleware-route-dynamic`, `fails-filter-unread`, `fails-interceptor-unread` |
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
-| Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread` |
+| Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-socket` (info), `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread` |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread`, `api-client-base-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |
@@ -6315,6 +6315,51 @@ of the same family.
 
 `contracts` treats a REST caller of a procedure's route as it treats a caller of
 the procedure: both directions unchecked, for the reasons above.
+
+**A server's client** of another service's tree is read the same way, by the
+same reader (`fixtures/rpc-server-to-server`). A NestJS, Express, Hono or plain
+Node service, or a worker, that builds an oRPC client
+(`createORPCClient(new RPCLink({ url }))`, `OpenAPILink`, a client typed by a
+contract) or a tRPC client (`createTRPCClient`, `createTRPCProxyClient`,
+`createTRPCUntypedClient`) and calls a procedure through it -
+`orders.orders.place(input)`, `billing.invoices.create.mutate(input)`,
+`untyped.mutation('invoices.refund', input)` - gets an `http_out` of kind `rpc`
+carrying the path, joined to the `entry:<service>:rpc:<path>` of the service the
+link's address names:
+
+- **Where the client is.** A module-level name, a hook's result, or the class
+  member a provider keeps it in, set where the member is declared or in the
+  constructor (`this.orders.orders.place(…)`).
+- **The address.** Read by the server's own address reading, the one every
+  request between services gets: `process.env.ORDERS_URL`, a configuration
+  service's `get('ORDERS_URL')`, a constant. A setting goes to the service that
+  claims it under `services[].baseUrlEnv`, or to the one its values name (P77);
+  a host written in the URL goes to the service `services[].hosts` says is
+  reached there, and another host is a third party. A join through a value the
+  deployment does not give is `heuristic` and says so in a
+  `base-url-from-files` row; a setting nothing places is `unknown-base-url-env`,
+  as for any request. Only the service the link names is asked; a path it does
+  not declare is `procedure-not-found`, naming both services asked.
+- **tRPC's links**, in the browser as in a server: the last link of
+  `links: [...]` sends (`httpBatchLink`, `httpLink`, `httpBatchStreamLink`,
+  `httpSubscriptionLink`), the links in front of it are stepped over, and
+  `splitLink({ true, false })` sends where its branches agree. A proxy whose
+  factory is handed no link - `createTRPCReact()`, `useTRPC()`, a client handed
+  to a provider - sends where the repository's own chains of links send, when
+  they all send to one address (`meta.link.from: repository`). Branches or
+  chains that send to different addresses, or a last link this does not read,
+  are `procedure-link-dynamic`.
+- **A WebSocket link** (`wsLink`) opens a socket whose address is the WebSocket
+  client's, which is not read: a subscription sent through one, or any request
+  through a client whose only link is one, is `procedure-link-socket` and is
+  joined as a request with no link is.
+- **Both halves at once.** A repository the browser half reads as well has its
+  calls read there first; the server's pass leaves those sites alone, so no
+  call is two requests. A receiver the calls reader could not type because the
+  client is `any` is no longer a `call-dynamic-receiver` row once the call is
+  read as a request.
+- Comparing what a caller sends with a procedure's input is still not done, for
+  either library (both directions are listed unchecked).
 
 ### Workflows written as state machines
 

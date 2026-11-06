@@ -68,6 +68,8 @@ describe('a procedure a client asks for', () => {
     expect(list?.label).toBe('rpc orders.list');
     expect(list?.meta?.['operation']).toBe('query');
     expect(list?.meta?.['inputKeys']).toEqual(['customerId']);
+    // The link of the chain the client was made with, read as any address is here (P242).
+    expect(list?.meta?.['link']).toEqual({ protocol: 'trpc', path: '/api/trpc' });
     // The function the call is written in reaches it, which is what makes it a caller.
     expect(
       graph.edges.some(

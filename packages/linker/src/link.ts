@@ -266,9 +266,11 @@ const buildProcedureIndex = (
 /**
  * The edge a request for a procedure becomes.
  *
- * `static` whichever of the two ways found it: the path was read in full at the
- * call and matched letter for letter, and the service was either the caller's
- * own or one the configuration named. Nothing about it was guessed.
+ * `static` whichever way found it: the path was read in full at the call and
+ * matched letter for letter, and the service was the caller's own, one the
+ * configuration named, or the one the link's address names. Nothing about it
+ * was guessed - except where that address was placed by a value the
+ * deployment does not give, which is as sure as the value (P77, P242).
  */
 const procedureEdge = (
   call: GraphNode,
@@ -277,11 +279,74 @@ const procedureEdge = (
   from: call.id,
   to: outcome.entry.id,
   type: 'hits',
-  confidence: boundedByRoute('static', outcome.entry),
+  confidence: boundedByRoute(outcome.confidence ?? 'static', outcome.entry),
   ...(call.file === undefined ? {} : { file: call.file }),
   ...(call.line === undefined ? {} : { line: call.line }),
-  meta: { via: outcome.via, targetService: outcome.targetService },
+  meta: {
+    via: outcome.via,
+    targetService: outcome.targetService,
+    ...(outcome.baseUrl === undefined ? {} : takenMeta(outcome.baseUrl)),
+  },
 });
+
+/**
+ * Where a procedure client's link sends, by the reading every request's
+ * address gets (P242).
+ *
+ * A server's link rooted at a setting is resolved as a request between
+ * services rooted at it is - a probe of the same request with no path, so
+ * only the service is asked of it: the setting's claimant, the function URL
+ * or value it is given, a third party. A link that writes a host is placed by
+ * the hosts services are reached at. A browser's link rooted at a setting is
+ * left to the key its `apiTarget` maps, which the procedure resolution asks
+ * itself (P58), and a host that names no service leaves it to the same.
+ */
+const procedureAddressLookup = (
+  index: RouteIndex,
+  serviceAtHost: NonNullable<UiIndex['serviceAtHost']>,
+): NonNullable<ProcedureIndex['addressOf']> => (call) => {
+  const link = call.meta?.['link'];
+  if (link === null || typeof link !== 'object') return undefined;
+  const { baseUrlEnv, baseUrlDefault, host } = link as Record<string, unknown>;
+  const server = call.type === 'http_out';
+  if (typeof baseUrlEnv === 'string') {
+    if (!server) return undefined;
+    const probe: GraphNode = {
+      ...call,
+      meta: { method: 'POST', baseUrlEnv, ...(typeof baseUrlDefault === 'string' ? { baseUrlDefault } : {}) },
+    };
+    const { outcome, baseUrl } = resolveCall(probe, index);
+    const service = aimOf(outcome);
+    if (service !== undefined) {
+      return {
+        kind: 'service',
+        service,
+        confidence: baseUrl === undefined || baseUrl.deployed ? 'static' : 'heuristic',
+        ...(baseUrl === undefined ? {} : { baseUrl }),
+      };
+    }
+    if (outcome.kind === 'external') {
+      return { kind: 'external', ...(outcome.host === undefined ? {} : { host: outcome.host }), ...(baseUrl === undefined ? {} : { baseUrl }) };
+    }
+    const finding = findingFor(outcome);
+    return finding === undefined ? undefined : { kind: 'unplaced', finding };
+  }
+  if (typeof host === 'string') {
+    const found = serviceAtHost(host);
+    if (found !== undefined) return { kind: 'service', service: found.service, confidence: found.configured ? 'static' : 'heuristic' };
+    return server ? { kind: 'external', host } : undefined;
+  }
+  return undefined;
+};
+
+/** What a server's request for a procedure counts under in the report, by how it ended (P242). */
+const PROCEDURE_COUNTED: Readonly<Record<Exclude<ProcedureOutcome['kind'], 'linked'>, keyof LinkReport['httpOut']>> = {
+  dynamic: 'dynamic',
+  noProcedure: 'noRoute',
+  ambiguous: 'ambiguous',
+  external: 'external',
+  unplaced: 'unknownEnv',
+};
 
 /**
  * A join edge may not claim more than the weakest of the two ends it rests on.
@@ -722,7 +787,10 @@ export const linkGraphs = (
     ...(valuedUiBaseUrlOf === undefined ? {} : { baseUrlOf: valuedUiBaseUrlOf }),
     serviceAtHost: hostLookup(config, settings),
   };
-  const procedureIndex = buildProcedureIndex(nodes, config, servicesByEnv);
+  const procedureIndex: ProcedureIndex = {
+    ...buildProcedureIndex(nodes, config, servicesByEnv),
+    addressOf: procedureAddressLookup(index, hostLookup(config, settings)),
+  };
 
   /** Where a finding happened; the finding itself says what and what to do. */
   const record = (call: GraphNode, finding: Finding): void => {
@@ -780,6 +848,46 @@ export const linkGraphs = (
   for (const call of [...nodes.values()]) {
     if (call.type !== 'http_out') continue;
     httpOut.total += 1;
+
+    // A procedure a server asks another service for, joined on its path in
+    // the service its link's address names (P242), and counted with the
+    // requests between services it is.
+    if (call.kind === 'rpc') {
+      const outcome = resolveProcedureCall(call, procedureIndex);
+      if (outcome.kind === 'linked') {
+        const edge = procedureEdge(call, outcome);
+        edges.set(edgeKey(edge), edge);
+        call.meta = { ...call.meta, targetService: outcome.targetService };
+        if (outcome.baseUrl !== undefined) {
+          call.meta = { ...call.meta, ...takenMeta(outcome.baseUrl) };
+          tookValue(call, outcome.baseUrl, outcome.targetService);
+        }
+        httpOut.linked += 1;
+      } else {
+        httpOut[PROCEDURE_COUNTED[outcome.kind]] += 1;
+      }
+      if (outcome.kind === 'external' && outcome.host !== undefined) {
+        // A third party, drawn as one written in the call is, and as sure as
+        // the value it was found from where a value found it.
+        const apiId = makeExternalApiId(outcome.host);
+        if (!nodes.has(apiId)) {
+          nodes.set(apiId, { id: apiId, type: 'external_api', label: outcome.host, repo: call.repo, meta: { host: outcome.host } });
+        }
+        const edge: GraphEdge = {
+          from: call.id,
+          to: apiId,
+          type: 'calls',
+          confidence: outcome.baseUrl === undefined || outcome.baseUrl.deployed ? 'static' : 'heuristic',
+          ...(call.file === undefined ? {} : { file: call.file }),
+          ...(call.line === undefined ? {} : { line: call.line }),
+          ...(outcome.baseUrl === undefined ? {} : { meta: takenMeta(outcome.baseUrl) }),
+        };
+        edges.set(edgeKey(edge), edge);
+      }
+      const finding = procedureFindingFor(outcome, call);
+      if (finding !== undefined) record(call, finding);
+      continue;
+    }
 
     const { outcome, notes, alsoLinked, baseUrl } = resolveCall(call, index);
     for (const note of notes) record(call, note);
