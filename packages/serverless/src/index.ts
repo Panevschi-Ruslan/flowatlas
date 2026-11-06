@@ -6,10 +6,13 @@ import { emptyParts } from './reading.js';
 import { readService } from './service.js';
 
 export { readServiceFile, readServiceYaml, ServiceFileUnreadable } from './document.js';
-export { Template, RESOURCE_KINDS, intrinsicOf, type Deployed, type Resource } from './cloudformation.js';
-export { Variables, Unread, HOLE, DEFAULT_STAGE, DEFAULT_REGION } from './variables.js';
+export { Template, RESOURCE_KINDS, intrinsicOf, type Declares, type Deployed, type Known, type Pseudo, type Resource, type TemplateOptions } from './cloudformation.js';
+export { Variables, Unread, HOLE, DEFAULT_STAGE, DEFAULT_REGION, isRecord, textOf } from './variables.js';
 export { EVENT_READERS } from './events.js';
 export { functionLogicalId, normalizedName } from './service.js';
+export { asTarget, emptyParts, FileReading, writtenAs, type DeploymentParts, type Site } from './reading.js';
+export { pushFunctionUrl, readResources, RESOURCE_READERS, userPoolName, type ResourceReader } from './resources.js';
+export { answerFor, readStateMachineResource, workflowNameOf, workflowOf } from './state-machines.js';
 
 /** The names a service file goes by, in the order the framework looks for them. */
 export const SERVICE_FILES = ['serverless.yml', 'serverless.yaml', 'serverless.json', 'serverless.ts', 'serverless.js'];

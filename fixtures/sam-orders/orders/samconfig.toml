@@ -1,0 +1,14 @@
+version = 0.1
+
+[default.global.parameters]
+stack_name = "orders-dev"
+
+[default.deploy.parameters]
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Stage=\"dev\""
+
+[prod.deploy.parameters]
+stack_name = "orders-prod"
+region = "eu-west-1"
+parameter_overrides = ["Stage=prod"]

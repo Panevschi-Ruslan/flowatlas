@@ -124,6 +124,9 @@ importers:
       '@flowatlas/graphql':
         specifier: workspace:*
         version: link:../graphql
+      '@flowatlas/sam':
+        specifier: workspace:*
+        version: link:../sam
       '@flowatlas/serverless':
         specifier: workspace:*
         version: link:../serverless
@@ -224,6 +227,9 @@ importers:
       '@flowatlas/mcp':
         specifier: workspace:*
         version: link:../mcp
+      '@flowatlas/sam':
+        specifier: workspace:*
+        version: link:../sam
       '@flowatlas/serverless':
         specifier: workspace:*
         version: link:../serverless
@@ -362,6 +368,18 @@ importers:
       zod:
         specifier: ^4.5.4
         version: 4.5.4
+
+  packages/sam:
+    dependencies:
+      '@flowatlas/aws':
+        specifier: workspace:*
+        version: link:../aws
+      '@flowatlas/core':
+        specifier: workspace:*
+        version: link:../core
+      '@flowatlas/serverless':
+        specifier: workspace:*
+        version: link:../serverless
 
   packages/serverless:
     dependencies:

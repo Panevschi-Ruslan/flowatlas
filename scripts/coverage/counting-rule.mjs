@@ -16,7 +16,7 @@
  *
  * A **source file** is a file the repository tracks in git, inside the
  * **extent** of the service being read, whose extension is one of
- * `SOURCE_EXTENSIONS`, and none
+ * `SOURCE_EXTENSIONS` or whose name is one of `DECLARATION_FILES`, and none
  * of whose path segments is one of `SKIPPED_SEGMENTS`, whose name does not
  * match `SKIPPED_FILES`, and which is not a test. What a test is comes from
  * `isTestFile` in `@flowatlas/core`, the definition the tool reads by, and from
@@ -91,6 +91,14 @@ export const SOURCE_EXTENSIONS = [
   '.vue',
   '.svelte',
 ];
+
+/**
+ * Files that are not code and still declare ways in, by name: a template a
+ * deployment of functions is written in (P246). Only a probe that names the
+ * file by its `path` finds anything in one, and its comments are a `#` to the
+ * end of the line.
+ */
+export const DECLARATION_FILES = /(?:^|\/)template\.ya?ml$/;
 
 /**
  * Path segments that take a file out of the count, a test's apart.
@@ -269,6 +277,17 @@ export const PROBES = [
     pattern: /\bnew\s+(?:[A-Za-z_$][\w$]*\.)*(?:NodejsFunction|Function|DockerImageFunction|SingletonFunction)\s*\(\s*(?:this|[A-Za-z_$][\w$]*)\s*,/g,
   },
   {
+    // A function a SAM template declares is a way in, as a route is: the
+    // platform runs it (P246). Counted by its `Type`, the SAM function and the
+    // plain CloudFormation one alike, in the template a deployment is read from.
+    name: 'sam-function-resource',
+    family: 'routes',
+    scope: 'line',
+    what: 'a Lambda function a SAM template declares (`Type: AWS::Serverless::Function`, `Type: AWS::Lambda::Function`)',
+    path: DECLARATION_FILES,
+    pattern: /^\s*Type:\s*['"]?AWS::(?:Serverless|Lambda)::Function['"]?\s*$/gm,
+  },
+  {
     name: 'nitro-route-file',
     family: 'routes',
     scope: 'file',
@@ -380,7 +399,7 @@ const extensionOf = (path) => {
 
 /** True when the path is source under the rule above. */
 export const isSourceFile = (path) => {
-  if (!SOURCE_EXTENSIONS.includes(extensionOf(path))) return false;
+  if (!SOURCE_EXTENSIONS.includes(extensionOf(path)) && !DECLARATION_FILES.test(path)) return false;
   const segments = path.split('/');
   if (segments.some((segment) => SKIPPED_SEGMENTS.has(segment))) return false;
   return !SKIPPED_FILES.test(segments[segments.length - 1]) && !isTestFile(path);
@@ -471,8 +490,12 @@ export const withoutComments = (text) => {
 // Markup's comments are not a script's, and a template's `//` is an address.
 const COMMENTED = new Set(SOURCE_EXTENSIONS.filter((extension) => !['.html', '.vue', '.svelte'].includes(extension)));
 
+/** A template's comments, `#` to the end of the line where it starts a line or follows a space, blanked as the code's are. */
+const withoutHashComments = (text) => text.replace(/(^|\s)#[^\n]*/g, (comment, before) => before + ' '.repeat(comment.length - before.length));
+
 /** What a probe reads: the file, with its comments blanked where it has any. */
-const codeOf = (path, text) => (COMMENTED.has(extensionOf(path)) ? withoutComments(text) : text);
+const codeOf = (path, text) =>
+  COMMENTED.has(extensionOf(path)) ? withoutComments(text) : DECLARATION_FILES.test(path) ? withoutHashComments(text) : text;
 
 const countLine = (probe, path, text) => {
   if (probe.path !== undefined && !probe.path.test(path)) return 0;

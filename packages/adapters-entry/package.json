@@ -55,7 +55,8 @@
     "@flowatlas/terraform": "workspace:*",
     "ts-morph": "^28.0.0",
     "@flowatlas/serverless": "workspace:*",
-    "@flowatlas/cdk": "workspace:*"
+    "@flowatlas/cdk": "workspace:*",
+    "@flowatlas/sam": "workspace:*"
   },
   "private": true
 }

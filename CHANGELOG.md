@@ -67,6 +67,29 @@ only one of them moved.
   since Nuxt resolves both against the application. `framework-layer-unread`
   now says why a layer is not read (`meta.why`: `remote`, `dynamic`,
   `installed`, `not-installed`, `missing`, `outside`).
+- **Lambdas declared in an AWS SAM template (P246).** A `template.yaml`
+  (`.yml`, `.json`) written for the SAM transform is read into the functions,
+  routes, subscribers, streams and workflows the Terraform, Serverless
+  Framework and CDK readers give - one deployment written all four ways reads
+  as one graph (`fixtures/sam-orders`). It is read with what `samconfig.toml`
+  gives it (the environment `services[].infra.options.config_env` names; any
+  other option is a parameter's value): parameters, conditions, `Fn::If`,
+  `Fn::FindInMap`, `Fn::ForEach` and `Globals` are settled before anything is
+  read, and what they leave unsettled is a row that names it. Every event type
+  a function or a state machine has is read or said; APIs are read from their
+  events, their OpenAPI bodies (in place, included, or a file), and
+  `AWS::ApiGatewayV2` and `AWS::ApiGateway` resources; state machines from a
+  `Definition` or a `DefinitionUri` file with its substitutions; a nested
+  application of the repository is read under the parameters it is handed, its
+  outputs answering the parent. The CloudFormation the Serverless Framework's
+  `resources` is read as now also reads `AWS::Scheduler::Schedule`,
+  `AWS::Lambda::EventInvokeConfig`, `AWS::Lambda::Url` and a user pool's
+  `LambdaConfig`, and a function URL handed to code (`!GetAtt ...Url.FunctionUrl`)
+  names its function in both readers, so a `fetch` of it joins (P54). New rows:
+  `nested-deployment-unread`, and `layer-not-followed` (a note). A coverage
+  probe counts the functions a template declares (`sam-function-resource`).
+  `deployment-unread` now names SST and Architect.
+
 - **GraphQL federation, one graph across subgraphs (P241).** A request to a
   federation gateway is planned the way the router plans it, statically: each
   selected field goes to the subgraph that resolves it, and a field of an
@@ -299,6 +322,12 @@ only one of them moved.
 
 ### Changed
 
+- **A queue, a topic or a bucket Terraform gives no name is named by its
+  declaration (P246)**, as the Serverless Framework and CDK readers name one:
+  `sqs/${…}@aws_sqs_queue.inbox`, joined by what the configuration points at it
+  with, with a `deployed-name-generated` note, where it was a name not read.
+- A text built with `Fn::Sub` or `Fn::Join` around a value that is not read
+  now says which variable or parameter it waits on.
 - **One resolution for names (P229).** The command line's `impact` resolved a
   name its own way, so `impact "POST /orders"` was refused while the
   `impact` tool took it; it now resolves as every tool does, and `--service`

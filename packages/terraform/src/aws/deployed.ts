@@ -1,7 +1,7 @@
 import { DEFAULT_EVENT_BUS, deployedNameIn } from '@flowatlas/aws';
-import type { DeployedKind, DeliveryTarget } from '@flowatlas/core';
+import { generatedName, type DeployedKind, type DeliveryTarget, type Unresolved } from '@flowatlas/core';
 import { describe, type Because, type Instance, type Value } from '../eval/values.js';
-import { argument, HOLE, referencesOf, textOf, textWithHoles, unreadRow, whyNot } from './arguments.js';
+import { argument, HOLE, referencesOf, siteOf, textOf, textWithHoles, unreadRow, whyNot } from './arguments.js';
 import type { ResourceReading } from './reading.js';
 
 /**
@@ -24,6 +24,8 @@ export interface Deployed {
   readonly function?: number;
   /** The table's stream of changes rather than the table, for a table. */
   readonly changes?: boolean;
+  /** The name is a stand-in for one the provider generates (P246). */
+  readonly generated?: boolean;
 }
 
 /**
@@ -60,6 +62,37 @@ const IDENTITY = new Set([
   // A bucket's own name, which its `id` is too.
   'bucket',
 ]);
+
+/**
+ * Types whose name the provider generates when the block sets none: a queue, a
+ * topic, a bucket. Such a thing is named by where it is declared, through
+ * `generatedName` (P57, P246), so what this deployment points at it by - a
+ * mapping, a subscription, a value handed to code - joins it, and nothing
+ * outside the deployment can.
+ */
+const GENERATES_NAME = new Set(['aws_sqs_queue', 'aws_sns_topic', 'aws_s3_bucket']);
+
+/** Whether a block declares something the provider will name, its own name argument unset or null. */
+const namedByProvider = (target: Instance, name: string): boolean => {
+  if (target.mode !== 'managed' || !GENERATES_NAME.has(target.type)) return false;
+  const value = argument(target, name);
+  // A `name_prefix` is the start of a name the provider still finishes.
+  return value === undefined || value.kind === 'null';
+};
+
+/** The note a block whose name the provider generates gets, once, where it is declared. */
+export const generatedNameRow = (instance: Instance): Unresolved | undefined => {
+  const declared = DECLARED.get(instance.type);
+  if (declared === undefined || !namedByProvider(instance, declared.name)) return undefined;
+  return {
+    ...siteOf(instance),
+    symbol: instance.address,
+    reason: 'deployed-name-generated',
+    level: 'info',
+    message: `${instance.address} is a ${declared.kind} with no name of its own, so it is named by where it is declared; what this deployment points at it by joins to it, and nothing outside it can`,
+    hint: `Give it a ${declared.name} of its own where other repositories reach it.`,
+  };
+};
 
 /** Types whose `function_name` names the function they stand in front of. */
 const FUNCTION_ALIASES = new Set(['aws_lambda_alias']);
@@ -108,6 +141,9 @@ export const deployedOf = (value: Value, reading: Pick<ResourceReading, 'functio
   const declared = DECLARED.get(target.type);
   if (declared === undefined) return undefined;
   const index = declared.kind === 'function' && target.mode === 'managed' ? reading.functionIndex(target) : undefined;
+  if (namedByProvider(target, declared.name)) {
+    return { kind: declared.kind, name: generatedName(target.address), generated: true, ...(attribute === 'stream_arn' ? { changes: true } : {}) };
+  }
   const nameValue = argument(target, declared.name);
   const name = textOf(nameValue);
   if (name === undefined) return whyNot(nameValue, `the name of ${target.address}`);

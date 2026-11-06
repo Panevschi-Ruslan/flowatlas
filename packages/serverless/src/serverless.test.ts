@@ -226,3 +226,67 @@ describe('a service read into a deployment (P57)', () => {
     expect(serviceFiles(dir)).toEqual(['services/a/serverless.yml', 'services/b/serverless.ts']);
   });
 });
+
+describe('what P246 added to the CloudFormation a service file holds', () => {
+  it("names a function's URL by the function, as the framework declares it (P54)", () => {
+    const deployment = read({
+      'serverless.yml': [
+        'service: shop',
+        'provider: { name: aws }',
+        'functions:',
+        '  receipt: { handler: src/receipt.handler, url: true }',
+        '  kiosk:',
+        '    handler: src/kiosk.handler',
+        '    environment: { RECEIPT_URL: !GetAtt ReceiptLambdaFunctionUrl.FunctionUrl }',
+      ].join('\n'),
+    });
+    expect(deployment.functions[1]?.environment?.['RECEIPT_URL']?.names).toEqual({ kind: 'url', name: 'shop-dev-receipt' });
+  });
+
+  it('reads a schedule of the scheduler, where a function hands its runs on, a user pool and a URL written as resources', () => {
+    const deployment = read({
+      'serverless.yml': [
+        'service: shop',
+        'provider: { name: aws }',
+        'functions:',
+        '  tick: { handler: src/tick.handler }',
+        'resources:',
+        '  Resources:',
+        '    Nightly:',
+        '      Type: AWS::Scheduler::Schedule',
+        '      Properties: { Name: shop-nightly, ScheduleExpression: rate(1 day), State: DISABLED, Target: { Arn: !GetAtt TickLambdaFunction.Arn } }',
+        '    Results:',
+        '      Type: AWS::Lambda::EventInvokeConfig',
+        '      Properties: { FunctionName: !Ref TickLambdaFunction, DestinationConfig: { OnFailure: { Destination: !GetAtt Failed.Arn } } }',
+        '    Failed: { Type: AWS::SQS::Queue, Properties: { QueueName: shop-failed } }',
+        '    Pool:',
+        '      Type: AWS::Cognito::UserPool',
+        '      Properties: { LambdaConfig: { PostConfirmation: !GetAtt TickLambdaFunction.Arn, CustomEmailSender: { LambdaArn: !GetAtt TickLambdaFunction.Arn } } }',
+        '    TickUrl: { Type: AWS::Lambda::Url, Properties: { TargetFunctionArn: !GetAtt TickLambdaFunction.Arn, AuthType: NONE } }',
+      ].join('\n'),
+    });
+    const pool = generatedName('resources.Resources.Pool');
+    expect(deployment.deliveries.map((delivery) => [delivery.by, delivery.from, delivery.to, delivery.meta?.['disabled'] ?? false])).toEqual([
+      ['schedule', { kind: 'schedule', expression: 'rate(1 day)' }, { kind: 'function', function: 0 }, true],
+      ['destination', { kind: 'outcome', when: 'failure', of: { function: 0 } }, { kind: 'queue', name: 'shop-failed' }, false],
+      ['trigger', { kind: 'trigger', service: 'cognito', key: `cognito/${pool}/post_confirmation` }, { kind: 'function', function: 0 }, false],
+      ['trigger', { kind: 'trigger', service: 'cognito', key: `cognito/${pool}/custom_email_sender` }, { kind: 'function', function: 0 }, false],
+    ]);
+    expect(deployment.routes).toEqual([expect.objectContaining({ method: 'ALL', path: '/*', target: { function: 0 } })]);
+    expect(reasons(deployment)).toContain('deployed-name-generated');
+  });
+
+  it('says which variable a substitution waits on, not only that part of it is unread', () => {
+    const deployment = read({
+      'serverless.yml': [
+        'service: shop',
+        'provider: { name: aws }',
+        'functions:',
+        '  a:',
+        '    handler: src/a.handler',
+        '    environment: { QUEUE: !Sub ["${Base}-orders", { Base: "${ssm:/shop/base}" }] }',
+      ].join('\n'),
+    });
+    expect(deployment.functions[0]?.environment?.['QUEUE']?.unread).toMatchObject({ variable: 'ssm:/shop/base' });
+  });
+});

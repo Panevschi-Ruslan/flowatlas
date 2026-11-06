@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * One deployment, written three ways, must read as one graph (P57).
+ * One deployment, written four ways, must read as one graph (P57, P246).
  *
  *   node scripts/deployments-agree.mjs [graph.json ...]
  *
- * `fixtures/terraform-orders`, `fixtures/serverless-orders` and
- * `fixtures/cdk-orders` deploy the same handlers the same way: in Terraform, in
- * a Serverless Framework file and in a CDK app. The readers of the three feed
- * one shape, and this is the check that they fill it alike: every way in by its
+ * `fixtures/terraform-orders`, `fixtures/serverless-orders`,
+ * `fixtures/cdk-orders` and `fixtures/sam-orders` deploy the same handlers the
+ * same way: in Terraform, in a Serverless Framework file, in a CDK app and in a
+ * SAM template. The readers of the four feed one shape, and this is the check
+ * that they fill it alike: every way in by its
  * kind and key, every channel by its name, and every edge by its type, its two
  * ends and its confidence.
  *
@@ -17,9 +18,9 @@
  * built from where it is declared, so it is compared by what it is instead: a
  * consumer by the channels it takes from, a publisher by those it puts on, a
  * step by its workflow and its name. Nodes of the code itself keep their ids,
- * because the code is the same file in all three.
+ * because the code is the same file in all four.
  *
- * With no arguments it compares the three committed snapshots and exits 1 on a
+ * With no arguments it compares the four committed snapshots and exits 1 on a
  * difference; with paths, it compares those graphs (a build's own output while
  * a reader is being written).
  */
@@ -29,9 +30,9 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(fileURLToPath(new URL('.', import.meta.url)), '..');
 
-export const ORDERS_FIXTURES = ['terraform-orders', 'serverless-orders', 'cdk-orders'];
+export const ORDERS_FIXTURES = ['terraform-orders', 'serverless-orders', 'cdk-orders', 'sam-orders'];
 
-/** Whether a node is written in the code the three deployments share. */
+/** Whether a node is written in the code the four deployments share. */
 const ofCode = (node) => typeof node.file === 'string' && node.file.startsWith('src/');
 
 /** What a graph is, set apart from where each of its parts is written. */

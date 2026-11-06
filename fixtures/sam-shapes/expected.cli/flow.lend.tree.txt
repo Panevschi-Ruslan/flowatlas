@@ -1,0 +1,10 @@
+@  POST /loans                                          library/template.yaml:56
+  !  api key
+  -> handler                                            library/src/loans/lend.ts:6
+    $  HOLDS_QUEUE_URL                                  library/src/loans/lend.ts:7
+    ~  message sqs/${…}@Resources.HoldsQueue            library/src/loans/lend.ts:7
+      ~  sqs/${…}@Resources.HoldsQueue                  template.yaml:81
+        ~  mapping Resources.HoldFunction.Events.Holds  library/template.yaml:81
+          @  library-prod-hold                          library/template.yaml:75
+            -> handler                                  library/src/loans/hold.ts:2
+unresolved on this path: 0

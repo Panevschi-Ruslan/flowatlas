@@ -1137,8 +1137,8 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.return-item.tree.txt', 'invoke:library-lending-return-item'],
   ]),
   terraformShape('lambda-terraform-shared-paths', [['flow.status-board.tree.txt', 'invoke:library-branch-kiosk-status-board']]),
-  // One deployment written three ways (P57): the same walks, from each format's files.
-  ...['terraform-orders', 'serverless-orders', 'cdk-orders'].map((name) =>
+  // One deployment written four ways (P57, P246): the same walks, from each format's files.
+  ...['terraform-orders', 'serverless-orders', 'cdk-orders', 'sam-orders'].map((name) =>
     terraformShape(name, [
       ['flow.post-orders.tree.txt', 'POST /orders'],
       ['flow.shipping.tree.txt', 'workflow:orders-dev-shipping'],
@@ -1147,6 +1147,10 @@ const TERRAFORM_SHAPE_SUITES = [
   terraformShape('serverless-shapes', [
     ['flow.welcome.tree.txt', 'event:cognito/club-members/post_confirmation'],
     ['flow.lapse.tree.txt', 'invoke:accounts-prod-lapse'],
+  ]),
+  terraformShape('sam-shapes', [
+    ['flow.lend.tree.txt', 'POST /loans'],
+    ['flow.overdue.tree.txt', 'workflow:library-prod-overdue'],
   ]),
   terraformShape('cdk-shapes', [
     ['flow.renewals.tree.txt', 'workflow:${…}@ClubStack.Renewals'],

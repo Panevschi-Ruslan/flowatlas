@@ -51,7 +51,7 @@ const filled = (found: Deployed | Unread | undefined): string | undefined => {
 };
 
 /** A reference, from the definition, to what it names: a function by key as the plugin allows, or anything the template knows. */
-const answerFor = (reading: FileReading, value: unknown): string | undefined => {
+export const answerFor = (reading: FileReading, value: unknown): string | undefined => {
   const intrinsic = intrinsicOf(value);
   if (intrinsic !== undefined && intrinsic[0] === 'Fn::GetAtt') {
     const argument = intrinsic[1];
@@ -71,7 +71,7 @@ const answerFor = (reading: FileReading, value: unknown): string | undefined => 
 };
 
 /** A workflow from a definition value written at `path` of the file. */
-const workflowOf = (
+export const workflowOf = (
   reading: FileReading,
   address: string,
   path: readonly PathStep[],
@@ -107,7 +107,7 @@ const workflowOf = (
 };
 
 /** A workflow whose name is generated says so, and is named by its declaration. */
-const nameOf = (reading: FileReading, written: unknown, address: string, path: readonly PathStep[]): { name?: string; reference?: string } => {
+export const workflowNameOf = (reading: FileReading, written: unknown, address: string, path: readonly PathStep[]): { name?: string; reference?: string } => {
   if (written === undefined || written === null) {
     reading.generatedRow({ kind: 'workflow', name: generatedName(address), generated: true }, path);
     return { reference: generatedName(address) };
@@ -163,7 +163,7 @@ export const readPluginStateMachines = (reading: FileReading, stateMachines: unk
     if (!isRecord(machine)) continue;
     const path = ['stepFunctions', 'stateMachines', key];
     const address = `stepFunctions.stateMachines.${key}`;
-    const { name, reference } = nameOf(reading, machine['name'], address, path);
+    const { name, reference } = workflowNameOf(reading, machine['name'], address, path);
     if (machine['definition'] === undefined) {
       reading.row(path, address, { reason: 'workflow-definition-not-loaded', message: `${address} has no definition written in the file`, hint: 'Nothing of this workflow is drawn. Write the definition under definition.' });
     } else {
@@ -181,9 +181,9 @@ export const readPluginStateMachines = (reading: FileReading, stateMachines: unk
 
 /** An `AWS::StepFunctions::StateMachine` resource: its definition, as an object or as JSON text. */
 export const readStateMachineResource = (reading: FileReading, resource: Resource): void => {
-  const path = ['resources', 'Resources', resource.logicalId];
+  const path = [...resource.path];
   const { properties } = resource;
-  const { name } = nameOf(reading, properties['StateMachineName'], resource.address, path);
+  const { name } = workflowNameOf(reading, properties['StateMachineName'], resource.address, path);
   let substitutions: Record<string, unknown> = isRecord(properties['DefinitionSubstitutions']) ? properties['DefinitionSubstitutions'] : {};
   let definition: unknown = properties['Definition'];
   let definitionPath: PathStep[] = [...path, 'Properties', 'Definition'];

@@ -96,6 +96,28 @@ describe('a function a CDK app makes (P57)', () => {
   });
 });
 
+describe('a function a SAM template declares (P246)', () => {
+  it('counts each by its Type, a SAM function and a plain one alike, and not in a comment', () => {
+    const text = [
+      'Resources:',
+      '  PlaceOrder:',
+      '    Type: AWS::Serverless::Function',
+      '  Legacy:',
+      "    Type: 'AWS::Lambda::Function'",
+      '  # Type: AWS::Serverless::Function',
+      '  Queue:',
+      '    Type: AWS::SQS::Queue',
+    ].join('\n');
+    assert.deepEqual(sitesIn('template.yaml', text), { routes: 2 });
+    assert.equal(isSourceFile('services/orders/template.yml'), true);
+  });
+
+  it('reads no other YAML file', () => {
+    assert.equal(isSourceFile('openapi.yaml'), false);
+    assert.equal(isSourceFile('.github/workflows/template.yaml.bak'), false);
+  });
+});
+
 describe('a test file, by the definition the tool reads by', () => {
   const tests = [
     'packages/features/credentials/handleDeleteCredential.integration-test.ts',

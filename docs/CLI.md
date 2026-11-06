@@ -2844,9 +2844,8 @@ narrows the question the way it narrows every other.
 one nothing reaches, so no flow starts there. That is usually a stack nothing
 reads under a type set by hand, and it is the first line of the report and the
 first sentence of the verdict, with what the repository looks like: a
-deployment written for a tool nothing reads (the Serverless Framework, AWS SAM,
-the AWS CDK), a framework nothing reads, a framework that *is* read under
-another type, or a library:
+deployment written for a tool nothing reads (SST, Architect), a framework
+nothing reads, a framework that *is* read under another type, or a library:
 
 ```
 api: no way in was found — its functions are declared for the Serverless Framework, which nothing here reads yet. Its code was read and nothing in this graph reaches it, so no flow starts there; its dependencies are not installed either, and installing them would not give it one.
@@ -6019,10 +6018,10 @@ describes is one `infra-module-undescribed` row naming the module, its source
 and the inputs it was given — at `info` unless one of those inputs looks like a
 handler, a function or a route (`fixtures/lambda-terraform-modules`).
 
-The only infrastructure reader is Terraform. SAM, the Serverless Framework, the
-CDK and CloudFormation are named when a repository is written for one
-(`deployment-unread`), and are a second implementation of the reader interface
-the adapter is written against, not a change to it.
+Terraform is one reader of the interface the adapter is written against; the
+Serverless Framework, the CDK and SAM are three more (below), each into the
+same shape. SST and Architect are named when a repository is written for one
+(`deployment-unread`), and read by none.
 
 ### Subscribers declared in Terraform
 
@@ -6068,7 +6067,11 @@ on the function it runs, so `flow` and `impact` follow Lambda A → table → st
 and nothing configured writes is one `stream-no-writer` row at `info`. Each is named by a reference to what the
 configuration declares or looks up, by an ARN or URL written out, or by a
 template whose name part is written out — `"arn:aws:lambda:${var.region}:${local.account}:function:library-notify"`
-names its function even though neither the region nor the account is known.
+names its function even though neither the region nor the account is known. A
+queue, a topic or a bucket the block gives no name (or only a `name_prefix`) is
+named by its address, `sqs/${…}@aws_sqs_queue.inbox`, because the provider
+names it when it is created: what the configuration points at it by joins it,
+`static`, and nothing outside can (`deployed-name-generated`, a note; P246).
 
 **Matching an event to a rule.** A pattern is a filter, not a name. Where it
 names `source` and `detail-type` exactly, every combination is a channel, and
@@ -6256,6 +6259,87 @@ construct of a module nothing reads that is handed a function is
 `invoker-not-read`; and a `cdk.json` whose app is not a TypeScript file of the
 repository is `deployment-app-unread`, with every stack read on its own and what
 it is handed unread (`fixtures/cdk-orders`, `fixtures/cdk-shapes`).
+
+### Functions declared in an AWS SAM template
+
+A `template.yaml`, `template.yml` or `template.json` written for the
+`AWS::Serverless-2016-10-31` transform - at the top of the repository or in a
+directory below it, or the one `samconfig.toml`'s `template_file` names - is
+read into what the Terraform reader gives for the same deployment (P246).
+Nothing is run: no `sam build`, no transform, no account; `.aws-sam` is the
+CLI's own output and is not read. `init` and `link` propose the `lambda` type.
+
+**What a template is deployed with** is read from `samconfig.toml` (or
+`samconfig.yaml`) beside it: the stack's `stack_name` and `region`, and each
+parameter's value from `parameter_overrides`, `deploy` over `global`, in the
+environment `services[].infra.options.config_env` names, else `default`. Any
+other option is a parameter's value (`--parameter-overrides` written down), and
+`stack_name` and `region` override the file's:
+
+```json
+{ "name": "library", "repo": "./library", "type": "lambda", "infra": { "options": { "config_env": "prod", "Owner": "desk" } } }
+```
+
+A parameter takes that value, else its `Default`; one with neither is unread,
+and every name or value built from it says which parameter it waits on. Then,
+before anything is read: `Conditions` are decided (`Fn::Equals`, `Fn::And`,
+`Fn::Or`, `Fn::Not`, the pseudo parameters `samconfig` settles), `Fn::If` takes
+its branch, `Fn::FindInMap`, `Fn::Select`, `Fn::Split` and `Fn::Join` of text
+are worked out, `!Ref AWS::NoValue` removes its property, `Fn::ForEach` (the
+language extensions) is written out once per element, and `Globals` is merged
+under each function, API and state machine as the transform merges it. A
+resource whose condition is settled false is not read; one under a condition
+nothing settles is read, and what reaches it is drawn `heuristic`
+(`construct-conditional`, a note).
+
+**Functions** - `AWS::Serverless::Function` and a plain `AWS::Lambda::Function`
+- are named `FunctionName`, or by their declaration where the platform names
+them (`invoke:${…}@Resources.LendFunction`, `deployed-name-generated`). The
+handler is the module `Handler` names in the directory `CodeUri` names (or
+`Code`, a local directory); built with esbuild (`Metadata.BuildMethod`), the
+entry point whose name the handler's module has is the source. An image, inline
+code and a runtime other than Node.js are rows.
+
+| Written as | Read as |
+|---|---|
+| `Api`, `HttpApi` events | a route of the API `RestApiId` / `ApiId` points at, named `Name`; with none, the API the transform makes, named after the stack; `Auth.Authorizer`, `Auth.ApiKeyRequired` and the API's `DefaultAuthorizer` as guards; an `HttpApi` event with no path is `ALL /{proxy+}` |
+| `FunctionUrlConfig`, `AWS::Lambda::Url` | the function URL, `ALL /*`; `!GetAtt <Function>Url.FunctionUrl` handed to code names it, so a `fetch` of it joins the function (P54) |
+| `SQS`, `DynamoDB`, `Kinesis` events | a mapping from the queue, the table's stream or the stream; `FilterCriteria` recorded, not matched; `DestinationConfig.OnFailure` where its batches go |
+| `SNS` | a subscription; `SqsSubscription` recorded |
+| `S3` | a notification of a bucket of the template, its `Filter` rules |
+| `Schedule`, `ScheduleV2`, `AWS::Scheduler::Schedule` | a schedule, its entry keyed by `Name` |
+| `EventBridgeRule`, `CloudWatchEvent` | a rule on `EventBusName`, the default bus where none is named |
+| `Cognito`, a user pool's `LambdaConfig` | `cognito/<pool>/<trigger>` |
+| `IoTRule` | `iot/<topic filter>`, as Terraform spells it |
+| `EventInvokeConfig`, `DeadLetterQueue`, `AWS::Lambda::EventInvokeConfig` | what a run ends in |
+| any other event: `CloudWatchLogs`, `MSK`, `MQ`, ... | an `invoker-not-read` row at `info` |
+
+**APIs written on their own** are read too: the OpenAPI body of an
+`AWS::Serverless::Api` or `HttpApi` - in place, through `AWS::Include`, or a
+`DefinitionUri` file of the repository - each path whose integration URI holds
+the ARN of a function of the template; an HTTP or WebSocket API written as
+`AWS::ApiGatewayV2` routes and integrations; and a REST API written as
+`AWS::ApiGateway` resources and methods, its path built up from `ParentId`.
+
+**State machines** (`AWS::Serverless::StateMachine`) are workflows: a
+`Definition` written in place, each state drawn at its line, or a
+`DefinitionUri` file read as Terraform reads a rendered template, every
+`${...}` answered from `DefinitionSubstitutions`; a step naming a function with
+`!GetAtt` or through a substitution invokes it. Their `Schedule`, `ScheduleV2`,
+`EventBridgeRule` and `CloudWatchEvent` events start them; an `Api` event is a
+`route-target-unread` row. Everything else is read as CloudFormation, by the
+same table the Serverless Framework's `resources.Resources` is read through.
+
+**A nested application** (`AWS::Serverless::Application`, or
+`AWS::CloudFormation::Stack`) whose `Location` is a template of the repository
+is read in place, under the parameters handed to it - a queue's `!Ref` handed
+down is the queue - its addresses under the application's logical id
+(`Notices.Resources.SenderFunction`), and `!GetAtt Notices.Outputs.X` is what
+its output names. One published elsewhere is `nested-deployment-unread`. A
+layer is a `layer-not-followed` note, a macro the template names in
+`Transform` other than the language extensions is `deployment-plugin-unread`,
+and a loop over a collection nothing settles is `construct-repeated-unread`
+(`fixtures/sam-orders`, `fixtures/sam-shapes`).
 
 ### Procedures
 

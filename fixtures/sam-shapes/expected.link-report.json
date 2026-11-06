@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-06T18:33:37.411Z",
+  "configHash": "e187e7f2c153",
+  "services": [
+    {
+      "name": "library",
+      "repo": "./library",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 74,
+      "edges": 58,
+      "types": 0,
+      "unresolved": 12,
+      "durationMs": 775,
+      "packages": {
+        "name": "library-desk",
+        "runtime": [
+          "@aws-sdk/client-eventbridge",
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 2,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 7,
+    "linked": 2,
+    "noConsumers": [
+      "channel:sqs/library-prod-failed-loans"
+    ],
+    "noProducers": [
+      "channel:eventbridge/default/library.loans/LoanOverdue",
+      "channel:eventbridge/default/library.loans/LoanRenewed",
+      "channel:kinesis/library-prod-returns",
+      "channel:sqs/library-prod-fiction-shelf"
+    ]
+  },
+  "routes": {
+    "total": 7,
+    "called": 2,
+    "uncalled": [
+      "entry:library:http:ALL:/:param",
+      "entry:library:http:GET:/books/:param",
+      "entry:library:http:GET:/branches/:param",
+      "entry:library:http:POST:/loans",
+      "entry:library:http:POST:/notices/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "library",
+      "file": "template.yaml",
+      "line": 118,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/library-prod-returns is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/library-prod-returns"
+    }
+  ],
+  "totals": {
+    "nodes": 74,
+    "edges": 65,
+    "types": 0,
+    "missed": 11,
+    "sites": 11,
+    "notes": 3,
+    "findings": 1,
+    "unresolved": 11
+  }
+}

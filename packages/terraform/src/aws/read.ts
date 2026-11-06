@@ -21,6 +21,7 @@ import { readStateMachineInstance } from './state-machines.js';
 import { addressesOf, joinSegments, MAPPING_READERS } from './addresses.js';
 import { argument, siteOf, textOf, whyNot } from './arguments.js';
 import { environmentOf } from './environment.js';
+import { generatedNameRow } from './deployed.js';
 import { DESTINATION_READERS } from './destinations.js';
 import { EVENT_READERS } from './events.js';
 import { INVOKER_READERS } from './invokers.js';
@@ -113,6 +114,11 @@ export class DeploymentReading implements ResourceReading {
   read(): Deployment {
     for (const [type, read] of this.#readers) {
       for (const instance of this.#ofType('managed', type)) read(instance);
+    }
+    // A queue, a topic or a bucket the provider names says so once (P246).
+    for (const instance of this.#instances) {
+      const row = generatedNameRow(instance);
+      if (row !== undefined) this.rows.push(row);
     }
     this.#publishedRoots();
     return {

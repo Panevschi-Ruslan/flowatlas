@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>187 fixtures</span>
-    <span>478 snapshot files</span>
+    <span>189 fixtures</span>
+    <span>485 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -575,9 +575,9 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, declared with the Serverless Framework or the CDK <span class="count" data-total="4">4</span></h2>
+    <h2>Serverless, declared with the Serverless Framework, the CDK or SAM <span class="count" data-total="6">6</span></h2>
     <ul>
-      <li class="fixture" data-search="cdk-orders serverless, declared with the serverless framework or the cdk the deployment of `terraform-orders`, written as an aws cdk app in typescript over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
+      <li class="fixture" data-search="cdk-orders serverless, declared with the serverless framework, the cdk or sam the deployment of `terraform-orders`, written as an aws cdk app in typescript over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/cdk-orders">cdk-orders</a>
           <span class="kind">one service</span>
@@ -585,7 +585,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>The deployment of <code>terraform-orders</code>, written as an AWS CDK app in TypeScript over the same handlers, and read as the same graph (P57; <code>scripts/deployments-agree.mjs</code>).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
-      <li class="fixture" data-search="cdk-shapes serverless, declared with the serverless framework or the cdk a members' club deployed with an aws cdk app (p57): the shapes a cdk app is written in, read by following the app from its entry, and what is not read, said as a row.">
+      <li class="fixture" data-search="cdk-shapes serverless, declared with the serverless framework, the cdk or sam a members' club deployed with an aws cdk app (p57): the shapes a cdk app is written in, read by following the app from its entry, and what is not read, said as a row.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/cdk-shapes">cdk-shapes</a>
           <span class="kind">one service</span>
@@ -593,7 +593,23 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A members' club deployed with an AWS CDK app (P57): the shapes a CDK app is written in, read by following the app from its entry, and what is not read, said as a row.</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
-      <li class="fixture" data-search="serverless-orders serverless, declared with the serverless framework or the cdk the deployment of `terraform-orders`, written as a serverless framework service (`orders/serverless.yml`) over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
+      <li class="fixture" data-search="sam-orders serverless, declared with the serverless framework, the cdk or sam the deployment of `terraform-orders`, written as an aws sam template (`orders/template.yaml`) over the same handlers, and read as the same graph (p246; `scripts/deployments-agree.mjs`).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sam-orders">sam-orders</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>The deployment of <code>terraform-orders</code>, written as an AWS SAM template (<code>orders/template.yaml</code>) over the same handlers, and read as the same graph (P246; <code>scripts/deployments-agree.mjs</code>).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="sam-shapes serverless, declared with the serverless framework, the cdk or sam the lending desk of a town library, deployed with aws sam (p246): a template (`library/template.yaml`), a template it nests (`library/notices`) and a tool rewritten by a macro (`library/tools`).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sam-shapes">sam-shapes</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>The lending desk of a town library, deployed with AWS SAM (P246): a template (<code>library/template.yaml</code>), a template it nests (<code>library/notices</code>) and a tool rewritten by a macro (<code>library/tools</code>).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="serverless-orders serverless, declared with the serverless framework, the cdk or sam the deployment of `terraform-orders`, written as a serverless framework service (`orders/serverless.yml`) over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/serverless-orders">serverless-orders</a>
           <span class="kind">one service</span>
@@ -601,7 +617,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>The deployment of <code>terraform-orders</code>, written as a Serverless Framework service (<code>orders/serverless.yml</code>) over the same handlers, and read as the same graph (P57; <code>scripts/deployments-agree.mjs</code>).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
-      <li class="fixture" data-search="serverless-shapes serverless, declared with the serverless framework or the cdk two serverless framework services of a members' club in one repository, read with `services[].infra.options: { &quot;stage&quot;: &quot;prod&quot; }` (p57): `accounts` written as `serverless.ts`, `notices` as `serverless.yml`.">
+      <li class="fixture" data-search="serverless-shapes serverless, declared with the serverless framework, the cdk or sam two serverless framework services of a members' club in one repository, read with `services[].infra.options: { &quot;stage&quot;: &quot;prod&quot; }` (p57): `accounts` written as `serverless.ts`, `notices` as `serverless.yml`.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/serverless-shapes">serverless-shapes</a>
           <span class="kind">one service</span>

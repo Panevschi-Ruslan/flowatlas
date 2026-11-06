@@ -90,6 +90,9 @@ const NOTES: readonly string[] = [
   'deployed-name-generated',
   'construct-conditional',
   'construct-unreached',
+  // Shared code a deployment hands its functions at run time, read as code
+  // where it is in the repository and not joined to what loads it (P246).
+  'layer-not-followed',
   // The route audit, where the source says what was decided
   'route-checked-in-body',
   'route-guard-skipped',
@@ -305,6 +308,8 @@ const GAPS: readonly string[] = [
   'deployment-app-unread',
   'deployment-plugin-unread',
   'construct-repeated-unread',
+  // A deployment nested in another whose description is published elsewhere (P246)
+  'nested-deployment-unread',
   // Workflows written down as state machine definitions
   'workflow-definition-unreadable',
   'workflow-target-dynamic',

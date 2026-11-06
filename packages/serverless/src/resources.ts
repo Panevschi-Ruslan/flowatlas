@@ -1,6 +1,6 @@
-import { DEFAULT_EVENT_BUS, deployedNameIn, eventPatternOf } from '@flowatlas/aws';
-import type { DeliverySource } from '@flowatlas/core';
-import { intrinsicOf, RESOURCE_KINDS, type Deployed, type Resource } from './cloudformation.js';
+import { cognitoTriggerKey, DEFAULT_EVENT_BUS, deployedNameIn, destinationOf, eventPatternOf } from '@flowatlas/aws';
+import { generatedName, makeFunctionUrlEntryKey, type DeliverySource, type PathStep } from '@flowatlas/core';
+import { intrinsicOf, type Deployed, type Resource } from './cloudformation.js';
 import type { FileReading } from './reading.js';
 import { isRecord, textOf, Unread } from './variables.js';
 
@@ -17,7 +17,7 @@ import { isRecord, textOf, Unread } from './variables.js';
 
 type ResourceReader = (resource: Resource, reading: FileReading) => void;
 
-const pathOf = (resource: Resource): string[] => ['resources', 'Resources', resource.logicalId];
+const pathOf = (resource: Resource): readonly PathStep[] => resource.path;
 
 /** The deployed thing a resource itself declares. */
 const own = (resource: Resource, reading: FileReading): Deployed | Unread | undefined => reading.template.named(resource.logicalId);
@@ -227,7 +227,120 @@ const readBucket: ResourceReader = (resource, reading) => {
   }
 };
 
-const READERS: ReadonlyMap<string, ResourceReader> = new Map<string, ResourceReader>([
+/** A function a property names: one of this template's by reference, or any by its name or ARN. */
+const functionIn = (reading: FileReading, value: unknown): Deployed | Unread | undefined => {
+  const text = textOf(value);
+  return text !== undefined && deployedNameIn(text) === undefined ? { kind: 'function', name: text } : reading.template.deployedOf(value);
+};
+
+/** A schedule of the scheduler (P246): a clock, and the one target it runs. */
+const readSchedule: ResourceReader = (resource, reading) => {
+  const { properties } = resource;
+  const expression = textOf(properties['ScheduleExpression']);
+  const target = isRecord(properties['Target']) ? properties['Target'] : {};
+  pushDelivery(
+    reading,
+    resource,
+    resource.address,
+    'schedule',
+    { kind: 'schedule', ...(expression === undefined ? {} : { expression }) },
+    target['Arn'],
+    `the target of ${resource.address}`,
+    {
+      ...(textOf(properties['State']) === 'DISABLED' ? { disabled: true } : {}),
+      ...(target['Input'] === undefined ? {} : { transformed: true }),
+    },
+    textOf(properties['Name']),
+  );
+};
+
+/** Where a function's runs are handed on, written as a resource of its own (P246). */
+const readInvokeConfig: ResourceReader = (resource, reading) => {
+  const fn = functionIn(reading, resource.properties['FunctionName']);
+  if (fn === undefined || fn instanceof Unread || fn.kind !== 'function') {
+    resourceRow(reading, resource, 'subscription-source-unread', `the function ${resource.address} configures is not read${fn instanceof Unread ? `: ${fn.text}` : ''}`, 'Write FunctionName as a Ref of a function the template declares, or its name.');
+    return;
+  }
+  const config = isRecord(resource.properties['DestinationConfig']) ? resource.properties['DestinationConfig'] : {};
+  for (const [key, when] of [
+    ['OnSuccess', 'success'],
+    ['OnFailure', 'failure'],
+  ] as const) {
+    const written = config[key];
+    if (!isRecord(written)) continue;
+    const address = `${resource.address}.DestinationConfig.${key}`;
+    const to = destinationOf(reading.targetOf(reading.template.deployedOf(written['Destination']), pathOf(resource), address, `the ${when} destination of ${resource.address}`), when);
+    reading.parts.deliveries.push({
+      ...reading.siteOf(pathOf(resource)),
+      address,
+      by: 'destination',
+      from: { kind: 'outcome', when, of: fn.function === undefined ? { name: fn.name } : { function: fn.function } },
+      ...(to === undefined ? {} : { to }),
+      meta: { when },
+    });
+  }
+};
+
+/** The steps of signing up and in a user pool runs a function at (P246), spelled as Terraform spells them. */
+const readUserPool: ResourceReader = (resource, reading) => {
+  const config = resource.properties['LambdaConfig'];
+  if (!isRecord(config)) return;
+  const pool = userPoolName(reading, resource);
+  for (const [trigger, written] of Object.entries(config)) {
+    if (trigger === 'KMSKeyID') continue;
+    // The senders and the newer token step are written with the version beside the function.
+    const target = isRecord(written) && intrinsicOf(written) === undefined ? written['LambdaArn'] : written;
+    const key = cognitoTriggerKey(pool, trigger.replace(/Config$/, ''));
+    const step = key.slice(key.lastIndexOf('/') + 1);
+    pushDelivery(reading, resource, `${resource.address}.LambdaConfig.${trigger}`, 'trigger', { kind: 'trigger', service: 'cognito', key }, target, `the function ${resource.address} runs at ${trigger}`, { pool, trigger: step }, step);
+  }
+};
+
+/** A user pool's name, or where it is declared when the platform names it. */
+export const userPoolName = (reading: FileReading, resource: Resource): string => {
+  const written = textOf(resource.properties['UserPoolName']);
+  if (written !== undefined) return written;
+  if (resource.properties['UserPoolName'] === undefined) {
+    resourceRow(
+      reading,
+      resource,
+      'deployed-name-generated',
+      `${resource.address} is a user pool with no name of its own, so its triggers are named by where it is declared`,
+      'Give it a UserPoolName where other repositories name its triggers.',
+      'info',
+    );
+  }
+  return generatedName(resource.address);
+};
+
+/** A function's own address, written as a resource (P246): every verb and every path, keyed as Terraform keys one. */
+const readFunctionUrl: ResourceReader = (resource, reading) => {
+  const fn = functionIn(reading, resource.properties['TargetFunctionArn']);
+  if (fn === undefined || fn instanceof Unread || fn.kind !== 'function') {
+    resourceRow(reading, resource, 'route-target-unread', `the function ${resource.address} is the address of is not read${fn instanceof Unread ? `: ${fn.text}` : ''}`, 'Write TargetFunctionArn as a Ref or Fn::GetAtt of a function the template declares.');
+    return;
+  }
+  pushFunctionUrl(reading, resource.path, resource.address, fn, textOf(resource.properties['AuthType']));
+};
+
+/** A function URL as a route, by the function it is the address of. */
+export const pushFunctionUrl = (reading: FileReading, path: readonly PathStep[], address: string, fn: Deployed, authType: string | undefined): void => {
+  const at = reading.siteOf(path);
+  reading.parts.routes.push({
+    ...at,
+    method: 'ALL',
+    path: '/*',
+    rawPath: '/*',
+    target: fn.function === undefined ? { name: fn.name } : { function: fn.function },
+    ...(authType === 'AWS_IAM' ? { guards: [{ label: 'AWS_IAM', ...at }] } : {}),
+    meta: { declaredAs: address, key: makeFunctionUrlEntryKey(fn.name), by: 'function-url' },
+  });
+};
+
+export type { ResourceReader };
+
+/** The resource types read, one reader each (Strategy). */
+export const RESOURCE_READERS: ReadonlyMap<string, ResourceReader> = new Map<string, ResourceReader>([
   ['AWS::DynamoDB::Table', readTable],
   ['AWS::DynamoDB::GlobalTable', readTable],
   ['AWS::Kinesis::Stream', readKinesis],
@@ -236,15 +349,22 @@ const READERS: ReadonlyMap<string, ResourceReader> = new Map<string, ResourceRea
   ['AWS::SNS::Subscription', readSubscription],
   ['AWS::Events::Rule', readRule],
   ['AWS::Lambda::EventSourceMapping', readMapping],
+  ['AWS::Lambda::EventInvokeConfig', readInvokeConfig],
+  ['AWS::Lambda::Url', readFunctionUrl],
+  ['AWS::Scheduler::Schedule', readSchedule],
+  ['AWS::Cognito::UserPool', readUserPool],
   ['AWS::S3::Bucket', readBucket],
 ]);
 
-/** Every resource of a template, through the reader for its type. */
-export const readResources = (reading: FileReading): void => {
+/**
+ * Every resource of a template, through the reader for its type: the
+ * caller's own first, where it reads types of its own (a SAM template's).
+ */
+export const readResources = (reading: FileReading, own: ReadonlyMap<string, ResourceReader> = new Map()): void => {
   for (const resource of reading.template.resources.values()) {
-    const read = READERS.get(resource.type);
+    const read = own.get(resource.type) ?? RESOURCE_READERS.get(resource.type);
     if (read !== undefined) read(resource, reading);
-    else if (RESOURCE_KINDS.has(resource.type)) declared(resource, reading);
+    else if (reading.template.kinds.has(resource.type)) declared(resource, reading);
   }
 };
 

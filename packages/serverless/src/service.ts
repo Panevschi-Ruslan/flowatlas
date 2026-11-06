@@ -118,6 +118,14 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
         const name = names[index - base] as string | Unread;
         return typeof name === 'string' ? { kind: 'function', name, function: index } : name;
       }
+      // A function's URL, which the framework declares as `<function>Url`: the
+      // function's own address, named by the function (P54, P246).
+      const url = logicalId.endsWith('Url') ? logicalIds.get(logicalId.slice(0, -'Url'.length)) : undefined;
+      const urlIndex = url === undefined ? undefined : functionIndex.get(url);
+      if (urlIndex !== undefined) {
+        const name = names[urlIndex - base] as string | Unread;
+        return typeof name === 'string' ? { kind: 'url', name } : name;
+      }
       for (const [machineKey, machine] of Object.entries(machines)) {
         if (!isRecord(machine) || stateMachineLogicalId(machineKey, machine) !== logicalId) continue;
         const name = textOf(machine['name']);

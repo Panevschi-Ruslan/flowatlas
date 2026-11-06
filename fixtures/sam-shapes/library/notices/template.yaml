@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: The library's notices, nested in the lending desk's template.
+
+Parameters:
+  Stage:
+    Type: String
+  TopicArn:
+    Type: String
+
+Resources:
+  SenderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub library-${Stage}-notice-sender
+      Runtime: nodejs20.x
+      CodeUri: src/
+      Handler: sender.handler
+      Events:
+        Lost:
+          Type: SNS
+          Properties:
+            Topic: !Ref TopicArn
+
+  # A REST API written out as resources and methods.
+  NoticesApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub library-${Stage}-notices
+
+  NoticesResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NoticesApi
+      ParentId: !GetAtt NoticesApi.RootResourceId
+      PathPart: notices
+
+  NoticeResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NoticesApi
+      ParentId: !Ref NoticesResource
+      PathPart: '{noticeId}'
+
+  ResendMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref NoticesApi
+      ResourceId: !Ref NoticeResource
+      HttpMethod: POST
+      AuthorizationType: AWS_IAM
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SenderFunction.Arn}/invocations
+
+Outputs:
+  SenderArn:
+    Value: !GetAtt SenderFunction.Arn

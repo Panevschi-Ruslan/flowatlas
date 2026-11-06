@@ -221,3 +221,19 @@ describe('an app, followed from its entry (P57)', () => {
     expect(unreached.rows).toEqual(expect.arrayContaining([expect.objectContaining({ reason: 'construct-unreached', symbol: 'Other' })]));
   });
 });
+
+// P54's callers through a function URL, for the CDK (P246): the URL an app
+// hands another function names the function it is the address of.
+describe("a function URL's address, handed to code", () => {
+  it('names the function the URL stands in front of, as Terraform names it', () => {
+    const deployment = stack(
+      [
+        `    const receipt = ${fn('Receipt', ", functionName: 'shop-receipt'")};`,
+        '    const url = receipt.addFunctionUrl({ authType: lambda.FunctionUrlAuthType.AWS_IAM });',
+        `    ${fn('Kiosk', ", functionName: 'shop-kiosk', environment: { RECEIPT_URL: url.url }")};`,
+      ].join('\n'),
+    );
+    expect(deployment.functions[1]?.environment?.['RECEIPT_URL']?.names).toEqual({ kind: 'url', name: 'shop-receipt' });
+    expect(deployment.routes).toEqual([expect.objectContaining({ meta: expect.objectContaining({ key: 'ALL:/*@shop-receipt' }) })]);
+  });
+});

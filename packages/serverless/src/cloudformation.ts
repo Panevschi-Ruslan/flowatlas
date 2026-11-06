@@ -1,5 +1,5 @@
 import { deployedArn, deployedNameIn } from '@flowatlas/aws';
-import { generatedName, type DeployedKind } from '@flowatlas/core';
+import { generatedName, type DeployedKind, type PathStep } from '@flowatlas/core';
 import { HOLE, isRecord, textOf, Unread } from './variables.js';
 
 /**
@@ -15,8 +15,9 @@ import { HOLE, isRecord, textOf, Unread } from './variables.js';
  * and everything in the same template that points at it agrees on the stand-in.
  *
  * Nothing here is specific to the framework but the logical ids it gives the
- * functions it creates, which the caller hands in; a reader of AWS SAM
- * templates reads the same resources with the same rows.
+ * functions it creates, which the caller hands in; the reader of AWS SAM
+ * templates (P246) reads the same resources with the same rows, handing in the
+ * types it adds, where its resources sit and what a function's logical id is.
  */
 
 /** A deployed thing, by kind and deployed name. */
@@ -33,7 +34,7 @@ export interface Deployed {
 }
 
 /** What a resource type declares, and the property that names it. */
-interface Declares {
+export interface Declares {
   readonly kind: DeployedKind;
   readonly name: string;
   /** What `Ref` returns for it. */
@@ -59,6 +60,8 @@ export interface Resource {
   readonly properties: Record<string, unknown>;
   /** Where it is declared, for a person and for every row about it. */
   readonly address: string;
+  /** Where it is written in the file. */
+  readonly path: readonly PathStep[];
 }
 
 /** What the template is deployed with that a pseudo parameter stands for. */
@@ -69,6 +72,25 @@ export interface Pseudo {
 
 /** Something the caller knows by a logical id the template does not declare: a function the framework creates. */
 export type Known = (logicalId: string) => Deployed | Unread | undefined;
+
+/** How a template sits in the file that holds it, and what its reader adds to the vocabulary. */
+export interface TemplateOptions {
+  /** Where `Resources` is in the file: `resources.Resources` in a service file, `Resources` in a template. */
+  readonly at?: readonly string[];
+  /** Put before every address, to keep a nested template's resources apart from its parent's: `Shipping.`. */
+  readonly scope?: string;
+  /** The resource types read, when a reader adds its own to {@link RESOURCE_KINDS}. */
+  readonly kinds?: ReadonlyMap<string, Declares>;
+  /** A function the template declares, by its logical id: its position among the deployment's functions. */
+  readonly functionOf?: (logicalId: string) => number | undefined;
+  /**
+   * What one attribute of a resource is, where the caller knows it and the
+   * resource's own name does not say: an output of a nested template.
+   */
+  readonly attributeOf?: (logicalId: string, attribute: string) => Deployed | Unread | undefined;
+  /** Where a resource is written when it is not under its own logical id: one a loop makes. */
+  readonly paths?: ReadonlyMap<string, readonly PathStep[]>;
+}
 
 /** A value as plain text, or `undefined` when it is not a string. */
 const stringOf = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
@@ -99,14 +121,20 @@ const deployedInText = (text: string): Deployed | undefined => {
 
 export class Template {
   readonly resources = new Map<string, Resource>();
+  readonly kinds: ReadonlyMap<string, Declares>;
+  readonly #options: TemplateOptions;
 
   constructor(
     resources: unknown,
     readonly known: Known,
     readonly pseudo: Pseudo,
     readonly file: string,
+    options: TemplateOptions = {},
   ) {
+    this.#options = options;
+    this.kinds = options.kinds ?? RESOURCE_KINDS;
     if (!isRecord(resources)) return;
+    const at = options.at ?? ['resources', 'Resources'];
     for (const [logicalId, written] of Object.entries(resources)) {
       if (!isRecord(written)) continue;
       const type = stringOf(written['Type']);
@@ -115,7 +143,8 @@ export class Template {
         logicalId,
         type,
         properties: isRecord(written['Properties']) ? written['Properties'] : {},
-        address: `resources.Resources.${logicalId}`,
+        address: `${options.scope ?? ''}${[...at, logicalId].join('.')}`,
+        path: options.paths?.get(logicalId) ?? [...at, logicalId],
       });
     }
   }
@@ -129,15 +158,31 @@ export class Template {
   named(logicalId: string): Deployed | Unread | undefined {
     const resource = this.resources.get(logicalId);
     if (resource === undefined) return this.known(logicalId);
-    const declares = RESOURCE_KINDS.get(resource.type);
+    // A function's URL is the function's own address, named by the function (P54).
+    if (resource.type === 'AWS::Lambda::Url') {
+      const target = this.deployedOf(resource.properties['TargetFunctionArn']);
+      return target === undefined || target instanceof Unread ? target : target.kind === 'function' ? { kind: 'url', name: target.name } : undefined;
+    }
+    const declares = this.kinds.get(resource.type);
     if (declares === undefined) return undefined;
+    const index = declares.kind === 'function' ? this.#options.functionOf?.(logicalId) : undefined;
+    const own = index === undefined ? {} : { function: index };
     const written = resource.properties[declares.name];
     if (written === undefined || written === null) {
-      return { kind: declares.kind, name: generatedName(resource.address), generated: true };
+      return { kind: declares.kind, name: generatedName(resource.address), generated: true, ...own };
     }
     const name = this.text(written);
-    if (typeof name === 'string') return { kind: declares.kind, name };
+    if (typeof name === 'string') return { kind: declares.kind, name, ...own };
     return new Unread(`the ${declares.name} of ${resource.address}: ${name.text}`, name.variable);
+  }
+
+  /** What an attribute of a resource names: the caller's answer where it has one, else the resource. */
+  #attribute(logicalId: string, attribute: string): Deployed | Unread | undefined {
+    const answered = this.#options.attributeOf?.(logicalId, attribute);
+    if (answered !== undefined) return answered;
+    if (attribute.startsWith('Outputs.')) return new Unread(`${attribute} of ${logicalId} is an output of a template that is not read`);
+    const found = this.named(logicalId);
+    return found === undefined || found instanceof Unread ? found : { ...found, ...(attribute === 'StreamArn' ? { changes: true } : {}) };
   }
 
   /**
@@ -154,8 +199,7 @@ export class Template {
       if (fn === 'Fn::GetAtt') {
         const parts = getAttOf(argument);
         if (parts === undefined) return new Unread('Fn::GetAtt names no resource');
-        const found = this.named(parts[0]);
-        return found === undefined || found instanceof Unread ? found : { ...found, ...(parts[1] === 'StreamArn' ? { changes: true } : {}) };
+        return this.#attribute(parts[0], parts[1]);
       }
       if (fn === 'Fn::ImportValue') return new Unread('the value is imported from another stack, whose outputs are not read');
       if (fn === 'Fn::Sub' || fn === 'Fn::Join') {
@@ -173,10 +217,13 @@ export class Template {
   /** What `Ref` or an attribute of a resource is as text, a {@link HOLE} where it is known only once deployed. */
   #attributeText(logicalId: string, attribute: string | undefined): string {
     if (logicalId.startsWith('AWS::')) return this.#pseudoText(logicalId);
-    const found = this.named(logicalId);
+    const found = attribute === undefined ? this.named(logicalId) : this.#attribute(logicalId, attribute);
+    if (found instanceof Unread) this.#unread ??= found;
     if (found === undefined || found instanceof Unread || found.kind === 'url') return HOLE;
+    // An output is text to whoever reads it, and an ARN is the one spelling every kind has.
+    if (attribute?.startsWith('Outputs.') === true) return deployedArn(found.kind, found.name);
     const resource = this.resources.get(logicalId);
-    const declares = resource === undefined ? undefined : RESOURCE_KINDS.get(resource.type);
+    const declares = resource === undefined ? undefined : this.kinds.get(resource.type);
     const shape = attribute === undefined ? (declares?.ref ?? 'arn') : attribute === 'Arn' ? 'arn' : attribute === 'QueueUrl' ? 'url' : attribute === 'StreamArn' ? 'stream' : 'name';
     switch (shape) {
       case 'arn':
@@ -205,8 +252,34 @@ export class Template {
     }
   }
 
+  /**
+   * The first value a text being built could not read, so the text says why
+   * it is not read - a parameter with no value - rather than only that it is not.
+   */
+  #unread: Unread | undefined;
+
+  /** A part of a text being built, a {@link HOLE} where it is not read. */
+  #part(value: unknown, depth: number): string {
+    const text = this.text(value, depth);
+    if (typeof text === 'string') return text;
+    this.#unread ??= text;
+    return text.partial ?? HOLE;
+  }
+
   /** A value as text: what the template settles, with a {@link HOLE} for the rest. */
   text(value: unknown, depth = 0): string | Unread {
+    if (depth > 0) return this.#build(value, depth);
+    // A name read while a text is built is a text of its own, with its own cause.
+    const outer = this.#unread;
+    this.#unread = undefined;
+    try {
+      return this.#build(value, 0);
+    } finally {
+      this.#unread = outer;
+    }
+  }
+
+  #build(value: unknown, depth: number): string | Unread {
     if (depth > 16) return new Unread('the value is nested too deeply to read');
     const plain = textOf(value);
     if (plain !== undefined) return plain;
@@ -221,27 +294,23 @@ export class Template {
       built = parts === undefined ? HOLE : this.#attributeText(parts[0], parts[1]);
     } else if (fn === 'Fn::Join' && Array.isArray(argument) && typeof argument[0] === 'string' && Array.isArray(argument[1])) {
       const delimiter = argument[0];
-      built = argument[1]
-        .map((part) => {
-          const text = this.text(part, depth + 1);
-          return typeof text === 'string' ? text : (text.partial ?? HOLE);
-        })
-        .join(delimiter);
+      built = argument[1].map((part) => this.#part(part, depth + 1)).join(delimiter);
     } else if (fn === 'Fn::Sub') {
       const [template, variables] = Array.isArray(argument) ? [argument[0], argument[1]] : [argument, undefined];
       if (typeof template !== 'string') return new Unread('Fn::Sub is not given text');
       built = template.replace(/\$\{([^}!]+)\}/g, (_whole, inside: string) => {
         const own = isRecord(variables) ? variables[inside] : undefined;
-        if (own !== undefined) {
-          const text = this.text(own, depth + 1);
-          return typeof text === 'string' ? text : (text.partial ?? HOLE);
-        }
+        if (own !== undefined) return this.#part(own, depth + 1);
         const dot = inside.indexOf('.');
         return dot < 0 || inside.startsWith('AWS::') ? this.#attributeText(inside, undefined) : this.#attributeText(inside.slice(0, dot), inside.slice(dot + 1));
       });
     } else {
       return new Unread(`${fn} is decided when the stack is deployed`);
     }
-    return built.includes(HOLE) ? new Unread('part of the value is known only once the stack is deployed', undefined, built) : built;
+    if (!built.includes(HOLE)) return built;
+    const because = this.#unread;
+    return because === undefined
+      ? new Unread('part of the value is known only once the stack is deployed', undefined, built)
+      : new Unread(because.text, because.variable, built);
   }
 }
