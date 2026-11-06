@@ -1,0 +1,10 @@
+federation_version: =2.9.0
+subgraphs:
+  orders:
+    routing_url: ${env.ORDERS_URL}/graphql
+    schema:
+      subgraph_url: http://orders:4001/graphql
+  customers:
+    routing_url: http://customers:4002/graphql
+    schema:
+      file: ./customers.graphql

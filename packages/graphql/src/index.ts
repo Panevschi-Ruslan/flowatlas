@@ -6,9 +6,12 @@
  * reading of the language, and the core may name no technology (I1). It
  * draws nothing: each reader turns what this finds into its own nodes.
  */
-export { GraphqlSyntaxError, isNullable, namedTypeOf, parseDocument, tryParse, typeText } from './parse.js';
+export { argumentOf, GraphqlSyntaxError, isNullable, namedTypeOf, parseDocument, stringsOf, tryParse, typeText } from './parse.js';
 export type {
+  AppliedDirective,
   Argument,
+  EnumValue,
+  Value,
   Definition,
   Document,
   FieldDefinition,
@@ -21,14 +24,20 @@ export type {
   TypeDefinition,
   TypeRef,
 } from './parse.js';
-export { mergeSchemas, namedTypeIn, rootTypeOf, schemaOf } from './schema.js';
-export type { SchemaField, SchemaSummary, SchemaType } from './schema.js';
+export { federationNamesOf, fieldFederationOf, mergeSchemas, namedTypeIn, rootTypeOf, schemaOf, typeFederationOf } from './schema.js';
+export type { FieldFederation, SchemaField, SchemaSummary, SchemaType, TypeFederation } from './schema.js';
+export { apiSchemaOf, composeSubgraphs, fieldSetNames, isSupergraph, supergraphComposition, unreachableOwners } from './federation.js';
+export type { ComposedField, ComposedType, Composition, CompositionConflict, FieldOwner, SubgraphSchema, SupergraphGraph } from './federation.js';
+export { planSelection } from './plan.js';
+export type { PlanStep } from './plan.js';
+export { addressOf, addressOfText, besideFile, readGraphqlGateway, readRouterConfig, readRoverConfig, routeAddress } from './gateway.js';
+export type { Address, GatewayMeta, GatewayReading, GatewayRouteMeta, SubgraphRoute, UnreadDetail } from './gateway.js';
 export { fragmentsOf, operationsOf, reachedFields } from './operations.js';
 export type { Operation, Reached, SelectedField } from './operations.js';
 export { documentOf, lineInFile } from './documents.js';
 export type { DocumentReading } from './documents.js';
 export { clientEndpointIn, fetchedDocument, graphqlCallOf, SERVICE_SENDS, serviceDocumentOf } from './calls.js';
 export type { GraphqlCall, GraphqlLibrary } from './calls.js';
-export { readGraphqlServer } from './servers.js';
+export { readGraphqlServer, REFERENCE_FIELD } from './servers.js';
 export type { ResolvedField, ServerReading } from './servers.js';
-export { GRAPHQL_META, operationMeta, type GraphqlCallMeta } from './meta.js';
+export { GRAPHQL_META, operationMeta, type GraphqlCallMeta, type MetaField } from './meta.js';

@@ -1,4 +1,4 @@
-import { isNullable, namedTypeOf, typeText, type Document, type TypeDefinition } from './parse.js';
+import { argumentOf, isNullable, namedTypeOf, stringsOf, typeText, type AppliedDirective, type Document, type TypeDefinition } from './parse.js';
 
 /**
  * A schema, as the graph keeps it (P232): its root types and each type's
@@ -8,6 +8,8 @@ import { isNullable, namedTypeOf, typeText, type Document, type TypeDefinition }
 export interface SchemaSummary {
   readonly roots: { readonly query: string; readonly mutation?: string; readonly subscription?: string };
   readonly types: Readonly<Record<string, SchemaType>>;
+  /** The federation version the schema is a subgraph of, when it is one (P241). */
+  readonly federation?: 1 | 2;
 }
 
 export interface SchemaType {
@@ -17,6 +19,8 @@ export interface SchemaType {
   readonly possible?: readonly string[];
   /** Directives on the type, by name: `key` marks a federated entity. */
   readonly directives?: readonly string[];
+  /** What a subgraph says of the type: its keys, and whether it is shared or hidden (P241). */
+  readonly federation?: TypeFederation;
 }
 
 export interface SchemaField {
@@ -24,23 +28,168 @@ export interface SchemaField {
   readonly args?: Readonly<Record<string, { readonly type: string; readonly required: boolean }>>;
   /** Where it is declared, when a reader knows: `file:line`. */
   readonly at?: string;
+  /** What a subgraph says of the field: who resolves it, and what it needs (P241). */
+  readonly federation?: FieldFederation;
 }
+
+/**
+ * A federated type, as one subgraph declares it: the keys it can be fetched
+ * by (`@key(fields: "id")`, `resolvable: false` for a stub that only names
+ * one), whether it extends a type another subgraph owns (federation 1's
+ * `extend type`, `@extends`), and the type-wide `@shareable` and
+ * `@inaccessible`.
+ */
+export interface TypeFederation {
+  readonly keys?: ReadonlyArray<{ readonly fields: string; readonly resolvable?: false }>;
+  readonly extension?: true;
+  readonly shareable?: true;
+  readonly inaccessible?: true;
+}
+
+/**
+ * A federated field, as one subgraph declares it: `@external` (another
+ * subgraph resolves it), `@requires` and `@provides` with their field sets,
+ * `@shareable`, `@override(from:, label:)` and `@inaccessible`.
+ */
+export interface FieldFederation {
+  readonly external?: true;
+  readonly requires?: string;
+  readonly provides?: string;
+  readonly shareable?: true;
+  readonly override?: { readonly from: string; readonly label?: string };
+  readonly inaccessible?: true;
+}
+
+/** The directives federation defines, by the name its specification gives them. */
+const FEDERATION_DIRECTIVES = new Set(['key', 'external', 'requires', 'provides', 'shareable', 'override', 'inaccessible', 'extends', 'interfaceObject', 'tag', 'composeDirective']);
+
+/** Whether a URL is federation 2's specification, linked by `extend schema @link(url: …)`. */
+const FEDERATION_SPEC = /specs\.apollo\.dev\/federation\/v2/;
+
+/**
+ * What each directive a schema writes is called by federation: a name
+ * imported under another (`{ name: "@key", as: "@primaryKey" }`) is the one
+ * imported, and one left in the specification's namespace (`@federation__key`,
+ * or under the prefix the link gives it) is the one it names. A schema that
+ * links nothing is federation 1, where the names are the plain ones.
+ */
+export const federationNamesOf = (documents: readonly Document[]): { version?: 1 | 2; canonical: (name: string) => string } => {
+  const renamed = new Map<string, string>();
+  const prefixes = new Set<string>();
+  let linked = false;
+  for (const document of documents) {
+    for (const definition of document.definitions) {
+      if (definition.kind !== 'schema') continue;
+      for (const link of definition.directives) {
+        if (link.name !== 'link') continue;
+        const url = stringsOf(argumentOf(link, 'url'))[0] ?? '';
+        if (!FEDERATION_SPEC.test(url)) continue;
+        linked = true;
+        prefixes.add(stringsOf(argumentOf(link, 'as'))[0] ?? 'federation');
+        const imports = argumentOf(link, 'import');
+        for (const item of imports?.kind === 'list' ? imports.items : []) {
+          if (item.kind === 'string') renamed.set(item.value.replace(/^@/, ''), item.value.replace(/^@/, ''));
+          if (item.kind === 'object') {
+            const name = stringsOf(item.fields['name'])[0]?.replace(/^@/, '');
+            const as = stringsOf(item.fields['as'])[0]?.replace(/^@/, '');
+            if (name !== undefined) renamed.set(as ?? name, name);
+          }
+        }
+      }
+    }
+  }
+  const canonical = (name: string): string => {
+    const imported = renamed.get(name);
+    if (imported !== undefined) return imported;
+    for (const prefix of prefixes) if (name.startsWith(`${prefix}__`)) return name.slice(prefix.length + 2);
+    return name;
+  };
+  if (linked) return { version: 2, canonical };
+  const federated = documents.some((document) =>
+    document.definitions.some(
+      (definition) =>
+        definition.kind === 'type' &&
+        (definition.applied.some((directive) => FEDERATION_DIRECTIVES.has(directive.name)) || definition.fields.some((field) => field.directives.some((directive) => FEDERATION_DIRECTIVES.has(directive.name)))),
+    ),
+  );
+  return { ...(federated ? { version: 1 as const } : {}), canonical };
+};
+
+/** What a type's own directives say of it under federation, or nothing. */
+export const typeFederationOf = (applied: readonly AppliedDirective[], extend: boolean, canonical: (name: string) => string): TypeFederation | undefined => {
+  const keys: Array<{ fields: string; resolvable?: false }> = [];
+  let extension = false;
+  let shareable = false;
+  let inaccessible = false;
+  for (const directive of applied) {
+    const name = canonical(directive.name);
+    if (name === 'key') {
+      const fields = stringsOf(argumentOf(directive, 'fields'))[0];
+      const resolvable = argumentOf(directive, 'resolvable');
+      if (fields !== undefined) keys.push({ fields, ...(resolvable?.kind === 'literal' && resolvable.text === 'false' ? { resolvable: false as const } : {}) });
+    }
+    if (name === 'extends') extension = true;
+    if (name === 'shareable') shareable = true;
+    if (name === 'inaccessible') inaccessible = true;
+  }
+  if (keys.length > 0 && extend) extension = true;
+  if (keys.length === 0 && !extension && !shareable && !inaccessible) return undefined;
+  return {
+    ...(keys.length === 0 ? {} : { keys }),
+    ...(extension ? { extension: true as const } : {}),
+    ...(shareable ? { shareable: true as const } : {}),
+    ...(inaccessible ? { inaccessible: true as const } : {}),
+  };
+};
+
+/** What a field's own directives say of it under federation, or nothing. */
+export const fieldFederationOf = (applied: readonly AppliedDirective[], canonical: (name: string) => string): FieldFederation | undefined => {
+  const found: { -readonly [K in keyof FieldFederation]: FieldFederation[K] } = {};
+  for (const directive of applied) {
+    const name = canonical(directive.name);
+    if (name === 'external') found.external = true;
+    if (name === 'shareable') found.shareable = true;
+    if (name === 'inaccessible') found.inaccessible = true;
+    if (name === 'requires' || name === 'provides') {
+      const fields = stringsOf(argumentOf(directive, 'fields'))[0];
+      if (fields !== undefined) found[name] = fields;
+    }
+    if (name === 'override') {
+      const from = stringsOf(argumentOf(directive, 'from'))[0];
+      const label = stringsOf(argumentOf(directive, 'label'))[0];
+      if (from !== undefined) found.override = { from, ...(label === undefined ? {} : { label }) };
+    }
+  }
+  return Object.keys(found).length === 0 ? undefined : found;
+};
+
+/** Two readings of one type's federation as one: keys added, flags kept. */
+const mergeTypeFederation = (a: TypeFederation | undefined, b: TypeFederation | undefined): TypeFederation | undefined => {
+  if (a === undefined || b === undefined) return a ?? b;
+  const keys = [...(a.keys ?? []), ...(b.keys ?? [])].filter((key, index, all) => all.findIndex((other) => other.fields === key.fields) === index);
+  return { ...a, ...b, ...(keys.length === 0 ? {} : { keys }) };
+};
 
 const ROOT_DEFAULTS = { query: 'Query', mutation: 'Mutation', subscription: 'Subscription' } as const;
 
 /** The schema the type definitions of some documents declare together, extensions merged in. */
 export const schemaOf = (documents: readonly Document[]): SchemaSummary => {
-  const types: Record<string, { kind: TypeDefinition['of']; fields: Record<string, SchemaField>; possible: Set<string>; directives: Set<string> }> = {};
+  const types: Record<string, { kind: TypeDefinition['of']; fields: Record<string, SchemaField>; possible: Set<string>; directives: Set<string>; federation?: TypeFederation }> = {};
   const roots: { query?: string; mutation?: string; subscription?: string } = {};
+  const names = federationNamesOf(documents);
   for (const document of documents) {
     for (const definition of document.definitions) {
       if (definition.kind === 'schema') Object.assign(roots, definition.roots);
       if (definition.kind !== 'type') continue;
       const type = (types[definition.name] ??= { kind: definition.of, fields: {}, possible: new Set(), directives: new Set() });
-      for (const directive of definition.directives) type.directives.add(directive);
+      for (const directive of definition.directives) type.directives.add(names.canonical(directive));
+      const typeFederation = names.version === undefined ? undefined : typeFederationOf(definition.applied, definition.extend, names.canonical);
+      const merged = mergeTypeFederation(type.federation, typeFederation);
+      if (merged !== undefined) type.federation = merged;
       for (const field of definition.fields) {
         const args = Object.fromEntries(field.arguments.map((arg) => [arg.name, { type: typeText(arg.type), required: !isNullable(arg.type) && !arg.hasDefault }]));
-        type.fields[field.name] = { type: typeText(field.type), ...(field.arguments.length === 0 ? {} : { args }) };
+        const federation = names.version === undefined ? undefined : fieldFederationOf(field.directives, names.canonical);
+        type.fields[field.name] = { type: typeText(field.type), ...(field.arguments.length === 0 ? {} : { args }), ...(federation === undefined ? {} : { federation }) };
       }
       for (const input of definition.inputs) type.fields[input.name] = { type: typeText(input.type) };
       for (const member of definition.members) type.possible.add(member);
@@ -60,6 +209,7 @@ export const schemaOf = (documents: readonly Document[]): SchemaSummary => {
   const subscription = root('subscription');
   return {
     roots: { query, ...(mutation === undefined ? {} : { mutation }), ...(subscription === undefined ? {} : { subscription }) },
+    ...(names.version === undefined ? {} : { federation: names.version }),
     types: Object.fromEntries(
       Object.entries(types)
         .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
@@ -70,6 +220,7 @@ export const schemaOf = (documents: readonly Document[]): SchemaSummary => {
             ...(Object.keys(type.fields).length === 0 ? {} : { fields: type.fields }),
             ...(type.possible.size === 0 ? {} : { possible: [...type.possible].sort() }),
             ...(type.directives.size === 0 ? {} : { directives: [...type.directives].sort() }),
+            ...(type.federation === undefined ? {} : { federation: type.federation }),
           },
         ]),
     ),
@@ -86,7 +237,9 @@ const mergeFields = (a: SchemaType['fields'], b: SchemaType['fields']): Record<s
   const fields: Record<string, SchemaField> = { ...a, ...b };
   for (const [name, field] of Object.entries(b ?? {})) {
     const args = a?.[name]?.args;
-    if (field.args === undefined && args !== undefined) fields[name] = { ...field, args };
+    const federation = a?.[name]?.federation;
+    // Nor do they take away what a subgraph's SDL says of the field (P241).
+    fields[name] = { ...field, ...(field.args === undefined && args !== undefined ? { args } : {}), ...(field.federation === undefined && federation !== undefined ? { federation } : {}) };
   }
   return fields;
 };
@@ -103,9 +256,11 @@ export const mergeSchemas = (a: SchemaSummary, b: SchemaSummary): SchemaSummary 
             ...known,
             fields: mergeFields(known.fields, type.fields),
             ...(known.possible === undefined && type.possible === undefined ? {} : { possible: [...new Set([...(known.possible ?? []), ...(type.possible ?? [])])].sort() }),
+            ...(known.federation === undefined && type.federation === undefined ? {} : { federation: mergeTypeFederation(known.federation, type.federation) as TypeFederation }),
           };
   }
-  return { roots: { ...b.roots, ...a.roots }, types };
+  const federation = a.federation === undefined || b.federation === undefined ? (a.federation ?? b.federation) : Math.max(a.federation, b.federation);
+  return { roots: { ...b.roots, ...a.roots }, types, ...(federation === undefined ? {} : { federation: federation as 1 | 2 }) };
 };
 
 /** The named type a field's type is: `[Order!]!` is `Order`. */

@@ -1,0 +1,12 @@
+%  CustomerPage                                web/src/CustomerPage.tsx:15
+  ^  query Customer /graphql                   web/src/CustomerPage.tsx:16
+    => customers @  Query.customer ~heuristic  customers/src/index.ts:12
+      -> Query.customer@12                     customers/src/index.ts:12
+        -> customerById                        customers/src/customers.ts:9
+    => orders @  Customer.orders ~heuristic    orders/src/index.ts:36
+      -> Customer.orders@36                    orders/src/index.ts:36
+        -> ordersOf                            orders/src/orders.ts:11
+    => gateway @  POST /graphql                gateway/src/app.module.ts:8
+      => orders @  POST /                      orders/src/index.ts:40
+      => customers @  POST /graphql            customers/src/index.ts:20
+unresolved on this path: 1

@@ -18,8 +18,9 @@
  * move; the age is a question about today and is asked where it is reported,
  * in `packages/cli/src/doctor/age.ts` (R78).
  */
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { isAbsolute, resolve } from 'node:path';
+import { dirname, isAbsolute, resolve } from 'node:path';
 import type { RepoGraph, ServiceConfig } from '@flowatlas/core';
 import { DocumentError, documentReader } from '@flowatlas/linker';
 
@@ -78,6 +79,13 @@ export const readDeclaredService = async (
     service: service.name,
     documentPath,
     ...(options.builtAt === undefined ? {} : { generatedAt: options.builtAt }),
+    readBeside: (path) => {
+      try {
+        return readFileSync(resolve(dirname(absolute), path), 'utf8');
+      } catch {
+        return undefined;
+      }
+    },
   });
 
   return { graph, declared, documentPath, kind };

@@ -1,5 +1,22 @@
-import { DECLARED_CONFIDENCE, makeEntryId, makeHttpEntryKey, makeSymbolId, SCHEMA_VERSION, type GraphEdge, type GraphNode } from '@flowatlas/core';
-import { GraphqlSyntaxError, parseDocument, schemaOf, type Document, type SchemaField, type SchemaSummary, type SchemaType } from '@flowatlas/graphql';
+import { DECLARED_CONFIDENCE, makeEntryId, makeHttpEntryKey, makeSymbolId, SCHEMA_VERSION, type GraphEdge, type GraphNode, type Unresolved } from '@flowatlas/core';
+import {
+  apiSchemaOf,
+  GraphqlSyntaxError,
+  isSupergraph,
+  parseDocument,
+  readRouterConfig,
+  readRoverConfig,
+  routeAddress,
+  schemaOf,
+  supergraphComposition,
+  tryParse,
+  type Document,
+  type GatewayMeta,
+  type GatewayRouteMeta,
+  type SchemaField,
+  type SchemaSummary,
+  type SchemaType,
+} from '@flowatlas/graphql';
 import { DECLARED_BY, DocumentError, type ReadDocumentOptions, type ReadDocumentResult } from '../document/declared.js';
 
 /**
@@ -73,8 +90,106 @@ const linesOf = (document: Document, text: string): Map<string, number> => {
   return lines;
 };
 
+/** A file named beside the document, as the graph names files: relative to the configuration. */
+const besideDocument = (documentPath: string, path: string): string => {
+  const directory = documentPath.includes('/') ? documentPath.slice(0, documentPath.lastIndexOf('/') + 1) : '';
+  return `${directory}${path.replace(/^\.\//, '')}`;
+};
+
+/**
+ * A router declared by its files (P241, D11): a supergraph, or rover's
+ * configuration of one, with the router's `router.yaml` read beside it for
+ * the path it serves at and the subgraph addresses it overrides. Its one way
+ * in is its endpoint, carrying the subgraphs and, from a supergraph, the
+ * composition; the linker joins the rest, `declared`.
+ */
+const readRouter = (text: string, options: ReadDocumentOptions, supergraph: Document | undefined): ReadDocumentResult => {
+  const { service, documentPath } = options;
+  const declared = { [DECLARED_BY]: documentPath };
+  const unresolved: Unresolved[] = [];
+  const routerFile = ['router.yaml', 'router.yml'].find((name) => options.readBeside?.(name) !== undefined);
+  const router = routerFile === undefined ? undefined : readRouterConfig(options.readBeside?.(routerFile) ?? '', besideDocument(documentPath, routerFile));
+  const lineAt = (offset: number): number => text.slice(0, offset).split('\n').length;
+  let gateway: GatewayMeta;
+  if (supergraph !== undefined) {
+    const { composition, graphs } = supergraphComposition(supergraph, text);
+    gateway = {
+      subgraphs: graphs.map((graph): GatewayRouteMeta => ({ name: graph.name, file: documentPath, line: lineAt(graph.at), ...(graph.url === undefined ? { path: '', unread: '' } : routeAddress({ kind: 'literal', url: graph.url })) })),
+      composition,
+      from: documentPath,
+    };
+  } else {
+    const rover = readRoverConfig(text, documentPath);
+    gateway = {
+      subgraphs: rover.subgraphs.map((route): GatewayRouteMeta => {
+        const schemaText = route.schemaFile === undefined ? undefined : options.readBeside?.(route.schemaFile);
+        const document = schemaText === undefined ? undefined : tryParse(schemaText);
+        if (route.registry !== undefined) {
+          unresolved.push({
+            service,
+            file: documentPath,
+            line: 'line' in route.at ? route.at.line : 1,
+            reason: 'graphql-federation-not-read',
+            level: 'info',
+            message: `the schema of the subgraph ${route.name} is the registry's (${route.registry}), so what it declares is read only where its source is in the project`,
+            hint: 'Point the subgraph\'s schema at a file or at the subgraph\'s own endpoint in the rover configuration, or add the subgraph\'s repository to the project.',
+            symbol: makeEntryId(service, 'http', makeHttpEntryKey('POST', router?.path ?? '/')),
+            meta: { detail: 'registry' },
+          });
+        }
+        return {
+          name: route.name,
+          file: documentPath,
+          line: 'line' in route.at ? route.at.line : 1,
+          ...routeAddress(route.address),
+          ...(document === undefined ? {} : { schema: schemaOf([document]) }),
+          ...(route.registry === undefined ? {} : { registry: route.registry }),
+        };
+      }),
+      from: documentPath,
+    };
+  }
+  // The router's own configuration overrides where it sends a subgraph.
+  const overrides = new Map((router?.overrides ?? []).map((override) => [override.name, override]));
+  gateway = {
+    ...gateway,
+    subgraphs: gateway.subgraphs.map((route) => {
+      const override = overrides.get(route.name);
+      if (override === undefined || router === undefined) return route;
+      const { url: _url, host: _host, baseUrlEnv: _env, baseUrlDefault: _default, unread: _unread, path: _path, ...kept } = route;
+      return { ...kept, file: router.file, line: override.line, ...routeAddress(override.address) };
+    }),
+  };
+  const path = router?.path ?? '/';
+  const nodes: GraphNode[] = [
+    {
+      id: makeEntryId(service, 'http', makeHttpEntryKey('POST', path)),
+      type: 'entry',
+      label: `POST ${path}`,
+      repo: service,
+      file: documentPath,
+      kind: 'http',
+      meta: {
+        method: 'POST',
+        path,
+        adapter: 'graphql-schema',
+        registration: 'graphql/endpoint',
+        handlerVia: 'graphql',
+        graphql: { endpoint: true, gateway, ...(gateway.composition === undefined ? {} : { schema: apiSchemaOf(gateway.composition) }) },
+        ...declared,
+      },
+    },
+  ];
+  return {
+    declared: 1,
+    graph: { schemaVersion: SCHEMA_VERSION, repo: service, generatedAt: options.generatedAt ?? new Date().toISOString(), nodes, edges: [], types: {}, unresolved, meta: { ...declared } },
+  };
+};
+
 export const readGraphqlDocument = (raw: unknown, options: ReadDocumentOptions): ReadDocumentResult => {
   const { service, documentPath } = options;
+  // Rover's configuration of a supergraph is YAML, and declares a router (P241).
+  if (typeof raw === 'string' && /\.ya?ml$/i.test(documentPath)) return readRouter(raw, options, undefined);
   let schema: SchemaSummary;
   let lines = new Map<string, number>();
   if (typeof raw === 'string') {
@@ -85,6 +200,8 @@ export const readGraphqlDocument = (raw: unknown, options: ReadDocumentOptions):
       if (!(error instanceof GraphqlSyntaxError)) throw error;
       throw new DocumentError(`${documentPath} is not GraphQL SDL: ${error.message} at line ${raw.slice(0, error.at).split('\n').length}`);
     }
+    // A supergraph is a router's, not a service's schema (P241).
+    if (isSupergraph(document)) return readRouter(raw, options, document);
     schema = schemaOf([document]);
     lines = linesOf(document, raw);
   } else if (raw !== null && typeof raw === 'object') {

@@ -8,6 +8,26 @@ only one of them moved.
 
 ### Added
 
+- **GraphQL federation, one graph across subgraphs (P241).** A request to a
+  federation gateway is planned the way the router plans it, statically: each
+  selected field goes to the subgraph that resolves it, and a field of an
+  entity another subgraph owns is an entity hop to that subgraph's reference
+  resolver (`__resolveReference`, `@ResolveReference()`, now entries). The
+  composition is read from a supergraph file (`@join__type`, `@join__field`)
+  or composed from the subgraphs `IntrospectAndCompose` or `serviceList`
+  names, by their federation directives (`@key`, `@external`, `@requires`,
+  `@provides`, `@shareable`, `@override`, `@inaccessible`, federation 1's
+  `extend type`). An Apollo Router is declared by its supergraph or rover's
+  `supergraph.yaml`, with `router.yaml` read beside it. Subgraph addresses are
+  joined to services as requests are, never by name. A shareable field the
+  router chooses at run time is drawn to each owner, `heuristic`. `contracts`
+  compares a selection through the gateway with the composed schema
+  (`graphql-field-unknown`, the new `graphql-field-inaccessible`); new rows
+  `graphql-subgraph-not-joined`, `graphql-composition-conflict`,
+  `graphql-supergraph-drift`, `graphql-shareable-choice`; and
+  `graphql-federation-not-read` now says what could not be read: managed
+  federation, a supergraph built at start or not committed, a registry schema,
+  a subgraph no gateway names.
 - **`flowatlas path <from> <to>` (P229).** How one node reaches another, by
   the shortest ways: directed along the edges `flow` walks, or `--undirected`
   for "are these joined at all". It looks 6, then 12, then 24 steps unless
@@ -205,6 +225,12 @@ only one of them moved.
   `impact` tool took it; it now resolves as every tool does, and `--service`
   narrows a name for both. `event:`, `cron:`, `rpc:` and `workflow:` names,
   which only the command line took, are taken by every tool too.
+- **`contracts` shows a GraphQL finding with no typed boundary beside it
+  (P241).** A project whose only comparisons were GraphQL selections against a
+  schema printed "no boundary between services" over its errors; the findings
+  table is printed now. A federated subgraph is no longer one
+  `graphql-federation-not-read` row each: it is said only when no gateway in
+  the project names it.
 
 ## [0.6.0][] - 2026-10-25
 

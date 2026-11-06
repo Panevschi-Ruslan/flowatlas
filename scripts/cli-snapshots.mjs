@@ -460,6 +460,28 @@ const GRAPHQL_CASES = [
   ['contracts.txt', (io) => runContracts({ config: graphqlPlain.config }, io)],
 ];
 
+/**
+ * GraphQL federation (P241): the walk from a screen through a gateway into
+ * the subgraph that resolves each field - an entity hop into another
+ * subgraph's reference resolver included - and the walk back from a
+ * subgraph's field to the screens; with the supergraph in a file, and with
+ * the composition made in code beside a router declared by its files.
+ */
+const federationFixture = join(root, 'fixtures', 'graphql-federation');
+const federationPlain = { config: join(federationFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const FEDERATION_CASES = [
+  ['flow.orders-page.tree.txt', (io) => runFlow('web#src/OrdersPage.tsx:OrdersPage', { ...federationPlain, format: 'tree' }, io)],
+  ['impact.customer-reference.tree.txt', (io) => runImpact('entry:customers:graphql:Customer.__resolveReference', { ...federationPlain, format: 'tree' }, io)],
+  ['contracts.txt', (io) => runContracts({ config: federationPlain.config }, io)],
+];
+const composedFixture = join(root, 'fixtures', 'graphql-federation-composed');
+const composedPlain = { config: join(composedFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const COMPOSED_CASES = [
+  ['flow.customer-page.tree.txt', (io) => runFlow('web#src/CustomerPage.tsx:CustomerPage', { ...composedPlain, format: 'tree' }, io)],
+  ['flow.orders-board.tree.txt', (io) => runFlow('kiosk#src/OrdersBoard.tsx:OrdersBoard', { ...composedPlain, format: 'tree' }, io)],
+  ['impact.customer-orders.tree.txt', (io) => runImpact('entry:orders:graphql:Customer.orders', { ...composedPlain, format: 'tree' }, io)],
+];
+
 const lambdaFixture = join(root, 'fixtures', 'multi-repo-lambda');
 const lambdaConfig = join(lambdaFixture, 'flowatlas.config.json');
 
@@ -1155,6 +1177,8 @@ const SUITES = [
   { dir: socketFixture, owned: false, cases: SOCKET_CASES },
   { dir: lambdaFixture, owned: false, cases: LAMBDA_CASES },
   { dir: join(graphqlFixture, 'expected.cli'), owned: true, cases: GRAPHQL_CASES },
+  { dir: join(federationFixture, 'expected.cli'), owned: true, cases: FEDERATION_CASES },
+  { dir: join(composedFixture, 'expected.cli'), owned: true, cases: COMPOSED_CASES },
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },

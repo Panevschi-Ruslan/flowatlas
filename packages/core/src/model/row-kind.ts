@@ -112,6 +112,9 @@ const FINDINGS: readonly string[] = [
   // Two declarations where the framework takes one, or one it never serves
   'route-claimed-twice',
   'graphql-field-resolved-twice',
+  // A federated graph its composition refuses, or a supergraph its subgraphs moved past (P241)
+  'graphql-composition-conflict',
+  'graphql-supergraph-drift',
   'route-file-not-served',
   'wizard-step-conflict',
   'workflow-name-duplicate',
@@ -241,6 +244,8 @@ const GAPS: readonly string[] = [
   'graphql-document-dynamic',
   'graphql-document-not-parsed',
   'graphql-fragment-not-read',
+  // A subgraph a gateway names whose address reaches no service (P241)
+  'graphql-subgraph-not-joined',
   'api-method-dynamic',
   'api-base-override-unread',
   'api-client-base-unread',
@@ -296,6 +301,8 @@ const GAPS: readonly string[] = [
   'service-binding-unknown',
   'target-route-not-found',
   'graphql-field-no-resolver',
+  // Which subgraph answers is the router's choice at run time; every one is drawn (P241)
+  'graphql-shareable-choice',
   'ambiguous-route',
   'ambiguous-route-application',
   'ambiguous-route-api',
@@ -411,6 +418,8 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
     [
       'route-claimed-twice',
       'graphql-field-resolved-twice',
+      'graphql-composition-conflict',
+      'graphql-supergraph-drift',
       'route-file-not-served',
       'wizard-step-conflict',
       'workflow-name-duplicate',

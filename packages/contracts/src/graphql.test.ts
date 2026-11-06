@@ -6,8 +6,8 @@ import { checkContracts } from './check.js';
 
 const ROOT = resolve(import.meta.dirname, '../../..');
 
-/** A graph with one request to one GraphQL endpoint, the operation and the schema as given. */
-const graphWith = (fields: unknown[], schema: unknown): ProjectGraph => {
+/** A graph with one request to one GraphQL endpoint, the operation and the schema as given; `served` adds to what the endpoint carries. */
+const graphWith = (fields: unknown[], schema: unknown, served: Record<string, unknown> = {}): ProjectGraph => {
   const call: GraphNode = {
     id: 'ui_api_call:web#src/a.ts:1:1',
     type: 'ui_api_call',
@@ -17,7 +17,7 @@ const graphWith = (fields: unknown[], schema: unknown): ProjectGraph => {
     line: 1,
     meta: { method: 'POST', path: '/graphql', graphql: { operation: 'query', name: 'A', fields, variables: [], document: { file: 'src/a.ts', line: 1 }, library: 'apollo' } },
   };
-  const endpoint: GraphNode = { id: 'entry:orders:http:POST:/graphql', type: 'entry', label: 'POST /graphql', repo: 'orders', kind: 'http', meta: { method: 'POST', path: '/graphql', graphql: { endpoint: true, schema } } };
+  const endpoint: GraphNode = { id: 'entry:orders:http:POST:/graphql', type: 'entry', label: 'POST /graphql', repo: 'orders', kind: 'http', meta: { method: 'POST', path: '/graphql', graphql: { endpoint: true, schema, ...served } } };
   const edge: GraphEdge = { from: call.id, to: endpoint.id, type: 'hits', confidence: 'static' };
   return { schemaVersion: 7, builtAt: '2026-11-05T00:00:00.000Z', services: [], nodes: [call, endpoint], edges: [edge], types: {}, unresolved: [] } as unknown as ProjectGraph;
 };
@@ -61,5 +61,35 @@ describe('a GraphQL operation against the schema it is sent to (P232)', () => {
     const graph = JSON.parse(readFileSync(join(ROOT, 'fixtures', 'graphql-gateway', 'expected.project-graph.json'), 'utf8')) as ProjectGraph;
     const report = checkContracts(graph);
     expect(report.findings.map((finding) => [finding.rule, finding.field, finding.receiver.service])).toEqual([['graphql-field-unknown', 'order.discount', 'web']]);
+  });
+});
+
+describe('an operation sent through a federation gateway (P241)', () => {
+  const COMPOSED = {
+    roots: { query: 'Query' },
+    types: {
+      Query: { kind: 'object', fields: { customer: { type: 'Customer' } } },
+      Customer: { kind: 'object', fields: { name: { type: 'String!' }, note: { type: 'String', federation: { inaccessible: true } } } },
+    },
+  };
+  const GATEWAY = { gateway: { subgraphs: [] } };
+
+  it('is an error to select a field no subgraph of the composition has, said of the gateway', () => {
+    const report = checkContracts(graphWith([{ field: 'customer', line: 3, selections: [{ field: 'discount', line: 4 }] }], COMPOSED, GATEWAY));
+    expect(report.findings.map((finding) => finding.rule)).toEqual(['graphql-field-unknown']);
+    expect(report.findings[0]?.message).toContain('no subgraph orders composes has Customer.discount');
+  });
+
+  it('is an error of its own to select a field the composition hides', () => {
+    const report = checkContracts(graphWith([{ field: 'customer', line: 3, selections: [{ field: 'name', line: 4 }, { field: 'note', line: 5 }] }], COMPOSED, GATEWAY));
+    expect(report.findings.map((finding) => [finding.rule, finding.severity, finding.field])).toEqual([['graphql-field-inaccessible', 'error', 'customer.note']]);
+    expect(report.findings[0]?.message).toContain('src/a.ts:5');
+  });
+
+  it('compares nothing on the gateway\'s own route to a subgraph', () => {
+    const graph = graphWith([], COMPOSED, GATEWAY);
+    const route = { id: 'entry:customers:http:POST:/graphql', type: 'entry', label: 'POST /graphql', repo: 'customers', kind: 'http', meta: { method: 'POST', path: '/graphql', graphql: { endpoint: true, schema: COMPOSED } } };
+    const routed = { ...graph, nodes: [...graph.nodes, route], edges: [...graph.edges, { from: 'entry:orders:http:POST:/graphql', to: route.id, type: 'http_calls', confidence: 'static' }] } as unknown as ProjectGraph;
+    expect(checkContracts(routed).findings).toEqual([]);
   });
 });

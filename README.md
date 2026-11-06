@@ -802,7 +802,11 @@ prove, and the path is given so you can run it.
   endpoint by its address and then the fields it selects, root fields and
   field resolvers alike, `static`, at the line of the selection. Selections are
   compared with the schema as a contract, and a service can be declared by its
-  SDL in place of its source (`fixtures/graphql-gateway`).
+  SDL in place of its source (`fixtures/graphql-gateway`). Through a federation
+  gateway or router, each field is planned into the subgraph that resolves it,
+  entity hops to the owner's reference resolver included, from a supergraph
+  file or from the subgraphs `IntrospectAndCompose` names
+  (`fixtures/graphql-federation`, `fixtures/graphql-federation-composed`).
 - **Components in files of their own format.** A `.vue` or `.svelte` file's
   scripts are read by the checker as TypeScript, every position named by the
   component file at its own line, and the event bindings of its markup are the

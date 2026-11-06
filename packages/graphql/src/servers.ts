@@ -2,8 +2,10 @@ import { readFileSync } from 'node:fs';
 import type { ClassDeclaration, Decorator, MethodDeclaration, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { documentOf } from './documents.js';
-import { tryParse, type Document } from './parse.js';
-import { mergeSchemas, schemaOf, type SchemaField, type SchemaSummary } from './schema.js';
+import { isSupergraph } from './federation.js';
+import { readGraphqlGateway, type GatewayReading } from './gateway.js';
+import { tryParse, type AppliedDirective, type Document } from './parse.js';
+import { fieldFederationOf, mergeSchemas, schemaOf, typeFederationOf, type FieldFederation, type SchemaField, type SchemaSummary, type TypeFederation } from './schema.js';
 
 /**
  * What a GraphQL server declares (P232): every field a resolver answers, the
@@ -21,6 +23,11 @@ import { mergeSchemas, schemaOf, type SchemaField, type SchemaSummary } from './
  *   arrays of maps.
  * - **The schema**: SDL in `.graphql` files and `gql` type definitions, and
  *   the classes a code-first server decorates as its types.
+ *
+ * And whether it is federated (P241): a subgraph, with the federation
+ * directives its schema writes and the reference resolvers an entity call
+ * runs (`__resolveReference`, `@ResolveReference()`), or a gateway, which
+ * resolves nothing and says where its subgraphs are.
  */
 export interface ResolvedField {
   readonly type: string;
@@ -33,7 +40,14 @@ export interface ResolvedField {
   /** The type it returns and the arguments it takes, where the code says. */
   readonly returns?: string;
   readonly args?: Readonly<Record<string, { readonly type: string; readonly required: boolean }>>;
+  /** The reference resolver an entity call from another subgraph runs (`T.__resolveReference`). */
+  readonly reference?: true;
+  /** What `@Directive(...)` on a code-first resolver method says of its field (P241). */
+  readonly federation?: FieldFederation;
 }
+
+/** The name a reference resolver is an entry under, beside the type's fields. */
+export const REFERENCE_FIELD = '__resolveReference';
 
 export interface ServerReading {
   readonly fields: readonly ResolvedField[];
@@ -43,6 +57,10 @@ export interface ServerReading {
   readonly endpointAt?: TsNode;
   /** One subgraph of a federated graph. */
   readonly federated: boolean;
+  /** The federation version it is a subgraph of, when it is one. */
+  readonly federation?: 1 | 2;
+  /** The gateway these files make, when they make one (P241). */
+  readonly gateway?: GatewayReading;
   /** Type definitions that could not be read, and why. */
   readonly unread: ReadonlyArray<{ readonly at: TsNode; readonly why: string }>;
 }
@@ -53,11 +71,15 @@ const ROOTS = new Map([
   ['Mutation', 'Mutation'],
   ['Subscription', 'Subscription'],
 ]);
-const FIELD_DECORATORS = new Set(['ResolveField', 'FieldResolver', 'ResolveProperty']);
+const FIELD_DECORATORS = new Set(['ResolveField', 'FieldResolver', 'ResolveProperty', 'ResolveReference']);
 
 /** A decorator of one of the GraphQL packages, by the name it is imported under. */
 const graphqlDecorator = (node: { getDecorators(): Decorator[] }, names: ReadonlySet<string> | readonly string[]): Decorator | undefined =>
-  node.getDecorators().find((decorator) => {
+  graphqlDecorators(node, names)[0];
+
+/** Every decorator of one of the GraphQL packages of these names, in the order written. */
+const graphqlDecorators = (node: { getDecorators(): Decorator[] }, names: ReadonlySet<string> | readonly string[]): Decorator[] =>
+  node.getDecorators().filter((decorator) => {
     const name = decorator.getName();
     if (!(names instanceof Set ? names.has(name) : (names as readonly string[]).includes(name))) return false;
     const identifier = decorator.getCallExpression()?.getExpression() ?? decorator.getNameNode();
@@ -110,10 +132,24 @@ const graphqlTypeOf = (written: string, list: boolean, nullable: boolean): strin
   return nullable ? inner : `${inner}!`;
 };
 
+/**
+ * The directives `@Directive('@key(fields: "id")')` writes on a class or a
+ * field, read as the SDL they are (P241).
+ */
+const writtenDirectives = (node: { getDecorators(): Decorator[] }): AppliedDirective[] =>
+  graphqlDecorators(node, ['Directive']).flatMap((decorator) => {
+    const [text] = decorator.getArguments();
+    if (text === undefined || !(Node.isStringLiteral(text) || Node.isNoSubstitutionTemplateLiteral(text))) return [];
+    const [definition] = tryParse(`scalar Written ${text.getLiteralValue()}`)?.definitions ?? [];
+    return definition?.kind === 'type' ? [...definition.applied] : [];
+  });
+
+const plainName = (name: string): string => name;
+
 /** The GraphQL name of each class a code-first server decorates as a type, and its fields. */
 const codeFirstTypes = (sources: readonly SourceFile[]): { names: Map<string, string>; schema: SchemaSummary } => {
   const names = new Map<string, string>();
-  const types: Record<string, { kind: 'object' | 'input' | 'interface'; fields: Record<string, SchemaField> }> = {};
+  const types: Record<string, { kind: 'object' | 'input' | 'interface'; fields: Record<string, SchemaField>; federation?: TypeFederation }> = {};
   for (const sourceFile of sources) {
     for (const declaration of sourceFile.getClasses()) {
       const decorator = graphqlDecorator(declaration, ['ObjectType', 'InputType', 'InterfaceType', 'ArgsType']);
@@ -130,9 +166,11 @@ const codeFirstTypes = (sources: readonly SourceFile[]): { names: Map<string, st
         const written = typeArgument(field.getArguments()[0]);
         const options = optionsOf(field);
         const type = written === undefined ? graphqlTypeOf(member.getTypeNode()?.getText() ?? 'String', false, booleanOption(options, 'nullable') || member.hasQuestionToken()) : graphqlTypeOf(written.name, written.list, booleanOption(options, 'nullable') || member.hasQuestionToken());
-        fields[stringOption(options, 'name') ?? member.getName()] = { type };
+        const federation = fieldFederationOf(writtenDirectives(member), plainName);
+        fields[stringOption(options, 'name') ?? member.getName()] = { type, ...(federation === undefined ? {} : { federation }) };
       }
-      types[name] = { kind: decorator.getName() === 'InputType' ? 'input' : decorator.getName() === 'InterfaceType' ? 'interface' : 'object', fields };
+      const federation = typeFederationOf(writtenDirectives(declaration), false, plainName);
+      types[name] = { kind: decorator.getName() === 'InputType' ? 'input' : decorator.getName() === 'InterfaceType' ? 'interface' : 'object', fields, ...(federation === undefined ? {} : { federation }) };
     }
   }
   return { names, schema: { roots: { query: 'Query', mutation: 'Mutation', subscription: 'Subscription' }, types } };
@@ -192,20 +230,24 @@ const decoratedFields = (sources: readonly SourceFile[], names: ReadonlyMap<stri
         if (decorator === undefined) continue;
         const [first] = decorator.getArguments();
         const options = optionsOf(decorator);
-        const named = first !== undefined && Node.isStringLiteral(first) ? first.getLiteralValue() : (stringOption(options, 'name') ?? method.getName());
+        const reference = decorator.getName() === 'ResolveReference';
+        const named = reference ? REFERENCE_FIELD : first !== undefined && Node.isStringLiteral(first) ? first.getLiteralValue() : (stringOption(options, 'name') ?? method.getName());
         const written = typeArgument(first !== undefined && Node.isStringLiteral(first) ? decorator.getArguments()[1] : first);
         const nullable = booleanOption(options, 'nullable');
         const type = root === undefined ? parent : ROOTS.get(root.getName());
         if (type === undefined) continue;
         const args = argumentsOf(method, argsTypes, names);
+        const federation = fieldFederationOf(writtenDirectives(method), plainName);
         found.push({
           type,
           field: named,
           root: root !== undefined,
           handler: { kind: 'method', method },
           at: method,
-          ...(written === undefined ? {} : { returns: graphqlTypeOf(names.get(written.name) ?? written.name, written.list, nullable) }),
+          ...(written === undefined || reference ? {} : { returns: graphqlTypeOf(names.get(written.name) ?? written.name, written.list, nullable) }),
           ...(Object.keys(args).length === 0 ? {} : { args }),
+          ...(reference ? { reference: true as const } : {}),
+          ...(federation === undefined ? {} : { federation }),
         });
       }
     }
@@ -264,48 +306,65 @@ const mappedFields = (sources: readonly SourceFile[], roots: ReadonlyMap<string,
   const fields: ResolvedField[] = [];
   const typeDefs: TsNode[] = [];
   const seen = new Set<ObjectLiteralExpression>();
+  /** One server's options, or one module of a subgraph: its type definitions and its resolver map. */
+  const readModule = (options: ObjectLiteralExpression): void => {
+    const valueOf = (key: string): TsNode | undefined => {
+      const property = options.getProperty(key);
+      if (property !== undefined && Node.isPropertyAssignment(property)) return property.getInitializer();
+      if (property === undefined || !Node.isShorthandPropertyAssignment(property)) return undefined;
+      // `{ resolvers }`: the value is whatever the name is bound to, not the property.
+      for (const declaration of property.getValueSymbol()?.getDeclarations() ?? []) {
+        if (Node.isVariableDeclaration(declaration)) return declaration.getInitializer();
+        if (Node.isImportSpecifier(declaration)) {
+          for (const found of declaration.getNameNode().getSymbol()?.getAliasedSymbol()?.getDeclarations() ?? []) {
+            if (Node.isVariableDeclaration(found)) return found.getInitializer();
+          }
+        }
+      }
+      return property.getNameNode();
+    };
+    const defs = valueOf('typeDefs') ?? valueOf('schema');
+    if (defs !== undefined) typeDefs.push(defs);
+    for (const map of resolverObjects(valueOf('resolvers'))) {
+      if (seen.has(map)) continue;
+      seen.add(map);
+      for (const typeProperty of map.getProperties()) {
+        if (!Node.isPropertyAssignment(typeProperty)) continue;
+        const type = typeProperty.getName();
+        if (!/^[A-Z_]/.test(type)) continue;
+        for (const object of resolverObjects(typeProperty.getInitializer())) {
+          for (const property of object.getProperties()) {
+            if (Node.isSpreadAssignment(property)) continue;
+            const field = (property as { getName?: () => string }).getName?.() ?? '';
+            // How an abstract type picks its member is not a field anybody selects.
+            if (field === '__resolveType' || field === '__isTypeOf') continue;
+            const handler = mapHandler(property, `${type}.${field}`);
+            if (handler === undefined || field === '') continue;
+            fields.push({
+              type: roots.get(type) ?? type,
+              field,
+              root: roots.has(type),
+              handler: { kind: 'function', fn: handler.fn, name: handler.name },
+              at: property,
+              ...(field === REFERENCE_FIELD ? { reference: true as const } : {}),
+            });
+          }
+        }
+      }
+    }
+  };
   for (const sourceFile of sources) {
     sourceFile.forEachDescendant((node) => {
       if (!Node.isNewExpression(node) && !Node.isCallExpression(node)) return;
       const callee = node.getExpression().getText().replace(/^.*\./, '');
-      const options = node.getArguments().find((argument): argument is ObjectLiteralExpression => Node.isObjectLiteralExpression(argument));
-      if (!SERVER_CALLS.has(callee) && !(callee === 'register' && options !== undefined && options.getProperty('resolvers') !== undefined)) return;
-      if (options === undefined) return;
-      const valueOf = (key: string): TsNode | undefined => {
-        const property = options.getProperty(key);
-        if (property !== undefined && Node.isPropertyAssignment(property)) return property.getInitializer();
-        if (property === undefined || !Node.isShorthandPropertyAssignment(property)) return undefined;
-        // `{ resolvers }`: the value is whatever the name is bound to, not the property.
-        for (const declaration of property.getValueSymbol()?.getDeclarations() ?? []) {
-          if (Node.isVariableDeclaration(declaration)) return declaration.getInitializer();
-          if (Node.isImportSpecifier(declaration)) {
-            for (const found of declaration.getNameNode().getSymbol()?.getAliasedSymbol()?.getDeclarations() ?? []) {
-              if (Node.isVariableDeclaration(found)) return found.getInitializer();
-            }
-          }
-        }
-        return property.getNameNode();
-      };
-      const defs = valueOf('typeDefs') ?? valueOf('schema');
-      if (defs !== undefined) typeDefs.push(defs);
-      for (const map of resolverObjects(valueOf('resolvers'))) {
-        if (seen.has(map)) continue;
-        seen.add(map);
-        for (const typeProperty of map.getProperties()) {
-          if (!Node.isPropertyAssignment(typeProperty)) continue;
-          const type = typeProperty.getName();
-          if (!/^[A-Z_]/.test(type)) continue;
-          for (const object of resolverObjects(typeProperty.getInitializer())) {
-            for (const property of object.getProperties()) {
-              if (Node.isSpreadAssignment(property)) continue;
-              const field = (property as { getName?: () => string }).getName?.() ?? '';
-              const handler = mapHandler(property, `${type}.${field}`);
-              if (handler === undefined || field === '') continue;
-              fields.push({ type: roots.get(type) ?? type, field, root: roots.has(type), handler: { kind: 'function', fn: handler.fn, name: handler.name }, at: property });
-            }
-          }
-        }
-      }
+      const written = node.getArguments().find((argument): argument is ObjectLiteralExpression => Node.isObjectLiteralExpression(argument));
+      if (!SERVER_CALLS.has(callee) && !(callee === 'register' && written !== undefined && written.getProperty('resolvers') !== undefined)) return;
+      // `buildSubgraphSchema([{ typeDefs, resolvers }, ...])`: a list of modules, each read as one (P241).
+      const listed = node
+        .getArguments()
+        .flatMap((argument) => (Node.isArrayLiteralExpression(argument) ? argument.getElements() : []))
+        .filter((element): element is ObjectLiteralExpression => Node.isObjectLiteralExpression(element));
+      for (const options of written === undefined ? listed : [written]) readModule(options);
     });
   }
   return { fields, typeDefs };
@@ -340,14 +399,13 @@ const sdlOf = (value: TsNode, unread: Array<{ at: TsNode; why: string }>, depth 
   return [];
 };
 
-/** Every `.graphql` / `.gql` file of the repository, as documents. */
-const schemaFiles = (files: readonly string[]): Document[] =>
-  files.flatMap((file) => {
+/** Every `.graphql` / `.gql` file of the repository, as documents, in the order given; undefined for one that does not parse. */
+const schemaFiles = (files: readonly string[]): Array<Document | undefined> =>
+  files.map((file) => {
     try {
-      const document = tryParse(readFileSync(file, 'utf8'));
-      return document === undefined ? [] : [document];
+      return tryParse(readFileSync(file, 'utf8'));
     } catch {
-      return [];
+      return undefined;
     }
   });
 
@@ -377,18 +435,32 @@ const endpointOf = (sources: readonly SourceFile[]): { path: string; at?: TsNode
   return { path: written ?? (standalone ? '/' : '/graphql'), ...(at === undefined ? {} : { at }) };
 };
 
-/** Whether the service is one subgraph of a federated graph. */
-const federatedIn = (sources: readonly SourceFile[], schema: SchemaSummary, dependencies: ReadonlySet<string>): boolean =>
-  dependencies.has('@apollo/subgraph') ||
-  dependencies.has('@apollo/federation') ||
-  Object.values(schema.types).some((type) => type.directives?.includes('key') === true) ||
-  sources.some((sourceFile) => /\bbuildSubgraphSchema\b|ApolloFederationDriver/.test(sourceFile.getFullText()));
+/** Whether the service is one subgraph of a federated graph, and of which version. */
+const federationIn = (sources: readonly SourceFile[], schema: SchemaSummary, dependencies: ReadonlySet<string>): 1 | 2 | undefined => {
+  const texts = sources.map((sourceFile) => sourceFile.getFullText());
+  const federated =
+    schema.federation !== undefined ||
+    dependencies.has('@apollo/subgraph') ||
+    dependencies.has('@apollo/federation') ||
+    Object.values(schema.types).some((type) => type.directives?.includes('key') === true || type.federation?.keys !== undefined) ||
+    texts.some((text) => /\bbuildSubgraphSchema\b|\bbuildFederatedSchema\b|ApolloFederationDriver/.test(text));
+  if (!federated) return undefined;
+  // NestJS says federation 2 in its driver's options; SDL says it by linking the specification.
+  if (schema.federation === 2 || texts.some((text) => /ApolloFederationDriver/.test(text) && /federation\s*:\s*2\b/.test(text))) return 2;
+  return schema.federation ?? 1;
+};
 
 /** Everything a GraphQL server in these files declares. */
-export const readGraphqlServer = (sources: readonly SourceFile[], options: { readonly schemaFiles: readonly string[]; readonly dependencies: ReadonlySet<string> }): ServerReading => {
+export const readGraphqlServer = (
+  sources: readonly SourceFile[],
+  options: { readonly schemaFiles: readonly string[]; readonly dependencies: ReadonlySet<string>; readonly repoDir?: string; readonly roverFiles?: readonly string[] },
+): ServerReading => {
   const unread: Array<{ at: TsNode; why: string }> = [];
   const codeFirst = codeFirstTypes(sources);
-  const filed = schemaFiles(options.schemaFiles);
+  // A supergraph is what a gateway serves, not a schema the service declares (P241).
+  const documents = schemaFiles(options.schemaFiles);
+  const supergraphs = options.schemaFiles.filter((_, index) => documents[index] !== undefined && isSupergraph(documents[index] as Document));
+  const filed = documents.filter((document): document is Document => document !== undefined && !isSupergraph(document));
   const roots = new Map(ROOTS);
   for (const document of filed) for (const definition of document.definitions) if (definition.kind === 'schema') for (const [operation, type] of Object.entries(definition.roots)) roots.set(type as string, operation === 'query' ? 'Query' : operation === 'mutation' ? 'Mutation' : 'Subscription');
   const decorated = decoratedFields(sources, codeFirst.names);
@@ -401,7 +473,7 @@ export const readGraphqlServer = (sources: readonly SourceFile[], options: { rea
   for (const field of fields) {
     if (field.returns === undefined) continue;
     const owner = (rootTypes[field.type] ??= { kind: 'object', fields: {} });
-    owner.fields[field.field] = { type: field.returns, ...(field.args === undefined ? {} : { args: field.args }) };
+    owner.fields[field.field] = { type: field.returns, ...(field.args === undefined ? {} : { args: field.args }), ...(field.federation === undefined ? {} : { federation: field.federation }) };
   }
   schema = mergeSchemas(schema, { roots: schema.roots, types: rootTypes });
   // What the schema says a field returns and takes, where the code did not.
@@ -411,12 +483,16 @@ export const readGraphqlServer = (sources: readonly SourceFile[], options: { rea
     return { ...field, ...(field.returns === undefined ? { returns: declared.type } : {}), ...(field.args === undefined && declared.args !== undefined ? { args: declared.args } : {}) };
   });
   const endpoint = endpointOf(sources);
+  const gateway = readGraphqlGateway(sources, { repoDir: options.repoDir ?? '', supergraphs, rover: options.roverFiles ?? [] });
+  const federation = gateway === undefined ? federationIn(sources, schema, options.dependencies) : undefined;
   return {
     fields: filled,
-    schema,
+    schema: federation === undefined ? schema : { ...schema, federation },
     endpoint: endpoint.path,
     ...(endpoint.at === undefined ? {} : { endpointAt: endpoint.at }),
-    federated: federatedIn(sources, schema, options.dependencies),
+    federated: federation !== undefined,
+    ...(federation === undefined ? {} : { federation }),
+    ...(gateway === undefined ? {} : { gateway }),
     unread,
   };
 };

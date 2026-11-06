@@ -7,11 +7,24 @@
  * the language this reads - definitions, selections, arguments, types - are
  * a small, fixed grammar. Every node keeps the offset it starts at in the
  * document's text, so a field selected in a template literal is named at its
- * own line of the file the literal is in. What is not read is kept as text:
- * directive arguments, default values.
+ * own line of the file the literal is in. A value is kept as written and,
+ * beside it, as the value it is: the string a directive's argument holds is
+ * what a federated schema says with it (P241). Default values are kept as text.
  */
 
 export type TypeRef = { readonly kind: 'named'; readonly name: string } | { readonly kind: 'list'; readonly of: TypeRef } | { readonly kind: 'nonNull'; readonly of: TypeRef };
+
+/**
+ * A value as the language has it: a string with its escapes undone, a list,
+ * an object, a variable, or any other literal as written (a number, `true`,
+ * an enum value, `null`).
+ */
+export type Value =
+  | { readonly kind: 'string'; readonly value: string }
+  | { readonly kind: 'list'; readonly items: readonly Value[] }
+  | { readonly kind: 'object'; readonly fields: Readonly<Record<string, Value>> }
+  | { readonly kind: 'variable'; readonly name: string }
+  | { readonly kind: 'literal'; readonly text: string };
 
 export interface Argument {
   readonly name: string;
@@ -19,6 +32,15 @@ export interface Argument {
   readonly value: string;
   /** The variable the value is, when it is one: `$id`. */
   readonly variable?: string;
+  /** The value itself. */
+  readonly parsed: Value;
+  readonly at: number;
+}
+
+/** A directive as written on a definition: `@key(fields: "id")`. */
+export interface AppliedDirective {
+  readonly name: string;
+  readonly arguments: readonly Argument[];
   readonly at: number;
 }
 
@@ -80,6 +102,15 @@ export interface FieldDefinition {
   readonly name: string;
   readonly arguments: readonly InputValue[];
   readonly type: TypeRef;
+  /** The directives written on the field, with their arguments. */
+  readonly directives: readonly AppliedDirective[];
+  readonly at: number;
+}
+
+/** An enum's value, with the directives written on it. */
+export interface EnumValue {
+  readonly name: string;
+  readonly directives: readonly AppliedDirective[];
   readonly at: number;
 }
 
@@ -96,12 +127,19 @@ export interface TypeDefinition {
   readonly interfaces: readonly string[];
   /** The directives written on it, by name: `key` for a federated entity. */
   readonly directives: readonly string[];
+  /** The same directives with their arguments, in the order written. */
+  readonly applied: readonly AppliedDirective[];
+  /** An enum's values with their directives. */
+  readonly enumValues: readonly EnumValue[];
   readonly at: number;
 }
 
 export interface SchemaDefinition {
   readonly kind: 'schema';
   readonly roots: Readonly<Partial<Record<'query' | 'mutation' | 'subscription', string>>>;
+  /** `@link(url: …, import: […])` and whatever else the schema is given. */
+  readonly directives: readonly AppliedDirective[];
+  readonly extend: boolean;
   readonly at: number;
 }
 
@@ -353,48 +391,53 @@ class Parser {
       const name = this.#name();
       this.#expect(':');
       const value = this.#value();
-      found.push({ name: name.value, value: value.text, ...(value.variable === undefined ? {} : { variable: value.variable }), at: name.at });
+      found.push({ name: name.value, value: value.text, ...(value.variable === undefined ? {} : { variable: value.variable }), parsed: value.parsed, at: name.at });
     }
     return found;
   }
 
-  /** A value, as written, and the variable it is when it is one. */
-  #value(): { text: string; variable?: string } {
+  /** A value, as written, the variable it is when it is one, and the value itself. */
+  #value(): { text: string; variable?: string; parsed: Value } {
     return this.#nested(() => this.#valueHere());
   }
 
-  #valueHere(): { text: string; variable?: string } {
+  #valueHere(): { text: string; variable?: string; parsed: Value } {
     const token = this.#token;
     if (this.#skip('$')) {
       const name = this.#name().value;
-      return { text: `$${name}`, variable: name };
+      return { text: `$${name}`, variable: name, parsed: { kind: 'variable', name } };
     }
     if (this.#skip('[')) {
-      const items: string[] = [];
-      while (!this.#skip(']')) items.push(this.#value().text);
-      return { text: `[${items.join(', ')}]` };
+      const items: Array<{ text: string; parsed: Value }> = [];
+      while (!this.#skip(']')) items.push(this.#value());
+      return { text: `[${items.map((item) => item.text).join(', ')}]`, parsed: { kind: 'list', items: items.map((item) => item.parsed) } };
     }
     if (this.#skip('{')) {
       const items: string[] = [];
+      const fields: Record<string, Value> = {};
       while (!this.#skip('}')) {
         const key = this.#name().value;
         this.#expect(':');
-        items.push(`${key}: ${this.#value().text}`);
+        const value = this.#value();
+        items.push(`${key}: ${value.text}`);
+        fields[key] = value.parsed;
       }
-      return { text: `{${items.join(', ')}}` };
+      return { text: `{${items.join(', ')}}`, parsed: { kind: 'object', fields } };
     }
     if (token.kind === 'eof' || token.kind === 'punct') throw new GraphqlSyntaxError(`expected a value, found ${token.value || 'the end'}`, token.at);
     this.#at += 1;
-    return { text: token.value };
+    return { text: token.value, parsed: token.kind === 'string' ? { kind: 'string', value: stringValue(token.value) } : { kind: 'literal', text: token.value } };
   }
 
-  #directives(): string[] {
-    const names: string[] = [];
-    while (this.#skip('@')) {
-      names.push(this.#name().value);
-      if (this.#is('(')) this.#arguments();
+  #directives(): AppliedDirective[] {
+    const found: AppliedDirective[] = [];
+    while (this.#is('@')) {
+      const at = this.#token.at;
+      this.#at += 1;
+      const name = this.#name().value;
+      found.push({ name, arguments: this.#is('(') ? this.#arguments() : [], at });
     }
-    return names;
+    return found;
   }
 
   #type(): TypeRef {
@@ -418,7 +461,7 @@ class Parser {
     const start = this.#name();
     switch (start.value) {
       case 'schema': {
-        this.#directives();
+        const directives = this.#directives();
         const roots: Partial<Record<'query' | 'mutation' | 'subscription', string>> = {};
         if (this.#skip('{')) {
           while (!this.#skip('}')) {
@@ -427,7 +470,7 @@ class Parser {
             roots[operation] = this.#name().value;
           }
         }
-        return { kind: 'schema', roots, at: start.at };
+        return { kind: 'schema', roots, directives, extend, at: start.at };
       }
       case 'scalar': {
         const name = this.#name().value;
@@ -461,15 +504,15 @@ class Parser {
       case 'enum': {
         const name = this.#name().value;
         const directives = this.#directives();
-        const values: string[] = [];
+        const enumValues: EnumValue[] = [];
         if (this.#skip('{')) {
           while (!this.#skip('}')) {
             if (this.#token.kind === 'string') this.#at += 1;
-            values.push(this.#name().value);
-            this.#directives();
+            const value = this.#name();
+            enumValues.push({ name: value.value, directives: this.#directives(), at: value.at });
           }
         }
-        return this.#typeDefinition('enum', name, extend, start.at, { values, directives });
+        return this.#typeDefinition('enum', name, extend, start.at, { values: enumValues.map((value) => value.name), enumValues, directives });
       }
       case 'input': {
         const name = this.#name().value;
@@ -498,9 +541,24 @@ class Parser {
     name: string,
     extend: boolean,
     at: number,
-    parts: Partial<Pick<TypeDefinition, 'fields' | 'inputs' | 'values' | 'members' | 'interfaces' | 'directives'>>,
+    parts: Partial<Pick<TypeDefinition, 'fields' | 'inputs' | 'values' | 'members' | 'interfaces' | 'enumValues'>> & { directives?: readonly AppliedDirective[] },
   ): TypeDefinition {
-    return { kind: 'type', of, name, extend, fields: parts.fields ?? [], inputs: parts.inputs ?? [], values: parts.values ?? [], members: parts.members ?? [], interfaces: parts.interfaces ?? [], directives: parts.directives ?? [], at };
+    const applied = parts.directives ?? [];
+    return {
+      kind: 'type',
+      of,
+      name,
+      extend,
+      fields: parts.fields ?? [],
+      inputs: parts.inputs ?? [],
+      values: parts.values ?? [],
+      members: parts.members ?? [],
+      interfaces: parts.interfaces ?? [],
+      directives: applied.map((directive) => directive.name),
+      applied,
+      enumValues: parts.enumValues ?? [],
+      at,
+    };
   }
 
   #fieldsDefinition(): FieldDefinition[] {
@@ -512,8 +570,8 @@ class Parser {
       const args = this.#is('(') ? this.#inputValues('(', ')') : [];
       this.#expect(':');
       const type = this.#type();
-      this.#directives();
-      found.push({ name: name.value, arguments: args, type, at: name.at });
+      const directives = this.#directives();
+      found.push({ name: name.value, arguments: args, type, directives, at: name.at });
     }
     return found;
   }
@@ -534,6 +592,36 @@ class Parser {
     return found;
   }
 }
+
+/**
+ * The text a string token holds: a quoted string with its escapes undone, a
+ * block string with its common indentation and its first and last blank lines
+ * taken away, as the specification says.
+ */
+const stringValue = (token: string): string => {
+  if (token.startsWith('"""')) {
+    const lines = token.slice(3, -3).replace(/\\"""/g, '"""').split(/\r\n|\n|\r/);
+    const indents = lines.slice(1).filter((line) => line.trim() !== '').map((line) => line.length - line.trimStart().length);
+    const common = indents.length === 0 ? 0 : Math.min(...indents);
+    const dedented = lines.map((line, index) => (index === 0 ? line : line.slice(common)));
+    while (dedented.length > 0 && (dedented[0] ?? '').trim() === '') dedented.shift();
+    while (dedented.length > 0 && (dedented[dedented.length - 1] ?? '').trim() === '') dedented.pop();
+    return dedented.join('\n');
+  }
+  try {
+    return JSON.parse(token) as string;
+  } catch {
+    return token.slice(1, -1);
+  }
+};
+
+/** The string a value is, or the strings a list of them is: `"id"`, `["@key", "@shareable"]`. */
+export const stringsOf = (value: Value | undefined): string[] =>
+  value === undefined ? [] : value.kind === 'string' ? [value.value] : value.kind === 'list' ? value.items.flatMap(stringsOf) : [];
+
+/** The argument of a directive, by name. */
+export const argumentOf = (directive: AppliedDirective, name: string): Value | undefined =>
+  directive.arguments.find((argument) => argument.name === name)?.parsed;
 
 /** A document, read whole; a `GraphqlSyntaxError` names the offset where it stopped. */
 export const parseDocument = (text: string): Document => new Parser(text).document();

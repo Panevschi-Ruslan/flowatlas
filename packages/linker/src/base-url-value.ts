@@ -64,7 +64,7 @@ export type BaseUrlAnswer =
     };
 
 /** Every name a host is known by, and the services it names. */
-type HostIndex = ReadonlyMap<string, readonly string[]>;
+export type HostIndex = ReadonlyMap<string, readonly string[]>;
 
 const addTo = (index: Map<string, string[]>, host: string, service: string): void => {
   const key = host.toLowerCase();

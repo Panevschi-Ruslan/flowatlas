@@ -320,7 +320,15 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'graphql-field-resolved-twice': () =>
     'Two resolvers answer one GraphQL field; the server runs one of them. Remove one, or move it to the field it was meant for.',
   'graphql-federation-not-read': () =>
-    'The service is one subgraph of a federated graph. Its own fields are joined; what an entity resolved in another subgraph reaches, and the router\'s plan, are not read yet.',
+    'Part of a federated graph cannot be read: a supergraph the registry hands the router at run time, one built by code at start or not committed, a subgraph schema in the registry, or a subgraph no gateway in the project names. Requests are joined as far as what was read; commit the supergraph or its rover configuration, or add the gateway to the project.',
+  'graphql-subgraph-not-joined': () =>
+    'A gateway names a subgraph whose address reaches no configured service, so the fields that subgraph resolves are not joined and the composition is a guess. Add the address\'s setting to services[].baseUrlEnv, or its host to services[].hosts, of the service that is the subgraph.',
+  'graphql-composition-conflict': () =>
+    'Composition refuses this graph: two subgraphs resolve one field and not every one marks it @shareable, or a subgraph resolves a field of an entity it declares no key for. The field is drawn to each owner as a choice; mark it @shareable, move it with @override(from:), or declare the key.',
+  'graphql-supergraph-drift': () =>
+    'The supergraph the router plans by and a subgraph\'s source disagree: a field it gives the subgraph is gone, or a root field the subgraph added is not in it. Compose the supergraph again and commit it.',
+  'graphql-shareable-choice': () =>
+    'More than one subgraph resolves the field and none is the one that fetched its parent, so the router chooses by cost at run time. Each is drawn, heuristic. Nothing to do here.',
   'graphql-field-no-resolver': () =>
     'The operation asks the service for a field its schema has and no resolver of it answers, so the request stops at the endpoint. Resolve the field, or correct the operation.',
   'graphql-document-dynamic': () =>
@@ -785,6 +793,8 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'route-shadowed': ['route a worker answers first', 'routes a worker answers first'],
   'route-claimed-twice': ['route claimed twice', 'routes claimed twice'],
   'graphql-field-resolved-twice': ['GraphQL field resolved twice', 'GraphQL fields resolved twice'],
+  'graphql-composition-conflict': ['federated field composition refuses', 'federated fields composition refuses'],
+  'graphql-supergraph-drift': ['supergraph field out of date', 'supergraph fields out of date'],
   'route-file-not-served': ['route file served at no address', 'route files served at no address'],
   'wizard-step-conflict': ['wizard step numbered twice', 'wizard steps numbered twice'],
   'workflow-name-duplicate': ['workflow defined twice', 'workflows defined twice'],

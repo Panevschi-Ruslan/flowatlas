@@ -15,11 +15,16 @@ import type { ContractFinding, GraphLookup } from './types.js';
  * - `graphql-arg-unknown`: an argument the field does not take.
  * - `graphql-arg-required`: an argument the field requires and the selection
  *   does not write.
+ * - `graphql-field-inaccessible`: a field a federated graph's composition
+ *   hides from the API the router serves (`@inaccessible`, P241).
+ *
+ * Through a federation gateway the schema is the composition's (P241), so a
+ * field no subgraph has is `graphql-field-unknown` there, said of the gateway.
  *
  * Read off the request's `meta.graphql` and the endpoint's schema, so `diff`,
  * SARIF and `contracts` carry these as they carry every other finding.
  */
-export const GRAPHQL_RULES = ['graphql-field-unknown', 'graphql-arg-unknown', 'graphql-arg-required'] as const;
+export const GRAPHQL_RULES = ['graphql-field-unknown', 'graphql-arg-unknown', 'graphql-arg-required', 'graphql-field-inaccessible'] as const;
 
 type MetaField = GraphqlCallMeta['fields'][number];
 
@@ -30,8 +35,10 @@ export const graphqlFindings = (lookup: GraphLookup): ContractFinding[] => {
     const call = lookup.node(edge.from);
     const endpoint = lookup.node(edge.to);
     const operation = call?.meta?.[GRAPHQL_META] as GraphqlCallMeta | undefined;
-    const served = endpoint?.meta?.[GRAPHQL_META] as { endpoint?: boolean; schema?: SchemaSummary } | undefined;
-    if (call === undefined || endpoint === undefined || operation === undefined || served?.endpoint !== true || served.schema === undefined) continue;
+    const served = endpoint?.meta?.[GRAPHQL_META] as { endpoint?: boolean; schema?: SchemaSummary; gateway?: unknown } | undefined;
+    // A gateway's own route to a subgraph carries no operation (P241).
+    if (call === undefined || endpoint === undefined || operation === undefined || !Array.isArray(operation.fields) || served?.endpoint !== true || served.schema === undefined) continue;
+    const composed = served.gateway !== undefined;
     const schema = served.schema;
     const rootType = schema.roots[operation.operation];
     if (rootType === undefined) continue;
@@ -64,10 +71,15 @@ export const graphqlFindings = (lookup: GraphLookup): ContractFinding[] => {
         const path = above === '' ? (field.alias ?? field.field) : `${above}.${field.alias ?? field.field}`;
         const declared = schema.types[owner]?.fields?.[field.field];
         if (schema.types[owner] !== undefined && declared === undefined) {
-          findings.push(finding('graphql-field-unknown', path, owner, `${named} selects ${owner}.${field.field} at ${at(field)}, and ${endpoint.repo}'s ${owner} has no such field; the server refuses the whole operation`, 'missing_required', 'response', field.field, null));
+          const none = composed ? `no subgraph ${endpoint.repo} composes has ${owner}.${field.field}; the router refuses the whole operation` : `${endpoint.repo}'s ${owner} has no such field; the server refuses the whole operation`;
+          findings.push(finding('graphql-field-unknown', path, owner, `${named} selects ${owner}.${field.field} at ${at(field)}, and ${none}`, 'missing_required', 'response', field.field, null));
           continue;
         }
         if (declared === undefined) continue;
+        if (declared.federation?.inaccessible === true) {
+          findings.push(finding('graphql-field-inaccessible', path, owner, `${named} selects ${owner}.${field.field} at ${at(field)}, which ${endpoint.repo}'s composition marks @inaccessible; the router does not serve it and refuses the whole operation`, 'missing_required', 'response', field.field, null));
+          continue;
+        }
         const written = new Set(field.arguments ?? []);
         for (const name of written) {
           if (declared.args?.[name] === undefined) {

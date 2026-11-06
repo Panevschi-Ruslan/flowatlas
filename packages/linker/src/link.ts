@@ -20,7 +20,7 @@ import {
   type TypeEntry,
   type Unresolved,
 } from '@flowatlas/core';
-import { baseUrlOf, hostIndexOf, servicesAt, takenMeta, whereFound, type FoundValue } from './base-url-value.js';
+import { baseUrlOf, hostIndexOf, servicesAt, takenMeta, whereFound, type FoundValue, type HostIndex } from './base-url-value.js';
 import {
   baseUrlTakenFinding,
   findingFor,
@@ -51,6 +51,8 @@ import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard, couldReach } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
 import { joinGraphqlFields } from './graphql-link.js';
+import { routeGateways, type RouteAnswer } from './graphql-federation.js';
+import type { GatewayRouteMeta } from '@flowatlas/graphql';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
 import {
@@ -462,6 +464,36 @@ const aimOf = (outcome: CallOutcome): string | undefined => {
   if (outcome.kind === 'noRoute' || outcome.kind === 'ambiguous') return outcome.targetService;
   if (outcome.kind === 'dynamic') return outcome.targetService;
   return undefined;
+};
+
+/**
+ * The service a subgraph's address reaches (P241), found as a request's is
+ * (D2): an address written out by the hosts services are known at (P77), one
+ * rooted at a setting by the resolution a request between services gets -
+ * the setting's claimant, then the values it is given. Never by the name the
+ * gateway gives the subgraph.
+ */
+const subgraphServiceOf = (route: GatewayRouteMeta, gateway: GraphNode, index: RouteIndex, hosts: HostIndex): RouteAnswer => {
+  if (route.unread !== undefined) return { why: route.unread === '' ? 'no address is written for it' : `its address (${route.unread}) is built at run time` };
+  if (route.baseUrlEnv === undefined) {
+    const at = route.url === undefined ? undefined : servicesAt(route.url, hosts);
+    if (Array.isArray(at) && at.length === 1) return { service: at[0] as string, confidence: 'static' };
+    if (Array.isArray(at)) return { why: `its host names ${at.join(' and ')}, not one service` };
+    return { why: `no configured service is reached at ${route.host ?? route.url ?? 'that address'}` };
+  }
+  const call: GraphNode = {
+    id: `${gateway.id}#subgraph:${route.name}`,
+    type: 'http_out',
+    label: `subgraph ${route.name}`,
+    repo: gateway.repo,
+    file: route.file,
+    line: route.line,
+    meta: { method: 'POST', path: route.path, baseUrlEnv: route.baseUrlEnv, ...(route.baseUrlDefault === undefined ? {} : { baseUrlDefault: route.baseUrlDefault }) },
+  };
+  const { outcome, baseUrl } = resolveCall(call, index);
+  const service = aimOf(outcome);
+  if (service === undefined) return { why: findingFor(outcome)?.message ?? `nothing says which service ${route.baseUrlEnv} is` };
+  return { service, confidence: baseUrl === undefined || baseUrl.deployed ? 'static' : 'heuristic' };
 };
 
 const emptyHttpOut = (): LinkReport['httpOut'] => ({
@@ -931,8 +963,14 @@ export const linkGraphs = (
 
   found.push(...taken.values());
 
+  // A federation gateway's routes to its subgraphs and its composition, before
+  // any request is planned through it (P241).
+  const hosts = hostIndexOf(config, settings);
+  const routing = routeGateways(nodes, edges, (route, gateway) => subgraphServiceOf(route, gateway, index, hosts));
+  found.push(...routing.rows);
+
   // The fields a GraphQL request selects, once the request has joined an endpoint (P232).
-  found.push(...joinGraphqlFields(nodes, edges));
+  found.push(...joinGraphqlFields(nodes, edges, routing.plans));
 
   // Whatever names an entry by its deployed name alone, joined to the entry in
   // whichever service declares it.

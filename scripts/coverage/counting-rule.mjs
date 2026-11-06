@@ -252,6 +252,13 @@ export const PROBES = [
     pattern: /\.\s*(?:query|mutation|subscription|handler)\s*\(\s*(?:async\s*)?(?:\(|function\b|[A-Za-z_$][\w$]*\s*=>)/g,
   },
   {
+    name: 'graphql-reference-resolver',
+    family: 'routes',
+    scope: 'line',
+    what: 'the reference resolver of a federated entity (`@ResolveReference()`, `__resolveReference` in a resolver map), the way in an entity call from another subgraph reaches',
+    pattern: /@ResolveReference\s*\(|\b__resolveReference\s*[(:]/g,
+  },
+  {
     name: 'nitro-route-file',
     family: 'routes',
     scope: 'file',

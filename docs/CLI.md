@@ -362,13 +362,66 @@ line), `graphql-arg-unknown` and `graphql-arg-required`. `dead` lists a root
 field no request selects; a field resolver is reached as soon as anything
 returning its type is. Rows: `graphql-document-dynamic` (a document built at
 run time, never guessed), `graphql-document-not-parsed`,
-`graphql-fragment-not-read`, `graphql-field-no-resolver`,
-`graphql-field-resolved-twice`, and `graphql-federation-not-read` once for a
-subgraph of a federated graph, whose entities across subgraphs are not joined
-yet. A service whose source is not here is declared by its schema:
-`{ "document": { "kind": "graphql", "path": "catalog.graphql" } }` gives the
-same root entries, `declared` (`fixtures/graphql-gateway`,
+`graphql-fragment-not-read`, `graphql-field-no-resolver` and
+`graphql-field-resolved-twice`. A service whose source is not here is declared
+by its schema: `{ "document": { "kind": "graphql", "path": "catalog.graphql" } }`
+gives the same root entries, `declared` (`fixtures/graphql-gateway`,
 `fixtures/graphql-declared`).
+
+**GraphQL federation (P241).** A request to a federation gateway is planned
+the way the router plans it, statically, so `flow` from a screen reaches the
+resolvers of every subgraph and `impact` on a subgraph's field reaches the
+screens.
+
+- *Subgraphs* are read from `@apollo/subgraph` (`buildSubgraphSchema`, its
+  options or its list of modules), NestJS's `ApolloFederationDriver`, and the
+  federation directives of their SDL or of code-first `@Directive(...)`:
+  `@key(fields:, resolvable:)`, `@external`, `@requires`, `@provides`,
+  `@shareable`, `@override(from:, label:)`, `@inaccessible`, under the names
+  `@link(import: [...])` gives them, and federation 1's `extend type`. A
+  reference resolver (`__resolveReference` in a map, `@ResolveReference()`) is
+  an entry, `entry:customers:graphql:Customer.__resolveReference`
+  (`meta.reference: true`).
+- *Gateways* are Apollo Gateway in code (`new ApolloGateway(...)` handed to
+  Apollo Server, NestJS's `ApolloGatewayDriver`) with
+  `IntrospectAndCompose({ subgraphs })` or `serviceList` - the subgraphs named
+  in code and composed here from what each one's source declares - or a
+  supergraph read from a file, the composition as written (`@join__type`,
+  `@join__field`, `@join__graph`). A router is declared by its files:
+  `{ "document": { "kind": "graphql", "path": "router/supergraph.graphql" } }`,
+  or rover's `supergraph.yaml`, with `router.yaml` beside it read for the path
+  it serves and `override_subgraph_url`.
+- *Subgraph addresses* are joined to services as requests are: a URL rooted at
+  a setting (`process.env.ORDERS_URL`, `${env.ORDERS_URL}`) by the services'
+  `baseUrlEnv` and the values the repositories give it, a URL written out by
+  its host - a service's name, an alias, `services[].hosts`, a host the files
+  name. Never by the subgraph's name. The gateway's endpoint gets an
+  `http_calls` edge to each subgraph's endpoint, at the line naming it.
+- *The plan*: each selected field goes to the subgraph that resolves it; one
+  the parent's subgraph resolves, provides (`@provides`) or holds as a key
+  stays there; any other is an entity hop, drawn to the owner's reference
+  resolver and then its field resolver; `@requires` plans the fields it needs
+  first. Edges go from the request to the subgraph entries, of the request's
+  type, with `meta.graphql: { operation, field, gateway, subgraph, hop?,
+  choice?, requiredBy? }`, and are no surer than the request's join, the
+  route and the composition: `static` for a supergraph read from source or a
+  composition of subgraphs every one of which was read, `declared` through a
+  router read from its files, `heuristic` when a subgraph the gateway names
+  was not joined. A shareable field the parent's subgraph cannot resolve, or a
+  progressive override, is a choice the router makes at run time: every owner
+  is drawn, `heuristic`, with an info row (`graphql-shareable-choice`).
+- *Contracts* compare a selection through the gateway with the composed
+  schema: `graphql-field-unknown` says no subgraph has it, and
+  `graphql-field-inaccessible` that the composition hides it. Rows:
+  `graphql-subgraph-not-joined` (an address reaching no service),
+  `graphql-composition-conflict` (two owners not both `@shareable`, or a field
+  of an entity its subgraph declares no key for), `graphql-supergraph-drift`
+  (the supergraph and a subgraph's source disagree), and
+  `graphql-federation-not-read` for what cannot be read, naming which: a
+  supergraph the registry hands over at run time (managed federation,
+  `APOLLO_KEY`), one built by code at start or not committed, a subgraph
+  schema in the registry (`graphref`), a subgraph no gateway in the project
+  names (`fixtures/graphql-federation`, `fixtures/graphql-federation-composed`).
 
 **A file-system router is four values.** Where the address is the path of a file
 rather than an argument of a call, what differs between one router and another
