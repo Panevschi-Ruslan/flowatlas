@@ -78,6 +78,22 @@ only one of them moved.
   per repository as a note (`aliases-from-convention`, `aliases-from-config`,
   `implicit-imports-from-convention`); a name two files give, a Nuxt layer and
   a setting written as code are rows.
+- **A request through a client instance carries its base (P239).** The base an
+  instance is made with - `axios.create({ baseURL })`, `ofetch.create` or
+  `$fetch.create`, `ky.create({ prefixUrl })` or `ky.extend`, or
+  `api.defaults.baseURL = …` set afterwards - is read where it is written and
+  put in front of the address each call writes, so the request joins the
+  service at that base `static` instead of by its route alone, in React,
+  Next.js client code, Vue, Nuxt and Svelte. The instance is followed through
+  imports, default exports, object keys, class fields and factories of your
+  own, and is recognised by its import with nothing installed; ky is a client
+  now, and ofetch and axios instances are read when called as functions. An
+  Angular interceptor writing `req.clone({ url: base + req.url })` puts its
+  base in front of every request of the framework's client. A browser request
+  whose address names a host a configured service is reached at (its name, an
+  alias, `services[].hosts`) joins it `via: "host"`. A base nobody can read is
+  the new row `api-client-base-unread`, and the request keeps today's join. On
+  `fixtures/vue-spa` the two requests through its instance now join `static`.
 - **Does it help an assistant, measured (P238).** `scripts/bench-agent/`
   generates an eight-repository TypeScript project from a seed, with traps and
   an answer key written from the generator's own model, asks Claude Code 30

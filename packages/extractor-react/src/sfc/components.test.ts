@@ -42,7 +42,7 @@ describe('Vue components, read from their files (P233)', () => {
 
   it('reads the requests a component and its store make, as the React reader reads them', () => {
     expect(edgesFrom('web#src/views/OrderDetail.vue:OrderDetail.cancel', 'calls')).toEqual(['ui_api_call:web#src/views/OrderDetail.vue:18:13']);
-    expect(node('ui_api_call:web#src/views/OrderDetail.vue:18:13')?.meta).toMatchObject({ method: 'POST', path: '/orders/:param/cancel' });
+    expect(node('ui_api_call:web#src/views/OrderDetail.vue:18:13')?.meta).toMatchObject({ method: 'POST', path: '/orders/:param/cancel', url: '${VITE_API_URL}/orders/:param/cancel', baseUrlEnv: 'VITE_API_URL' });
     expect(node('ui_api_call:web#src/composables/useOrders.ts:7:26')?.meta).toMatchObject({ method: 'GET', path: '/orders', baseUrlEnv: 'VITE_API_URL' });
   });
 

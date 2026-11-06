@@ -15,6 +15,8 @@ import {
   requestVerbOf,
   resolveTypeOrigin,
   siteOf,
+  toPosixPath,
+  underBase,
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
@@ -34,6 +36,7 @@ import { Node, SyntaxKind } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { ANGULAR_HTTP } from '../index-classes.js';
 import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSite } from '../util/forward.js';
+import { interceptorBaseOf, type InterceptorBase } from '../util/interceptor-base.js';
 import type { ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
@@ -99,6 +102,8 @@ interface Spelling {
   readonly client: Readonly<Record<string, unknown>>;
   /** Where the address is, when it is not an argument at `urlIndex`: a described client's (P121). */
   readonly url?: (network: CallExpression) => TsNode | undefined;
+  /** Whether the repository's interceptors rewrite what this client sends (P239): the framework's client only. */
+  readonly intercepted?: true;
 }
 
 /**
@@ -137,6 +142,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
           : bodyThrough(network, shape.bodyIndex, frames),
       typedAnswer: true,
       client: { package: ANGULAR_HTTP },
+      intercepted: true,
     };
   };
 
@@ -249,17 +255,48 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     return node === undefined ? NO_BODY : typeOfBody(at, position);
   };
 
+  /**
+   * The base the repository's interceptors put in front of every request of the
+   * framework's client (P239), read the first time one is recorded, and the
+   * rewrites nothing could be taken from said once, where they are written.
+   */
+  let intercepting: InterceptorBase | undefined;
+  const interceptorBase = (): InterceptorBase => {
+    if (intercepting !== undefined) return intercepting;
+    const repoDir = toPosixPath(ctx.repoDir).replace(/[/]+$/, '');
+    const files = ctx.project.getSourceFiles().filter((file) => {
+      const path = toPosixPath(file.getFilePath());
+      return path.startsWith(`${repoDir}/`) && !path.includes('/node_modules/');
+    });
+    intercepting = interceptorBaseOf(files, ctx.config.sharedPackages);
+    for (const { at, why } of intercepting.unread) {
+      ctx.report({
+        file: ctx.fileOf(at),
+        line: siteOf(at).line,
+        reason: 'api-client-base-unread',
+        hint: `${why}. Requests through the framework's client are recorded under the path each call writes, and join by their route alone. Write the base as a literal or a setting, and the rewrite unconditionally.`,
+        symbol: at.getText().slice(0, 80),
+      });
+    }
+    return intercepting;
+  };
+
   const record = (
     network: CallExpression,
     spelling: Spelling,
     site: RequestSite,
-    address: ApiUrl,
+    written: ApiUrl,
     frames: readonly CallFrame[],
     choice?: string,
     pathChoices?: readonly string[],
     handedIn?: string | null,
   ): void => {
     const { call, methodId, file } = site;
+    // The address the call writes, under the base an interceptor puts in front
+    // of every request the framework's client makes (P239).
+    const interceptor = spelling.intercepted === true ? interceptorBase().base : undefined;
+    const address = underBase(interceptor, written);
+    const intercepted = address !== written;
 
     // A verb a wrapper is handed is read at the caller the address was read
     // at, along the same frames (P91); one handed in where the address was
@@ -303,6 +340,9 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         // address (R132).
         ...(application === undefined ? {} : { application }),
         via: address.via,
+        // Where the opening of the address came from, said only when it is not
+        // the call's own: an interceptor in another file (P239).
+        ...(intercepted ? { baseFrom: 'interceptor' } : {}),
         ...(address.host === null ? {} : { host: address.host }),
         // Only ever set, never set to false: it is a mark on the few addresses
         // a branch was guessed for, and the linker lowers the edge it draws

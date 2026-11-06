@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:30:42.900Z",
+  "builtAt": "2026-11-06T09:42:34.071Z",
   "services": [
     {
       "name": "api",
@@ -340,9 +340,9 @@
       "kind": "http",
       "meta": {
         "method": "POST",
-        "url": "/orders",
+        "url": "${VITE_API_URL}/orders",
         "path": "/orders",
-        "baseUrlEnv": null,
+        "baseUrlEnv": "VITE_API_URL",
         "responseType": null,
         "bodyType": "{name:string}",
         "bodyFrom": "literal",
@@ -351,7 +351,7 @@
         ],
         "package": "axios",
         "client": "axios",
-        "via": "literal",
+        "via": "template-env",
         "targetService": "api"
       }
     },
@@ -365,14 +365,14 @@
       "kind": "http",
       "meta": {
         "method": "POST",
-        "url": "/orders/:param/cancel",
+        "url": "${VITE_API_URL}/orders/:param/cancel",
         "path": "/orders/:param/cancel",
-        "baseUrlEnv": null,
+        "baseUrlEnv": "VITE_API_URL",
         "responseType": null,
         "bodyType": null,
         "package": "axios",
         "client": "axios",
-        "via": "literal",
+        "via": "template-env",
         "targetService": "api"
       }
     },
@@ -612,14 +612,14 @@
       "from": "ui_api_call:web#src/stores/orders.ts:9:13",
       "to": "entry:api:http:POST:/orders",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/stores/orders.ts",
       "line": 9,
       "params": [
         "{name:string}"
       ],
       "meta": {
-        "via": "unique-route",
+        "via": "api-target",
         "targetService": "api"
       }
     },
@@ -627,11 +627,11 @@
       "from": "ui_api_call:web#src/views/OrderDetail.vue:18:13",
       "to": "entry:api:http:POST:/orders/:param/cancel",
       "type": "hits",
-      "confidence": "heuristic",
+      "confidence": "static",
       "file": "src/views/OrderDetail.vue",
       "line": 18,
       "meta": {
-        "via": "unique-route",
+        "via": "api-target",
         "targetService": "api"
       }
     },

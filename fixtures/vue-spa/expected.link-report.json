@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:30:42.900Z",
+  "builtAt": "2026-11-06T09:42:34.071Z",
   "configHash": "7aca8ec0debd",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 859,
+      "durationMs": 1403,
       "packages": {
         "name": "vue-spa-api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 12,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 686,
+      "durationMs": 1116,
       "packages": {
         "name": "vue-spa-web",
         "runtime": [

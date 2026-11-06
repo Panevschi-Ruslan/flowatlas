@@ -33,6 +33,12 @@ export interface UiIndex {
   serviceOf?(name: string): string | undefined;
   /** Every alias configured, for the row that says a name answers to none. */
   aliases?(): readonly string[];
+  /**
+   * The one configured service a host is reached at, and whether the
+   * configuration says so (its name, an alias, `services[].hosts`) or only the
+   * services' own setting files do (P239).
+   */
+  serviceAtHost?(host: string): { readonly service: string; readonly configured: boolean } | undefined;
 }
 
 /**
@@ -46,7 +52,7 @@ export interface UiIndex {
  * `marker` is an annotation naming the service, `@flowatlas-calls catalog GET
  * /items`, which outranks all of them (P127).
  */
-export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'same-service' | 'unique-route';
+export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'same-service' | 'unique-route';
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -59,6 +65,8 @@ interface Details {
     mountAssumed?: readonly string[];
     /** The value the base address was taken from, where a setting's value decided it (P77). */
     baseUrl?: FoundValue;
+    /** The host was found only in the services' own setting files, not in the configuration (P239). */
+    hostFromFiles?: true;
   };
   /** The address or the verb is only known at run time; the extractor said so. */
   dynamic: { reason: string };
@@ -272,6 +280,27 @@ const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
 };
 
 /**
+ * The service a host the address names outright is reached at (P239).
+ *
+ * `axios.create({ baseURL: 'https://orders.example.test' })` writes where every
+ * request through it goes, and until the base was read the address had no host
+ * at all. Once it has one, the configuration may say whose it is - a service's
+ * name, an alias, `services[].hosts` - and that is as much somebody writing down
+ * which service is meant as `apiTarget` is: terminal, and `static`. A host only
+ * a service's own setting files name is the evidence P77 treats as a guess, and
+ * the edge says so.
+ */
+const byHost = (ask: Ask): UiOutcome | undefined => {
+  const { call, index } = ask;
+  const host = call.meta?.['host'];
+  if (typeof host !== 'string') return undefined;
+  const found = index.serviceAtHost?.(host);
+  if (found === undefined) return undefined;
+  const outcome = within(ask, found.service, 'host');
+  return outcome.kind === 'linked' && !found.configured ? { ...outcome, hostFromFiles: true } : outcome;
+};
+
+/**
  * The service the call was written in, answering its own browser.
  *
  * This is what a relative `fetch('/api/thing')` means, and until R93 it was the
@@ -343,6 +372,7 @@ const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
   byApiTarget,
   byBaseUrlEnv,
   byBaseUrlValue,
+  byHost,
   bySameService,
   byUniqueRoute,
 ];

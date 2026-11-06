@@ -57,6 +57,13 @@ export interface CallShape {
    * it says one (R114, R128).
    */
   readonly optionsAt?: number;
+  /**
+   * The options the body is written under, when the body sits inside the
+   * options rather than beside them: `ky.post(url, { json })`, an axios
+   * instance called as `api(url, { data })`. The first one written is the body,
+   * looked through `JSON.stringify` as `fetch`'s is.
+   */
+  readonly bodyKeys?: readonly string[];
 }
 
 /**
@@ -101,11 +108,12 @@ export interface RequestClient {
   /**
    * The address the client puts in front of every path written through it.
    *
-   * Absent for the two installed clients, and not because they have no such
-   * thing: `axios.create({ baseURL })` is exactly this, and where it is set is a
-   * question about one call in one file rather than about a class this repository
-   * declares. A client of a project's own keeps its base in a field, and that
-   * field is read where the class is (R114).
+   * Absent on the rows for installed clients, and not because they have no such
+   * thing: `axios.create({ baseURL })` is exactly this, and it belongs to one
+   * instance made in one file rather than to the client, so it is read where
+   * the instance is made and set on the row for that instance's requests
+   * ({@link CLIENT_FACTORIES}, P239). A client of a project's own keeps its base
+   * in a field, and that field is read where the class is (R114).
    */
   readonly base?: ApiUrl;
   /** Verb methods on a value of one of these types: `api.post(url, body)`. */
@@ -187,7 +195,6 @@ export const AXIOS: RequestClient = {
   },
 };
 
-/** Every client this extractor reads without being told anything. */
 /**
  * Nuxt's clients (P233): `$fetch` and `ofetch` take an address and options as
  * the platform's `fetch` does, with the body under `body`, and `useFetch` /
@@ -201,7 +208,109 @@ export const OFETCH: RequestClient = {
   callee: { names: ['$fetch', 'ofetch', 'useFetch', 'useLazyFetch'], method: null, urlAt: 0, optionsAt: 1, bodyAt: 1 },
 };
 
-export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS, OFETCH];
+/**
+ * The verbs `ky` names as methods, each with its body inside the options
+ * (P239): `ky.post(url, { json: order })`. The address is the first argument
+ * on the module and on an instance alike, and ky has no `options` verb.
+ */
+const KY_VERBS: Readonly<Record<string, CallShape>> = Object.fromEntries(
+  ['get', 'post', 'put', 'patch', 'delete', 'head'].map((verb) => [
+    verb,
+    { method: verb.toUpperCase(), urlAt: 0, optionsAt: 1, ...(['get', 'delete', 'head'].includes(verb) ? {} : { bodyKeys: ['json', 'body'] }) },
+  ]),
+);
+
+/**
+ * The small client written over the platform's `fetch` (P239): `ky(url, { method,
+ * json })` called by its own name, and `ky.post(url, { json })` with the verb in
+ * the name. An instance made by `ky.create` or `ky.extend` is the same client
+ * holding a `prefixUrl`, read where it is made ({@link CLIENT_FACTORIES}).
+ */
+export const KY: RequestClient = {
+  name: 'ky',
+  package: 'ky',
+  packages: ['ky'],
+  callee: { names: ['ky'], method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['json', 'body'] },
+  receiver: {
+    types: ['KyInstance'].map((typeName) => ({ package: 'ky', typeName })),
+    verbs: KY_VERBS,
+  },
+};
+
+/** Every client this extractor reads without being told anything. */
+export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS, OFETCH, KY];
+
+/**
+ * How an instance of an installed client is made, and where its base is written.
+ *
+ * The other half of R114. A client class a project wrote keeps its base in a
+ * field; a client somebody installed keeps it in the options its instance is
+ * made with, `axios.create({ baseURL })`, and that instance is how nearly every
+ * front end larger than a sample writes its requests. Until P239 the instance was
+ * read by its type and its base was not read at all, so the address recorded was
+ * the path the call site writes and the request joined only by its route.
+ *
+ * A row per client, read by one reader (`util/client-instance.ts`):
+ *
+ * - `modules`: the packages whose import the factory is called on. The instance
+ *   is told apart by how it was made, the import naming its package, so it is
+ *   read in a clone with nothing installed, where its type is unknown.
+ * - `globals`: names the framework provides without an import (Nuxt's `$fetch`).
+ * - `methods`: the calls that make an instance, on the module or on an instance,
+ *   which then inherits the base it does not write.
+ * - `baseKey`: the option the base is written under.
+ * - `called`: the shape of the instance called as a function, when it can be.
+ * - `verbs`: the verbs named as methods on an instance, beside the module's own.
+ * - `defaults`: where an instance keeps the options it was made with, when
+ *   assigning there afterwards (`api.defaults.baseURL = …`) sets the base.
+ */
+export interface ClientFactory {
+  readonly client: RequestClient;
+  readonly modules: readonly string[];
+  readonly globals?: readonly string[];
+  readonly methods: readonly string[];
+  readonly baseKey: string;
+  readonly called?: CallShape;
+  readonly verbs: Readonly<Record<string, CallShape>>;
+  readonly defaults?: string;
+}
+
+/**
+ * The instance made by each installed client, and where its base is.
+ *
+ * axios's instance is also callable, `api(url, { method, data })`; a call
+ * handed one config object in place of an address is not read here (the
+ * address is a key of it), as it was not before. ofetch's instance is called
+ * as the module is, and `.raw` answers with the whole response the same way.
+ */
+export const CLIENT_FACTORIES: readonly ClientFactory[] = [
+  {
+    client: AXIOS,
+    modules: ['axios'],
+    methods: ['create'],
+    baseKey: 'baseURL',
+    called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['data'] },
+    verbs: VERB_CALLS,
+    defaults: 'defaults',
+  },
+  {
+    client: OFETCH,
+    modules: ['ofetch'],
+    globals: ['$fetch'],
+    methods: ['create'],
+    baseKey: 'baseURL',
+    called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1 },
+    verbs: { raw: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1 } },
+  },
+  {
+    client: KY,
+    modules: ['ky'],
+    methods: ['create', 'extend'],
+    baseKey: 'prefixUrl',
+    called: KY.callee,
+    verbs: KY_VERBS,
+  },
+];
 
 /**
  * A client class the repository being read wrote itself.

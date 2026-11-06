@@ -90,7 +90,7 @@ export const hostIndexOf = (config: FlowatlasConfig, settings: Readonly<Record<s
 };
 
 /** The services a value's host names, by every name it may be known by. */
-const servicesAt = (address: string, index: HostIndex): readonly string[] | 'external' | 'inner' | undefined => {
+export const servicesAt = (address: string, index: HostIndex): readonly string[] | 'external' | 'inner' | undefined => {
   const host = hostOf(address);
   if (host === undefined) return undefined;
   const named =

@@ -1,0 +1,290 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-05T22:15:50.054Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/views/ItemsView.vue:13:26",
+        "to": "entry:billing:http:POST:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/views/ItemsView.vue:13:26|hits|entry:billing:http:POST:/items",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "admin",
+        "typeId": "{name:string}",
+        "symbol": "admin#src/views/ItemsView.vue:ItemsView",
+        "writes": [
+          "name"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{name:string}",
+        "symbol": "billing#src/items.controller.ts:ItemsController.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:console#src/app/items.service.ts:15:12",
+        "to": "entry:orders:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:console#src/app/items.service.ts:15:12|hits|entry:orders:http:GET:/items",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#Item[]",
+        "symbol": "orders#src/items.controller.ts:ItemsController.list"
+      },
+      "receiver": {
+        "service": "console",
+        "typeId": "type:console#Item[]",
+        "symbol": "console#src/app/items.service.ts:ItemsService.list"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:console#src/app/items.service.ts:19:12",
+        "to": "entry:orders:http:POST:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:console#src/app/items.service.ts:19:12|hits|entry:orders:http:POST:/items",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "console",
+        "typeId": "{name:string}",
+        "symbol": "console#src/app/items.service.ts:ItemsService.create",
+        "writes": [
+          "name"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{name:string}",
+        "symbol": "orders#src/items.controller.ts:ItemsController.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:console#src/app/items.service.ts:19:12",
+        "to": "entry:orders:http:POST:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:console#src/app/items.service.ts:19:12|hits|entry:orders:http:POST:/items",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#Item",
+        "symbol": "orders#src/items.controller.ts:ItemsController.create"
+      },
+      "receiver": {
+        "service": "console",
+        "typeId": "type:console#Item",
+        "symbol": "console#src/app/items.service.ts:ItemsService.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/Items.tsx:10:28",
+        "to": "entry:billing:http:POST:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/Items.tsx:10:28|hits|entry:billing:http:POST:/items",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "shop",
+        "typeId": "{name:string}",
+        "symbol": "shop#src/Items.tsx:Items",
+        "writes": [
+          "name"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "billing",
+        "typeId": "{name:string}",
+        "symbol": "billing#src/items.controller.ts:ItemsController.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/Items.tsx:8:26",
+        "to": "entry:orders:http:POST:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/Items.tsx:8:26|hits|entry:orders:http:POST:/items",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "shop",
+        "typeId": "{name:string}",
+        "symbol": "shop#src/Items.tsx:Items",
+        "writes": [
+          "name"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{name:string}",
+        "symbol": "orders#src/items.controller.ts:ItemsController.create"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/views/ItemsView.vue:12:26",
+        "to": "entry:orders:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/views/ItemsView.vue:12:26|hits|entry:orders:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/views/ItemsView.vue:ItemsView declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/views/ItemsView.vue:12:26",
+        "to": "entry:orders:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/views/ItemsView.vue:12:26|hits|entry:orders:http:GET:/items",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "admin#src/views/ItemsView.vue:ItemsView declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/views/ItemsView.vue:13:26",
+        "to": "entry:billing:http:POST:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/views/ItemsView.vue:13:26|hits|entry:billing:http:POST:/items",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "admin#src/views/ItemsView.vue:ItemsView declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:console#src/app/items.service.ts:15:12",
+        "to": "entry:orders:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:console#src/app/items.service.ts:15:12|hits|entry:orders:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "console#src/app/items.service.ts:ItemsService.list declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/Items.tsx:10:28",
+        "to": "entry:billing:http:POST:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/Items.tsx:10:28|hits|entry:billing:http:POST:/items",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/Items.tsx:Items declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/Items.tsx:7:28",
+        "to": "entry:orders:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/Items.tsx:7:28|hits|entry:orders:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/Items.tsx:Items declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/Items.tsx:7:28",
+        "to": "entry:orders:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/Items.tsx:7:28|hits|entry:orders:http:GET:/items",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/Items.tsx:Items declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/Items.tsx:8:26",
+        "to": "entry:orders:http:POST:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/Items.tsx:8:26|hits|entry:orders:http:POST:/items",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/Items.tsx:Items declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/Items.tsx:9:30",
+        "to": "entry:billing:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/Items.tsx:9:30|hits|entry:billing:http:GET:/items",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "shop#src/Items.tsx:Items declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/Items.tsx:9:30",
+        "to": "entry:billing:http:GET:/items",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/Items.tsx:9:30|hits|entry:billing:http:GET:/items",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/Items.tsx:Items declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 6,
+    "shared": 0,
+    "identical": 5,
+    "hash_differs": 1,
+    "unchecked": 10,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

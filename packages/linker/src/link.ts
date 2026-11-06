@@ -20,7 +20,7 @@ import {
   type TypeEntry,
   type Unresolved,
 } from '@flowatlas/core';
-import { baseUrlOf, hostIndexOf, takenMeta, whereFound, type FoundValue } from './base-url-value.js';
+import { baseUrlOf, hostIndexOf, servicesAt, takenMeta, whereFound, type FoundValue } from './base-url-value.js';
 import {
   baseUrlTakenFinding,
   findingFor,
@@ -402,6 +402,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
   const guessed =
     call.meta?.['guessed'] === true ||
     outcome.via === 'unique-route' ||
+    outcome.hostFromFiles === true ||
     (outcome.via === 'base-url-value' && outcome.baseUrl?.deployed !== true);
   return {
     from: call.id,
@@ -475,6 +476,40 @@ const emptyHttpOut = (): LinkReport['httpOut'] => ({
 });
 
 const emptyUi = (): LinkReport['ui'] => ({ total: 0, resolved: 0, unresolved: 0, byReason: {} });
+
+/**
+ * The one configured service a host is reached at (P239): by what the
+ * configuration says first, and by what the services' own setting files say
+ * where it says nothing.
+ */
+const hostLookup = (
+  config: FlowatlasConfig,
+  settings: Readonly<Record<string, RepoSettings>>,
+): NonNullable<UiIndex['serviceAtHost']> => {
+  const configured = hostIndexOf(config, {});
+  const everything = config.settingFiles.read === false ? configured : hostIndexOf(config, settings);
+  const one = (found: ReturnType<typeof servicesAt>): string | undefined =>
+    Array.isArray(found) && found.length === 1 ? found[0] : undefined;
+  return (host) => {
+    const address = `http:${'/'.repeat(2)}${host}`;
+    const named = one(servicesAt(address, configured));
+    if (named !== undefined) return { service: named, configured: true };
+    const filed = one(servicesAt(address, everything));
+    return filed === undefined ? undefined : { service: filed, configured: false };
+  };
+};
+
+/** Takes away a request's edge to a host found to be a configured service's, and the host where nothing else calls it. */
+const dropExternal = (nodes: Map<string, GraphNode>, edges: Map<string, GraphEdge>, from: string, apiId: string): void => {
+  let reached = false;
+  let dropped = false;
+  for (const [key, edge] of edges) {
+    if (edge.to !== apiId) continue;
+    if (edge.from !== from) reached = true;
+    else dropped = edges.delete(key) || dropped;
+  }
+  if (dropped && !reached) nodes.delete(apiId);
+};
 
 /**
  * The lookup a request rooted at a setting nobody claims asks of the values
@@ -648,6 +683,7 @@ export const linkGraphs = (
   const uiIndex: UiIndex = {
     ...buildUiIndex(config, routesByService, servicesByEnv),
     ...(valuedUiBaseUrlOf === undefined ? {} : { baseUrlOf: valuedUiBaseUrlOf }),
+    serviceAtHost: hostLookup(config, settings),
   };
   const procedureIndex = buildProcedureIndex(nodes, config, servicesByEnv);
 
@@ -689,6 +725,10 @@ export const linkGraphs = (
   const joinUi = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>, path: string): void => {
     const edge = uiEdge(call, outcome);
     edges.set(edgeKey(edge), edge);
+    // The host was a configured service's, so it is no third party: the edge
+    // the reader drew to it, not knowing whose it was, goes (P239).
+    const host = call.meta?.['host'];
+    if (outcome.via === 'host' && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
     if (outcome.baseUrl !== undefined) {
       edge.meta = { ...edge.meta, ...takenMeta(outcome.baseUrl) };
       call.meta = { ...call.meta, ...takenMeta(outcome.baseUrl) };

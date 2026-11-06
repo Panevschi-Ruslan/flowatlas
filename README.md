@@ -888,7 +888,10 @@ prove, and the path is given so you can run it.
   a pass-through wrapper, a base whose resource a subclass decides, or a client
   class the project wrote itself, recognised by following its verbs to the
   network or named in the configuration (`fixtures/angular-client-wrapper`,
-  `fixtures/react-local-client`, `fixtures/react-client-base`). A browser
+  `fixtures/react-local-client`, `fixtures/react-client-base`). A request
+  through a client instance (`axios.create`, `ofetch.create`, `ky.create`) or
+  an Angular interceptor carries the base it puts in front, so it joins the
+  service at that base (`fixtures/client-instance-base`). A browser
   holding a stream open is a request like any other (`fixtures/sse-stream`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a
   table of handlers the project keeps itself (`fixtures/nest-telegraf`,

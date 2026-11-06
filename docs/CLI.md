@@ -2929,7 +2929,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread` |
-| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
+| Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread`, `api-client-base-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
@@ -4093,6 +4093,17 @@ serves routes of its own and calls somebody else's is unaffected: where its own
 service answers nothing, the search goes on exactly as before, and where nothing
 anywhere answers, the row says so and names the verbs that path does answer.
 
+**A host the configuration names is that service.** A browser request whose
+address names a host outright - written at the call, or the base of the client
+instance it goes through (`axios.create({ baseURL: 'https://billing.example.test' })`)
+- joins the service reached at that host: its name, an alias, or one of its
+`hosts`. The edge says `via: "host"` and is `static`, as `apiTarget` is, because
+the code names the host and the configuration says whose it is; the request is
+then no third party, and the `external_api` node drawn for the host goes. A
+host only a service's own setting files name joins `heuristic`
+(`fixtures/client-instance-base`). Requests between services keep reading a
+host written outright as a third party.
+
 **`document` is for the ends of a project nobody here can read.** A payment
 provider, another team's service, something written in another language: there
 is no repository to open and no extractor to choose, so the document is read
@@ -4728,6 +4739,53 @@ built at run time.
   }
 }
 ```
+
+**A client instance's base (P239).** Most front ends write every request through
+an instance made once: `axios.create({ baseURL })`, `ofetch.create({ baseURL })`
+or `$fetch.create(…)`, `ky.create({ prefixUrl })` or `ky.extend(…)`. The base is
+read where the instance is made and put in front of the address the call writes,
+so `ordersApi.get('/items')` under `baseURL: import.meta.env.VITE_ORDERS_URL` is
+recorded as `GET ${VITE_ORDERS_URL}/items` and joins through `apiTarget` or
+`baseUrlEnv`, `static`, instead of by its route alone. This holds in React,
+Next.js client code, Vue, Nuxt and Svelte alike:
+
+- **The base** is read as any base is: a literal, a template, a setting
+  (`import.meta.env.VITE_API`, `process.env.NEXT_PUBLIC_API`,
+  `useRuntimeConfig().public.apiBase`), a constant from another module, a host.
+- **The instance** is followed to where it is made: a `const`, exported and
+  imported (named, default, re-exported), a key of an object, a class field, a
+  function of yours that makes one with the base handed in (`createApi(base)`),
+  an instance made from another (which keeps the base it does not write again).
+  It is told apart by the import its factory is called on, so a clone with
+  nothing installed reads it too.
+- **`api.defaults.baseURL = …`** set anywhere in the repository wins over the
+  options the instance was made with; `axios.defaults.baseURL` applies to calls
+  on `axios` itself.
+- **The calls:** the verbs (`api.get(url)`), the instance called as a function
+  (`api(url, { method })`, ofetch's `api.raw(url)`), and ky on the module and on
+  an instance, with its body under `json`.
+- **Which base wins.** A base the call writes in its own options (`{ baseURL }`)
+  wins; an address with a host or a setting of its own is not under any base.
+- **A class of yours holding an instance** in a field and wrapping its verbs
+  takes that instance's base, where it keeps none of its own.
+
+An Angular interceptor that puts a base in front of every request,
+`req.clone({ url: environment.apiUrl + req.url })` or the same as a template, is
+read the same way, for every request of the framework's client (not `fetch`).
+The interceptor is a class's `intercept` or a function (`HttpInterceptorFn`),
+registered with `withInterceptors([...])` or `useClass` under
+`HTTP_INTERCEPTORS`; such a request carries `baseFrom: "interceptor"`. A guard
+about whether the address is already absolute (`req.url.startsWith('http')`)
+changes nothing.
+
+A base that cannot be read - written and not readable, options handed in from
+somewhere unread, two `defaults` assignments that disagree, an interceptor whose
+rewrite depends on anything else, two interceptors rewriting the address - is
+one row, `api-client-base-unread`, at the line that writes it. Its requests keep
+the path each call writes and join by their route alone, as before. An instance
+handed in from outside (a parameter, `this.$axios`) has nothing to read and is
+not mentioned. `fixtures/client-instance-base` shows each case against two
+services serving the same routes.
 
 A custom broker entry:
 

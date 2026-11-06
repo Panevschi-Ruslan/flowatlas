@@ -243,6 +243,7 @@ const GAPS: readonly string[] = [
   'graphql-fragment-not-read',
   'api-method-dynamic',
   'api-base-override-unread',
+  'api-client-base-unread',
   'api-base-unknown',
   'api-client-unread',
   'handler-not-found',

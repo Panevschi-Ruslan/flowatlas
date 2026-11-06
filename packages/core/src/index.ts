@@ -698,6 +698,8 @@ export {
   requestVerbOf,
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
+export { isSomewhere, underBase } from './under-base.js';
+export type { ReadAddress } from './under-base.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
 export { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
 export { BOUNDED_BY, boundedLoopOf, isMigrationFile } from './bounded-loop.js';

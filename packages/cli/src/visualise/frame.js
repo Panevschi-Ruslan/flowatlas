@@ -286,6 +286,7 @@ export const PAGE_WORDS = Object.freeze({
     'api-base-override-unread': 'own base address not read',
     'api-base-unknown': 'base address setting unknown',
     'api-body-unread': 'API description not read',
+    'api-client-base-unread': 'client base address not read',
     'api-client-unread': 'client class not followed',
     'api-method-dynamic': 'verb chosen at run time',
     'api-path-dynamic': 'address built at run time',
