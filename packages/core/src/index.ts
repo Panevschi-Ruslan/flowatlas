@@ -1039,3 +1039,26 @@ export { attachNotes, DEFAULT_NOTE_TAGS, leadingNotes, MAX_NOTE_CHARS, MAX_NOTES
 export type { SourceText } from './notes.js';
 export { addEmbeddedScripts, blankOutside } from './embedded.js';
 export type { EmbeddedFile, EmbeddedFormat, EmbeddedScripts } from './embedded.js';
+export {
+  ALIASES_FROM_CONFIG_REASON,
+  ALIASES_FROM_CONVENTION_REASON,
+  IMPLICIT_IMPORT_AMBIGUOUS_REASON,
+  IMPLICIT_IMPORTS_REASON,
+  addImplicitImports,
+  conventionFiles,
+  conventionsFor,
+  frameworkModuleOf,
+  implicitNamesUsed,
+  implicitSourcesOf,
+  reportConventions,
+  scriptFilesIn,
+} from './conventions.js';
+export type {
+  ConventionsOf,
+  FrameworkModule,
+  ImplicitImports,
+  ImplicitImportSource,
+  ProjectConventions,
+} from './conventions.js';
+export { ConfigPath, NotLiteral, configValueAt, exportedNamesOf, readConfigLiteral } from './config-literal.js';
+export type { ConfigLiteral, ExportedNames } from './config-literal.js';

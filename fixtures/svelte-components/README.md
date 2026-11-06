@@ -9,9 +9,16 @@ reaches the route it calls, in both Svelte 4's spelling and Svelte 5's.
 |---|---|---|
 | Svelte 4 | `routes/+page.svelte`, `on:click={place}` | handles `place`, which requests `POST /api/orders` |
 | Svelte 5 | `lib/OrderRow.svelte`, `onclick={() => orders.cancel(id)}` | handles `cancel` of `lib/orders.ts`, which requests `DELETE /api/orders/:param` |
-| the route | `routes/api/orders/+server.ts`, `routes/api/orders/[id]/+server.ts` | entries `POST /api/orders`, `DELETE /api/orders/:param` |
+| the route | `routes/api/orders/+server.ts`, `routes/api/orders/[id]/+server.ts` | entries `GET` and `POST /api/orders`, `DELETE /api/orders/:param` |
 
 Nothing is installed; `@sveltejs/kit` and `svelte` are declared and that is
-enough. The tsconfig names `$lib` itself, as the one SvelteKit generates into
-`.svelte-kit/` does; a fresh clone without that file resolves no `$lib`
-import.
+enough. The tsconfig is the one SvelteKit scaffolds: it extends
+`.svelte-kit/tsconfig.json`, which `svelte-kit sync` writes and a fresh clone
+does not have (P240).
+
+| What | Where | What the graph says |
+|---|---|---|
+| `$lib` with no `.svelte-kit/` | `import { listOrders } from '$lib/api'` | `on:click={refresh}` reaches `GET /api/orders` |
+| a `kit.alias` | `$orders` in `svelte.config.js` | `place` calls `lib/orders.ts:place` |
+| a module of the framework | `import { goto } from '$app/navigation'` | no file, and no package named `$app` |
+| what was read so | `tsconfig.json` | note `aliases-from-convention`, once |

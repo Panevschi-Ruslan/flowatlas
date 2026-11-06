@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T16:33:34.395Z",
+  "builtAt": "2026-11-05T22:29:57.112Z",
   "configHash": "a27cd8f77c0e",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "nuxt",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 26,
-      "edges": 20,
+      "nodes": 50,
+      "edges": 43,
       "types": 1,
-      "unresolved": 2,
-      "durationMs": 635,
+      "unresolved": 3,
+      "durationMs": 706,
       "packages": {
         "name": "nuxt-shop",
         "runtime": [
@@ -36,8 +36,8 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 4,
-    "resolved": 4,
+    "total": 7,
+    "resolved": 7,
     "unresolved": 0,
     "byReason": {}
   },
@@ -48,8 +48,8 @@
     "noProducers": []
   },
   "routes": {
-    "total": 4,
-    "called": 4,
+    "total": 7,
+    "called": 7,
     "uncalled": [],
     "duplicated": []
   },
@@ -59,13 +59,13 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 26,
-    "edges": 24,
+    "nodes": 50,
+    "edges": 50,
     "types": 1,
-    "missed": 2,
-    "sites": 2,
-    "notes": 0,
+    "missed": 3,
+    "sites": 3,
+    "notes": 2,
     "findings": 0,
-    "unresolved": 2
+    "unresolved": 3
   }
 }

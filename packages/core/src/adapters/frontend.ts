@@ -1,5 +1,6 @@
 import type { ExtractContext } from './context.js';
 import type { PackageJson } from './manifest.js';
+import type { ConventionsOf } from '../conventions.js';
 
 /** What a caller may ask of any frontend extractor, whichever one it is. */
 export interface FrontendExtractOptions {
@@ -21,4 +22,6 @@ export interface FrontendAdapter {
   name: string;
   detect(pkg: PackageJson): boolean;
   extract(ctx: ExtractContext, options?: FrontendExtractOptions): void;
+  /** What the framework's build would have written for the compiler (P240), when it writes anything. */
+  conventions?: ConventionsOf;
 }

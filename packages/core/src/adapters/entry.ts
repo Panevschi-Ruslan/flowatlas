@@ -5,6 +5,7 @@ import type { EntryKind } from '../model/nodes.js';
 import type { ExtractContext } from './context.js';
 import type { EntryWrapping } from './wrapping.js';
 import type { PackageJson } from './manifest.js';
+import type { ConventionsOf } from '../conventions.js';
 import type { Envelope } from '../envelope.js';
 import type { RequestReading } from '../request.js';
 import type { StatedSignature } from '../types/signatures.js';
@@ -182,4 +183,11 @@ export interface EntryAdapter {
    * in — get the same answer the ids carry, from the same reading.
    */
   applications?(ctx: ExtractContext): ApplicationMap | undefined;
+  /**
+   * What the framework's build would have written for the compiler before
+   * the repository is read (P240): aliases its generated tsconfig names, and
+   * names its files use with no import. Asked before the project is opened,
+   * of every adapter that applies, through the registry.
+   */
+  conventions?: ConventionsOf;
 }

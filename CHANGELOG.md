@@ -62,6 +62,22 @@ only one of them moved.
   failure, and a Nuxt application is both halves of one service. New types
   `vue`, `svelte` and `nuxt`; nothing needs to be installed. Astro and Solid
   are now the frameworks `init` names as unread.
+- **Aliases and imports a framework generates, read without its build
+  (P240).** A fresh clone has no `.nuxt/` or `.svelte-kit/`, so Nuxt's `~`,
+  `@`, `~~`, `@@`, `#shared` and SvelteKit's `$lib` resolved to nothing and
+  every call through them was lost. They are now read as each framework
+  documents them - Nuxt 3's root and Nuxt 4's `app/`, `srcDir`, `alias`,
+  `kit.files.lib` and `kit.alias` where written as literals - and the
+  generated tsconfig, where it is there, wins. Names Nuxt imports for a file
+  that does not import them (`composables/`, `utils/`, `stores/`,
+  `imports.dirs`, `server/utils/`, Nuxt 4's `shared/utils`) are read as
+  imports of their files, a template's handler included, and `#imports` is a
+  module of them. Nuxt 4's pages are read under `app/pages`. A solution
+  tsconfig lends the aliases of the projects it refers to, and Vite's
+  `resolve.alias` is read for any alias no tsconfig names. Each is said once
+  per repository as a note (`aliases-from-convention`, `aliases-from-config`,
+  `implicit-imports-from-convention`); a name two files give, a Nuxt layer and
+  a setting written as code are rows.
 - **Does it help an assistant, measured (P238).** `scripts/bench-agent/`
   generates an eight-repository TypeScript project from a seed, with traps and
   an answer key written from the generator's own model, asks Claude Code 30

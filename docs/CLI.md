@@ -277,6 +277,52 @@ joins to its own `server/api/orders.get.ts`. Neither framework needs to be
 installed (`fixtures/vue-spa`, `fixtures/nuxt-full-stack`,
 `fixtures/svelte-components`).
 
+**Aliases and imports a framework generates (P240).** Nuxt and SvelteKit name
+their aliases for the compiler in a tsconfig they write on `nuxi prepare` and
+`svelte-kit sync` - `.nuxt/tsconfig.json`, `.svelte-kit/tsconfig.json` - and
+no repository commits it. Where that file is not there, the aliases are read
+as each framework documents them, so an import through one resolves as it
+would after the framework ran:
+
+| Framework | Aliases | Read from the configuration, when written as literals |
+|---|---|---|
+| Nuxt 3 | `~` and `@` the root, `~~` and `@@` the root, `#shared`, `#app` | `srcDir`, `serverDir`, `alias` |
+| Nuxt 4 (or `future.compatibilityVersion: 4`) | `~` and `@` `app/` (the root without one), `~~` and `@@` the root, the server beside `app/` | the same |
+| SvelteKit | `$lib` to `src/lib` where it is there | `kit.files.lib`, `kit.alias` |
+
+Nuxt also imports some names for a file that uses them with no import line,
+and those are read as imports of the files that export them: in the
+application, what `composables/`, `utils/`, `@pinia/nuxt`'s `stores/` and
+`imports.dirs` export (top-level files and each folder's `index`, a default
+export by its file's name in camel case), and `shared/utils` from Nuxt 4; on
+the server, what `server/utils/` exports, and `shared/utils`. A name only a
+template names is imported too, so `@click="clearBasket"` reaches
+`utils/basket.ts`. The import is added after the file's last line, so no
+position moves, and only where the file does not declare or import the name
+itself; `#imports` is a module of the same names. `imports.autoImport: false`
+turns it off. A name two of those files export is joined to neither, and is a
+row (`implicit-import-ambiguous`).
+
+What the repository says itself always wins. A `paths` key the tsconfig names
+is never replaced, and where the generated tsconfig is there its aliases are
+the ones read. A solution tsconfig (`files: []` and `references`, as Vite and
+Nuxt 4 scaffold it) lends the aliases of the projects it refers to, and
+`resolve.alias` in `vite.config.*` is read for any alias no tsconfig names.
+`$app/*`, `$env/*` and Nuxt's `#app`, `#build`, `#components` are the
+framework's own modules, so an import of one that does not resolve says the
+framework is not installed rather than naming a package called `$app`.
+
+Each reading is said once per repository, as a note: `aliases-from-convention`
+(the generated tsconfig is not there), `aliases-from-config` (a solution
+tsconfig's projects, a Vite configuration) and
+`implicit-imports-from-convention` (how many names, in how many files). A
+setting written as code is a row naming it, with the default read in its place
+(`framework-setting-dynamic`), and a Nuxt layer - `extends`, or a directory of
+`layers/` - is a row and is not read (`framework-layer-unread`).
+Next.js, Remix and React Router write their aliases in the tsconfig they
+scaffold, so nothing is generated there to miss (`fixtures/nuxt-full-stack`,
+`fixtures/nuxt4-layout`, `fixtures/svelte-components`, `fixtures/vue-spa`).
+
 **GraphQL (P232).** A field a resolver answers is a way in of kind `graphql`,
 keyed by its type and name: `entry:orders:graphql:Query.orders`, and
 `entry:orders:graphql:Order.customer` for a field of another type, which a
@@ -2885,6 +2931,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread` |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
+| What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop) |
 | Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |

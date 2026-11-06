@@ -112,6 +112,8 @@ export type {
 export { MEDUSA_API } from './medusa-routes.js';
 export { GRAPHQL_SERVER_PACKAGES, graphqlResolversAdapter } from './graphql-resolvers.js';
 export { NITRO_API, NITRO_REQUEST, NITRO_ROUTES, nitroAddressOf, nitroRoutesAdapter, NUXT_PAGES, SVELTEKIT_PAGES } from './nuxt-routes.js';
+export { nuxtConventions, nuxtLayoutOf, sveltekitConventions } from './framework-conventions.js';
+export type { NuxtLayout } from './framework-conventions.js';
 export {
   fsRoutesAdapter,
   REMIX_ROUTES,

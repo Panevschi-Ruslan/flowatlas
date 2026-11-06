@@ -1,6 +1,6 @@
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import type { RepoGraph } from '@flowatlas/core';
+import { dirname, join, resolve } from 'node:path';
+import { AdapterRegistry, implicitSourcesOf, scriptFilesIn, type RepoGraph } from '@flowatlas/core';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   dependentsOf,
@@ -168,3 +168,50 @@ describe('re-reading a repository that is already open', () => {
     );
   });
 }, 60_000);
+
+describe('a repository whose framework imports names for its files (P240)', () => {
+  /** A framework that imports what `utils/` exports for every file. */
+  const registry = new AdapterRegistry().register('entry', {
+    name: 'framework-routes',
+    detect: () => true,
+    extractEntries: () => [],
+    conventions: (root: string) => ({
+      by: 'Framework',
+      adapter: 'framework-routes',
+      file: 'package.json',
+      implicit: [
+        {
+          label: 'the application',
+          within: [''],
+          from: ['utils/'],
+          sources: implicitSourcesOf(root, scriptFilesIn(root, 'utils'), () => undefined),
+        },
+      ],
+    }),
+  });
+
+  const write = (rootDir: string, file: string, text: string): void => {
+    mkdirSync(dirname(join(rootDir, file)), { recursive: true });
+    writeFileSync(join(rootDir, file), text);
+  };
+
+  const importedBy = (repo: WarmRepo, file: string): string[] =>
+    repo.project
+      .getSourceFileOrThrow(join(repo.options.rootDir, file))
+      .getImportDeclarations()
+      .map((declaration) => declaration.getModuleSpecifierSourceFile()?.getBaseName() ?? '?');
+
+  it('adds the imports again to a file read again from the disk, and calls their sources global', async () => {
+    const rootDir = join(scratch, 'implicit');
+    write(rootDir, 'package.json', '{ "name": "implicit" }');
+    write(rootDir, 'utils/money.ts', 'export const cents = (value: number): number => value * 100;\n');
+    write(rootDir, 'pages/total.ts', 'export const total = (): number => cents(1);\n');
+    const repo = openRepo({ rootDir, repo: 'implicit', registry });
+    expect(importedBy(repo, 'pages/total.ts')).toEqual(['money.ts']);
+    expect(globalFiles(repo)).toContain('utils/money.ts');
+
+    write(rootDir, 'pages/total.ts', 'export const total = (): number => cents(2) + cents(3);\n');
+    await extractRepoIncremental(repo, { files: ['pages/total.ts'] });
+    expect(importedBy(repo, 'pages/total.ts')).toEqual(['money.ts']);
+  });
+});

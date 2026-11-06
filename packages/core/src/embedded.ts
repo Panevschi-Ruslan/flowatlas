@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Project, SourceFile } from 'ts-morph';
+import { implicitImportsFor } from './conventions.js';
 import { nameMadeUpFile, toPosixPath } from './ids.js';
 
 /**
@@ -33,6 +34,12 @@ export interface EmbeddedScripts {
   readonly markup?: boolean;
   /** Code the reader adds after the file's last line, where no position of the file is. */
   readonly tail?: string;
+  /**
+   * Names the file's markup uses outside its scripts: a handler a template
+   * names. A name a framework imports with no import line (P240) is imported
+   * for the script when only the markup uses it.
+   */
+  readonly uses?: readonly string[];
 }
 
 /** One file made up for the checker, and the one it stands for. */
@@ -97,8 +104,11 @@ export const addEmbeddedScripts = (
     const virtual = `${real}${scripts.markup === true ? '.tsx' : '.ts'}`;
     if (existsSync(virtual)) continue;
     const existing = project.getSourceFile(virtual);
+    const script = blankOutside(text, scripts.ranges);
+    // The imports a framework adds go after the tail, past every line of the file (P240).
+    const implicit = existing === undefined ? implicitImportsFor(project, toPosixPath(file), script, scripts.uses) : '';
     const sourceFile =
-      existing ?? project.createSourceFile(virtual, `${blankOutside(text, scripts.ranges)}${scripts.tail === undefined ? '' : `\n${scripts.tail}`}`, { overwrite: true });
+      existing ?? project.createSourceFile(virtual, `${script}${scripts.tail === undefined ? '' : `\n${scripts.tail}`}${implicit}`, { overwrite: true });
     nameMadeUpFile(toPosixPath(virtual), toPosixPath(real));
     made.push({ sourceFile, file: toPosixPath(file), format, text });
   }

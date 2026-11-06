@@ -1,5 +1,5 @@
 import { hasDependency, makeLeafId, makeSymbolId, startLineOf, type EmbeddedFile, type NamedFunction } from '@flowatlas/core';
-import { NUXT_PAGES, SVELTEKIT_PAGES } from '@flowatlas/adapters-entry';
+import { NUXT_PAGES, SVELTEKIT_PAGES, nuxtLayoutOf, type FsRouter } from '@flowatlas/adapters-entry';
 import type { Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -105,6 +105,9 @@ const targetOf = (ctx: ReactExtractContext, scope: ComponentScope, handler: Temp
   return undefined;
 };
 
+/** Nuxt's pages, in the directory its application keeps its code in. */
+const nuxtPages = (srcDir: string): FsRouter => (srcDir === '' ? NUXT_PAGES : { ...NUXT_PAGES, root: `${srcDir}/${NUXT_PAGES.root}` });
+
 export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
   if (ctx.embedded.length === 0) return;
   const sources = repoFiles(ctx);
@@ -114,7 +117,8 @@ export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
     repoDir: ctx.repoDir,
     extensions,
     pages: [
-      ...(hasDependency(ctx.pkg, 'nuxt') ? [NUXT_PAGES] : []),
+      // Under `app/` from Nuxt 4, under `srcDir` where the configuration names one (P240).
+      ...(hasDependency(ctx.pkg, 'nuxt') ? [nuxtPages(nuxtLayoutOf(ctx.repoDir, ctx.pkg).srcDir)] : []),
       ...(hasDependency(ctx.pkg, '@sveltejs/kit') ? [SVELTEKIT_PAGES] : []),
     ],
   });

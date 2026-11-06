@@ -10,6 +10,7 @@ import {
   type SourceFile,
 } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
+import { conventionAliases, installConventions, isConventionModule, type ProjectConventions } from './conventions.js';
 import {
   installDeclarationShapes,
   isDeclarationShape,
@@ -92,6 +93,13 @@ export interface CreateProjectOptions extends SourceRootOptions {
    * of the project's own. See `standInsFor`.
    */
   standIns?: StandInRequest;
+  /**
+   * What the frameworks the repository is written in would have written for
+   * the compiler before it is asked (P240): aliases the tsconfig does not
+   * name, and names files use with no import. Stated by the readers that know
+   * those frameworks (`AdapterRegistry.conventions`); none unless one does.
+   */
+  conventions?: readonly ProjectConventions[];
 }
 
 /** Directories that never hold sources worth reading. */
@@ -993,10 +1001,27 @@ export const createProject = (options: CreateProjectOptions): Project => {
     mounts.map((mount) => [mount.source.name, { dir: mount.virtual, manifest: mount.source.manifest }]),
   );
 
+  // Aliases the tsconfig does not name and the repository still resolves
+  // (P240): those of the projects a solution tsconfig refers to, and those a
+  // framework's build would have written. Merged under the tsconfig's own,
+  // every target absolute, so the base each was written against does not matter.
+  const own = compilerOptionsAt(tsConfigFilePath);
+  const conventions = options.conventions ?? [];
+  const supplied = conventionAliases(rootDir, tsConfigFilePath, own.paths, conventions);
+  const extraPaths =
+    Object.keys(supplied.paths).length === 0
+      ? {}
+      : {
+          paths: { ...supplied.paths, ...(own.paths ?? {}) },
+          ...(own.pathsBasePath === undefined && own.baseUrl === undefined
+            ? { pathsBasePath: toPosixPath(tsConfigFilePath === undefined ? rootDir : dirname(tsConfigFilePath)) }
+            : {}),
+        };
+
   const project = new Project({
     ...(tsConfigFilePath === undefined ? {} : { tsConfigFilePath }),
     skipAddingFilesFromTsConfig: true,
-    ...(tsConfigFilePath === undefined ? { compilerOptions: FALLBACK_COMPILER_OPTIONS } : {}),
+    compilerOptions: { ...(tsConfigFilePath === undefined ? FALLBACK_COMPILER_OPTIONS : {}), ...extraPaths },
     ...(mounts.length === 0 ? {} : { fileSystem: mountedFileSystem(mounts) }),
     // Only inside a workspace, or where a package's source stands in. A service
     // with no package of its own to alias, none to import by name and no source
@@ -1029,12 +1054,16 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // files that are there. It is also the list `listRepoSources` makes from the
   // same roots, so what a build stamps and what this opens are one answer (R170).
   const roots = sourceRootsOf(rootDir, options);
+  const opened: SourceFile[] = [];
   for (const file of sourceFilesUnder(rootDir, tests, roots)) {
-    project.addSourceFileAtPath(join(rootDir, file));
+    opened.push(project.addSourceFileAtPath(join(rootDir, file)));
   }
   for (const dir of membersBeyond(rootDir, roots)) {
     for (const file of sourceFilesUnder(dir, tests)) project.addSourceFileAtPath(join(dir, file));
   }
+  // Once every file is open, so an import is added for a name only where the
+  // file that gives it is read (P240).
+  installConventions(project, rootDir, conventions, supplied, opened);
   // After the sources are opened, before anything builds the program: a shape
   // is decided by whether the package resolves, and stands in from the first
   // import the checker resolves.
@@ -1152,10 +1181,11 @@ export interface RepoStats extends SourceCounts {
  */
 export const countSources = (project: Project): SourceCounts => {
   const program = project.getProgram();
-  // A shape held in memory stands for a package, and is no file of this one.
+  // A shape held in memory stands for a package, and is no file of this one;
+  // nor is a module of names a framework would have written (P240).
   const files = project
     .getSourceFiles()
-    .filter((file) => !isDeclarationShape(project, file.getFilePath()));
+    .filter((file) => !isDeclarationShape(project, file.getFilePath()) && !isConventionModule(project, file.getFilePath()));
   const unreadable = files.filter((file) => firstSyntaxError(program, file) !== undefined);
   return {
     files: files.length,

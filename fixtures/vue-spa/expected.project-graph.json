@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T16:34:14.817Z",
+  "builtAt": "2026-11-05T22:30:42.900Z",
   "services": [
     {
       "name": "api",
@@ -227,8 +227,8 @@
       "repo": "web",
       "meta": {
         "stats": {
-          "files": 8,
-          "filesRead": 8,
+          "files": 9,
+          "filesRead": 9,
           "filesUnreadable": 0,
           "functions": 5,
           "components": 3,
@@ -750,6 +750,37 @@
       "message": "@click=\"archive\" names archive, which OrdersView does not declare or import",
       "hint": "Declare the function in the component, import it, or correct the name in the markup.",
       "symbol": "OrdersView @click",
+      "service": "web"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-config",
+      "level": "info",
+      "message": "@/* -> src/* resolve as tsconfig.app.json says; @ -> src, #api -> src/api resolve as vite.config.ts says, and the tsconfig read names none of them",
+      "hint": "Nothing to do. Name the aliases in the tsconfig to have the compiler and this reading agree on them.",
+      "symbol": "tsconfig.app.json",
+      "meta": {
+        "cause": "aliases-from-config",
+        "by": [
+          "tsconfig.app.json",
+          "vite.config.ts"
+        ],
+        "aliases": {
+          "@/*": [
+            "src/*"
+          ],
+          "@": [
+            "src"
+          ],
+          "#api": [
+            "src/api"
+          ],
+          "#api/*": [
+            "src/api/*"
+          ]
+        }
+      },
       "service": "web"
     }
   ]

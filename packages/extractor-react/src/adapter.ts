@@ -1,7 +1,9 @@
 import { hasDependency, type AdapterRegistry, type FrontendAdapter } from '@flowatlas/core';
+import { nuxtLayoutOf } from '@flowatlas/adapters-entry';
 import { extractBrowser, extractReact, type BrowserReading } from './extract-repo.js';
 import { declaresReact, declaresSvelte, declaresVue } from './framework.js';
 import { SVELTE_FORMAT, VUE_FORMAT } from './sfc/formats.js';
+import { viteConventions } from './vite.js';
 
 /**
  * The frontend this extractor reads.
@@ -18,6 +20,8 @@ export const reactFrontendAdapter: FrontendAdapter = {
   name: 'react',
   detect: declaresReact,
   extract: (ctx, options) => extractReact(ctx, options),
+  // The aliases of `vite.config.*` that no tsconfig names (P240).
+  conventions: viteConventions,
 };
 
 /**
@@ -28,7 +32,8 @@ export const reactFrontendAdapter: FrontendAdapter = {
 export const VUE_READING: BrowserReading = {
   declares: declaresVue,
   formats: [VUE_FORMAT],
-  elsewhere: (base) => (hasDependency(base.pkg, 'nuxt') ? ['server'] : []),
+  // Where the server is, as the Nuxt version and configuration say (P240).
+  elsewhere: (base) => (hasDependency(base.pkg, 'nuxt') ? [nuxtLayoutOf(base.repoDir, base.pkg).serverDir] : []),
 };
 
 /** Svelte (P233): components in `.svelte` files, SvelteKit's among them. */
@@ -38,12 +43,14 @@ export const vueFrontendAdapter: FrontendAdapter = {
   name: 'vue',
   detect: declaresVue,
   extract: (ctx, options) => extractBrowser(ctx, options ?? {}, VUE_READING),
+  conventions: viteConventions,
 };
 
 export const svelteFrontendAdapter: FrontendAdapter = {
   name: 'svelte',
   detect: declaresSvelte,
   extract: (ctx, options) => extractBrowser(ctx, options ?? {}, SVELTE_READING),
+  conventions: viteConventions,
 };
 
 /** Puts this extractor where the registry can find it, like every other adapter. */

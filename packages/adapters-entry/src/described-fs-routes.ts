@@ -10,6 +10,7 @@ import {
   type RequestReadingDescription,
 } from '@flowatlas/core';
 import { fsAddressSpace, fsApplicationMap, readVerbFile, type FsRouter, type FsRouteVerb } from './fs-routes.js';
+import { sveltekitConventions } from './framework-conventions.js';
 import { readingOf } from './request-readings.js';
 import { handlerOfFunction, inlineHandlerOf, repoSources } from './shared.js';
 
@@ -369,7 +370,7 @@ export const REMIX_REQUEST: RequestReadingDescription = {
   ],
 };
 
-export const sveltekitRoutesAdapter = fsRoutesAdapter({
+const sveltekitFsRoutes = fsRoutesAdapter({
   name: 'sveltekit-routes',
   packages: ['@sveltejs/kit'],
   router: SVELTEKIT_ROUTES,
@@ -392,6 +393,9 @@ export const sveltekitRoutesAdapter = fsRoutesAdapter({
     answers: SVELTEKIT_ANSWERS,
   },
 });
+
+/** SvelteKit's routes, and `$lib` and `kit.alias` as `svelte-kit sync` would write them (P240). */
+export const sveltekitRoutesAdapter: EntryAdapter = { ...sveltekitFsRoutes, conventions: sveltekitConventions };
 
 export const remixRoutesAdapter = fsRoutesAdapter({
   name: 'remix-routes',

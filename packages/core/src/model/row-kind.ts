@@ -62,6 +62,11 @@ const NOTES: readonly string[] = [
   'package-from-repo',
   'package-version-differs',
   'shape-file-unmatched',
+  // What a framework's build would have written for the compiler, read
+  // without it (core/conventions.ts, P240): its aliases, and the imports it adds
+  'aliases-from-convention',
+  'aliases-from-config',
+  'implicit-imports-from-convention',
   // The project's own extraction patterns (core/patterns, P121): a rule a
   // written description won over, and one nothing in its services matches
   'pattern-shadowed',
@@ -127,6 +132,11 @@ const FINDINGS: readonly string[] = [
 // default, so the read gate can tell a reason somebody classified as a gap from
 // one nobody looked at.
 const GAPS: readonly string[] = [
+  // A framework's conventions the reader could not read (P240): a name two
+  // files give unimported, a layer, a setting written as code
+  'implicit-import-ambiguous',
+  'framework-layer-unread',
+  'framework-setting-dynamic',
   // What traffic reached and no reader drew (core/blind-spots.ts, P110): asked
   // of the observed file at read time, at info, never stored in the graph.
   'seen-not-in-code',

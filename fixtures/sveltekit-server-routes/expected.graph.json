@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "sveltekit-server-routes",
-  "generatedAt": "2026-10-09T10:21:02.110Z",
+  "generatedAt": "2026-11-05T22:30:34.197Z",
   "nodes": [
     {
       "id": "entry:sveltekit-server-routes:http:DELETE:/api/orders/:param",
@@ -642,5 +642,30 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "symbol": ".svelte-kit/tsconfig.json",
+      "message": ".svelte-kit/tsconfig.json is not there (`svelte-kit sync` writes it), so $lib -> src/lib resolve as SvelteKit documents them",
+      "hint": "Nothing to do. Run `svelte-kit sync` before building to read the aliases the framework writes, which win over these.",
+      "adapter": "sveltekit-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "SvelteKit"
+        ],
+        "aliases": {
+          "$lib": [
+            "src/lib"
+          ],
+          "$lib/*": [
+            "src/lib/*"
+          ]
+        }
+      }
+    }
+  ]
 }

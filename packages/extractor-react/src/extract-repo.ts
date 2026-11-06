@@ -12,6 +12,8 @@ import {
   reportPatterns,
   readPatterns,
   reportStandIns,
+  reportConventions,
+  conventionsFor,
   reportUnreadableSources,
   silentLogger,
   standInsFor,
@@ -97,8 +99,11 @@ export const openProject = (options: ExtractRepoOptions): Project => {
     configDir: options.configDir,
     ...(options.standInsOfBuild === undefined ? {} : { given: options.standInsOfBuild }),
   });
+  // What the frameworks detected here would have written for the compiler (P240).
+  const conventions = conventionsFor(options.registry, options.rootDir, options.config);
   return createReactProject({
     rootDir: options.rootDir,
+    ...(conventions.length === 0 ? {} : { conventions }),
     ...(tsconfig === undefined ? {} : { tsconfig }),
     ...(service.readTestDirectories === undefined
       ? {}
@@ -325,6 +330,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     });
   }
 
+  // After the adapters, which make up the component files and the imports a
+  // framework adds to them (P240), so the rows count those as well.
+  reportConventions(base);
   closeStandIns(base);
   return builder.build();
 };

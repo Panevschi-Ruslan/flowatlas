@@ -16,3 +16,9 @@ export const saveOrder = (name: string): Order => {
 };
 
 export const dropOrder = (id: string): boolean => orders.delete(id);
+
+export const renameOrder = (id: string, name: string): Order | undefined => {
+  const order = orders.get(id);
+  if (order !== undefined) order.name = name;
+  return order;
+};

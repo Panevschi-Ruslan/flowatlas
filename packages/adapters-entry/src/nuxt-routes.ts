@@ -12,6 +12,7 @@ import {
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
+import { nuxtConventions, nuxtLayoutOf } from './framework-conventions.js';
 import { routeAddressOfFile, type FsRouter } from './fs-routes.js';
 import { readingOf } from './request-readings.js';
 import { inlineHandlerOf, repoSources } from './shared.js';
@@ -37,11 +38,21 @@ export const NITRO_ROUTES: FsRouter = { root: 'server/routes', segments: ['group
 
 const METHOD_SUFFIX = /\.(get|post|put|patch|delete|head|options)(?=\.[cm]?[jt]s$)/i;
 
-/** The address and verb a server file answers, its method suffix read off its name. */
-export const nitroAddressOf = (file: string): { path: string; rawPath: string; method: string } | null => {
+/** Nitro's routers, under the directory a Nuxt application keeps its server in (P240). */
+const nitroRouters = (serverDir: string): FsRouter[] =>
+  serverDir === 'server'
+    ? [NITRO_API, NITRO_ROUTES]
+    : [NITRO_API, NITRO_ROUTES].map((router) => ({ ...router, root: router.root.replace(/^server/, serverDir) }));
+
+/**
+ * The address and verb a server file answers, its method suffix read off its
+ * name. `serverDir` is where the server is, repo-relative: `server` unless a
+ * Nuxt application keeps it elsewhere.
+ */
+export const nitroAddressOf = (file: string, serverDir = 'server'): { path: string; rawPath: string; method: string } | null => {
   const suffix = METHOD_SUFFIX.exec(file);
   const plain = suffix === null ? file : file.replace(METHOD_SUFFIX, '');
-  for (const router of [NITRO_API, NITRO_ROUTES]) {
+  for (const router of nitroRouters(serverDir)) {
     const address = routeAddressOfFile(plain, router);
     if (address !== null) return { ...address, method: suffix === null ? 'ALL' : (suffix[1] as string).toUpperCase() };
   }
@@ -101,14 +112,17 @@ const middlewareOf = (ctx: ExtractContext): EntryWrapping[] =>
 export const nitroRoutesAdapter: EntryAdapter = {
   name: 'nitro-routes',
   detect: (pkg) => hasAnyDependency(pkg, ['nuxt', 'nitropack', 'h3']),
+  // Nuxt's aliases and the names its files use unimported (P240).
+  conventions: nuxtConventions,
 
   extractEntries(ctx: ExtractContext): EntryNode[] {
     const request = readingOf(NITRO_REQUEST);
     const wrapping = middlewareOf(ctx);
     const entries: EntryNode[] = [];
+    const serverDir = hasAnyDependency(ctx.pkg, ['nuxt']) ? nuxtLayoutOf(ctx.repoDir, ctx.pkg).serverDir : 'server';
     for (const sourceFile of repoSources(ctx)) {
       const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
-      const address = nitroAddressOf(file);
+      const address = nitroAddressOf(file, serverDir);
       if (address === null) continue;
       const handlerNode = defaultHandlerOf(sourceFile);
       const label = `${address.method} ${address.path}`;

@@ -218,6 +218,19 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The package is not installed, and its types were read from its source in a repository this project reads. Nothing to do; the source may not be the version that runs, and installing the dependencies reads the installed copy instead (packageSources: false reads nothing in its place).',
   'package-source-ambiguous': () =>
     'Two directories of the project carry this package name, so neither is read in place of the missing install. Rename one in its package.json, leave one out of the configuration, or install the dependencies.',
+  // What a framework's build would have written for the compiler (core/conventions.ts, P240)
+  'aliases-from-convention': () =>
+    "The framework writes these aliases into a tsconfig of its own when it prepares the project, and that file is not in the checkout, so they were read as the framework documents them. Nothing to do; run the framework's prepare step before building to read the ones it writes instead.",
+  'aliases-from-config': () =>
+    'These aliases are named by a configuration the tsconfig that was read does not mirror - a bundler configuration, or a project a solution tsconfig refers to - and were read from there. Nothing to do; naming them in the tsconfig makes the compiler and this reading agree.',
+  'implicit-imports-from-convention': () =>
+    'The framework imports these names for a file that uses them with no import line, and they were read as imports of the files that export them. Nothing to do.',
+  'implicit-import-ambiguous': () =>
+    'The name is used with no import, and two files the framework imports names from both export it, so the call is not joined to either. Rename one of them, or import the name from the file meant.',
+  'framework-layer-unread': () =>
+    "The application extends a layer, and nothing of the layer is read: its pages, routes, composables and aliases are missing from the graph. Read the layer as a service of its own, or import what the application uses from it with an import line.",
+  'framework-setting-dynamic': () =>
+    "A setting of the framework's configuration is written as code rather than as a literal, so its default was read in its place. Write it as a literal, or name what it sets in the tsconfig's paths.",
   'package-version-differs': () =>
     'The source read in place of the package is not a version this service asks for, so its types may not be the ones it runs. Install the dependencies to read the version asked for.',
   'shape-file-unread': () =>

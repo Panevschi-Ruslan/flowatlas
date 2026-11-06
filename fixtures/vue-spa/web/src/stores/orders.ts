@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import { api } from '../api/client';
+import { api } from '#api/client';
 
 export const useOrdersStore = defineStore('orders', {
   state: () => ({ added: 0 }),

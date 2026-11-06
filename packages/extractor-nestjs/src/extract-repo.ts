@@ -3,7 +3,9 @@ import {
   AdapterRegistry,
   builtInShapesFor,
   countSources,
+  conventionsFor,
   createProject,
+  reportConventions,
   declarationShapesOf,
   GraphBuilder,
   normalizeFilePath,
@@ -133,8 +135,12 @@ export const createRepoProject = (options: ExtractRepoOptions): Project => {
     configDir: options.configDir,
     ...(options.standInsOfBuild === undefined ? {} : { given: options.standInsOfBuild }),
   });
+  // What the frameworks detected here would have written for the compiler
+  // (P240), asked of the registry before the project is opened.
+  const conventions = conventionsFor(options.registry, options.rootDir, options.config);
   return createProject({
     rootDir: options.rootDir,
+    ...(conventions.length === 0 ? {} : { conventions }),
     // Read only where the package itself does not resolve, and not at all where
     // the configuration says so (`builtInShapes: false`).
     ...(builtInShapesFor(options.config, options.service) ? { shapes: NEST_SHAPES } : {}),
@@ -319,6 +325,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       ...(options.typesDepth === undefined ? {} : { typesDepth: options.typesDepth }),
     });
   }
+  // After the browser half, which makes up its component files and the imports
+  // a framework adds to them (P240), so the rows count those as well.
+  reportConventions(base);
 
   const ctx = createNestContext({
     base,

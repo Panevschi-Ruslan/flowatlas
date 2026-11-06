@@ -1,5 +1,6 @@
 import type { EmbeddedFormat } from '@flowatlas/core';
 import { scriptAndStyleBlocks, topLevelBlocks, type Block } from './blocks.js';
+import { svelteMarkupEvents, vueTemplateEvents, type TemplateEvent } from './events.js';
 
 /**
  * The two component formats whose scripts are read as TypeScript (P233).
@@ -15,6 +16,11 @@ const TAIL = `const ${COMPONENT_TAIL_NAME} = (): void => undefined;`;
 /** A script block read in place: not one that names its source elsewhere. */
 const inPlace = (block: Block): boolean => block.name === 'script' && block.attributes.get('src') === undefined;
 
+/** The names a template's handlers start from: `save`, and `orders` of `orders.remove`. */
+const handlerNames = (events: readonly TemplateEvent[]): string[] => [
+  ...new Set(events.flatMap((event) => event.handlers.map((handler) => (handler.kind === 'name' ? handler.name : handler.object)))),
+];
+
 const markupLang = (blocks: readonly Block[]): boolean =>
   blocks.some((block) => block.name === 'script' && ['tsx', 'jsx'].includes(String(block.attributes.get('lang') ?? '')));
 
@@ -26,6 +32,8 @@ export const VUE_FORMAT: EmbeddedFormat = {
       ranges: blocks.filter(inPlace).map((block) => [block.contentStart, block.contentEnd] as const),
       markup: markupLang(blocks),
       tail: TAIL,
+      // A name only the template calls is still one the framework imports for it (P240).
+      uses: handlerNames(vueTemplateEvents(text)),
     };
   },
 };
@@ -38,6 +46,7 @@ export const SVELTE_FORMAT: EmbeddedFormat = {
       ranges: blocks.filter(inPlace).map((block) => [block.contentStart, block.contentEnd] as const),
       markup: false,
       tail: TAIL,
+      uses: handlerNames(svelteMarkupEvents(text)),
     };
   },
 };

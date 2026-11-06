@@ -809,7 +809,12 @@ prove, and the path is given so you can run it.
   clicks a person makes: a function of the script, a method of the Options
   API, an action of a Pinia or Vuex store. Vue Router's routes, lazy ones
   included, and Nuxt's and SvelteKit's pages make components screens
-  (`fixtures/vue-spa`, `fixtures/nuxt-full-stack`, `fixtures/svelte-components`). A verb a helper built, aliased or re-exported is
+  (`fixtures/vue-spa`, `fixtures/nuxt-full-stack`, `fixtures/svelte-components`).
+  A fresh clone resolves what the framework would have generated for it:
+  Nuxt's `~`, `@` and `#shared`, SvelteKit's `$lib` and `kit.alias`, Nuxt 4's
+  `app/` layout, and the composables and utilities Nuxt imports for a file that
+  uses them with no import line, each said once as a note
+  (`fixtures/nuxt4-layout`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
   `zsa` is a boundary with its callers (`fixtures/next-actions`).
@@ -980,10 +985,12 @@ Known gaps in what it can read:
   repository and which framework, and the graph is smaller than the project by
   exactly that much. Remix and React Router are read for their file routes,
   loads and actions, and for their React components.
-- The aliases a framework generates its tsconfig for: SvelteKit's `$lib` and
-  Nuxt's `~` live in `.svelte-kit/` and `.nuxt/`, which a fresh clone does not
-  have, so an import through one resolves only once the framework has run or
-  the tsconfig names the path itself.
+- What a framework adds beyond its documented defaults. SvelteKit's `$lib`
+  and Nuxt's `~` are read as each documents them when `.svelte-kit/` and
+  `.nuxt/` are not there, and the names Nuxt imports from `composables/` and
+  `utils/` as imports; a Nuxt layer (`extends`) is a row and is not read, an
+  alias or a directory a module adds at build time is not known, and a
+  setting written as code is read as its default and named in a row.
 - A file-system router nobody has described — `@fastify/autoload`, or a
   convention of the repository's own. The reader says it cannot tell such a
   repository from a library that merely depends on the framework, rather than
