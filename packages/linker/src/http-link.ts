@@ -67,6 +67,13 @@ export interface RouteIndex {
    * known by.
    */
   bindingOf?(call: GraphNode, binding: string): BindingAnswer;
+  /**
+   * The one configured service a host is reached at, and whether the
+   * configuration says so or only the services' own setting files do: the
+   * lookup a browser request's host is asked of (P239), asked of a request
+   * between services too (P244).
+   */
+  serviceAtHost?(host: string): { readonly service: string; readonly configured: boolean } | undefined;
 }
 
 /** Where a binding goes, as the deployment files and the configuration say. */
@@ -80,11 +87,13 @@ export type BindingAnswer =
 /** What each way a call can end carries with it. */
 interface Details {
   linked: {
-    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding';
+    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host';
     entry: GraphNode;
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
     mountAssumed?: readonly string[];
+    /** The host was found only in the services' own setting files, not in the configuration (P244, as P239). */
+    hostFromFiles?: true;
   };
   /** The host, when it was found from the value the setting is given rather than written in the call (P77). */
   external: { host?: string };
@@ -620,6 +629,18 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   }
 
   if (typeof env !== 'string') {
+    // A host written in the call that the configuration says a service is
+    // reached at - its name, an alias, `services[].hosts` - is that service,
+    // not a third party (P244): the same lookup a browser request's host is
+    // asked of (P239). Named only by the services' own setting files, the join
+    // is a guess and the edge says so.
+    const at = typeof host === 'string' ? index.serviceAtHost?.(host) : undefined;
+    if (at !== undefined) {
+      const reached = within(at.service, 'host', {});
+      return reached.outcome.kind === 'linked' && !at.configured
+        ? { ...reached, outcome: { ...reached.outcome, hostFromFiles: true } }
+        : reached;
+    }
     // Nothing to look up: either it names a third party outright, or the
     // address was built at run time and there is nothing to read.
     const outcome: CallOutcome =

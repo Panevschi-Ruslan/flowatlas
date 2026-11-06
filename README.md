@@ -895,7 +895,10 @@ prove, and the path is given so you can run it.
   `fixtures/react-local-client`, `fixtures/react-client-base`). A request
   through a client instance (`axios.create`, `ofetch.create`, `ky.create`) or
   an Angular interceptor carries the base it puts in front, so it joins the
-  service at that base (`fixtures/client-instance-base`). A browser
+  service at that base (`fixtures/client-instance-base`); so does one whose
+  base an axios interceptor, an ofetch `onRequest` hook or a ky
+  `beforeRequest` hook sets, and a server's request to a host a configured
+  service is reached at joins that service (`fixtures/client-interceptor-base`). A browser
   holding a stream open is a request like any other (`fixtures/sse-stream`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a
   table of handlers the project keeps itself (`fixtures/nest-telegraf`,

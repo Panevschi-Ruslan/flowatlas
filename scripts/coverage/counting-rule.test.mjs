@@ -137,3 +137,41 @@ describe('a procedure of a tree (R95, P58)', () => {
     assert.deepEqual(sitesIn('src/db.ts', text), {});
   });
 });
+
+describe('where a request is written, and what stands in front of it (P244)', () => {
+  it('counts the platform client by its own name, a verb with its address written out, and a config call', () => {
+    const text = [
+      "await fetch('/api/orders');",
+      "await $fetch('/api/items', { method: 'POST' });",
+      "this.http.get<Order[]>('/orders');",
+      'api.post(`${base}/orders`, body);',
+      "axios.get('orders');",
+      "api({ url: '/orders', method: 'post' });",
+      "axios.request({\n  url: '/items',\n});",
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/api.ts', text), { requests: 7 });
+  });
+
+  it('does not count a store looked up by a key, a method named fetch, or a call handed a path it was given', () => {
+    const text = [
+      "cache.get('orders');",
+      'documents.get(id);',
+      'store.fetch(id);',
+      'this.http.get(path);',
+      "useFetch('/api/orders');",
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/a.ts', text), {});
+  });
+
+  it('counts an instance made with options of its own and each function run before every request', () => {
+    const text = [
+      "export const api = axios.create({ baseURL: '/api' });",
+      "export const shop = $fetch.create({ onRequest({ options }) { options.baseURL = '/shop'; } });",
+      'export const billing = ky.extend({ hooks: { beforeRequest: [(request) => request] } });',
+      'api.interceptors.request.use((config) => config);',
+      'export class BaseInterceptor implements HttpInterceptor {}',
+      'export const base: HttpInterceptorFn = (req, next) => next(req);',
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/api.ts', text), { bases: 8 });
+  });
+});

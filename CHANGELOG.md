@@ -8,6 +8,30 @@ only one of them moved.
 
 ### Added
 
+- **A function run before every request carries its base into each one
+  (P244).** An axios request interceptor (`api.interceptors.request.use`, on an
+  instance or on `axios` itself) that writes `config.baseURL`, answers
+  `{ ...config, baseURL }`, calls `Object.assign(config, { baseURL })` or
+  rewrites `config.url = base + config.url`; an ofetch or `$fetch` `onRequest`
+  hook writing `options.baseURL` or `ctx.request`; and a ky
+  `hooks.beforeRequest` answering a new `Request` at a prefixed address are
+  read where they are written, and every request through that instance is
+  recorded under the base, `baseFrom: "interceptor"`. A base set outright wins
+  over the call's own option; `??=`, `||=` and `if (!config.baseURL)` set it
+  only where none is set. A base chosen by a branch, a rewrite behind any other
+  condition, one that cannot be read and two that disagree are
+  `api-client-base-unread` at the line, and the requests keep the base the
+  instance is made with. axios handed one config object (`api({ url, method,
+  data })`, `axios({ ... })`, `request({ ... })`) is read too. A server's
+  request with a literal host joins the service the configuration says is
+  reached there (its name, an alias, `services[].hosts`, a name only the
+  project's network resolves), `static`, `via: host`, and the third-party node
+  for that host goes; a host only setting files name joins `heuristic`. The
+  coverage counting rule has two new families, `requests` (held to strength 1
+  by the read gate) and `bases` (client instances and request interceptors),
+  and the condition and prefix readers Angular's interceptor base used moved to
+  the core so both front-end readers share them
+  (`fixtures/client-interceptor-base`).
 - **GraphQL federation, one graph across subgraphs (P241).** A request to a
   federation gateway is planned the way the router plans it, statically: each
   selected field goes to the subgraph that resolves it, and a field of an

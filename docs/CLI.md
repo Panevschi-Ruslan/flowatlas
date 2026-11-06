@@ -4840,6 +4840,57 @@ handed in from outside (a parameter, `this.$axios`) has nothing to read and is
 not mentioned. `fixtures/client-instance-base` shows each case against two
 services serving the same routes.
 
+**A function run before every request (P244).** The base is often set one step
+after the instance is made, in a function the client runs before each request.
+Each is read where it is written and put into every request through that
+instance, which then carries `baseFrom: "interceptor"`:
+
+- **axios request interceptors**, `api.interceptors.request.use(fn)` on an
+  instance or on `axios` itself (whose interceptors are its own: an instance
+  has none of the module's). `fn` is written in place or named, and may write
+  `config.baseURL = X`, answer `{ ...config, baseURL: X }`, call
+  `Object.assign(config, { baseURL: X })`, or rewrite the address,
+  `config.url = X + config.url` or the same as a template.
+- **ofetch and `$fetch` `onRequest` hooks** among the options an instance is
+  made with (a method, a property or a list of them): `options.baseURL = X`
+  with `{ options }` destructured or `ctx.options`, and `ctx.request = X +
+  ctx.request`. An instance made from another keeps its parent's hook unless
+  it writes one of its own.
+- **ky `hooks.beforeRequest`** answering a new `Request` at an address built
+  from the old one's path: `` new Request(`${X}${new URL(request.url).pathname}`, request) ``.
+  The path keeps the `prefixUrl` it was made under; the host is the new one.
+
+How it composes with the base the instance or the call already gives: setting
+the base outright wins over the call's own option too (it runs after the call's
+options are merged in); `config.baseURL ??= X`, `||= X`, `config.baseURL ?? X`
+or a guard `if (!config.baseURL)` sets it only where none is set; a rewrite of
+the address goes under whatever base the client then applies. A guard about
+whether the address is already absolute changes nothing, as for Angular. A
+function that only sets headers changes nothing and says nothing.
+
+A rewrite that cannot be read is `api-client-base-unread` at the line that
+writes it, and the requests keep the base the instance is made with: a base
+chosen between two values by a branch (`isAdmin ? A : B`) is a row, not a pick,
+and so is a rewrite behind any other condition, a base that cannot be read, an
+address rewritten in a shape that is not a base in front of it, and two
+functions that set different bases (which runs last is not read).
+
+**axios handed one config object (P244).** `api({ url, method, data })`,
+`axios({ ... })`, `axios.request({ ... })` and `api.request({ ... })` are read
+as the other spellings: the address is `url`, the verb `method` (`GET` where
+none is written), the body `data`, and a `baseURL` beside them is the call's own
+base. Only an object written in place is read.
+
+**A request between services to a host a service is reached at (P244).** A
+server's request with a literal host - `fetch('https://orders.internal/items')`
+- joins the service the configuration says is reached there (its name, an
+alias, `services[].hosts`, or a name only the project's own network resolves,
+such as `orders.default.svc.cluster.local`), `static`, `via: host`, and the
+`external_api` node the reader drew for that host is dropped where nothing else
+calls it. A host only the services' own setting files name joins `heuristic`.
+A host no service is reached at stays `external`, as before.
+`fixtures/client-interceptor-base` shows each case.
+
 A custom broker entry:
 
 ```jsonc

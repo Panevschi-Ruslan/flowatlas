@@ -36,6 +36,7 @@ import type { IndexedFunction } from '../index-functions.js';
 import { clientInstances, type ClientInstance } from '../util/client-instance.js';
 import { enclosingIndexed, requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
+import { basedBy } from '../util/request-rewrite.js';
 import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
@@ -81,6 +82,18 @@ const valueOf = (object: ObjectLiteralExpression | undefined, key: string): TsNo
     : undefined;
 };
 
+/**
+ * The address a call writes: the argument its shape names, or the key of its
+ * one options object the address is written under (P244), `api({ url })`.
+ */
+const addressWrittenIn = (call: CallExpression, shape: CallShape): TsNode | undefined => {
+  if (shape.urlKey === undefined) return call.getArguments()[shape.urlAt];
+  const property = objectAt(call, shape.optionsAt)?.getProperty(shape.urlKey);
+  if (property === undefined) return undefined;
+  if (Node.isShorthandPropertyAssignment(property)) return property.getNameNode();
+  return Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+};
+
 /** Every verb an instance of an installed client answers to as a method (P239). */
 const INSTANCE_VERBS: ReadonlySet<string> = new Set(CLIENT_FACTORIES.flatMap((factory) => Object.keys(factory.verbs)));
 
@@ -111,7 +124,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    */
   const verbOf = (call: CallExpression, shape: CallShape, chain: readonly CallExpression[] = []): string | null => {
     if (shape.method !== null) return shape.method;
-    const read = requestVerbOf(call);
+    const read = requestVerbOf(call, { ...PLATFORM_FETCH, optionsAt: shape.optionsAt ?? PLATFORM_FETCH.optionsAt });
     if (read !== null || chain.length === 0) return read;
     // A verb the wrapper is handed, read at the caller its address was read
     // at, along the same calls (P91).
@@ -228,21 +241,36 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   const clientOf = (instance: ClientInstance): RequestClient =>
     instance.base === undefined ? instance.factory.client : { ...instance.factory.client, base: instance.base };
 
-  /** A base an instance is made with that could not be read, said once at the line that writes it. */
+  /**
+   * A base an instance is made with that could not be read, or a function it
+   * runs before every request whose rewrite of the address could not be
+   * (P244), said once at the line that writes it.
+   */
   const saidUnread = new Set<TsNode>();
   const reportUnreadBase = (instance: ClientInstance): void => {
-    const unread = instance.unread;
-    if (unread === undefined || saidUnread.has(unread.at)) return;
-    saidUnread.add(unread.at);
-    ctx.report({
-      file: ctx.fileOf(unread.at),
-      line: siteOf(unread.at).line,
-      reason: 'api-client-base-unread',
-      hint:
-        `The base of this ${instance.factory.client.name} instance: ${unread.why}. Requests through it are recorded under the path each call writes, ` +
-        'and join by their route alone. Write the base as a literal, a settings key or a constant.',
-      symbol: unread.at.getText().slice(0, 80),
-    });
+    const say = (unread: { at: TsNode; why: string }, after: string): void => {
+      if (saidUnread.has(unread.at)) return;
+      saidUnread.add(unread.at);
+      ctx.report({
+        file: ctx.fileOf(unread.at),
+        line: siteOf(unread.at).line,
+        reason: 'api-client-base-unread',
+        hint: `The base of this ${instance.factory.client.name} instance: ${unread.why}. ${after}`,
+        symbol: unread.at.getText().slice(0, 80),
+      });
+    };
+    if (instance.unread !== undefined) {
+      say(
+        instance.unread,
+        'Requests through it are recorded under the path each call writes, and join by their route alone. Write the base as a literal, a settings key or a constant.',
+      );
+    }
+    if (instance.rewriteUnread !== undefined) {
+      say(
+        instance.rewriteUnread,
+        'Requests through it are recorded under the base the instance is made with, or the path each call writes where it is made with none, and this function may change either. Set the base unconditionally, to a literal, a settings key or a constant.',
+      );
+    }
   };
 
   const record = (found: FoundCall, request: ReadRequest, handedIn?: string | null): void => {
@@ -259,8 +287,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     // and neither where the call writes one that could not be read — the
     // client's default is then the one answer already known to be wrong (R128).
     const written = baseWrittenAt(network, shape);
-    const base =
+    const before =
       written === null ? client.base : written.kind === 'base' ? written.base : undefined;
+    // And a function the instance runs before every request may rewrite
+    // either, after both are known: it sets the base over the call's own, or
+    // where none is set, or puts one in front of the address (P244).
+    const base = basedBy(found.instance?.rewrite, before);
+    const rewritten = base !== before;
     const address = underBase(base, request.address);
     const at = siteOf(site.call);
     const leaf = makeLeafId('ui_api_call', ctx.repo, site.file, at.line, at.column);
@@ -304,7 +337,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         // Where the opening of the address came from, said only when it is not
         // the client's own: an address that differs from every other one this
         // client writes is a fact a reader should not have to go and work out.
-        ...(written?.kind === 'base' ? { baseFrom: 'call' } : {}),
+        ...(rewritten ? { baseFrom: 'interceptor' } : written?.kind === 'base' ? { baseFrom: 'call' } : {}),
         ...(found.local === undefined ? {} : { localClient: found.local }),
         via: address.via,
         ...(found.described?.client.describedBy === undefined ? {} : { describedBy: found.described.client.describedBy }),
@@ -406,13 +439,14 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
           return;
         }
         // An instance called as a function, `api('/orders', { method: 'POST' })`
-        // (P239). A call handed one options object in place of an address
-        // writes the address as a key of it, which is not read here.
+        // (P239), or handed one options object holding the address,
+        // `api({ url: '/orders', method: 'post' })` (P244); the module itself
+        // is called the same two ways.
         const instance = instances.of(callee);
-        const shape = instance?.factory.called;
-        if (instance === undefined || shape === undefined) return;
-        const written = node.getArguments()[shape.urlAt];
-        if (written === undefined || Node.isObjectLiteralExpression(written)) return;
+        if (instance === undefined) return;
+        const written = node.getArguments()[0];
+        const shape = written !== undefined && Node.isObjectLiteralExpression(written) ? instance.factory.configCalled : instance.factory.called;
+        if (written === undefined || shape === undefined) return;
         found.push({ call: node, client: clientOf(instance), shape, instance });
         return;
       }
@@ -464,7 +498,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       basesIn: (body) =>
         describedCallsIn(body).map((found) => {
           if (found.instance !== undefined) reportUnreadBase(found.instance);
-          return found.instance?.base ?? null;
+          return found.instance === undefined ? null : (basedBy(found.instance.rewrite, found.instance.base) ?? null);
         }),
     });
     readings.set(cls, reading);
@@ -629,7 +663,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     if (found.length === 0) continue;
     ctx.ensureFunctionNode(indexed.fn);
     for (const call of found) {
-      const urlArg = call.described === undefined ? call.call.getArguments()[call.shape.urlAt] : (call.described.url ?? call.call);
+      const urlArg = call.described === undefined ? addressWrittenIn(call.call, call.shape) : (call.described.url ?? call.call);
       if (urlArg === undefined) continue;
       const site: RequestSite = { call: call.call, ownerId: indexed.id, file: indexed.file };
       for (const request of requestsOf(ctx, urlArg, indexed, site)) {

@@ -702,6 +702,7 @@ export {
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
 export { isSomewhere, underBase } from './under-base.js';
+export { asksAbsolute, conditionsAround, literalAddress, prefixOfRewrite } from './address-rewrite.js';
 export type { ReadAddress } from './under-base.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
 export { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';

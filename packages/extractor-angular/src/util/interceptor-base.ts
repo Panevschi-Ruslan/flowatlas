@@ -1,4 +1,4 @@
-import { isSomewhere, underBase } from '@flowatlas/core';
+import { asksAbsolute, conditionsAround, prefixOfRewrite } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { analyzeBaseUrl, type ApiUrl } from './url.js';
@@ -16,7 +16,7 @@ import { analyzeBaseUrl, type ApiUrl } from './url.js';
  *
  * Read only where it is certain. An interceptor runs for every request, so the
  * one condition that changes nothing is whether the address is already
- * absolute, which {@link underBase} honours anyway. Any other condition in front
+ * absolute, which `underBase` honours anyway. Any other condition in front
  * of the rewrite - a path it skips, a header it looks for - means some requests
  * go out under the base and some do not, and nothing here can tell which: that
  * is a row, and no base. So is a second interceptor rewriting the address, since
@@ -70,92 +70,9 @@ const interceptorOf = (clone: CallExpression): { fn: TsNode; request: TsNode; na
   return typed ? { fn, request, name: holder.getName() } : undefined;
 };
 
-/**
- * Whether a condition only asks whether the address is already absolute:
- * `req.url.startsWith('http')`, `req.url.includes('://')`,
- * `/^https?:/.test(req.url)`, alone, negated or joined.
- */
-const asksAbsolute = (condition: TsNode, request: TsNode): boolean => {
-  const target = unwrap(condition);
-  if (Node.isPrefixUnaryExpression(target) && target.getOperatorToken() === SyntaxKind.ExclamationToken) {
-    return asksAbsolute(target.getOperand(), request);
-  }
-  if (Node.isBinaryExpression(target)) {
-    const operator = target.getOperatorToken().getKind();
-    if (operator === SyntaxKind.BarBarToken || operator === SyntaxKind.AmpersandAmpersandToken) {
-      return asksAbsolute(target.getLeft(), request) && asksAbsolute(target.getRight(), request);
-    }
-    return false;
-  }
-  if (!Node.isCallExpression(target)) return false;
-  const callee = target.getExpression();
-  if (!Node.isPropertyAccessExpression(callee)) return false;
-  const [argument] = target.getArguments();
-  if (argument === undefined) return false;
-  if (['startsWith', 'includes'].includes(callee.getName()) && isRequestUrl(callee.getExpression(), request)) {
-    return (Node.isStringLiteral(argument) || Node.isNoSubstitutionTemplateLiteral(argument)) && /^(https?:?(\/\/)?|:\/\/|\/\/)$/.test(argument.getLiteralText());
-  }
-  if (callee.getName() === 'test' && isRequestUrl(argument, request)) {
-    const pattern = unwrap(callee.getExpression());
-    return Node.isRegularExpressionLiteral(pattern) && /http|:\\?\/\\?\//.test(pattern.getText());
-  }
-  return false;
-};
-
-/** The conditions a rewrite sits behind inside its interceptor: the branches around it and the guards before it. */
-const conditionsOf = (clone: CallExpression, fn: TsNode): TsNode[] => {
-  const conditions: TsNode[] = [];
-  let child: TsNode = clone;
-  for (let at = clone.getParent(); at !== undefined && at !== fn; child = at, at = at.getParent()) {
-    if (Node.isIfStatement(at) && child !== at.getExpression()) conditions.push(at.getExpression());
-    if (Node.isConditionalExpression(at) && child !== at.getCondition()) conditions.push(at.getCondition());
-    if (Node.isBinaryExpression(at) && child === at.getRight()) {
-      const operator = at.getOperatorToken().getKind();
-      if (operator === SyntaxKind.AmpersandAmpersandToken || operator === SyntaxKind.BarBarToken || operator === SyntaxKind.QuestionQuestionToken) {
-        conditions.push(at.getLeft());
-      }
-    }
-    // A guard written before the rewrite in the same block decides whether the
-    // rewrite is reached at all.
-    if (Node.isBlock(at)) {
-      for (const statement of at.getStatements()) {
-        if (statement === child) break;
-        if (Node.isIfStatement(statement)) conditions.push(statement.getExpression());
-      }
-    }
-  }
-  return conditions;
-};
-
-/** A base written as text, read as an address. */
-const literalBase = (text: string): ApiUrl => ({ url: text, path: text, baseUrlEnv: null, host: null, via: 'literal', guessed: false });
-
-/**
- * The base a rewrite of the address puts in front of it: `base + req.url`, or
- * `` `${base}${req.url}` `` with any text between the two.
- */
-const baseOfRewrite = (written: TsNode, request: TsNode, sharedPackages: readonly string[]): ApiUrl | undefined => {
-  const value = unwrap(written);
-  if (Node.isBinaryExpression(value) && value.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
-    if (!isRequestUrl(value.getRight(), request)) return undefined;
-    const base = analyzeBaseUrl(value.getLeft(), sharedPackages);
-    return isSomewhere(base) ? base : undefined;
-  }
-  if (!Node.isTemplateExpression(value)) return undefined;
-  const spans = value.getTemplateSpans();
-  const last = spans[spans.length - 1];
-  if (last === undefined || !isRequestUrl(last.getExpression(), request) || last.getLiteral().getLiteralText() !== '') return undefined;
-  const head = value.getHead().getLiteralText();
-  const before = spans.slice(0, -1);
-  if (before.length === 0) return head === '' ? undefined : literalBase(head);
-  if (before.length > 1 || head !== '') return undefined;
-  const [span] = before;
-  if (span === undefined) return undefined;
-  const base = analyzeBaseUrl(span.getExpression(), sharedPackages);
-  if (!isSomewhere(base)) return undefined;
-  const tail = span.getLiteral().getLiteralText();
-  return tail === '' || tail === '/' ? base : underBase(base, literalBase(tail.startsWith('/') ? tail : `/${tail}`));
-};
+/** The base a rewrite of the address puts in front of it, read as this reader reads every base. */
+const baseOfRewrite = (written: TsNode, request: TsNode, sharedPackages: readonly string[]): ApiUrl | undefined =>
+  prefixOfRewrite(written, (node) => isRequestUrl(node, request), (node) => analyzeBaseUrl(node, sharedPackages));
 
 /** Whether the repository registers an interceptor of this name. */
 const registered = (name: string, texts: readonly string[]): boolean => {
@@ -184,7 +101,7 @@ export const interceptorBaseOf = (files: readonly SourceFile[], sharedPackages: 
       const owner = unwrap(callee.getExpression());
       if (!Node.isIdentifier(owner) || owner.getSymbol()?.getDeclarations()[0] !== interceptor.request) continue;
       const written = Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
-      const conditional = conditionsOf(call, interceptor.fn).filter((condition) => !asksAbsolute(condition, interceptor.request));
+      const conditional = conditionsAround(call, interceptor.fn).filter((condition) => !asksAbsolute(condition, (node) => isRequestUrl(node, interceptor.request)));
       if (conditional.length > 0) {
         rewrites.push({ at: call, name: interceptor.name, why: `${interceptor.name} rewrites the address only when ${conditional[0]?.getText().slice(0, 60)}, so which requests go out under the base is not known` });
         continue;

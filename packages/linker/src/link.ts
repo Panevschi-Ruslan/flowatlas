@@ -356,13 +356,17 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
   // A worker's binding names the worker it reaches in its deployment, and the
   // path was read in full to be matched at all (P91).
   serviceBinding: () => 'static',
+  // A host written in the call that the configuration places (P244); one only
+  // setting files place is bounded below, in the edge.
+  host: () => 'static',
 };
 
 /** The edge a resolved call becomes. */
 const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>, baseUrl?: FoundValue): GraphEdge => {
   const params = call.meta?.['bodyType'];
   const returns = call.meta?.['responseType'];
-  const joinedAs = baseUrl?.deployed === true ? 'static' : JOINED_AS[outcome.via](call);
+  const joinedAs =
+    outcome.hostFromFiles === true ? 'heuristic' : baseUrl?.deployed === true ? 'static' : JOINED_AS[outcome.via](call);
   return {
     from: call.id,
     to: outcome.entry.id,
@@ -711,6 +715,7 @@ export const linkGraphs = (
     functionUrlsOf: (callId) => urls.get(callId) ?? [],
     ...(valuedBaseUrlOf === undefined ? {} : { baseUrlOf: valuedBaseUrlOf }),
     bindingOf: bindingLookup(config, settings),
+    serviceAtHost: hostLookup(config, settings),
   };
   const uiIndex: UiIndex = {
     ...buildUiIndex(config, routesByService, servicesByEnv),
@@ -812,6 +817,10 @@ export const linkGraphs = (
     if (outcome.kind === 'linked') {
       const edge = callEdge(call, outcome, baseUrl);
       edges.set(edgeKey(edge), edge);
+      // The host was a configured service's, so it is no third party: the edge
+      // the reader drew to it goes, as a browser request's does (P244).
+      const host = call.meta?.['host'];
+      if (outcome.via === 'host' && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
       for (const also of alsoLinked ?? []) {
         const more = callEdge(call, {
           kind: 'linked',

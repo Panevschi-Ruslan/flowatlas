@@ -2,6 +2,7 @@ import { declarationOf, isPlatformProvided } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { CLIENT_FACTORIES, type ClientFactory } from '../clients.js';
+import { functionsOf, rewritesOf, type Rewrite, type RewriteReading } from './request-rewrite.js';
 import { analyzeClientBase, isSomewhere, type ApiUrl, type Bindings } from './url.js';
 
 /**
@@ -25,6 +26,20 @@ export interface ClientInstance {
    * once.
    */
   readonly unread?: { readonly at: TsNode; readonly why: string };
+  /**
+   * What the functions the client runs before every request through it do to
+   * the address, when they were read and agree (P244): an interceptor
+   * registered on it afterwards, a hook among the options it was made with.
+   */
+  readonly rewrite?: Rewrite;
+  /**
+   * Where such a function rewrites the address and nothing certain could be
+   * taken from it, and why. The instance keeps the base it was made with, which
+   * is what every request the function leaves alone goes out under.
+   */
+  readonly rewriteUnread?: { readonly at: TsNode; readonly why: string };
+  /** Every reading of such functions, before they are put together. */
+  readonly readings?: readonly RewriteReading[];
 }
 
 export interface InstanceOptions {
@@ -168,6 +183,8 @@ const keyIn = (object: ObjectLiteralExpression, key: string, bindings: Bindings 
     if (Node.isShorthandPropertyAssignment(property) && property.getName() === key) {
       return { kind: 'value', node: property.getNameNode() };
     }
+    // A hook written as a method, `onRequest({ options }) { ... }` (P244).
+    if (Node.isMethodDeclaration(property) && property.getName() === key) return { kind: 'value', node: property };
     if (Node.isSpreadAssignment(property)) {
       const spread = objectOf(property.getExpression(), bindings, depth + 1);
       if (spread === undefined) return { kind: 'unread', at: property };
@@ -240,6 +257,19 @@ const holderAt = (made: CallExpression): TsNode | undefined => {
   return undefined;
 };
 
+/**
+ * What a member chain is called on, when a callee spells the chain:
+ * `api.interceptors.request.use` is `api` for `interceptors / request / use`.
+ */
+const ownerOfChain = (callee: TsNode, chain: readonly string[]): TsNode | undefined => {
+  let current = unwrap(callee);
+  for (let index = chain.length - 1; index >= 0; index -= 1) {
+    if (!Node.isPropertyAccessExpression(current) || current.getName() !== chain[index]) return undefined;
+    current = unwrap(current.getExpression());
+  }
+  return current;
+};
+
 /** The bindings a call to a function of the repository makes of its parameters. */
 const bindingsAt = (call: CallExpression, fn: TsNode, under: Bindings | undefined): Bindings | undefined => {
   if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn) && !Node.isFunctionDeclaration(fn)) return under;
@@ -263,15 +293,37 @@ export const clientInstances = (options: InstanceOptions) => {
   const { sharedPackages = [] } = options;
   const byDeclaration = new Map<TsNode, ClientInstance | null>();
 
-  /** `x.defaults.baseURL = …` anywhere in the repository, by the declaration `x` holds. */
+  /**
+   * `x.defaults.baseURL = ...` and `x.interceptors.request.use(fn)` anywhere in
+   * the repository, by the declaration `x` holds: what is done to an instance
+   * after it is made (P239, P244).
+   */
   let assignments: Map<TsNode | ClientFactory, TsNode[]> | undefined;
-  const defaultsOf = (holder: TsNode | ClientFactory): readonly TsNode[] => {
-    if (assignments === undefined) {
-      assignments = new Map();
-      const keys = new Set(CLIENT_FACTORIES.flatMap((factory) => (factory.defaults === undefined ? [] : [`${factory.defaults}.${factory.baseKey}`])));
-      for (const file of options.files()) {
-        const text = file.getFullText();
-        if (![...keys].some((key) => text.includes(key))) continue;
+  let registrations: Map<TsNode | ClientFactory, Array<{ factory: ClientFactory; fn: TsNode }>> | undefined;
+  const scan = (): void => {
+    if (assignments !== undefined) return;
+    assignments = new Map();
+    const registered = new Map<TsNode | ClientFactory, Array<{ factory: ClientFactory; fn: TsNode }>>();
+    registrations = registered;
+    const keys = new Set(CLIENT_FACTORIES.flatMap((factory) => (factory.defaults === undefined ? [] : [`${factory.defaults}.${factory.baseKey}`])));
+    const chains = CLIENT_FACTORIES.flatMap((factory) => (factory.rewrites?.registeredAt === undefined ? [] : [{ factory, chain: factory.rewrites.registeredAt }]));
+    for (const file of options.files()) {
+      const text = file.getFullText();
+      if (chains.some(({ chain }) => chain.every((name) => text.includes(name)))) {
+        for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+          for (const { factory, chain } of chains) {
+            const owner = ownerOfChain(call.getExpression(), chain);
+            if (owner === undefined) continue;
+            const module = factoryOfModule(owner);
+            if (module !== undefined && module !== factory) continue;
+            const key = module ?? holderOf(owner);
+            const [handed] = call.getArguments();
+            if (key === undefined || handed === undefined) continue;
+            for (const fn of functionsOf(handed)) registered.set(key, [...(registered.get(key) ?? []), { factory, fn }]);
+          }
+        }
+      }
+      if ([...keys].some((key) => text.includes(key))) {
         for (const binary of file.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
           if (binary.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) continue;
           const left = binary.getLeft();
@@ -288,7 +340,17 @@ export const clientInstances = (options: InstanceOptions) => {
         }
       }
     }
-    return assignments.get(holder) ?? [];
+  };
+  const defaultsOf = (holder: TsNode | ClientFactory): readonly TsNode[] => {
+    scan();
+    return assignments?.get(holder) ?? [];
+  };
+  /** What the functions registered on an instance afterwards do to its address (P244). */
+  const registeredOn = (holder: TsNode | ClientFactory, factory: ClientFactory): RewriteReading[] => {
+    scan();
+    return (registrations?.get(holder) ?? [])
+      .filter((each) => each.factory === factory)
+      .flatMap((each) => rewritesOf(each.fn, factory, (node) => readBase(node, undefined)));
   };
 
   /** The declaration that holds an instance a name is, the one whose value makes it. */
@@ -337,24 +399,93 @@ export const clientInstances = (options: InstanceOptions) => {
       : { written: true, base };
   };
 
-  /** What `defaults` assignments make of a base, where any are written. */
+  /**
+   * What is done to an instance after it is made: `defaults` assignments to
+   * its base (P239), and the functions registered to run before each of its
+   * requests (P244), which are kept beside the ones it was made with.
+   */
   const withDefaults = (instance: ClientInstance, holder: TsNode | ClientFactory | undefined): ClientInstance => {
-    if (holder === undefined || instance.factory.defaults === undefined) return instance;
-    const written = defaultsOf(holder);
-    if (written.length === 0) return instance;
-    const read = written.map((value) => ({ value, base: readBase(value, undefined) }));
+    if (holder === undefined) return instance;
+    const registered = registeredOn(holder, instance.factory);
+    const readings = registered.length === 0 ? instance.readings : [...(instance.readings ?? []), ...registered];
+    const kept = readings === undefined ? {} : { readings };
+    const based = instance.factory.defaults === undefined ? [] : defaultsOf(holder);
+    if (based.length === 0) return { ...instance, ...kept };
+    const read = based.map((value) => ({ value, base: readBase(value, undefined) }));
     const unread = read.find((each) => each.base === 'unread');
     if (unread !== undefined) {
-      return { factory: instance.factory, unread: { at: unread.value, why: `${instance.factory.defaults}.${instance.factory.baseKey} is assigned a value that could not be read` } };
+      return { factory: instance.factory, ...kept, unread: { at: unread.value, why: `${instance.factory.defaults}.${instance.factory.baseKey} is assigned a value that could not be read` } };
     }
     const bases = [...new Set(read.map((each) => (each.base as ApiUrl).url))];
     if (bases.length > 1) {
       return {
         factory: instance.factory,
-        unread: { at: written[1] as TsNode, why: `${instance.factory.defaults}.${instance.factory.baseKey} is assigned ${bases.length} different values, and which one a request goes out under depends on what ran last` },
+        ...kept,
+        unread: { at: based[1] as TsNode, why: `${instance.factory.defaults}.${instance.factory.baseKey} is assigned ${bases.length} different values, and which one a request goes out under depends on what ran last` },
       };
     }
-    return { factory: instance.factory, base: read[0]?.base as ApiUrl };
+    return { factory: instance.factory, ...kept, base: read[0]?.base as ApiUrl };
+  };
+
+  /**
+   * What the functions among the options an instance is made with do to the
+   * address (P244): `onRequest`, `hooks.beforeRequest`. `written` says whether
+   * the options name any, which decides what an instance made from an instance
+   * keeps of its parent's.
+   */
+  const hooksIn = (factory: ClientFactory, call: CallExpression, bindings: Bindings | undefined): { readings: RewriteReading[]; written: boolean } => {
+    const path = factory.rewrites?.optionAt;
+    const [config] = call.getArguments();
+    if (path === undefined || config === undefined) return { readings: [], written: false };
+    let object = objectOf(config, bindings, 0);
+    let found: Found = { kind: 'absent' };
+    for (const [index, key] of path.entries()) {
+      if (object === undefined) return { readings: [], written: false };
+      found = keyIn(object, key, bindings, 0);
+      if (found.kind !== 'value') return { readings: [], written: false };
+      if (index < path.length - 1) object = objectOf(found.node, bindings, 0);
+    }
+    if (found.kind !== 'value') return { readings: [], written: false };
+    const readings = functionsOf(found.node).flatMap((fn) => rewritesOf(fn, factory, (node) => readBase(node, bindings)));
+    return { readings, written: true };
+  };
+
+  /** The readings an instance made from an instance keeps of its parent's, beside its own. */
+  const inherit = (factory: ClientFactory, own: { readings: RewriteReading[]; written: boolean }, parent: ClientInstance | undefined): readonly RewriteReading[] => {
+    const inherited = parent?.readings ?? [];
+    switch (factory.rewrites?.inherited ?? 'none') {
+      case 'merged':
+        return [...inherited, ...own.readings];
+      case 'replaced':
+        return own.written ? own.readings : inherited;
+      case 'none':
+        return own.readings;
+    }
+  };
+
+  /**
+   * The readings of every function an instance runs before a request, put
+   * together: one rewrite where they agree, a row where any could not be read
+   * or two disagree (which runs last is not read).
+   */
+  const finished = (instance: ClientInstance | undefined): ClientInstance | undefined => {
+    const readings = instance?.readings;
+    if (instance === undefined || readings === undefined || readings.length === 0) return instance;
+    const unread = readings.find((reading) => reading.kind === 'unread');
+    if (unread !== undefined && unread.kind === 'unread') return { ...instance, rewriteUnread: { at: unread.at, why: unread.why } };
+    const rewrites = readings.flatMap((reading) => (reading.kind === 'rewrite' ? [reading.rewrite] : []));
+    const distinct = [...new Map(rewrites.map((rewrite) => [`${rewrite.kind}\0${rewrite.base.url ?? ''}`, rewrite])).values()];
+    if (distinct.length > 1) {
+      return {
+        ...instance,
+        rewriteUnread: {
+          at: distinct[1]?.at as TsNode,
+          why: `${distinct.length} functions ${instance.factory.client.name} runs before every request rewrite the address differently, and which one runs last is not read`,
+        },
+      };
+    }
+    const [rewrite] = distinct;
+    return rewrite === undefined ? instance : { ...instance, rewrite };
   };
 
   /** The instance an expression is, followed through names, functions and parents. */
@@ -389,9 +520,13 @@ export const clientInstances = (options: InstanceOptions) => {
       const factory = fromModule ?? parent?.factory;
       if (factory === undefined || !factory.methods.includes(callee.getName())) return undefined;
       const own = baseIn(factory, target, bindings);
-      const made: ClientInstance = own.written
-        ? { factory, ...(own.base === undefined ? {} : { base: own.base }), ...(own.unread === undefined ? {} : { unread: own.unread }) }
-        : { factory, ...(parent?.base === undefined ? {} : { base: parent.base }), ...(parent?.unread === undefined ? {} : { unread: parent.unread }) };
+      const readings = inherit(factory, hooksIn(factory, target, bindings), parent);
+      const made: ClientInstance = {
+        ...(own.written
+          ? { factory, ...(own.base === undefined ? {} : { base: own.base }), ...(own.unread === undefined ? {} : { unread: own.unread }) }
+          : { factory, ...(parent?.base === undefined ? {} : { base: parent.base }), ...(parent?.unread === undefined ? {} : { unread: parent.unread }) }),
+        ...(readings.length === 0 ? {} : { readings }),
+      };
       return withDefaults(made, holderAt(target));
     }
 
@@ -409,7 +544,7 @@ export const clientInstances = (options: InstanceOptions) => {
 
   return {
     /** The instance an expression is, when it is one this reader can follow to where it is made. */
-    of: (node: TsNode): ClientInstance | undefined => instanceOf(node, undefined, 0),
+    of: (node: TsNode): ClientInstance | undefined => finished(instanceOf(node, undefined, 0)),
   };
 };
 

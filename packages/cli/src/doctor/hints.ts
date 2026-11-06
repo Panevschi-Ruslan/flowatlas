@@ -454,7 +454,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'api-base-override-unread': () =>
     'The call writes a base of its own and it could not be read, so the address was recorded as the path alone. Write that option as a literal or a constant.',
   'api-client-base-unread': () =>
-    'A client instance is made with a base, or an interceptor puts one in front of every request, and it could not be read, so its requests were recorded under the path each call writes and join by their route alone. Write the base as a literal, a settings key or a constant.',
+    'A client instance is made with a base, or an interceptor or a hook run before every request sets one or rewrites the address, and it could not be read, was chosen by a branch, or two disagree. Requests through it were recorded under the base the instance is made with, or the path each call writes where it has none, and may join by their route alone. Write the base unconditionally, as a literal, a settings key or a constant.',
   'api-base-unknown': () =>
     'Add the settings key to services[].apiBaseEnv, and services[].apiTarget to say which service answers it.',
   'api-client-unread': () =>

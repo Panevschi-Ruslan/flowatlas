@@ -83,8 +83,9 @@ const FIXTURES = join(ROOT, 'fixtures');
  * and the tool records the binding, and which binding it decided this one is is
  * not this gate's business.
  *
- * `perFile` is false for exactly one family, and the reason is a property of the
- * graph model rather than a concession. A table node's identity is
+ * `perFile` is false for two families, and the reason is a property of the
+ * graph model rather than a concession; `requests` says its own beside its
+ * entry, and `models` is this. A table node's identity is
  * `table:<repo>#<Name>` and it carries no file at all: the model asks where a
  * table is *used* and never where it was declared. There is therefore no
  * file-level answer to give about `models`, and a gate that demanded one would
@@ -202,6 +203,26 @@ const GATED = {
     ],
     perFile: true,
   },
+  // A request is recorded where it is written, which is often not where the
+  // probe sees it: a wrapper's `fetch` is read once per caller and the node
+  // sits at the caller (P91). So no file-level answer can be asked of it, and
+  // the family is held to strength 1, as `models` is (P244). `bases` (client
+  // instances and request interceptors) is not here at all: neither is a node,
+  // and the requests they stand in front of are this family's.
+  requests: {
+    types: ['ui_api_call', 'http_out'],
+    edges: [],
+    reasons: [
+      'api-path-dynamic',
+      'api-method-dynamic',
+      'api-base-override-unread',
+      'api-client-base-unread',
+      'api-base-unknown',
+      'api-client-unread',
+      'dynamic-http-url',
+    ],
+    perFile: false,
+  },
   models: { types: ['table'], edges: [], reasons: [], perFile: false },
 };
 
@@ -298,6 +319,17 @@ export const EXEMPT = [
       'by `variants/linked`, which configures it and whose graph the CLI snapshots ' +
       'build on their own. Reading it here would be the very configuration the ' +
       'fixture exists to be without.',
+  },
+  {
+    where: 'next-hollow',
+    path: '(anywhere)',
+    family: 'requests',
+    why:
+      'The fixture holds a browser repository no frontend adapter claims, on purpose: ' +
+      '`widget/src/panel.ts` writes a request so that a reader which did claim it would ' +
+      'have something to find, and the fixture exists to keep `build` and `doctor` naming ' +
+      'the service that contributed nothing. The request family added by P244 is the first ' +
+      'to see that request from the counting side; the silence is the fixture, not a gap.',
   },
   // A measured target's exemptions are not here. They name files of a
   // repository this project does not own, so they live with the target itself,

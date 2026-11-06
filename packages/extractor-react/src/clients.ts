@@ -64,6 +64,13 @@ export interface CallShape {
    * looked through `JSON.stringify` as `fetch`'s is.
    */
   readonly bodyKeys?: readonly string[];
+  /**
+   * The option the address is written under, when the call is handed one
+   * options object holding it rather than an address (P244):
+   * `api({ url: '/orders', method: 'post', data })`, `axios.request({ url })`.
+   * The options are then the object at `optionsAt`, and `urlAt` is not read.
+   */
+  readonly urlKey?: string;
 }
 
 /**
@@ -185,13 +192,21 @@ export const VERB_CALLS: Readonly<Record<string, CallShape>> = {
  * two in anything larger than a sample, because it is where the base address
  * and the headers are set.
  */
+/**
+ * axios handed one config object holding the address (P244): `axios({ url,
+ * method, data })`, an instance called the same way, and `request(config)` on
+ * either. The verb is `method` (axios sends `GET` where none is written), the
+ * body `data`, and a `baseURL` written beside the address is the call's own.
+ */
+const AXIOS_CONFIG_CALL: CallShape = { method: null, urlAt: 0, urlKey: 'url', optionsAt: 0, bodyKeys: ['data'] };
+
 export const AXIOS: RequestClient = {
   name: 'axios',
   package: 'axios',
   packages: ['axios'],
   receiver: {
     types: ['AxiosInstance', 'AxiosStatic'].map((typeName) => ({ package: 'axios', typeName })),
-    verbs: VERB_CALLS,
+    verbs: { ...VERB_CALLS, request: AXIOS_CONFIG_CALL },
   },
 };
 
@@ -263,6 +278,10 @@ export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS, OFETCH, 
  * - `verbs`: the verbs named as methods on an instance, beside the module's own.
  * - `defaults`: where an instance keeps the options it was made with, when
  *   assigning there afterwards (`api.defaults.baseURL = …`) sets the base.
+ * - `configCalled`: the instance called with one options object holding the
+ *   address, `api({ url, method })` (P244).
+ * - `rewrites`: the functions the client runs before every request, which may
+ *   rewrite its address (P244).
  */
 export interface ClientFactory {
   readonly client: RequestClient;
@@ -271,17 +290,55 @@ export interface ClientFactory {
   readonly methods: readonly string[];
   readonly baseKey: string;
   readonly called?: CallShape;
+  readonly configCalled?: CallShape;
   readonly verbs: Readonly<Record<string, CallShape>>;
   readonly defaults?: string;
+  readonly rewrites?: RequestRewrites;
+}
+
+/**
+ * A function a client runs before every request, and how it is handed the
+ * request (P244).
+ *
+ * The base is not always written where the instance is made. axios lets a
+ * repository register a request interceptor on the instance afterwards,
+ * `api.interceptors.request.use((config) => { config.baseURL = … })`; ofetch
+ * takes an `onRequest` hook among the options, handed `{ request, options }`;
+ * ky takes `hooks.beforeRequest`, handed the `Request` itself, which can only
+ * be replaced. Each runs for every request through the instance, so what it
+ * does to the address is the instance's as surely as the option it was made
+ * with, read the same way (`util/request-rewrite.ts`):
+ *
+ * - `registeredAt`: the member chain a function is registered through, called
+ *   on an instance or on the module.
+ * - `optionAt`: the key path of the options an instance is made with that holds
+ *   the function, or a list of them.
+ * - `handed`: what the function's first parameter is - the request's own
+ *   options (`options`), a context holding them under `options` and the
+ *   address under `request` (`context`), or the request itself, which a new
+ *   one replaces (`request`).
+ * - `addressKey`: where the address is in what the function is handed.
+ * - `inherited`: whether an instance made from an instance keeps its parent's
+ *   functions beside its own (`merged`) or loses them to its own (`replaced`).
+ */
+export interface RequestRewrites {
+  readonly registeredAt?: readonly string[];
+  readonly optionAt?: readonly string[];
+  readonly handed: 'options' | 'context' | 'request';
+  readonly addressKey: string;
+  readonly inherited: 'merged' | 'replaced' | 'none';
 }
 
 /**
  * The instance made by each installed client, and where its base is.
  *
- * axios's instance is also callable, `api(url, { method, data })`; a call
- * handed one config object in place of an address is not read here (the
- * address is a key of it), as it was not before. ofetch's instance is called
- * as the module is, and `.raw` answers with the whole response the same way.
+ * axios's instance is also callable, `api(url, { method, data })`, and so is
+ * the module; handed one config object in place of an address, the address is
+ * its `url` (P244). An axios instance made from another keeps none of its
+ * interceptors, the module's included: each has its own. ofetch's instance is
+ * called as the module is, and `.raw` answers with the whole response the
+ * same way; one made from another replaces its hooks with its own where it
+ * writes any. ky's instances made by `extend` add their hooks to their parent's.
  */
 export const CLIENT_FACTORIES: readonly ClientFactory[] = [
   {
@@ -290,8 +347,10 @@ export const CLIENT_FACTORIES: readonly ClientFactory[] = [
     methods: ['create'],
     baseKey: 'baseURL',
     called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['data'] },
-    verbs: VERB_CALLS,
+    configCalled: AXIOS_CONFIG_CALL,
+    verbs: { ...VERB_CALLS, request: AXIOS_CONFIG_CALL },
     defaults: 'defaults',
+    rewrites: { registeredAt: ['interceptors', 'request', 'use'], handed: 'options', addressKey: 'url', inherited: 'none' },
   },
   {
     client: OFETCH,
@@ -301,6 +360,7 @@ export const CLIENT_FACTORIES: readonly ClientFactory[] = [
     baseKey: 'baseURL',
     called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1 },
     verbs: { raw: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1 } },
+    rewrites: { optionAt: ['onRequest'], handed: 'context', addressKey: 'request', inherited: 'replaced' },
   },
   {
     client: KY,
@@ -309,6 +369,7 @@ export const CLIENT_FACTORIES: readonly ClientFactory[] = [
     baseKey: 'prefixUrl',
     called: KY.callee,
     verbs: KY_VERBS,
+    rewrites: { optionAt: ['hooks', 'beforeRequest'], handed: 'request', addressKey: 'url', inherited: 'merged' },
   },
 ];
 

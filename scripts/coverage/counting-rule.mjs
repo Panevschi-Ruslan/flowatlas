@@ -277,6 +277,54 @@ export const PROBES = [
     contains: /export\s+default\b/,
   },
   {
+    // The request families (P244). A request is written at a call, and the
+    // call is what a person sees: the platform's client by its own name, a verb
+    // on a client with the address written out beside it, or a client handed
+    // one options object holding the address. Over-counted where a receiver is
+    // only named like a client (`cacheClient.get('/k')`), which is this rule's
+    // side; under-counted where an instance has a name of its own and writes an
+    // address without its opening slash, which a probe cannot tell from a key.
+    name: 'fetch-call-site',
+    family: 'requests',
+    scope: 'line',
+    what: "a request made by calling the platform's `fetch`, `$fetch` or `ofetch` by its own name",
+    pattern: /(?<![\w$.])(?:fetch|\$fetch|ofetch)\s*\(/g,
+  },
+  {
+    name: 'client-verb-call',
+    family: 'requests',
+    scope: 'line',
+    what: 'a verb called with its address written out, on `axios` or `ky` themselves or on a receiver named like a client (`this.http.get(...)`, `api.post(...)`), the address rooted at a slash, a host or a setting',
+    pattern:
+      /(?:\b(?:axios|ky)\s*\.\s*(?:get|post|put|patch|delete|head|request)\s*(?:<[^>()]*>\s*)?\(\s*['"`]|\b[\w$]*(?:http|api|client)\s*\.\s*(?:get|post|put|patch|delete|head)\s*(?:<[^>()]*>\s*)?\(\s*['"`](?:\/|https?:|\$\{))/gi,
+  },
+  {
+    name: 'client-config-call',
+    family: 'requests',
+    scope: 'line',
+    what: 'a client handed one options object holding the address (`axios({ url })`, `api.request({ url })`)',
+    pattern: /\b(?:axios|[\w$]*(?:http|api|client))\s*(?:\.\s*request\s*)?\(\s*\{[^}]*?\burl\s*:/gi,
+  },
+  {
+    // What stands in front of every request through a client (P239, P244): the
+    // instance a client is made as, and the interceptor or hook that rewrites
+    // the address before each request. Neither is a node of its own, so the
+    // family is a denominator for the reading of bases and nothing is gated on
+    // it per file.
+    name: 'client-instance-factory',
+    family: 'bases',
+    scope: 'line',
+    what: 'a client instance made with options of its own (`axios.create(...)`, `ofetch.create(...)`, `$fetch.create(...)`, `ky.create(...)`, `ky.extend(...)`)',
+    pattern: /(?<![\w$.])(?:axios|ofetch|\$fetch|ky)\s*\.\s*(?:create|extend)\s*\(/g,
+  },
+  {
+    name: 'request-interceptor',
+    family: 'bases',
+    scope: 'line',
+    what: 'a function run before every request (`interceptors.request.use(...)`, an `onRequest` hook, `hooks.beforeRequest`, an Angular `HttpInterceptor` class or `HttpInterceptorFn`)',
+    pattern: /\binterceptors\s*\.\s*request\s*\.\s*use\s*\(|\bonRequest\s*[(:]|\bbeforeRequest\s*:|\bimplements\s+HttpInterceptor\b|:\s*HttpInterceptorFn\b/g,
+  },
+  {
     name: 'prisma-call-site',
     family: 'data',
     scope: 'line',
@@ -319,6 +367,8 @@ export const FAMILIES = [
   ['routes', 'ways in over HTTP'],
   ['screens', 'screens'],
   ['clicks', 'things a person can click'],
+  ['requests', 'places a request is written'],
+  ['bases', 'client instances and functions run before every request'],
   ['data', 'places the code reaches storage'],
   ['models', 'tables or models declared (an upper bound)'],
 ];
