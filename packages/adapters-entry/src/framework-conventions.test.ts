@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { toPosixPath } from '@flowatlas/core';
 import { afterAll, describe, expect, it } from 'vitest';
 import { keptByLayer, nuxtConventions, nuxtLayersOf, nuxtLayoutOf, sveltekitConventions } from './framework-conventions.js';
 import { nitroAddressOf, nuxtPagesOf } from './nuxt-routes.js';
@@ -198,7 +199,7 @@ describe("a Nuxt application's layers (P243)", () => {
     expect(app?.except).toEqual(expect.arrayContaining(['server', 'layers/base/server', '../ui/server']));
     expect(server?.within).toEqual(['server', 'layers/base/server', '../ui/server']);
     // The layer beside the application is part of it; its files are stamped.
-    expect(conventions?.extent).toEqual([join(dirname(shop), 'ui')]);
+    expect(conventions?.extent?.map(toPosixPath)).toEqual([toPosixPath(join(dirname(shop), 'ui'))]);
     expect(conventions?.files).toEqual(['nuxt.config.ts', '../ui/server/utils/db.ts', '../ui/utils/money.ts']);
     expect(conventions?.precedence).toBe("the order of Nuxt's layers: the application, layers/base and ../ui");
   });

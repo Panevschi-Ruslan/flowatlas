@@ -16,6 +16,7 @@ import {
 } from './conventions.js';
 import { addEmbeddedScripts, type EmbeddedFormat } from './embedded.js';
 import { causeOfTypeNode } from './follow-cause.js';
+import { toPosixPath } from './ids.js';
 import { createProject, countSources, listRepoSources } from './project.js';
 import { serviceSourceDirs } from './workspace.js';
 
@@ -42,7 +43,7 @@ const declarationCalled = (root: string, project: ReturnType<typeof createProjec
     if (call.getExpression().getText() !== callee) continue;
     const symbol = call.getExpression().getSymbol();
     const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
-    return declaration === undefined ? undefined : relative(root, declaration.getSourceFile().getFilePath());
+    return declaration === undefined ? undefined : toPosixPath(relative(root, declaration.getSourceFile().getFilePath()));
   }
   return undefined;
 };
@@ -294,8 +295,8 @@ describe('a framework that builds code in from more than one place (P243)', () =
     const project = createProject({ rootDir: root, conventions: [conventions] });
     expect(project.getSourceFile(join(top, 'ui/pages/catalog.ts'))).toBeDefined();
     expect(declarationCalled(root, project, '../ui/pages/catalog.ts', 'useCatalog')).toBe('../ui/composables/useCatalog.ts');
-    expect(conventionExtentOf(project)).toEqual([join(top, 'ui')]);
-    expect(serviceSourceDirs(root)).toEqual([root, join(top, 'ui')]);
+    expect(conventionExtentOf(project).map(toPosixPath)).toEqual([toPosixPath(join(top, 'ui'))]);
+    expect(serviceSourceDirs(root).map(toPosixPath)).toEqual([root, join(top, 'ui')].map(toPosixPath));
     expect(listRepoSources(root)).toContain('../ui/pages/catalog.ts');
   });
 });
