@@ -9,6 +9,7 @@ import {
   type RepoGraph,
   type TypeEntry,
   type Unresolved,
+  whenFree,
 } from '@flowatlas/core';
 import type { LinkReport } from '../report.js';
 import { GRAPH_DB_FORMAT_VERSION, SCHEMA_SQL } from './schema.js';
@@ -117,27 +118,6 @@ const renameOver = (from: string, to: string, attempts = 20): void => {
 };
 
 /**
- * Runs a change to a file, waiting briefly while another process holds it.
- * Removing the old database before the rename is such a change too (P199): on
- * Windows it failed at once on a reader's handle, before the rename's own
- * wait was ever reached.
- */
-const whenFree = (change: () => void, attempts = 20): void => {
-  for (let attempt = 1; ; attempt += 1) {
-    try {
-      change();
-      return;
-    } catch (cause) {
-      const code = (cause as NodeJS.ErrnoException).code;
-      if (attempt >= attempts || (code !== 'EPERM' && code !== 'EBUSY' && code !== 'EACCES')) {
-        throw cause;
-      }
-      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);
-    }
-  }
-};
-
-/**
  * Writes the graph to a database file.
  *
  * Built into a temporary file and renamed into place, so a reader either sees
@@ -184,6 +164,8 @@ export const writeGraphDb = (
   }
 
   for (const suffix of ['-wal', '-shm']) rmSync(`${temporary}${suffix}`, { force: true });
+  // Removing the old database waits too (P199): on Windows it failed at once on
+  // a reader's handle, before the rename's own wait was ever reached.
   whenFree(() => rmSync(dbPath, { force: true }));
   for (const suffix of ['-wal', '-shm']) whenFree(() => rmSync(`${dbPath}${suffix}`, { force: true }));
   renameOver(temporary, dbPath);

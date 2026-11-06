@@ -69,6 +69,7 @@ export {
   wasRead,
 } from './ids.js';
 export type { DeployedEntryKind, HttpMethod, ReachedAs, SiteLeafType } from './ids.js';
+export { whenFree } from './when-free.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
 export { SENDS_META, wayInBodyRead } from './model/way-in.js';

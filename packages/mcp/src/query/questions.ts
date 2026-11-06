@@ -1,6 +1,6 @@
 import { appendFileSync, readFileSync, renameSync, statSync, unlinkSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
-import { gapIdOf, type FlowatlasConfig } from '@flowatlas/core';
+import { gapIdOf, whenFree, type FlowatlasConfig } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
 
 /**
@@ -138,18 +138,21 @@ const rotate = (path: string, maxBytes: number): void => {
     return;
   }
   const taken = join(dirname(path), `${QUESTIONS_FILE}.${process.pid}.${(rotations += 1)}.rotating`);
+  // Each move waits out a file another process holds: on Windows a writer
+  // appending, or another rotation renaming onto the older file, fails the
+  // move for milliseconds, and giving up left the taken file behind.
   try {
-    renameSync(path, taken);
+    whenFree(() => renameSync(path, taken));
   } catch {
     return;
   }
   try {
     if (statSync(taken).size > maxBytes) {
-      renameSync(taken, join(dirname(path), OLDER_QUESTIONS_FILE));
+      whenFree(() => renameSync(taken, join(dirname(path), OLDER_QUESTIONS_FILE)));
       return;
     }
     appendFileSync(path, readFileSync(taken, 'utf8'), 'utf8');
-    unlinkSync(taken);
+    whenFree(() => unlinkSync(taken));
   } catch {
     // Left under its own name, the file is kept; the live log goes on regardless.
   }
