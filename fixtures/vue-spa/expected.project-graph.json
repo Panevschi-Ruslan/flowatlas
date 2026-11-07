@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T09:42:34.071Z",
+  "builtAt": "2026-11-07T17:41:44.568Z",
   "services": [
     {
       "name": "api",
@@ -217,7 +217,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {

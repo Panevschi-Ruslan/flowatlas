@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-rabbitmq",
-  "generatedAt": "2026-10-07T18:29:38.133Z",
+  "generatedAt": "2026-11-07T17:39:40.565Z",
   "nodes": [
     {
       "id": "channel:order.cancelled",
@@ -459,7 +459,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 13
+          }
+        ]
       }
     }
   ],

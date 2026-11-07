@@ -1,0 +1,9 @@
+{
+  "name": "listen-port-joins-catalog",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@hono/node-server": "^1.13.0",
+    "hono": "^4.12.16"
+  }
+}

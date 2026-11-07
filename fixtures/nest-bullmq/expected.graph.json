@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-10-07T18:29:15.510Z",
+  "generatedAt": "2026-11-07T17:38:37.418Z",
   "nodes": [
     {
       "id": "channel:digest",
@@ -597,7 +597,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

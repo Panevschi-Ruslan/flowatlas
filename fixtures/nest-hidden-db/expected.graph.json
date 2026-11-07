@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-hidden-db",
-  "generatedAt": "2026-10-07T14:34:12.871Z",
+  "generatedAt": "2026-11-07T17:39:02.838Z",
   "nodes": [
     {
       "id": "config_key:nest-hidden-db#MONGO_URL",
@@ -299,7 +299,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     }
   ],

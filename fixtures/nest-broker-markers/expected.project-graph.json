@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-07T18:29:14.667Z",
+  "builtAt": "2026-11-07T17:38:35.999Z",
   "services": [
     {
       "name": "nest-broker-markers",
@@ -1015,7 +1015,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

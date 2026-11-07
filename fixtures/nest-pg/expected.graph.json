@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-pg",
-  "generatedAt": "2026-10-07T14:34:26.134Z",
+  "generatedAt": "2026-11-07T17:39:36.109Z",
   "nodes": [
     {
       "id": "db_query:nest-pg#src/orders/orders.service.ts:10:12",
@@ -417,7 +417,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

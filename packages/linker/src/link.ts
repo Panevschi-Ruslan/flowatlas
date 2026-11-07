@@ -52,7 +52,8 @@ import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard, couldReach } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
 import { joinGraphqlFields } from './graphql-link.js';
-import { listeningAt, routeGateways, type Listening, type RouteAnswer } from './graphql-federation.js';
+import { routeGateways, type RouteAnswer } from './graphql-federation.js';
+import { atLocalPort, listeningAt, portSharedFinding, whereListening, type Listening, type PortIndex } from './local-port.js';
 import type { GatewayRouteMeta } from '@flowatlas/graphql';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
@@ -334,7 +335,9 @@ const procedureAddressLookup = (
   }
   if (typeof host === 'string') {
     const found = serviceAtHost(host);
-    if (found !== undefined) return { kind: 'service', service: found.service, confidence: found.configured ? 'static' : 'heuristic' };
+    if (found?.kind === 'service') return { kind: 'service', service: found.service, confidence: found.sure ? 'static' : 'heuristic' };
+    // Two services listen where the link sends (P250).
+    if (found?.kind === 'shared') return { kind: 'unplaced', finding: portSharedFinding(found.port, found.said) };
     return server ? { kind: 'external', host } : undefined;
   }
   return undefined;
@@ -399,6 +402,10 @@ const boundedByMount = (confidence: Confidence, mountAssumed: readonly string[] 
     ? confidence
     : 'heuristic';
 
+/** What an edge joined by the port a server listens on carries: where the code starts it there (P250). */
+const listensMeta = (listening: Listening | undefined): Record<string, unknown> =>
+  listening === undefined ? {} : { listensAt: whereListening(listening) };
+
 /** What an edge across a mount taken as empty carries, so a reader of the edge alone can see it. */
 const mountMeta = (mountAssumed: readonly string[] | undefined): Record<string, unknown> =>
   mountAssumed === undefined ? {} : { mountAssumedEmpty: [...mountAssumed] };
@@ -445,6 +452,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
     meta: {
       via: outcome.via,
       targetService: outcome.entry.repo,
+      ...listensMeta(outcome.listening),
       ...(outcome.via === 'functionUrl' ? { variable: call.meta?.['baseUrlEnv'] } : {}),
       ...(baseUrl === undefined ? {} : takenMeta(baseUrl)),
       ...mountMeta(outcome.mountAssumed),
@@ -491,6 +499,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
     meta: {
       via: outcome.via,
       targetService: outcome.targetService,
+      ...listensMeta(outcome.listening),
       ...mountMeta(outcome.mountAssumed),
       ...(outcome.runnersUp.length === 0
         ? {}
@@ -547,26 +556,16 @@ const subgraphServiceOf = (
   route: GatewayRouteMeta,
   gateway: GraphNode,
   index: RouteIndex,
-  hosts: { readonly all: HostIndex; readonly configured: HostIndex; readonly listening: ReadonlyMap<number, readonly Listening[]> },
+  hosts: PortIndex,
 ): RouteAnswer => {
   if (route.unread !== undefined) return { why: route.unread === '' ? 'no address is written for it' : `its address (${route.unread}) is built at run time` };
   if (route.baseUrlEnv === undefined) {
+    // A port on this machine is the service whose server listens on it (P245),
+    // by the one lookup every request to this machine is asked of (P250).
+    const local = route.url === undefined ? undefined : atLocalPort(route.url, hosts);
+    if (local?.kind === 'service') return { service: local.service, confidence: local.sure ? 'static' : 'heuristic' };
+    if (local?.kind === 'shared') return { why: portSharedFinding(local.port, local.said).message };
     const at = route.url === undefined ? undefined : servicesAt(route.url, hosts.all);
-    // A port on this machine is the service whose server listens on it (P245);
-    // a host the configuration names wins, and two services on one port are no answer.
-    const port = route.url === undefined ? undefined : localPortOf(route.url);
-    const listening = port === undefined ? [] : (hosts.listening.get(port) ?? []);
-    if (port !== undefined && listening.length > 0) {
-      const configured = servicesAt(route.url as string, hosts.configured);
-      if (Array.isArray(configured) && configured.length === 1) return { service: configured[0] as string, confidence: 'static' };
-      const services = [...new Set([...(Array.isArray(at) ? at : []), ...listening.map((each) => each.service)])].sort(cmp);
-      if (services.length === 1) return { service: services[0] as string, confidence: 'static' };
-      const said = services.map((service) => {
-        const where = listening.find((each) => each.service === service);
-        return where === undefined ? `${service} (its setting files)` : `${service} (${where.file}:${where.line})`;
-      });
-      return { why: `port ${port} on this machine is where ${said.join(' and ')} each listen, so it is not one service` };
-    }
     if (Array.isArray(at) && at.length === 1) return { service: at[0] as string, confidence: 'static' };
     if (Array.isArray(at)) return { why: `its host names ${at.join(' and ')}, not one service` };
     return { why: `no configured service is reached at ${route.host ?? route.url ?? 'that address'}` };
@@ -586,17 +585,6 @@ const subgraphServiceOf = (
   return { service, confidence: baseUrl === undefined || baseUrl.deployed ? 'static' : 'heuristic' };
 };
 
-/** The hosts an address on this machine is written with, and nothing else. */
-const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]', '::1']);
-
-/** The port an address names on this machine: `http://localhost:4001/graphql` is 4001. */
-const localPortOf = (address: string): number | undefined => {
-  const host = hostOf(address);
-  if (host === undefined || !LOCAL_HOSTNAMES.has(host.hostname)) return undefined;
-  const port = /:(\d+)$/.exec(host.host)?.[1];
-  return port === undefined ? undefined : Number(port);
-};
-
 const emptyHttpOut = (): LinkReport['httpOut'] => ({
   total: 0,
   linked: 0,
@@ -610,25 +598,37 @@ const emptyHttpOut = (): LinkReport['httpOut'] => ({
 
 const emptyUi = (): LinkReport['ui'] => ({ total: 0, resolved: 0, unresolved: 0, byReason: {} });
 
+/** The hosts every service is reached at, and the ports their servers listen on (P77, P250). */
+const portIndexOf = (
+  config: FlowatlasConfig,
+  settings: Readonly<Record<string, RepoSettings>>,
+  nodes: ReadonlyMap<string, GraphNode>,
+): PortIndex => {
+  const configured = hostIndexOf(config, {});
+  return {
+    configured,
+    all: config.settingFiles.read === false ? configured : hostIndexOf(config, settings),
+    listening: listeningAt(nodes),
+  };
+};
+
 /**
  * The one configured service a host is reached at (P239): by what the
  * configuration says first, and by what the services' own setting files say
- * where it says nothing.
+ * where it says nothing. An address on this machine is asked of the ports the
+ * servers listen on too, and may be two services' (P250).
  */
-const hostLookup = (
-  config: FlowatlasConfig,
-  settings: Readonly<Record<string, RepoSettings>>,
-): NonNullable<UiIndex['serviceAtHost']> => {
-  const configured = hostIndexOf(config, {});
-  const everything = config.settingFiles.read === false ? configured : hostIndexOf(config, settings);
+const hostLookup = (hosts: PortIndex): NonNullable<UiIndex['serviceAtHost']> => {
   const one = (found: ReturnType<typeof servicesAt>): string | undefined =>
     Array.isArray(found) && found.length === 1 ? found[0] : undefined;
   return (host) => {
     const address = `http:${'/'.repeat(2)}${host}`;
-    const named = one(servicesAt(address, configured));
-    if (named !== undefined) return { service: named, configured: true };
-    const filed = one(servicesAt(address, everything));
-    return filed === undefined ? undefined : { service: filed, configured: false };
+    const local = atLocalPort(address, hosts);
+    if (local !== undefined) return local;
+    const named = one(servicesAt(address, hosts.configured));
+    if (named !== undefined) return { kind: 'service', service: named, sure: true };
+    const filed = one(servicesAt(address, hosts.all));
+    return filed === undefined ? undefined : { kind: 'service', service: filed, sure: false };
   };
 };
 
@@ -805,6 +805,9 @@ export const linkGraphs = (
   const routesByService = routesByServiceOf(nodes);
   const servicesByEnv = servicesByEnvOf(config);
   const urls = functionUrlsOf(nodes, edges);
+  // Where every service is reached, its server's ports included, asked of
+  // every request with a host and of a gateway's subgraphs (P250).
+  const hosts = portIndexOf(config, settings, nodes);
   const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, true);
   const valuedUiBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, false);
   const index: RouteIndex = {
@@ -812,16 +815,16 @@ export const linkGraphs = (
     functionUrlsOf: (callId) => urls.get(callId) ?? [],
     ...(valuedBaseUrlOf === undefined ? {} : { baseUrlOf: valuedBaseUrlOf }),
     bindingOf: bindingLookup(config, settings),
-    serviceAtHost: hostLookup(config, settings),
+    serviceAtHost: hostLookup(hosts),
   };
   const uiIndex: UiIndex = {
     ...buildUiIndex(config, routesByService, servicesByEnv),
     ...(valuedUiBaseUrlOf === undefined ? {} : { baseUrlOf: valuedUiBaseUrlOf }),
-    serviceAtHost: hostLookup(config, settings),
+    serviceAtHost: hostLookup(hosts),
   };
   const procedureIndex: ProcedureIndex = {
     ...buildProcedureIndex(nodes, config, servicesByEnv),
-    addressOf: procedureAddressLookup(index, hostLookup(config, settings)),
+    addressOf: procedureAddressLookup(index, hostLookup(hosts)),
   };
 
   /** Where a finding happened; the finding itself says what and what to do. */
@@ -976,8 +979,12 @@ export const linkGraphs = (
       if (outcome.via !== 'functionUrl' && answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
     } else {
       // A binding nothing is found behind is counted with the settings no
-      // service claims: both are a name the configuration does not place.
-      httpOut[outcome.kind === 'unknownBinding' ? 'unknownEnv' : outcome.kind] += 1;
+      // service claims: both are a name the configuration does not place. Two
+      // services on one port are two answers, as two routes are (P250).
+      httpOut[outcome.kind === 'unknownBinding' ? 'unknownEnv' : outcome.kind === 'portShared' ? 'ambiguous' : outcome.kind] += 1;
+      // The port is the project's own services', so no third party (P250).
+      const host = call.meta?.['host'];
+      if (outcome.kind === 'portShared' && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
     }
     const partial = nearMissOf(call, outcome);
     if (partial !== undefined) partials.push(partial);
@@ -1098,6 +1105,9 @@ export const linkGraphs = (
     }
 
     ui.unresolved += 1;
+    // Two of the project's own services listen on the port: no third party either (P250).
+    const sharedHost = call.meta?.['host'];
+    if (outcome.kind === 'portShared' && typeof sharedHost === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(sharedHost));
     const reason = uiReasonOf(outcome);
     if (reason !== undefined) ui.byReason[reason] = (ui.byReason[reason] ?? 0) + 1;
     if (outcome.kind === 'dynamic') {
@@ -1114,7 +1124,6 @@ export const linkGraphs = (
 
   // A federation gateway's routes to its subgraphs and its composition, before
   // any request is planned through it (P241).
-  const hosts = { all: hostIndexOf(config, settings), configured: hostIndexOf(config, {}), listening: listeningAt(nodes) };
   const routing = routeGateways(nodes, edges, (route, gateway) => subgraphServiceOf(route, gateway, index, hosts));
   found.push(...routing.rows);
 

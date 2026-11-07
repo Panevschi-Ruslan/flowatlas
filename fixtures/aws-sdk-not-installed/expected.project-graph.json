@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T03:49:10.221Z",
+  "builtAt": "2026-11-07T17:36:08.521Z",
   "services": [
     {
       "name": "catalogue",
@@ -312,7 +312,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 11
+          }
+        ]
       }
     }
   ],

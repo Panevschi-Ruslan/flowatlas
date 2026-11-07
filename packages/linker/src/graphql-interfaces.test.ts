@@ -131,6 +131,21 @@ describe('subgraphs found by the port they listen on (P245)', () => {
     expect(configured.unresolved.filter((each) => each.reason === 'graphql-subgraph-not-joined')).toEqual([]);
     expect(from(configured, 'entry:gateway:http:POST:/graphql')).toContain('entry:media:http:POST:/graphql static 3');
   });
+
+  it('joins a subgraph whose port is only a setting fallback as a guess, as every request to this machine is (P250)', () => {
+    const fallback = graph('accounts', [
+      { id: 'repo:accounts', type: 'repo', label: 'accounts', repo: 'accounts', meta: { listen: [{ port: 4003, file: 'src/main.ts', line: 7, setting: 'PORT' }] } },
+      endpoint('accounts', { schema: schemaOf([parseDocument(ACCOUNTS)]), subgraph: { federation: 2 } }),
+      ...['Query.me', 'Query.wishItem', 'User.wishlist', 'WishItem.price'].map((key) => field('accounts', key, key.startsWith('Query.') ? {} : { field: true })),
+    ]);
+    const joined = linkGraphs(
+      [graph('gateway', [endpoint('gateway', { gateway: { subgraphs: ROUTES } })]), ...SUBGRAPHS().filter((each) => each.repo !== 'accounts'), fallback, asking(operation('Me', 'me { id }'))],
+      config(SERVICES),
+      { builtAt: FIXED },
+    ).project;
+    expect(from(joined, 'entry:gateway:http:POST:/graphql')).toContain('entry:accounts:http:POST:/graphql heuristic 5');
+    expect(from(joined, 'entry:gateway:http:POST:/graphql')).toContain('entry:media:http:POST:/graphql static 3');
+  });
 });
 
 describe('a request through entity interfaces and contexts (P245)', () => {

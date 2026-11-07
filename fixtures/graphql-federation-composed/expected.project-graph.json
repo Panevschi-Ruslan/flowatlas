@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T18:14:57.482Z",
+  "builtAt": "2026-11-07T17:36:53.894Z",
   "services": [
     {
       "name": "gateway",
@@ -827,7 +827,14 @@
             "nestjs-http",
             "graphql-resolvers"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -871,7 +878,14 @@
           "entry": [
             "graphql-resolvers"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4001,
+            "file": "src/index.ts",
+            "line": 42
+          }
+        ]
       }
     },
     {

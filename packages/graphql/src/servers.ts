@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
 import type { ClassDeclaration, Decorator, MethodDeclaration, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
+import { listenAt, listenCallsIn, portIn, type ListenAt } from '@flowatlas/core';
 import { documentOf } from './documents.js';
 import { isSupergraph } from './federation.js';
-import { followed, readGraphqlGateway, settingRead, type GatewayReading } from './gateway.js';
+import { followed, readGraphqlGateway, type GatewayReading } from './gateway.js';
 import { tryParse, type AppliedDirective, type Document } from './parse.js';
 import { fieldFederationOf, mergeSchemas, schemaOf, typeFederationOf, type FieldFederation, type SchemaField, type SchemaSummary, type TypeFederation } from './schema.js';
 
@@ -49,14 +50,10 @@ export interface ResolvedField {
 /**
  * A port a server listens on, as its code writes it (P245): a number, or the
  * one it falls back to where a setting is not given
- * (`process.env.PORT ?? 4003`), with the setting.
+ * (`process.env.PORT ?? 4003`), with the setting; or the library's own
+ * default where the code writes none. The core's reading (P250).
  */
-export interface ListenPort {
-  readonly port: number;
-  readonly at: TsNode;
-  /** The setting that moves it elsewhere when it is given. */
-  readonly setting?: string;
-}
+export type ListenPort = ListenAt;
 
 /** The name a reference resolver is an entry under, beside the type's fields. */
 export const REFERENCE_FIELD = '__resolveReference';
@@ -499,81 +496,32 @@ const endpointOf = (sources: readonly SourceFile[]): { path: string; at?: TsNode
   return { path: written ?? (standalone ? '/' : '/graphql'), ...(at === undefined ? {} : { at }) };
 };
 
-/** A number as code writes a port: `4001`, `'4001'`. */
-const portNumber = (node: TsNode | undefined): number | undefined => {
-  if (node === undefined) return undefined;
-  const text = Node.isNumericLiteral(node) ? node.getText() : Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node) ? node.getLiteralValue() : undefined;
-  if (text === undefined || !/^\d+$/.test(text)) return undefined;
-  const port = Number(text);
-  return port > 0 && port < 65536 ? port : undefined;
-};
-
-/**
- * The port an expression is: a number, a constant holding one, or a setting
- * with the number it falls back to - `process.env.PORT ?? 4003`,
- * `Number(process.env.PORT) || 4003`, `parseInt(process.env.PORT ?? '4003', 10)`,
- * `config.get('PORT', 4003)`. A setting with no fallback is the setting's
- * value, which the services' own files give where they do (P77).
- */
-const portOf = (written: TsNode | undefined, depth = 0): { port?: number; setting?: string } => {
-  const node = followed(written);
-  if (node === undefined || depth > 6) return {};
-  const number = portNumber(node);
-  if (number !== undefined) return { port: number };
-  const setting = settingRead(node);
-  if (setting !== undefined) {
-    // `config.get('PORT', 4003)`: the fallback is the second argument.
-    const fallback = Node.isCallExpression(node) ? portNumber(followed(node.getArguments()[1])) : undefined;
-    return { setting, ...(fallback === undefined ? {} : { port: fallback }) };
-  }
-  if (Node.isBinaryExpression(node) && ['??', '||'].includes(node.getOperatorToken().getText())) {
-    const left = portOf(node.getLeft(), depth + 1);
-    const right = portOf(node.getRight(), depth + 1);
-    return { ...(left.setting === undefined ? {} : { setting: left.setting }), ...((left.port ?? right.port) === undefined ? {} : { port: (left.port ?? right.port) as number }) };
-  }
-  if (Node.isCallExpression(node) && /^(Number|parseInt|parseFloat)$/.test(node.getExpression().getText())) return portOf(node.getArguments()[0], depth + 1);
-  if (Node.isPrefixUnaryExpression(node)) return portOf(node.getOperand(), depth + 1);
-  return {};
-};
-
-/** The port in `{ port: 4001 }`, or the expression itself. */
-const portIn = (argument: TsNode | undefined): { port?: number; setting?: string } => {
-  const node = followed(argument);
-  if (node !== undefined && Node.isObjectLiteralExpression(node)) return portOf(option(node, 'port'));
-  return portOf(node);
-};
-
 /** Apollo Server's standalone server listens here unless told otherwise. */
 const STANDALONE_PORT = 4000;
 
 /**
  * Where the server listens, read where it starts (P245):
  * `startStandaloneServer(server, { listen: { port } })` (port 4000 where it
- * names none, the library's default), and `app.listen(4002)`,
- * `app.listen({ port })`, `await app.listen(process.env.PORT ?? 4003)` of
- * Express, Fastify, NestJS and Node's own server. A port no code writes - a
+ * names none, the library's default), and every `<server>.listen(port)` of
+ * Express, Fastify, NestJS and Node's own server, read by the core's reader
+ * every HTTP server's port is read by (P250). A port no code writes - a
  * setting with no fallback - is not one.
  */
-const listenPortsOf = (sources: readonly SourceFile[]): ListenPort[] => {
+export const listenPortsOf = (sources: readonly SourceFile[]): ListenPort[] => {
   const found: ListenPort[] = [];
   for (const sourceFile of sources) {
+    if (!sourceFile.getFullText().includes('startStandaloneServer')) continue;
     sourceFile.forEachDescendant((node) => {
-      if (!Node.isCallExpression(node)) return;
-      const callee = node.getExpression().getText();
-      let read: { port?: number; setting?: string } | undefined;
-      if (/(^|\.)startStandaloneServer$/.test(callee)) {
-        const options = followed(node.getArguments()[1]);
-        const listen = options !== undefined && Node.isObjectLiteralExpression(options) ? option(options, 'listen') : undefined;
-        read = listen === undefined ? { port: STANDALONE_PORT } : portIn(listen);
-      } else if (Node.isPropertyAccessExpression(node.getExpression()) && node.getExpression().getText().endsWith('.listen')) {
-        read = portIn(node.getArguments()[0]);
-      }
-      if (read?.port === undefined) return;
-      if (found.some((each) => each.port === read?.port)) return;
-      found.push({ port: read.port, at: node, ...(read.setting === undefined ? {} : { setting: read.setting }) });
+      if (!Node.isCallExpression(node) || !/(^|\.)startStandaloneServer$/.test(node.getExpression().getText())) return;
+      const options = followed(node.getArguments()[1]);
+      const listen = options !== undefined && Node.isObjectLiteralExpression(options) ? option(options, 'listen') : undefined;
+      const read = listen === undefined ? listenAt({ port: STANDALONE_PORT }, node, { default: true }) : listenAt(portIn(listen), node);
+      if (read !== undefined) found.push(read);
     });
   }
-  return found;
+  found.push(...listenCallsIn(sources));
+  // One port is one way in, however many lines start a server on it.
+  return found.filter((each, index) => found.findIndex((other) => other.port === each.port) === index);
 };
 
 /** Whether the service is one subgraph of a federated graph, and of which version. */

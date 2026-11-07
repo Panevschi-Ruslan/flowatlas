@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-08T19:06:20.228Z",
+  "builtAt": "2026-11-07T17:40:47.797Z",
   "services": [
     {
       "name": "orders-api",
@@ -919,7 +919,14 @@
           "entry": [
             "koa-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/server.ts",
+            "line": 48
+          }
+        ]
       }
     },
     {
@@ -941,7 +948,14 @@
           "entry": [
             "fastify-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/server.ts",
+            "line": 34
+          }
+        ]
       }
     },
     {
@@ -964,7 +978,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9
+          }
+        ]
       }
     },
     {

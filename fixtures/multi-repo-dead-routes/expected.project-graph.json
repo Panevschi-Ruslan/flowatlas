@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T04:49:56.851Z",
+  "builtAt": "2026-11-07T17:38:16.134Z",
   "services": [
     {
       "name": "catalog-api",
@@ -695,7 +695,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {

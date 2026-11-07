@@ -28,6 +28,27 @@ only one of them moved.
   `@ResolveField() __resolveType` is no longer read as a field.
   `@requires`, `@provides` and `@external` were already planned (P241). New
   fixture `graphql-federation-gaps`.
+- **A request to a port on this machine joins the service listening there
+  (P250).** The port a server is started on is read for every server the tool
+  reads - `<server>.listen(port)` for express, koa, fastify, NestJS and Node's
+  own server, Hono's `serve({ fetch, port })`, `Bun.serve`, `Deno.serve` and
+  `export default { port, fetch }`, GraphQL's standalone server, Nuxt's
+  `devServer.port`, and `--port` / `-p` on a `next`, `nuxi` or `nitro` script -
+  and kept on the service's repository node (`meta.listen`). A request to
+  `localhost`, `127.0.0.1`, `0.0.0.0` or `[::1]` at that port, from a browser,
+  a server, a procedure client or a gateway naming a subgraph, joins it
+  `via: host` with `meta.listensAt` on the edge: `static` where the code writes
+  the port as a number, `heuristic` where it is a setting's fallback, a
+  library's default or a setting file's value. A host the configuration names
+  still decides; two services on one port is the new row `local-port-shared`
+  naming each and where it listens, and the third-party node a reader drew for
+  the host goes. A hook written on one call (`useFetch(url, { onRequest })`,
+  `$fetch(url, { onRequest })`, a ky call's `hooks.beforeRequest`) is read for
+  that call only (`baseFrom: "call-hook"`), and a ky hook answering
+  `new Request(request.url.replace(location.origin, X), request)` or
+  `new Request(new URL(url.pathname, X), request)` is read as a new origin in
+  front of the old path. The coverage counting rule gains the family `listens`
+  (`fixtures/listen-port-joins`).
 
 - **A function run before every request carries its base into each one
   (P244).** An axios request interceptor (`api.interceptors.request.use`, on an
@@ -378,6 +399,12 @@ only one of them moved.
   `index`); one that cannot be is `procedure-branch-unread` saying it is a
   lazy branch, and the module it names is no longer read as a root of its
   own, with its procedures at addresses nobody calls.
+- **A subgraph whose port is only a setting's fallback joins `heuristic`
+  (P250).** P245 joined a gateway's `localhost:<port>` subgraph `static`
+  whatever the port was read from; it now follows the rule every request to
+  this machine does, so `process.env.PORT ?? 4003` and Apollo's default 4000
+  are a guess. A GraphQL endpoint's `meta.graphql.listen` says `default: true`
+  for a library's default.
 
 - **A queue, a topic or a bucket Terraform gives no name is named by its
   declaration (P246)**, as the Serverless Framework and CDK readers name one:

@@ -1,21 +1,21 @@
-%  WishlistPage                               kiosk/src/WishlistPage.tsx:15
-  ^  query Wishlist /graphql                  kiosk/src/WishlistPage.tsx:16
-    => accounts @  Query.me ?declared         accounts/src/accounts.resolver.ts:9
-      -> AccountsResolver.me                  accounts/src/accounts.resolver.ts:9
-        -> AccountsService.current            accounts/src/accounts.service.ts:20
-    => accounts @  User.email ?declared       accounts/src/accounts.resolver.ts:35
+%  WishlistPage                                kiosk/src/WishlistPage.tsx:15
+  ^  query Wishlist /graphql                   kiosk/src/WishlistPage.tsx:16
+    => accounts @  Query.me ~heuristic         accounts/src/accounts.resolver.ts:9
+      -> AccountsResolver.me                   accounts/src/accounts.resolver.ts:9
+        -> AccountsService.current             accounts/src/accounts.service.ts:20
+    => accounts @  User.email ~heuristic       accounts/src/accounts.resolver.ts:35
       !  @policy(account:owner | support & staff)
-      -> UserResolver.email                   accounts/src/accounts.resolver.ts:35
-    => accounts @  User.wishlist ?declared    accounts/src/accounts.resolver.ts:40
-      -> UserResolver.wishlist                accounts/src/accounts.resolver.ts:40
-        -> AccountsService.wishlist           accounts/src/accounts.service.ts:32
-    => accounts @  User.currency ?declared    accounts/src/accounts.resolver.ts:30
-      -> UserResolver.currency                accounts/src/accounts.resolver.ts:30
-    => accounts @  WishItem.price ?declared   accounts/src/accounts.resolver.ts:51
-      -> WishItemResolver.price               accounts/src/accounts.resolver.ts:51
-        -> AccountsService.price              accounts/src/accounts.service.ts:36
-    => router @  POST /graphql ?declared      router/router/supergraph.graphql
-      => accounts @  POST /graphql ?declared  accounts/src/app.module.ts:9
-      => media @  POST / ?declared            media/src/index.ts:23
-      => reviews @  POST /graphql ?declared   reviews/src/index.ts:39
+      -> UserResolver.email                    accounts/src/accounts.resolver.ts:35
+    => accounts @  User.wishlist ~heuristic    accounts/src/accounts.resolver.ts:40
+      -> UserResolver.wishlist                 accounts/src/accounts.resolver.ts:40
+        -> AccountsService.wishlist            accounts/src/accounts.service.ts:32
+    => accounts @  User.currency ~heuristic    accounts/src/accounts.resolver.ts:30
+      -> UserResolver.currency                 accounts/src/accounts.resolver.ts:30
+    => accounts @  WishItem.price ~heuristic   accounts/src/accounts.resolver.ts:51
+      -> WishItemResolver.price                accounts/src/accounts.resolver.ts:51
+        -> AccountsService.price               accounts/src/accounts.service.ts:36
+    => router @  POST /graphql ?declared       router/router/supergraph.graphql
+      => accounts @  POST /graphql ~heuristic  accounts/src/app.module.ts:9
+      => media @  POST / ?declared             media/src/index.ts:23
+      => reviews @  POST /graphql ?declared    reviews/src/index.ts:39
 unresolved on this path: 1

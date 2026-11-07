@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T05:29:47.634Z",
+  "builtAt": "2026-11-07T17:37:50.845Z",
   "services": [
     {
       "name": "parcels",
@@ -1416,7 +1416,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {

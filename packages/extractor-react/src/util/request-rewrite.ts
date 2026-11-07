@@ -27,7 +27,10 @@ import type { ApiUrl } from './url.js';
  *   unless the result is absolute.
  * - `origin`: it replaces the whole request with one at a new address built
  *   from the old one's path, `new Request(`${X}${new URL(request.url).pathname}`,
- *   request)`; the path keeps the base's own path and loses its host.
+ *   request)`; the path keeps the base's own path and loses its host. Two more
+ *   spellings say the same (P250): the old address with its origin replaced,
+ *   `request.url.replace(location.origin, X)`, and the old path resolved
+ *   against the base, `new URL(new URL(request.url).pathname, X)`.
  *
  * Read only where it is certain, by the rule an interceptor of the framework's
  * client is read by (P239): the one condition that changes nothing is whether
@@ -40,6 +43,12 @@ export interface Rewrite {
   readonly base: ApiUrl;
   /** Where the function writes it, for the row that says two disagree. */
   readonly at: TsNode;
+  /**
+   * Only for a request whose address is relative to the page (P250): a hook
+   * that replaces the page's own origin changes nothing for one already sent
+   * to a host or a setting.
+   */
+  readonly when?: 'relative';
 }
 
 export type RewriteReading =
@@ -145,12 +154,21 @@ const HANDED: Readonly<Record<RequestRewrites['handed'], (fn: Fn, rewrites: Requ
   // address is anything read off `request.url`.
   request: (fn, rewrites) => {
     const request = bindingOf(fn.getParameters()[0]);
+    // A name the hook gives what it read off the request reads it too:
+    // `const url = new URL(request.url)` (P250).
+    const reads = (node: TsNode, depth: number): boolean =>
+      depth < 4 &&
+      [unwrap(node), ...node.getDescendants()].some((each) => {
+        if (Node.isPropertyAccessExpression(each) && each.getName() === rewrites.addressKey && refersTo(each.getExpression(), request)) return true;
+        if (!Node.isIdentifier(each)) return false;
+        const declaration = each.getSymbol()?.getDeclarations()[0];
+        if (declaration === undefined || !Node.isVariableDeclaration(declaration) || ownerOf(declaration) !== fn) return false;
+        const value = declaration.getInitializer();
+        return value !== undefined && reads(value, depth + 1);
+      });
     return {
       isOptions: () => false,
-      isAddress: (node) =>
-        [unwrap(node), ...node.getDescendants()].some(
-          (each) => Node.isPropertyAccessExpression(each) && each.getName() === rewrites.addressKey && refersTo(each.getExpression(), request),
-        ),
+      isAddress: (node) => reads(node, 0),
     };
   },
 };
@@ -264,6 +282,77 @@ const fallbackIn = (value: TsNode, handed: Handed, baseKey: string): TsNode | un
   return Node.isPropertyAccessExpression(left) && left.getName() === baseKey && handed.isOptions(left.getExpression()) ? target.getRight() : undefined;
 };
 
+/** `location.origin` and its spellings: the origin of the page a request relative to it is sent from. */
+const PAGE_ORIGIN = /^(?:(?:window|globalThis|self|document)\.)?location\.origin$/;
+
+/** An expression through `.toString()` and `.href`, which spell the same address. */
+const asText = (node: TsNode): TsNode => {
+  const target = unwrap(node);
+  if (Node.isCallExpression(target) && target.getArguments().length === 0) {
+    const callee = target.getExpression();
+    if (Node.isPropertyAccessExpression(callee) && callee.getName() === 'toString') return asText(callee.getExpression());
+  }
+  if (Node.isPropertyAccessExpression(target) && target.getName() === 'href') return asText(target.getExpression());
+  return target;
+};
+
+/** Whether an expression is the path the request has, read off its own address: `url.pathname`, with `search` after it. */
+const isOwnPath = (node: TsNode, handed: Handed): boolean => {
+  const target = unwrap(node);
+  const part = (each: TsNode, name: string): boolean => {
+    const at = unwrap(each);
+    return Node.isPropertyAccessExpression(at) && at.getName() === name && handed.isAddress(at.getExpression());
+  };
+  if (part(target, 'pathname')) return true;
+  if (Node.isBinaryExpression(target) && target.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
+    return part(target.getLeft(), 'pathname') && part(target.getRight(), 'search');
+  }
+  if (Node.isTemplateExpression(target) && target.getHead().getLiteralText() === '') {
+    const spans = target.getTemplateSpans();
+    return spans.every((span) => span.getLiteral().getLiteralText() === '') && part(spans[0]?.getExpression() as TsNode, 'pathname') && spans.slice(1).every((span) => part(span.getExpression(), 'search'));
+  }
+  return false;
+};
+
+/** A base cut to its origin, as `new URL(path, base)` cuts it: a literal's own path is dropped. */
+const originOnly = (base: ApiUrl): ApiUrl => {
+  if (base.host === null || base.url === null) return base;
+  try {
+    const url = new URL(base.url);
+    return { ...base, url: url.origin, path: '' };
+  } catch {
+    return base;
+  }
+};
+
+/**
+ * The base a new request's address puts in front of the old one's path,
+ * where it is written as the old address with its origin replaced or as the
+ * old path resolved against the base (P250): `request.url.replace(location.origin,
+ * X)`, `request.url.replace(new URL(request.url).origin, X)`,
+ * `new URL(new URL(request.url).pathname, X)`. Nothing where it is neither.
+ */
+const originOf = (written: TsNode, handed: Handed, read: BaseReader): { base: ApiUrl | 'unread'; when?: 'relative' } | undefined => {
+  const value = asText(written);
+  if (Node.isCallExpression(value)) {
+    const callee = value.getExpression();
+    const [from, to] = value.getArguments();
+    if (!Node.isPropertyAccessExpression(callee) || !['replace', 'replaceAll'].includes(callee.getName()) || from === undefined || to === undefined) return undefined;
+    if (!handed.isAddress(callee.getExpression())) return undefined;
+    const origin = unwrap(from);
+    if (PAGE_ORIGIN.test(origin.getText())) return { base: read(to), when: 'relative' };
+    const own = Node.isPropertyAccessExpression(origin) && origin.getName() === 'origin' && handed.isAddress(origin.getExpression());
+    return own ? { base: read(to) } : undefined;
+  }
+  if (Node.isNewExpression(value) && value.getExpression().getText() === 'URL') {
+    const [path, base] = value.getArguments();
+    if (path === undefined || base === undefined || !isOwnPath(path, handed)) return undefined;
+    const found = read(base);
+    return { base: found === 'unread' ? found : originOnly(found) };
+  }
+  return undefined;
+};
+
 /** How much of a written expression a row quotes. */
 const quoted = (node: TsNode): string => node.getText().replace(/\s+/g, ' ').slice(0, 60);
 
@@ -272,36 +361,42 @@ const quoted = (node: TsNode): string => node.getText().replace(/\s+/g, ' ').sli
  * as one reading per write: nothing where it writes neither the base nor the
  * address.
  */
-export const rewritesOf = (fnNode: TsNode, factory: ClientFactory, read: BaseReader): RewriteReading[] => {
+export const rewritesOf = (fnNode: TsNode, factory: ClientFactory, read: BaseReader, who?: string): RewriteReading[] => {
   const rewrites = factory.rewrites;
   if (rewrites === undefined || !isFn(fnNode)) return [];
   const fn = fnNode;
   const handed = HANDED[rewrites.handed](fn, rewrites);
-  const named = factory.client.name;
+  // Who the row says runs it: the client before every request, or one call before its own (P250).
+  const runs = who ?? `a function ${factory.client.name} runs before every request`;
   return writesOf(fn, handed, factory, rewrites).map((write): RewriteReading => {
     const conditions = conditionsAround(write.at, fnNode);
     const unset = conditions.some((condition) => asksUnset(condition, handed, factory.baseKey));
     const open = conditions.filter((condition) => !asksAbsolute(condition, handed.isAddress) && !asksUnset(condition, handed, factory.baseKey));
     if (open.length > 0) {
-      return { kind: 'unread', at: write.at, why: `a function ${named} runs before every request rewrites the address only when ${quoted(open[0] as TsNode)}, so which requests go out under it is not known` };
+      return { kind: 'unread', at: write.at, why: `${runs} rewrites the address only when ${quoted(open[0] as TsNode)}, so which requests go out under it is not known` };
     }
     const value = unwrap(write.value);
     if (Node.isConditionalExpression(value)) {
-      return { kind: 'unread', at: write.at, why: `a function ${named} runs before every request writes one of two bases by a branch (${quoted(value.getCondition())}), and which one a request goes out under is not read` };
+      return { kind: 'unread', at: write.at, why: `${runs} writes one of two bases by a branch (${quoted(value.getCondition())}), and which one a request goes out under is not read` };
     }
     if (write.key === 'base') {
       const behind = fallbackIn(value, handed, factory.baseKey);
       const base = read(behind ?? value);
-      if (base === 'unread') return { kind: 'unread', at: write.at, why: `a function ${named} runs before every request writes ${factory.baseKey} and it could not be read` };
+      if (base === 'unread') return { kind: 'unread', at: write.at, why: `${runs} writes ${factory.baseKey} and it could not be read` };
       const kind = write.fallback === true || unset || behind !== undefined ? 'fallback' : 'base';
       return { kind: 'rewrite', rewrite: { kind, base, at: write.at } };
+    }
+    if (write.key === 'origin') {
+      const replaced = originOf(value, handed, read);
+      if (replaced?.base === 'unread') return { kind: 'unread', at: write.at, why: `${runs} replaces the request's origin, and the base it puts there could not be read` };
+      if (replaced !== undefined) return { kind: 'rewrite', rewrite: { kind: 'origin', base: replaced.base, at: write.at, ...(replaced.when === undefined ? {} : { when: replaced.when }) } };
     }
     const prefix = prefixOfRewrite(value, handed.isAddress, (node) => {
       const base = read(node);
       return base === 'unread' ? { url: null, path: null, baseUrlEnv: null, host: null, via: null, guessed: false } : base;
     });
     if (prefix === undefined) {
-      return { kind: 'unread', at: write.at, why: `a function ${named} runs before every request rewrites the address, and the base it puts in front could not be read` };
+      return { kind: 'unread', at: write.at, why: `${runs} rewrites the address, and the base it puts in front could not be read` };
     }
     return { kind: 'rewrite', rewrite: { kind: write.key === 'origin' ? 'origin' : 'prefix', base: prefix, at: write.at } };
   });
@@ -325,6 +420,8 @@ export const basedBy = (rewrite: Rewrite | undefined, base: ApiUrl | undefined):
     case 'prefix':
       return base === undefined ? rewrite.base : underBase(base, rewrite.base);
     case 'origin':
+      // The page's origin is in front only of a request relative to the page (P250).
+      if (rewrite.when === 'relative' && base !== undefined && (base.host !== null || base.baseUrlEnv !== null)) return base;
       return base === undefined || base.path === null ? rewrite.base : underBase(rewrite.base, pathOnly(base));
   }
 };

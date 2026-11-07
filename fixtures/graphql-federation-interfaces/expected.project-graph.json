@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T18:14:51.039Z",
+  "builtAt": "2026-11-07T17:36:57.234Z",
   "services": [
     {
       "name": "gateway",
@@ -2191,7 +2191,15 @@
             "nestjs-http",
             "graphql-resolvers"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4003,
+            "file": "src/main.ts",
+            "line": 7,
+            "setting": "PORT"
+          }
+        ]
       }
     },
     {
@@ -2213,7 +2221,14 @@
             "graphql-resolvers",
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4000,
+            "file": "src/index.ts",
+            "line": 24
+          }
+        ]
       }
     },
     {
@@ -2234,7 +2249,14 @@
           "entry": [
             "graphql-resolvers"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4004,
+            "file": "src/index.ts",
+            "line": 22
+          }
+        ]
       }
     },
     {
@@ -2277,7 +2299,14 @@
           "entry": [
             "graphql-resolvers"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4004,
+            "file": "src/server.ts",
+            "line": 20
+          }
+        ]
       }
     },
     {
@@ -2298,7 +2327,14 @@
           "entry": [
             "graphql-resolvers"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4001,
+            "file": "src/index.ts",
+            "line": 27
+          }
+        ]
       }
     },
     {
@@ -2320,7 +2356,14 @@
             "graphql-resolvers",
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4002,
+            "file": "src/index.ts",
+            "line": 45
+          }
+        ]
       }
     },
     {
@@ -3001,7 +3044,7 @@
       "from": "entry:accounts:graphql:User.email",
       "to": "router#router/supergraph.graphql:@policy(account:owner | support & staff)",
       "type": "guarded_by",
-      "confidence": "declared",
+      "confidence": "heuristic",
       "meta": {
         "order": 0,
         "scope": "route",
@@ -3043,7 +3086,7 @@
       "from": "entry:gateway:http:POST:/graphql",
       "to": "entry:accounts:http:POST:/graphql",
       "type": "http_calls",
-      "confidence": "static",
+      "confidence": "heuristic",
       "file": "src/index.ts",
       "line": 12,
       "meta": {
@@ -3205,7 +3248,7 @@
       "from": "entry:router:http:POST:/graphql",
       "to": "entry:accounts:http:POST:/graphql",
       "type": "http_calls",
-      "confidence": "declared",
+      "confidence": "heuristic",
       "file": "router/supergraph.graphql",
       "line": 43,
       "meta": {
@@ -3351,7 +3394,7 @@
       "from": "ui_api_call:kiosk#src/ItemCard.tsx:13:20",
       "to": "entry:accounts:graphql:Query.wishItem",
       "type": "hits",
-      "confidence": "declared",
+      "confidence": "heuristic",
       "file": "src/ItemCard.tsx",
       "line": 5,
       "meta": {
@@ -3368,7 +3411,7 @@
       "from": "ui_api_call:kiosk#src/ItemCard.tsx:13:20",
       "to": "entry:accounts:graphql:WishItem.price",
       "type": "hits",
-      "confidence": "declared",
+      "confidence": "heuristic",
       "file": "src/ItemCard.tsx",
       "line": 7,
       "meta": {
@@ -3487,7 +3530,7 @@
       "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
       "to": "entry:accounts:graphql:Query.me",
       "type": "hits",
-      "confidence": "declared",
+      "confidence": "heuristic",
       "file": "src/WishlistPage.tsx",
       "line": 5,
       "meta": {
@@ -3504,7 +3547,7 @@
       "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
       "to": "entry:accounts:graphql:User.currency",
       "type": "hits",
-      "confidence": "declared",
+      "confidence": "heuristic",
       "file": "src/WishlistPage.tsx",
       "line": 9,
       "meta": {
@@ -3523,7 +3566,7 @@
       "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
       "to": "entry:accounts:graphql:User.email",
       "type": "hits",
-      "confidence": "declared",
+      "confidence": "heuristic",
       "file": "src/WishlistPage.tsx",
       "line": 6,
       "meta": {
@@ -3540,7 +3583,7 @@
       "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
       "to": "entry:accounts:graphql:User.wishlist",
       "type": "hits",
-      "confidence": "declared",
+      "confidence": "heuristic",
       "file": "src/WishlistPage.tsx",
       "line": 7,
       "meta": {
@@ -3557,7 +3600,7 @@
       "from": "ui_api_call:kiosk#src/WishlistPage.tsx:16:20",
       "to": "entry:accounts:graphql:WishItem.price",
       "type": "hits",
-      "confidence": "declared",
+      "confidence": "heuristic",
       "file": "src/WishlistPage.tsx",
       "line": 9,
       "meta": {

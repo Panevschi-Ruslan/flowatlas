@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-sequelize-typescript",
-  "generatedAt": "2026-10-07T14:34:31.562Z",
+  "generatedAt": "2026-11-07T17:39:50.313Z",
   "nodes": [
     {
       "id": "db_query:nest-sequelize-typescript#src/documents/documents.service.ts:12:12",
@@ -512,7 +512,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:29:15.112Z",
+  "builtAt": "2026-11-07T18:07:26.876Z",
   "services": [
     {
       "name": "catalog",
@@ -911,7 +911,14 @@
           "entry": [
             "graphql-resolvers"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4001,
+            "file": "src/index.ts",
+            "line": 26
+          }
+        ]
       }
     },
     {
@@ -932,7 +939,14 @@
           "entry": [
             "graphql-resolvers"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4002,
+            "file": "src/index.ts",
+            "line": 37
+          }
+        ]
       }
     },
     {

@@ -51,6 +51,6 @@ export { documentOf, lineInFile } from './documents.js';
 export type { DocumentReading } from './documents.js';
 export { clientEndpointIn, fetchedDocument, graphqlCallOf, SERVICE_SENDS, serviceDocumentOf } from './calls.js';
 export type { GraphqlCall, GraphqlLibrary } from './calls.js';
-export { readGraphqlServer, REFERENCE_FIELD } from './servers.js';
+export { listenPortsOf, readGraphqlServer, REFERENCE_FIELD } from './servers.js';
 export type { ListenPort, ResolvedField, ServerReading } from './servers.js';
 export { GRAPHQL_META, operationMeta, type GraphqlCallMeta, type MetaField } from './meta.js';

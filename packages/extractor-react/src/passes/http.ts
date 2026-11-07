@@ -273,10 +273,32 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     }
   };
 
+  /**
+   * A hook a call writes among its own options whose rewrite of the address
+   * could not be read (P250), said once at the line that writes it.
+   */
+  const reportUnreadCallHook = (hooked: ClientInstance): void => {
+    const unread = hooked.rewriteUnread;
+    if (unread === undefined || saidUnread.has(unread.at)) return;
+    saidUnread.add(unread.at);
+    ctx.report({
+      file: ctx.fileOf(unread.at),
+      line: siteOf(unread.at).line,
+      reason: 'api-client-base-unread',
+      hint: `The base of this ${hooked.factory.client.name} request: ${unread.why}. It is recorded under the base its call or its client gives, and the hook may change it. Set the base unconditionally, to a literal, a settings key or a constant.`,
+      symbol: unread.at.getText().slice(0, 80),
+    });
+  };
+
   const record = (found: FoundCall, request: ReadRequest, handedIn?: string | null): void => {
     const { call: network, client, shape } = found;
     const { site } = request;
     if (found.instance !== undefined) reportUnreadBase(found.instance);
+    // A hook the call writes for itself runs for this request alone (P250).
+    const factory = found.instance?.factory ?? CLIENT_FACTORIES.find((each) => each.client.name === client.name);
+    const hooked =
+      factory === undefined || shape.optionsAt === undefined ? undefined : instances.atCall(network, factory, shape.optionsAt, found.instance);
+    if (hooked !== undefined) reportUnreadCallHook(hooked);
     // The path at the call site is written under whatever base its client holds,
     // so the address is the two of them together. Recorded that way rather than
     // forgiven later: `impact`, `dead` and `contracts` all read what is written
@@ -292,7 +314,8 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     // And a function the instance runs before every request may rewrite
     // either, after both are known: it sets the base over the call's own, or
     // where none is set, or puts one in front of the address (P244).
-    const base = basedBy(found.instance?.rewrite, before);
+    const runs = hooked ?? found.instance;
+    const base = basedBy(runs?.rewrite, before);
     const rewritten = base !== before;
     const address = underBase(base, request.address);
     const at = siteOf(site.call);
@@ -337,7 +360,11 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         // Where the opening of the address came from, said only when it is not
         // the client's own: an address that differs from every other one this
         // client writes is a fact a reader should not have to go and work out.
-        ...(rewritten ? { baseFrom: 'interceptor' } : written?.kind === 'base' ? { baseFrom: 'call' } : {}),
+        ...(rewritten
+          ? { baseFrom: hooked?.rewrite !== undefined && hooked.rewrite !== found.instance?.rewrite ? 'call-hook' : 'interceptor' }
+          : written?.kind === 'base'
+            ? { baseFrom: 'call' }
+            : {}),
         ...(found.local === undefined ? {} : { localClient: found.local }),
         via: address.via,
         ...(found.described?.client.describedBy === undefined ? {} : { describedBy: found.described.client.describedBy }),

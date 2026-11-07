@@ -16,7 +16,7 @@
         -> ratingOf                                 reviews/src/reviews.ts:10
           -> reviewsOf                              reviews/src/reviews.ts:8
     => router @  POST /graphql ?declared            router/router/supergraph.graphql
-      => accounts @  POST /graphql ?declared        accounts/src/app.module.ts:9
+      => accounts @  POST /graphql ~heuristic       accounts/src/app.module.ts:9
       => media @  POST / ?declared                  media/src/index.ts:23
       => reviews @  POST /graphql ?declared         reviews/src/index.ts:39
 unresolved on this path: 1

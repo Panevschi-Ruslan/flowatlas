@@ -196,4 +196,18 @@ describe('where a request is written, and what stands in front of it (P244)', ()
     ].join('\n');
     assert.deepEqual(sitesIn('src/api.ts', text), { bases: 8 });
   });
+
+  it('counts each server started on a port, and not a listen with nothing to listen on', () => {
+    const text = [
+      'app.listen(3001);',
+      'await app.listen({ port: Number(process.env.PORT) || 3002 });',
+      'http.createServer(app).listen(port, () => {});',
+      'serve({ fetch: app.fetch, port: 3003 });',
+      'Bun.serve({ port: 3004, fetch });',
+      'Deno.serve(handler);',
+      'server.listen();',
+      'observe(source, { serve: true });',
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/main.ts', text), { listens: 6 });
+  });
 });

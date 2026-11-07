@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "express-not-installed",
-  "generatedAt": "2026-10-16T15:10:43.683Z",
+  "generatedAt": "2026-11-07T17:36:35.711Z",
   "nodes": [
     {
       "id": "entry:express-not-installed:http:GET:/admin",
@@ -216,7 +216,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 9000,
+            "file": "src/server.ts",
+            "line": 27
+          }
+        ]
       }
     }
   ],

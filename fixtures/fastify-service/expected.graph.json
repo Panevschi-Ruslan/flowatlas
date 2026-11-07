@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "fastify-service",
-  "generatedAt": "2026-10-08T09:12:34.866Z",
+  "generatedAt": "2026-11-07T17:36:40.627Z",
   "nodes": [
     {
       "id": "db_query:fastify-service#src/orders/orders.repository.ts:12:12",
@@ -414,7 +414,14 @@
           "entry": [
             "fastify-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 21
+          }
+        ]
       }
     },
     {

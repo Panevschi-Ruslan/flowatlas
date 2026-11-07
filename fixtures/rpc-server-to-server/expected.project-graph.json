@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T18:10:18.352Z",
+  "builtAt": "2026-11-07T17:40:49.895Z",
   "services": [
     {
       "name": "orders",
@@ -770,7 +770,14 @@
             "express-routes",
             "trpc-procedures"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 4000,
+            "file": "src/server.ts",
+            "line": 11
+          }
+        ]
       }
     },
     {
@@ -793,7 +800,14 @@
             "express-routes",
             "orpc-procedures"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 16
+          }
+        ]
       }
     },
     {
@@ -814,7 +828,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 5000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

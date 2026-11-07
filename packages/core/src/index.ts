@@ -319,6 +319,17 @@ export {
   ROOT_APPLICATION,
 } from './adapters/applications.js';
 export type { ApplicationKeys, ApplicationMap } from './adapters/applications.js';
+export {
+  LISTEN_META,
+  listenAt,
+  listenCallsIn,
+  listeningOf,
+  literalPort,
+  placedPort,
+  portIn,
+  portWritten,
+} from './listen-port.js';
+export type { ListenAt, ListenPort, WrittenPort } from './listen-port.js';
 export { LOG_LEVELS, createLogger, silentLogger } from './adapters/context.js';
 export type { ExtractContext, LogLevel, Logger } from './adapters/context.js';
 export {

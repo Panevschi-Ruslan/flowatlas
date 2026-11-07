@@ -329,3 +329,119 @@ describe('ky beforeRequest hooks that replace the request (P244)', () => {
     expect(rows(headers)).toEqual([]);
   });
 });
+
+describe('a hook written on one call (P250)', () => {
+  it('reads `useFetch`, `useLazyFetch` and `$fetch` with their own `onRequest` into that call only', () => {
+    const graph = read({
+      '/src/Panel.tsx': `
+        export const Panel = () => {
+          const load = () => {
+            useFetch('/orders', { onRequest({ options }) { options.baseURL = import.meta.env.VITE_ORDERS_URL; } });
+            useLazyFetch('/stock', { onRequest: (ctx) => { ctx.options.baseURL = '/inventory'; } });
+            $fetch('/items', { method: 'POST', body: { a: 1 }, onRequest({ options }) { options.baseURL ??= '/catalog'; } });
+            $fetch('/plain');
+          };
+          return <button onClick={load} />;
+        };
+      `,
+    });
+    expect(addresses(graph)).toEqual(['GET ${VITE_ORDERS_URL}/orders', 'GET /inventory/stock', 'GET /plain', 'POST /catalog/items']);
+    expect(requests(graph).filter((node) => node.meta?.['baseFrom'] === 'call-hook')).toHaveLength(3);
+    expect(rows(graph)).toEqual([]);
+  });
+
+  it('replaces an ofetch instance hook with the call own, and keeps the instance hook for calls that write none', () => {
+    const graph = read({
+      '/src/api.ts': `export const api = $fetch.create({ onRequest({ options }) { options.baseURL = '/made'; } });\n`,
+      '/src/Panel.tsx': PANEL(
+        `api('/a'); api('/b', { onRequest({ options }) { options.baseURL = '/own'; } }); api('/c', { onRequest({ options }) { options.headers = {}; } });`,
+      ),
+    });
+    expect(addresses(graph)).toEqual(['GET /c', 'GET /made/a', 'GET /own/b']);
+    const from = Object.fromEntries(requests(graph).map((node) => [String(node.meta?.['url']), node.meta?.['baseFrom'] ?? null]));
+    expect(from).toEqual({ '/made/a': 'interceptor', '/own/b': 'call-hook', '/c': null });
+  });
+
+  it('runs a ky call hook after the instance own, and says so where the two disagree', () => {
+    const agree = read({
+      '/src/api.ts': `import ky from 'ky';\nexport const api = ky.create({ prefixUrl: '/api' });\n`,
+      '/src/Panel.tsx': PANEL(
+        "api.get('items', { hooks: { beforeRequest: [(request) => new Request(`${import.meta.env.VITE_BILLING_URL}${new URL(request.url).pathname}`, request)] } });",
+      ),
+    });
+    expect(addresses(agree)).toEqual(['GET ${VITE_BILLING_URL}/api/items']);
+    expect(requests(agree)[0]?.meta?.['baseFrom']).toBe('call-hook');
+    const disagree = read({
+      '/src/api.ts': [
+        `import ky from 'ky';`,
+        "export const api = ky.create({ prefixUrl: '/api', hooks: { beforeRequest: [(request) => new Request(`https://one.example.test${new URL(request.url).pathname}`, request)] } });",
+        '',
+      ].join('\n'),
+      '/src/Panel.tsx': PANEL(
+        "api.get('items', { hooks: { beforeRequest: [(request) => new Request(`https://two.example.test${new URL(request.url).pathname}`, request)] } });",
+      ),
+    });
+    expect(addresses(disagree)).toEqual(['GET /api/items']);
+    expect(rows(disagree)).toHaveLength(1);
+  });
+
+  it('is a row at the hook, worded for the call, where its base is chosen by a branch', () => {
+    const graph = read({
+      '/src/Panel.tsx': `
+        export const Panel = () => {
+          const load = () => { $fetch('/items', { onRequest({ options }) { options.baseURL = isStaff() ? '/staff' : '/shop'; } }); };
+          return <button onClick={load} />;
+        };
+      `,
+    });
+    expect(addresses(graph)).toEqual(['GET /items']);
+    expect(rows(graph)).toHaveLength(1);
+    expect(rows(graph)[0]?.hint).toContain('a hook this call runs before its request');
+  });
+});
+
+describe('ky hooks that build the address another way (P250)', () => {
+  const KY_WITH = (prefix: string, hook: string): string =>
+    [`import ky from 'ky';`, `export const api = ky.create({ prefixUrl: '${prefix}', hooks: { beforeRequest: [${hook}] } });`, ''].join('\n');
+
+  it('reads the page origin replaced by a base, only for a request relative to the page', () => {
+    const hook = '(request) => new Request(request.url.replace(window.location.origin, import.meta.env.VITE_BILLING_URL), request)';
+    const relative = read({ '/src/api.ts': KY_WITH('/api', hook), '/src/Panel.tsx': PANEL(`api.get('items');`) });
+    expect(addresses(relative)).toEqual(['GET ${VITE_BILLING_URL}/api/items']);
+    expect(rows(relative)).toEqual([]);
+    const absolute = read({ '/src/api.ts': KY_WITH('https://old.example.test/api', hook), '/src/Panel.tsx': PANEL(`api.get('items');`) });
+    expect(addresses(absolute)).toEqual(['GET https://old.example.test/api/items']);
+  });
+
+  it('reads the request own origin replaced, through a name the hook gives the address', () => {
+    const graph = read({
+      '/src/api.ts': KY_WITH(
+        'https://old.example.test/api',
+        '(request) => { const url = new URL(request.url); return new Request(request.url.replace(url.origin, "https://billing.example.test"), request); }',
+      ),
+      '/src/Panel.tsx': PANEL(`api.get('items');`),
+    });
+    expect(addresses(graph)).toEqual(['GET https://billing.example.test/api/items']);
+  });
+
+  it('reads the old path resolved against a base, which loses the base own path as `new URL` does', () => {
+    for (const hook of [
+      '(request) => new Request(new URL(new URL(request.url).pathname, "https://billing.example.test/ignored"), request)',
+      '(request) => { const url = new URL(request.url); return new Request(new URL(url.pathname + url.search, "https://billing.example.test").toString(), request); }',
+      '(request) => { const url = new URL(request.url); return new Request(`https://billing.example.test${url.pathname}`, request); }',
+    ]) {
+      const graph = read({ '/src/api.ts': KY_WITH('/api', hook), '/src/Panel.tsx': PANEL(`api.get('items');`) });
+      expect(addresses(graph), hook).toEqual(['GET https://billing.example.test/api/items']);
+      expect(rows(graph), hook).toEqual([]);
+    }
+  });
+
+  it('is a row where the replaced part is no origin', () => {
+    const graph = read({
+      '/src/api.ts': KY_WITH('/api', `(request) => new Request(request.url.replace('/v1', '/v2'), request)`),
+      '/src/Panel.tsx': PANEL(`api.get('items');`),
+    });
+    expect(addresses(graph)).toEqual(['GET /api/items']);
+    expect(rows(graph)).toHaveLength(1);
+  });
+});

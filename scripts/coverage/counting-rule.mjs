@@ -344,6 +344,16 @@ export const PROBES = [
     pattern: /\binterceptors\s*\.\s*request\s*\.\s*use\s*\(|\bonRequest\s*[(:]|\bbeforeRequest\s*:|\bimplements\s+HttpInterceptor\b|:\s*HttpInterceptorFn\b/g,
   },
   {
+    // Where a server is started on a port (P250): what a request to this
+    // machine's port joins by. Kept on the repository node, never a node of
+    // its own, so the family is a denominator and nothing is gated on it.
+    name: 'server-listen',
+    family: 'listens',
+    scope: 'line',
+    what: 'a server started on a port (`app.listen(port)`, `serve({ fetch, port })`, `Bun.serve(...)`, `Deno.serve(...)`)',
+    pattern: /\.\s*listen\s*\(\s*[^)\s]|(?<![\w$.])serve\s*\(\s*\{|\b(?:Bun|Deno)\s*\.\s*serve\s*\(/g,
+  },
+  {
     name: 'prisma-call-site',
     family: 'data',
     scope: 'line',
@@ -388,6 +398,7 @@ export const FAMILIES = [
   ['clicks', 'things a person can click'],
   ['requests', 'places a request is written'],
   ['bases', 'client instances and functions run before every request'],
+  ['listens', 'servers started on a port'],
   ['data', 'places the code reaches storage'],
   ['models', 'tables or models declared (an upper bound)'],
 ];

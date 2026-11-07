@@ -2,6 +2,8 @@ import type { Project } from 'ts-morph';
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  LISTEN_META,
+  listeningOf,
   countSources,
   GraphBuilder,
   parseConfig,
@@ -234,6 +236,8 @@ export const extractBrowser = (base: ExtractContext, options: FrontendExtractOpt
   // letting the other half fold its counts in is what keeps it one node; see
   // the server reader, which does the folding because it is the half that goes
   // second.
+  // Where the service's own server listens, where it has one (P250).
+  const listen = listeningOf(base);
   base.builder.addNode({
     id: `repo:${base.repo}`,
     type: 'repo',
@@ -245,6 +249,7 @@ export const extractBrowser = (base: ExtractContext, options: FrontendExtractOpt
         frontend: base.adapters.frontend.map((adapter) => adapter.name),
         entry: base.adapters.entry.map((adapter) => adapter.name),
       },
+      ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
     },
   });
 };

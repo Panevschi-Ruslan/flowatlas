@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  LISTEN_META,
+  listeningOf,
   builtInShapesFor,
   countSources,
   conventionsFor,
@@ -361,6 +363,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // when no other half ran, and folding those into themselves would count every
   // skipped call twice.
   const priorStats = builder.getNode(repoId)?.meta?.['stats'];
+  // Where the service's server listens, as the adapters that start it say
+  // (P250): what a request to this machine's port is joined by.
+  const listen = listeningOf(base);
   const node = builder.addNode({
     id: repoId,
     type: 'repo',
@@ -373,6 +378,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       adapters: {
         entry: adapters.entry.map((adapter) => adapter.name),
       },
+      ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
     },
   });
   node.meta = {

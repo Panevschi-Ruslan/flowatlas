@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-two-applications",
-  "generatedAt": "2026-10-07T14:34:34.365Z",
+  "generatedAt": "2026-11-07T17:39:57.143Z",
   "nodes": [
     {
       "id": "entry:nest-two-applications:http:GET:/legacy",
@@ -269,7 +269,19 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 14
+          },
+          {
+            "port": 3001,
+            "file": "src/worker/main.ts",
+            "line": 15
+          }
+        ]
       }
     }
   ],

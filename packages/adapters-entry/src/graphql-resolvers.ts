@@ -6,6 +6,7 @@ import {
   makeEntryId,
   makeHttpEntryKey,
   normalizeFilePath,
+  placedPort,
   startLineOf,
   type EntryAdapter,
   type EntryNode,
@@ -14,6 +15,7 @@ import {
 import {
   apiSchemaOf,
   besideFile,
+  listenPortsOf,
   readGraphqlServer,
   readRoverConfig,
   routeAddress,
@@ -180,6 +182,9 @@ const FEDERATION_UNREAD_HINTS: Readonly<Record<UnreadDetail, string>> = {
 export const graphqlResolversAdapter: EntryAdapter = {
   name: 'graphql-resolvers',
   detect: (pkg) => hasAnyDependency(pkg, GRAPHQL_SERVER_PACKAGES),
+  // Where the server listens, on the service's own node too, so every request
+  // to this machine is asked of it and not only a gateway's (P250).
+  listens: (ctx) => listenPortsOf([...repoSources(ctx)]).map((port) => placedPort(port, ctx.repoDir)),
 
   extractEntries(ctx: ExtractContext): EntryNode[] {
     const sources = [...repoSources(ctx)];
@@ -239,7 +244,7 @@ export const graphqlResolversAdapter: EntryAdapter = {
     const gateway = reading.gateway === undefined ? undefined : gatewayMetaOf(reading.gateway, ctx);
     const endpointId = makeEntryId(ctx.repo, 'http', makeHttpEntryKey('POST', reading.endpoint));
     // Where the server listens, so a gateway's `http://localhost:4001/graphql` reaches it (P245).
-    const listen = reading.listen.map((port) => ({ port: port.port, file: fileOfNode(port.at, ctx), line: startLineOf(port.at), ...(port.setting === undefined ? {} : { setting: port.setting }) }));
+    const listen = reading.listen.map((port) => placedPort(port, ctx.repoDir));
     // A subgraph says the types its code says the concrete type of, for an entity call for an interface (P252).
     const subgraph = reading.federation === undefined ? undefined : { federation: reading.federation, ...(reading.typeResolvers.length === 0 ? {} : { typeResolvers: reading.typeResolvers }) };
     // A gateway serves the composition: a supergraph's is known now, one composed at start once the linker has the subgraphs.

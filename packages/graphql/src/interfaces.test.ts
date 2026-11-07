@@ -284,6 +284,8 @@ describe('a subgraph in code (P245)', () => {
     expect(ports('b.ts')).toEqual([[4002, 'PORT']]);
     expect(ports('c.ts')).toEqual([[4003, 'PORT']]);
     expect(ports('d.ts')).toEqual([[4000, undefined]]);
+    // The library's own default, said so, as every reader of a port says it (P250).
+    expect(readGraphqlServer([made.getSourceFileOrThrow('d.ts')], { schemaFiles: [], dependencies: new Set() }).listen[0]?.default).toBe(true);
     expect(ports('e.ts')).toEqual([[4005, 'PORT']]);
   });
 

@@ -1,6 +1,7 @@
 import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
 import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
+import { portSharedFinding, type Listening, type PortAnswer } from './local-port.js';
 import { cmp } from './order.js';
 import {
   behindUnread,
@@ -38,7 +39,7 @@ export interface UiIndex {
    * configuration says so (its name, an alias, `services[].hosts`) or only the
    * services' own setting files do (P239).
    */
-  serviceAtHost?(host: string): { readonly service: string; readonly configured: boolean } | undefined;
+  serviceAtHost?(host: string): PortAnswer | undefined;
 }
 
 /**
@@ -67,7 +68,11 @@ interface Details {
     baseUrl?: FoundValue;
     /** The host was found only in the services' own setting files, not in the configuration (P239). */
     hostFromFiles?: true;
+    /** Where the service's server is started on the port an address on this machine names (P250). */
+    listening?: Listening;
   };
+  /** Two or more services listen on the port an address on this machine names (P250). */
+  portShared: { port: number; said: readonly string[]; services: readonly string[] };
   /** The address or the verb is only known at run time; the extractor said so. */
   dynamic: { reason: string };
   /** No route answers. `targetService` is null when nothing named one to ask. */
@@ -137,6 +142,7 @@ const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null
     return detail.unread.length === 0 ? missingRoute(detail) : unreadRouteFinding(detail);
   },
   serviceUnknown: (detail) => MARKER_FINDINGS.serviceUnknown(detail, detail.aliases, '@flowatlas-calls'),
+  portShared: ({ port, said }) => portSharedFinding(port, said),
   ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'target' : 'application'](detail),
 };
 
@@ -296,8 +302,16 @@ const byHost = (ask: Ask): UiOutcome | undefined => {
   if (typeof host !== 'string') return undefined;
   const found = index.serviceAtHost?.(host);
   if (found === undefined) return undefined;
+  // Two services listen on the port this machine's address names (P250): no
+  // way below may pick one of them by its route.
+  if (found.kind === 'shared') return { kind: 'portShared', port: found.port, said: found.said, services: found.services };
   const outcome = within(ask, found.service, 'host');
-  return outcome.kind === 'linked' && !found.configured ? { ...outcome, hostFromFiles: true } : outcome;
+  if (outcome.kind !== 'linked') return outcome;
+  return {
+    ...outcome,
+    ...(found.sure ? {} : { hostFromFiles: true as const }),
+    ...(found.listening === undefined ? {} : { listening: found.listening }),
+  };
 };
 
 /**

@@ -19,6 +19,7 @@ import { keptByLayer, nuxtConventions, nuxtLayerOf, nuxtLayersOf, withinLayer, t
 import { routeAddressOfFile, routePathOfFile, type FsRouter } from './fs-routes.js';
 import { readingOf } from './request-readings.js';
 import { inlineHandlerOf, repoSources } from './shared.js';
+import { listensByCall, nitroListens } from './listen-ports.js';
 
 /**
  * Nuxt's addresses, as rows of the file-system routers (P233).
@@ -141,6 +142,9 @@ const middlewareOf = (ctx: ExtractContext): EntryWrapping[] =>
 export const nitroRoutesAdapter: EntryAdapter = {
   name: 'nitro-routes',
   detect: (pkg) => hasAnyDependency(pkg, ['nuxt', 'nitropack', 'h3']),
+  // The dev server's port where the configuration or a script writes it, and
+  // an h3 application's own `listen` (P250).
+  listens: (ctx) => [...nitroListens(ctx), ...listensByCall(ctx)],
   // Nuxt's aliases and the names its files use unimported (P240).
   conventions: nuxtConventions,
 

@@ -433,9 +433,15 @@ export const clientInstances = (options: InstanceOptions) => {
    * the options name any, which decides what an instance made from an instance
    * keeps of its parent's.
    */
-  const hooksIn = (factory: ClientFactory, call: CallExpression, bindings: Bindings | undefined): { readings: RewriteReading[]; written: boolean } => {
+  const hooksIn = (
+    factory: ClientFactory,
+    call: CallExpression,
+    bindings: Bindings | undefined,
+    at = 0,
+    who?: string,
+  ): { readings: RewriteReading[]; written: boolean } => {
     const path = factory.rewrites?.optionAt;
-    const [config] = call.getArguments();
+    const config = call.getArguments()[at];
     if (path === undefined || config === undefined) return { readings: [], written: false };
     let object = objectOf(config, bindings, 0);
     let found: Found = { kind: 'absent' };
@@ -446,7 +452,7 @@ export const clientInstances = (options: InstanceOptions) => {
       if (index < path.length - 1) object = objectOf(found.node, bindings, 0);
     }
     if (found.kind !== 'value') return { readings: [], written: false };
-    const readings = functionsOf(found.node).flatMap((fn) => rewritesOf(fn, factory, (node) => readBase(node, bindings)));
+    const readings = functionsOf(found.node).flatMap((fn) => rewritesOf(fn, factory, (node) => readBase(node, bindings), who));
     return { readings, written: true };
   };
 
@@ -542,9 +548,26 @@ export const clientInstances = (options: InstanceOptions) => {
     return undefined;
   };
 
+  /**
+   * What runs before one request, where the call writes a hook of its own
+   * among its options (P250): `useFetch(url, { onRequest })`, `$fetch(url, {
+   * onRequest })`, `ky.get(url, { hooks: { beforeRequest } })`. Composed with
+   * the instance's as an instance made from it would be - ofetch's call
+   * options replace the instance's hook, ky's run after them - and nothing
+   * where the call writes none, which leaves the instance's as they are.
+   */
+  const atCall = (call: CallExpression, factory: ClientFactory, optionsAt: number, instance: ClientInstance | undefined): ClientInstance | undefined => {
+    const own = hooksIn(factory, call, undefined, optionsAt, 'a hook this call runs before its request');
+    if (!own.written) return undefined;
+    const readings = inherit(factory, own, instance);
+    const { rewrite: _rewrite, rewriteUnread: _unread, readings: _readings, ...made } = instance ?? { factory };
+    return finished({ ...made, ...(readings.length === 0 ? {} : { readings }) });
+  };
+
   return {
     /** The instance an expression is, when it is one this reader can follow to where it is made. */
     of: (node: TsNode): ClientInstance | undefined => finished(instanceOf(node, undefined, 0)),
+    atCall,
   };
 };
 

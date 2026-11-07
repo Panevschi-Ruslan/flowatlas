@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-mikro-orm-knex-not-installed",
-  "generatedAt": "2026-10-16T15:11:52.954Z",
+  "generatedAt": "2026-11-07T17:39:25.513Z",
   "nodes": [
     {
       "id": "db_query:nest-mikro-orm-knex-not-installed#src/inventory/inventory-level.repository.ts:24:12",
@@ -269,7 +269,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

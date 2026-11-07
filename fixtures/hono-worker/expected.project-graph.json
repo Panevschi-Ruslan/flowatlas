@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T15:28:56.774Z",
+  "builtAt": "2026-11-07T17:37:06.106Z",
   "services": [
     {
       "name": "api",
@@ -758,7 +758,14 @@
             "nestjs-http",
             "hono-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 17
+          }
+        ]
       }
     },
     {

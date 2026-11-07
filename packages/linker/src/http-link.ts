@@ -9,6 +9,7 @@ import {
 } from './route-match.js';
 import { chooseByApiName } from './api-choice.js';
 import { whereFound, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
+import { portSharedFinding, type Listening, type PortAnswer } from './local-port.js';
 
 /** A reason, a sentence and what to do about it — everything but where it happened. */
 export interface Finding {
@@ -73,7 +74,7 @@ export interface RouteIndex {
    * lookup a browser request's host is asked of (P239), asked of a request
    * between services too (P244).
    */
-  serviceAtHost?(host: string): { readonly service: string; readonly configured: boolean } | undefined;
+  serviceAtHost?(host: string): PortAnswer | undefined;
 }
 
 /** Where a binding goes, as the deployment files and the configuration say. */
@@ -94,7 +95,11 @@ interface Details {
     mountAssumed?: readonly string[];
     /** The host was found only in the services' own setting files, not in the configuration (P244, as P239). */
     hostFromFiles?: true;
+    /** Where the service's server is started on the port an address on this machine names (P250). */
+    listening?: Listening;
   };
+  /** Two or more services listen on the port an address on this machine names (P250). */
+  portShared: { port: number; said: readonly string[]; services: readonly string[] };
   /** The host, when it was found from the value the setting is given rather than written in the call (P77). */
   external: { host?: string };
   /** The service is known when the address said so; the route never was. */
@@ -160,6 +165,7 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
   linked: null,
   external: null,
   dynamic: null,
+  portShared: ({ port, said }) => portSharedFinding(port, said),
   unknownEnv: ({ env, claiming, values }) =>
     claiming.length === 0 && values !== undefined
       ? unsettledFinding(env, values)
@@ -635,11 +641,18 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     // asked of (P239). Named only by the services' own setting files, the join
     // is a guess and the edge says so.
     const at = typeof host === 'string' ? index.serviceAtHost?.(host) : undefined;
+    if (at?.kind === 'shared') return { outcome: { kind: 'portShared', port: at.port, said: at.said, services: at.services }, notes };
     if (at !== undefined) {
       const reached = within(at.service, 'host', {});
-      return reached.outcome.kind === 'linked' && !at.configured
-        ? { ...reached, outcome: { ...reached.outcome, hostFromFiles: true } }
-        : reached;
+      if (reached.outcome.kind !== 'linked') return reached;
+      return {
+        ...reached,
+        outcome: {
+          ...reached.outcome,
+          ...(at.sure ? {} : { hostFromFiles: true as const }),
+          ...(at.listening === undefined ? {} : { listening: at.listening }),
+        },
+      };
     }
     // Nothing to look up: either it names a third party outright, or the
     // address was built at run time and there is nothing to read.

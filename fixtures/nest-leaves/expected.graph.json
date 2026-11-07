@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-leaves",
-  "generatedAt": "2026-10-07T14:34:17.537Z",
+  "generatedAt": "2026-11-07T17:39:15.906Z",
   "nodes": [
     {
       "id": "cache_op:nest-leaves#src/orders/orders.service.ts:19:12",
@@ -593,7 +593,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     }
   ],

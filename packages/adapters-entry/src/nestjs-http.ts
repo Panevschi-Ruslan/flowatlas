@@ -24,6 +24,7 @@ import {
   repoClasses,
   type ForeignDecorator,
 } from './shared.js';
+import { listensByCall } from './listen-ports.js';
 
 /**
  * The package the decorators read here come from, matched as a package.
@@ -288,6 +289,8 @@ const servedAt = (
 export const nestjsHttpAdapter: EntryAdapter = {
   name: 'nestjs-http',
   detect: (pkg) => hasAnyDependency(pkg, ['@nestjs/common']),
+  // `await app.listen(process.env.PORT ?? 3000)` where the bootstrap starts it (P250).
+  listens: listensByCall,
   extractEntries: (ctx) => {
     const entries: EntryNode[] = [];
     const globalPrefix =

@@ -5001,6 +5001,62 @@ calls it. A host only the services' own setting files name joins `heuristic`.
 A host no service is reached at stays `external`, as before.
 `fixtures/client-interceptor-base` shows each case.
 
+**A hook written on one call (P250).** `useFetch(url, { onRequest })`,
+`useLazyFetch`, `$fetch(url, { onRequest })`, an ofetch instance called with
+one, and a ky call with `hooks: { beforeRequest: [...] }` run that hook for
+that request alone. It is read as an instance's is and composed with the
+instance's: ofetch's call options replace the instance's `onRequest`, ky runs
+the call's after the instance's (two that set different bases are a row). The
+request carries `baseFrom: "call-hook"`; an unread one is
+`api-client-base-unread` at the hook, worded for the one call.
+
+**ky hooks that build the address another way (P250).** Besides the template
+spelling, two more are read as a new origin in front of the old path:
+`new Request(request.url.replace(location.origin, X), request)` (also
+`window.`, `globalThis.`, `self.` `location.origin`, or the request's own
+`new URL(request.url).origin`), and `new Request(new URL(<path>, X), request)`
+where `<path>` is the request's own `pathname` (with `search` after it). The
+page's origin is in front only of a request relative to the page, so the first
+spelling leaves an instance whose `prefixUrl` names a host or a setting alone.
+`new URL(path, X)` drops the path of a literal `X`, as the platform does. A
+name the hook gives the request's address (`const url = new URL(request.url)`)
+is read through. A `.replace` of anything but an origin is a row.
+
+**Where a server listens (P250).** A request to a port on this machine -
+`http://localhost:3001/orders`, `127.0.0.1`, `0.0.0.0`, `[::1]` - reaches the
+service listening on that port, and the code that starts each server usually
+says which that is. It is read for every server the tool reads and kept on the
+service's repository node as `meta.listen: [{ port, file, line, setting?, default? }]`:
+
+| Server | Read |
+|---|---|
+| express, koa, fastify, NestJS, Node's own | `<server>.listen(3001)`, `listen({ port })`, `http.createServer(app).listen(port)`, through constants |
+| Hono | `serve({ fetch, port })` from `@hono/node-server` (3000 where no port is written, its default), `Bun.serve({ port })` (3000), `Deno.serve({ port }, handler)` (8000), `export default { port, fetch }` |
+| GraphQL servers | `startStandaloneServer` (4000 by default) and `.listen` (P245) |
+| Nuxt, Nitro | `devServer: { port }` in `nuxt.config.*`, `--port` / `-p` on a `nuxi` / `nuxt` / `nitro` `dev` / `preview` / `start` script |
+| Next | `-p` / `--port` on a `next dev` / `next start` script |
+
+A port is a number, a constant, or the number a setting falls back to
+(`process.env.PORT ?? 3001`, `Number(process.env.PORT) || 3001`,
+`parseInt(...)`, `config.get('PORT', 3001)`); a setting with no fallback is the
+setting's value, which an example environment file may give (P77). No
+framework's own default dev port is assumed.
+
+A request with a local host and a port is joined by, in order: a host the
+configuration names (`services[].hosts`, a name, an alias), `static`; else the
+services whose code listens on the port and those whose setting files place
+them at `localhost:<port>` (a `PORT=` in an example environment file, a
+published container port, a worker's `dev.port`), which together must be one.
+The join is `via: host` with `meta.listensAt` (`src/app.ts:16`, with the
+setting where the port is a fallback), `static` where the code writes the port
+as a number and `heuristic` where it is a fallback, a library's default or a
+setting file's value. Two services or more is the row `local-port-shared`
+naming each and where it listens, and the request is not joined (counted as
+`ambiguous` for a server's request). The third party a reader drew for the host
+is dropped either way. The same lookup places a gateway's subgraph (P245), a
+procedure client's link (P242), and a browser's and a server's request alike.
+`fixtures/listen-port-joins` shows each case.
+
 A custom broker entry:
 
 ```jsonc

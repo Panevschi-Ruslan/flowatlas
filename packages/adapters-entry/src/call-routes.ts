@@ -5,6 +5,7 @@ import type {
   EntryNode,
   EntryWrapping,
   ExtractContext,
+  ListenPort,
 } from '@flowatlas/core';
 import {
   evaluateExpression,
@@ -36,6 +37,7 @@ import {
   repoSources,
 } from './shared.js';
 import { evidenceOf, unwrapWork } from './wrapped-work.js';
+import { honoListens, listensByCall } from './listen-ports.js';
 
 /**
  * The sentence for a route whose own path could not be read.
@@ -1427,6 +1429,9 @@ export interface CallRoutesOptions {
   readonly reportSilence?: boolean;
 }
 
+/** The dialects whose server starts other than by `app.listen(port)` as well (P250). */
+const LISTENS_OF: Readonly<Record<string, (ctx: ExtractContext) => ListenPort[]>> = { [HONO.name]: honoListens };
+
 export const callRoutesAdapter = (
   dialect: RouteDialect,
   options: CallRoutesOptions = {},
@@ -1437,6 +1442,9 @@ export const callRoutesAdapter = (
   // guards and pipes never run for them and none are drawn.
   outsideApplication: true,
   detect: (pkg) => hasAnyDependency(pkg, dialect.packages),
+  // Where the application's server listens (P250): `app.listen(port)` for
+  // every dialect, and Hono's own ways of starting one.
+  listens: (ctx: ExtractContext) => (LISTENS_OF[dialect.name] ?? listensByCall)(ctx),
   extractEntries: (ctx: ExtractContext) => {
     const sources = [...repoSources(ctx)];
     const applications = new Applications(dialect, ctx, new Registries(sources));

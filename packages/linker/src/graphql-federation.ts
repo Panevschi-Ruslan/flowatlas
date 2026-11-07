@@ -83,32 +83,8 @@ export interface GatewayPlan {
   readonly saysType?: (subgraph: string, type: string) => boolean;
 }
 
-/** One port a GraphQL server listens on, and where its code says so (P245). */
-export interface Listening {
-  readonly service: string;
-  readonly file: string;
-  readonly line: number;
-  readonly setting?: string;
-}
-
-/**
- * Every port the GraphQL servers of the project listen on, as their code
- * writes it (P245): where a gateway names a subgraph at `localhost:4001`,
- * the service that listens on 4001 is the subgraph, with no host configured.
- */
-export const listeningAt = (nodes: ReadonlyMap<string, GraphNode>): Map<number, Listening[]> => {
-  const found = new Map<number, Listening[]>();
-  for (const node of nodes.values()) {
-    if (node.type !== 'entry' || node.kind !== 'http') continue;
-    const listen = (node.meta?.[GRAPHQL_META] as { listen?: ReadonlyArray<{ port: number; file: string; line: number; setting?: string }> } | undefined)?.listen;
-    for (const port of listen ?? []) {
-      const list = found.get(port.port) ?? [];
-      if (!list.some((each) => each.service === node.repo)) list.push({ service: node.repo, file: port.file, line: port.line, ...(port.setting === undefined ? {} : { setting: port.setting }) });
-      found.set(port.port, list.sort((a, b) => cmp(a.service, b.service)));
-    }
-  }
-  return found;
-};
+/** Where servers listen: every server's now, GraphQL's first (P245, P250). */
+export { listeningAt, type Listening } from './local-port.js';
 
 /** The weakest of some confidences: an edge is no surer than what it rests on. */
 export const weakest = (...levels: readonly Confidence[]): Confidence =>

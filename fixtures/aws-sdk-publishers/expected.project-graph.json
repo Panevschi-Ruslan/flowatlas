@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T03:49:11.305Z",
+  "builtAt": "2026-11-07T17:36:10.371Z",
   "services": [
     {
       "name": "loans",
@@ -1012,7 +1012,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "api/app.ts",
+            "line": 17
+          }
+        ]
       }
     }
   ],

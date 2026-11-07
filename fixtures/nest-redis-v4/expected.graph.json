@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-redis-v4",
-  "generatedAt": "2026-10-07T18:29:39.579Z",
+  "generatedAt": "2026-11-07T17:39:43.166Z",
   "nodes": [
     {
       "id": "cache_op:nest-redis-v4#src/feed/feed.service.ts:24:11",
@@ -338,7 +338,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

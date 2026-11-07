@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:27:04.115Z",
+  "builtAt": "2026-11-07T17:40:29.952Z",
   "services": [
     {
       "name": "orders",
@@ -529,7 +529,14 @@
             "express-routes",
             "orpc-procedures"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 16
+          }
+        ]
       }
     },
     {

@@ -338,6 +338,8 @@ const GAPS: readonly string[] = [
   'ambiguous-route-application',
   'ambiguous-route-api',
   'ambiguous-route-target',
+  // Two services listen on the port an address on this machine names (P250)
+  'local-port-shared',
   'route-wildcard-only',
   'marker-service-unknown',
   'marker-route-not-found',

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-kysely",
-  "generatedAt": "2026-10-07T14:34:16.892Z",
+  "generatedAt": "2026-11-07T17:39:14.422Z",
   "nodes": [
     {
       "id": "db_query:nest-kysely#src/assets/assets.service.ts:16:12",
@@ -564,7 +564,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

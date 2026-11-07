@@ -3,6 +3,7 @@ import type { FlowatlasConfig } from '../config.js';
 import type { Confidence } from '../model/edges.js';
 import type { EntryKind } from '../model/nodes.js';
 import type { ExtractContext } from './context.js';
+import type { ListenPort } from '../listen-port.js';
 import type { EntryWrapping } from './wrapping.js';
 import type { PackageJson } from './manifest.js';
 import type { ConventionsOf } from '../conventions.js';
@@ -183,6 +184,13 @@ export interface EntryAdapter {
    * in — get the same answer the ids carry, from the same reading.
    */
   applications?(ctx: ExtractContext): ApplicationMap | undefined;
+  /**
+   * The ports this adapter's server listens on, where the repository writes
+   * them (P250): the line that starts the server, or the framework's own
+   * configuration of its server. Optional, and asked of every adapter that
+   * applies; two answering for one line are one port.
+   */
+  listens?(ctx: ExtractContext): readonly ListenPort[];
   /**
    * What the framework's build would have written for the compiler before
    * the repository is read (P240): aliases its generated tsconfig names, and

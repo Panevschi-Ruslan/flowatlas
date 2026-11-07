@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-guards",
-  "generatedAt": "2026-10-17T01:51:18.815Z",
+  "generatedAt": "2026-11-07T17:38:58.743Z",
   "nodes": [
     {
       "id": "entry:nest-guards:http:GET:/admin/audit",
@@ -793,7 +793,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 11
+          }
+        ]
       }
     }
   ],

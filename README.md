@@ -914,7 +914,12 @@ prove, and the path is given so you can run it.
   service at that base (`fixtures/client-instance-base`); so does one whose
   base an axios interceptor, an ofetch `onRequest` hook or a ky
   `beforeRequest` hook sets, and a server's request to a host a configured
-  service is reached at joins that service (`fixtures/client-interceptor-base`). A browser
+  service is reached at joins that service (`fixtures/client-interceptor-base`). A request
+  to `localhost:<port>` joins the service whose server listens there, as its
+  code (`app.listen(3001)`, Hono's `serve({ port })`, NestJS's bootstrap) or
+  its framework's configuration (`devServer.port`, `next dev -p`) says, and a
+  hook written on one call (`useFetch(url, { onRequest })`) is that call's
+  (`fixtures/listen-port-joins`). A browser
   holding a stream open is a request like any other (`fixtures/sse-stream`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a
   table of handlers the project keeps itself (`fixtures/nest-telegraf`,
