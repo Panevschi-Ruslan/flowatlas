@@ -192,6 +192,64 @@ const scopedSubject = (
   return { id: subject.id, subject };
 };
 
+/** What `describe_for_prompt` is asked: the id, and how much the text may say. */
+export interface DescribeInput {
+  id: string;
+  scope?: PromptScopeName | undefined;
+  maxSteps: number;
+  maxChars: number;
+  withSpec?: boolean | undefined;
+}
+
+/**
+ * The answer `describe_for_prompt` gives (P67, P97), for the server and for
+ * `flowatlas explain` alike (P229): the Markdown, the id it is about, and
+ * `next`; or the candidates a name could mean; or an error saying why there
+ * is none. One function, so the terminal prints the text the tool returns.
+ */
+export const describeAnswer = (db: GraphDb, ctx: ToolContext, input: DescribeInput): object => {
+  const trimmed = input.id.trim();
+  if (isGapId(trimmed)) {
+    const check = checkOf(db, ctx, trimmed);
+    return check === undefined ? { error: `no rows answer to ${JSON.stringify(trimmed)}` } : answer(trimmed, check, input);
+  }
+  // A place as cant_follow and search name one, `file:line` or `service#file:line` (P122): the gap written there.
+  const place = db.node(trimmed) === undefined ? gapsAtPlace(db, trimmed) : [];
+  if (place.length === 1) {
+    const check = checkOf(db, ctx, place[0] as string);
+    if (check !== undefined) return answer(place[0] as string, check, input);
+  }
+  if (place.length > 1) {
+    return withNext({ candidates: place }, place.slice(0, MAX_NEXT).map((id) => `describe_for_prompt({id: ${JSON.stringify(id)}})`));
+  }
+  if (input.scope !== undefined && input.scope !== 'node') {
+    const scoped = scopedSubject(db, ctx, trimmed, input.scope);
+    if (scoped !== undefined && 'error' in scoped) {
+      return { ...scoped, next: (scoped.scopes ?? []).slice(0, MAX_NEXT).map((scope) => `describe_for_prompt({id: ${JSON.stringify(trimmed)}${scope === 'node' ? '' : `, scope: ${JSON.stringify(scope)}`}})`) };
+    }
+    if (scoped !== undefined) return answer(scoped.id, withRules(db, ctx, scoped.subject), input, undefined, withDocs(db, ctx.handle.path, scoped.id));
+  }
+  const found = subjectOf(db, input.id);
+  if (Array.isArray(found)) {
+    return found.length === 0
+      ? { error: `nothing matches ${JSON.stringify(input.id)}` }
+      : withNext(
+          { candidates: found.map((node) => projectDetail(node, 1)) },
+          found
+            .slice(0, MAX_NEXT)
+            .map((node) => `describe_for_prompt({id: ${JSON.stringify(node.id)}${input.scope === undefined || input.scope === 'node' ? '' : `, scope: ${JSON.stringify(input.scope)}`}})`),
+        );
+  }
+  const counts = loadObservedCounts(ctx.handle.path);
+  const subject = withSpec(db, ctx, withRules(db, ctx, gatherPromptSubject(db, found.node, counts)), found.node, input.withSpec === true);
+  // An entry seen at run time carries the comparison as data too (P106), beside the text that says it.
+  const compared = counts === undefined ? undefined : failuresSeen(counts, found.node);
+  return answer(found.node.id, subject, input, found.alsoAnswers, {
+    ...withDocs(db, ctx.handle.path, found.node.id),
+    ...(compared === undefined ? {} : { failures: failuresSeenRef(compared) }),
+  });
+};
+
 export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'describe_for_prompt',
@@ -207,48 +265,6 @@ export const registerPrompt = (server: McpServer, ctx: ToolContext): void => {
       },
       annotations: READ_ONLY,
     },
-    (input) =>
-      withDb(ctx.handle, (db) => {
-        const trimmed = input.id.trim();
-        if (isGapId(trimmed)) {
-          const check = checkOf(db, ctx, trimmed);
-          return check === undefined ? { error: `no rows answer to ${JSON.stringify(trimmed)}` } : answer(trimmed, check, input);
-        }
-        // A place as cant_follow and search name one, `file:line` or `service#file:line` (P122): the gap written there.
-        const place = db.node(trimmed) === undefined ? gapsAtPlace(db, trimmed) : [];
-        if (place.length === 1) {
-          const check = checkOf(db, ctx, place[0] as string);
-          if (check !== undefined) return answer(place[0] as string, check, input);
-        }
-        if (place.length > 1) {
-          return withNext({ candidates: place }, place.slice(0, MAX_NEXT).map((id) => `describe_for_prompt({id: ${JSON.stringify(id)}})`));
-        }
-        if (input.scope !== undefined && input.scope !== 'node') {
-          const scoped = scopedSubject(db, ctx, trimmed, input.scope);
-          if (scoped !== undefined && 'error' in scoped) {
-            return { ...scoped, next: (scoped.scopes ?? []).slice(0, MAX_NEXT).map((scope) => `describe_for_prompt({id: ${JSON.stringify(trimmed)}${scope === 'node' ? '' : `, scope: ${JSON.stringify(scope)}`}})`) };
-          }
-          if (scoped !== undefined) return answer(scoped.id, withRules(db, ctx, scoped.subject), input, undefined, withDocs(db, ctx.handle.path, scoped.id));
-        }
-        const found = subjectOf(db, input.id);
-        if (Array.isArray(found)) {
-          return found.length === 0
-            ? { error: `nothing matches ${JSON.stringify(input.id)}` }
-            : withNext(
-                { candidates: found.map((node) => projectDetail(node, 1)) },
-                found
-                  .slice(0, MAX_NEXT)
-                  .map((node) => `describe_for_prompt({id: ${JSON.stringify(node.id)}${input.scope === undefined || input.scope === 'node' ? '' : `, scope: ${JSON.stringify(input.scope)}`}})`),
-              );
-        }
-        const counts = loadObservedCounts(ctx.handle.path);
-        const subject = withSpec(db, ctx, withRules(db, ctx, gatherPromptSubject(db, found.node, counts)), found.node, input.withSpec === true);
-        // An entry seen at run time carries the comparison as data too (P106), beside the text that says it.
-        const compared = counts === undefined ? undefined : failuresSeen(counts, found.node);
-        return answer(found.node.id, subject, input, found.alsoAnswers, {
-          ...withDocs(db, ctx.handle.path, found.node.id),
-          ...(compared === undefined ? {} : { failures: failuresSeenRef(compared) }),
-        });
-      }),
+    (input) => withDb(ctx.handle, (db) => describeAnswer(db, ctx, input)),
   );
 };

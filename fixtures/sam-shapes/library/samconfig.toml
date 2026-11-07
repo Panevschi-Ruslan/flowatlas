@@ -1,0 +1,16 @@
+version = 0.1
+
+# Each environment is a table of its own; flowatlas.config.json names the one read.
+[default.deploy.parameters]
+stack_name = "library-dev"
+region = "eu-central-1"
+parameter_overrides = "Stage=dev"
+
+[prod.global.parameters]
+stack_name = "library-prod"
+
+[prod.deploy.parameters]
+region = "eu-central-1"
+parameter_overrides = [
+  "Stage=prod",
+]

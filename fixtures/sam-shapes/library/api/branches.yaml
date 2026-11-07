@@ -1,0 +1,17 @@
+openapi: '3.0.1'
+info:
+  title: branches
+  version: '1'
+paths:
+  /branches/{branchId}:
+    get:
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BranchFunction.Arn}/invocations
+  /branches:
+    get:
+      x-amazon-apigateway-integration:
+        type: http_proxy
+        httpMethod: GET
+        uri: https://branches.example.org/list

@@ -1,0 +1,2524 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T18:40:41.731Z",
+  "services": [
+    {
+      "name": "library",
+      "repo": "./library",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/default/library.loans/LoanOverdue",
+      "type": "channel",
+      "label": "eventbridge/default/library.loans/LoanOverdue",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 392,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/default/library.loans/LoanRenewed",
+      "type": "channel",
+      "label": "eventbridge/default/library.loans/LoanRenewed",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 344,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:kinesis/library-prod-returns",
+      "type": "channel",
+      "label": "kinesis/library-prod-returns",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 118,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-kinesis"
+        ],
+        "declaredBy": "Resources.ReturnsStream",
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/${…}@import.export.shared-notices-topic-arn",
+      "type": "channel",
+      "label": "sns/${…}@import.export.shared-notices-topic-arn",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 211,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/library-prod-lost-returns",
+      "type": "channel",
+      "label": "sns/library-prod-lost-returns",
+      "repo": "library",
+      "file": "notices/template.yaml",
+      "line": 20,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@Resources.HoldsQueue",
+      "type": "channel",
+      "label": "sqs/${…}@Resources.HoldsQueue",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 81,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/library-prod-failed-loans",
+      "type": "channel",
+      "label": "sqs/library-prod-failed-loans",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 63,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/library-prod-fiction-shelf",
+      "type": "channel",
+      "label": "sqs/library-prod-fiction-shelf",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 377,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:library#BOOK_URL",
+      "type": "config_key",
+      "label": "BOOK_URL",
+      "repo": "library",
+      "file": "src/desk/door.ts",
+      "line": 4,
+      "meta": {
+        "key": "BOOK_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:library#HOLDS_QUEUE_URL",
+      "type": "config_key",
+      "label": "HOLDS_QUEUE_URL",
+      "repo": "library",
+      "file": "src/loans/lend.ts",
+      "line": 7,
+      "meta": {
+        "key": "HOLDS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:library#KIOSK_URL",
+      "type": "config_key",
+      "label": "KIOSK_URL",
+      "repo": "library",
+      "file": "src/desk/door.ts",
+      "line": 3,
+      "meta": {
+        "key": "KIOSK_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:library#notices/template.yaml:Notices.Resources.SenderFunction.Events.Lost",
+      "type": "consumer",
+      "label": "subscription Notices.Resources.SenderFunction.Events.Lost",
+      "repo": "library",
+      "file": "notices/template.yaml",
+      "line": 20,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "Notices.Resources.SenderFunction.Events.Lost",
+        "deployedBy": "sam",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:library#template.yaml:Resources.DoorFunction.Events.Shared",
+      "type": "consumer",
+      "label": "subscription Resources.DoorFunction.Events.Shared",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 211,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "Resources.DoorFunction.Events.Shared",
+        "deployedBy": "sam",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:library#template.yaml:Resources.HoldFunction.Events.Holds",
+      "type": "consumer",
+      "label": "mapping Resources.HoldFunction.Events.Holds",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 81,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "Resources.HoldFunction.Events.Holds",
+        "deployedBy": "sam",
+        "unmatched": {
+          "filter": [
+            "{\"body\": {\"kind\": [\"hold\"]}}"
+          ]
+        },
+        "notMatchedOn": [
+          "filter"
+        ],
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:library#template.yaml:Resources.NoticeRule.Targets[0]",
+      "type": "consumer",
+      "label": "rule library-prod-notice",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 392,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "Resources.NoticeRule.Targets[0]",
+        "deployedBy": "sam",
+        "name": "library-prod-notice",
+        "rule": "Resources.NoticeRule",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:library#template.yaml:Resources.RenewalsStateMachine.Events.Renewed",
+      "type": "consumer",
+      "label": "rule Resources.RenewalsStateMachine.Events.Renewed",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 344,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "Resources.RenewalsStateMachine.Events.Renewed",
+        "deployedBy": "sam",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        },
+        "reaches": [
+          "workflow:${…}@Resources.RenewalsStateMachine"
+        ]
+      }
+    },
+    {
+      "id": "consumer:library#template.yaml:Resources.ReturnFunction.Events.Returned",
+      "type": "consumer",
+      "label": "mapping Resources.ReturnFunction.Events.Returned",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 108,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "by": "mapping",
+        "declaredAs": "Resources.ReturnFunction.Events.Returned",
+        "deployedBy": "sam"
+      }
+    },
+    {
+      "id": "consumer:library#template.yaml:Resources.ShelvingFunction.Events.Fiction",
+      "type": "consumer",
+      "label": "mapping Resources.ShelvingFunction.Events.Fiction",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 377,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "Resources.ShelvingFunction.Events.Fiction",
+        "deployedBy": "sam",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:library:cron:Resources.OverdueStateMachine.Events.Daily",
+      "type": "entry",
+      "label": "cron Resources.OverdueStateMachine.Events.Daily",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 326,
+      "kind": "cron",
+      "meta": {
+        "key": "Resources.OverdueStateMachine.Events.Daily",
+        "by": "schedule",
+        "declaredAs": "Resources.OverdueStateMachine.Events.Daily",
+        "deployedBy": "sam",
+        "schedule": "rate(1 day)",
+        "nameRead": false,
+        "reaches": [
+          "workflow:library-prod-overdue"
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:cron:Resources.ReportFunction.Events.Weekly",
+      "type": "entry",
+      "label": "cron Resources.ReportFunction.Events.Weekly",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 159,
+      "kind": "cron",
+      "meta": {
+        "key": "Resources.ReportFunction.Events.Weekly",
+        "by": "schedule",
+        "declaredAs": "Resources.ReportFunction.Events.Weekly",
+        "deployedBy": "sam",
+        "schedule": "rate(7 days)",
+        "nameRead": false,
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:cron:library-prod-audit",
+      "type": "entry",
+      "label": "cron library-prod-audit",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 137,
+      "kind": "cron",
+      "meta": {
+        "key": "library-prod-audit",
+        "by": "schedule",
+        "declaredAs": "Resources.AuditFunction.Events.Hourly",
+        "deployedBy": "sam",
+        "schedule": "rate(1 hour)",
+        "function": "library-audit",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:cron:library-prod-nightly",
+      "type": "entry",
+      "label": "cron library-prod-nightly",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 289,
+      "kind": "cron",
+      "meta": {
+        "key": "library-prod-nightly",
+        "by": "schedule",
+        "declaredAs": "Resources.NightlySchedule",
+        "deployedBy": "sam",
+        "schedule": "cron(0 3 * * ? *)",
+        "function": "library-prod-kiosk",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:event:cognito/library-members/post_confirmation",
+      "type": "entry",
+      "label": "event cognito/library-members/post_confirmation",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 201,
+      "kind": "event",
+      "meta": {
+        "key": "cognito/library-members/post_confirmation",
+        "by": "trigger",
+        "declaredAs": "Resources.DoorFunction.Events.Joined",
+        "deployedBy": "sam",
+        "service": "cognito",
+        "name": "post_confirmation",
+        "pool": "library-members",
+        "trigger": "post_confirmation",
+        "function": "library-prod-door",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:event:cognito/library-members/pre_sign_up",
+      "type": "entry",
+      "label": "event cognito/library-members/pre_sign_up",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 216,
+      "kind": "event",
+      "meta": {
+        "key": "cognito/library-members/pre_sign_up",
+        "by": "trigger",
+        "declaredAs": "Resources.MembersPool.LambdaConfig.PreSignUp",
+        "deployedBy": "sam",
+        "service": "cognito",
+        "name": "pre_sign_up",
+        "pool": "library-members",
+        "trigger": "pre_sign_up",
+        "function": "library-prod-door",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:event:iot/library/doors/+",
+      "type": "entry",
+      "label": "event iot/library/doors/+",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 197,
+      "kind": "event",
+      "meta": {
+        "key": "iot/library/doors/+",
+        "by": "rule",
+        "declaredAs": "Resources.DoorFunction.Events.Door",
+        "deployedBy": "sam",
+        "service": "iot",
+        "function": "library-prod-door",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:event:kinesis/library-prod-returns",
+      "type": "entry",
+      "label": "event kinesis/library-prod-returns",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 108,
+      "kind": "event",
+      "meta": {
+        "key": "kinesis/library-prod-returns",
+        "by": "mapping",
+        "declaredAs": "Resources.ReturnFunction.Events.Returned",
+        "deployedBy": "sam",
+        "changesOf": "stream",
+        "name": "library-prod-returns",
+        "function": "library-prod-return-item",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:http:ALL:/*@library-prod-book",
+      "type": "entry",
+      "label": "ALL /*",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 255,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/*",
+        "rawPath": "/*",
+        "deployedBy": "sam",
+        "function": "library-prod-book",
+        "declaredAs": "Resources.BookFunction.FunctionUrlConfig",
+        "by": "function-url",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:http:ALL:/*@library-prod-kiosk",
+      "type": "entry",
+      "label": "ALL /*",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 274,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/*",
+        "rawPath": "/*",
+        "deployedBy": "sam",
+        "function": "library-prod-kiosk",
+        "declaredAs": "Resources.KioskUrl",
+        "by": "function-url",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:http:ALL:/:param",
+      "type": "entry",
+      "label": "ALL /:param",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 88,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/:param",
+        "rawPath": "/{proxy+}",
+        "deployedBy": "sam",
+        "api": "library-prod",
+        "function": "library-prod-hold",
+        "declaredAs": "Resources.HoldFunction.Events.Desk",
+        "stage": "$default",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:http:GET:/books/:param",
+      "type": "entry",
+      "label": "GET /books/:param",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 233,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/books/:param",
+        "rawPath": "/books/{isbn}",
+        "deployedBy": "sam",
+        "api": "library-prod-catalog",
+        "function": "library-prod-book",
+        "declaredAs": "Resources.CatalogApi.paths./books/{isbn}.get",
+        "stage": "prod",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:http:GET:/branches/:param",
+      "type": "entry",
+      "label": "GET /branches/:param",
+      "repo": "library",
+      "file": "api/branches.yaml",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/branches/:param",
+        "rawPath": "/branches/{branchId}",
+        "deployedBy": "sam",
+        "api": "library-prod-branches",
+        "function": "library-prod-branch",
+        "declaredAs": "Resources.BranchesApi.paths./branches/{branchId}.get",
+        "stage": "prod",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 56,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "deployedBy": "sam",
+        "api": "library-prod",
+        "function": "Resources.LendFunction",
+        "declaredAs": "Resources.LendFunction.Events.Lend",
+        "stage": "Prod",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:http:POST:/notices/:param",
+      "type": "entry",
+      "label": "POST /notices/:param",
+      "repo": "library",
+      "file": "notices/template.yaml",
+      "line": 45,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/notices/:param",
+        "rawPath": "/notices/{noticeId}",
+        "deployedBy": "sam",
+        "api": "library-prod-notices",
+        "function": "library-prod-notice-sender",
+        "declaredAs": "Notices.Resources.ResendMethod",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:${…}@Resources.LendFunction",
+      "type": "entry",
+      "label": "Resources.LendFunction (name generated when deployed)",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.LendFunction",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.LendFunction",
+        "logicalId": "LendFunction",
+        "nameGenerated": true,
+        "handler": "loans/lend.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "HOLDS_QUEUE_URL": {
+            "written": "!Ref HoldsQueue",
+            "value": "${…}@Resources.HoldsQueue",
+            "kind": "queue"
+          },
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "reads": {
+          "": "{body?:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:${…}@Resources.OwnerFunction",
+      "type": "entry",
+      "label": "Resources.OwnerFunction (name not read)",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 179,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.OwnerFunction",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.OwnerFunction",
+        "logicalId": "OwnerFunction",
+        "nameUnread": "the parameter Owner has no value: it has no Default, and neither samconfig.toml nor services[].infra.options sets it",
+        "handler": "loans/owner.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-audit",
+      "type": "entry",
+      "label": "library-audit",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 130,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-audit",
+        "deployedBy": "sam",
+        "name": "library-audit",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.AuditFunction",
+        "logicalId": "AuditFunction",
+        "conditional": "Audited",
+        "handler": "audit/audit.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-book",
+      "type": "entry",
+      "label": "library-prod-book",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 250,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-book",
+        "deployedBy": "sam",
+        "name": "library-prod-book",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.BookFunction",
+        "logicalId": "BookFunction",
+        "handler": "catalog/book.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-branch",
+      "type": "entry",
+      "label": "library-prod-branch",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 258,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-branch",
+        "deployedBy": "sam",
+        "name": "library-prod-branch",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.BranchFunction",
+        "logicalId": "BranchFunction",
+        "handler": "catalog/branch.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-covers",
+      "type": "entry",
+      "label": "library-prod-covers",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 164,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-covers",
+        "deployedBy": "sam",
+        "name": "library-prod-covers",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.CoversFunction",
+        "logicalId": "CoversFunction",
+        "environment": {
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-door",
+      "type": "entry",
+      "label": "library-prod-door",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 187,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-door",
+        "deployedBy": "sam",
+        "name": "library-prod-door",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.DoorFunction",
+        "logicalId": "DoorFunction",
+        "handler": "desk/door.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "BOOK_URL": {
+            "written": "!GetAtt BookFunctionUrl.FunctionUrl",
+            "value": "library-prod-book",
+            "kind": "url"
+          },
+          "KIOSK_URL": {
+            "written": "!GetAtt KioskUrl.FunctionUrl",
+            "value": "library-prod-kiosk",
+            "kind": "url"
+          },
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "reads": {
+          "": "{memberId?:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-hold",
+      "type": "entry",
+      "label": "library-prod-hold",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 75,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-hold",
+        "deployedBy": "sam",
+        "name": "library-prod-hold",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.HoldFunction",
+        "logicalId": "HoldFunction",
+        "handler": "loans/hold.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-kiosk",
+      "type": "entry",
+      "label": "library-prod-kiosk",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 265,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-kiosk",
+        "deployedBy": "sam",
+        "name": "library-prod-kiosk",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.KioskFunction",
+        "logicalId": "KioskFunction",
+        "handler": "desk/kiosk.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-notice-sender",
+      "type": "entry",
+      "label": "library-prod-notice-sender",
+      "repo": "library",
+      "file": "notices/template.yaml",
+      "line": 12,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-notice-sender",
+        "deployedBy": "sam",
+        "name": "library-prod-notice-sender",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Notices.Resources.SenderFunction",
+        "logicalId": "SenderFunction",
+        "handler": "sender.handler",
+        "sourceDirectory": "notices/src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-ping",
+      "type": "entry",
+      "label": "library-prod-ping",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 171,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-ping",
+        "deployedBy": "sam",
+        "name": "library-prod-ping",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.PingFunction",
+        "logicalId": "PingFunction",
+        "environment": {
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-report",
+      "type": "entry",
+      "label": "library-prod-report",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 151,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-report",
+        "deployedBy": "sam",
+        "name": "library-prod-report",
+        "runtime": "python3.12",
+        "declaredAs": "Resources.ReportFunction",
+        "logicalId": "ReportFunction",
+        "environment": {
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-return-item",
+      "type": "entry",
+      "label": "library-prod-return-item",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 97,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-return-item",
+        "deployedBy": "sam",
+        "name": "library-prod-return-item",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.ReturnFunction",
+        "logicalId": "ReturnFunction",
+        "handler": "return-item.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-prod-shelving",
+      "type": "entry",
+      "label": "library-prod-shelving",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 371,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-prod-shelving",
+        "deployedBy": "sam",
+        "name": "library-prod-shelving",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.ShelvingFunction",
+        "logicalId": "ShelvingFunction",
+        "handler": "loans/shelving.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "STAGE": {
+            "written": "\"prod\"",
+            "value": "prod"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:invoke:library-sweep",
+      "type": "entry",
+      "label": "library-sweep",
+      "repo": "library",
+      "file": "tools/template.yaml",
+      "line": 8,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-sweep",
+        "deployedBy": "sam",
+        "name": "library-sweep",
+        "runtime": "nodejs20.x",
+        "declaredAs": "tools/Resources.SweepFunction",
+        "logicalId": "SweepFunction",
+        "handler": "sweep.handler",
+        "sourceDirectory": "tools/src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:library:workflow:${…}@Resources.RenewalsStateMachine",
+      "type": "entry",
+      "label": "workflow Resources.RenewalsStateMachine",
+      "repo": "library",
+      "file": "statemachine/renewals.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "${…}@Resources.RenewalsStateMachine",
+        "name": "Resources.RenewalsStateMachine",
+        "nameFrom": "deployment",
+        "startAt": "PlaceHold",
+        "states": 1,
+        "queryLanguage": "JSONPath",
+        "comment": "Renews a loan by placing a hold for the next reader.",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "sam",
+        "declaredAs": "Resources.RenewalsStateMachine",
+        "nameGenerated": true,
+        "declaredIn": "template.yaml:337",
+        "nameRead": false
+      }
+    },
+    {
+      "id": "entry:library:workflow:library-prod-overdue",
+      "type": "entry",
+      "label": "workflow library-prod-overdue",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 306,
+      "kind": "workflow",
+      "meta": {
+        "key": "library-prod-overdue",
+        "name": "library-prod-overdue",
+        "nameFrom": "deployment",
+        "startAt": "Remind",
+        "states": 2,
+        "queryLanguage": "JSONPath",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "sam",
+        "declaredAs": "Resources.OverdueStateMachine",
+        "declaredIn": "template.yaml:302"
+      }
+    },
+    {
+      "id": "http_out:library#src/desk/door.ts:3:23",
+      "type": "http_out",
+      "label": "POST /members",
+      "repo": "library",
+      "file": "src/desk/door.ts",
+      "line": 3,
+      "meta": {
+        "method": "POST",
+        "url": "${KIOSK_URL}/members",
+        "path": "/members",
+        "baseUrlEnv": "KIOSK_URL",
+        "responseType": null,
+        "bodyType": "{memberId?:string}",
+        "bodyFrom": "value",
+        "targetService": "library"
+      }
+    },
+    {
+      "id": "http_out:library#src/desk/door.ts:4:22",
+      "type": "http_out",
+      "label": "GET /recommended",
+      "repo": "library",
+      "file": "src/desk/door.ts",
+      "line": 4,
+      "meta": {
+        "method": "GET",
+        "url": "${BOOK_URL}/recommended",
+        "path": "/recommended",
+        "baseUrlEnv": "BOOK_URL",
+        "responseType": null,
+        "bodyType": null,
+        "targetService": "library"
+      }
+    },
+    {
+      "id": "library#notices/src/sender.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "notices/src/sender.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "library#notices/template.yaml:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "library",
+      "file": "notices/template.yaml",
+      "line": 45,
+      "kind": "authorizer"
+    },
+    {
+      "id": "library#src/audit/audit.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "src/audit/audit.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "library#src/catalog/book.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "src/catalog/book.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "library#src/catalog/branch.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "src/catalog/branch.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "library#src/desk/door.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "src/desk/door.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{memberId?:string}"
+            }
+          ],
+          "returns": "{open:boolean}"
+        }
+      }
+    },
+    {
+      "id": "library#src/desk/kiosk.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "src/desk/kiosk.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "library#src/loans/hold.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "src/loans/hold.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "library#src/loans/lend.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "src/loans/lend.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{body?:string}"
+            }
+          ],
+          "returns": "{statusCode:number}"
+        }
+      }
+    },
+    {
+      "id": "library#src/loans/owner.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "src/loans/owner.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "library#src/loans/shelving.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "src/loans/shelving.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "library#src/returns/return-item.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "src/returns/return-item.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "library#statemachine/renewals.asl.json:Resources.RenewalsStateMachine/PlaceHold",
+      "type": "function",
+      "label": "PlaceHold [Task lambda:invoke]",
+      "repo": "library",
+      "file": "statemachine/renewals.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "Resources.RenewalsStateMachine",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "library-prod-hold"
+        },
+        "reaches": [
+          "invoke:library-prod-hold"
+        ],
+        "parameters": {
+          "FunctionName": "${HoldArn}",
+          "Payload.$": "$"
+        }
+      }
+    },
+    {
+      "id": "library#template.yaml:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 255,
+      "kind": "authorizer"
+    },
+    {
+      "id": "library#template.yaml:api key",
+      "type": "guard",
+      "label": "api key",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 56,
+      "kind": "authorizer"
+    },
+    {
+      "id": "library#template.yaml:library-prod-overdue/Notify",
+      "type": "function",
+      "label": "Notify [Task sns:publish]",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 316,
+      "kind": "state",
+      "meta": {
+        "workflow": "library-prod-overdue",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "channel",
+          "service": "sns",
+          "action": "publish",
+          "pattern": "request-response",
+          "transport": "topic",
+          "targets": [
+            "library-prod-lost-returns"
+          ],
+          "channels": [
+            "sns/library-prod-lost-returns"
+          ]
+        },
+        "parameters": {
+          "TopicArn": "${LostTopicArn}",
+          "Message.$": "$"
+        }
+      }
+    },
+    {
+      "id": "library#template.yaml:library-prod-overdue/Remind",
+      "type": "function",
+      "label": "Remind [Task lambda:invoke]",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 309,
+      "kind": "state",
+      "meta": {
+        "workflow": "library-prod-overdue",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "${…}@Resources.LendFunction"
+        },
+        "reaches": [
+          "invoke:${…}@Resources.LendFunction"
+        ],
+        "parameters": {
+          "FunctionName": "${ref0}",
+          "Payload.$": "$"
+        }
+      }
+    },
+    {
+      "id": "library#tools/src/sweep.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "library",
+      "file": "tools/src/sweep.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "producer:library#src/loans/lend.ts:7:9",
+      "type": "producer",
+      "label": "message sqs/${…}@Resources.HoldsQueue",
+      "repo": "library",
+      "file": "src/loans/lend.ts",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "HOLDS_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:library#template.yaml:316:11",
+      "type": "producer",
+      "label": "message sns/library-prod-lost-returns",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 316,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "definition",
+        "service": "sns",
+        "action": "publish"
+      }
+    },
+    {
+      "id": "producer:library#template.yaml:Resources.KioskInvokeConfig.DestinationConfig.OnSuccess",
+      "type": "producer",
+      "label": "message sqs/library-prod-failed-loans",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 280,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "Resources.KioskInvokeConfig.DestinationConfig.OnSuccess",
+        "deployedBy": "sam",
+        "when": "success"
+      }
+    },
+    {
+      "id": "producer:library#template.yaml:Resources.LendFunction.EventInvokeConfig.OnFailure",
+      "type": "producer",
+      "label": "message sqs/library-prod-failed-loans",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 63,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "Resources.LendFunction.EventInvokeConfig.OnFailure",
+        "deployedBy": "sam",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "producer:library#template.yaml:Resources.ReturnFunction.Events.Returned.DestinationConfig.OnFailure",
+      "type": "producer",
+      "label": "message sns/library-prod-lost-returns",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 114,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "Resources.ReturnFunction.Events.Returned.DestinationConfig.OnFailure",
+        "deployedBy": "sam",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "repo:library",
+      "type": "repo",
+      "label": "library",
+      "repo": "library",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "stack:library-prod#LendArn"
+            ],
+            "address": "Outputs.LendArn",
+            "file": "template.yaml",
+            "line": 418,
+            "kind": "function",
+            "value": "${…}@Resources.LendFunction",
+            "deployedBy": "sam"
+          }
+        ],
+        "imports": [
+          {
+            "key": "export:shared-notices-topic-arn",
+            "file": "template.yaml",
+            "line": 211,
+            "what": "the topic Resources.DoorFunction.Events.Shared subscribes to",
+            "kinds": [
+              "topic"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:eventbridge/default/library.loans/LoanOverdue",
+      "to": "consumer:library#template.yaml:Resources.NoticeRule.Targets[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 392,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:eventbridge/default/library.loans/LoanRenewed",
+      "to": "consumer:library#template.yaml:Resources.RenewalsStateMachine.Events.Renewed",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 344,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:kinesis/library-prod-returns",
+      "to": "consumer:library#template.yaml:Resources.ReturnFunction.Events.Returned",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 108,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sns/${…}@import.export.shared-notices-topic-arn",
+      "to": "consumer:library#template.yaml:Resources.DoorFunction.Events.Shared",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 211,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sns/library-prod-lost-returns",
+      "to": "consumer:library#notices/template.yaml:Notices.Resources.SenderFunction.Events.Lost",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "notices/template.yaml",
+      "line": 20,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/${…}@Resources.HoldsQueue",
+      "to": "consumer:library#template.yaml:Resources.HoldFunction.Events.Holds",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 81,
+      "meta": {
+        "by": "mapping",
+        "notMatchedOn": [
+          "filter"
+        ]
+      }
+    },
+    {
+      "from": "channel:sqs/library-prod-fiction-shelf",
+      "to": "consumer:library#template.yaml:Resources.ShelvingFunction.Events.Fiction",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 377,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:library#notices/template.yaml:Notices.Resources.SenderFunction.Events.Lost",
+      "to": "entry:library:invoke:library-prod-notice-sender",
+      "type": "calls",
+      "confidence": "static",
+      "file": "notices/template.yaml",
+      "line": 20,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:library#template.yaml:Resources.DoorFunction.Events.Shared",
+      "to": "entry:library:invoke:library-prod-door",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 211,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:library#template.yaml:Resources.HoldFunction.Events.Holds",
+      "to": "entry:library:invoke:library-prod-hold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 81,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:library#template.yaml:Resources.NoticeRule.Targets[0]",
+      "to": "entry:library:invoke:library-prod-notice-sender",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 392,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:library#template.yaml:Resources.RenewalsStateMachine.Events.Renewed",
+      "to": "entry:library:workflow:${…}@Resources.RenewalsStateMachine",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 344,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:${…}@Resources.RenewalsStateMachine"
+      }
+    },
+    {
+      "from": "consumer:library#template.yaml:Resources.ReturnFunction.Events.Returned",
+      "to": "entry:library:event:kinesis/library-prod-returns",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 108,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:library#template.yaml:Resources.ShelvingFunction.Events.Fiction",
+      "to": "entry:library:invoke:library-prod-shelving",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 377,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:library:cron:Resources.OverdueStateMachine.Events.Daily",
+      "to": "entry:library:workflow:library-prod-overdue",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 326,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:library-prod-overdue"
+      }
+    },
+    {
+      "from": "entry:library:cron:Resources.ReportFunction.Events.Weekly",
+      "to": "entry:library:invoke:library-prod-report",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 159,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:library:cron:library-prod-audit",
+      "to": "library#src/audit/audit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/audit/audit.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:cron:library-prod-nightly",
+      "to": "library#src/desk/kiosk.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/desk/kiosk.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:event:cognito/library-members/post_confirmation",
+      "to": "library#src/desk/door.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/desk/door.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:event:cognito/library-members/pre_sign_up",
+      "to": "library#src/desk/door.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/desk/door.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:event:iot/library/doors/+",
+      "to": "library#src/desk/door.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/desk/door.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:event:kinesis/library-prod-returns",
+      "to": "library#src/returns/return-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/return-item.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:event:kinesis/library-prod-returns",
+      "to": "producer:library#template.yaml:Resources.ReturnFunction.Events.Returned.DestinationConfig.OnFailure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 114,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:library:http:ALL:/*@library-prod-book",
+      "to": "library#src/catalog/book.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/book.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:library:http:ALL:/*@library-prod-book",
+      "to": "library#template.yaml:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 255,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:library:http:ALL:/*@library-prod-kiosk",
+      "to": "library#src/desk/kiosk.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/desk/kiosk.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:library:http:ALL:/*@library-prod-kiosk",
+      "to": "library#template.yaml:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 274,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:library:http:ALL:/:param",
+      "to": "library#src/loans/hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/hold.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:library:http:GET:/books/:param",
+      "to": "library#src/catalog/book.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/book.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:library:http:GET:/branches/:param",
+      "to": "library#src/catalog/branch.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/branch.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:library:http:POST:/loans",
+      "to": "library#src/loans/lend.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/lend.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:library:http:POST:/loans",
+      "to": "library#template.yaml:api key",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 56,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:library:http:POST:/notices/:param",
+      "to": "library#notices/src/sender.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "notices/src/sender.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:library:http:POST:/notices/:param",
+      "to": "library#notices/template.yaml:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "notices/template.yaml",
+      "line": 45,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:library:invoke:${…}@Resources.LendFunction",
+      "to": "library#src/loans/lend.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/lend.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:library:invoke:${…}@Resources.LendFunction",
+      "to": "producer:library#template.yaml:Resources.LendFunction.EventInvokeConfig.OnFailure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 63,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:library:invoke:${…}@Resources.OwnerFunction",
+      "to": "library#src/loans/owner.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/owner.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:invoke:library-audit",
+      "to": "library#src/audit/audit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/audit/audit.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:invoke:library-prod-book",
+      "to": "library#src/catalog/book.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/book.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:invoke:library-prod-branch",
+      "to": "library#src/catalog/branch.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/branch.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:invoke:library-prod-door",
+      "to": "library#src/desk/door.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/desk/door.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:invoke:library-prod-hold",
+      "to": "library#src/loans/hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/hold.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:invoke:library-prod-kiosk",
+      "to": "library#src/desk/kiosk.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/desk/kiosk.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:invoke:library-prod-kiosk",
+      "to": "producer:library#template.yaml:Resources.KioskInvokeConfig.DestinationConfig.OnSuccess",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 280,
+      "meta": {
+        "via": "deployment",
+        "when": "success"
+      }
+    },
+    {
+      "from": "entry:library:invoke:library-prod-notice-sender",
+      "to": "library#notices/src/sender.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "notices/src/sender.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:invoke:library-prod-return-item",
+      "to": "library#src/returns/return-item.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/returns/return-item.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:invoke:library-prod-shelving",
+      "to": "library#src/loans/shelving.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/shelving.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:invoke:library-sweep",
+      "to": "library#tools/src/sweep.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "tools/src/sweep.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:library:workflow:${…}@Resources.RenewalsStateMachine",
+      "to": "library#statemachine/renewals.asl.json:Resources.RenewalsStateMachine/PlaceHold",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/renewals.asl.json",
+      "line": 3
+    },
+    {
+      "from": "entry:library:workflow:library-prod-overdue",
+      "to": "library#template.yaml:library-prod-overdue/Remind",
+      "type": "handles",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 307
+    },
+    {
+      "from": "http_out:library#src/desk/door.ts:3:23",
+      "to": "entry:library:http:ALL:/*@library-prod-kiosk",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/desk/door.ts",
+      "line": 3,
+      "params": [
+        "{memberId?:string}"
+      ],
+      "meta": {
+        "via": "functionUrl",
+        "targetService": "library",
+        "variable": "KIOSK_URL"
+      }
+    },
+    {
+      "from": "http_out:library#src/desk/door.ts:4:22",
+      "to": "entry:library:http:ALL:/*@library-prod-book",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/desk/door.ts",
+      "line": 4,
+      "meta": {
+        "via": "functionUrl",
+        "targetService": "library",
+        "variable": "BOOK_URL"
+      }
+    },
+    {
+      "from": "library#src/desk/door.ts:handler",
+      "to": "config_key:library#BOOK_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/desk/door.ts",
+      "line": 4,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-prod-door",
+            "written": "!GetAtt BookFunctionUrl.FunctionUrl",
+            "value": "library-prod-book"
+          }
+        ]
+      }
+    },
+    {
+      "from": "library#src/desk/door.ts:handler",
+      "to": "config_key:library#KIOSK_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/desk/door.ts",
+      "line": 3,
+      "meta": {
+        "setBy": [
+          {
+            "function": "library-prod-door",
+            "written": "!GetAtt KioskUrl.FunctionUrl",
+            "value": "library-prod-kiosk"
+          }
+        ]
+      }
+    },
+    {
+      "from": "library#src/desk/door.ts:handler",
+      "to": "http_out:library#src/desk/door.ts:3:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/desk/door.ts",
+      "line": 3
+    },
+    {
+      "from": "library#src/desk/door.ts:handler",
+      "to": "http_out:library#src/desk/door.ts:4:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/desk/door.ts",
+      "line": 4
+    },
+    {
+      "from": "library#src/loans/lend.ts:handler",
+      "to": "config_key:library#HOLDS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/loans/lend.ts",
+      "line": 7,
+      "meta": {
+        "setBy": [
+          {
+            "function": "Resources.LendFunction (name generated when deployed)",
+            "written": "!Ref HoldsQueue",
+            "value": "${…}@Resources.HoldsQueue"
+          }
+        ]
+      }
+    },
+    {
+      "from": "library#src/loans/lend.ts:handler",
+      "to": "producer:library#src/loans/lend.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/loans/lend.ts",
+      "line": 7
+    },
+    {
+      "from": "library#statemachine/renewals.asl.json:Resources.RenewalsStateMachine/PlaceHold",
+      "to": "entry:library:invoke:library-prod-hold",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/renewals.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:library-prod-hold"
+      }
+    },
+    {
+      "from": "library#template.yaml:library-prod-overdue/Notify",
+      "to": "producer:library#template.yaml:316:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 316
+    },
+    {
+      "from": "library#template.yaml:library-prod-overdue/Remind",
+      "to": "entry:library:invoke:${…}@Resources.LendFunction",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 309,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:${…}@Resources.LendFunction"
+      }
+    },
+    {
+      "from": "library#template.yaml:library-prod-overdue/Remind",
+      "to": "library#template.yaml:library-prod-overdue/Notify",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 315,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "producer:library#src/loans/lend.ts:7:9",
+      "to": "channel:sqs/${…}@Resources.HoldsQueue",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/loans/lend.ts",
+      "line": 7,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "HOLDS_QUEUE_URL"
+        ],
+        "functions": [
+          "Resources.LendFunction (name generated when deployed)"
+        ]
+      }
+    },
+    {
+      "from": "producer:library#template.yaml:316:11",
+      "to": "channel:sns/library-prod-lost-returns",
+      "type": "emits",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 316,
+      "meta": {
+        "payload": {
+          "Message.$": "$"
+        }
+      }
+    },
+    {
+      "from": "producer:library#template.yaml:Resources.KioskInvokeConfig.DestinationConfig.OnSuccess",
+      "to": "channel:sqs/library-prod-failed-loans",
+      "type": "emits",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 280,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:library#template.yaml:Resources.LendFunction.EventInvokeConfig.OnFailure",
+      "to": "channel:sqs/library-prod-failed-loans",
+      "type": "emits",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 63,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:library#template.yaml:Resources.ReturnFunction.Events.Returned.DestinationConfig.OnFailure",
+      "to": "channel:sns/library-prod-lost-returns",
+      "type": "emits",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 114,
+      "meta": {
+        "via": "deployment"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "api/branches.yaml",
+      "line": 13,
+      "reason": "route-target-unread",
+      "message": "what GET /branches of Resources.BranchesApi runs is not read: its integration names no function",
+      "hint": "Write the integration uri as the invocation ARN of a function the template declares, through Fn::Sub.",
+      "symbol": "Resources.BranchesApi.paths./branches.get",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 48,
+      "reason": "deployed-name-generated",
+      "level": "info",
+      "sites": 4,
+      "message": "Resources.LendFunction is a function with no name of its own, so it is named by where it is declared; what this file points at it by joins to it, and nothing outside this deployment can",
+      "hint": "Give it a name of its own where other repositories reach it.",
+      "symbol": "entry:library:invoke:${…}@Resources.LendFunction",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "service": "library",
+      "file": "template.yaml",
+      "line": 118,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/library-prod-returns is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/library-prod-returns"
+    },
+    {
+      "file": "template.yaml",
+      "line": 130,
+      "reason": "construct-conditional",
+      "level": "info",
+      "message": "Resources.AuditFunction is declared under the condition Audited, which the files do not settle; it is read as declared, and what reaches it is drawn heuristic",
+      "hint": "Give the parameters the condition reads a value - a Default, samconfig.toml, or services[].infra.options - and it is decided.",
+      "symbol": "entry:library:invoke:library-audit",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 151,
+      "reason": "function-runtime-unread",
+      "level": "info",
+      "message": "library-prod-report runs on python3.12; only Node.js handlers are read, so its body is not",
+      "hint": "The function is still in the graph under its name, and whatever invokes it still joins to it.",
+      "symbol": "entry:library:invoke:library-prod-report",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 164,
+      "reason": "function-image-unread",
+      "level": "info",
+      "message": "library-prod-covers is deployed as a container image, whose handler is set inside the image",
+      "hint": "The function is in the graph under its name; the code it runs is not pointed at.",
+      "symbol": "entry:library:invoke:library-prod-covers",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 175,
+      "reason": "function-handler-unread",
+      "message": "Resources.PingFunction is written inline in the template, so there is no module to point at",
+      "hint": "Move the code into a file and name it with CodeUri and Handler.",
+      "symbol": "entry:library:invoke:library-prod-ping",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 182,
+      "reason": "function-name-unread",
+      "message": "the name of Resources.OwnerFunction is not read: the parameter Owner has no value: it has no Default, and neither samconfig.toml nor services[].infra.options sets it",
+      "hint": "Give the parameter Owner a Default, a value in samconfig.toml's parameter_overrides, or one under services[].infra.options.",
+      "symbol": "entry:library:invoke:${…}@Resources.OwnerFunction",
+      "adapter": "aws-lambda",
+      "meta": {
+        "variable": "Owner"
+      },
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 206,
+      "reason": "invoker-not-read",
+      "level": "info",
+      "message": "library-prod-door is run by CloudWatchLogs events, which are not read, so nothing drawn reaches it that way",
+      "hint": "Events of this kind run it outside anything this reads. Nothing to fix; it is still in the graph under its name.",
+      "symbol": "Resources.DoorFunction.Events.Logs",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "service": "library",
+      "file": "template.yaml",
+      "line": 211,
+      "reason": "export-not-found",
+      "message": "the topic Resources.DoorFunction.Events.Shared subscribes to is the export shared-notices-topic-arn, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:export:shared-notices-topic-arn",
+      "meta": {
+        "key": "export:shared-notices-topic-arn"
+      }
+    },
+    {
+      "file": "template.yaml",
+      "line": 330,
+      "reason": "route-target-unread",
+      "message": "Resources.OverdueStateMachine.Events.Check is a route that starts the workflow, and a route onto a workflow is not drawn",
+      "hint": "The workflow is still drawn and joined by its name; this way of starting it is not.",
+      "symbol": "Resources.OverdueStateMachine.Events.Check",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 363,
+      "reason": "construct-repeated-unread",
+      "message": "the resources of the loop Branches are declared once per element of a collection the files do not settle (the parameter Branches has no value: it has no Default, and neither samconfig.toml nor services[].infra.options sets it), so none of them is read",
+      "hint": "Write the collection out, or give the parameter it reads a value, and each is read under its own name.",
+      "symbol": "Resources.Branches",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 404,
+      "reason": "nested-deployment-unread",
+      "message": "Resources.Postcodes deploys a template published in the Serverless Application Repository, so nothing it declares is read",
+      "hint": "Keep the nested template in the repository and point at it by a path relative to this one; one published elsewhere is read where its own repository is.",
+      "symbol": "Resources.Postcodes",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "template.yaml",
+      "line": 411,
+      "reason": "layer-not-followed",
+      "level": "info",
+      "message": "Resources.SharedLayer is a layer, whose code functions load from /opt when they run; an import of it is not followed to its sources",
+      "hint": "Its sources are still read as code. Import shared code by a path or a package the repository resolves, and the call is followed.",
+      "symbol": "Resources.SharedLayer",
+      "adapter": "aws-lambda",
+      "service": "library"
+    },
+    {
+      "file": "tools/template.yaml",
+      "line": 2,
+      "reason": "deployment-plugin-unread",
+      "message": "tools/template.yaml is rewritten by ShelfMarks when it is deployed, which is not run here; what it adds is not read",
+      "hint": "The template is read as it is written. Declare in it what the macro would add, or expect that missing from the map.",
+      "symbol": "tools/template.yaml#Transform",
+      "adapter": "aws-lambda",
+      "service": "library"
+    }
+  ]
+}

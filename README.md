@@ -10,8 +10,8 @@ One map of a project that lives in several repositories.
 **A command-line tool that reads several TypeScript repositories with the
 compiler's own checker, without running them, and joins them into one graph you
 can query — from a terminal or from a coding agent over the Model Context
-Protocol.** It knows NestJS and Angular, React and Next.js, SvelteKit and Remix,
-Express, Fastify, Koa and Hono, Medusa, tRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
+Protocol.** It knows NestJS and Angular, React and Next.js, Vue and Nuxt, Svelte and SvelteKit, Remix, GraphQL,
+Express, Fastify, Koa and Hono, Medusa, tRPC, oRPC and Telegraf; TypeORM, Prisma, Drizzle, Mongoose,
 Sequelize, Kysely, Knex, MongoDB and node-postgres; Redis, Kafka, RabbitMQ,
 BullMQ and socket.io; and OpenAPI and AsyncAPI documents for the services whose
 source you do not have.
@@ -149,6 +149,20 @@ node -e 'const g=require("./.flowatlas/project-graph.json"),r=new Map(g.nodes.ma
 `flowatlas stats` and `flowatlas doctor` print the same figures for your own
 project.
 
+### Measured with an assistant
+
+Whether an assistant answers questions about a multi-repository project better
+with flowatlas than without it is measured by a benchmark in this repository:
+a generated project with its own answer key, four arms (with and without the
+graph, from one repository and from all of them), the questions where the
+graph should not help asked beside the ones where it should, and the
+expectations written down before the first run ([docs/benchmark.md](docs/benchmark.md)).
+
+<!-- benchmark:start -->
+No run has been recorded yet; the figures appear here, quoted from the report,
+after the first full run.
+<!-- benchmark:end -->
+
 ---
 
 ## Install
@@ -267,6 +281,11 @@ read again and the others come from the cache.
 | `flowatlas flow <entry>` | follow one way in through every service it reaches |
 | `flowatlas impact <symbol>` | every entry point that reaches a symbol |
 | `flowatlas channel <name>` | who publishes to a channel and who handles it |
+| `flowatlas path <from> <to>` | how one node reaches another, by the shortest ways, across services; says when it is the other way round |
+| `uses: Panevschi-Ruslan/flowatlas/action@v0.7.0` | the GitHub Action: one pull request comment, kept up to date, saying what the change reaches across the repositories and whether it breaks a contract or a rule ([CI](docs/ci.md#the-action)) |
+| `flowatlas publish` / `flowatlas pull` | one graph for the team: CI publishes it, anybody pulls it and asks the whole project from one checkout; `build --on-pulled` and `diff --pulled` put your branch against everyone's main ([guide](docs/team.md)) |
+| `flowatlas report` | the page to read first: the services, what crosses between them, what most depends on, what is worth a second look, what was not read, and questions to ask; `--output .` writes ARCHITECTURE.md |
+| `flowatlas explain <name>` | everything the graph knows about one name, in the Markdown the graph server and the page's *Copy as prompt* write |
 | `flowatlas types [--drift]` | the type registry, and names two repositories disagree about |
 | `flowatlas contracts` | what each service sends against what the other declares, field by field |
 | `flowatlas stats` | what the graph is made of |
@@ -476,6 +495,12 @@ build.
 flowatlas mcp --install       # register in every repository of the project
 flowatlas mcp                 # serve over stdio, which the editor does for you
 ```
+
+`flowatlas agents install` tells each assistant when to ask the graph rather
+than search: a skill for Claude Code, a rule for Cursor, and with
+`--instructions` a block in `AGENTS.md`; `--hook` adds a Claude Code hook that,
+after a search naming a route another repository calls, says which repositories
+call it ([the graph server](docs/mcp.md#tell-the-assistant-when-to-ask)).
 
 `--install` writes `.mcp.json` into each repository, merging rather than
 overwriting so any servers already there survive. After that, `claude mcp list`
@@ -765,11 +790,52 @@ prove, and the path is given so you can run it.
 - **Routes declared by where a file is.** A file-system router is four values —
   its root, which file names declare a route, the prefix in front and which
   segment spellings it honours — so Next.js (app router, pages router, API
-  routes), Medusa, SvelteKit (`+server`, a page's `load` and form actions) and
+  routes), Medusa, SvelteKit (`+server`, a page's `load` and form actions),
+  Nuxt (its pages and Nitro's `server/api` with the verb in the file name) and
   Remix / React Router (flat routes, `app/routes.ts`, `flatRoutes()`) are rows
   of one reading (`fixtures/react-next`, `fixtures/medusa-fs-router`,
-  `fixtures/sveltekit-server-routes`, `fixtures/remix-flat-routes`,
-  `fixtures/react-router-config`). A verb a helper built, aliased or re-exported is
+  `fixtures/sveltekit-server-routes`, `fixtures/nuxt-full-stack`,
+  `fixtures/remix-flat-routes`, `fixtures/react-router-config`).
+- **GraphQL, both halves.** A field a resolver answers is a way in, read from
+  NestJS and type-graphql resolvers, resolver maps and the schema; a client's
+  operation (Apollo Client, urql, graphql-request, apollo-angular) joins the
+  endpoint by its address and then the fields it selects, root fields and
+  field resolvers alike, `static`, at the line of the selection. Selections are
+  compared with the schema as a contract, and a service can be declared by its
+  SDL in place of its source (`fixtures/graphql-gateway`). Through a federation
+  gateway or router, each field is planned into the subgraph that resolves it,
+  entity hops to the owner's reference resolver included, from a supergraph
+  file or from the subgraphs `IntrospectAndCompose` names
+  (`fixtures/graphql-federation`, `fixtures/graphql-federation-composed`);
+  an entity interface and the `@interfaceObject` that adds to it, an argument
+  a `@fromContext` fills, and a subgraph found by the port its server listens
+  on are planned too, and the router's `@authenticated`, `@requiresScopes`
+  and `@policy` are checks in front of the fields they guard
+  (`fixtures/graphql-federation-interfaces`) - on the resolver that answers a
+  field with no resolver of its own, for that field only - and an entity
+  interface whose owner can say no type of it is a finding
+  (`fixtures/graphql-federation-gaps`).
+- **Components in files of their own format.** A `.vue` or `.svelte` file's
+  scripts are read by the checker as TypeScript, every position named by the
+  component file at its own line, and the event bindings of its markup are the
+  clicks a person makes: a function of the script, a method of the Options
+  API, an action of a Pinia or Vuex store. Vue Router's routes, lazy ones
+  included, and Nuxt's and SvelteKit's pages make components screens
+  (`fixtures/vue-spa`, `fixtures/nuxt-full-stack`, `fixtures/svelte-components`).
+  A fresh clone resolves what the framework would have generated for it:
+  Nuxt's `~`, `@` and `#shared`, SvelteKit's `$lib` and `kit.alias`, Nuxt 4's
+  `app/` layout, and the composables and utilities Nuxt imports for a file that
+  uses them with no import line, each said once as a note
+  (`fixtures/nuxt4-layout`). A Nuxt layer in the repository or its workspace -
+  a directory of `layers/`, or an `extends` entry by path or workspace package,
+  nested ones too - is read as part of the application: its pages, routes,
+  composables and aliases, the higher layer's where two give one, said as a
+  note (`fixtures/nuxt-layers`). A Nuxt module of the repository is read for
+  what it adds when the application builds - the names of a directory it adds,
+  the routes it serves, the pages and aliases it adds - and `dir.pages`,
+  `dir.shared`, `$production` and SvelteKit's `kit.files.routes` move what is
+  read where the configuration says (`fixtures/nuxt-modules`,
+  `fixtures/sveltekit-routes-dir`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
   `zsa` is a boundary with its callers (`fixtures/next-actions`).
@@ -777,7 +843,22 @@ prove, and the path is given so you can run it.
   addressed by the dotted path its callers write, with the guards inherited
   through the procedure it was built from (`fixtures/trpc-router`), and the
   client's `trpc.orders.list.useQuery(…)` is a request joined to it
-  (`fixtures/trpc-join`).
+  (`fixtures/trpc-join`). An oRPC router is read by the same walk: a plain
+  object or `os.router(…)` with the guards it installs, a contract-first
+  `implement(contract)` with its input, output, errors and route read off the
+  contract, and, under an `OpenAPIHandler`, each procedure's REST route too. A
+  client's `client.orders.list(input)` or `orpc.orders.list.queryOptions(…)`
+  joins it in the service its link's URL names (`fixtures/orpc-next`,
+  `fixtures/orpc-contract`). A server's own oRPC or tRPC client - a NestJS
+  provider's, a worker's - is read the same way: each call is a request
+  between services, joined to the procedure of the service its link's setting
+  or host names, and tRPC's `links: [...]` chains are read in a browser too
+  (`fixtures/rpc-server-to-server`). `contracts` compares what each call hands
+  and reads back with the procedure's declared input and answer, as it compares
+  a request body; a tRPC link's path is checked against where the tree is
+  mounted; a client built in a DI factory and injected by its token is followed
+  to the client; and an Angular application's clients are read by the same
+  reader (`fixtures/rpc-contracts`).
 - **Applications.** Two applications in one service — a NestJS API and a worker,
   or a second Next.js application under `examples/` — serving the same path are
   two entries, and a request written inside one reaches its own
@@ -837,7 +918,18 @@ prove, and the path is given so you can run it.
   a pass-through wrapper, a base whose resource a subclass decides, or a client
   class the project wrote itself, recognised by following its verbs to the
   network or named in the configuration (`fixtures/angular-client-wrapper`,
-  `fixtures/react-local-client`, `fixtures/react-client-base`). A browser
+  `fixtures/react-local-client`, `fixtures/react-client-base`). A request
+  through a client instance (`axios.create`, `ofetch.create`, `ky.create`) or
+  an Angular interceptor carries the base it puts in front, so it joins the
+  service at that base (`fixtures/client-instance-base`); so does one whose
+  base an axios interceptor, an ofetch `onRequest` hook or a ky
+  `beforeRequest` hook sets, and a server's request to a host a configured
+  service is reached at joins that service (`fixtures/client-interceptor-base`). A request
+  to `localhost:<port>` joins the service whose server listens there, as its
+  code (`app.listen(3001)`, Hono's `serve({ port })`, NestJS's bootstrap) or
+  its framework's configuration (`devServer.port`, `next dev -p`) says, and a
+  hook written on one call (`useFetch(url, { onRequest })`) is that call's
+  (`fixtures/listen-port-joins`). A browser
   holding a stream open is a request like any other (`fixtures/sse-stream`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a
   table of handlers the project keeps itself (`fixtures/nest-telegraf`,
@@ -866,6 +958,31 @@ prove, and the path is given so you can run it.
   start in one call and starts it by id in the next as well - so a route leads
   into the workflow it starts (`fixtures/start-workflow-sdk`,
   `fixtures/start-workflow-helper`, `fixtures/start-workflow-by-record`).
+- **Serverless on AWS, declared with the Serverless Framework, the CDK, SAM or
+  CloudFormation.** A `serverless.yml` (or `.yaml`, `.json`, `.ts`, `.js`), a
+  CDK app in TypeScript, an AWS SAM `template.yaml` and a plain CloudFormation
+  template under any name are read into the same functions, routes,
+  subscribers, streams and workflows the Terraform reader gives - one
+  deployment written all five ways reads as one graph
+  (`fixtures/terraform-orders`, `fixtures/serverless-orders`,
+  `fixtures/cdk-orders`, `fixtures/sam-orders`,
+  `fixtures/cloudformation-orders`), and a stack's `Fn::ImportValue` of
+  another stack's export in the same repository is what that export names
+  (`fixtures/cloudformation-shapes`). The framework's variables are
+  resolved where the files settle them; the CDK app is followed from the entry
+  `cdk.json` names, through its constructs, helpers, loops and conditions,
+  without being run or installed; a SAM template is read with its parameters
+  from `samconfig.toml`, its conditions, `Globals`, loops and nested
+  applications. A queue or a function the platform names when it is deployed
+  is named by its declaration, so everything in the deployment that points at
+  it joins (`fixtures/serverless-shapes`, `fixtures/cdk-shapes`,
+  `fixtures/sam-shapes`). What one repository exports as an output and
+  another imports - an API's id or root, a queue's ARN, an API's URL - is
+  joined on the export's name: routes hung from another repository's API get
+  its full path and are reached at its address, and an imported queue is the
+  producer's queue (`fixtures/multi-repo-exports`). A `serverless-compose.yml`
+  is read as one deployment of the services it lists, its params and
+  `${service.Output}` references included (`fixtures/serverless-compose`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —
@@ -929,11 +1046,21 @@ prove, and the path is given so you can run it.
 
 Known gaps in what it can read:
 
-- A repository built on anything but the frameworks above. Nuxt and Vue are
+- A repository built on anything but the frameworks above. Astro and Solid are
   recognised by name and read by nothing: `init` and `build` both say which
   repository and which framework, and the graph is smaller than the project by
-  exactly that much. Remix, React Router and SvelteKit are read for their file
-  routes, loads and actions, not for their components.
+  exactly that much. Remix and React Router are read for their file routes,
+  loads and actions, and for their React components.
+- What a framework adds beyond its documented defaults. SvelteKit's `$lib`
+  and Nuxt's `~` are read as each documents them when `.svelte-kit/` and
+  `.nuxt/` are not there, and the names Nuxt imports from `composables/` and
+  `utils/` as imports; a Nuxt layer fetched when the application builds
+  (`github:`, a URL), installed from a registry or named in code is a row and
+  is not read; what a module installed from a registry adds at build time is
+  not known (it is named in a note), nor what a module of the repository adds
+  with an argument written as code (a row); only the production build is read,
+  another environment's differences said in a note; and a
+  setting written as code is read as its default and named in a row.
 - A file-system router nobody has described — `@fastify/autoload`, or a
   convention of the repository's own. The reader says it cannot tell such a
   repository from a library that merely depends on the framework, rather than
@@ -1117,7 +1244,8 @@ configuration key. `docs/run-time.md` adds run time from an end-to-end test
 run in five minutes. `docs/mcp.md` is the graph server. `docs/ci.md` is how to run
 it in a build. `docs/coverage.md` is how this tool is measured against
 repositories nobody here wrote, by one counting rule; the list of repositories and
-the reports stay on the machine that measures. The [fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
+the reports stay on the machine that measures. `docs/benchmark.md` is whether an
+assistant answers better with it, measured against a key it did not write. The [fixtures page](https://panevschi-ruslan.github.io/flowatlas/fixtures.html)
 lists every fixture and what it proves, generated from their READMEs.
 `PUBLISHING.md` is the release runbook. `scripts/demo/record.sh` remakes every terminal
 recording in the walkthrough from `fixtures/multi-repo`, and `scripts/demo/page-tour.mjs`

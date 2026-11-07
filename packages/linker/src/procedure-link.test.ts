@@ -148,3 +148,246 @@ describe('a request for a procedure', () => {
     expect(ui.byReason).toEqual({ 'procedure-path-dynamic': 1 });
   });
 });
+
+describe('a request for an oRPC procedure (P58)', () => {
+  const served = (repo: string, key: string, prefix = '/rpc'): GraphNode => ({
+    ...procedure(repo, key, 'handler'),
+    file: 'src/orders.ts',
+    line: 12,
+    meta: { key, call: 'handler', mounted: [{ protocol: 'rpc', prefix, file: 'src/app/rpc/route.ts' }] },
+  });
+  const sent = (repo: string, key: string, link: Record<string, unknown>): GraphNode => ({
+    ...ask(repo, key, 'handler'),
+    meta: { procedure: key, call: 'handler', operation: 'call', client: 'orpc-client', link },
+  });
+
+  it('goes where the link sends, of the services the caller names', () => {
+    const graphs = [
+      graph('api', [served('api', 'orders.list')]),
+      graph('admin', [served('admin', 'orders.list')]),
+      graph('web', [sent('web', 'orders.list', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ADMIN_URL' })]),
+    ];
+    const { hits, rows } = hitsOf(graphs, config({ API_URL: 'api', ADMIN_URL: 'admin' }));
+    expect(hits.map((edge) => [edge.to, edge.meta?.['via'], edge.confidence])).toEqual([
+      ['entry:admin:rpc:orders.list', 'link-url', 'static'],
+    ]);
+    expect(rows).toEqual([]);
+  });
+
+  it('asks only the service the link names, and says who else declares it', () => {
+    const graphs = [
+      graph('api', [served('api', 'orders.list')]),
+      graph('admin', []),
+      graph('web', [sent('web', 'orders.list', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ADMIN_URL' })]),
+    ];
+    const { hits, rows } = hitsOf(graphs, config({ API_URL: 'api', ADMIN_URL: 'admin' }));
+    expect(hits).toEqual([]);
+    expect(rows).toMatchObject([{ reason: 'procedure-not-found', message: 'no procedure orders.list in web or admin', hint: expect.stringContaining('api declares it') }]);
+  });
+
+  it('joins and says so when the link sends where no mount of its protocol answers', () => {
+    const graphs = [
+      graph('api', [served('api', 'orders.list', '/rpc')]),
+      graph('web', [sent('web', 'orders.list', { protocol: 'rpc', path: '/api', baseUrlEnv: 'API_URL' })]),
+    ];
+    const { hits, rows } = hitsOf(graphs, config({ API_URL: 'api' }));
+    expect(hits).toHaveLength(1);
+    expect(rows).toMatchObject([{ reason: 'procedure-link-unserved', message: 'orders.list is sent to /api and served over rpc at /rpc' }]);
+  });
+
+  it('joins a procedure named by its value at the place it is declared, whatever its path says', () => {
+    const inProcess: GraphNode = {
+      ...ask('api', 'get', 'handler'),
+      meta: { procedure: 'get', call: 'handler', operation: 'call', client: 'orpc-client', procedureAt: 'src/orders.ts:12', inProcess: true },
+    };
+    const { hits, rows } = hitsOf([graph('api', [served('api', 'orders.get'), inProcess])], config());
+    expect(hits.map((edge) => [edge.to, edge.meta?.['via']])).toEqual([['entry:api:rpc:orders.get', 'same-service']]);
+    expect(rows).toEqual([]);
+  });
+});
+
+describe('the routes a procedure is answered at (P58)', () => {
+  const route = (id: string, path: string, file: string, meta: Record<string, unknown> = {}): GraphNode => ({
+    id,
+    type: 'entry',
+    kind: 'http',
+    label: id,
+    repo: 'api',
+    file,
+    line: 1,
+    meta: { method: 'POST', path, ...meta },
+  });
+  const listed: GraphNode = {
+    ...procedure('api', 'orders.list', 'handler'),
+    file: 'src/orders.ts',
+    line: 5,
+    meta: {
+      key: 'orders.list',
+      call: 'handler',
+      served: ['app/rpc/route.ts', 'app/api/route.ts'],
+      mounted: [
+        { protocol: 'rpc', prefix: '/rpc', file: 'app/rpc/route.ts' },
+        { protocol: 'openapi', prefix: '/api', file: 'app/api/route.ts' },
+      ],
+    },
+  };
+  const placed: GraphNode = { ...procedure('api', 'orders.place', 'handler'), meta: { key: 'orders.place', call: 'handler' } };
+  const nodes = [
+    listed,
+    placed,
+    route('entry:api:http:GET:/api/orders', '/api/orders', 'src/orders.ts', { procedure: 'orders.list' }),
+    route('entry:api:http:POST:/api/orders/place', '/api/orders/place', 'src/orders.ts', { procedure: 'orders.place' }),
+    route('entry:api:http:POST:/rpc/*', '/rpc/*', 'app/rpc/route.ts'),
+    route('entry:api:http:POST:/api/*', '/api/*', 'app/api/route.ts'),
+    route('entry:api:http:GET:/health', '/health', 'app/rpc/route.ts'),
+  ];
+  const sent: GraphNode = {
+    ...ask('web', 'orders.list', 'handler'),
+    meta: { procedure: 'orders.list', call: 'handler', operation: 'call', client: 'orpc-client', link: { protocol: 'rpc', path: '/rpc' } },
+  };
+
+  it('counts the route of a called procedure as called, and the catch-all of the mount it went through', () => {
+    const { report } = linkGraphs([graph('api', nodes), graph('web', [sent])], config({ API_URL: 'api' }), { builtAt: FIXED });
+    expect(report.routes.uncalled).toEqual([
+      'entry:api:http:GET:/health',
+      'entry:api:http:POST:/api/*',
+      'entry:api:http:POST:/api/orders/place',
+    ]);
+  });
+});
+
+describe("a server's request for another service's procedure (P242)", () => {
+  const servers = (): FlowatlasConfig =>
+    parseConfig({
+      services: [
+        { name: 'orders', repo: './orders', type: 'express', baseUrlEnv: ['ORDERS_URL'] },
+        { name: 'billing', repo: './billing', type: 'express', hosts: ['billing.internal'] },
+        { name: 'worker', repo: './worker', type: 'nestjs' },
+      ],
+    } as Parameters<typeof parseConfig>[0]);
+
+  /** A worker's request through a client whose link sends where `link` says. */
+  const sent = (path: string, link: Record<string, unknown>, call = 'handler'): GraphNode => ({
+    id: `http_out:worker#src/clients.ts:${path.length}:5`,
+    type: 'http_out',
+    kind: 'rpc',
+    label: `rpc ${path}`,
+    repo: 'worker',
+    file: 'src/clients.ts',
+    line: path.length,
+    meta: { procedure: path, call, operation: 'call', client: 'orpc-client', link },
+  });
+
+  const linked = (nodes: GraphNode[], settings = {}) =>
+    linkGraphs(
+      [
+        graph('orders', [procedure('orders', 'orders.place', 'handler')]),
+        graph('billing', [procedure('billing', 'invoices.create', 'mutation')]),
+        graph('worker', nodes),
+      ],
+      servers(),
+      { builtAt: FIXED, settings },
+    );
+
+  it("joins the procedure of the service its link's setting is claimed by, and counts it a call out", () => {
+    const { project, report } = linked([sent('orders.place', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ORDERS_URL' })]);
+    expect(project.edges.filter((edge) => edge.type === 'hits')).toMatchObject([
+      { to: 'entry:orders:rpc:orders.place', confidence: 'static', meta: { via: 'link-url', targetService: 'orders' } },
+    ]);
+    expect(report.httpOut).toMatchObject({ total: 1, linked: 1 });
+    expect(report.unresolved).toEqual([]);
+  });
+
+  it('joins the service a written host is reached at', () => {
+    const { project } = linked([sent('invoices.create', { protocol: 'trpc', path: '/trpc', host: 'billing.internal' }, 'mutation')]);
+    expect(project.edges.filter((edge) => edge.type === 'hits')).toMatchObject([
+      { to: 'entry:billing:rpc:invoices.create', confidence: 'static', meta: { via: 'link-url', targetService: 'billing' } },
+    ]);
+  });
+
+  it("takes a setting nobody claims as the service its own files' value names, as a guess, and says so", () => {
+    const settings = {
+      worker: { values: { PAYMENTS_URL: [{ value: 'http://billing.internal:4000', file: '.env.example' }] }, namedOnly: {}, hosts: [] },
+    };
+    const { project, report } = linked(
+      [sent('invoices.create', { protocol: 'trpc', path: '/trpc', baseUrlEnv: 'PAYMENTS_URL' }, 'mutation')],
+      settings,
+    );
+    expect(project.edges.filter((edge) => edge.type === 'hits')).toMatchObject([
+      { to: 'entry:billing:rpc:invoices.create', confidence: 'heuristic', meta: { via: 'link-url', baseUrlFrom: '.env.example' } },
+    ]);
+    expect(report.unresolved.map((row) => row.reason)).toEqual(['base-url-from-files']);
+  });
+
+  it('says a setting nothing places with the row any request rooted at it gets, and joins nothing', () => {
+    const { project, report } = linked([sent('orders.place', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'LEGACY_URL' })]);
+    expect(project.edges.filter((edge) => edge.type === 'hits')).toEqual([]);
+    expect(report.unresolved.map((row) => row.reason)).toEqual(['unknown-base-url-env']);
+    expect(report.httpOut).toMatchObject({ total: 1, linked: 0, unknownEnv: 1 });
+  });
+
+  it('draws a host no service is reached at as a third party', () => {
+    const { project, report } = linked([sent('entries.record', { protocol: 'trpc', path: '/trpc', host: 'ledger.partner.example' }, 'mutation')]);
+    expect(project.edges.filter((edge) => edge.to.startsWith('external_api:'))).toHaveLength(1);
+    expect(report.httpOut).toMatchObject({ external: 1 });
+    expect(report.unresolved).toEqual([]);
+  });
+
+  it('asks only the service the link names, and names the two it asked', () => {
+    const { report } = linked([sent('invoices.create', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ORDERS_URL' })]);
+    expect(report.unresolved).toMatchObject([{ reason: 'procedure-not-found', message: 'no procedure invoices.create in worker or orders' }]);
+    expect(report.httpOut).toMatchObject({ noRoute: 1 });
+  });
+
+  it('carries what the caller hands and reads back on the edge, as a request carries its body (P247)', () => {
+    const typed: GraphNode = {
+      ...sent('orders.place', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ORDERS_URL' }),
+      meta: {
+        procedure: 'orders.place',
+        call: 'handler',
+        operation: 'call',
+        client: 'orpc-client',
+        link: { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ORDERS_URL' },
+        inputType: 'type:worker#NewOrder',
+        outputType: 'type:worker#PlacedOrder',
+      },
+    };
+    const { project } = linked([typed]);
+    expect(project.edges.filter((edge) => edge.type === 'hits')).toMatchObject([
+      { params: ['type:worker#NewOrder'], returns: 'type:worker#PlacedOrder' },
+    ]);
+  });
+
+  it("checks a tRPC link's path against where the tree is mounted (P247)", () => {
+    const { report } = linkGraphs(
+      [
+        graph('ledger', [
+          {
+            ...procedure('ledger', 'entries.record', 'mutation'),
+            meta: { key: 'entries.record', call: 'mutation', mounted: [{ protocol: 'trpc', prefix: '/api', file: 'src/server.ts' }] },
+          },
+        ]),
+        graph('worker', [sent('entries.record', { protocol: 'trpc', path: '/trpc', baseUrlEnv: 'LEDGER_URL' }, 'mutation')]),
+      ],
+      parseConfig({
+        services: [
+          { name: 'ledger', repo: './ledger', type: 'express', baseUrlEnv: ['LEDGER_URL'] },
+          { name: 'worker', repo: './worker', type: 'nestjs' },
+        ],
+      } as Parameters<typeof parseConfig>[0]),
+      { builtAt: FIXED },
+    );
+    expect(report.unresolved).toMatchObject([
+      { reason: 'procedure-link-unserved', message: 'entries.record is sent to /trpc and served over trpc at /api' },
+    ]);
+  });
+
+  it('keeps the values a setting nothing places was given, for the survey of missing repositories (P247)', () => {
+    const settings = {
+      worker: { values: { ARCHIVE_URL: [{ value: 'http://archive.shop.internal:7000', file: '.env.example' }] }, namedOnly: {}, hosts: [] },
+    };
+    const { project, report } = linked([sent('orders.store', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ARCHIVE_URL' })], settings);
+    expect(report.unresolved.map((row) => row.reason)).toEqual(['unknown-base-url-env']);
+    expect(project.nodes.find((node) => node.type === 'http_out')?.meta?.['baseUrlValues']).toEqual(['http://archive.shop.internal:7000']);
+  });
+});

@@ -49,6 +49,8 @@ export interface FoundValue {
   readonly namedOnly?: readonly string[];
   /** For a setting taken by its name: the values found, none of which named a configured service. */
   readonly unmatched?: readonly string[];
+  /** The service the value is an address of, where the deployment says so: an API another service publishes (P249). */
+  readonly service?: string;
 }
 
 /** What the values of a setting say a request's base address is. */
@@ -64,7 +66,7 @@ export type BaseUrlAnswer =
     };
 
 /** Every name a host is known by, and the services it names. */
-type HostIndex = ReadonlyMap<string, readonly string[]>;
+export type HostIndex = ReadonlyMap<string, readonly string[]>;
 
 const addTo = (index: Map<string, string[]>, host: string, service: string): void => {
   const key = host.toLowerCase();
@@ -90,7 +92,7 @@ export const hostIndexOf = (config: FlowatlasConfig, settings: Readonly<Record<s
 };
 
 /** The services a value's host names, by every name it may be known by. */
-const servicesAt = (address: string, index: HostIndex): readonly string[] | 'external' | 'inner' | undefined => {
+export const servicesAt = (address: string, index: HostIndex): readonly string[] | 'external' | 'inner' | undefined => {
   const host = hostOf(address);
   if (host === undefined) return undefined;
   const named =
@@ -103,6 +105,10 @@ const servicesAt = (address: string, index: HostIndex): readonly string[] | 'ext
 const deployedValues = (variable: string, runners: readonly GraphNode[]): FoundValue[] =>
   runners.flatMap((fn) => {
     const set = (fn.meta?.[ENVIRONMENT_META] as Record<string, EnvironmentValue> | undefined)?.[variable];
+    // An API another service publishes, imported by its name: that service (P249).
+    if (set?.kind === 'api' && set.service !== undefined && set.value !== undefined) {
+      return [{ variable, value: set.value, from: `the environment ${fn.label} is deployed with`, deployed: true, service: set.service }];
+    }
     // A reference to something deployed is a function URL or a queue, which
     // their own joins answer; only a value the files settle as text is an address.
     if (set?.value === undefined || set.kind !== undefined) return [];
@@ -201,7 +207,7 @@ export const baseUrlOf = (input: BaseUrlInput): BaseUrlAnswer | undefined => {
   const external = new Map<string, FoundValue>();
   const unsettled: string[] = [];
   for (const found of values) {
-    const at = servicesAt(found.value, input.hosts);
+    const at = found.service === undefined ? servicesAt(found.value, input.hosts) : [found.service];
     if (Array.isArray(at)) {
       if (at.length === 1) byService.set(at[0] as string, [...(byService.get(at[0] as string) ?? []), found]);
       else unsettled.push(...at);

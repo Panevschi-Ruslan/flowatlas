@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T19:06:35.137Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:42:50.592Z",
   "services": [
     {
       "name": "api",
@@ -166,10 +166,28 @@
         "call": "mutation",
         "registration": "router({ … })",
         "input": "OrderBody",
+        "inputAt": "src/server/root.ts:21",
         "middlewareRead": true,
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc",
+            "file": "src/pages/api/trpc/[trpc].ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:api:rpc:orders.create",
+            "file": "src/server/root.ts",
+            "line": 21,
+            "source": "pipe"
+          }
         ]
       }
     },
@@ -196,10 +214,28 @@
         "call": "query",
         "registration": "router({ … })",
         "input": "OrderQuery",
+        "inputAt": "src/server/root.ts:20",
         "middlewareRead": true,
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc",
+            "file": "src/pages/api/trpc/[trpc].ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:api:rpc:orders.list",
+            "file": "src/server/root.ts",
+            "line": 20,
+            "source": "pipe"
+          }
         ]
       }
     },
@@ -224,6 +260,13 @@
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc",
+            "file": "src/pages/api/trpc/[trpc].ts"
+          }
         ]
       }
     },
@@ -343,6 +386,7 @@
         "inputKeys": [
           "customerId"
         ],
+        "inputType": "{customerId:'c-1'}",
         "targetService": "api"
       }
     },
@@ -359,6 +403,7 @@
         "call": "query",
         "operation": "queryOptions",
         "client": "trpc-client",
+        "inputNone": true,
         "targetService": "api"
       }
     },
@@ -378,6 +423,7 @@
         "inputKeys": [
           "customerId"
         ],
+        "inputType": "{customerId:string}",
         "targetService": "api"
       }
     },
@@ -394,6 +440,7 @@
         "call": "mutation",
         "operation": "useMutation",
         "client": "trpc-client",
+        "inputLater": true,
         "targetService": "api"
       }
     },
@@ -410,6 +457,7 @@
         "call": "mutation",
         "operation": "useMutation",
         "client": "trpc-client",
+        "inputLater": true,
         "targetService": "api"
       }
     },
@@ -425,7 +473,8 @@
         "procedure": "orders.archive",
         "call": "mutation",
         "operation": "useMutation",
-        "client": "trpc-client"
+        "client": "trpc-client",
+        "inputLater": true
       }
     },
     {
@@ -440,7 +489,8 @@
         "procedure": null,
         "call": "query",
         "operation": "useQuery",
-        "client": "trpc-client"
+        "client": "trpc-client",
+        "inputNone": true
       }
     },
     {
@@ -555,6 +605,9 @@
       "confidence": "static",
       "file": "src/pages/orders.tsx",
       "line": 9,
+      "params": [
+        "{customerId:'c-1'}"
+      ],
       "meta": {
         "via": "same-service",
         "targetService": "api"
@@ -579,6 +632,9 @@
       "confidence": "static",
       "file": "src/Orders.tsx",
       "line": 14,
+      "params": [
+        "{customerId:string}"
+      ],
       "meta": {
         "via": "api-target",
         "targetService": "api"

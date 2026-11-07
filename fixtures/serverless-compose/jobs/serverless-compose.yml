@@ -1,0 +1,15 @@
+services:
+  shared:
+    path: shared
+
+  api:
+    path: api
+    params:
+      restApiId: ${shared.RestApiId}
+      restApiRootResourceId: ${shared.RestApiRootResourceId}
+      jobsQueueUrl: ${shared.JobsQueueUrl}
+    dependsOn: shared
+
+  # A folder nobody made yet.
+  ghost:
+    path: ghost

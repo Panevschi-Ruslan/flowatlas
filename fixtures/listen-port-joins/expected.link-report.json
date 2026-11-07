@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:37:48.775Z",
+  "configHash": "73b8a22633ac",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1511,
+      "packages": {
+        "name": "listen-port-joins-admin",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1490,
+      "packages": {
+        "name": "listen-port-joins-audit",
+        "runtime": [
+          "@koa/router",
+          "koa"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1473,
+      "packages": {
+        "name": "listen-port-joins-catalog",
+        "runtime": [
+          "@hono/node-server",
+          "hono"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1700,
+      "packages": {
+        "name": "listen-port-joins-jobs",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1672,
+      "packages": {
+        "name": "listen-port-joins-ledger",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1467,
+      "packages": {
+        "name": "listen-port-joins-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1437,
+      "packages": {
+        "name": "listen-port-joins-stock",
+        "runtime": [
+          "fastify"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1483,
+      "packages": {
+        "name": "listen-port-joins-storefront",
+        "runtime": [
+          "nuxt"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 22,
+      "edges": 21,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1457,
+      "packages": {
+        "name": "listen-port-joins-web",
+        "runtime": [
+          "axios",
+          "ky",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 1,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 9,
+    "resolved": 8,
+    "unresolved": 1,
+    "byReason": {
+      "local-port-shared": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 11,
+    "called": 6,
+    "uncalled": [
+      "entry:audit:http:GET:/entries",
+      "entry:jobs:http:POST:/sync/ping",
+      "entry:jobs:http:POST:/sync/stock",
+      "entry:ledger:http:GET:/entries",
+      "entry:stock:http:GET:/health"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 10,
+      "reason": "local-port-shared",
+      "message": "port 3005 on this machine is where audit (its setting files) and ledger (src/main.ts:8) each listen, so it is not one service",
+      "hint": "Name the host under services[].hosts of the service this request means (localhost:3005), or start the servers on different ports.",
+      "symbol": "ui_api_call:web#src/Dashboard.tsx:10:29"
+    }
+  ],
+  "totals": {
+    "nodes": 60,
+    "edges": 42,
+    "types": 4,
+    "missed": 1,
+    "sites": 1,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

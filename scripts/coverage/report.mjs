@@ -292,7 +292,19 @@ ${rows.length === 0 ? 'No addresses.' : table(['first segment', 'addresses'], ro
 `;
 };
 
-const joins = ({ figures }) => `
+/**
+ * The requests found, against the places the counting rule sees one written
+ * (P244). A denominator pinned before the rule had a request family has none,
+ * and says so rather than printing a fraction of nothing.
+ */
+const requestsAgainstRule = (figures, truth) => {
+  const expected = truth.families.requests;
+  if (expected === undefined) return '';
+  const found = figures.requests.browser.found + figures.requests.service.found;
+  return `\nRequests found, both kinds together: ${of(found, expected)} places the counting rule sees a request written.\n`;
+};
+
+const joins = ({ figures, truth }) => `
 ## What joined
 
 ${table(
@@ -303,7 +315,7 @@ ${table(
     ['channels', String(figures.channels.found), `${figures.channels.bothEnds} with both ends`],
   ],
 )}
-`;
+${requestsAgainstRule(figures, truth)}`;
 
 const storage = ({ figures, truth }) => `
 ## Storage and screens

@@ -242,7 +242,7 @@ const GRAPH_FAULTS: ReadonlyArray<(facts: GraphFacts) => string[]> = Object.free
  * graph-wide fault — no nodes anywhere — is never narrowed away, since there is
  * no service for which it is untrue.
  */
-const graphFaults = (
+export const graphFaults = (
   db: GraphDb,
   ways: ReadonlyMap<string, WaysIn>,
   service?: string,
@@ -430,7 +430,7 @@ const EXIT_RULES: ReadonlyArray<{ applies(facts: VerdictFacts): boolean; exitCod
 const NOTHING_FAILS = { exitCode: 0 } as const;
 
 /** Ways in per service, narrowed as the run is. */
-const waysOf = (db: GraphDb, service?: string): Map<string, WaysIn> => {
+export const waysOf = (db: GraphDb, service?: string): Map<string, WaysIn> => {
   const all = waysInByService(
     db.nodesByType('entry'),
     (id) => db.edgesFrom(id, ['handles']).length > 0,

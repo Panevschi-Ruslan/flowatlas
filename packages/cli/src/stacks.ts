@@ -1,7 +1,8 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { allDependencies, readPackageJson, type PackageJson } from '@flowatlas/core';
-import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
+import { deploymentReadersFor } from '@flowatlas/adapters-entry';
+import { unreadDeploymentOf } from '@flowatlas/terraform';
 import { halfOf, rowsInHalf, type ReaderRow } from './readers.js';
 
 /**
@@ -40,15 +41,13 @@ export const UNKNOWN_TYPE = 'unknown';
  * strength of a second dependency it happens to declare.
  */
 export const UNREAD_SIGNATURES: ReadonlyArray<readonly [framework: string, dependency: string]> = [
-  // The file-system routers that are left. What they have in common with the four
-  // that are now read is that the path a route is served at is the path of the
-  // file declaring it — a different fact from a call with a path in it — and by
-  // now that part is a row of data rather than a reader (`fs-routes.ts`). What
-  // they do not have in common with them is the language the rest is written in,
-  // which is what would have to be read next.
-  ['Nuxt', 'nuxt'],
-  ['Vue', 'vue'],
-  ['Svelte', 'svelte'],
+  // Nuxt, Vue and Svelte were here until P233 read them: their components'
+  // scripts as TypeScript, Nuxt's server as a row of the file-system routers.
+  // These two are what is left. Astro is a script block in a file of its own
+  // format, as those were; Solid is TSX already, with a convention of its own
+  // for what a component is.
+  ['Astro', 'astro'],
+  ['Solid', 'solid-js'],
 ];
 
 /** The first name in a table whose dependency the manifest declares. */
@@ -243,8 +242,11 @@ export const nestedManifests = (dir: string, depth = 4): PackageJson[] => {
 /** The type a deployment description gives a repository away as, when one does. */
 const DEPLOYED_TYPE = 'lambda';
 
-/** Whether a directory holds infrastructure that declares a function or a route. */
-export const declaresDeployment = (dir: string): boolean => terraformReader.declares(dir);
+/**
+ * Whether a directory holds a deployment description any reader reads: Terraform,
+ * a Serverless Framework service file, an AWS CDK app (P57).
+ */
+export const declaresDeployment = (dir: string): boolean => deploymentReadersFor(dir).length > 0;
 
 /**
  * The type to suggest for a directory, asking more than its manifest.

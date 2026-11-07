@@ -89,9 +89,9 @@ Wrote …/flowatlas.config.json with 4 service(s):
 Without `--yes` it asks about each one. The type is what decides which reader
 opens a repository, and it is read from the manifest: a server type wins over a
 browser type when a repository declares both, because the server reader reads
-the browser half too. A framework nothing here reads — Nuxt, Vue, plain
-Svelte — is named rather than silently skipped; SvelteKit and Remix are read
-for their file routes, loads and actions.
+the browser half too. A framework nothing here reads — Astro, Solid — is
+named rather than silently skipped; SvelteKit, Nuxt and Remix are read for
+their file routes, loads and actions, and Vue and Svelte for their components.
 
 **A monorepo is proposed as its applications.** A repository that declares a
 workspace, in `workspaces` or a `pnpm-workspace.yaml`, becomes one service per
@@ -386,6 +386,10 @@ to look for.
 | Fixture | What it shows |
 |---|---|
 | [`trpc-join`](../fixtures/trpc-join) | procedures on the server, and `trpc.orders.list.useQuery(…)` in a browser joined to them by path |
+| [`orpc-next`](../fixtures/orpc-next) | an oRPC router mounted for RPC and OpenAPI, its REST routes, and a client joined through its link's URL |
+| [`orpc-contract`](../fixtures/orpc-contract) | a contract-first oRPC service, its routes and failures read off the contract |
+| [`rpc-server-to-server`](../fixtures/rpc-server-to-server) | a NestJS worker's oRPC and tRPC clients joined to the procedures of two other services by their links' settings and hosts |
+| [`rpc-contracts`](../fixtures/rpc-contracts) | each procedure call's input and answer compared with the procedure's, a tRPC link checked against its mount, a client injected by a token, and an Angular client |
 | [`next-caller-application`](../fixtures/next-caller-application) | one service holding three Next.js applications, and a request reaching its own application's route |
 | [`nest-two-applications`](../fixtures/nest-two-applications) | an API and a worker in one repository, each serving `GET /health` |
 | [`socket-namespaces`](../fixtures/socket-namespaces) | socket.io read from both ends, with the namespace opened by `io.of(…)` |
@@ -510,7 +514,15 @@ flowatlas mcp --install       # register in every repository, merging what is th
 flowatlas mcp --install --dry-run
 ```
 
-After that, `claude mcp list` shows `flowatlas`.
+After that, `claude mcp list` shows `flowatlas`. To tell each assistant which
+questions to ask the graph rather than search for, and to have a search that
+names another repository's route say what it could not see:
+
+```sh
+flowatlas agents install --hook
+```
+
+([Tell the assistant when to ask](mcp.md#tell-the-assistant-when-to-ask).)
 
 ---
 
@@ -528,6 +540,8 @@ After that, `claude mcp list` shows `flowatlas`.
   and timings on the map.
 - [Coverage](coverage.md) — how the tool is measured against repositories nobody
   here wrote.
+- [The benchmark](benchmark.md) — whether an assistant answers better with it,
+  with and without the graph, against a key the tool did not write.
 - [The README](../README.md) — how the joining works, what it reads, and what it
   still cannot.
 

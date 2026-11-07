@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: The kiosk at a dock, at its own address, and a queue of its audits exported under a name the docks stack exports too.
+
+Resources:
+  KioskFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: rides-kiosk
+      Runtime: nodejs20.x
+      Handler: kiosk/kiosk.handler
+      Code: ../src
+
+  KioskUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt KioskFunction.Arn
+      AuthType: AWS_IAM
+
+  KioskAuditQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: rides-kiosk-audit
+
+Outputs:
+  KioskAuditQueueArn:
+    Value: !GetAtt KioskAuditQueue.Arn
+    Export:
+      Name: rides-audit-queue

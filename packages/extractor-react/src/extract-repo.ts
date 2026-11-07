@@ -2,6 +2,8 @@ import type { Project } from 'ts-morph';
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  LISTEN_META,
+  listeningOf,
   countSources,
   GraphBuilder,
   parseConfig,
@@ -12,6 +14,8 @@ import {
   reportPatterns,
   readPatterns,
   reportStandIns,
+  reportConventions,
+  conventionsFor,
   reportUnreadableSources,
   silentLogger,
   standInsFor,
@@ -24,21 +28,30 @@ import {
   type PackageJson,
   type RepoGraph,
   type ServiceConfig,
+  projectText,
+  addEmbeddedScripts,
+  listRepoSources,
+  toPosixPath,
+  type EmbeddedFile,
+  type EmbeddedFormat,
 } from '@flowatlas/core';
 import { createReactContext } from './context.js';
 import { declaresReact } from './framework.js';
+import { COMPONENT_TAIL_NAME } from './sfc/formats.js';
+import { sfcPass } from './sfc/pass.js';
 import { buildReactFunctionIndex } from './index-functions.js';
 import { actionsPass } from './passes/actions.js';
 import { callsPass } from './passes/calls.js';
 import { entriesPass } from './passes/entries.js';
 import { functionsPass } from './passes/functions.js';
+import { graphqlPass } from './passes/graphql.js';
 import { httpPass } from './passes/http.js';
 import { markersPass } from './passes/markers.js';
 import { proceduresPass } from './passes/procedures.js';
 import { routesPass } from './passes/routes.js';
 import { signaturesPass } from './passes/signatures.js';
 import type { ReactExtractorPass } from './passes/types.js';
-import { createReactProject } from './project.js';
+import { createReactProject, REACT_SOURCE_ROOTS } from './project.js';
 
 export interface ExtractRepoOptions {
   /** Absolute path to the repository root. */
@@ -88,8 +101,11 @@ export const openProject = (options: ExtractRepoOptions): Project => {
     configDir: options.configDir,
     ...(options.standInsOfBuild === undefined ? {} : { given: options.standInsOfBuild }),
   });
+  // What the frameworks detected here would have written for the compiler (P240).
+  const conventions = conventionsFor(options.registry, options.rootDir, options.config);
   return createReactProject({
     rootDir: options.rootDir,
+    ...(conventions.length === 0 ? {} : { conventions }),
     ...(tsconfig === undefined ? {} : { tsconfig }),
     ...(service.readTestDirectories === undefined
       ? {}
@@ -114,15 +130,46 @@ export const openProject = (options: ExtractRepoOptions): Project => {
  */
 export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   functionsPass,
+  // Component files (P233) right after the functions, so a component is a
+  // screen, with its routes, before anything else writes its node.
+  sfcPass,
   routesPass,
   callsPass,
   actionsPass,
   httpPass,
+  // After the requests, so a `fetch` that sends an operation is one node (P232).
+  graphqlPass,
   proceduresPass,
   markersPass,
   entriesPass,
   signaturesPass,
 ];
+
+/**
+ * What one framework of the browser is, to this reader (P233): the package
+ * that gives it away, the formats its components are written in when they
+ * are not TypeScript, and the directories of a repository that are another
+ * half's - a full-stack framework's server code, which the server reader
+ * reads.
+ */
+export interface BrowserReading {
+  readonly declares: (pkg: PackageJson) => boolean;
+  readonly formats?: readonly EmbeddedFormat[];
+  /** Repo-relative directories that are not this framework's code. */
+  readonly elsewhere?: (base: ExtractContext) => readonly string[];
+}
+
+export const REACT_READING: BrowserReading = { declares: declaresReact };
+
+/** The component files of a repository, as the build lists them, made up for the checker. */
+const componentFiles = (base: ExtractContext, formats: readonly EmbeddedFormat[]): EmbeddedFile[] => {
+  const listed = listRepoSources(base.repoDir, base.service.readTestDirectories, {
+    ...REACT_SOURCE_ROOTS,
+    ...(base.service.tsconfig === undefined ? {} : { tsconfig: base.service.tsconfig }),
+    companions: formats.map((format) => format.extension),
+  });
+  return addEmbeddedScripts(base.project, base.repoDir, listed, formats);
+};
 
 /**
  * Reads one repository into the shared builder.
@@ -131,7 +178,13 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
  * whole extractor is reachable through the context alone and nothing here needs
  * a privileged path into the tool.
  */
-export const extractReact = (base: ExtractContext, options: FrontendExtractOptions = {}): void => {
+export const extractReact = (base: ExtractContext, options: FrontendExtractOptions = {}): void => extractBrowser(base, options, REACT_READING);
+
+/** {@link extractReact} for any framework this reader reads, by its {@link BrowserReading}. */
+export const extractBrowser = (base: ExtractContext, options: FrontendExtractOptions, reading: BrowserReading): void => {
+  const embedded = reading.formats === undefined ? [] : componentFiles(base, reading.formats);
+  const elsewhere = (reading.elsewhere?.(base) ?? []).map((dir) => `${toPosixPath(join(base.repoDir, dir))}/`);
+  const supplied = suppliedWith(base.repoDir, reading.declares);
   // Which files are React's to read. Detection said the framework is somewhere
   // in what this service can import; that switches the reader on and says
   // nothing about which files are written for it. A server whose mail library
@@ -151,11 +204,13 @@ export const extractReact = (base: ExtractContext, options: FrontendExtractOptio
     project: base.project,
     repo: base.repo,
     repoDir: base.repoDir,
-    reads: suppliedWith(base.repoDir, declaresReact),
+    reads: (file) => supplied(file) && !elsewhere.some((dir) => toPosixPath(file).startsWith(dir)),
+    skip: (fn) => fn.name === COMPONENT_TAIL_NAME,
   });
   const ctx = createReactContext({
     base,
     functions,
+    embedded,
     sources: countSources(base.project),
     ...(options.typesDepth === undefined ? {} : { maxDepth: options.typesDepth }),
   });
@@ -181,6 +236,8 @@ export const extractReact = (base: ExtractContext, options: FrontendExtractOptio
   // letting the other half fold its counts in is what keeps it one node; see
   // the server reader, which does the folding because it is the half that goes
   // second.
+  // Where the service's own server listens, where it has one (P250).
+  const listen = listeningOf(base);
   base.builder.addNode({
     id: `repo:${base.repo}`,
     type: 'repo',
@@ -192,6 +249,7 @@ export const extractReact = (base: ExtractContext, options: FrontendExtractOptio
         frontend: base.adapters.frontend.map((adapter) => adapter.name),
         entry: base.adapters.entry.map((adapter) => adapter.name),
       },
+      ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
     },
   });
 };
@@ -230,6 +288,11 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const builder = new GraphBuilder({
     repo,
     ...(options.generatedAt === undefined ? {} : { generatedAt: options.generatedAt }),
+    // The tagged comments above declarations (P234), from the files this reading parsed.
+    notesFrom: {
+      text: projectText(project, rootDir),
+      ...(config?.docs?.commentTags === undefined ? {} : { tags: config.docs.commentTags }),
+    },
   });
 
   const base: ExtractContext = {
@@ -272,6 +335,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
     });
   }
 
+  // After the adapters, which make up the component files and the imports a
+  // framework adds to them (P240), so the rows count those as well.
+  reportConventions(base);
   closeStandIns(base);
   return builder.build();
 };

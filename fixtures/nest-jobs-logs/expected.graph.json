@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "nest-jobs-logs",
-  "generatedAt": "2026-10-16T11:02:42.033Z",
+  "generatedAt": "2026-11-07T17:39:06.542Z",
   "nodes": [
     {
       "id": "entry:nest-jobs-logs:cron:CleanupService.nightly",
@@ -154,7 +154,14 @@
             "nestjs-http",
             "nestjs-schedule"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     }
   ],

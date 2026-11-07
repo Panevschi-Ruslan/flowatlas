@@ -358,7 +358,6 @@ export interface QuestionFold {
 export declare const UPSTREAM: readonly string[];
 export declare const CROSSING: readonly string[];
 export declare const IMPACT_DEPTH: number;
-export declare const PATH_DEPTHS: readonly number[];
 export declare const EDITOR_NAMES: readonly string[];
 export declare const createProblems: (model: GraphModel) => Problems;
 export declare const onlyProblems: (

@@ -1,0 +1,21 @@
+@  POST /orders                                                orders/lib/orders-stack.ts:42
+  -> handler                                                   orders/src/place-order.ts:7
+    $  PLACED_QUEUE_URL                                        orders/src/place-order.ts:9
+    ~  message sqs/orders-placed                               orders/src/place-order.ts:9
+      ~  sqs/orders-placed                                     serverless.yml:31
+        => gateway ~  mapping functions.audit.events[0]        gateway/serverless.yml:31
+          @  shop-gateway-prod-audit                           gateway/serverless.yml:28
+            -> handler                                         gateway/src/audit.ts:7
+              $  AUDIT_QUEUE_URL                               gateway/src/audit.ts:9
+              ~  message ? ~heuristic                          gateway/src/audit.ts:9
+        => catalog ~  mapping Resources.Reorder.Events.Placed  catalog/template.yaml:79
+          @  catalog-reorder                                   catalog/template.yaml:69
+            -> handler                                         catalog/src/reorder.ts:11
+              $  SHOP_API_URL                                  catalog/src/reorder.ts:14
+              ^  POST /orders                                  catalog/src/reorder.ts:14
+                (again) POST /orders
+              $  RESTOCK_TOPIC_ARN                             catalog/src/reorder.ts:15
+              ~  message sns/catalog-restock                   catalog/src/reorder.ts:15
+                ~  sns/catalog-restock                         lib/orders-stack.ts:55
+... truncated: ≥1 more nodes (raise --depth)
+unresolved on this path: 4

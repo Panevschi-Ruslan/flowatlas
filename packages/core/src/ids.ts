@@ -179,6 +179,18 @@ const rootOfPath = (path: string): string | undefined =>
   path.startsWith('/') ? '/' : DRIVE.test(path) ? path.slice(0, 2).toUpperCase() : undefined;
 
 /**
+ * The files a reading made up for the checker, by the POSIX path of each, and
+ * the file each stands for (P233, `embedded.ts`). A position in one is a
+ * position in the other, so the only thing to change is the name.
+ */
+const MADE_UP_FILES = new Map<string, string>();
+
+/** Records that `virtual` is the checker's copy of `real`: both absolute, POSIX. */
+export const nameMadeUpFile = (virtual: string, real: string): void => {
+  MADE_UP_FILES.set(virtual, real);
+};
+
+/**
  * Bring a file path into the form every id uses: POSIX separators,
  * repo-relative when `repoDir` is given, without a leading `./`.
  *
@@ -189,6 +201,8 @@ const rootOfPath = (path: string): string | undefined =>
  */
 export const normalizeFilePath = (file: string, repoDir?: string): string => {
   let out = toPosixPath(typeof file === 'string' ? file : '');
+  // A file made up for the checker is named as the file it was made from.
+  out = MADE_UP_FILES.get(out) ?? out;
   if (typeof repoDir === 'string' && repoDir !== '') {
     const base = pathKey(toPosixPath(repoDir).replace(/\/+$/, ''));
     const key = pathKey(out);
@@ -322,8 +336,65 @@ export const makeInvokeEntryKey = (name: string): string => required('name', nam
  * starts with `UNREAD_SPAN`, which no deployed name can contain, so it can never
  * be mistaken for one and `wasRead` says no to it.
  */
-export const makeUnnamedInvokeKey = (declaration: string): string =>
-  `${UNREAD_SPAN}@${required('declaration', declaration)}`;
+export const makeUnnamedInvokeKey = (declaration: string): string => `${UNREAD_SPAN}@${standIn(declaration)}`;
+
+/**
+ * A declaration spelled so it can stand where a name goes: a construct path's
+ * slashes and a site's colon, which a channel's name and an ARN are split on,
+ * are dots (P57). An address with neither is spelled as it is.
+ */
+const standIn = (declaration: string): string => required('declaration', declaration).replace(/[/:]/g, '.');
+
+/**
+ * The name a deployment gives something whose name it generates when it is
+ * deployed: a queue, a topic, a table or a function declared with no name of
+ * its own (P57).
+ *
+ * No file holds such a name, and guessing the platform's spelling of it would
+ * be a guess (I3). So it is stood in for by where it is declared, in the
+ * spelling an unnamed function's key already has: everything in the one
+ * deployment that refers to the declaration - a value a function is deployed
+ * with, a subscriber, a step - spells it the same way and joins to it, and
+ * nothing outside the deployment can, because no deployed name contains
+ * `UNREAD_SPAN` and `wasRead` says no to it.
+ */
+export const generatedName = (declaration: string): string => makeUnnamedInvokeKey(declaration);
+
+/**
+ * Whether a name is one {@link generatedName} stood in for: a reader that
+ * checks what a deployed name may be made of lets it through, because it is
+ * the one spelling every part of its deployment agrees on.
+ */
+export const isGeneratedName = (name: string): boolean => name.startsWith(`${UNREAD_SPAN}@`) && name.length > UNREAD_SPAN.length + 1;
+
+/**
+ * The key of a value one deployment publishes under a name for others to read
+ * (P249): by the name it is exported under, which is unique where both are
+ * deployed, or by the deployment's name and the value's own, which a reader of
+ * that deployment can also spell.
+ */
+export const exportKey = (name: string): string => `export:${required('name', name)}`;
+export const stackOutputKey = (stack: string, output: string): string => `stack:${required('stack', stack)}#${required('output', output)}`;
+
+/** Where an imported name's stand-in starts. */
+const IMPORTED_AT = `${UNREAD_SPAN}@import.`;
+
+/**
+ * The name a reader gives something another deployment publishes and this one
+ * imports: a queue, a topic, a bus, a function known here only by the key of
+ * the value that names it (P249).
+ *
+ * Like a {@link generatedName}, it is a name nothing deployed has, so every
+ * part of the importing deployment that points at it agrees on it and nothing
+ * else joins to it by accident; unlike one, the linker can finish it, by the
+ * value another repository publishes under the same key, before the graphs
+ * are merged. The key is spelled as a declaration is, with the `#` between a
+ * stack and its output a dot too, which nothing an id is split on holds.
+ */
+export const importedName = (key: string): string => `${IMPORTED_AT}${standIn(key).replace(/#/g, '.')}`;
+
+/** Whether a name is one {@link importedName} stood in for. */
+export const isImportedName = (name: string): boolean => name.startsWith(IMPORTED_AT) && name.length > IMPORTED_AT.length;
 
 /**
  * The `key` half of a `workflow` entry id: the name the workflow is deployed
@@ -340,8 +411,7 @@ export const makeWorkflowEntryKey = (name: string): string => required('name', n
  * reason {@link makeUnnamedInvokeKey} gives: the steps are still worth drawing,
  * and nothing may join to them by a name made of the parts that were read.
  */
-export const makeUnnamedWorkflowKey = (declaration: string): string =>
-  `${UNREAD_SPAN}@${required('declaration', declaration)}`;
+export const makeUnnamedWorkflowKey = (declaration: string): string => `${UNREAD_SPAN}@${standIn(declaration)}`;
 
 /**
  * `<repo>#<file>:<workflow>/<state>` — one step of a workflow.

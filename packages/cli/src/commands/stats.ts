@@ -3,6 +3,7 @@ import {
   CONFIDENCE_LEVELS,
   countsOf,
   EDGE_TYPES,
+  gapIdOf,
   rowKindOf,
   NODE_TYPES,
   tally,
@@ -15,9 +16,12 @@ import {
 } from '@flowatlas/core';
 import type { GraphDb, LinkReport } from '@flowatlas/linker';
 import type { Command } from 'commander';
-import { openDbFromOptions } from '../db.js';
+import { questionLogSettings, questionsPathFor, readQuestions } from '@flowatlas/mcp';
+import { dbPathFor, handleFor, openDbFromOptions } from '../db.js';
+import { cannotRun } from '../exit.js';
 import { withQueryOptions, type QueryOptions } from '../options.js';
 import { processIo, settingsFor, type QueryIo } from '../query/answer.js';
+import { renderQuestions, sinceOf, summariseQuestions } from '../report/questions.js';
 
 /** Enough of the link report for the summary, however it was obtained. */
 export interface LinkSummary {
@@ -299,9 +303,55 @@ export const summariseStats = (stats: Stats): string[] => {
   return lines;
 };
 
+export interface StatsOptions extends QueryOptions {
+  /** What the question log says, instead of what the graph holds (P235). */
+  questions?: boolean;
+  since?: string;
+}
+
+/** The gap ids the graph has now, or undefined when there is no graph to ask. */
+const currentGaps = (options: StatsOptions): Set<string> | undefined => {
+  const opened = handleFor(options).open();
+  if ('error' in opened) return undefined;
+  try {
+    return new Set(opened.db.allUnresolved().map((row) => gapIdOf({ reason: row.reason, ...(row.service ? { service: row.service } : {}), ...(row.file ? { file: row.file } : {}) })));
+  } finally {
+    opened.db.close();
+  }
+};
+
+/** `stats --questions`: the log beside the database, summarised; a log never turned on says how to. */
+const runQuestionStats = (options: StatsOptions, format: string, io: QueryIo): void => {
+  const since = sinceOf(options.since);
+  const dbPath = dbPathFor(options);
+  const { entries, unreadable } = readQuestions(dbPath);
+  if (entries.length === 0 && unreadable === 0) {
+    let enabled = false;
+    try {
+      enabled = questionLogSettings(handleFor(options).config).enabled;
+    } catch {
+      // No configuration to read: the environment alone says.
+      enabled = questionLogSettings(undefined).enabled;
+    }
+    io.err(
+      enabled
+        ? `no questions logged yet in ${questionsPathFor(dbPath)}\n`
+        : 'the question log is off: set "log": { "questions": true } in flowatlas.config.json, or FLOWATLAS_LOG_QUESTIONS=1\n',
+    );
+  }
+  const current = currentGaps(options);
+  const summary = summariseQuestions(entries, { unreadable, ...(since === undefined ? {} : { since }), ...(current === undefined ? {} : { current }) });
+  io.out(format === 'json' ? `${JSON.stringify(summary, null, 2)}\n` : `${renderQuestions(summary).join('\n')}\n`);
+};
+
 /** Counts of everything, and the numbers the build wrote down. */
-export const runStats = (options: QueryOptions, io: QueryIo = processIo): void => {
+export const runStats = (options: StatsOptions, io: QueryIo = processIo): void => {
   const settings = settingsFor(options, io, ['json', 'tree']);
+  if (options.questions === true) {
+    runQuestionStats(options, settings.format, io);
+    return;
+  }
+  if (options.since !== undefined) throw cannotRun('--since goes with --questions');
   const db = openDbFromOptions(settings);
   // Closed once counted (P199): on Windows an open database can be neither
   // replaced by the next build nor removed with its directory.
@@ -322,7 +372,10 @@ export const registerStats = (program: Command): void => {
   withQueryOptions(program.command('stats').description('what the built graph is made of'), {
     formats: ['json', 'tree'],
     walks: false,
-  }).action((options: QueryOptions) => {
-    runStats(options);
-  });
+  })
+    .option('--questions', 'what the question log says assistants and commands asked, instead of what the graph holds')
+    .option('--since <when>', 'with --questions: from a date, or a span back from now such as 24h, 7d or 2w')
+    .action((options: StatsOptions) => {
+      runStats(options);
+    });
 };

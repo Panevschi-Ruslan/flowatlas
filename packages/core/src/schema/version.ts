@@ -7,5 +7,8 @@
  *
  * 6 added the `workflow` entry kind and the `function` node of kind `state`
  * that its steps are (P22).
+ *
+ * 7 added the `graphql` entry kind: a field a resolver answers, reached
+ * through the endpoint a request joins to (P232).
  */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;

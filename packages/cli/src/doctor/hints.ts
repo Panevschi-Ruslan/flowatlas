@@ -218,6 +218,35 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The package is not installed, and its types were read from its source in a repository this project reads. Nothing to do; the source may not be the version that runs, and installing the dependencies reads the installed copy instead (packageSources: false reads nothing in its place).',
   'package-source-ambiguous': () =>
     'Two directories of the project carry this package name, so neither is read in place of the missing install. Rename one in its package.json, leave one out of the configuration, or install the dependencies.',
+  // What a framework's build would have written for the compiler (core/conventions.ts, P240)
+  'aliases-from-convention': () =>
+    "The framework writes these aliases into a tsconfig of its own when it prepares the project, and that file is not in the checkout, so they were read as the framework documents them. Nothing to do; run the framework's prepare step before building to read the ones it writes instead.",
+  'aliases-from-config': () =>
+    'These aliases are named by a configuration the tsconfig that was read does not mirror - a bundler configuration, or a project a solution tsconfig refers to - and were read from there. Nothing to do; naming them in the tsconfig makes the compiler and this reading agree.',
+  'implicit-imports-from-convention': () =>
+    'The framework imports these names for a file that uses them with no import line, and they were read as imports of the files that export them. Nothing to do.',
+  'implicit-import-ambiguous': () =>
+    'The name is used with no import, and two files the framework imports names from both export it, so the call is not joined to either. Rename one of them, or import the name from the file meant.',
+  'framework-layer-unread': () =>
+    "The application extends a layer that is not read - one downloaded when the application builds, installed from a registry, named in code, or outside the repository and its workspace - so its pages, routes, composables and aliases are missing from the graph. Extend it by its path in the repository, or read it as a service of its own.",
+  'framework-layer-read': () =>
+    "The application is built with these layers, and each was read as part of it: its pages, routes, composables and aliases are the application's. Nothing to do.",
+  'framework-layer-overridden': () =>
+    'Two parts of the application give this page or route, and the framework uses the one of the higher-ranked part; the lower one is read as code, and not as a page or route. Nothing to do, unless the lower one was meant to be used.',
+  'framework-layer-alias': () =>
+    "A layer imports its own code with `~` or `@`, which the framework resolves against the application in every layer, and the application has no such file, so the import is not joined. Import it with a relative path, or through the layer's named alias.",
+  'framework-module-read': () =>
+    "The application is built with these modules of the repository, and what each adds when the application builds - names used with no import, routes, pages, aliases - was read from its code. Nothing to do.",
+  'framework-module-installed': () =>
+    "These modules are packages the application installs, run when it builds; what a package adds is not read as the repository's code. Nothing to do for the ones whose additions are their own package's; for another, name an alias it adds in the tsconfig's paths, or describe a route it serves.",
+  'framework-environment-differs': () =>
+    "The configuration overrides some settings for one environment, and the graph is the production build's, so a layer, module or setting only another environment has is not read. Nothing to do; write what every build shares outside the overrides.",
+  'framework-module-unread': () =>
+    "A module the application is built with, or something it adds, could not be read: the module is written as code or in the configuration itself, names nothing, or hands the framework a path that is not built from its own file. Build the path from the module's file, with `createResolver(import.meta.url).resolve(...)`, or move the module to a file of `modules/`.",
+  'implicit-import-overridden': () =>
+    'More than one part of the application exports this name, and the framework imports it from the higher-ranked one, which is the one joined. Nothing to do; rename the other to use both.',
+  'framework-setting-dynamic': () =>
+    "A setting of the framework's configuration is written as code rather than as a literal, so its default was read in its place. Write it as a literal, or name what it sets in the tsconfig's paths.",
   'package-version-differs': () =>
     'The source read in place of the package is not a version this service asks for, so its types may not be the ones it runs. Install the dependencies to read the version asked for.',
   'shape-file-unread': () =>
@@ -288,6 +317,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // Routes (adapters-entry)
   'route-path-dynamic': () =>
     'Write the path as a literal, a const, or a + or template of them, and every path of a list the same way; a path that needs a call or a run-time value to compute is not recorded as a route at all, so no caller can reach it.',
+  'fs-route-handler-not-read': () =>
+    'The file serves a route and its default export is not a handler written in place. Export defineEventHandler((event) => ...) as the default, or describe the route in flowatlas.config.json.',
   'route-mount-unread': () =>
     'The route was read and the path its application is mounted under was not. Mount the application at a literal path, or declare its routes on the application that is served.',
   'route-handler-anonymous': () =>
@@ -302,6 +333,34 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Describe the builder that made it, or declare the action as an exported function, so the way in and its callers are visible.',
   'route-module-not-found': () =>
     'A route config names a module that is not a source file of this project, so the address it declares has nothing behind it here. Name the module by its path relative to the app directory as it is spelled on disk, or add the file.',
+  'graphql-field-resolved-twice': () =>
+    'Two resolvers answer one GraphQL field; the server runs one of them. Remove one, or move it to the field it was meant for.',
+  'graphql-federation-not-read': () =>
+    'Part of a federated graph cannot be read: a supergraph the registry hands the router at run time, one built by code at start or not committed, a subgraph schema in the registry, or a subgraph no gateway in the project names. Requests are joined as far as what was read; commit the supergraph or its rover configuration, or add the gateway to the project.',
+  'local-port-shared': () =>
+    'The request names a port on this machine, and two or more services listen on it: their code starts a server there, or their setting files (an example environment file, a published container port) place them there. Which one a local run reaches is whichever started first, so the request is not joined. Name the host (localhost:<port>) under services[].hosts of the service it means, or give the servers different ports.',
+  'graphql-subgraph-not-joined': () =>
+    'A gateway names a subgraph whose address reaches no configured service, so the fields that subgraph resolves are not joined and the composition is a guess. Add the address\'s setting to services[].baseUrlEnv, or its host to services[].hosts, of the service that is the subgraph.',
+  'graphql-composition-conflict': () =>
+    'Composition refuses this graph: two subgraphs resolve one field and not every one marks it @shareable, or a subgraph resolves a field of an entity it declares no key for. The field is drawn to each owner as a choice; mark it @shareable, move it with @override(from:), or declare the key.',
+  'graphql-supergraph-drift': () =>
+    'The supergraph the router plans by and a subgraph\'s source disagree: a field it gives the subgraph is gone, or a root field the subgraph added is not in it. Compose the supergraph again and commit it.',
+  'graphql-auth-not-checked': () =>
+    'The subgraphs mark fields with the router\'s authorization directives (@authenticated, @requiresScopes, @policy), and the gateway that composes them is an Apollo Gateway, which does not check them: a request through it reaches those fields unchecked. Serve the graph with a router that checks them, or check who is asking in the subgraph\'s resolvers.',
+  'graphql-entity-type-unsaid': () =>
+    'A subgraph owns an entity interface other subgraphs make entity calls for, and writes neither its reference resolver nor a type resolver: the call arrives naming the interface, so the subgraph cannot say which of its types the item is, and refuses it. Write the interface\'s __resolveReference answering with the item and its __typename, or __resolveType.',
+  'graphql-context-not-reached': () =>
+    'A field takes an argument the router fills from a context (@fromContext), and no type above it in the selection sets that context (@context), so what the argument needs is not planned. Select the field under the type that sets the context, or pass the argument another way.',
+  'graphql-shareable-choice': () =>
+    'More than one subgraph resolves the field and none is the one that fetched its parent, so the router chooses by cost at run time. Each is drawn, heuristic. Nothing to do here.',
+  'graphql-field-no-resolver': () =>
+    'The operation asks the service for a field its schema has and no resolver of it answers, so the request stops at the endpoint. Resolve the field, or correct the operation.',
+  'graphql-document-dynamic': () =>
+    'The GraphQL document is built at run time or is not written where it is used, so the fields it asks for cannot be joined. Write it as a gql template, a graphql() call or a .graphql file.',
+  'graphql-document-not-parsed': () =>
+    'The document is not valid GraphQL, so nothing it asks for is joined; the server would refuse it too.',
+  'graphql-fragment-not-read': () =>
+    'The operation spreads a fragment that could not be read. Its root fields are joined; the fragment\'s fields are not compared with the schema.',
   'route-claimed-twice': () =>
     'Two route files resolve to one verb and address, so only the first is drawn. The framework refuses that or serves one of them; remove one, or move it to the address it was meant for.',
   'route-file-not-served': () =>
@@ -334,11 +393,21 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Nothing here is assembled by any of the names that reader looks for. Ordinary in a repository that only calls procedures; check assembledBy if this is the one that declares them.',
   'procedure-members-unmatched': () =>
     'Calls to the assembling name were found and no member of any of them ended a chain the way a way in does, so none of them was read as a tree. Check terminators on that description.',
-  // Callers of procedures (extractor-react/passes/procedures)
+  // Callers of procedures (adapters-entry/procedure-calls, in a browser and in a server)
   'procedure-path-dynamic': () =>
     'A step of the path a procedure is asked for by is computed, so the procedure it reaches cannot be named and the call is joined to nothing. Write each step as a name.',
   'entry-procedures-description-inactive': () =>
     'Ordinary in a project of several repositories. If this is the one it was written for, check the spelling of its packages.',
+  // oRPC's links, mounts and contracts (P58)
+  'procedure-link-dynamic': () =>
+    'The link a client was made with works its address out when each request is sent, or is not one this reads, so nothing says which service it reaches; the join falls back to apiTarget. Write the URL as text, or as a setting followed by a path.',
+  // A client's WebSocket link (P242)
+  'procedure-link-socket': () =>
+    'The request is sent over a WebSocket link, whose address belongs to the socket client and is not read, so the join falls back to the caller’s own service and apiTarget. Nothing is wrong; name the service the socket connects to in services[].apiTarget.',
+  'procedure-prefix-unread': () =>
+    'The mount that serves a tree is handed its requests somewhere this could not read the prefix of, so where it answers is unknown and, for an OpenAPI mount, none of the REST routes it answers is drawn. Hand the request to it in the file that builds it, with the prefix written as text.',
+  'procedure-contract-unread': () =>
+    'An implementation names a member of a contract this could not follow, so its input, output, errors and route are only what the implementation itself writes. Write the contract as object literals of chains the service can read, and check that the member exists.',
 
   // Bots (adapters-entry/nestjs-telegraf, telegraf-calls)
   'dynamic-bot-trigger': () =>
@@ -411,6 +480,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The verb is chosen at run time. Annotate the method with /** @flowatlas-calls METHOD /path */.',
   'api-base-override-unread': () =>
     'The call writes a base of its own and it could not be read, so the address was recorded as the path alone. Write that option as a literal or a constant.',
+  'api-client-base-unread': () =>
+    'A client instance is made with a base, or an interceptor or a hook run before every request sets one or rewrites the address, and it could not be read, was chosen by a branch, or two disagree. Requests through it were recorded under the base the instance is made with, or the path each call writes where it has none, and may join by their route alone. Write the base unconditionally, as a literal, a settings key or a constant.',
   'api-base-unknown': () =>
     'Add the settings key to services[].apiBaseEnv, and services[].apiTarget to say which service answers it.',
   'api-client-unread': () =>
@@ -424,6 +495,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The template could not be parsed, so every trigger in it is missing from the graph until it is fixed.',
   'route-link-dynamic': () =>
     'The path is built at run time, so no configured route can be matched against it. Nothing to fix.',
+  'template-handler-not-found': () =>
+    'The binding names a function the component neither declares nor imports, so the click runs nothing the graph can follow. Declare it, import it, or correct the name in the markup.',
   'route-screen-unread': () =>
     'A route answers this link, but nothing said which component it shows — a redirect, or a loader that was not read.',
   'route-target-unresolved': (row) =>
@@ -483,13 +556,39 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'api-body-unread': () =>
     'An API is created from an OpenAPI body that is not read, so none of its routes are drawn. Write the body as templatefile(), file(), jsonencode() or a heredoc, with a path the files settle and text that is JSON or YAML with paths.',
   'deployment-unread': () =>
-    'The repository declares Lambda packages and no deployment description this reads. Functions are read from Terraform; the handlers are still read as code, and nothing reaches them.',
+    'The repository declares Lambda packages and no deployment description this reads. Functions are read from Terraform, a Serverless Framework file, an AWS CDK app in TypeScript, an AWS SAM template or a CloudFormation template; the handlers are still read as code, and nothing reaches them.',
+  'nested-deployment-unread': () =>
+    'A deployment nests another whose description is published somewhere else - an application of a registry, a template at a web or storage address - so nothing it declares is read. Keep the nested description in the repository and point at it by a relative path; one published elsewhere is read where its own repository is.',
+  'layer-not-followed': () =>
+    'Shared code is deployed as a layer that functions load when they run. Its sources are read as code where they are in the repository, but an import of the layer is not followed to them. Nothing to fix unless the calls into it matter; import it by a path or a package the repository resolves and they are followed.',
+  'deployment-copy-not-read': () =>
+    'A deployment description declares exactly what another one of the repository does, with uploads where the other names files of the repository: it is the copy a packaging step wrote, and it is read once, as the description it was written from. Nothing to fix; keep such copies out of the repository and this note goes too.',
+  'deployment-app-unread': () =>
+    'The program that declares the deployment was not read from its start - no cdk.json, an app that is not TypeScript, or a bound on how far it is followed - so what its stacks are handed is not known. Name a TypeScript app in cdk.json; the stacks are still read on their own.',
+  'deployment-plugin-unread': () =>
+    'A plugin or a macro of the deployment declares functions, queues or routes in a section of its own, or rewrites the description when it is deployed - or the description uses the types of one it does not name, such as the SAM transform - and what it adds is not read. Declare them in the description itself, name the transform it is written for, or expect them missing from the map.',
+  'construct-repeated-unread': () =>
+    'Something is declared once per element of a collection the files do not settle, so neither how many there are nor their names are known; one is read in their place. Write the collection out, or as a constant, and each is read under its own name.',
+  'deployed-name-generated': () =>
+    'The platform names this when it is deployed, so no file holds its name. It is named by where it is declared, which everything in the same deployment joins to; nothing outside it can. Give it a name of its own if other repositories reach it.',
+  'construct-conditional': () =>
+    'This is declared under a condition the files do not settle. It is read as declared, and what reaches it is drawn heuristic. Set the value the condition reads under services[].infra.options, or in the files.',
+  'construct-unreached': () =>
+    'This stack or construct is declared and never created by the program that deploys the others, so it is not read. Nothing to do unless it is deployed some other way.',
 
   // Joining the repositories (linker)
   'route-root-not-found': () =>
     'A route hangs from a point of an API that no configured service publishes, so its full path is not known. Add the repository that declares that API to the configuration.',
   'route-root-ambiguous': () =>
     'A route hangs from a point of an API that two declarations place differently. One of them is stale.',
+  'export-not-found': () =>
+    'A deployment reads a value another one publishes - an output, by the name it is exported under or by its stack and its own name - and no configured service publishes it, so what it names is not joined. Add the repository whose deployment declares that output to the configuration, or check the name on both sides.',
+  'export-ambiguous': () =>
+    'Two configured services publish a value under the same name, so a deployment reading it cannot be joined to either. A name is exported once where both are deployed; one of the two is stale, or they are two environments the configuration should tell apart.',
+  'export-mismatched': () =>
+    'A deployment reads a value another publishes, and that value is not read on the publishing side or is another kind of thing than the reader takes - a topic where a queue is read - so the two are not joined. Fix the output, or what reads it.',
+  'compose-service-unread': () =>
+    'A composition of deployments lists a service that is not read: its folder is outside the repository, is not there, or holds no service file. Point it at a folder of the repository with a service file; one in another repository is read where that repository is.',
   'invoke-target-not-found': () =>
     'A route names its function by the name it is deployed under, and no configured service deploys a function of that name. Add the repository that deploys it to the configuration.',
   'invoke-target-ambiguous': () =>
@@ -546,6 +645,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'More than one service the caller is configured to call declares this procedure. Leave only the one it talks to in its apiTarget.',
   'procedure-call-mismatch': () =>
     'The procedure is asked for as one kind of call and declared as another, and the server refuses a call of the kind it did not declare. Call it as declared.',
+  'procedure-link-unserved': () =>
+    'The client sends to an address where no mount of the protocol it speaks serves the tree, so nothing answers the request there. Point the link at the prefix the mount is handed, or mount the tree where the link sends.',
   'duplicate-node-id': () =>
     'Two repositories declared the same id. One of them was kept; rename the other, or split the shared file out into a package.',
 
@@ -555,6 +656,14 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // what keeps the old spelling working in a configuration that silenced it.
   'document-age': () =>
     'Nothing here can check a document against the running service, so how recently the document was updated is the only evidence there is that it is still true. Fetch the current one from whoever owns the service if it is behind.',
+
+  // A store more than one service writes (doctor/shared-store.ts, P228), asked at doctor time.
+  'store-shared': () =>
+    'Two services write this store, so a change to its shape in one is a change under the other. If that is the design, accept it; if only one should write it, an `only` rule says so and flowatlas rules lists every other writer.',
+
+  // A checkout that moved since the build (doctor/checkout.ts, P230), asked at doctor time.
+  'checkout-moved': () =>
+    'The graph describes the commit each repository was on when it was built. Run flowatlas build after a checkout or a merge, or flowatlas hook install to have it rebuilt in the background every time.',
 
   // What traffic answered beside what the code declares (doctor/runtime.ts, P106).
   // Asked of the observed file at doctor time, never stored in the graph.
@@ -736,6 +845,11 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'marker-reason-missing': ['public marker with no reason', 'public markers with no reason'],
   'route-shadowed': ['route a worker answers first', 'routes a worker answers first'],
   'route-claimed-twice': ['route claimed twice', 'routes claimed twice'],
+  'graphql-field-resolved-twice': ['GraphQL field resolved twice', 'GraphQL fields resolved twice'],
+  'graphql-composition-conflict': ['federated field composition refuses', 'federated fields composition refuses'],
+  'graphql-supergraph-drift': ['supergraph field out of date', 'supergraph fields out of date'],
+  'graphql-auth-not-checked': ['gateway that checks no authorization directive', 'gateways that check no authorization directive'],
+  'graphql-entity-type-unsaid': ['entity interface no subgraph can type', 'entity interfaces no subgraph can type'],
   'route-file-not-served': ['route file served at no address', 'route files served at no address'],
   'wizard-step-conflict': ['wizard step numbered twice', 'wizard steps numbered twice'],
   'workflow-name-duplicate': ['workflow defined twice', 'workflows defined twice'],
@@ -743,6 +857,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'orphan-scene-decorator': ['scene handler outside a scene', 'scene handlers outside a scene'],
   'orphan-update-decorator': ['bot handler outside an update class', 'bot handlers outside an update class'],
   'procedure-call-mismatch': ['procedure called as the wrong kind', 'procedures called as the wrong kind'],
+  'procedure-link-unserved': ['procedure sent where nothing answers', 'procedures sent where nothing answers'],
   's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],
   'stream-no-writer': ['stream nothing writes to', 'streams nothing writes to'],
   'subscription-matches-nothing': ['rule nothing published matches', 'rules nothing published matches'],

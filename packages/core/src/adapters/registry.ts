@@ -1,4 +1,5 @@
 import type { FlowatlasConfig } from '../config.js';
+import type { ConventionsOf, ProjectConventions } from '../conventions.js';
 import { AdapterNotFoundError, FlowatlasError } from '../errors.js';
 import type { BrokerAdapter } from './broker.js';
 import type { PackageJson } from './manifest.js';
@@ -120,6 +121,34 @@ export class AdapterRegistry {
       broker: this.#resolve('broker', pkg, force.broker, config, repoDir),
       frontend: this.#resolve('frontend', pkg, force.frontend, config, repoDir),
     };
+  }
+
+  /**
+   * What the frameworks of a repository would have written for the compiler
+   * before it is read (P240), as the adapters that apply state it: asked
+   * before the project is opened, because the aliases and the implicit
+   * imports decide how every import of it resolves.
+   *
+   * Asked of the entry and frontend adapters detection picks, each way of
+   * stating them once: one framework read by two adapters is one statement.
+   */
+  conventions(
+    pkg: PackageJson,
+    repoDir: string,
+    force: AdapterForce = {},
+    config?: FlowatlasConfig,
+  ): ProjectConventions[] {
+    const detected = this.detect(pkg, force, config, repoDir);
+    const asked = new Set<ConventionsOf>();
+    const stated: ProjectConventions[] = [];
+    for (const adapter of [...detected.entry, ...detected.frontend]) {
+      const of = adapter.conventions;
+      if (of === undefined || asked.has(of)) continue;
+      asked.add(of);
+      const found = of(repoDir, pkg);
+      if (found !== undefined) stated.push(found);
+    }
+    return stated;
   }
 
   #resolve<S extends AdapterSlot>(

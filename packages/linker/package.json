@@ -48,8 +48,9 @@
     "test": "vitest run --passWithNoTests --testTimeout=60000"
   },
   "dependencies": {
-    "@flowatlas/core": "workspace:*",
     "@flowatlas/contracts": "workspace:*",
+    "@flowatlas/core": "workspace:*",
+    "@flowatlas/graphql": "workspace:*",
     "better-sqlite3": "^13.0.3",
     "zod": "^4.5.4"
   },

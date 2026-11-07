@@ -711,6 +711,20 @@ export const deadEntries = (
     if (excluded.has(node.kind ?? '')) continue;
     rows.push(routeRow(context, node));
   }
+  // GraphQL fields no request selects (P232). A field resolver is reached only
+  // through a selection under a field returning its type, so it is reached as
+  // soon as any such field is: listing one nobody selects by name would be
+  // wrong for every client that selects it through a fragment this never read (D4).
+  const fields = db.nodesByType('entry', 'graphql');
+  const selected = (entry: GraphNode): boolean => db.edgesTo(entry.id, ['http_calls', 'hits']).length > 0;
+  const returned = new Set(
+    fields.filter(selected).map((entry) => `${entry.repo}#${String(entry.meta?.['returns'] ?? '').replace(/[[\]!]/g, '')}`),
+  );
+  for (const node of fields) {
+    if (!inService(node, options.service) || selected(node)) continue;
+    if (node.meta?.['field'] === true && returned.has(`${node.repo}#${String(node.meta?.['type'] ?? '')}`)) continue;
+    rows.push(routeRow(context, node));
+  }
   for (const channel of report?.channels.noProducers ?? []) {
     for (const edge of db.edgesFrom(channel, ['consumes'])) {
       const consumer = db.node(edge.to);

@@ -1,0 +1,33 @@
+{
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express"
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "express"
+    },
+    {
+      "name": "router",
+      "document": {
+        "kind": "graphql",
+        "path": "router/supergraph.graphql"
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_ROUTER_URL"
+      ],
+      "apiTarget": {
+        "VITE_ROUTER_URL": "router"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

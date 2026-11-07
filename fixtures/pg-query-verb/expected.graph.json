@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "pg-query-verb",
-  "generatedAt": "2026-10-07T14:34:46.673Z",
+  "generatedAt": "2026-11-07T17:40:36.020Z",
   "nodes": [
     {
       "id": "db_query:pg-query-verb#src/orders/orders.service.ts:10:12",
@@ -254,7 +254,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
       }
     },
     {

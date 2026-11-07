@@ -16,7 +16,7 @@
  *
  * A **source file** is a file the repository tracks in git, inside the
  * **extent** of the service being read, whose extension is one of
- * `SOURCE_EXTENSIONS`, and none
+ * `SOURCE_EXTENSIONS` or whose name is one of `DECLARATION_FILES`, and none
  * of whose path segments is one of `SKIPPED_SEGMENTS`, whose name does not
  * match `SKIPPED_FILES`, and which is not a test. What a test is comes from
  * `isTestFile` in `@flowatlas/core`, the definition the tool reads by, and from
@@ -87,7 +87,22 @@ export const SOURCE_EXTENSIONS = [
   '.cjs',
   '.html',
   '.prisma',
+  // Components in files of their own format (P233).
+  '.vue',
+  '.svelte',
 ];
+
+/**
+ * Files that are not code and still declare ways in, by name: a template a
+ * deployment of functions is written in (P246). A CloudFormation template may
+ * be called anything (P248), so every YAML file and every `.template` is one
+ * of these; a JSON file is only where its name says it is a template
+ * (`template.json`, `*.template.json`, `*.cfn.json`), since most JSON is
+ * something else. Only a probe that names the file by its `path` finds
+ * anything in one, and its comments - outside JSON - are a `#` to the end of
+ * the line.
+ */
+export const DECLARATION_FILES = /\.(?:ya?ml|template)$|(?:^|[/.])(?:template|cfn)\.json$/;
 
 /**
  * Path segments that take a file out of the count, a test's apart.
@@ -217,6 +232,153 @@ export const PROBES = [
     pattern: /\(click\)\s*=/g,
   },
   {
+    name: 'component-file',
+    family: 'screens',
+    scope: 'file',
+    what: 'a Vue or Svelte component file',
+    path: /\.(?:vue|svelte)$/,
+  },
+  {
+    name: 'component-click-binding',
+    family: 'clicks',
+    scope: 'line',
+    what: 'a click bound in a Vue or Svelte component',
+    path: /\.(?:vue|svelte)$/,
+    pattern: /(?:@click|v-on:click|on:click|\bonclick)(?=[\s.|=])|\{\s*onclick\s*\}/g,
+  },
+  {
+    name: 'graphql-resolver-field',
+    family: 'routes',
+    scope: 'line',
+    what: 'a GraphQL field a resolver method answers (`@Query`, `@Mutation`, `@Subscription`, `@ResolveField`), counted where it is written with a type, so a REST parameter decorator is not one',
+    pattern: /@(?:Query|Mutation|Subscription|ResolveField|FieldResolver)\s*\(\s*(?:\(\s*\)|[A-Za-z_$][\w$]*)\s*=>/g,
+  },
+  {
+    name: 'procedure-handler',
+    family: 'routes',
+    scope: 'line',
+    what: 'a procedure of a tRPC or oRPC tree, counted where the chain that declares it ends - `.query`, `.mutation`, `.subscription` or `.handler` - handed a function written in place; one handed a named function is not counted, because `pool.query(sql)` is spelled the same way',
+    // A procedure is a way in over HTTP too (R95, P58). The function written in
+    // place is what tells a procedure from a database call, which ends in the
+    // same word with a string or a name after it.
+    pattern: /\.\s*(?:query|mutation|subscription|handler)\s*\(\s*(?:async\s*)?(?:\(|function\b|[A-Za-z_$][\w$]*\s*=>)/g,
+  },
+  {
+    name: 'graphql-reference-resolver',
+    family: 'routes',
+    scope: 'line',
+    what: 'the reference resolver of a federated entity (`@ResolveReference()`, `__resolveReference` in a resolver map), the way in an entity call from another subgraph reaches',
+    pattern: /@ResolveReference\s*\(|\b__resolveReference\s*[(:]/g,
+  },
+  {
+    // A function a CDK app deploys is a way in, as a route is: the platform
+    // runs it (P57). Counted where it is made with a scope and an id, so the
+    // language's own `new Function('return 1')` is not one.
+    name: 'cdk-function-construct',
+    family: 'routes',
+    scope: 'line',
+    what: 'a Lambda function an AWS CDK app makes (`new NodejsFunction(this, ...)`, `new lambda.Function(scope, ...)`)',
+    pattern: /\bnew\s+(?:[A-Za-z_$][\w$]*\.)*(?:NodejsFunction|Function|DockerImageFunction|SingletonFunction)\s*\(\s*(?:this|[A-Za-z_$][\w$]*)\s*,/g,
+  },
+  {
+    // A function a SAM template declares is a way in, as a route is: the
+    // platform runs it (P246). Counted by its `Type`, written as YAML or JSON,
+    // in any file a template may be.
+    name: 'sam-function-resource',
+    family: 'routes',
+    scope: 'line',
+    what: 'a Lambda function a SAM template declares (`Type: AWS::Serverless::Function`)',
+    path: DECLARATION_FILES,
+    pattern: /^\s*Type:\s*['"]?AWS::Serverless::Function['"]?\s*$|"Type"\s*:\s*"AWS::Serverless::Function"/gm,
+  },
+  {
+    // The plain CloudFormation function (P248), in a SAM template or a plain
+    // one, wherever the repository keeps it.
+    name: 'cloudformation-function-resource',
+    family: 'routes',
+    scope: 'line',
+    what: 'a Lambda function a CloudFormation template declares (`Type: AWS::Lambda::Function`)',
+    path: DECLARATION_FILES,
+    pattern: /^\s*Type:\s*['"]?AWS::Lambda::Function['"]?\s*$|"Type"\s*:\s*"AWS::Lambda::Function"/gm,
+  },
+  {
+    // A way in a Nuxt module adds when the application builds (P251): no file
+    // of `server/` gives it, the call does. Counted where the call hands an
+    // object with a `route`, so a handler that stands in front of every route
+    // is not one.
+    name: 'nuxt-module-server-handler',
+    family: 'routes',
+    scope: 'line',
+    what: 'a route a Nuxt module adds (`addServerHandler({ route, handler })`)',
+    pattern: /\baddServerHandler\s*\(\s*\{[^}]*?\broute\s*:/g,
+  },
+  {
+    name: 'nitro-route-file',
+    family: 'routes',
+    scope: 'file',
+    what: 'a file under `server/api` or `server/routes` that default-exports a handler',
+    path: /(^|\/)server\/(?:api|routes)\/.+\.[cm]?[jt]s$/,
+    contains: /export\s+default\b/,
+  },
+  {
+    // The request families (P244). A request is written at a call, and the
+    // call is what a person sees: the platform's client by its own name, a verb
+    // on a client with the address written out beside it, or a client handed
+    // one options object holding the address. Over-counted where a receiver is
+    // only named like a client (`cacheClient.get('/k')`), which is this rule's
+    // side; under-counted where an instance has a name of its own and writes an
+    // address without its opening slash, which a probe cannot tell from a key.
+    name: 'fetch-call-site',
+    family: 'requests',
+    scope: 'line',
+    what: "a request made by calling the platform's `fetch`, `$fetch` or `ofetch` by its own name",
+    pattern: /(?<![\w$.])(?:fetch|\$fetch|ofetch)\s*\(/g,
+  },
+  {
+    name: 'client-verb-call',
+    family: 'requests',
+    scope: 'line',
+    what: 'a verb called with its address written out, on `axios` or `ky` themselves or on a receiver named like a client (`this.http.get(...)`, `api.post(...)`), the address rooted at a slash, a host or a setting',
+    pattern:
+      /(?:\b(?:axios|ky)\s*\.\s*(?:get|post|put|patch|delete|head|request)\s*(?:<[^>()]*>\s*)?\(\s*['"`]|\b[\w$]*(?:http|api|client)\s*\.\s*(?:get|post|put|patch|delete|head)\s*(?:<[^>()]*>\s*)?\(\s*['"`](?:\/|https?:|\$\{))/gi,
+  },
+  {
+    name: 'client-config-call',
+    family: 'requests',
+    scope: 'line',
+    what: 'a client handed one options object holding the address (`axios({ url })`, `api.request({ url })`)',
+    pattern: /\b(?:axios|[\w$]*(?:http|api|client))\s*(?:\.\s*request\s*)?\(\s*\{[^}]*?\burl\s*:/gi,
+  },
+  {
+    // What stands in front of every request through a client (P239, P244): the
+    // instance a client is made as, and the interceptor or hook that rewrites
+    // the address before each request. Neither is a node of its own, so the
+    // family is a denominator for the reading of bases and nothing is gated on
+    // it per file.
+    name: 'client-instance-factory',
+    family: 'bases',
+    scope: 'line',
+    what: 'a client instance made with options of its own (`axios.create(...)`, `ofetch.create(...)`, `$fetch.create(...)`, `ky.create(...)`, `ky.extend(...)`)',
+    pattern: /(?<![\w$.])(?:axios|ofetch|\$fetch|ky)\s*\.\s*(?:create|extend)\s*\(/g,
+  },
+  {
+    name: 'request-interceptor',
+    family: 'bases',
+    scope: 'line',
+    what: 'a function run before every request (`interceptors.request.use(...)`, an `onRequest` hook, `hooks.beforeRequest`, an Angular `HttpInterceptor` class or `HttpInterceptorFn`)',
+    pattern: /\binterceptors\s*\.\s*request\s*\.\s*use\s*\(|\bonRequest\s*[(:]|\bbeforeRequest\s*:|\bimplements\s+HttpInterceptor\b|:\s*HttpInterceptorFn\b/g,
+  },
+  {
+    // Where a server is started on a port (P250): what a request to this
+    // machine's port joins by. Kept on the repository node, never a node of
+    // its own, so the family is a denominator and nothing is gated on it.
+    name: 'server-listen',
+    family: 'listens',
+    scope: 'line',
+    what: 'a server started on a port (`app.listen(port)`, `serve({ fetch, port })`, `Bun.serve(...)`, `Deno.serve(...)`)',
+    pattern: /\.\s*listen\s*\(\s*[^)\s]|(?<![\w$.])serve\s*\(\s*\{|\b(?:Bun|Deno)\s*\.\s*serve\s*\(/g,
+  },
+  {
     name: 'prisma-call-site',
     family: 'data',
     scope: 'line',
@@ -259,6 +421,9 @@ export const FAMILIES = [
   ['routes', 'ways in over HTTP'],
   ['screens', 'screens'],
   ['clicks', 'things a person can click'],
+  ['requests', 'places a request is written'],
+  ['bases', 'client instances and functions run before every request'],
+  ['listens', 'servers started on a port'],
   ['data', 'places the code reaches storage'],
   ['models', 'tables or models declared (an upper bound)'],
 ];
@@ -270,7 +435,7 @@ const extensionOf = (path) => {
 
 /** True when the path is source under the rule above. */
 export const isSourceFile = (path) => {
-  if (!SOURCE_EXTENSIONS.includes(extensionOf(path))) return false;
+  if (!SOURCE_EXTENSIONS.includes(extensionOf(path)) && !DECLARATION_FILES.test(path)) return false;
   const segments = path.split('/');
   if (segments.some((segment) => SKIPPED_SEGMENTS.has(segment))) return false;
   return !SKIPPED_FILES.test(segments[segments.length - 1]) && !isTestFile(path);
@@ -358,13 +523,20 @@ export const withoutComments = (text) => {
  * schema, whose `//` and `///` are line comments too. A template is markup,
  * where `//` is part of an address and nothing is a comment of this kind.
  */
-const COMMENTED = new Set(SOURCE_EXTENSIONS.filter((extension) => extension !== '.html'));
+// Markup's comments are not a script's, and a template's `//` is an address.
+const COMMENTED = new Set(SOURCE_EXTENSIONS.filter((extension) => !['.html', '.vue', '.svelte'].includes(extension)));
+
+/** A template's comments, `#` to the end of the line where it starts a line or follows a space, blanked as the code's are. */
+const withoutHashComments = (text) => text.replace(/(^|\s)#[^\n]*/g, (comment, before) => before + ' '.repeat(comment.length - before.length));
 
 /** What a probe reads: the file, with its comments blanked where it has any. */
-const codeOf = (path, text) => (COMMENTED.has(extensionOf(path)) ? withoutComments(text) : text);
+const codeOf = (path, text) =>
+  COMMENTED.has(extensionOf(path)) ? withoutComments(text) : DECLARATION_FILES.test(path) && !path.endsWith('.json') ? withoutHashComments(text) : text;
 
 const countLine = (probe, path, text) => {
   if (probe.path !== undefined && !probe.path.test(path)) return 0;
+  // A declaration file is not code: a probe of code that names no path does not look in one.
+  if (probe.path === undefined && !SOURCE_EXTENSIONS.includes(extensionOf(path))) return 0;
   probe.pattern.lastIndex = 0;
   let sites = 0;
   while (probe.pattern.exec(text) !== null) sites += 1;

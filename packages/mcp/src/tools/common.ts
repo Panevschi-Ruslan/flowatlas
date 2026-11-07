@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { CLAMP_NOTE, clampDetail } from '../query/detail.js';
 import type { DbHandle } from '../query/db.js';
 import { MAX_NEXT } from '../query/next.js';
+import { withStale } from '../query/fresh.js';
 
 /**
  * What every tool says about itself (P93): it reads a database built
@@ -230,7 +231,8 @@ export const withDb = (
   const opened = handle.open();
   if ('error' in opened) return respond({ error: opened.error });
   try {
-    return respond(run(opened.db));
+    // Every answer that cites a file says when one changed since the build (P230).
+    return respond(withStale(handle, run(opened.db)));
   } catch (cause) {
     return respond({ error: cause instanceof Error ? cause.message : String(cause) });
   }

@@ -446,6 +446,62 @@ const SOCKET_CASES = [
   ['expected.channel.updated.tree.txt', (io) => runChannel('orders/order:updated', { config: socketConfig, color: false, ascii: true, format: 'tree' }, io)],
 ];
 
+/**
+ * GraphQL, both halves (P232): the walk from a screen into the resolvers of
+ * another repository through the fields its operation selects, the walk back
+ * from a field resolver to both browsers' screens, and the field the schema
+ * does not have.
+ */
+const graphqlFixture = join(root, 'fixtures', 'graphql-gateway');
+const graphqlPlain = { config: join(graphqlFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const GRAPHQL_CASES = [
+  ['flow.orders-page.tree.txt', (io) => runFlow('web#src/orders/OrdersPage.tsx:OrdersPage', { ...graphqlPlain, format: 'tree' }, io)],
+  ['impact.order-customer.tree.txt', (io) => runImpact('entry:orders:graphql:Order.customer', { ...graphqlPlain, format: 'tree' }, io)],
+  ['contracts.txt', (io) => runContracts({ config: graphqlPlain.config }, io)],
+];
+
+/**
+ * GraphQL federation (P241): the walk from a screen through a gateway into
+ * the subgraph that resolves each field - an entity hop into another
+ * subgraph's reference resolver included - and the walk back from a
+ * subgraph's field to the screens; with the supergraph in a file, and with
+ * the composition made in code beside a router declared by its files.
+ */
+const federationFixture = join(root, 'fixtures', 'graphql-federation');
+const federationPlain = { config: join(federationFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const FEDERATION_CASES = [
+  ['flow.orders-page.tree.txt', (io) => runFlow('web#src/OrdersPage.tsx:OrdersPage', { ...federationPlain, format: 'tree' }, io)],
+  ['impact.customer-reference.tree.txt', (io) => runImpact('entry:customers:graphql:Customer.__resolveReference', { ...federationPlain, format: 'tree' }, io)],
+  ['contracts.txt', (io) => runContracts({ config: federationPlain.config }, io)],
+];
+const composedFixture = join(root, 'fixtures', 'graphql-federation-composed');
+const composedPlain = { config: join(composedFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const COMPOSED_CASES = [
+  ['flow.customer-page.tree.txt', (io) => runFlow('web#src/CustomerPage.tsx:CustomerPage', { ...composedPlain, format: 'tree' }, io)],
+  ['flow.orders-board.tree.txt', (io) => runFlow('kiosk#src/OrdersBoard.tsx:OrdersBoard', { ...composedPlain, format: 'tree' }, io)],
+  ['impact.customer-orders.tree.txt', (io) => runImpact('entry:orders:graphql:Customer.orders', { ...composedPlain, format: 'tree' }, io)],
+];
+/**
+ * Entity interfaces, contexts and the router's checks (P245): a screen through
+ * the gateway hops into the interface object; one through the router meets
+ * the router's checks on the subgraph fields and plans what a context fills.
+ */
+const interfacesFixture = join(root, 'fixtures', 'graphql-federation-interfaces');
+const interfacesPlain = { config: join(interfacesFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const INTERFACES_CASES = [
+  ['flow.shelf-page.tree.txt', (io) => runFlow('web#src/ShelfPage.tsx:ShelfPage', { ...interfacesPlain, format: 'tree' }, io)],
+  ['flow.movie-card.tree.txt', (io) => runFlow('kiosk#src/MovieCard.tsx:MovieCard', { ...interfacesPlain, format: 'tree' }, io)],
+  ['flow.wishlist-page.tree.txt', (io) => runFlow('kiosk#src/WishlistPage.tsx:WishlistPage', { ...interfacesPlain, format: 'tree' }, io)],
+  ['impact.media-rating.tree.txt', (io) => runImpact('entry:reviews:graphql:Media.rating', { ...interfacesPlain, format: 'tree' }, io)],
+];
+
+const gapsFixture = join(root, 'fixtures', 'graphql-federation-gaps');
+const gapsPlain = { config: join(gapsFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const GAPS_CASES = [
+  ['flow.book-page.tree.txt', (io) => runFlow('shop#src/BookPage.tsx:BookPage', { ...gapsPlain, format: 'tree' }, io)],
+  ['flow.top-books.tree.txt', (io) => runFlow('shop#src/TopBooks.tsx:TopBooks', { ...gapsPlain, format: 'tree' }, io)],
+];
+
 const lambdaFixture = join(root, 'fixtures', 'multi-repo-lambda');
 const lambdaConfig = join(lambdaFixture, 'flowatlas.config.json');
 
@@ -977,6 +1033,8 @@ const specDiff = (options) => async (io) => {
 const DIFF_CASES = [
   ['diff.md', diffMarkdown({})],
   ['diff.class.md', diffMarkdown({ sequenceDetail: 'class', maxDiagrams: '1', context: '0' })],
+  // The same as a pull request's comment (P231): the verdict first, the marker that finds it again.
+  ['diff.comment.md', diffMarkdown({ format: 'comment' })],
   [
     'diff.json',
     async (io) => {
@@ -1099,6 +1157,35 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.return-item.tree.txt', 'invoke:library-lending-return-item'],
   ]),
   terraformShape('lambda-terraform-shared-paths', [['flow.status-board.tree.txt', 'invoke:library-branch-kiosk-status-board']]),
+  // One deployment written five ways (P57, P246, P248): the same walks, from each format's files.
+  ...['terraform-orders', 'serverless-orders', 'cdk-orders', 'sam-orders', 'cloudformation-orders'].map((name) =>
+    terraformShape(name, [
+      ['flow.post-orders.tree.txt', 'POST /orders'],
+      ['flow.shipping.tree.txt', 'workflow:orders-dev-shipping'],
+    ]),
+  ),
+  terraformShape('serverless-shapes', [
+    ['flow.welcome.tree.txt', 'event:cognito/club-members/post_confirmation'],
+    ['flow.lapse.tree.txt', 'invoke:accounts-prod-lapse'],
+  ]),
+  terraformShape('sam-shapes', [
+    ['flow.lend.tree.txt', 'POST /loans'],
+    ['flow.overdue.tree.txt', 'workflow:library-prod-overdue'],
+  ]),
+  terraformShape('cloudformation-shapes', [
+    ['flow.start-ride.tree.txt', 'POST /rides'],
+    ['flow.billing.tree.txt', 'workflow:rides-harbour-billing'],
+  ]),
+  terraformShape('cdk-shapes', [
+    ['flow.renewals.tree.txt', 'workflow:${…}@ClubStack.Renewals'],
+    ['flow.lapses.tree.txt', 'workflow:club-dev-lapses'],
+  ]),
+  // Routes on another repository's API and values read from its outputs (P249).
+  terraformShape('multi-repo-exports', [
+    ['flow.reorder.tree.txt', 'invoke:catalog-reorder'],
+    ['flow.post-orders.tree.txt', 'POST /orders'],
+  ]),
+  terraformShape('serverless-compose', [['flow.post-jobs.tree.txt', 'POST /jobs']]),
   terraformShape('lambda-terraform-bucket-module', [
     ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
     ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],
@@ -1138,6 +1225,11 @@ const SUITES = [
   { dir: hollowFixture, owned: false, cases: HOLLOW_CASES },
   { dir: socketFixture, owned: false, cases: SOCKET_CASES },
   { dir: lambdaFixture, owned: false, cases: LAMBDA_CASES },
+  { dir: join(graphqlFixture, 'expected.cli'), owned: true, cases: GRAPHQL_CASES },
+  { dir: join(federationFixture, 'expected.cli'), owned: true, cases: FEDERATION_CASES },
+  { dir: join(composedFixture, 'expected.cli'), owned: true, cases: COMPOSED_CASES },
+  { dir: join(interfacesFixture, 'expected.cli'), owned: true, cases: INTERFACES_CASES },
+  { dir: join(gapsFixture, 'expected.cli'), owned: true, cases: GAPS_CASES },
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },

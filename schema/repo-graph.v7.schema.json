@@ -1,0 +1,330 @@
+{
+  "$id": "https://raw.githubusercontent.com/Panevschi-Ruslan/flowatlas/main/schema/repo-graph.v7.schema.json",
+  "title": "<output>/services/<name>/graph.json, one service's own graph",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "generatedAt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "repo",
+              "service",
+              "module",
+              "entry",
+              "provider",
+              "method",
+              "function",
+              "guard",
+              "interceptor",
+              "pipe",
+              "middleware",
+              "db_query",
+              "table",
+              "cache_op",
+              "channel",
+              "producer",
+              "consumer",
+              "http_out",
+              "external_api",
+              "ui_component",
+              "ui_action",
+              "ui_api_call",
+              "config_key"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "repo": {
+            "type": "string",
+            "minLength": 1
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "kind": {
+            "type": "string"
+          },
+          "meta": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "label",
+          "repo"
+        ]
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "imports",
+              "injects",
+              "calls",
+              "handles",
+              "guarded_by",
+              "queries",
+              "caches",
+              "emits",
+              "consumes",
+              "http_calls",
+              "hits",
+              "triggers",
+              "reads_config"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "static",
+              "marker",
+              "declared",
+              "heuristic",
+              "runtime"
+            ]
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "returns": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "meta": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "type",
+          "confidence"
+        ]
+      }
+    },
+    "types": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "object",
+              "enum",
+              "union",
+              "generic",
+              "external",
+              "unknown"
+            ]
+          },
+          "declaredIn": {
+            "type": "string"
+          },
+          "structuralHash": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "type": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "optional": {
+                  "type": "boolean"
+                },
+                "meta": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "optional"
+              ]
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "typeParams": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "declaredIn",
+          "structuralHash"
+        ]
+      }
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "action",
+              "info",
+              "nothing"
+            ]
+          },
+          "sites": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "message": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "adapter": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          },
+          "meta": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "file",
+          "line",
+          "reason"
+        ]
+      }
+    },
+    "meta": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "repo": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "nodes",
+    "edges",
+    "types",
+    "unresolved",
+    "repo"
+  ]
+}

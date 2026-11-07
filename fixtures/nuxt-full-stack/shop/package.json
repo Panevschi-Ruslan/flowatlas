@@ -1,0 +1,11 @@
+{
+  "name": "nuxt-shop",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "nuxt": "^3.13.0",
+    "pinia": "^2.2.0",
+    "@pinia/nuxt": "^0.5.0",
+    "zod": "^3.23.0"
+  }
+}

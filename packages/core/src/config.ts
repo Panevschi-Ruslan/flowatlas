@@ -209,8 +209,18 @@ const serviceEntrySchema = z.strictObject({
    * A word about what is being chosen rather than the tool that reads it,
    * because this schema names no technology (I1); the reader that understands
    * variable files is the one that reads them.
+   *
+   * `options` are the values a deployment is run with that no file holds: what
+   * a command line would pass as a stage, a region or a context value (P57).
+   * Without one, a reader takes what the deployment's own files fall back to,
+   * and otherwise says the value is not read.
    */
-  infra: z.strictObject({ vars: z.array(z.string().min(1)).default([]) }).optional(),
+  infra: z
+    .strictObject({
+      vars: z.array(z.string().min(1)).default([]),
+      options: z.record(z.string().min(1), z.string()).optional(),
+    })
+    .optional(),
 });
 
 /** The directory part of a configured path, in the spelling it was written in. */
@@ -826,6 +836,58 @@ export const entryProcedureMountSchema = z.strictObject({
   treeArg: z.number().int().min(0).default(0),
   /** The key of an options argument that carries the tree, when it is one. */
   treeKey: z.string().min(1).optional(),
+  /**
+   * The mount is a class built with `new` rather than a function called: a
+   * handler object made once and handed each request later.
+   */
+  constructed: z.boolean().default(false),
+  /**
+   * Whether the mount also answers each way in at its own HTTP route - the
+   * method and path its `routeMethod` link names, or the key path posted to
+   * where it names none - so a caller of that route reaches the way in too.
+   */
+  routes: z.boolean().default(false),
+  /**
+   * Where the address the mount answers under is written, when it is not the
+   * file's own: the key of an options argument of a method called on what the
+   * mount made - `handle` and `prefix` in `handler.handle(request, { prefix })`.
+   */
+  prefixFrom: z
+    .strictObject({
+      method: z.string().min(1),
+      key: z.string().min(1),
+      /** Which argument holds the options. */
+      arg: z.number().int().min(0).default(1),
+    })
+    .optional(),
+  /**
+   * The key of the mount call's own options that names the address it
+   * answers under (P247): `endpoint` in `fetchRequestHandler({ endpoint })`,
+   * `basePath` in `createHTTPServer({ basePath })`.
+   */
+  prefixKey: z.string().min(1).optional(),
+  /** The address where the options name none under `prefixKey`; absent, another way is tried (P247). */
+  prefixDefault: z.string().optional(),
+  /**
+   * The address is the path argument of the call the mount is handed to,
+   * written in place or by the name it was assigned (P247): `use` and `0` in
+   * `app.use('/trpc', createExpressMiddleware(…))`. Handed as that argument
+   * itself, it answers at the root.
+   */
+  handedTo: z
+    .strictObject({
+      method: z.string().min(1),
+      pathAt: z.number().int().min(0).default(0),
+    })
+    .optional(),
+  /**
+   * The address is the file's own, as the framework's file-system router
+   * serves it, with its last parameter segment taken off (P247): a mount in
+   * `pages/api/trpc/[trpc].ts` answers under `/api/trpc`.
+   */
+  fileRoute: z.boolean().default(false),
+  /** What the mount's protocol is called in `meta.mounted`, so a caller's link can be checked against it. */
+  protocol: z.string().min(1).optional(),
 });
 
 /**
@@ -917,6 +979,39 @@ export const entryProcedureSchema = z.strictObject({
       key: z.string().min(1),
     })
     .optional(),
+  /**
+   * Whether an object literal is a tree in its own right, with no call around
+   * it (P58). Some frameworks of this family take any object whose values are
+   * ways in as a tree, and the assembling call only adds something to one. The
+   * same evidence decides as for a call: a literal is a tree only when a member
+   * is a way in or another tree, so an unrelated literal produces nothing.
+   */
+  plainTrees: z.boolean().default(false),
+  /**
+   * Functions that take a contract - a tree of declarations with no code - and
+   * hand back a builder whose property accesses name its members (P58):
+   * `implement(contract).orders.list.handler(fn)`. The member's own chain, in
+   * the contract, carries the input, output, errors and route.
+   */
+  implementedBy: z.array(z.string().min(1)).default([]),
+  /**
+   * Functions that load a tree from a module when it is first asked for, handed
+   * a function returning `import(...)` (P58): the tree is that module's default
+   * export.
+   */
+  lazyBy: z.array(z.string().min(1)).default([]),
+  /** The chain link carrying the shape a way in answers with. */
+  outputMethod: z.string().min(1).optional(),
+  /**
+   * The chain link declaring the failures a way in may answer with, as an
+   * object literal whose keys are their codes and whose values may write a
+   * `status`.
+   */
+  errorsMethod: z.string().min(1).optional(),
+  /** The chain link giving a way in an HTTP route of its own: `{ method, path }` in its first argument. */
+  routeMethod: z.string().min(1).optional(),
+  /** The chain link, on the call that assembles a tree, prefixing the HTTP route of every way in under it. */
+  prefixMethod: z.string().min(1).optional(),
   /** Where a tree is hung so that requests reach it. */
   mounts: z.array(entryProcedureMountSchema).default([]),
 });
@@ -1085,7 +1180,43 @@ export const mcpSettingsSchema = z.strictObject({
   tools: z.enum(['auto', 'all']).default('auto'),
   include: z.array(toolNameSchema).default([]),
   exclude: z.array(toolNameSchema).default([]),
+  /**
+   * `on-change`: an answer that finds the files it cites changed since the
+   * build starts a background build (P230), and says `rebuilding`. Off unless
+   * asked: work starting on its own is a surprise unless somebody chose it.
+   */
+  rebuild: z.enum(['off', 'on-change']).default('off'),
+  /** `on-start`: the server pulls the team's graph (`remote`) when it starts, a conditional request when nothing is new (P236). */
+  pull: z.enum(['off', 'on-start']).default('off'),
 });
+
+/**
+ * Where a team's graph is pulled from (P236): a bundle `flowatlas publish`
+ * wrote, as a CI artifact (`gh:owner/repo/artifact-name`), an `https://`
+ * address, or a path. `tokenEnv` names the variable holding a token for it;
+ * the token is never written anywhere and never sent to another host.
+ */
+export const remoteSettingsSchema = z.strictObject({
+  url: z.string().min(1),
+  tokenEnv: z.string().min(1).optional(),
+});
+
+export type RemoteSettings = z.infer<typeof remoteSettingsSchema>;
+
+/**
+ * What the MCP server and the asking commands keep of each question (P235):
+ * nothing unless `questions` is true (or `FLOWATLAS_LOG_QUESTIONS=1` is set),
+ * then one line per question in `<output>/questions.jsonl`, on this machine
+ * only. `text` also keeps a search's words; `maxBytes` is where the log is
+ * moved aside, so at most two files are kept.
+ */
+export const logSettingsSchema = z.strictObject({
+  questions: z.boolean().default(false),
+  text: z.boolean().default(false),
+  maxBytes: z.number().int().positive().optional(),
+});
+
+export type LogSettings = z.infer<typeof logSettingsSchema>;
 
 export type McpSettings = z.infer<typeof mcpSettingsSchema>;
 
@@ -1389,6 +1520,11 @@ export const flowatlasConfigSchema = z
     docs: z
       .strictObject({
         files: z.array(z.string().min(1)).optional(),
+        /**
+         * The tags a comment above a declaration starts with to be kept on its
+         * node (P234): `WHY`, `NOTE`, `DECISION`, `HACK` and `SEE` unless set.
+         */
+        commentTags: z.array(z.string().regex(/^[A-Za-z]+$/)).optional(),
       })
       .optional(),
     /**
@@ -1409,6 +1545,8 @@ export const flowatlasConfigSchema = z
      * any it does not have.
      */
     mcp: mcpSettingsSchema.optional(),
+    remote: remoteSettingsSchema.optional(),
+    log: logSettingsSchema.optional(),
   })
   .superRefine((config, ctx) => {
     // A tool both listed whatever it needs and never listed says nothing (P201).
@@ -1649,7 +1787,9 @@ export const loadConfig = (
         const key = service.openapi === undefined ? 'document.path' : 'openapi';
         return isFile(path) ? [] : [`services.${service.name}.${key}: ${written} is not a file`];
       }
-      return isDirectory(repoDirOf(service))
+      // With a team's graph to pull (P236), a repository not checked out here is
+      // the point, not a mistake: its graph comes from the team's.
+      return isDirectory(repoDirOf(service)) || config.remote !== undefined
         ? []
         : [`services.${service.name}.repo: ${service.repo} is not a directory`];
     });

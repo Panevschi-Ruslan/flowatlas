@@ -133,8 +133,10 @@ export const renderContractsText = (
 
   // A project where nothing reaches another service has no contract to check,
   // which is an answer rather than a failure — and a different answer from
-  // "everything agrees", which is what an empty table would read as.
-  if (report.summary.edges === 0 && report.summary.unchecked === 0) {
+  // "everything agrees", which is what an empty table would read as. A
+  // finding with no typed boundary beside it - a GraphQL selection compared
+  // with a schema (P232, P241) - is still a finding, and is shown.
+  if (report.summary.edges === 0 && report.summary.unchecked === 0 && report.findings.length === 0) {
     lines.push(
       'no boundary between services in this graph: nothing calls another service, and no channel has both a publisher and a handler',
       'See flowatlas link --report for why nothing was joined.',

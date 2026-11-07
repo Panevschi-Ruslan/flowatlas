@@ -81,6 +81,74 @@ describe('a verb exported where a router serves it', () => {
   });
 });
 
+describe('a function a CDK app makes (P57)', () => {
+  it('counts one made with a scope and an id, however the class is imported', () => {
+    const text = [
+      "const a = new NodejsFunction(this, 'PlaceOrder', { entry });",
+      "const b = new lambda.Function(scope, 'Sender', { handler: 'send.handler' });",
+      "const c = new cdk.aws_lambda.DockerImageFunction(this, 'Renderer', {});",
+    ].join('\n');
+    assert.deepEqual(sitesIn('lib/orders-stack.ts', text), { routes: 3 });
+  });
+
+  it("does not count the language's own Function constructor", () => {
+    assert.deepEqual(sitesIn('src/sandbox.ts', "const run = new Function('a', 'return a + 1');\n"), {});
+  });
+});
+
+describe('a route a Nuxt module adds (P251)', () => {
+  it('counts a handler handed a route, written on one line or across several', () => {
+    const text = [
+      "addServerHandler({ route: '/api/catalog', method: 'get', handler: resolver.resolve('./runtime/catalog') });",
+      'addServerHandler({',
+      "  handler: resolver.resolve('./runtime/audit'),",
+      '  route: auditRoute,',
+      '});',
+    ].join('\n');
+    assert.deepEqual(sitesIn('modules/catalog/index.ts', text), { routes: 2 });
+  });
+
+  it('does not count one that stands in front of every route', () => {
+    assert.deepEqual(sitesIn('modules/audit.ts', "addServerHandler({ middleware: true, handler: resolve('./stamp') });\n"), {});
+  });
+});
+
+describe('a function a SAM template declares (P246)', () => {
+  it('counts each by its Type, a SAM function and a plain one alike, and not in a comment', () => {
+    const text = [
+      'Resources:',
+      '  PlaceOrder:',
+      '    Type: AWS::Serverless::Function',
+      '  Legacy:',
+      "    Type: 'AWS::Lambda::Function'",
+      '  # Type: AWS::Serverless::Function',
+      '  Queue:',
+      '    Type: AWS::SQS::Queue',
+    ].join('\n');
+    assert.deepEqual(sitesIn('template.yaml', text), { routes: 2 });
+    assert.equal(isSourceFile('services/orders/template.yml'), true);
+  });
+
+  it('reads every YAML file and a JSON one named as a template, and no probe of code looks in one (P248)', () => {
+    assert.equal(isSourceFile('openapi.yaml'), true);
+    assert.equal(isSourceFile('legacy/fleet.template'), true);
+    assert.equal(isSourceFile('stacks/orders.template.json'), true);
+    assert.equal(isSourceFile('package.json'), false);
+    assert.equal(isSourceFile('.github/workflows/template.yaml.bak'), false);
+    assert.deepEqual(sitesIn('docs.yaml', "example: app.get('/orders', handler)\nfetch: fetch('/orders')\n"), {});
+  });
+});
+
+describe('a function a plain CloudFormation template declares (P248)', () => {
+  it('counts each by its Type, in YAML under any name and in JSON named as a template', () => {
+    const yaml = ['Resources:', '  Kiosk:', '    Type: AWS::Lambda::Function', '  Url:', '    Type: AWS::Lambda::Url'].join('\n');
+    assert.deepEqual(sitesIn('stacks/rides.yaml', yaml), { routes: 1 });
+    const json = JSON.stringify({ Resources: { A: { Type: 'AWS::Lambda::Function' }, B: { Type: 'AWS::Serverless::Function' } } }, null, 2);
+    assert.deepEqual(sitesIn('stacks/rides.template.json', json), { routes: 2 });
+    assert.deepEqual(sitesIn('legacy/fleet.template', json), { routes: 2 });
+  });
+});
+
 describe('a test file, by the definition the tool reads by', () => {
   const tests = [
     'packages/features/credentials/handleDeleteCredential.integration-test.ts',
@@ -104,5 +172,73 @@ describe('a test file, by the definition the tool reads by', () => {
       assert.equal(isTestFile(path), false, path);
       assert.equal(isSourceFile(path), true, path);
     }
+  });
+});
+
+describe('a procedure of a tree (R95, P58)', () => {
+  it('counts a chain ending in a function written in place', () => {
+    const text = [
+      'export const list = authed.input(OrderQuery).handler(async ({ input }) => find(input));',
+      'export const read = procedure.query(({ ctx }) => ctx.user);',
+      'export const save = procedure.mutation(async function save() { return 1; });',
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/server/orders.ts', text), { routes: 3 });
+  });
+
+  it('does not count a database call that ends in the same word', () => {
+    const text = "await pool.query('select 1');\nawait pool.query(sql, [id]);\nconst handler = route.handler;\n";
+    assert.deepEqual(sitesIn('src/db.ts', text), {});
+  });
+});
+
+describe('where a request is written, and what stands in front of it (P244)', () => {
+  it('counts the platform client by its own name, a verb with its address written out, and a config call', () => {
+    const text = [
+      "await fetch('/api/orders');",
+      "await $fetch('/api/items', { method: 'POST' });",
+      "this.http.get<Order[]>('/orders');",
+      'api.post(`${base}/orders`, body);',
+      "axios.get('orders');",
+      "api({ url: '/orders', method: 'post' });",
+      "axios.request({\n  url: '/items',\n});",
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/api.ts', text), { requests: 7 });
+  });
+
+  it('does not count a store looked up by a key, a method named fetch, or a call handed a path it was given', () => {
+    const text = [
+      "cache.get('orders');",
+      'documents.get(id);',
+      'store.fetch(id);',
+      'this.http.get(path);',
+      "useFetch('/api/orders');",
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/a.ts', text), {});
+  });
+
+  it('counts an instance made with options of its own and each function run before every request', () => {
+    const text = [
+      "export const api = axios.create({ baseURL: '/api' });",
+      "export const shop = $fetch.create({ onRequest({ options }) { options.baseURL = '/shop'; } });",
+      'export const billing = ky.extend({ hooks: { beforeRequest: [(request) => request] } });',
+      'api.interceptors.request.use((config) => config);',
+      'export class BaseInterceptor implements HttpInterceptor {}',
+      'export const base: HttpInterceptorFn = (req, next) => next(req);',
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/api.ts', text), { bases: 8 });
+  });
+
+  it('counts each server started on a port, and not a listen with nothing to listen on', () => {
+    const text = [
+      'app.listen(3001);',
+      'await app.listen({ port: Number(process.env.PORT) || 3002 });',
+      'http.createServer(app).listen(port, () => {});',
+      'serve({ fetch: app.fetch, port: 3003 });',
+      'Bun.serve({ port: 3004, fetch });',
+      'Deno.serve(handler);',
+      'server.listen();',
+      'observe(source, { serve: true });',
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/main.ts', text), { listens: 6 });
   });
 });

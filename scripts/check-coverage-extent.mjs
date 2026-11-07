@@ -36,7 +36,7 @@
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { extentOf } from './coverage/extent.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -48,7 +48,24 @@ if (!existsSync(join(ROOT, 'packages', 'core', 'dist'))) {
   process.exit(2);
 }
 
-const { serviceSourceDirs } = await import('@flowatlas/core');
+const { AdapterRegistry, conventionsFor, serviceSourceDirs } = await import('@flowatlas/core');
+
+/**
+ * The tool's answer, asked the way its readers ask it (P251): the entry
+ * adapters' conventions first, so a directory a framework builds into the
+ * service from beside it (`ProjectConventions.extent`) is in the answer, as
+ * it is in every build. The harness reads the same fact from the framework's
+ * configuration (`BUILT_FROM`), so the two still disagree where either is
+ * wrong.
+ */
+const { registerEntryAdapters } = await import(
+  pathToFileURL(join(ROOT, 'packages', 'adapters-entry', 'dist', 'index.js')).href
+);
+const registry = registerEntryAdapters(new AdapterRegistry());
+const toolExtentOf = (dir) => {
+  conventionsFor(registry, dir);
+  return serviceSourceDirs(dir);
+};
 
 /**
  * Every directory in the fixture tree that could be pointed at as a service,
@@ -110,7 +127,7 @@ let checked = 0;
 for (const { tree, dir } of [...candidates(), ...clones]) {
   checked += 1;
   const mine = extentOf(tree, relative(tree, dir) || '.').dirs;
-  const theirs = asPaths(serviceSourceDirs(dir), tree);
+  const theirs = asPaths(toolExtentOf(dir), tree);
   const same = mine.length === theirs.length && mine.every((path, index) => path === theirs[index]);
   if (same) continue;
   disagreements += 1;

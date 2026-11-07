@@ -24,6 +24,8 @@ import {
 import { READABLE_TYPES } from '../readers.js';
 import { NAMED_AT_MOST, unreadSummary } from './init-summary.js';
 import { installMcp } from './mcp.js';
+import { installHooks } from './hook.js';
+import { installAgents } from './agents.js';
 
 /** Directories that are never a service of their own. */
 const SKIPPED = new Set(['node_modules', 'dist', 'build', 'coverage', 'tmp']);
@@ -242,6 +244,16 @@ export const scanCandidates = (scanDir: string, configDir: string): Candidate[] 
 export interface InitOptions {
   /** Also register the graph server in each repository. Defaults to true. */
   mcp?: boolean;
+  /** Also install the git hooks that rebuild after a checkout or a merge (P230). Defaults to false: printed, not done. */
+  gitHooks?: boolean;
+  /** Also write each assistant's guide (P227). Defaults to false: printed, not done. */
+  agents?: boolean;
+  /** With `agents`, the marked block in AGENTS.md, CLAUDE.md and Copilot's instructions too. */
+  instructions?: boolean;
+  /** With `agents`, the Claude Code search hook too. */
+  hook?: boolean;
+  /** With `hook`, in the committed settings. */
+  shared?: boolean;
   /** Directory to scan for repositories. Defaults to the parent of the output. */
   dir?: string;
   /** Where to write the configuration. Defaults to `./flowatlas.config.json`. */
@@ -369,6 +381,42 @@ export const runInit = async (options: InitOptions = {}): Promise<InitResult> =>
     }
   }
 
+  // Telling each assistant when to ask the graph is offered, and done only
+  // when asked (P227): every choice a flag, the defaults the quiet ones.
+  if (selected.length > 0) {
+    if (options.agents === true) {
+      print('Telling each assistant when to ask the graph:');
+      try {
+        const run = installAgents({
+          config: configPath,
+          ...(options.instructions === true ? { instructions: true } : {}),
+          ...(options.hook === true ? { hook: true } : {}),
+          ...(options.shared === true ? { shared: true } : {}),
+        });
+        for (const change of run.changes) print(`  ${change.state}: ${change.file}`);
+      } catch (cause) {
+        print(`Could not write them: ${cause instanceof Error ? cause.message : String(cause)}`);
+      }
+    } else {
+      print('To tell each assistant when to ask the graph: flowatlas agents install');
+    }
+  }
+
+  // Rebuilding after a checkout is offered, and done only when asked (P230):
+  // a hook runs in somebody's repository on every branch switch.
+  if (selected.length > 0) {
+    if (options.gitHooks === true) {
+      print('Installing the git hooks that rebuild after a checkout or a merge:');
+      try {
+        for (const change of installHooks({ config: configPath }).changes) print(`  ${change.state}: ${change.file}`);
+      } catch (cause) {
+        print(`Could not install them: ${cause instanceof Error ? cause.message : String(cause)}`);
+      }
+    } else {
+      print('To rebuild in the background after every checkout and merge: flowatlas hook install');
+    }
+  }
+
   return { configPath, config, candidates };
 };
 
@@ -382,6 +430,11 @@ export const registerInit = (program: Command): void => {
     .option('--force', 'overwrite an existing configuration')
     .option('--list-unknown', 'name every repository nothing reads, however many there are')
     .option('--no-mcp', 'do not register the graph server in the repositories')
+    .option('--git-hooks', 'also install the git hooks that rebuild after a checkout or a merge')
+    .option('--agents', "also write each assistant's guide to when to ask the graph")
+    .option('--instructions', 'with --agents, also a marked block in AGENTS.md, CLAUDE.md and Copilot instructions')
+    .option('--hook', 'with --agents, also the Claude Code hook that says what a search could not see')
+    .option('--shared', 'with --hook, in the committed .claude/settings.json')
     .action(async (opts: InitOptions) => {
       await runInit(opts);
     });

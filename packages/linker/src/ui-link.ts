@@ -1,6 +1,7 @@
 import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
 import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
+import { portSharedFinding, type Listening, type PortAnswer } from './local-port.js';
 import { cmp } from './order.js';
 import {
   behindUnread,
@@ -33,6 +34,12 @@ export interface UiIndex {
   serviceOf?(name: string): string | undefined;
   /** Every alias configured, for the row that says a name answers to none. */
   aliases?(): readonly string[];
+  /**
+   * The one configured service a host is reached at, and whether the
+   * configuration says so (its name, an alias, `services[].hosts`) or only the
+   * services' own setting files do (P239).
+   */
+  serviceAtHost?(host: string): PortAnswer | undefined;
 }
 
 /**
@@ -46,7 +53,7 @@ export interface UiIndex {
  * `marker` is an annotation naming the service, `@flowatlas-calls catalog GET
  * /items`, which outranks all of them (P127).
  */
-export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'same-service' | 'unique-route';
+export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'same-service' | 'unique-route';
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -59,7 +66,13 @@ interface Details {
     mountAssumed?: readonly string[];
     /** The value the base address was taken from, where a setting's value decided it (P77). */
     baseUrl?: FoundValue;
+    /** The host was found only in the services' own setting files, not in the configuration (P239). */
+    hostFromFiles?: true;
+    /** Where the service's server is started on the port an address on this machine names (P250). */
+    listening?: Listening;
   };
+  /** Two or more services listen on the port an address on this machine names (P250). */
+  portShared: { port: number; said: readonly string[]; services: readonly string[] };
   /** The address or the verb is only known at run time; the extractor said so. */
   dynamic: { reason: string };
   /** No route answers. `targetService` is null when nothing named one to ask. */
@@ -129,6 +142,7 @@ const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null
     return detail.unread.length === 0 ? missingRoute(detail) : unreadRouteFinding(detail);
   },
   serviceUnknown: (detail) => MARKER_FINDINGS.serviceUnknown(detail, detail.aliases, '@flowatlas-calls'),
+  portShared: ({ port, said }) => portSharedFinding(port, said),
   ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'target' : 'application'](detail),
 };
 
@@ -272,6 +286,35 @@ const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
 };
 
 /**
+ * The service a host the address names outright is reached at (P239).
+ *
+ * `axios.create({ baseURL: 'https://orders.example.test' })` writes where every
+ * request through it goes, and until the base was read the address had no host
+ * at all. Once it has one, the configuration may say whose it is - a service's
+ * name, an alias, `services[].hosts` - and that is as much somebody writing down
+ * which service is meant as `apiTarget` is: terminal, and `static`. A host only
+ * a service's own setting files name is the evidence P77 treats as a guess, and
+ * the edge says so.
+ */
+const byHost = (ask: Ask): UiOutcome | undefined => {
+  const { call, index } = ask;
+  const host = call.meta?.['host'];
+  if (typeof host !== 'string') return undefined;
+  const found = index.serviceAtHost?.(host);
+  if (found === undefined) return undefined;
+  // Two services listen on the port this machine's address names (P250): no
+  // way below may pick one of them by its route.
+  if (found.kind === 'shared') return { kind: 'portShared', port: found.port, said: found.said, services: found.services };
+  const outcome = within(ask, found.service, 'host');
+  if (outcome.kind !== 'linked') return outcome;
+  return {
+    ...outcome,
+    ...(found.sure ? {} : { hostFromFiles: true as const }),
+    ...(found.listening === undefined ? {} : { listening: found.listening }),
+  };
+};
+
+/**
  * The service the call was written in, answering its own browser.
  *
  * This is what a relative `fetch('/api/thing')` means, and until R93 it was the
@@ -343,6 +386,7 @@ const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
   byApiTarget,
   byBaseUrlEnv,
   byBaseUrlValue,
+  byHost,
   bySameService,
   byUniqueRoute,
 ];

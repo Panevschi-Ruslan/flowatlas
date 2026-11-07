@@ -1,0 +1,17 @@
+%  OrdersBoard                                             kiosk/src/OrdersBoard.tsx:17
+  ^  query Board /graphql                                  kiosk/src/OrdersBoard.tsx:18
+    => orders @  Query.orders ?declared                    orders/src/index.ts:29
+      -> Query.orders@29                                   orders/src/index.ts:29
+        -> listOrders                                      orders/src/orders.ts:9
+    => orders @  Order.customer ?declared                  orders/src/index.ts:33
+      -> Order.customer@33                                 orders/src/index.ts:33
+    => customers @  Customer.__resolveReference ?declared  customers/src/index.ts:16
+      -> Customer.__resolveReference@16                    customers/src/index.ts:16
+        -> customerById                                    customers/src/customers.ts:9
+    => orders @  Customer.orders ?declared                 orders/src/index.ts:36
+      -> Customer.orders@36                                orders/src/index.ts:36
+        -> ordersOf                                        orders/src/orders.ts:11
+    => router @  POST /graphql ?declared                   router/router/supergraph.yaml
+      => orders @  POST / ?declared                        orders/src/index.ts:40
+      => customers @  POST /graphql ?declared              customers/src/index.ts:20
+unresolved on this path: 1

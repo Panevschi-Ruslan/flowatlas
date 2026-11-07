@@ -27,12 +27,15 @@ import {
   type RepoGraph,
   type SourceRootOptions,
   type ServiceConfig,
+  projectText,
 } from '@flowatlas/core';
 import { createAngularContext } from './context.js';
 import { declaresAngular } from './framework.js';
 import { buildAngularClassIndex } from './index-classes.js';
 import { callsPass } from './passes/calls.js';
 import { classesPass } from './passes/classes.js';
+import { graphqlPass } from './passes/graphql.js';
+import { proceduresPass } from './passes/procedures.js';
 import { httpPass } from './passes/http.js';
 import { markersPass } from './passes/markers.js';
 import { modulesPass } from './passes/modules.js';
@@ -135,6 +138,10 @@ export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   templatesPass,
   callsPass,
   httpPass,
+  // After the requests, so a request that sends an operation is one node (P232).
+  graphqlPass,
+  // Requests for procedures, read by the reader the other halves share (P247).
+  proceduresPass,
   ssePass,
   socketsPass,
   markersPass,
@@ -240,6 +247,11 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const builder = new GraphBuilder({
     repo,
     ...(options.generatedAt === undefined ? {} : { generatedAt: options.generatedAt }),
+    // The tagged comments above declarations (P234), from the files this reading parsed.
+    notesFrom: {
+      text: projectText(project, rootDir),
+      ...(config?.docs?.commentTags === undefined ? {} : { tags: config.docs.commentTags }),
+    },
   });
 
   const base: ExtractContext = {

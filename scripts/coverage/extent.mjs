@@ -45,13 +45,28 @@
  *   the harness already applies to a guessed service type: print both answers
  *   rather than let one quietly win.
  *
- * Nothing here knows the name of a framework, and nothing here takes an
- * argument from `targets.json`. The rule is the same for every target: a
- * service is its own directory, plus every workspace package its manifest
- * names, plus the packages those name in turn for run time.
+ * Nothing here takes an argument from `targets.json`. The rule is the same
+ * for every target: a service is its own directory, plus every workspace
+ * package its manifest names, plus the packages those name in turn for run
+ * time, plus what the configuration of a framework its manifest declares says
+ * the service is built from.
+ *
+ * ## Why one framework's configuration is read here at all (P251)
+ *
+ * A framework can build a directory into a service that no manifest names: a
+ * Nuxt application extends a layer beside it by a path (`extends:
+ * ['../ui-layer']`), and compiles that layer's pages and routes as its own.
+ * The tool reads such a layer as part of the service, so a harness that saw
+ * only manifests would count over a smaller service than the one read - the
+ * same two-questions mistake this file exists to avoid, in the other
+ * direction. The configuration is the repository's own writing, as a
+ * workspace file is, and it is read the same way: as text, by a reader of its
+ * own here, never the tool's. Which configuration and which keys is one table
+ * (`BUILT_FROM`), keyed by the package a manifest declares, so the rule stays
+ * one rule for every target.
  */
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
 
 /** Directories a workspace glob never means, however wide the glob. */
 const NEVER_A_PACKAGE = new Set(['node_modules', 'dist', 'build', 'coverage', 'tmp']);
@@ -292,6 +307,206 @@ const workspaceRootOf = (dir, stopAt) => {
 };
 
 /**
+ * What a framework's configuration says a service is built from, by the
+ * package a manifest declares (P251): the files that hold it, and the keys
+ * whose entries are a directory or a package the service is built from.
+ *
+ * Nuxt: `extends` names its layers, each read the same way in turn, and
+ * `modules` its modules; both at the top of the configuration and under
+ * `$production`, which is the build the tool reads. A path entry is a
+ * directory (or a file in one) from the configuration's own directory; any
+ * other entry is a workspace member by its name, or nothing here.
+ */
+export const BUILT_FROM = [
+  {
+    package: 'nuxt',
+    files: ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs', 'nuxt.config.mts', 'nuxt.config.cjs'],
+    parts: 'extends',
+    keys: ['extends', 'modules'],
+    within: ['$production'],
+  },
+];
+
+/**
+ * The tokens of a configuration file that a literal is written in: strings,
+ * names, numbers and the punctuation between them. Comments are dropped, and
+ * a template with a substitution is a token no literal reading accepts.
+ */
+const tokensOf = (text) => {
+  const tokens = [];
+  let at = 0;
+  while (at < text.length) {
+    const char = text[at];
+    if (/\s/.test(char)) {
+      at += 1;
+    } else if (text.startsWith('//', at)) {
+      const end = text.indexOf('\n', at);
+      at = end === -1 ? text.length : end;
+    } else if (text.startsWith('/*', at)) {
+      const end = text.indexOf('*/', at + 2);
+      at = end === -1 ? text.length : end + 2;
+    } else if (char === "'" || char === '"' || char === '`') {
+      let value = '';
+      let end = at + 1;
+      let plain = true;
+      while (end < text.length && text[end] !== char) {
+        if (text[end] === '\\') {
+          value += text[end + 1] ?? '';
+          end += 2;
+          continue;
+        }
+        if (char === '`' && text.startsWith('${', end)) plain = false;
+        value += text[end];
+        end += 1;
+      }
+      tokens.push(plain ? { kind: 'string', value } : { kind: 'code', value });
+      at = end + 1;
+    } else if (/[\w$]/.test(char)) {
+      const word = /^[\w$.]+/.exec(text.slice(at))[0];
+      tokens.push({ kind: 'name', value: word });
+      at += word.length;
+    } else {
+      tokens.push({ kind: 'punct', value: char });
+      at += 1;
+    }
+  }
+  return tokens;
+};
+
+const CODE = Symbol('code');
+
+/**
+ * The default export of a configuration as plain values, as far as it is
+ * written in literals: objects, lists and strings. Anything else is `CODE`.
+ * The object handed to `define...Config(...)` is the configuration, as the
+ * framework reads it.
+ */
+const configValueOf = (text) => {
+  const tokens = tokensOf(text);
+  let at = tokens.findIndex((token, index) => token.value === 'export' && tokens[index + 1]?.value === 'default');
+  if (at === -1) return undefined;
+  at += 2;
+  // `defineNuxtConfig(` and the like, up to the value it is handed.
+  while (at < tokens.length && (tokens[at].kind === 'name' || tokens[at].value === '(')) at += 1;
+  const skip = () => {
+    let depth = 0;
+    while (at < tokens.length) {
+      const { value } = tokens[at];
+      if (depth === 0 && (value === ',' || value === '}' || value === ']' || value === ')')) return;
+      if (value === '{' || value === '[' || value === '(') depth += 1;
+      if (value === '}' || value === ']' || value === ')') depth -= 1;
+      at += 1;
+    }
+  };
+  const value = () => {
+    const token = tokens[at];
+    const next = tokens[at + 1];
+    if (token?.kind === 'string' && (next === undefined || [',', '}', ']', ')'].includes(next.value))) {
+      at += 1;
+      return token.value;
+    }
+    if (token?.value === '[') {
+      at += 1;
+      const items = [];
+      while (at < tokens.length && tokens[at].value !== ']') {
+        items.push(value());
+        if (tokens[at]?.value === ',') at += 1;
+      }
+      at += 1;
+      return items;
+    }
+    if (token?.value === '{') {
+      at += 1;
+      const object = {};
+      while (at < tokens.length && tokens[at].value !== '}') {
+        const key = tokens[at];
+        if ((key.kind === 'name' || key.kind === 'string') && tokens[at + 1]?.value === ':') {
+          at += 2;
+          object[key.value] = value();
+        } else skip();
+        if (tokens[at]?.value === ',') at += 1;
+      }
+      at += 1;
+      return object;
+    }
+    skip();
+    return CODE;
+  };
+  return value();
+};
+
+const isPlain = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isDirectory = (path) => {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
+const SCRIPT_ENDINGS = ['.ts', '.mts', '.js', '.mjs', '/index.ts', '/index.js'];
+
+/**
+ * The directories a service's framework configuration says it is built
+ * from, beyond its own: each part `extends` names, read in turn, and each
+ * module directory `modules` names that is not inside one of them. Absolute,
+ * inside `clone`, and nothing for a service whose manifest declares none of
+ * the frameworks in `BUILT_FROM`.
+ */
+const builtFromDirs = (own, clone, manifest, byName) => {
+  const declared = Object.assign({}, ...EXTENT_SECTIONS.service.map((key) => manifest[key] ?? {}));
+  const found = { parts: [], others: [] };
+  for (const framework of BUILT_FROM) {
+    if (declared[framework.package] === undefined) continue;
+    const seen = new Set([own]);
+    const read = (dir) => {
+      const file = framework.files.map((name) => join(dir, name)).find((path) => existsSync(path));
+      if (file === undefined) return;
+      let config;
+      try {
+        config = configValueOf(readFileSync(file, 'utf8'));
+      } catch {
+        return;
+      }
+      if (!isPlain(config)) return;
+      const blocks = [config, ...framework.within.map((key) => config[key]).filter(isPlain)];
+      for (const key of framework.keys) {
+        for (const block of blocks) {
+          const entries = Array.isArray(block[key]) ? block[key] : block[key] === undefined ? [] : [block[key]];
+          for (const listed of entries) {
+            const entry = Array.isArray(listed) ? listed[0] : listed;
+            if (typeof entry !== 'string') continue;
+            let target;
+            if (entry.startsWith('.') || entry.startsWith('/')) {
+              const path = resolve(dir, entry);
+              if (isDirectory(path)) target = path;
+              else if (existsSync(path) || SCRIPT_ENDINGS.some((ending) => existsSync(`${path}${ending}`))) target = dirname(path);
+            } else {
+              target = byName.get(entry.startsWith('@') ? entry.split('/').slice(0, 2).join('/') : entry.split('/')[0]);
+            }
+            if (target === undefined || seen.has(target)) continue;
+            if (target !== clone && !target.startsWith(`${clone}/`)) continue;
+            seen.add(target);
+            if (key === framework.parts) {
+              found.parts.push(target);
+              read(target);
+            } else found.others.push(target);
+          }
+        }
+      }
+    };
+    read(own);
+  }
+  const outside = (dir) => dir !== own && !dir.startsWith(`${own}/`);
+  const parts = found.parts.filter(outside);
+  return [
+    ...parts,
+    ...found.others.filter(outside).filter((dir) => !parts.some((part) => dir === part || dir.startsWith(`${part}/`))),
+  ];
+};
+
+/**
  * One service's extent: its own directory first, then what it declares.
  *
  * Clone-relative POSIX paths, because that is what `git ls-files` takes and what
@@ -310,8 +525,8 @@ export const extentOf = (cloneDir, readRoot) => {
   const own = resolve(clone, readRoot);
   const root = workspaceRootOf(own, clone);
   const dirs = [own];
+  const byName = new Map();
   if (root !== undefined) {
-    const byName = new Map();
     for (const dir of memberDirs(root)) {
       const name = readManifest(dir)?.name;
       if (typeof name === 'string' && name !== '') byName.set(name, dir);
@@ -334,6 +549,11 @@ export const extentOf = (cloneDir, readRoot) => {
         queue.push(dir);
       }
     }
+  }
+  // What a framework builds into the service from beside it (P251). Read as
+  // a member that declares nothing: its own manifest adds no further package.
+  for (const dir of builtFromDirs(own, clone, readManifest(own) ?? {}, byName)) {
+    if (!dirs.includes(dir)) dirs.push(dir);
   }
   const asPath = (dir) => relative(clone, dir).split('\\').join('/') || '.';
   return {

@@ -68,6 +68,8 @@ describe('a procedure a client asks for', () => {
     expect(list?.label).toBe('rpc orders.list');
     expect(list?.meta?.['operation']).toBe('query');
     expect(list?.meta?.['inputKeys']).toEqual(['customerId']);
+    // The link of the chain the client was made with, read as any address is here (P242).
+    expect(list?.meta?.['link']).toEqual({ protocol: 'trpc', path: '/api/trpc' });
     // The function the call is written in reaches it, which is what makes it a caller.
     expect(
       graph.edges.some(
@@ -170,3 +172,103 @@ describe('a procedure a client asks for', () => {
     expect(procedureCalls(graph)).toEqual([]);
   });
 });
+
+const ORPC = { '@orpc/client': '^1.0.0', '@orpc/tanstack-query': '^1.0.0' };
+
+const ORPC_CLIENT_FILE = `
+  import { createORPCClient } from '@orpc/client';
+  import { RPCLink } from '@orpc/client/fetch';
+  import { createTanstackQueryUtils } from '@orpc/tanstack-query';
+  const link = new RPCLink({ url: \`\${import.meta.env.VITE_API_URL}/rpc\` });
+  export const client = createORPCClient<any>(link);
+  export const orpc = createTanstackQueryUtils(client);
+`;
+
+const requestFor = (graph: RepoGraph, procedure: string): GraphNode | undefined =>
+  procedureCalls(graph).find((node) => node.meta?.['procedure'] === procedure);
+
+describe('an oRPC procedure a client asks for (P58)', () => {
+  const graph = read(
+    {
+      '/src/orpc.ts': ORPC_CLIENT_FILE,
+      '/src/Orders.tsx': `
+        import { useQuery, useMutation } from '@tanstack/react-query';
+        import { client, orpc } from './orpc';
+        export function Orders() {
+          const orders = useQuery(orpc.orders.list.queryOptions({ input: { status: 'open' } }));
+          const place = useMutation(orpc.orders.place.mutationOptions());
+          const key = orpc.orders.list.key();
+          return <button onClick={() => place.mutate({ sku: 'a' })}>{String(orders.data)}{String(key)}</button>;
+        }
+        export const cancel = (id: string) => client.orders.cancel({ id });
+      `,
+    },
+    ORPC,
+  );
+
+  it('is a request for the procedure whose path is called, or whose options are built', () => {
+    expect(byProcedure(graph)).toEqual({ 'orders.list': 'handler', 'orders.place': 'handler', 'orders.cancel': 'handler' });
+    expect(requestFor(graph, 'orders.cancel')?.meta?.['operation']).toBe('call');
+    expect(requestFor(graph, 'orders.list')?.meta?.['operation']).toBe('queryOptions');
+  });
+
+  it('reads the input under its key in the options', () => {
+    expect(requestFor(graph, 'orders.list')?.meta?.['inputKeys']).toEqual(['status']);
+    expect(requestFor(graph, 'orders.cancel')?.meta?.['inputKeys']).toEqual(['id']);
+  });
+
+  it('reads where the link sends, through the proxy the utilities were made from', () => {
+    expect(requestFor(graph, 'orders.list')?.meta?.['link']).toEqual({ protocol: 'rpc', path: '/rpc', baseUrlEnv: 'VITE_API_URL' });
+    expect(requestFor(graph, 'orders.cancel')?.meta?.['link']).toEqual({ protocol: 'rpc', path: '/rpc', baseUrlEnv: 'VITE_API_URL' });
+  });
+
+  it('says so when the link works its address out per request', () => {
+    const dynamic = read(
+      {
+        '/src/orpc.ts': `
+          import { createORPCClient } from '@orpc/client';
+          import { RPCLink } from '@orpc/client/fetch';
+          export const client = createORPCClient<any>(new RPCLink({ url: () => window.location.origin + '/rpc' }));
+          export const list = () => client.orders.list();
+        `,
+      },
+      ORPC,
+    );
+    expect(requestFor(dynamic, 'orders.list')?.meta?.['link']).toEqual({ protocol: 'rpc', dynamic: true });
+    expect(dynamic.unresolved.map((row) => row.reason)).toEqual(['procedure-link-dynamic']);
+  });
+
+  it('names the declaration a server-side call reaches, through the tree it was made from', () => {
+    const server = read(
+      {
+        '/src/orders.ts': `
+          import { os } from '@orpc/server';
+          export const getOrder = os
+            .handler(async () => ({ id: 'o-1' }));
+          export const ordersRouter = os.router({ get: getOrder });
+        `,
+        '/src/router.ts': `
+          import { ordersRouter } from './orders';
+          export const router = { orders: ordersRouter };
+        `,
+        '/src/page.tsx': `
+          import { call, createRouterClient } from '@orpc/server';
+          import { router } from './router';
+          import { getOrder, ordersRouter } from './orders';
+          const caller = createRouterClient(router);
+          export const viaClient = () => caller.orders.get({ id: 'o-1' });
+          export const viaCall = () => call(getOrder, { id: 'o-1' });
+          export const viaBranch = () => call(ordersRouter.get, { id: 'o-1' });
+        `,
+      },
+      { '@orpc/server': '^1.0.0' },
+    );
+    const calls = procedureCalls(server);
+    expect(calls).toHaveLength(3);
+    expect(calls.every((node) => node.meta?.['procedureAt'] === 'src/orders.ts:3')).toBe(true);
+    expect(calls.every((node) => node.meta?.['inProcess'] === true)).toBe(true);
+    expect(calls.map((node) => String(node.meta?.['procedure'])).sort()).toEqual(['get', 'null', 'orders.get']);
+    expect(server.unresolved).toEqual([]);
+  });
+});
+

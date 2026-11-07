@@ -53,10 +53,17 @@ export {
   makeStateId,
   makeSymbolId,
   makeUnnamedInvokeKey,
+  generatedName,
+  isGeneratedName,
+  exportKey,
+  stackOutputKey,
+  importedName,
+  isImportedName,
   makeUnnamedWorkflowKey,
   makeTypeId,
   makeWorkflowEntryKey,
   isBelowDir,
+  nameMadeUpFile,
   normalizeFilePath,
   normalizePath,
   pathKey,
@@ -66,6 +73,7 @@ export {
   wasRead,
 } from './ids.js';
 export type { DeployedEntryKind, HttpMethod, ReachedAs, SiteLeafType } from './ids.js';
+export { whenFree } from './when-free.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
 export { SENDS_META, wayInBodyRead } from './model/way-in.js';
@@ -170,6 +178,8 @@ export {
   infraModuleSchema,
   loadConfig,
   mcpSettingsSchema,
+  remoteSettingsSchema,
+  logSettingsSchema,
   builtInShapesFor,
   packageSourcesFor,
   parseConfig,
@@ -253,6 +263,8 @@ export type {
   MessagePattern,
   MessageTarget,
   PublishedRoot,
+  DeployedExport,
+  DeployedImport,
   RouteTarget,
   ValueFilter,
 } from './adapters/deployment.js';
@@ -264,6 +276,8 @@ export {
   CHANNEL_FORWARD_META,
   CHANNEL_PATTERN_META,
   ENVIRONMENT_META,
+  EXPORTS_META,
+  IMPORTS_META,
   forwardedName,
   matchChannelPattern,
   nameInForms,
@@ -275,6 +289,8 @@ export type {
   ChannelForward,
   ChannelPattern,
   EnvironmentValue,
+  ExportedValue,
+  ImportedValue,
   PatternMatch,
 } from './channel-pattern.js';
 export {
@@ -303,6 +319,7 @@ export {
   shifted,
 } from './positioned-document.js';
 export type { DefinitionFormat, PathStep, PositionedDocument } from './positioned-document.js';
+export { readExpressionDocument, UnreadMember } from './positioned-expression.js';
 
 export {
   applicationOfFile,
@@ -312,6 +329,17 @@ export {
   ROOT_APPLICATION,
 } from './adapters/applications.js';
 export type { ApplicationKeys, ApplicationMap } from './adapters/applications.js';
+export {
+  LISTEN_META,
+  listenAt,
+  listenCallsIn,
+  listeningOf,
+  literalPort,
+  placedPort,
+  portIn,
+  portWritten,
+} from './listen-port.js';
+export type { ListenAt, ListenPort, WrittenPort } from './listen-port.js';
 export { LOG_LEVELS, createLogger, silentLogger } from './adapters/context.js';
 export type { ExtractContext, LogLevel, Logger } from './adapters/context.js';
 export {
@@ -425,6 +453,8 @@ export {
   workspaceGlobs,
   workspacePackages,
   workspaceRootOf,
+  workspaceRootsAbove,
+  widenServiceExtent,
 } from './workspace.js';
 export type { ExtentPackage, WorkspacePackage } from './workspace.js';
 
@@ -695,6 +725,9 @@ export {
   requestVerbOf,
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
+export { isSomewhere, underBase } from './under-base.js';
+export { asksAbsolute, conditionsAround, literalAddress, prefixOfRewrite } from './address-rewrite.js';
+export type { ReadAddress } from './under-base.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
 export { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
 export { BOUNDED_BY, boundedLoopOf, isMigrationFile } from './bounded-loop.js';
@@ -891,6 +924,8 @@ export {
   renderPrompt,
 } from './prompt-text.js';
 export { REMEDIES, remediesOf, remedyLinesOf } from './remedies.js';
+export { DEFAULT_PATH_CAP, DEFAULT_PATH_DEPTH, PATH_DEPTHS, shortestWays } from './shortest-ways.js';
+export type { ShortestWays, ShortestWaysOptions, WayStep } from './shortest-ways.js';
 export type {
   PromptAccess,
   PromptCheckPlace,
@@ -1013,3 +1048,49 @@ export {
   writeDeployed,
 } from './deployed.js';
 export type { Deployed, Pin, PinSource } from './deployed.js';
+export {
+  checkoutLine,
+  checkoutsMoved,
+  citedFiles,
+  contentHash,
+  FRESHNESS_FILE,
+  FRESHNESS_FORMAT_VERSION,
+  freshnessPathFor,
+  freshnessSchema,
+  headOf,
+  MAX_CITED_FILES,
+  readFreshness,
+  staleOf,
+} from './freshness.js';
+export type { Checkout, CheckoutMoved, CitedFile, Freshness, FreshnessService, Stale } from './freshness.js';
+export { AGENT_QUESTIONS, AGENT_RULES, agentQuestionsLine } from './agent-guide.js';
+export type { AgentQuestion } from './agent-guide.js';
+export { attachNotes, DEFAULT_NOTE_TAGS, leadingNotes, MAX_NOTE_CHARS, MAX_NOTES, NOTES_META, projectText } from './notes.js';
+export type { SourceText } from './notes.js';
+export { addEmbeddedScripts, blankOutside } from './embedded.js';
+export type { EmbeddedFile, EmbeddedFormat, EmbeddedScripts } from './embedded.js';
+export {
+  ALIASES_FROM_CONFIG_REASON,
+  ALIASES_FROM_CONVENTION_REASON,
+  IMPLICIT_IMPORT_AMBIGUOUS_REASON,
+  IMPLICIT_IMPORT_OVERRIDDEN_REASON,
+  IMPLICIT_IMPORTS_REASON,
+  addImplicitImports,
+  conventionExtentOf,
+  conventionFiles,
+  conventionsFor,
+  frameworkModuleOf,
+  implicitNamesUsed,
+  implicitSourcesOf,
+  reportConventions,
+  scriptFilesIn,
+} from './conventions.js';
+export type {
+  ConventionsOf,
+  FrameworkModule,
+  ImplicitImports,
+  ImplicitImportSource,
+  ProjectConventions,
+} from './conventions.js';
+export { ConfigPath, NotLiteral, configValueAt, exportedNamesOf, readConfigLiteral } from './config-literal.js';
+export type { ConfigLiteral, ExportedNames } from './config-literal.js';

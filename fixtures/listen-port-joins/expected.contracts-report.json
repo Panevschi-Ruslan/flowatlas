@@ -1,0 +1,237 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-07T17:37:49.398Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:jobs#src/sync.controller.ts:12:28",
+        "to": "entry:stock:http:GET:/stock/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/sync.controller.ts:12:28|http_calls|entry:stock:http:GET:/stock/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/sync.controller.ts:SyncController.stock declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/sync.controller.ts:12:28",
+        "to": "entry:stock:http:GET:/stock/:param",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/sync.controller.ts:12:28|http_calls|entry:stock:http:GET:/stock/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "jobs#src/sync.controller.ts:SyncController.stock declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#pages/index.vue:14:34",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#pages/index.vue:14:34|hits|entry:catalog:http:GET:/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#pages/index.vue:pages/index declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#pages/index.vue:14:34",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#pages/index.vue:14:34|hits|entry:catalog:http:GET:/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/server.ts:GET /products@7 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#pages/index.vue:21:9",
+        "to": "entry:storefront:http:GET:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#pages/index.vue:21:9|hits|entry:storefront:http:GET:/api/basket",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#pages/index.vue:load declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#pages/index.vue:21:9",
+        "to": "entry:storefront:http:GET:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#pages/index.vue:21:9|hits|entry:storefront:http:GET:/api/basket",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "storefront#pages/index.vue:load declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:11:29",
+        "to": "entry:admin:http:GET:/api/reports",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:11:29|hits|entry:admin:http:GET:/api/reports",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:11:29",
+        "to": "entry:admin:http:GET:/api/reports",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:11:29|hits|entry:admin:http:GET:/api/reports",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "admin#app/api/reports/route.ts:GET answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:12:27",
+        "to": "entry:stock:http:GET:/stock/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:12:27|hits|entry:stock:http:GET:/stock/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:12:27",
+        "to": "entry:stock:http:GET:/stock/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:12:27|hits|entry:stock:http:GET:/stock/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:13:28",
+        "to": "entry:storefront:http:GET:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:13:28|hits|entry:storefront:http:GET:/api/basket",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:13:28",
+        "to": "entry:storefront:http:GET:/api/basket",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:13:28|hits|entry:storefront:http:GET:/api/basket",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:7:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:7:28|hits|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:7:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:7:28|hits|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:8:30",
+        "to": "entry:orders:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:8:30|hits|entry:orders:http:GET:/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:8:30",
+        "to": "entry:orders:http:GET:/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:8:30|hits|entry:orders:http:GET:/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:9:30",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:9:30|hits|entry:catalog:http:GET:/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Dashboard.tsx:Dashboard declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Dashboard.tsx:9:30",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Dashboard.tsx:9:30|hits|entry:catalog:http:GET:/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/server.ts:GET /products@7 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 18,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

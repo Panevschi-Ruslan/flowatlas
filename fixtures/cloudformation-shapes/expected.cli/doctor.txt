@@ -1,0 +1,53 @@
+unresolved: total=5 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 5 to act on · missed: 6 · notes: 2 · findings: 1
+  1 missed place static reading cannot see, folded into 1 row
+  1 finding: 1 stream nothing writes to
+  ways in: 20 found, 19 with a handler that was read, 1 without
+  subscription-source-unread: 2 rows
+    What a rule, a subscription, a mapping or a pipe takes its messages from is not read, so it is drawn on no channel. Write the queue, topic, bus or stream so the files settle it: a reference to what the configuration declares, or its ARN. A source of a kind nothing here reads is said once, at info.
+      rides/stacks/rides.yaml:189  stacks/rides.Resources.LostSubscription
+        ↳ Write TopicArn as a Ref of a topic the file declares, or its ARN.
+      rides/stacks/rides.yaml:196  stacks/rides.Resources.AuditMapping
+        ↳ Write EventSourceArn as an Fn::GetAtt of a queue or a stream the file declares, or its ARN.
+  api-body-unread: 1 row
+    Write the body under Body, include it with AWS::Include, or point BodyS3Location at a file of the repository for aws cloudformation package to upload.
+      rides/stacks/rides.yaml:164  stacks/rides.Resources.ArchiveApi
+  deployment-plugin-unread: 1 row
+    Add Transform: AWS::Serverless-2016-10-31 to the template, and it is read as a SAM template.
+      rides/legacy/fleet.template:4  legacy/fleet.template#Transform
+  workflow-definition-not-loaded: 1 row
+    Nothing of this workflow is drawn. Write the definition under Definition, or point DefinitionS3Location at a .asl.json or .asl.yaml file of the repository, which aws cloudformation package uploads.
+      rides/stacks/rides.yaml:228  stacks/rides.Resources.ArchiveStateMachine
+  deployed-name-generated (note): 1 row
+    Give it a name of its own where other repositories reach it.
+      rides/stacks/docks.yaml:12  stacks.docks.Resources.RecountQueue
+  deployment-copy-not-read (note): 1 row
+    Nothing to fix. Keep the packaged copy out of the repository, and this note goes too.
+      rides/kiosk/kiosk.packaged.yaml:1  kiosk/kiosk.packaged.yaml
+  invoker-not-read (info): 1 row
+    The function is still a way in of its own; nothing here says it is unused because nothing drawn reaches it.
+      rides/stacks/rides.yaml:202  stacks/rides.Resources.AuditLogsPermission
+  stream-no-writer (finding): 1 row
+    Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.
+      rides/stacks/docks.yaml:15  dynamodb/rides-harbour-docks is read by a function and nothing in the configured services writes to it
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 5 now, +5)
+  no baseline at <root>/fixtures/cloudformation-shapes/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  api-body-unread: 0 → 1 (+1)
+  deployment-plugin-unread: 0 → 1 (+1)
+  subscription-source-unread: 0 → 2 (+2)
+  workflow-definition-not-loaded: 0 → 1 (+1)
+  new (5):
+    rides|legacy/fleet.template|legacy/fleet.template#Transform|deployment-plugin-unread
+    rides|stacks/rides.yaml|stacks/rides.Resources.ArchiveApi|api-body-unread
+    rides|stacks/rides.yaml|stacks/rides.Resources.ArchiveStateMachine|workflow-definition-not-loaded
+    rides|stacks/rides.yaml|stacks/rides.Resources.AuditMapping|subscription-source-unread
+    rides|stacks/rides.yaml|stacks/rides.Resources.LostSubscription|subscription-source-unread

@@ -1,0 +1,1605 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-05T22:29:57.112Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:DELETE:/api/basket",
+      "type": "entry",
+      "label": "DELETE /api/basket",
+      "repo": "shop",
+      "file": "server/api/basket.delete.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/basket",
+        "rawPath": "/api/basket",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:DELETE:/api/orders/:param",
+      "type": "entry",
+      "label": "DELETE /api/orders/:param",
+      "repo": "shop",
+      "file": "server/api/orders/[id].delete.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
+        "adapter": "nitro-routes",
+        "registration": "server/file",
+        "fails": [
+          {
+            "status": 404,
+            "exception": "createError",
+            "at": "shop#server/api/orders/[id].delete.ts:DELETE /api/orders/:param@3",
+            "file": "server/api/orders/[id].delete.ts",
+            "line": 5,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "server/api/orders.get.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/orders/:param",
+      "type": "entry",
+      "label": "GET /api/orders/:param",
+      "repo": "shop",
+      "file": "server/api/orders/[id].get.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
+        "adapter": "nitro-routes",
+        "registration": "server/file",
+        "fails": [
+          {
+            "status": 404,
+            "exception": "createError",
+            "at": "shop#server/api/orders/[id].get.ts:GET /api/orders/:param@3",
+            "file": "server/api/orders/[id].get.ts",
+            "line": 7,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:http:PATCH:/api/orders/:param",
+      "type": "entry",
+      "label": "PATCH /api/orders/:param",
+      "repo": "shop",
+      "file": "server/api/orders/[id].patch.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "path": "/api/orders/:param",
+        "rawPath": "/api/orders/:id",
+        "adapter": "nitro-routes",
+        "registration": "server/file",
+        "fails": [
+          {
+            "status": 404,
+            "exception": "createError",
+            "at": "shop#server/api/orders/[id].patch.ts:PATCH /api/orders/:param@2",
+            "file": "server/api/orders/[id].patch.ts",
+            "line": 7,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/basket",
+      "type": "entry",
+      "label": "POST /api/basket",
+      "repo": "shop",
+      "file": "server/api/basket.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/basket",
+        "rawPath": "/api/basket",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/orders",
+      "type": "entry",
+      "label": "POST /api/orders",
+      "repo": "shop",
+      "file": "server/api/orders.post.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "nitro-routes",
+        "registration": "server/file",
+        "fails": [
+          {
+            "status": 422,
+            "exception": "createError",
+            "at": "shop#server/api/orders.post.ts:POST /api/orders@7",
+            "file": "server/api/orders.post.ts",
+            "line": 10,
+            "source": "throw"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 20,
+          "filesRead": 20,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 8,
+          "components": 5,
+          "hooks": 3
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#app.vue:app",
+      "type": "ui_component",
+      "label": "app",
+      "repo": "shop",
+      "file": "app.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#components/AddToBasket.vue:AddToBasket",
+      "type": "ui_component",
+      "label": "AddToBasket",
+      "repo": "shop",
+      "file": "components/AddToBasket.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#components/AddToBasket.vue:addThis",
+      "type": "function",
+      "label": "addThis",
+      "repo": "shop",
+      "file": "components/AddToBasket.vue",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#composables/useBasket.ts:useBasket",
+      "type": "function",
+      "label": "useBasket",
+      "repo": "shop",
+      "file": "composables/useBasket.ts",
+      "line": 2,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{items:unknown;add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#composables/useOrderApi.ts:useOrderApi",
+      "type": "function",
+      "label": "useOrderApi",
+      "repo": "shop",
+      "file": "composables/useOrderApi.ts",
+      "line": 2,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{rename:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#pages/basket.vue:addFirst",
+      "type": "function",
+      "label": "addFirst",
+      "repo": "shop",
+      "file": "pages/basket.vue",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#pages/basket.vue:basket",
+      "type": "ui_component",
+      "label": "basket",
+      "repo": "shop",
+      "file": "pages/basket.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/basket"
+      }
+    },
+    {
+      "id": "shop#pages/index.vue:create",
+      "type": "function",
+      "label": "create",
+      "repo": "shop",
+      "file": "pages/index.vue",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#pages/index.vue:pages/index",
+      "type": "ui_component",
+      "label": "pages/index",
+      "repo": "shop",
+      "file": "pages/index.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "shop#pages/orders/[id].vue:orders/[id]",
+      "type": "ui_component",
+      "label": "orders/[id]",
+      "repo": "shop",
+      "file": "pages/orders/[id].vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "id": "shop#pages/orders/[id].vue:renameIt",
+      "type": "function",
+      "label": "renameIt",
+      "repo": "shop",
+      "file": "pages/orders/[id].vue",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/basket.delete.ts:DELETE /api/basket@1",
+      "type": "function",
+      "label": "DELETE /api/basket@1",
+      "repo": "shop",
+      "file": "server/api/basket.delete.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/basket.post.ts:POST /api/basket@1",
+      "type": "function",
+      "label": "POST /api/basket@1",
+      "repo": "shop",
+      "file": "server/api/basket.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/orders.get.ts:GET /api/orders@3",
+      "type": "function",
+      "label": "GET /api/orders@3",
+      "repo": "shop",
+      "file": "server/api/orders.get.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "type:shop#Order[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/orders.post.ts:POST /api/orders@7",
+      "type": "function",
+      "label": "POST /api/orders@7",
+      "repo": "shop",
+      "file": "server/api/orders.post.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "type:shop#Order"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/orders/[id].delete.ts:DELETE /api/orders/:param@3",
+      "type": "function",
+      "label": "DELETE /api/orders/:param@3",
+      "repo": "shop",
+      "file": "server/api/orders/[id].delete.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "{removed:unknown}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/orders/[id].get.ts:GET /api/orders/:param@3",
+      "type": "function",
+      "label": "GET /api/orders/:param@3",
+      "repo": "shop",
+      "file": "server/api/orders/[id].get.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "type:shop#Order"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/orders/[id].patch.ts:PATCH /api/orders/:param@2",
+      "type": "function",
+      "label": "PATCH /api/orders/:param@2",
+      "repo": "shop",
+      "file": "server/api/orders/[id].patch.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "type:shop#Order"
+        }
+      }
+    },
+    {
+      "id": "shop#server/middleware/auth.ts:auth",
+      "type": "middleware",
+      "label": "auth",
+      "repo": "shop",
+      "file": "server/middleware/auth.ts",
+      "line": 1,
+      "kind": "file"
+    },
+    {
+      "id": "shop#server/utils/basket.ts:addToBasket",
+      "type": "function",
+      "label": "addToBasket",
+      "repo": "shop",
+      "file": "server/utils/basket.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/utils/basket.ts:emptyBasket",
+      "type": "function",
+      "label": "emptyBasket",
+      "repo": "shop",
+      "file": "server/utils/basket.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop#server/utils/orders.ts:dropOrder",
+      "type": "function",
+      "label": "dropOrder",
+      "repo": "shop",
+      "file": "server/utils/orders.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "shop#server/utils/orders.ts:findOrder",
+      "type": "function",
+      "label": "findOrder",
+      "repo": "shop",
+      "file": "server/utils/orders.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop#Order|undefined"
+        }
+      }
+    },
+    {
+      "id": "shop#server/utils/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "shop",
+      "file": "server/utils/orders.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:shop#Order[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/utils/orders.ts:renameOrder",
+      "type": "function",
+      "label": "renameOrder",
+      "repo": "shop",
+      "file": "server/utils/orders.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop#Order|undefined"
+        }
+      }
+    },
+    {
+      "id": "shop#server/utils/orders.ts:saveOrder",
+      "type": "function",
+      "label": "saveOrder",
+      "repo": "shop",
+      "file": "server/utils/orders.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:shop#Order"
+        }
+      }
+    },
+    {
+      "id": "shop#stores/orders.ts:useOrdersStore",
+      "type": "function",
+      "label": "useOrdersStore",
+      "repo": "shop",
+      "file": "stores/orders.ts",
+      "line": 3,
+      "kind": "hook"
+    },
+    {
+      "id": "shop#stores/orders.ts:useOrdersStore.remove",
+      "type": "function",
+      "label": "useOrdersStore.remove",
+      "repo": "shop",
+      "file": "stores/orders.ts",
+      "line": 5,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#utils/basket.ts:clearBasket",
+      "type": "function",
+      "label": "clearBasket",
+      "repo": "shop",
+      "file": "utils/basket.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop#components/AddToBasket.vue:2:11",
+      "type": "ui_action",
+      "label": "@click=\"addThis\"",
+      "repo": "shop",
+      "file": "components/AddToBasket.vue",
+      "line": 2,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "addThis",
+        "component": "shop#components/AddToBasket.vue:AddToBasket",
+        "template": "components/AddToBasket.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#pages/basket.vue:4:13",
+      "type": "ui_action",
+      "label": "@click=\"addFirst\"",
+      "repo": "shop",
+      "file": "pages/basket.vue",
+      "line": 4,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "addFirst",
+        "component": "shop#pages/basket.vue:basket",
+        "template": "pages/basket.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#pages/basket.vue:5:13",
+      "type": "ui_action",
+      "label": "@click=\"clearBasket\"",
+      "repo": "shop",
+      "file": "pages/basket.vue",
+      "line": 5,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "clearBasket",
+        "component": "shop#pages/basket.vue:basket",
+        "template": "pages/basket.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#pages/index.vue:5:13",
+      "type": "ui_action",
+      "label": "@click=\"create\"",
+      "repo": "shop",
+      "file": "pages/index.vue",
+      "line": 5,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "create",
+        "component": "shop#pages/index.vue:pages/index",
+        "template": "pages/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#pages/orders/[id].vue:4:13",
+      "type": "ui_action",
+      "label": "@click=\"orders.remove(id)\"",
+      "repo": "shop",
+      "file": "pages/orders/[id].vue",
+      "line": 4,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "orders.remove(id)",
+        "component": "shop#pages/orders/[id].vue:orders/[id]",
+        "template": "pages/orders/[id].vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#pages/orders/[id].vue:5:13",
+      "type": "ui_action",
+      "label": "@click=\"renameIt\"",
+      "repo": "shop",
+      "file": "pages/orders/[id].vue",
+      "line": 5,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "renameIt",
+        "component": "shop#pages/orders/[id].vue:orders/[id]",
+        "template": "pages/orders/[id].vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#composables/useBasket.ts:5:11",
+      "type": "ui_api_call",
+      "label": "POST /api/basket",
+      "repo": "shop",
+      "file": "composables/useBasket.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/basket",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{id:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "id"
+        ],
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#composables/useOrderApi.ts:4:11",
+      "type": "ui_api_call",
+      "label": "PATCH /api/orders/:param",
+      "repo": "shop",
+      "file": "composables/useOrderApi.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "url": "/api/orders/:param",
+        "path": "/api/orders/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{name:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ],
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#pages/index.vue:14:33",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "pages/index.vue",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#pages/index.vue:17:9",
+      "type": "ui_api_call",
+      "label": "POST /api/orders",
+      "repo": "shop",
+      "file": "pages/index.vue",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{name:unknown}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name"
+        ],
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#pages/orders/[id].vue:17:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders/:param",
+      "repo": "shop",
+      "file": "pages/orders/[id].vue",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders/:param",
+        "path": "/api/orders/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#stores/orders.ts:6:11",
+      "type": "ui_api_call",
+      "label": "DELETE /api/orders/:param",
+      "repo": "shop",
+      "file": "stores/orders.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "/api/orders/:param",
+        "path": "/api/orders/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#utils/basket.ts:3:9",
+      "type": "ui_api_call",
+      "label": "DELETE /api/basket",
+      "repo": "shop",
+      "file": "utils/basket.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "/api/basket",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:DELETE:/api/basket",
+      "to": "shop#server/api/basket.delete.ts:DELETE /api/basket@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "number",
+      "file": "server/api/basket.delete.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:DELETE:/api/basket",
+      "to": "shop#server/middleware/auth.ts:auth",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/middleware/auth.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:DELETE:/api/orders/:param",
+      "to": "shop#server/api/orders/[id].delete.ts:DELETE /api/orders/:param@3",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{removed:unknown}",
+      "file": "server/api/orders/[id].delete.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:DELETE:/api/orders/:param",
+      "to": "shop#server/middleware/auth.ts:auth",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/middleware/auth.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#server/api/orders.get.ts:GET /api/orders@3",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:shop#Order[]",
+      "file": "server/api/orders.get.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#server/middleware/auth.ts:auth",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/middleware/auth.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders/:param",
+      "to": "shop#server/api/orders/[id].get.ts:GET /api/orders/:param@3",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:shop#Order",
+      "file": "server/api/orders/[id].get.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders/:param",
+      "to": "shop#server/middleware/auth.ts:auth",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/middleware/auth.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:PATCH:/api/orders/:param",
+      "to": "shop#server/api/orders/[id].patch.ts:PATCH /api/orders/:param@2",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:shop#Order",
+      "file": "server/api/orders/[id].patch.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true,
+        "body": "{name:string}",
+        "params": "{id:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:http:PATCH:/api/orders/:param",
+      "to": "shop#server/middleware/auth.ts:auth",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/middleware/auth.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/basket",
+      "to": "shop#server/api/basket.post.ts:POST /api/basket@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string[]",
+      "file": "server/api/basket.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true,
+        "body": "{id:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/basket",
+      "to": "shop#server/middleware/auth.ts:auth",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/middleware/auth.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders",
+      "to": "shop#server/api/orders.post.ts:POST /api/orders@7",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:shop#Order",
+      "file": "server/api/orders.post.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders",
+      "to": "shop#server/middleware/auth.ts:auth",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/middleware/auth.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "shop#components/AddToBasket.vue:AddToBasket",
+      "to": "shop#composables/useBasket.ts:useBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{items:unknown;add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "components/AddToBasket.vue",
+      "line": 12
+    },
+    {
+      "from": "shop#components/AddToBasket.vue:addThis",
+      "to": "shop#composables/useBasket.ts:useBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{items:unknown;add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "components/AddToBasket.vue",
+      "line": 12
+    },
+    {
+      "from": "shop#composables/useBasket.ts:useBasket",
+      "to": "ui_api_call:shop#composables/useBasket.ts:5:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "composables/useBasket.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#composables/useOrderApi.ts:useOrderApi",
+      "to": "ui_api_call:shop#composables/useOrderApi.ts:4:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "composables/useOrderApi.ts",
+      "line": 4
+    },
+    {
+      "from": "shop#pages/basket.vue:addFirst",
+      "to": "shop#composables/useBasket.ts:useBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{items:unknown;add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "pages/basket.vue",
+      "line": 14
+    },
+    {
+      "from": "shop#pages/basket.vue:basket",
+      "to": "shop#composables/useBasket.ts:useBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{items:unknown;add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "pages/basket.vue",
+      "line": 14
+    },
+    {
+      "from": "shop#pages/index.vue:create",
+      "to": "ui_api_call:shop#pages/index.vue:17:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 17
+    },
+    {
+      "from": "shop#pages/index.vue:pages/index",
+      "to": "ui_api_call:shop#pages/index.vue:14:33",
+      "type": "calls",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 14
+    },
+    {
+      "from": "shop#pages/index.vue:pages/index",
+      "to": "ui_api_call:shop#pages/index.vue:17:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 17
+    },
+    {
+      "from": "shop#pages/orders/[id].vue:orders/[id]",
+      "to": "shop#composables/useOrderApi.ts:useOrderApi",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{rename:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "pages/orders/[id].vue",
+      "line": 20
+    },
+    {
+      "from": "shop#pages/orders/[id].vue:orders/[id]",
+      "to": "shop#stores/orders.ts:useOrdersStore",
+      "type": "calls",
+      "confidence": "static",
+      "file": "pages/orders/[id].vue",
+      "line": 15
+    },
+    {
+      "from": "shop#pages/orders/[id].vue:orders/[id]",
+      "to": "ui_api_call:shop#pages/orders/[id].vue:17:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "pages/orders/[id].vue",
+      "line": 17
+    },
+    {
+      "from": "shop#pages/orders/[id].vue:renameIt",
+      "to": "shop#composables/useOrderApi.ts:useOrderApi",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{rename:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "pages/orders/[id].vue",
+      "line": 20
+    },
+    {
+      "from": "shop#server/api/basket.delete.ts:DELETE /api/basket@1",
+      "to": "shop#server/utils/basket.ts:emptyBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "number",
+      "file": "server/api/basket.delete.ts",
+      "line": 1
+    },
+    {
+      "from": "shop#server/api/basket.post.ts:POST /api/basket@1",
+      "to": "shop#server/utils/basket.ts:addToBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "server/api/basket.post.ts",
+      "line": 3
+    },
+    {
+      "from": "shop#server/api/orders.get.ts:GET /api/orders@3",
+      "to": "shop#server/utils/orders.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:shop#Order[]",
+      "file": "server/api/orders.get.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#server/api/orders.post.ts:POST /api/orders@7",
+      "to": "shop#server/utils/orders.ts:saveOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop#Order",
+      "file": "server/api/orders.post.ts",
+      "line": 12
+    },
+    {
+      "from": "shop#server/api/orders/[id].delete.ts:DELETE /api/orders/:param@3",
+      "to": "shop#server/utils/orders.ts:dropOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "boolean",
+      "file": "server/api/orders/[id].delete.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#server/api/orders/[id].get.ts:GET /api/orders/:param@3",
+      "to": "shop#server/utils/orders.ts:findOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:shop#Order|undefined",
+      "file": "server/api/orders/[id].get.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#server/api/orders/[id].patch.ts:PATCH /api/orders/:param@2",
+      "to": "shop#server/utils/orders.ts:renameOrder",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "type:shop#Order|undefined",
+      "file": "server/api/orders/[id].patch.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#stores/orders.ts:useOrdersStore",
+      "to": "ui_api_call:shop#stores/orders.ts:6:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "stores/orders.ts",
+      "line": 6
+    },
+    {
+      "from": "shop#stores/orders.ts:useOrdersStore.remove",
+      "to": "ui_api_call:shop#stores/orders.ts:6:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "stores/orders.ts",
+      "line": 6
+    },
+    {
+      "from": "shop#utils/basket.ts:clearBasket",
+      "to": "ui_api_call:shop#utils/basket.ts:3:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "utils/basket.ts",
+      "line": 3
+    },
+    {
+      "from": "ui_action:shop#components/AddToBasket.vue:2:11",
+      "to": "shop#components/AddToBasket.vue:addThis",
+      "type": "handles",
+      "confidence": "static",
+      "file": "components/AddToBasket.vue",
+      "line": 2
+    },
+    {
+      "from": "ui_action:shop#pages/basket.vue:4:13",
+      "to": "shop#pages/basket.vue:addFirst",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/basket.vue",
+      "line": 4
+    },
+    {
+      "from": "ui_action:shop#pages/basket.vue:5:13",
+      "to": "shop#utils/basket.ts:clearBasket",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/basket.vue",
+      "line": 5
+    },
+    {
+      "from": "ui_action:shop#pages/index.vue:5:13",
+      "to": "shop#pages/index.vue:create",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 5
+    },
+    {
+      "from": "ui_action:shop#pages/orders/[id].vue:4:13",
+      "to": "shop#stores/orders.ts:useOrdersStore.remove",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/orders/[id].vue",
+      "line": 4
+    },
+    {
+      "from": "ui_action:shop#pages/orders/[id].vue:5:13",
+      "to": "shop#pages/orders/[id].vue:renameIt",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/orders/[id].vue",
+      "line": 5
+    },
+    {
+      "from": "ui_api_call:shop#composables/useBasket.ts:5:11",
+      "to": "entry:shop:http:POST:/api/basket",
+      "type": "hits",
+      "confidence": "static",
+      "file": "composables/useBasket.ts",
+      "line": 5,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#composables/useOrderApi.ts:4:11",
+      "to": "entry:shop:http:PATCH:/api/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "composables/useOrderApi.ts",
+      "line": 4,
+      "params": [
+        "{name:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#pages/index.vue:14:33",
+      "to": "entry:shop:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 14,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#pages/index.vue:17:9",
+      "to": "entry:shop:http:POST:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 17,
+      "params": [
+        "{name:unknown}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#pages/orders/[id].vue:17:24",
+      "to": "entry:shop:http:GET:/api/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "pages/orders/[id].vue",
+      "line": 17,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#stores/orders.ts:6:11",
+      "to": "entry:shop:http:DELETE:/api/orders/:param",
+      "type": "hits",
+      "confidence": "static",
+      "file": "stores/orders.ts",
+      "line": 6,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#utils/basket.ts:3:9",
+      "to": "entry:shop:http:DELETE:/api/basket",
+      "type": "hits",
+      "confidence": "static",
+      "file": "utils/basket.ts",
+      "line": 3,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {
+    "type:shop#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "shop#server/utils/orders.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "composables/useBasket.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "implicit-imports-from-convention",
+      "level": "info",
+      "message": "5 names used with no import in 4 files were read as Nuxt imports them: the application's from composables/, utils/ and stores/ and the server's from server/utils/",
+      "hint": "Nothing to do. These are the imports Nuxt adds when it builds; a name it gives two ways is a row of its own.",
+      "symbol": "Nuxt",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "implicit-imports-from-convention",
+        "names": [
+          "addToBasket",
+          "clearBasket",
+          "emptyBasket",
+          "renameOrder",
+          "useBasket"
+        ],
+        "files": 4
+      },
+      "service": "shop"
+    },
+    {
+      "file": "pages/index.vue",
+      "line": 17,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "server/api/orders/[id].delete.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "name-undeclared"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> ., @ -> ., ~~ -> ., @@ -> ., #shared -> shared, #app -> node_modules/nuxt/dist/app resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "."
+          ],
+          "~/*": [
+            "./*"
+          ],
+          "@": [
+            "."
+          ],
+          "@/*": [
+            "./*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "shared"
+          ],
+          "#shared/*": [
+            "shared/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ]
+        }
+      },
+      "service": "shop"
+    }
+  ]
+}

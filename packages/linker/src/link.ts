@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import {
   CONFIDENCE_RANK,
   ENVIRONMENT_META,
+  hostOf,
   namesGivenTo,
   SCHEMA_VERSION,
   serviceNamesOf,
@@ -20,7 +21,7 @@ import {
   type TypeEntry,
   type Unresolved,
 } from '@flowatlas/core';
-import { baseUrlOf, hostIndexOf, takenMeta, whereFound, type FoundValue } from './base-url-value.js';
+import { baseUrlOf, hostIndexOf, servicesAt, takenMeta, whereFound, type FoundValue, type HostIndex } from './base-url-value.js';
 import {
   baseUrlTakenFinding,
   findingFor,
@@ -32,6 +33,7 @@ import {
   type RouteIndex,
 } from './http-link.js';
 import { joinDeployments } from './deployment-link.js';
+import { joinImports } from './import-link.js';
 import { keepWhereDeclared } from './declared-link.js';
 import { completeFromEnvironment, reachedBy } from './environment-link.js';
 import { functionUrlsOf } from './function-url-link.js';
@@ -50,6 +52,10 @@ import { joinReferences } from './reference-link.js';
 import { auditRoutes } from './route-audit.js';
 import { answeredOnlyByWildcard, couldReach } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
+import { joinGraphqlFields } from './graphql-link.js';
+import { routeGateways, type RouteAnswer } from './graphql-federation.js';
+import { atLocalPort, listeningAt, portSharedFinding, whereListening, type Listening, type PortIndex } from './local-port.js';
+import type { GatewayRouteMeta } from '@flowatlas/graphql';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
 import {
@@ -129,11 +135,18 @@ const callsServicesOf = (method: GraphNode | undefined): CallsServiceMarker[] =>
 /** Which routes each service serves, which is what both matchers ask first. */
 const routesByServiceOf = (nodes: ReadonlyMap<string, GraphNode>): Map<string, GraphNode[]> => {
   const routesByService = new Map<string, GraphNode[]>();
+  const add = (service: string, node: GraphNode): void => {
+    const list = routesByService.get(service);
+    if (list === undefined) routesByService.set(service, [node]);
+    else list.push(node);
+  };
   for (const node of nodes.values()) {
     if (node.type !== 'entry' || node.kind !== 'http') continue;
-    const list = routesByService.get(node.repo);
-    if (list === undefined) routesByService.set(node.repo, [node]);
-    else list.push(node);
+    add(node.repo, node);
+    // A route hanging from another service's API is reached at that service's
+    // address too: a client of the API's owner lands on it (P249).
+    const rootedIn = node.meta?.['rootedIn'];
+    if (typeof rootedIn === 'string' && rootedIn !== node.repo) add(rootedIn, node);
   }
   return routesByService;
 };
@@ -224,21 +237,29 @@ const buildUiIndex = (
 const buildProcedureIndex = (
   nodes: ReadonlyMap<string, GraphNode>,
   config: FlowatlasConfig,
+  servicesByEnv: ReadonlyMap<string, string[]>,
 ): ProcedureIndex => {
   const byService = new Map<string, Map<string, GraphNode>>();
+  /** Each procedure by where it is declared, for a caller that named it by its value (P58). */
+  const bySite = new Map<string, GraphNode>();
   for (const node of nodes.values()) {
     if (!isProcedureEntry(node)) continue;
     const declared = byService.get(node.repo) ?? new Map<string, GraphNode>();
     declared.set(String(node.meta?.['key']), node);
     byService.set(node.repo, declared);
+    if (node.file !== undefined && node.line !== undefined) bySite.set(`${node.repo}\0${node.file}:${node.line}`, node);
   }
   const names = serviceNamesOf(config);
   const targets = new Map<string, string[]>();
+  const targetByEnv = new Map<string, string>();
   for (const service of config.services) {
     targets.set(
       service.name,
       [...new Set(Object.values(service.apiTarget ?? {}).map((target) => names.get(target) ?? target))].sort(cmp),
     );
+    for (const [env, target] of Object.entries(service.apiTarget ?? {})) {
+      targetByEnv.set(`${service.name}\0${env}`, names.get(target) ?? target);
+    }
   }
   const declaring = [...byService.keys()].sort(cmp);
   const none = new Map<string, GraphNode>();
@@ -246,15 +267,24 @@ const buildProcedureIndex = (
     proceduresOf: (service) => byService.get(service) ?? none,
     targetsOf: (service) => targets.get(service) ?? [],
     services: () => declaring,
+    declaredAt: (service, site) => bySite.get(`${service}\0${site}`),
+    targetOf: (service, env) => targetByEnv.get(`${service}\0${env}`),
+    claimantsOf: (env) => servicesByEnv.get(env) ?? [],
   };
 };
 
 /**
  * The edge a request for a procedure becomes.
  *
- * `static` whichever of the two ways found it: the path was read in full at the
- * call and matched letter for letter, and the service was either the caller's
- * own or one the configuration named. Nothing about it was guessed.
+ * `static` whichever way found it: the path was read in full at the call and
+ * matched letter for letter, and the service was the caller's own, one the
+ * configuration named, or the one the link's address names. Nothing about it
+ * was guessed - except where that address was placed by a value the
+ * deployment does not give, which is as sure as the value (P77, P242).
+ *
+ * It carries what the caller hands and reads back where the caller typed
+ * them (P247), as a request's edge carries its body and response, so the
+ * contract check compares a procedure's two ends as it compares a route's.
  */
 const procedureEdge = (
   call: GraphNode,
@@ -263,11 +293,85 @@ const procedureEdge = (
   from: call.id,
   to: outcome.entry.id,
   type: 'hits',
-  confidence: boundedByRoute('static', outcome.entry),
+  confidence: boundedByRoute(outcome.confidence ?? 'static', outcome.entry),
   ...(call.file === undefined ? {} : { file: call.file }),
   ...(call.line === undefined ? {} : { line: call.line }),
-  meta: { via: outcome.via, targetService: outcome.targetService },
+  ...(typeof call.meta?.['inputType'] === 'string' ? { params: [call.meta['inputType'] as string] } : {}),
+  ...(typeof call.meta?.['outputType'] === 'string' ? { returns: call.meta['outputType'] as string } : {}),
+  meta: {
+    via: outcome.via,
+    targetService: outcome.targetService,
+    ...(outcome.baseUrl === undefined ? {} : takenMeta(outcome.baseUrl)),
+  },
 });
+
+/**
+ * Where a procedure client's link sends, by the reading every request's
+ * address gets (P242).
+ *
+ * A server's link rooted at a setting is resolved as a request between
+ * services rooted at it is - a probe of the same request with no path, so
+ * only the service is asked of it: the setting's claimant, the function URL
+ * or value it is given, a third party. A link that writes a host is placed by
+ * the hosts services are reached at. A browser's link rooted at a setting is
+ * left to the key its `apiTarget` maps, which the procedure resolution asks
+ * itself (P58), and a host that names no service leaves it to the same.
+ */
+const procedureAddressLookup = (
+  index: RouteIndex,
+  serviceAtHost: NonNullable<UiIndex['serviceAtHost']>,
+): NonNullable<ProcedureIndex['addressOf']> => (call) => {
+  const link = call.meta?.['link'];
+  if (link === null || typeof link !== 'object') return undefined;
+  const { baseUrlEnv, baseUrlDefault, host } = link as Record<string, unknown>;
+  const server = call.type === 'http_out';
+  if (typeof baseUrlEnv === 'string') {
+    if (!server) return undefined;
+    const probe: GraphNode = {
+      ...call,
+      meta: { method: 'POST', baseUrlEnv, ...(typeof baseUrlDefault === 'string' ? { baseUrlDefault } : {}) },
+    };
+    const { outcome, baseUrl } = resolveCall(probe, index);
+    const service = aimOf(outcome);
+    if (service !== undefined) {
+      return {
+        kind: 'service',
+        service,
+        confidence: baseUrl === undefined || baseUrl.deployed ? 'static' : 'heuristic',
+        ...(baseUrl === undefined ? {} : { baseUrl }),
+      };
+    }
+    if (outcome.kind === 'external') {
+      return { kind: 'external', ...(outcome.host === undefined ? {} : { host: outcome.host }), ...(baseUrl === undefined ? {} : { baseUrl }) };
+    }
+    const finding = findingFor(outcome);
+    // The values a setting nobody claims was found with, where they named no
+    // service: what they name is evidence of the repository that is not here
+    // (P122, P247), as for any request rooted at it.
+    const values =
+      outcome.kind === 'unknownEnv' && outcome.values !== undefined
+        ? [...new Set(outcome.values.values.map((found) => found.value))].sort()
+        : [];
+    return finding === undefined ? undefined : { kind: 'unplaced', finding, ...(values.length === 0 ? {} : { values }) };
+  }
+  if (typeof host === 'string') {
+    const found = serviceAtHost(host);
+    if (found?.kind === 'service') return { kind: 'service', service: found.service, confidence: found.sure ? 'static' : 'heuristic' };
+    // Two services listen where the link sends (P250).
+    if (found?.kind === 'shared') return { kind: 'unplaced', finding: portSharedFinding(found.port, found.said) };
+    return server ? { kind: 'external', host } : undefined;
+  }
+  return undefined;
+};
+
+/** What a server's request for a procedure counts under in the report, by how it ended (P242). */
+const PROCEDURE_COUNTED: Readonly<Record<Exclude<ProcedureOutcome['kind'], 'linked'>, keyof LinkReport['httpOut']>> = {
+  dynamic: 'dynamic',
+  noProcedure: 'noRoute',
+  ambiguous: 'ambiguous',
+  external: 'external',
+  unplaced: 'unknownEnv',
+};
 
 /**
  * A join edge may not claim more than the weakest of the two ends it rests on.
@@ -319,6 +423,10 @@ const boundedByMount = (confidence: Confidence, mountAssumed: readonly string[] 
     ? confidence
     : 'heuristic';
 
+/** What an edge joined by the port a server listens on carries: where the code starts it there (P250). */
+const listensMeta = (listening: Listening | undefined): Record<string, unknown> =>
+  listening === undefined ? {} : { listensAt: whereListening(listening) };
+
 /** What an edge across a mount taken as empty carries, so a reader of the edge alone can see it. */
 const mountMeta = (mountAssumed: readonly string[] | undefined): Record<string, unknown> =>
   mountAssumed === undefined ? {} : { mountAssumedEmpty: [...mountAssumed] };
@@ -342,13 +450,17 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
   // A worker's binding names the worker it reaches in its deployment, and the
   // path was read in full to be matched at all (P91).
   serviceBinding: () => 'static',
+  // A host written in the call that the configuration places (P244); one only
+  // setting files place is bounded below, in the edge.
+  host: () => 'static',
 };
 
 /** The edge a resolved call becomes. */
 const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>, baseUrl?: FoundValue): GraphEdge => {
   const params = call.meta?.['bodyType'];
   const returns = call.meta?.['responseType'];
-  const joinedAs = baseUrl?.deployed === true ? 'static' : JOINED_AS[outcome.via](call);
+  const joinedAs =
+    outcome.hostFromFiles === true ? 'heuristic' : baseUrl?.deployed === true ? 'static' : JOINED_AS[outcome.via](call);
   return {
     from: call.id,
     to: outcome.entry.id,
@@ -361,6 +473,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
     meta: {
       via: outcome.via,
       targetService: outcome.entry.repo,
+      ...listensMeta(outcome.listening),
       ...(outcome.via === 'functionUrl' ? { variable: call.meta?.['baseUrlEnv'] } : {}),
       ...(baseUrl === undefined ? {} : takenMeta(baseUrl)),
       ...mountMeta(outcome.mountAssumed),
@@ -390,6 +503,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
   const guessed =
     call.meta?.['guessed'] === true ||
     outcome.via === 'unique-route' ||
+    outcome.hostFromFiles === true ||
     (outcome.via === 'base-url-value' && outcome.baseUrl?.deployed !== true);
   return {
     from: call.id,
@@ -406,6 +520,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
     meta: {
       via: outcome.via,
       targetService: outcome.targetService,
+      ...listensMeta(outcome.listening),
       ...mountMeta(outcome.mountAssumed),
       ...(outcome.runnersUp.length === 0
         ? {}
@@ -451,6 +566,46 @@ const aimOf = (outcome: CallOutcome): string | undefined => {
   return undefined;
 };
 
+/**
+ * The service a subgraph's address reaches (P241), found as a request's is
+ * (D2): an address written out by the hosts services are known at (P77), one
+ * rooted at a setting by the resolution a request between services gets -
+ * the setting's claimant, then the values it is given. Never by the name the
+ * gateway gives the subgraph.
+ */
+const subgraphServiceOf = (
+  route: GatewayRouteMeta,
+  gateway: GraphNode,
+  index: RouteIndex,
+  hosts: PortIndex,
+): RouteAnswer => {
+  if (route.unread !== undefined) return { why: route.unread === '' ? 'no address is written for it' : `its address (${route.unread}) is built at run time` };
+  if (route.baseUrlEnv === undefined) {
+    // A port on this machine is the service whose server listens on it (P245),
+    // by the one lookup every request to this machine is asked of (P250).
+    const local = route.url === undefined ? undefined : atLocalPort(route.url, hosts);
+    if (local?.kind === 'service') return { service: local.service, confidence: local.sure ? 'static' : 'heuristic' };
+    if (local?.kind === 'shared') return { why: portSharedFinding(local.port, local.said).message };
+    const at = route.url === undefined ? undefined : servicesAt(route.url, hosts.all);
+    if (Array.isArray(at) && at.length === 1) return { service: at[0] as string, confidence: 'static' };
+    if (Array.isArray(at)) return { why: `its host names ${at.join(' and ')}, not one service` };
+    return { why: `no configured service is reached at ${route.host ?? route.url ?? 'that address'}` };
+  }
+  const call: GraphNode = {
+    id: `${gateway.id}#subgraph:${route.name}`,
+    type: 'http_out',
+    label: `subgraph ${route.name}`,
+    repo: gateway.repo,
+    file: route.file,
+    line: route.line,
+    meta: { method: 'POST', path: route.path, baseUrlEnv: route.baseUrlEnv, ...(route.baseUrlDefault === undefined ? {} : { baseUrlDefault: route.baseUrlDefault }) },
+  };
+  const { outcome, baseUrl } = resolveCall(call, index);
+  const service = aimOf(outcome);
+  if (service === undefined) return { why: findingFor(outcome)?.message ?? `nothing says which service ${route.baseUrlEnv} is` };
+  return { service, confidence: baseUrl === undefined || baseUrl.deployed ? 'static' : 'heuristic' };
+};
+
 const emptyHttpOut = (): LinkReport['httpOut'] => ({
   total: 0,
   linked: 0,
@@ -463,6 +618,52 @@ const emptyHttpOut = (): LinkReport['httpOut'] => ({
 });
 
 const emptyUi = (): LinkReport['ui'] => ({ total: 0, resolved: 0, unresolved: 0, byReason: {} });
+
+/** The hosts every service is reached at, and the ports their servers listen on (P77, P250). */
+const portIndexOf = (
+  config: FlowatlasConfig,
+  settings: Readonly<Record<string, RepoSettings>>,
+  nodes: ReadonlyMap<string, GraphNode>,
+): PortIndex => {
+  const configured = hostIndexOf(config, {});
+  return {
+    configured,
+    all: config.settingFiles.read === false ? configured : hostIndexOf(config, settings),
+    listening: listeningAt(nodes),
+  };
+};
+
+/**
+ * The one configured service a host is reached at (P239): by what the
+ * configuration says first, and by what the services' own setting files say
+ * where it says nothing. An address on this machine is asked of the ports the
+ * servers listen on too, and may be two services' (P250).
+ */
+const hostLookup = (hosts: PortIndex): NonNullable<UiIndex['serviceAtHost']> => {
+  const one = (found: ReturnType<typeof servicesAt>): string | undefined =>
+    Array.isArray(found) && found.length === 1 ? found[0] : undefined;
+  return (host) => {
+    const address = `http:${'/'.repeat(2)}${host}`;
+    const local = atLocalPort(address, hosts);
+    if (local !== undefined) return local;
+    const named = one(servicesAt(address, hosts.configured));
+    if (named !== undefined) return { kind: 'service', service: named, sure: true };
+    const filed = one(servicesAt(address, hosts.all));
+    return filed === undefined ? undefined : { kind: 'service', service: filed, sure: false };
+  };
+};
+
+/** Takes away a request's edge to a host found to be a configured service's, and the host where nothing else calls it. */
+const dropExternal = (nodes: Map<string, GraphNode>, edges: Map<string, GraphEdge>, from: string, apiId: string): void => {
+  let reached = false;
+  let dropped = false;
+  for (const [key, edge] of edges) {
+    if (edge.to !== apiId) continue;
+    if (edge.from !== from) reached = true;
+    else dropped = edges.delete(key) || dropped;
+  }
+  if (dropped && !reached) nodes.delete(apiId);
+};
 
 /**
  * The lookup a request rooted at a setting nobody claims asks of the values
@@ -600,11 +801,14 @@ export const linkGraphs = (
   config: FlowatlasConfig,
   options: LinkOptions = {},
 ): LinkResult => {
-  const merged = mergeGraphs(graphs, config);
+  // Before the merge: what one repository imports from another's outputs is
+  // renamed to what the other says it is, so the merge joins the two (P249).
+  const imported = joinImports(graphs);
+  const merged = mergeGraphs(imported.graphs, config);
   const { nodes, edges, types } = merged;
   // Before anything reads a route's address: a route hanging from another
   // repository's API only has its full path once both repositories are here.
-  const found: Unresolved[] = joinDeployments(nodes, edges, merged.unresolved);
+  const found: Unresolved[] = [...imported.rows, ...joinDeployments(nodes, edges, merged.unresolved)];
   // An address read from the environment, completed from the values each
   // function that runs it is deployed with; then every rule that takes its
   // channels by a pattern, matched against every channel, those included (P23).
@@ -625,6 +829,9 @@ export const linkGraphs = (
   const routesByService = routesByServiceOf(nodes);
   const servicesByEnv = servicesByEnvOf(config);
   const urls = functionUrlsOf(nodes, edges);
+  // Where every service is reached, its server's ports included, asked of
+  // every request with a host and of a gateway's subgraphs (P250).
+  const hosts = portIndexOf(config, settings, nodes);
   const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, true);
   const valuedUiBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, false);
   const index: RouteIndex = {
@@ -632,12 +839,17 @@ export const linkGraphs = (
     functionUrlsOf: (callId) => urls.get(callId) ?? [],
     ...(valuedBaseUrlOf === undefined ? {} : { baseUrlOf: valuedBaseUrlOf }),
     bindingOf: bindingLookup(config, settings),
+    serviceAtHost: hostLookup(hosts),
   };
   const uiIndex: UiIndex = {
     ...buildUiIndex(config, routesByService, servicesByEnv),
     ...(valuedUiBaseUrlOf === undefined ? {} : { baseUrlOf: valuedUiBaseUrlOf }),
+    serviceAtHost: hostLookup(hosts),
   };
-  const procedureIndex = buildProcedureIndex(nodes, config);
+  const procedureIndex: ProcedureIndex = {
+    ...buildProcedureIndex(nodes, config, servicesByEnv),
+    addressOf: procedureAddressLookup(index, hostLookup(hosts)),
+  };
 
   /** Where a finding happened; the finding itself says what and what to do. */
   const record = (call: GraphNode, finding: Finding): void => {
@@ -677,6 +889,10 @@ export const linkGraphs = (
   const joinUi = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>, path: string): void => {
     const edge = uiEdge(call, outcome);
     edges.set(edgeKey(edge), edge);
+    // The host was a configured service's, so it is no third party: the edge
+    // the reader drew to it, not knowing whose it was, goes (P239).
+    const host = call.meta?.['host'];
+    if (outcome.via === 'host' && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
     if (outcome.baseUrl !== undefined) {
       edge.meta = { ...edge.meta, ...takenMeta(outcome.baseUrl) };
       call.meta = { ...call.meta, ...takenMeta(outcome.baseUrl) };
@@ -691,6 +907,47 @@ export const linkGraphs = (
   for (const call of [...nodes.values()]) {
     if (call.type !== 'http_out') continue;
     httpOut.total += 1;
+
+    // A procedure a server asks another service for, joined on its path in
+    // the service its link's address names (P242), and counted with the
+    // requests between services it is.
+    if (call.kind === 'rpc') {
+      const outcome = resolveProcedureCall(call, procedureIndex);
+      if (outcome.kind === 'linked') {
+        const edge = procedureEdge(call, outcome);
+        edges.set(edgeKey(edge), edge);
+        call.meta = { ...call.meta, targetService: outcome.targetService };
+        if (outcome.baseUrl !== undefined) {
+          call.meta = { ...call.meta, ...takenMeta(outcome.baseUrl) };
+          tookValue(call, outcome.baseUrl, outcome.targetService);
+        }
+        httpOut.linked += 1;
+      } else {
+        httpOut[PROCEDURE_COUNTED[outcome.kind]] += 1;
+      }
+      if (outcome.kind === 'unplaced' && outcome.values !== undefined) call.meta = { ...call.meta, baseUrlValues: outcome.values };
+      if (outcome.kind === 'external' && outcome.host !== undefined) {
+        // A third party, drawn as one written in the call is, and as sure as
+        // the value it was found from where a value found it.
+        const apiId = makeExternalApiId(outcome.host);
+        if (!nodes.has(apiId)) {
+          nodes.set(apiId, { id: apiId, type: 'external_api', label: outcome.host, repo: call.repo, meta: { host: outcome.host } });
+        }
+        const edge: GraphEdge = {
+          from: call.id,
+          to: apiId,
+          type: 'calls',
+          confidence: outcome.baseUrl === undefined || outcome.baseUrl.deployed ? 'static' : 'heuristic',
+          ...(call.file === undefined ? {} : { file: call.file }),
+          ...(call.line === undefined ? {} : { line: call.line }),
+          ...(outcome.baseUrl === undefined ? {} : { meta: takenMeta(outcome.baseUrl) }),
+        };
+        edges.set(edgeKey(edge), edge);
+      }
+      const finding = procedureFindingFor(outcome, call);
+      if (finding !== undefined) record(call, finding);
+      continue;
+    }
 
     const { outcome, notes, alsoLinked, baseUrl } = resolveCall(call, index);
     for (const note of notes) record(call, note);
@@ -728,6 +985,10 @@ export const linkGraphs = (
     if (outcome.kind === 'linked') {
       const edge = callEdge(call, outcome, baseUrl);
       edges.set(edgeKey(edge), edge);
+      // The host was a configured service's, so it is no third party: the edge
+      // the reader drew to it goes, as a browser request's does (P244).
+      const host = call.meta?.['host'];
+      if (outcome.via === 'host' && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
       for (const also of alsoLinked ?? []) {
         const more = callEdge(call, {
           kind: 'linked',
@@ -743,8 +1004,12 @@ export const linkGraphs = (
       if (outcome.via !== 'functionUrl' && answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
     } else {
       // A binding nothing is found behind is counted with the settings no
-      // service claims: both are a name the configuration does not place.
-      httpOut[outcome.kind === 'unknownBinding' ? 'unknownEnv' : outcome.kind] += 1;
+      // service claims: both are a name the configuration does not place. Two
+      // services on one port are two answers, as two routes are (P250).
+      httpOut[outcome.kind === 'unknownBinding' ? 'unknownEnv' : outcome.kind === 'portShared' ? 'ambiguous' : outcome.kind] += 1;
+      // The port is the project's own services', so no third party (P250).
+      const host = call.meta?.['host'];
+      if (outcome.kind === 'portShared' && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
     }
     const partial = nearMissOf(call, outcome);
     if (partial !== undefined) partials.push(partial);
@@ -865,6 +1130,9 @@ export const linkGraphs = (
     }
 
     ui.unresolved += 1;
+    // Two of the project's own services listen on the port: no third party either (P250).
+    const sharedHost = call.meta?.['host'];
+    if (outcome.kind === 'portShared' && typeof sharedHost === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(sharedHost));
     const reason = uiReasonOf(outcome);
     if (reason !== undefined) ui.byReason[reason] = (ui.byReason[reason] ?? 0) + 1;
     if (outcome.kind === 'dynamic') {
@@ -878,6 +1146,14 @@ export const linkGraphs = (
   }
 
   found.push(...taken.values());
+
+  // A federation gateway's routes to its subgraphs and its composition, before
+  // any request is planned through it (P241).
+  const routing = routeGateways(nodes, edges, (route, gateway) => subgraphServiceOf(route, gateway, index, hosts));
+  found.push(...routing.rows);
+
+  // The fields a GraphQL request selects, once the request has joined an endpoint (P232).
+  found.push(...joinGraphqlFields(nodes, edges, routing.plans));
 
   // Whatever names an entry by its deployed name alone, joined to the entry in
   // whichever service declares it.

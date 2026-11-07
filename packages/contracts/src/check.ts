@@ -37,6 +37,7 @@ import {
   type UncheckedEdge,
   type UncheckedReason,
 } from './types.js';
+import { graphqlFindings } from './graphql.js';
 
 /** The annotation that says a difference here is deliberate. */
 const IGNORE_MARKER = 'ContractIgnore';
@@ -656,7 +657,7 @@ export const checkContracts = (
     const verdict = judge(lookup, exchange, options);
     if (verdict.blocked !== undefined) {
       const { reason, subject, detail } = verdict.blocked;
-      const note = uncheckedNote(reason, subject, exchange.direction, detail, exchange.described === true, exchange.statusUnknown);
+      const note = uncheckedNote(reason, subject, exchange.direction, detail, exchange.described === true, exchange.statusUnknown, exchange.procedure === true);
       unchecked.push({
         edge: exchange.edge,
         edgeKey: exchange.edgeKey,
@@ -708,6 +709,13 @@ export const checkContracts = (
       else if (finding.severity === 'warning') summary.warnings += 1;
       else summary.infos += 1;
     }
+  }
+
+  // What a GraphQL request selects, against the schema of the service it reached (P232).
+  for (const finding of graphqlFindings(lookup)) {
+    if (finding.ignored) continue;
+    findings.push(finding);
+    summary.errors += 1;
   }
 
   summary.edges = edges.length;

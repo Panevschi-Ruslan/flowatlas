@@ -1,6 +1,6 @@
 import type { GraphNode } from '@flowatlas/core';
 import type { GraphDb } from '@flowatlas/linker';
-import { isResolved, resolveEntryRef } from '@flowatlas/mcp';
+import { isResolved, resolveEntryRef, resolveSymbol as resolveSymbolRef } from '@flowatlas/mcp';
 import { notFound } from '../exit.js';
 
 /** How many near misses are worth printing when nothing matched. */
@@ -32,34 +32,6 @@ const nearest = (db: GraphDb, text: string, types: readonly string[]): string[] 
 };
 
 /**
- * `event:order.created`, `cron:nightly`, `workflow:loan-approval`: a kind, then
- * the key it is registered under.
- */
-const KIND_REF = /^(event|cron|rpc|workflow):(.+)$/;
-
-/**
- * Entries named by their kind and key rather than by a path.
- *
- * A channel handler and a scheduled job have no route to be named by, so this
- * is how they are asked for. It parses a reference and nothing else: what
- * happens after an entry is found is the same whatever kind it is (I8).
- */
-const byKindRef = (db: GraphDb, ref: string): GraphNode[] => {
-  const match = KIND_REF.exec(ref.trim());
-  if (match === null) return [];
-  const kind = match[1] as string;
-  const key = (match[2] as string).trim();
-  return db
-    .nodesByType('entry', kind)
-    .filter(
-      (entry) =>
-        String(entry.meta?.['pattern'] ?? entry.meta?.['key'] ?? '') === key ||
-        entry.label === key ||
-        entry.label === `${kind} ${key}`,
-    );
-};
-
-/**
  * The entry someone means, or a stop listing the ones they might have meant.
  *
  * A route, a bot key, a channel name and a full id all arrive here and leave as
@@ -71,7 +43,7 @@ export const resolveEntry = (db: GraphDb, ref: string, service?: string): GraphN
   const found = resolveEntryRef(db, ref);
   if (isResolved(found)) return found.node;
 
-  const matched = found.candidates.length > 0 ? found.candidates : byKindRef(db, ref);
+  const matched = found.candidates;
   const candidates =
     service === undefined || matched.length < 2
       ? matched
@@ -95,29 +67,21 @@ export const resolveEntry = (db: GraphDb, ref: string, service?: string): GraphN
 };
 
 /**
- * The symbol someone means.
+ * The symbol someone means, by the one resolution every tool uses (P94, P229).
  *
- * A full id always wins. A bare `Class.method` is accepted only while it names
- * exactly one node, since answering for the wrong service's
- * `OrdersService.create` would be worse than asking which one was meant.
+ * A full id always wins; then an entry said aloud, `POST /orders/123` as much
+ * as `workflow:loan-approval`; then the only best near name. A bare
+ * `Class.method` naming nodes in two services is never settled by picking
+ * one, since answering for the wrong service's `OrdersService.create` would
+ * be worse than asking which one was meant: `--service` says which.
  */
 export const resolveSymbol = (db: GraphDb, symbol: string, service?: string): GraphNode => {
   const trimmed = symbol.trim();
-  const exact = db.node(trimmed);
-  if (exact !== undefined) return exact;
-
-  const pool = db
-    .search(trimmed, { limit: 200 })
-    .filter((node) => service === undefined || node.repo === service);
-  // An exact label is what someone typing `Class.method` means; the wider
-  // search is only there for when that finds nothing.
-  const named = pool.filter((node) => node.label === trimmed);
-  const matches = named.length > 0 ? named : pool;
-
-  if (matches.length === 1) return matches[0] as GraphNode;
-  if (matches.length > 1) {
-    throw notFound(`${JSON.stringify(trimmed)} matches ${matches.length} symbols`, [
-      ...listed(matches.slice(0, NEAREST)),
+  const found = resolveSymbolRef(db, trimmed, service);
+  if (isResolved(found)) return found.node;
+  if (found.candidates.length > 0) {
+    throw notFound(`${JSON.stringify(trimmed)} matches ${found.candidates.length} symbols`, [
+      ...listed(found.candidates.slice(0, NEAREST)),
       'narrow it with --service, or pass a full node id',
     ]);
   }

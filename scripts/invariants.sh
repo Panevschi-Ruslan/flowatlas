@@ -47,7 +47,8 @@ status=0
 # a service is deployed are read by `packages/terraform` and an entry adapter,
 # and the core's half of it - the reader interface, the `invoke` kind, the
 # module-description schema - says "deployment", "function" and "module".
-FORBIDDEN='typeorm|prisma|mongoose|mikro-orm|sequelize|knex|drizzle|kafka|rabbit|amqp|bullmq|ioredis|telegraf|angular|axios|express|fastify|react|svelte|vue|nuxt|remix|terraform|hcl|lambda|middy|apigateway|aws|serverless|cloudformation|cdk'
+# GraphQL is a protocol the core may name, as it names HTTP (P232); its libraries are not.
+FORBIDDEN='typeorm|prisma|mongoose|mikro-orm|sequelize|knex|drizzle|kafka|rabbit|amqp|bullmq|ioredis|telegraf|angular|axios|express|fastify|react|svelte|vue|nuxt|remix|terraform|hcl|lambda|middy|apigateway|aws|serverless|cloudformation|cdk|apollo|urql|yoga|mercurius|type-graphql|graphql-request'
 
 check_I1() {
   echo "I1  core is technology-agnostic"

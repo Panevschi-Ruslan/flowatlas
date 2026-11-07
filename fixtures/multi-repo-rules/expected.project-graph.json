@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T11:31:42.416Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:38:29.827Z",
   "services": [
     {
       "name": "gateway",
@@ -1661,7 +1661,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/main.ts",
+            "line": 15
+          }
+        ]
       }
     },
     {
@@ -1687,7 +1694,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -1712,7 +1726,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {

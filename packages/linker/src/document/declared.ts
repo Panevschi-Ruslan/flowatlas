@@ -28,6 +28,13 @@ export interface ReadDocumentOptions {
   documentPath: string;
   /** Fixed timestamp, for reproducible output. */
   generatedAt?: string;
+  /**
+   * The text of a file beside the document, by its path relative to the
+   * document's directory, or undefined where there is none: a router's
+   * `router.yaml` beside its supergraph, the schema files a rover
+   * configuration names (P241).
+   */
+  readBeside?: (path: string) => string | undefined;
 }
 
 export interface ReadDocumentResult {

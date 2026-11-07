@@ -242,14 +242,14 @@ describe('runInit', () => {
 
   it('names a framework it has no reader for, and says the repository is left out', async () => {
     const { root, out } = makeWorkspace();
-    makeRepo(root, 'api', { name: 'api', dependencies: { nuxt: '3.14.0' } });
+    makeRepo(root, 'api', { name: 'api', dependencies: { astro: '4.16.0' } });
     const messages: string[] = [];
     const result = await runInit({ dir: root, out, yes: true, print: (m) => messages.push(m) });
     // The configuration still holds it: a repository nobody can read is still a
     // repository of this project, and `type` is an open string.
     expect(result.config.services[0]).toEqual({ name: 'api', repo: '../api', type: UNKNOWN_TYPE });
     const said = messages.join('\n');
-    expect(said).toContain('No reader yet for: api (Nuxt)');
+    expect(said).toContain('No reader yet for: api (Astro)');
     expect(said).toContain('contribute nothing to the graph');
     expect(said).not.toContain('Could not tell the type of');
   });
@@ -329,7 +329,7 @@ describe('init over many repositories it cannot read', () => {
     const { root, out } = makeWorkspace();
     makeRepo(root, 'api', { name: 'api', dependencies: { '@nestjs/core': '10.0.0' } });
     for (const name of ['catalogue-web', 'loans-web', 'holds-web']) {
-      makeRepo(root, name, { name, dependencies: { vue: '3.4.0' } });
+      makeRepo(root, name, { name, dependencies: { 'solid-js': '1.9.0' } });
     }
     for (const name of ['scripts', 'ops', 'mailer', 'reports']) {
       makeRepo(root, name, { name, dependencies: { lodash: '4.0.0', dayjs: '1.11.0' } });
@@ -346,7 +346,7 @@ describe('init over many repositories it cannot read', () => {
     expect(result.config.services).toHaveLength(9);
     expect(said).toContain('  api  ../api  nestjs');
     expect(said).toContain('  and 8 that nothing here reads:');
-    expect(said).toContain('No reader yet for 3 repositories: Vue (3).');
+    expect(said).toContain('No reader yet for 3 repositories: Solid (3).');
     expect(said).toContain('Could not tell the type of 5 repositories. Of those:');
     expect(said).toContain('  5 have no tsconfig.json, so may hold no TypeScript at all');
     expect(said).toContain('  1 declare no dependency at all');
@@ -361,7 +361,7 @@ describe('init over many repositories it cannot read', () => {
     const messages: string[] = [];
     await runInit({ dir: root, out, yes: true, mcp: false, listUnknown: true, print: (m) => messages.push(m) });
     const said = messages.join('\n');
-    expect(said).toContain('No reader yet for: catalogue-web (Vue), holds-web (Vue), loans-web (Vue).');
+    expect(said).toContain('No reader yet for: catalogue-web (Solid), holds-web (Solid), loans-web (Solid).');
     expect(said).toContain('Could not tell the type of: mailer, ops, palette, reports, scripts.');
     expect(said).not.toContain('Of those');
   });

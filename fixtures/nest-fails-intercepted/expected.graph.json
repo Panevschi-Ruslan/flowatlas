@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "nest-fails-intercepted",
-  "generatedAt": "2026-10-18T10:34:59.152Z",
+  "generatedAt": "2026-11-07T17:38:55.230Z",
   "nodes": [
     {
       "id": "entry:nest-fails-intercepted:http:GET:/books/:param",
@@ -794,7 +794,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 13
+          }
+        ]
       }
     }
   ],

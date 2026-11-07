@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform:
+  - AWS::Serverless-2016-10-31
+  - ShelfMarks
+Description: A tool of the lending desk, rewritten by a macro of the library's own.
+
+Resources:
+  SweepFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: library-sweep
+      Runtime: nodejs20.x
+      CodeUri: src/
+      Handler: sweep.handler

@@ -1,0 +1,16 @@
+service: jobs-tools
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-west-1
+
+# Not in the compose file: deployed on its own, reading the shared queue by its stack.
+functions:
+  sweep:
+    handler: src/sweep.handler
+    environment:
+      JOBS_QUEUE_URL: ${cf:jobs-shared-dev.JobsQueueUrl}
+    events:
+      - schedule: rate(1 hour)

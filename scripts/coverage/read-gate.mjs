@@ -83,8 +83,9 @@ const FIXTURES = join(ROOT, 'fixtures');
  * and the tool records the binding, and which binding it decided this one is is
  * not this gate's business.
  *
- * `perFile` is false for exactly one family, and the reason is a property of the
- * graph model rather than a concession. A table node's identity is
+ * `perFile` is false for two families, and the reason is a property of the
+ * graph model rather than a concession; `requests` says its own beside its
+ * entry, and `models` is this. A table node's identity is
  * `table:<repo>#<Name>` and it carries no file at all: the model asks where a
  * table is *used* and never where it was declared. There is therefore no
  * file-level answer to give about `models`, and a gate that demanded one would
@@ -160,13 +161,25 @@ const GATED = {
       'procedure-branch-unread',
       'procedure-key-dynamic',
       'entry-procedures-description-inactive',
+      'procedure-prefix-unread',
+      'procedure-contract-unread',
+      // A route a lower layer of the application serves, which the higher one's
+      // takes the place of (P243).
+      'framework-layer-overridden',
+      // A template whose functions are declared and deliberately not drawn: the
+      // copy a package command wrote of another, or types of a transform the
+      // template does not name (P248).
+      'deployment-copy-not-read',
+      'deployment-plugin-unread',
+      // A route a module adds whose address or handler is written as code (P251).
+      'framework-module-unread',
     ],
     perFile: true,
   },
   screens: {
     types: ['ui_component'],
     edges: [],
-    reasons: ['route-config-unread', 'route-loader-unread'],
+    reasons: ['route-config-unread', 'route-loader-unread', 'framework-layer-overridden'],
     perFile: true,
   },
   clicks: {
@@ -199,6 +212,26 @@ const GATED = {
       'sql-parse-failed',
     ],
     perFile: true,
+  },
+  // A request is recorded where it is written, which is often not where the
+  // probe sees it: a wrapper's `fetch` is read once per caller and the node
+  // sits at the caller (P91). So no file-level answer can be asked of it, and
+  // the family is held to strength 1, as `models` is (P244). `bases` (client
+  // instances and request interceptors) is not here at all: neither is a node,
+  // and the requests they stand in front of are this family's.
+  requests: {
+    types: ['ui_api_call', 'http_out'],
+    edges: [],
+    reasons: [
+      'api-path-dynamic',
+      'api-method-dynamic',
+      'api-base-override-unread',
+      'api-client-base-unread',
+      'api-base-unknown',
+      'api-client-unread',
+      'dynamic-http-url',
+    ],
+    perFile: false,
   },
   models: { types: ['table'], edges: [], reasons: [], perFile: false },
 };
@@ -296,6 +329,28 @@ export const EXEMPT = [
       'by `variants/linked`, which configures it and whose graph the CLI snapshots ' +
       'build on their own. Reading it here would be the very configuration the ' +
       'fixture exists to be without.',
+  },
+  {
+    where: 'next-hollow',
+    path: '(anywhere)',
+    family: 'requests',
+    why:
+      'The fixture holds a browser repository no frontend adapter claims, on purpose: ' +
+      '`widget/src/panel.ts` writes a request so that a reader which did claim it would ' +
+      'have something to find, and the fixture exists to keep `build` and `doctor` naming ' +
+      'the service that contributed nothing. The request family added by P244 is the first ' +
+      'to see that request from the counting side; the silence is the fixture, not a gap.',
+  },
+  {
+    where: 'nuxt-modules',
+    path: 'dev-layer/**',
+    family: 'screens',
+    why:
+      'A layer only the development build extends (`$development.extends`, P251). The ' +
+      "graph is the production build's, and the layer is said in the " +
+      '`framework-environment-differs` note at the configuration rather than read: ' +
+      'reading it would draw a page production never shows. The fixture holds the ' +
+      'layer there to keep that note honest, and the silence is the reading.',
   },
   // A measured target's exemptions are not here. They name files of a
   // repository this project does not own, so they live with the target itself,
@@ -536,6 +591,25 @@ const familiesOfEdge = (edge, nodes) => {
 };
 
 /**
+ * The files a folded row's samples name (P251): `meta.causes[].samples`,
+ * which the builder keeps for a row below `action` it folded over several
+ * sites. The builder keeps three per cause, so a fourth site of one reason in
+ * one repository is still read from nowhere but its count.
+ */
+const sampledFiles = (row) => {
+  const causes = Array.isArray(row.meta?.causes) ? row.meta.causes : [];
+  return [
+    ...new Set(
+      causes.flatMap((cause) =>
+        (Array.isArray(cause?.samples) ? cause.samples : [])
+          .map((sample) => sample?.file)
+          .filter((file) => typeof file === 'string'),
+      ),
+    ),
+  ];
+};
+
+/**
  * What one graph says about each file: which families something in it answers.
  *
  * `toPath` turns a path as the graph spells it into a path as the counting rule
@@ -583,7 +657,20 @@ const readingOf = (graph, toPath) => {
   }
   for (const row of graph.unresolved ?? []) {
     if (typeof row.file !== 'string') continue;
-    place('row', row.file, row.service, SPOKEN_FOR_BY.reasons.get(row.reason) ?? []);
+    const families = SPOKEN_FOR_BY.reasons.get(row.reason) ?? [];
+    place('row', row.file, row.service, families);
+    // A row below `action` is folded to one per reason, and the sites it
+    // stands for are its samples (P251): each speaks for its own file, or a
+    // second overridden route in one repository would read as never read.
+    if (declared.has(row.service)) continue;
+    for (const file of sampledFiles(row)) {
+      if (file === row.file) continue;
+      const path = toPath(file, row.service);
+      if (path === undefined) continue;
+      const found = answered.get(path) ?? new Set();
+      for (const family of families) found.add(family);
+      answered.set(path, found);
+    }
   }
   // An edge recorded at a site is the reader saying it read that line, even
   // where the node it drew from lives in another file - in the service that

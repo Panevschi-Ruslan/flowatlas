@@ -1,0 +1,141 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-07T17:39:00.786Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:worker#src/billing.client.ts:28:12",
+        "to": "entry:billing:rpc:invoices.create",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.client.ts:28:12|hits|entry:billing:rpc:invoices.create",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:billing:rpc:invoices.create declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/billing.client.ts:28:12",
+        "to": "entry:billing:rpc:invoices.create",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.client.ts:28:12|hits|entry:billing:rpc:invoices.create",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/billing.client.ts:BillingClient.invoice reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/billing.client.ts:32:12",
+        "to": "entry:billing:rpc:invoices.byOrder",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.client.ts:32:12|hits|entry:billing:rpc:invoices.byOrder",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:billing:rpc:invoices.byOrder declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/billing.client.ts:32:12",
+        "to": "entry:billing:rpc:invoices.byOrder",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/billing.client.ts:32:12|hits|entry:billing:rpc:invoices.byOrder",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/billing.client.ts:BillingClient.invoicesOf reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:15:12",
+        "to": "entry:orders:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:15:12|hits|entry:orders:rpc:orders.place",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:orders:rpc:orders.place declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:15:12",
+        "to": "entry:orders:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:15:12|hits|entry:orders:rpc:orders.place",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/orders.client.ts:OrdersClient.place reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:19:12",
+        "to": "entry:orders:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:19:12|hits|entry:orders:rpc:orders.get",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:orders:rpc:orders.get declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/orders.client.ts:19:12",
+        "to": "entry:orders:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/orders.client.ts:19:12|hits|entry:orders:rpc:orders.get",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/orders.client.ts:OrdersClient.find reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/refunds.ts:12:53",
+        "to": "entry:billing:rpc:invoices.refund",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/refunds.ts:12:53|hits|entry:billing:rpc:invoices.refund",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:billing:rpc:invoices.refund declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/refunds.ts:12:53",
+        "to": "entry:billing:rpc:invoices.refund",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/refunds.ts:12:53|hits|entry:billing:rpc:invoices.refund",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/refunds.ts:refundInvoice reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 10,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

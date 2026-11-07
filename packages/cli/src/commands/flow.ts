@@ -8,6 +8,7 @@ import { FLOW_FORMATS, withQueryOptions, type QueryOptions } from '../options.js
 import { present, processIo, settingsFor, type QueryIo } from '../query/answer.js';
 import { resolveEntry } from '../query/refs.js';
 import { SEQUENCE_WALK_DETAIL, sequenceDepth, sitesFrom, stopsIn } from '../query/sequence.js';
+import { askedCommand } from '../query/asked.js';
 
 export interface FlowOptions extends QueryOptions {
   /** `service` (the default) or `class`: what a participant of `--format sequence` is (P116). */
@@ -31,7 +32,7 @@ export const sequenceDetailOf = (value: string | undefined): SequenceDetail => {
  * and are walked by the same code; the only thing that knows which is which is
  * the glyph at the start of the line (I8).
  */
-export const runFlow = (ref: string, options: FlowOptions, io: QueryIo = processIo): void => {
+const answerFlow = (ref: string, options: FlowOptions, io: QueryIo = processIo): void => {
   const settings = settingsFor(options, io, FLOW_FORMATS);
   const db = openDbFromOptions(settings);
   // Closed when the answer is out (P199): on Windows an open database can
@@ -73,6 +74,10 @@ export const runFlow = (ref: string, options: FlowOptions, io: QueryIo = process
     db.close();
   }
 };
+
+/** flow, logged when the question log is on (P235). */
+export const runFlow = (ref: string, options: FlowOptions, io: QueryIo = processIo): void =>
+  askedCommand('flow', { entry: ref, service: options.service }, options, () => answerFlow(ref, options, io));
 
 export const registerFlow = (program: Command): void => {
   withQueryOptions(

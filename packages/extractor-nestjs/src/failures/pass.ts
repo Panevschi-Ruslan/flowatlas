@@ -26,7 +26,17 @@ import {
   throughInterceptors,
   type InterceptorInFront,
 } from './interceptors.js';
-import { GUARD_REFUSAL, HTTP_EXCEPTION, knownRefusal, NEST_PACKAGES, type Refusal } from './statuses.js';
+import {
+  DECLARED_ERRORS,
+  ERROR_FACTORY_FRAMEWORKS,
+  GUARD_REFUSAL,
+  HTTP_EXCEPTION,
+  INPUT_REFUSALS,
+  knownRefusal,
+  NEST_PACKAGES,
+  PROCEDURE_PACKAGES,
+  type Refusal,
+} from './statuses.js';
 import { classNamed, throwsIn } from './throws.js';
 
 /** The edges control goes along from a way in to the code that can fail. */
@@ -213,7 +223,9 @@ const checkFailures = (node: GraphNode, edge: GraphEdge, reading: Reading, entry
     return [...refusals.map((refusal) => refusalAt(refusal, node, edge, 'guard')), ...own];
   }
   if (node.type === 'pipe') return known === undefined ? own : [refusalAt(known, node, edge, 'pipe'), ...own];
-  return own;
+  // A middleware that is a function rather than a class is its own body: what
+  // it throws is read there (P58), as a procedure's `.use(fn)` is drawn.
+  return own.length > 0 ? own : (reading.throws.get(node.id) ?? []);
 };
 
 /** `ParseIntPipe` or `new ParseIntPipe(...)` handed to `@Param`, as a check. */
@@ -364,12 +376,21 @@ const withoutStatus = ({ status: _status, assumed: _assumed, declared: _declared
  * because what a way in reaches is what the failures are read along.
  */
 export const failuresPass = definePass('failures', (ctx: NestExtractContext) => {
-  if (!hasAnyDependency(readPackageJson(ctx.repoDir) ?? {}, NEST_PACKAGES)) return;
+  const manifest = readPackageJson(ctx.repoDir) ?? {};
+  const every = hasAnyDependency(manifest, [...NEST_PACKAGES, ...ERROR_FACTORY_FRAMEWORKS]);
+  // A service with procedures and none of those has its procedures read and
+  // nothing else: theirs is the framework that answers a throw (P58).
+  const procedures = hasAnyDependency(manifest, PROCEDURE_PACKAGES);
+  if (!every && !procedures) return;
   const interceptors = readInterceptors(ctx);
   const reading = read(ctx, interceptors.mappingThrows);
   const filters = readFilters(ctx);
   for (const record of ctx.entries) {
-    const http = record.kind === 'http';
+    const procedure = isProcedure(record.node);
+    if (!every && !procedure) continue;
+    // A procedure is answered over HTTP however its way in is keyed, so its
+    // failures keep their statuses.
+    const http = record.kind === 'http' || procedure;
     // Interceptors and filters both answer a request: on a bot or a message
     // handler neither is read, as before.
     const found = failuresFrom(
@@ -381,9 +402,71 @@ export const failuresPass = definePass('failures', (ctx: NestExtractContext) => 
     );
     // The same exception reaches a bot or a message handler too, and there is
     // no status line for it to set there.
-    const fails = http ? found : settleFailures(found.map(withoutStatus));
-    if (fails.length === 0) continue;
     const node = ctx.builder.getNode(record.node.id);
+    const declared = procedure ? declaredStatuses(node ?? record.node) : undefined;
+    const settled = procedure ? settleFailures([...found.map((failure) => asDeclared(failure, declared)), ...inputRefusal(record.node)]) : found;
+    if (node !== undefined && declared !== undefined && declared.size > 0) {
+      node.meta = { ...node.meta, errors: [...declared].map(([code, status]) => ({ code, status })) };
+    }
+    const fails = http ? settled : settleFailures(settled.map(withoutStatus));
+    if (fails.length === 0) continue;
     if (node !== undefined) node.meta = { ...node.meta, [FAILS_META]: fails };
   }
 });
+
+/**
+ * Whether a way in is a procedure, or the route of one (P58), by what its
+ * entry says: a path and an ending, or the procedure a route answers for.
+ */
+const isProcedure = (node: GraphNode): boolean =>
+  (typeof node.meta?.['key'] === 'string' && typeof node.meta?.['call'] === 'string') ||
+  typeof node.meta?.['procedure'] === 'string';
+
+/**
+ * The status of every failure a procedure declares, by code (P58): the one its
+ * declaration writes, or the one the framework answers the code with.
+ */
+const declaredStatuses = (node: GraphNode): Map<string, number> => {
+  const statuses = new Map<string, number>();
+  const errors = node.meta?.['errors'];
+  if (!Array.isArray(errors)) return statuses;
+  for (const error of errors as Array<{ code?: unknown; status?: unknown }>) {
+    if (typeof error.code !== 'string') continue;
+    statuses.set(
+      error.code,
+      typeof error.status === 'number' ? error.status : (DECLARED_ERRORS.statuses.get(error.code) ?? DECLARED_ERRORS.fallback),
+    );
+  }
+  return statuses;
+};
+
+/** A declared failure thrown, at the status its procedure declares for it (P58). */
+const asDeclared = (failure: Failure, declared: ReadonlyMap<string, number> | undefined): Failure => {
+  const prefix = `${DECLARED_ERRORS.parameter}.`;
+  if (declared === undefined || !failure.exception.startsWith(prefix)) return failure;
+  const status = declared.get(failure.exception.slice(prefix.length));
+  if (status === undefined) return failure;
+  const { assumed: _assumed, ...rest } = failure;
+  return { ...rest, status };
+};
+
+/**
+ * What a procedure with an input schema refuses a request with before its
+ * handler runs (P58), where the reader of its framework is known here.
+ */
+const inputRefusal = (node: GraphNode): Failure[] => {
+  const refusal = INPUT_REFUSALS.get(String(node.meta?.['adapter'] ?? ''));
+  const at = node.meta?.['inputAt'];
+  if (refusal === undefined || typeof node.meta?.['input'] !== 'string') return [];
+  const [file, line] = typeof at === 'string' ? [at.slice(0, at.lastIndexOf(':')), Number(at.slice(at.lastIndexOf(':') + 1))] : [node.file, node.line];
+  return [
+    {
+      status: refusal.status,
+      exception: refusal.exception,
+      at: node.id,
+      ...(file === undefined ? {} : { file }),
+      ...(line === undefined || Number.isNaN(line) ? {} : { line }),
+      source: 'pipe',
+    },
+  ];
+};

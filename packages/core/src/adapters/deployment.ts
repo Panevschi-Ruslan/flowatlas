@@ -97,9 +97,16 @@ export interface DeployedSetting {
    * its URL, its ARN, its name. The name is the deployed name, which is what
    * everything joins on, so it is given even where the value itself - an ARN
    * the provider assigns - is not known until the thing is created. A `url`
-   * is a function's own address, named by the function (P54).
+   * is a function's own address, named by the function (P54); an `api` is an
+   * API's, named by the API (P249).
    */
-  readonly names?: { readonly kind: DeployedKind | 'url'; readonly name: string };
+  readonly names?: { readonly kind: DeployedKind | 'url' | 'api'; readonly name: string };
+  /**
+   * The key of a value another deployment publishes, when this one is that:
+   * what it names is known only once the publisher is read, which the linker
+   * does (P249). `unread` then says what the value is waiting on.
+   */
+  readonly imported?: string;
   /** Why the value is not read, when it is not. */
   readonly unread?: {
     readonly text: string;
@@ -295,6 +302,42 @@ export interface PublishedRoot {
   readonly line: number;
 }
 
+/**
+ * A value this deployment publishes for other deployments to read: an output,
+ * by every key the files settle for it (P249).
+ *
+ * A deployment shares what it creates by writing it out under a name - the
+ * name the value is exported under, or the deployment's own name and the
+ * value's - and another deployment reads it back by that name. Neither side
+ * holds the other's files; both hold the name, and the linker joins on it as
+ * it joins a route to a published root.
+ */
+export interface DeployedExport {
+  /** Every key it is read by: `export:<name>`, `stack:<deployment>#<value>` (`exportKey`, `stackOutputKey`). */
+  readonly keys: readonly string[];
+  /** Where it is declared, in the deployment's own terms: unique per deployment. */
+  readonly address: string;
+  readonly file: string;
+  readonly line: number;
+  /** What the value names, when it names something deployed: a queue, a function's address, an API. */
+  readonly names?: { readonly kind: DeployedKind | 'url' | 'api'; readonly name: string };
+  /** The value, when it is text the files settle. */
+  readonly text?: string;
+  /** Why the value is not read, when it is not. */
+  readonly unread?: string;
+}
+
+/** One place this deployment uses a value another deployment publishes (P249). */
+export interface DeployedImport {
+  readonly key: string;
+  readonly file: string;
+  readonly line: number;
+  /** What it is used for, for a person: `the queue functions.ship.events[0] reads`. */
+  readonly what: string;
+  /** The kinds of thing it may name where it is used; absent where it may be anything. */
+  readonly kinds?: readonly (DeployedKind | 'url' | 'api')[];
+}
+
 /** Where something inside a document is written, 1-based, as an editor counts. */
 export interface DefinitionPosition {
   readonly line: number;
@@ -382,6 +425,10 @@ export interface Deployment {
   readonly deliveries: readonly DeployedDelivery[];
   /** The streams it declares, which a write in code publishes onto (P51). */
   readonly streams?: readonly DeclaredStream[];
+  /** The values it publishes for other deployments to read (P249). */
+  readonly exports?: readonly DeployedExport[];
+  /** Where it reads values other deployments publish (P249). */
+  readonly imports?: readonly DeployedImport[];
   /** What could not be read, with repo-relative files. */
   readonly rows: readonly Unresolved[];
 }

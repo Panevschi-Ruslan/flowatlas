@@ -128,6 +128,14 @@ export const registerSource = (server: McpServer, ctx: ToolContext): void => {
           return { error: 'source unavailable', reason: `no repository configured for ${node.repo}`, file: node.file };
         }
         const path = join(root, node.file);
+        // A repository the team's graph holds and this machine has not checked out (P236).
+        if (!existsSync(root)) {
+          return {
+            error: 'source unavailable',
+            reason: `${node.repo} is not checked out here; the graph came from the team's (flowatlas pull)`,
+            file: `${node.repo}/${node.file}${node.line === undefined ? '' : `:${node.line}`}`,
+          };
+        }
         if (!existsSync(path)) return { error: 'source unavailable', file: path };
 
         // A file checked out with CRLF, as Windows does by default, is read

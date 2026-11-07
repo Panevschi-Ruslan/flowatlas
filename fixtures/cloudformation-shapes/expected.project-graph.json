@@ -1,0 +1,1335 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T18:37:43.925Z",
+  "services": [
+    {
+      "name": "rides",
+      "repo": "./rides",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:dynamodb/rides-harbour-docks",
+      "type": "channel",
+      "label": "dynamodb/rides-harbour-docks",
+      "repo": "rides",
+      "file": "stacks/docks.yaml",
+      "line": 15,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb"
+        ],
+        "declaredBy": "stacks/docks.Resources.DocksTable",
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@stacks.docks.Resources.RecountQueue",
+      "type": "channel",
+      "label": "sqs/${…}@stacks.docks.Resources.RecountQueue",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 174,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:rides#DOCKS_QUEUE_URL",
+      "type": "config_key",
+      "label": "DOCKS_QUEUE_URL",
+      "repo": "rides",
+      "file": "src/rides/start-ride.ts",
+      "line": 7,
+      "meta": {
+        "key": "DOCKS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:rides#stacks/rides.yaml:stacks/rides.Resources.DockMapping",
+      "type": "consumer",
+      "label": "mapping stacks/rides.Resources.DockMapping",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 174,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "stacks/rides.Resources.DockMapping",
+        "deployedBy": "cloudformation",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:rides#stacks/rides.yaml:stacks/rides.Resources.TallyMapping",
+      "type": "consumer",
+      "label": "mapping stacks/rides.Resources.TallyMapping",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 181,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "stacks/rides.Resources.TallyMapping",
+        "deployedBy": "cloudformation"
+      }
+    },
+    {
+      "id": "entry:rides:cron:rides-harbour-alerts-hourly",
+      "type": "entry",
+      "label": "cron rides-harbour-alerts-hourly",
+      "repo": "rides",
+      "file": "alerts/alerts.yaml",
+      "line": 17,
+      "kind": "cron",
+      "meta": {
+        "key": "rides-harbour-alerts-hourly",
+        "by": "schedule",
+        "declaredAs": "stacks/rides.Alerts.Resources.AlertRule.Targets[0]",
+        "deployedBy": "cloudformation",
+        "schedule": "rate(1 hour)",
+        "function": "rides-harbour-alert",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:cron:rides-harbour-billing-daily",
+      "type": "entry",
+      "label": "cron rides-harbour-billing-daily",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 219,
+      "kind": "cron",
+      "meta": {
+        "key": "rides-harbour-billing-daily",
+        "by": "schedule",
+        "declaredAs": "stacks/rides.Resources.BillingRule.Targets[0]",
+        "deployedBy": "cloudformation",
+        "schedule": "rate(1 day)",
+        "reaches": [
+          "workflow:rides-harbour-billing"
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:event:dynamodb/rides-harbour-docks",
+      "type": "entry",
+      "label": "event dynamodb/rides-harbour-docks",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 181,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/rides-harbour-docks",
+        "by": "mapping",
+        "declaredAs": "stacks/rides.Resources.TallyMapping",
+        "deployedBy": "cloudformation",
+        "changesOf": "table",
+        "name": "rides-harbour-docks",
+        "function": "rides-harbour-tally",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:http:ALL:/*@rides-kiosk",
+      "type": "entry",
+      "label": "ALL /*",
+      "repo": "rides",
+      "file": "kiosk/kiosk.yaml",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/*",
+        "rawPath": "/*",
+        "deployedBy": "cloudformation",
+        "function": "rides-kiosk",
+        "declaredAs": "kiosk/kiosk.Resources.KioskUrl",
+        "by": "function-url",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:http:ALL:/:param",
+      "type": "entry",
+      "label": "ALL /:param",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 156,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/:param",
+        "rawPath": "/{proxy+}",
+        "deployedBy": "cloudformation",
+        "api": "rides-harbour-status",
+        "function": "rides-harbour-status",
+        "declaredAs": "stacks/rides.Resources.StatusApi.Target",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:http:GET:/maps/:param",
+      "type": "entry",
+      "label": "GET /maps/:param",
+      "repo": "rides",
+      "file": "api/maps.yaml",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/maps/:param",
+        "rawPath": "/maps/{zone}",
+        "deployedBy": "cloudformation",
+        "api": "rides-harbour-maps",
+        "function": "rides-harbour-map",
+        "declaredAs": "stacks/rides.Resources.MapsApi.paths./maps/{zone}.get",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:http:GET:/rides/:param",
+      "type": "entry",
+      "label": "GET /rides/:param",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 138,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/rides/:param",
+        "rawPath": "/rides/{rideId}",
+        "deployedBy": "cloudformation",
+        "api": "rides-harbour-lookup",
+        "function": "rides-harbour-get-ride",
+        "declaredAs": "stacks/rides.Resources.GetRideMethod",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:http:POST:/rides",
+      "type": "entry",
+      "label": "POST /rides",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 101,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/rides",
+        "rawPath": "/rides",
+        "deployedBy": "cloudformation",
+        "api": "rides-harbour",
+        "function": "rides-harbour-start-ride",
+        "declaredAs": "stacks/rides.Resources.RidesApi.paths./rides.post",
+        "stage": "v1",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-harbour-alert",
+      "type": "entry",
+      "label": "rides-harbour-alert",
+      "repo": "rides",
+      "file": "alerts/alerts.yaml",
+      "line": 9,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-harbour-alert",
+        "deployedBy": "cloudformation",
+        "name": "rides-harbour-alert",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/rides.Alerts.Resources.AlertFunction",
+        "logicalId": "AlertFunction",
+        "handler": "alerts/alert.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-harbour-audit",
+      "type": "entry",
+      "label": "rides-harbour-audit",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 75,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-harbour-audit",
+        "deployedBy": "cloudformation",
+        "name": "rides-harbour-audit",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/rides.Resources.AuditFunction",
+        "logicalId": "AuditFunction",
+        "handler": "docks/audit.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-harbour-charge",
+      "type": "entry",
+      "label": "rides-harbour-charge",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 83,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-harbour-charge",
+        "deployedBy": "cloudformation",
+        "name": "rides-harbour-charge",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/rides.Resources.ChargeFunction",
+        "logicalId": "ChargeFunction",
+        "handler": "billing/charge.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-harbour-dock",
+      "type": "entry",
+      "label": "rides-harbour-dock",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 51,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-harbour-dock",
+        "deployedBy": "cloudformation",
+        "name": "rides-harbour-dock",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/rides.Resources.DockFunction",
+        "logicalId": "DockFunction",
+        "handler": "docks/dock.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-harbour-get-ride",
+      "type": "entry",
+      "label": "rides-harbour-get-ride",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 27,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-harbour-get-ride",
+        "deployedBy": "cloudformation",
+        "name": "rides-harbour-get-ride",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/rides.Resources.GetRideFunction",
+        "logicalId": "GetRideFunction",
+        "handler": "rides/get-ride.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-harbour-lost",
+      "type": "entry",
+      "label": "rides-harbour-lost",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 67,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-harbour-lost",
+        "deployedBy": "cloudformation",
+        "name": "rides-harbour-lost",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/rides.Resources.LostFunction",
+        "logicalId": "LostFunction",
+        "handler": "docks/lost.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-harbour-map",
+      "type": "entry",
+      "label": "rides-harbour-map",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 43,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-harbour-map",
+        "deployedBy": "cloudformation",
+        "name": "rides-harbour-map",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/rides.Resources.MapFunction",
+        "logicalId": "MapFunction",
+        "handler": "rides/map.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-harbour-start-ride",
+      "type": "entry",
+      "label": "rides-harbour-start-ride",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 15,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-harbour-start-ride",
+        "deployedBy": "cloudformation",
+        "name": "rides-harbour-start-ride",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/rides.Resources.StartRideFunction",
+        "logicalId": "StartRideFunction",
+        "handler": "rides/start-ride.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "DOCKS_QUEUE_URL": {
+            "written": "!ImportValue rides-harbour-recount-url",
+            "value": "${…}@stacks.docks.Resources.RecountQueue",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "{body?:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-harbour-status",
+      "type": "entry",
+      "label": "rides-harbour-status",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 35,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-harbour-status",
+        "deployedBy": "cloudformation",
+        "name": "rides-harbour-status",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/rides.Resources.StatusFunction",
+        "logicalId": "StatusFunction",
+        "handler": "rides/status.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-harbour-tally",
+      "type": "entry",
+      "label": "rides-harbour-tally",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 59,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-harbour-tally",
+        "deployedBy": "cloudformation",
+        "name": "rides-harbour-tally",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/rides.Resources.TallyFunction",
+        "logicalId": "TallyFunction",
+        "handler": "docks/tally.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:invoke:rides-kiosk",
+      "type": "entry",
+      "label": "rides-kiosk",
+      "repo": "rides",
+      "file": "kiosk/kiosk.yaml",
+      "line": 5,
+      "kind": "invoke",
+      "meta": {
+        "key": "rides-kiosk",
+        "deployedBy": "cloudformation",
+        "name": "rides-kiosk",
+        "runtime": "nodejs20.x",
+        "declaredAs": "kiosk/kiosk.Resources.KioskFunction",
+        "logicalId": "KioskFunction",
+        "handler": "kiosk/kiosk.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:rides:workflow:rides-harbour-billing",
+      "type": "entry",
+      "label": "workflow rides-harbour-billing",
+      "repo": "rides",
+      "file": "workflows/billing.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "rides-harbour-billing",
+        "name": "rides-harbour-billing",
+        "nameFrom": "deployment",
+        "startAt": "Charge",
+        "states": 1,
+        "queryLanguage": "JSONPath",
+        "comment": "Charges every finished ride once a day.",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "cloudformation",
+        "declaredAs": "stacks/rides.Resources.BillingStateMachine",
+        "declaredIn": "stacks/rides.yaml:211"
+      }
+    },
+    {
+      "id": "producer:rides#src/rides/start-ride.ts:7:9",
+      "type": "producer",
+      "label": "message sqs/${…}@stacks.docks.Resources.RecountQueue",
+      "repo": "rides",
+      "file": "src/rides/start-ride.ts",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "DOCKS_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:rides",
+      "type": "repo",
+      "label": "rides",
+      "repo": "rides",
+      "meta": {
+        "stats": {
+          "files": 11,
+          "filesRead": 11,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:rides-audit-queue"
+            ],
+            "address": "kiosk/kiosk.Outputs.KioskAuditQueueArn",
+            "file": "kiosk/kiosk.yaml",
+            "line": 25,
+            "kind": "queue",
+            "value": "rides-kiosk-audit",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:rides-harbour-recount-url"
+            ],
+            "address": "stacks/docks.Outputs.RecountQueueUrl",
+            "file": "stacks/docks.yaml",
+            "line": 35,
+            "kind": "queue",
+            "value": "${…}@stacks.docks.Resources.RecountQueue",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:rides-harbour-recount-arn"
+            ],
+            "address": "stacks/docks.Outputs.RecountQueueArn",
+            "file": "stacks/docks.yaml",
+            "line": 39,
+            "kind": "queue",
+            "value": "${…}@stacks.docks.Resources.RecountQueue",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:rides-harbour-docks-stream"
+            ],
+            "address": "stacks/docks.Outputs.DocksStream",
+            "file": "stacks/docks.yaml",
+            "line": 43,
+            "kind": "table",
+            "value": "rides-harbour-docks",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:rides-audit-queue"
+            ],
+            "address": "stacks/docks.Outputs.AuditQueueArn",
+            "file": "stacks/docks.yaml",
+            "line": 47,
+            "kind": "queue",
+            "value": "rides-audit",
+            "deployedBy": "cloudformation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rides#kiosk/kiosk.yaml:AWS_IAM",
+      "type": "guard",
+      "label": "AWS_IAM",
+      "repo": "rides",
+      "file": "kiosk/kiosk.yaml",
+      "line": 13,
+      "kind": "authorizer"
+    },
+    {
+      "id": "rides#src/alerts/alert.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/alerts/alert.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "rides#src/billing/charge.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/billing/charge.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "rides#src/docks/audit.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/docks/audit.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "rides#src/docks/dock.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/docks/dock.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "rides#src/docks/lost.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/docks/lost.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "rides#src/docks/tally.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/docks/tally.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "rides#src/kiosk/kiosk.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "rides#src/rides/get-ride.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/rides/get-ride.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "rides#src/rides/map.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/rides/map.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "rides#src/rides/start-ride.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/rides/start-ride.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{body?:string}"
+            }
+          ],
+          "returns": "{statusCode:number}"
+        }
+      }
+    },
+    {
+      "id": "rides#src/rides/status.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "rides",
+      "file": "src/rides/status.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "rides#stacks/rides.yaml:COGNITO_USER_POOLS",
+      "type": "guard",
+      "label": "COGNITO_USER_POOLS",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 138,
+      "kind": "authorizer"
+    },
+    {
+      "id": "rides#stacks/rides.yaml:api key",
+      "type": "guard",
+      "label": "api key",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 138,
+      "kind": "authorizer"
+    },
+    {
+      "id": "rides#workflows/billing.asl.json:rides-harbour-billing/Charge",
+      "type": "function",
+      "label": "Charge [Task lambda:invoke]",
+      "repo": "rides",
+      "file": "workflows/billing.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "rides-harbour-billing",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "rides-harbour-charge"
+        },
+        "reaches": [
+          "invoke:rides-harbour-charge"
+        ],
+        "parameters": {
+          "FunctionName": "${charge_arn}",
+          "Payload.$": "$"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:dynamodb/rides-harbour-docks",
+      "to": "consumer:rides#stacks/rides.yaml:stacks/rides.Resources.TallyMapping",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "stacks/rides.yaml",
+      "line": 181,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/${…}@stacks.docks.Resources.RecountQueue",
+      "to": "consumer:rides#stacks/rides.yaml:stacks/rides.Resources.DockMapping",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "stacks/rides.yaml",
+      "line": 174,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:rides#stacks/rides.yaml:stacks/rides.Resources.DockMapping",
+      "to": "entry:rides:invoke:rides-harbour-dock",
+      "type": "calls",
+      "confidence": "static",
+      "file": "stacks/rides.yaml",
+      "line": 174,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:rides#stacks/rides.yaml:stacks/rides.Resources.TallyMapping",
+      "to": "entry:rides:event:dynamodb/rides-harbour-docks",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "stacks/rides.yaml",
+      "line": 181,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:rides:cron:rides-harbour-alerts-hourly",
+      "to": "rides#src/alerts/alert.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/alerts/alert.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:cron:rides-harbour-billing-daily",
+      "to": "entry:rides:workflow:rides-harbour-billing",
+      "type": "calls",
+      "confidence": "static",
+      "file": "stacks/rides.yaml",
+      "line": 219,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "workflow:rides-harbour-billing"
+      }
+    },
+    {
+      "from": "entry:rides:event:dynamodb/rides-harbour-docks",
+      "to": "rides#src/docks/tally.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/docks/tally.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:http:ALL:/*@rides-kiosk",
+      "to": "rides#kiosk/kiosk.yaml:AWS_IAM",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "kiosk/kiosk.yaml",
+      "line": 13,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:rides:http:ALL:/*@rides-kiosk",
+      "to": "rides#src/kiosk/kiosk.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:rides:http:ALL:/:param",
+      "to": "rides#src/rides/status.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rides/status.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:rides:http:GET:/maps/:param",
+      "to": "rides#src/rides/map.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rides/map.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:rides:http:GET:/rides/:param",
+      "to": "rides#src/rides/get-ride.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rides/get-ride.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:rides:http:GET:/rides/:param",
+      "to": "rides#stacks/rides.yaml:COGNITO_USER_POOLS",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "stacks/rides.yaml",
+      "line": 138,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:rides:http:GET:/rides/:param",
+      "to": "rides#stacks/rides.yaml:api key",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "stacks/rides.yaml",
+      "line": 138,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "guard",
+        "source": "authorizer"
+      }
+    },
+    {
+      "from": "entry:rides:http:POST:/rides",
+      "to": "rides#src/rides/start-ride.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rides/start-ride.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:rides:invoke:rides-harbour-alert",
+      "to": "rides#src/alerts/alert.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/alerts/alert.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:invoke:rides-harbour-audit",
+      "to": "rides#src/docks/audit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/docks/audit.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:invoke:rides-harbour-charge",
+      "to": "rides#src/billing/charge.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/billing/charge.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:invoke:rides-harbour-dock",
+      "to": "rides#src/docks/dock.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/docks/dock.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:invoke:rides-harbour-get-ride",
+      "to": "rides#src/rides/get-ride.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rides/get-ride.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:invoke:rides-harbour-lost",
+      "to": "rides#src/docks/lost.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/docks/lost.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:invoke:rides-harbour-map",
+      "to": "rides#src/rides/map.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rides/map.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:invoke:rides-harbour-start-ride",
+      "to": "rides#src/rides/start-ride.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rides/start-ride.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:rides:invoke:rides-harbour-status",
+      "to": "rides#src/rides/status.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rides/status.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:invoke:rides-harbour-tally",
+      "to": "rides#src/docks/tally.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/docks/tally.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:invoke:rides-kiosk",
+      "to": "rides#src/kiosk/kiosk.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/kiosk/kiosk.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:rides:workflow:rides-harbour-billing",
+      "to": "rides#workflows/billing.asl.json:rides-harbour-billing/Charge",
+      "type": "handles",
+      "confidence": "static",
+      "file": "workflows/billing.asl.json",
+      "line": 3
+    },
+    {
+      "from": "producer:rides#src/rides/start-ride.ts:7:9",
+      "to": "channel:sqs/${…}@stacks.docks.Resources.RecountQueue",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/rides/start-ride.ts",
+      "line": 7,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "DOCKS_QUEUE_URL"
+        ],
+        "functions": [
+          "rides-harbour-start-ride"
+        ]
+      }
+    },
+    {
+      "from": "rides#src/rides/start-ride.ts:handler",
+      "to": "config_key:rides#DOCKS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/rides/start-ride.ts",
+      "line": 7,
+      "meta": {
+        "setBy": [
+          {
+            "function": "rides-harbour-start-ride",
+            "written": "!ImportValue rides-harbour-recount-url",
+            "value": "${…}@stacks.docks.Resources.RecountQueue"
+          }
+        ]
+      }
+    },
+    {
+      "from": "rides#src/rides/start-ride.ts:handler",
+      "to": "producer:rides#src/rides/start-ride.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/rides/start-ride.ts",
+      "line": 7
+    },
+    {
+      "from": "rides#workflows/billing.asl.json:rides-harbour-billing/Charge",
+      "to": "entry:rides:invoke:rides-harbour-charge",
+      "type": "calls",
+      "confidence": "static",
+      "file": "workflows/billing.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:rides-harbour-charge"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "kiosk/kiosk.packaged.yaml",
+      "line": 1,
+      "reason": "deployment-copy-not-read",
+      "level": "info",
+      "message": "kiosk/kiosk.packaged.yaml declares what kiosk/kiosk.yaml does, with uploads where kiosk/kiosk.yaml names files of the repository: it is the copy a package command writes, and is read once, as kiosk/kiosk.yaml",
+      "hint": "Nothing to fix. Keep the packaged copy out of the repository, and this note goes too.",
+      "symbol": "kiosk/kiosk.packaged.yaml",
+      "adapter": "aws-lambda",
+      "service": "rides"
+    },
+    {
+      "file": "legacy/fleet.template",
+      "line": 4,
+      "reason": "deployment-plugin-unread",
+      "message": "legacy/fleet.template declares AWS::Serverless::Function, which only the SAM transform reads, and names no Transform: AWS::Serverless-2016-10-31; CloudFormation refuses it, and none of it is read",
+      "hint": "Add Transform: AWS::Serverless-2016-10-31 to the template, and it is read as a SAM template.",
+      "symbol": "legacy/fleet.template#Transform",
+      "adapter": "aws-lambda",
+      "service": "rides"
+    },
+    {
+      "file": "stacks/docks.yaml",
+      "line": 12,
+      "reason": "deployed-name-generated",
+      "level": "info",
+      "message": "stacks.docks.Resources.RecountQueue is a queue with no name of its own, so it is named by where it is declared; what this file points at it by joins to it, and nothing outside this deployment can",
+      "hint": "Give it a name of its own where other repositories reach it.",
+      "symbol": "stacks.docks.Resources.RecountQueue",
+      "adapter": "aws-lambda",
+      "service": "rides"
+    },
+    {
+      "service": "rides",
+      "file": "stacks/docks.yaml",
+      "line": 15,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "dynamodb/rides-harbour-docks is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:dynamodb/rides-harbour-docks"
+    },
+    {
+      "file": "stacks/rides.yaml",
+      "line": 164,
+      "reason": "api-body-unread",
+      "message": "the OpenAPI body of stacks/rides.Resources.ArchiveApi is not read: the body is in a location that is not a file of the repository",
+      "hint": "Write the body under Body, include it with AWS::Include, or point BodyS3Location at a file of the repository for aws cloudformation package to upload.",
+      "symbol": "stacks/rides.Resources.ArchiveApi",
+      "adapter": "aws-lambda",
+      "service": "rides"
+    },
+    {
+      "file": "stacks/rides.yaml",
+      "line": 189,
+      "reason": "subscription-source-unread",
+      "message": "the topic stacks/rides.Resources.LostSubscription subscribes to is not read: the value is imported from another stack, which exports it as fleet-lost-topic",
+      "hint": "Write TopicArn as a Ref of a topic the file declares, or its ARN.",
+      "symbol": "stacks/rides.Resources.LostSubscription",
+      "adapter": "aws-lambda",
+      "service": "rides"
+    },
+    {
+      "file": "stacks/rides.yaml",
+      "line": 196,
+      "reason": "subscription-source-unread",
+      "message": "what stacks/rides.Resources.AuditMapping reads is not read: the export rides-audit-queue is declared by 2 templates (kiosk/kiosk.yaml, stacks/docks.yaml), and a stack can import only one",
+      "hint": "Write EventSourceArn as an Fn::GetAtt of a queue or a stream the file declares, or its ARN.",
+      "symbol": "stacks/rides.Resources.AuditMapping",
+      "adapter": "aws-lambda",
+      "service": "rides"
+    },
+    {
+      "file": "stacks/rides.yaml",
+      "line": 202,
+      "reason": "invoker-not-read",
+      "level": "info",
+      "message": "rides-harbour-audit may be run by logs.amazonaws.com, which is not read, so what runs it from there is not drawn",
+      "hint": "The function is still a way in of its own; nothing here says it is unused because nothing drawn reaches it.",
+      "symbol": "stacks/rides.Resources.AuditLogsPermission",
+      "adapter": "aws-lambda",
+      "meta": {
+        "principal": "logs.amazonaws.com",
+        "function": "rides-harbour-audit"
+      },
+      "service": "rides"
+    },
+    {
+      "file": "stacks/rides.yaml",
+      "line": 228,
+      "reason": "workflow-definition-not-loaded",
+      "message": "the definition of stacks/rides.Resources.ArchiveStateMachine is not read: it is uploaded to a bucket, which no file here holds",
+      "hint": "Nothing of this workflow is drawn. Write the definition under Definition, or point DefinitionS3Location at a .asl.json or .asl.yaml file of the repository, which aws cloudformation package uploads.",
+      "symbol": "stacks/rides.Resources.ArchiveStateMachine",
+      "adapter": "aws-lambda",
+      "service": "rides"
+    }
+  ]
+}

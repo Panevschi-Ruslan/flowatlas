@@ -1,0 +1,17 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "apiBaseEnv": ["VITE_ORDERS_URL"],
+      "apiTarget": { "VITE_ORDERS_URL": "orders" }
+    }
+  ],
+  "output": ".flowatlas"
+}

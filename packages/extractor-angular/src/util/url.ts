@@ -228,3 +228,27 @@ export const analyzeForwardedApiUrl = (
     guessed,
   };
 };
+
+/**
+ * The base an interceptor puts in front of every address (P239).
+ *
+ * Read setting first, as a template's opening span is: `environment.apiUrl`
+ * is a value the build swaps out, and the value written in the development
+ * file is not the address the request goes to. Only where nothing about it is
+ * a setting is it read as any other address is.
+ */
+export const analyzeBaseUrl = (node: TsNode, sharedPackages: readonly string[]): ApiUrl => {
+  const behind = settingBehind(node);
+  const prefix = behind?.prefix ?? '';
+  if (behind !== null && !prefix.includes(UNREAD_SPAN)) {
+    return {
+      url: `\${${behind.key}}${prefix}`,
+      path: routePathOf(prefix),
+      baseUrlEnv: behind.key,
+      host: null,
+      via: 'template-env',
+      guessed: behind.guessed === true,
+    };
+  }
+  return analyzeApiUrl(node, sharedPackages);
+};

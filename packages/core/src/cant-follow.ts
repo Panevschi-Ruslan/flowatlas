@@ -17,6 +17,7 @@ import { makeSymbolId } from './ids.js';
 import { wasMissed, type Unresolved, type UnresolvedLevel } from './model/graph.js';
 import type { FollowCause } from './follow-cause.js';
 import { SEEN_NOT_IN_CODE, type BlindSpot } from './blind-spots.js';
+import { gapIdOf } from './accepted.js';
 
 /** The key on a row's `meta` naming why its step could not be followed. */
 export const CAUSE_META = 'cause';
@@ -192,6 +193,8 @@ export interface CantFollowCause {
   packages: CantFollowPackage[];
   /** Packages left out by `top`. */
   truncated?: number;
+  /** How many logged questions ran into its rows (P235), when a question log was read. */
+  asked?: number;
   /**
    * Under `seen-not-in-code` (P110): what traffic reached that no reader drew,
    * one group per service and kind, most spans first. Its rows name no file,
@@ -243,6 +246,12 @@ export interface CantFollowOptions {
   package?: string;
   /** Causes to skip before the first one listed, to read the list a page at a time (P93). Default 0. */
   offset?: number;
+  /**
+   * How many logged questions ran into each gap, by gap id (P235). Given, each
+   * cause says how many questions its rows were on, and the causes the most
+   * questions ran into come first: what people ask about is fixed first.
+   */
+  asked?: ReadonlyMap<string, number>;
 }
 
 /**
@@ -300,6 +309,8 @@ interface Acc {
   hint?: string;
   packages: Map<string, { package: string | null; sites: number; samples: CantFollowSample[] }>;
   seen: BlindSpot[];
+  /** The gap ids of its rows, for the questions that ran into them. */
+  gaps: Set<string>;
 }
 
 /** A blind-spot group a row carries (P110), when it is one. */
@@ -344,8 +355,12 @@ export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFol
         services: new Set<string>(),
         packages: new Map(),
         seen: [],
+        gaps: new Set<string>(),
       };
       causes.set(part.cause, acc);
+      if (options.asked !== undefined) {
+        acc.gaps.add(gapIdOf({ reason: row.reason, ...(row.service ? { service: row.service } : {}), ...(row.file ? { file: row.file } : {}) }));
+      }
       acc.sites += part.sites;
       acc.reasons.add(row.reason);
       if (row.service !== undefined && row.service !== null && row.service !== '') acc.services.add(row.service);
@@ -378,7 +393,11 @@ export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFol
     }
   }
 
-  const ranked = [...causes.values()].sort((a, b) => b.sites - a.sites || cmp(a.cause, b.cause));
+  const askedOf = (acc: Acc): number => [...acc.gaps].reduce((sum, gap) => sum + (options.asked?.get(gap) ?? 0), 0);
+  // With a question log, what was asked about first; then most places, as without one.
+  const ranked = [...causes.values()].sort(
+    (a, b) => (options.asked === undefined ? 0 : askedOf(b) - askedOf(a)) || b.sites - a.sites || cmp(a.cause, b.cause),
+  );
   const offset = Math.min(options.offset ?? 0, ranked.length);
   const listed: CantFollowCause[] = ranked.slice(offset, offset + top).map((acc) => {
     const byPkg = [...acc.packages.values()].sort(
@@ -394,6 +413,7 @@ export const groupCantFollow = (rows: readonly CantFollowRow[], options: CantFol
       services: [...acc.services].sort(cmp),
       packages: byPkg.slice(0, top),
       ...(byPkg.length > top ? { truncated: byPkg.length - top } : {}),
+      ...(options.asked === undefined ? {} : { asked: askedOf(acc) }),
       ...(acc.seen.length === 0
         ? {}
         : {

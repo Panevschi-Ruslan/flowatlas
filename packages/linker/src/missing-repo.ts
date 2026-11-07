@@ -432,7 +432,10 @@ export const missingRepoSignals = (project: MissingRepoProject, report?: Pick<Li
     if (row.reason !== 'unknown-base-url-env') continue;
     const said = UNCLAIMED.exec(row.message ?? '')?.[1]?.replace(/[;,.]$/, '');
     const node = nodeOf(row);
-    const key = text(node?.meta?.['baseUrlEnv']) ?? said;
+    // A request for a procedure keeps its setting under its link (P242, P247).
+    const link = node?.meta?.['link'];
+    const linked = link !== null && typeof link === 'object' ? text((link as Record<string, unknown>)['baseUrlEnv']) : undefined;
+    const key = text(node?.meta?.['baseUrlEnv']) ?? linked ?? said;
     if (key === undefined || said === undefined) continue;
     signals.add('setting', key, tokenOf(key), placeOfRow(row));
     const values = node?.meta?.['baseUrlValues'];

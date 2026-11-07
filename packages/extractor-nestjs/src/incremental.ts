@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  addImplicitImports,
+  conventionFiles,
   fileOf,
   hasDecorator,
   installedFiles,
@@ -88,6 +90,9 @@ export const packageFiles = (repo: WarmRepo): string[] => [
   // And what stood in for a package that is not installed (P78): a package
   // source read in its place, its manifest, and the shape files listed.
   ...standInFiles(repo.project, repo.options.rootDir),
+  // And a framework's configuration the aliases and implicit imports were
+  // read from (P240), which need not be a source file at all.
+  ...conventionFiles(repo.project),
 ];
 
 /**
@@ -153,6 +158,9 @@ export const globalFiles = (repo: WarmRepo): string[] => {
       .some((declaration) => hasDecorator(declaration, 'Module', NEST_COMMON));
     if (declaresModule) out.add(fileOf(sourceFile, rootDir));
   }
+  // A framework's configuration and every file whose exports others use with
+  // no import (P240): a change to either changes which imports are added.
+  for (const file of conventionFiles(repo.project)) out.add(file);
   return [...out].sort();
 };
 
@@ -180,7 +188,9 @@ const refreshFiles = (repo: WarmRepo, files: readonly string[]): void => {
       if (existing !== undefined) repo.project.removeSourceFile(existing);
       continue;
     }
-    if (existing === undefined) repo.project.addSourceFileAtPath(path);
-    else existing.refreshFromFileSystemSync();
+    const refreshed = existing ?? repo.project.addSourceFileAtPath(path);
+    if (existing !== undefined) existing.refreshFromFileSystemSync();
+    // The disk has none of the imports a framework adds (P240): added again.
+    addImplicitImports(repo.project, refreshed);
   }
 };

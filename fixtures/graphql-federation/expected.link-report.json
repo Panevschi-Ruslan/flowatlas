@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-05T22:21:33.230Z",
+  "configHash": "6380be62f418",
+  "services": [
+    {
+      "name": "customers",
+      "repo": "./customers",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 7,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 3987,
+      "packages": {
+        "name": "federation-customers",
+        "runtime": [
+          "@apollo/subgraph",
+          "@nestjs/apollo",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/graphql",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 2,
+      "edges": 0,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 3200,
+      "packages": {
+        "name": "federation-gateway",
+        "runtime": [
+          "@apollo/gateway",
+          "@apollo/server",
+          "express",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 20,
+      "edges": 11,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 3108,
+      "packages": {
+        "name": "federation-orders",
+        "runtime": [
+          "@apollo/server",
+          "@apollo/subgraph",
+          "graphql",
+          "graphql-tag"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 11,
+      "edges": 5,
+      "types": 0,
+      "unresolved": 5,
+      "durationMs": 3077,
+      "packages": {
+        "name": "federation-web",
+        "runtime": [
+          "@apollo/client",
+          "graphql",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 5,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 3,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "gateway",
+      "file": "supergraph.graphql",
+      "line": 62,
+      "symbol": "entry:gateway:http:POST:/graphql",
+      "reason": "graphql-supergraph-drift",
+      "level": "action",
+      "message": "the supergraph says orders resolves Order.status, which orders's schema does not declare; the router plans by the supergraph, so it sends orders a request it refuses",
+      "hint": "Compose the supergraph again from the subgraphs as they are now (rover supergraph compose), and commit it."
+    },
+    {
+      "service": "web",
+      "file": "src/queries.ts",
+      "line": 31,
+      "reason": "graphql-shareable-choice",
+      "level": "info",
+      "message": "Regions selects Query.regions through gateway, which customers and orders each resolve; the router chooses one at run time, so each is drawn as a choice",
+      "hint": "Nothing is wrong. Which subgraph answers is the router's plan, decided by cost when the request arrives; both edges are heuristic for that reason.",
+      "symbol": "ui_api_call:web#src/RegionPicker.tsx:6:20"
+    }
+  ],
+  "totals": {
+    "nodes": 46,
+    "edges": 40,
+    "types": 2,
+    "missed": 8,
+    "sites": 8,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 8
+  }
+}

@@ -9,7 +9,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { resolveNodeId } from '../../../../scripts/fixture-nodes.mjs';
 import { CACHE_VERSION, loadBuildCache } from '../build/cache.js';
 import { serviceOutputDir } from '@flowatlas/core';
-import { buildProject, inPools, serviceGraphPath, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
+import { backgroundArgs, buildProject, inPools, serviceGraphPath, summariseBuild, summariseRebuild, unresolvedLine } from './build.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const FIXTURES = join(ROOT, 'fixtures');
@@ -327,12 +327,12 @@ describe('building a project', () => {
    * `constructor` with a function - so a typo would have been planned, cached and
    * reported as a repository with a reader, and whatever that function returned
    * would have been its extractor's name. It is a `Map` now and the answer is the
-   * same as for `svelte`: no reader, no nodes (R134).
+   * same as for `astro`: no reader, no nodes (R134).
    */
   it('leaves a service no extractor can read out, without failing', async () => {
     const config = configFor('unknown-type', [
       service('orders', { baseUrlEnv: ['ORDERS_URL'] }),
-      { name: 'landing', repo: join(FIXTURE, 'web'), type: 'svelte' },
+      { name: 'landing', repo: join(FIXTURE, 'web'), type: 'astro' },
       { name: 'mistyped', repo: join(FIXTURE, 'web'), type: 'constructor' },
     ]);
     const result = await buildProject({ config, builtAt: FIXED });
@@ -800,4 +800,33 @@ describe('the line a rebuild prints', () => {
     // The deprecated alias says the same number for one more version (P81).
     expect(first.report.totals.unresolved).toBe(first.report.totals.missed);
   }, 240_000);
+});
+
+describe('the build --background starts (P230)', () => {
+  it('is given every choice the request made of what to read, --on-pulled among them, then the wait and the queue', () => {
+    const settings = { out: 'out', service: ['orders', 'web'], concurrency: 2, heap: 4096, skipFrontend: true, cache: false, onPulled: true };
+    expect(backgroundArgs(settings, 'flowatlas.config.json', 'project-out', 42)).toEqual([
+      'build',
+      '--config',
+      'flowatlas.config.json',
+      '--out',
+      'project-out',
+      '--service',
+      'orders',
+      '--service',
+      'web',
+      '--concurrency',
+      '2',
+      '--heap',
+      '4096',
+      '--skip-frontend',
+      '--no-cache',
+      '--on-pulled',
+      '--wait',
+      '1800',
+      '--queued-by',
+      '42',
+    ]);
+    expect(backgroundArgs({}, 'flowatlas.config.json', 'project-out', 42)).toEqual(['build', '--config', 'flowatlas.config.json', '--wait', '1800', '--queued-by', '42']);
+  });
 });

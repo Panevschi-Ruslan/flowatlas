@@ -1,6 +1,7 @@
 import {
   fileOf,
   TypeCollector,
+  type EmbeddedFile,
   type ExtractContext,
   type GraphNode,
   type NamedFunction,
@@ -51,6 +52,8 @@ const NODE_SHAPE: Record<ReactRole, { type: NodeType; kind?: string }> = {
  */
 export interface ReactExtractContext extends ExtractContext {
   readonly functions: ReactFunctionIndex;
+  /** The component files whose scripts the checker reads in made-up files (P233); none for React. */
+  readonly embedded: readonly EmbeddedFile[];
   readonly stats: ReactStats;
   /** The type registry being built. */
   readonly types: TypeCollector;
@@ -73,6 +76,8 @@ export interface CreateContextOptions {
   functions: ReactFunctionIndex;
   /** What the parser made of the repository's sources, counted before any pass ran. */
   sources: SourceCounts;
+  /** The component files made up for the checker (P233). */
+  embedded?: readonly EmbeddedFile[];
   /** How deep anonymous shapes are written out. Defaults to the configured value. */
   maxDepth?: number;
 }
@@ -119,6 +124,7 @@ export const createReactContext = (options: CreateContextOptions): ReactExtractC
   return {
     ...base,
     functions,
+    embedded: options.embedded ?? [],
     stats,
     types: collector,
 

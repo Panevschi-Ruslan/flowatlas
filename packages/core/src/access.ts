@@ -34,6 +34,12 @@ export interface AccessGuard {
    * for it, read off the check itself reading the flag the decorator sets.
    */
   skippedBy?: string;
+  /**
+   * The parts of what this way in answers the check stands in front of, where
+   * it is not the whole of it: fields it answers that have no handler of
+   * their own, each guarded on its own. Absent for a check of the way in.
+   */
+  for?: string[];
 }
 
 /**

@@ -1,0 +1,96 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.5", for: EXECUTION)
+  @link(url: "https://specs.apollo.dev/authenticated/v0.1", for: SECURITY)
+  @link(url: "https://specs.apollo.dev/requiresScopes/v0.1", for: SECURITY)
+  @link(url: "https://specs.apollo.dev/policy/v0.1", for: SECURITY)
+  @link(url: "https://specs.apollo.dev/context/v0.1", for: SECURITY)
+  @link(url: "https://example.dev/audit/v1.0", import: ["@audited"])
+{
+  query: Query
+}
+
+directive @audited(reason: String) on FIELD_DEFINITION
+directive @authenticated on FIELD_DEFINITION | OBJECT | INTERFACE | SCALAR | ENUM
+directive @requiresScopes(scopes: [[requiresScopes__Scope!]!]!) on FIELD_DEFINITION | OBJECT | INTERFACE | SCALAR | ENUM
+directive @policy(policies: [[policy__Policy!]!]!) on FIELD_DEFINITION | OBJECT | INTERFACE | SCALAR | ENUM
+directive @context(name: String!) repeatable on INTERFACE | OBJECT | UNION
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean, overrideLabel: String, contextArguments: [join__ContextArgument!]) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+scalar join__FieldSet
+scalar join__FieldValue
+scalar link__Import
+scalar requiresScopes__Scope
+scalar policy__Policy
+
+input join__ContextArgument {
+  name: String!
+  type: String!
+  context: String!
+  selection: join__FieldValue!
+}
+
+enum link__Purpose {
+  SECURITY
+  EXECUTION
+}
+
+enum join__Graph {
+  ACCOUNTS @join__graph(name: "accounts", url: "http://localhost:4003/graphql")
+  INVENTORY @join__graph(name: "inventory", url: "http://localhost:4004/graphql")
+  MEDIA @join__graph(name: "media", url: "http://localhost:4001/graphql")
+  REVIEWS @join__graph(name: "reviews", url: "http://localhost:4002/graphql")
+}
+
+type Query @join__type(graph: ACCOUNTS) @join__type(graph: INVENTORY) @join__type(graph: MEDIA) @join__type(graph: REVIEWS) {
+  me: User @join__field(graph: ACCOUNTS)
+  wishItem(id: ID!): WishItem @join__field(graph: ACCOUNTS)
+  stock(id: ID!): Int @join__field(graph: INVENTORY)
+  media: [Media!]! @join__field(graph: MEDIA)
+  topRated: [Media!]! @join__field(graph: REVIEWS)
+}
+
+interface Media @join__type(graph: MEDIA, key: "id") @join__type(graph: REVIEWS, key: "id", isInterfaceObject: true) {
+  id: ID!
+  title: String! @join__field(graph: MEDIA)
+  reviews: [Review!]! @join__field(graph: REVIEWS)
+  rating: Float @join__field(graph: REVIEWS) @authenticated
+}
+
+type Book implements Media @join__implements(graph: MEDIA, interface: "Media") @join__type(graph: MEDIA, key: "id") {
+  id: ID!
+  title: String!
+  author: String! @audited(reason: "licensing")
+  reviews: [Review!]! @join__field
+  rating: Float @join__field @authenticated
+}
+
+type Movie implements Media @join__implements(graph: MEDIA, interface: "Media") @join__type(graph: MEDIA, key: "id") {
+  id: ID!
+  title: String!
+  director: String! @requiresScopes(scopes: [["media:staff"]])
+  reviews: [Review!]! @join__field
+  rating: Float @join__field @authenticated
+}
+
+type Review @join__type(graph: REVIEWS) {
+  score: Int!
+  body: String!
+}
+
+type User @join__type(graph: ACCOUNTS, key: "id") @context(name: "accounts__viewer") {
+  id: ID!
+  currency: String!
+  email: String! @policy(policies: [["account:owner"], ["support", "staff"]])
+  wishlist: [WishItem!]!
+}
+
+type WishItem @join__type(graph: ACCOUNTS) {
+  id: ID!
+  name: String!
+  price(currency: String): Float! @join__field(graph: ACCOUNTS, contextArguments: [{ context: "accounts__viewer", name: "currency", type: "String", selection: "{ currency }" }])
+}

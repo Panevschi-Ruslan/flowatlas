@@ -70,6 +70,45 @@ describe('what a body throws', () => {
   });
 });
 
+describe('what a procedure throws (P58)', () => {
+  it('reads a coded error at the status of its code, or the one written beside it', () => {
+    const body = bodyOf(`
+      import { ORPCError } from '@orpc/server';
+      import { TRPCError } from '@trpc/server';
+      function f(a: number) {
+        if (a === 1) throw new ORPCError('NOT_FOUND');
+        if (a === 2) throw new ORPCError('TEAPOT', { status: 418 });
+        if (a === 3) throw new ORPCError('OUT_OF_STOCK');
+        if (a === 4) throw new TRPCError({ code: 'FORBIDDEN', message: 'no' });
+      }`);
+    expect(throwsIn(body).map(({ exception, status, assumed, declared }) => [exception, status, assumed ?? false, declared])).toEqual([
+      ['ORPCError(NOT_FOUND)', 404, false, undefined],
+      ['ORPCError(TEAPOT)', 418, false, undefined],
+      ['ORPCError(OUT_OF_STOCK)', 500, true, undefined],
+      ['TRPCError(FORBIDDEN)', 403, false, undefined],
+    ]);
+  });
+
+  it('reads a failure a procedure declared, thrown through the helper its handler is handed', () => {
+    const body = bodyOf(`
+      function f({ input, errors }: { input: unknown; errors: any }) {
+        if (!input) throw errors.NOT_FOUND({ data: { id: 'x' } });
+        throw errors.RATE_LIMITED();
+      }`);
+    expect(throwsIn(body).map(({ exception, status, assumed }) => [exception, status, assumed ?? false])).toEqual([
+      ['errors.NOT_FOUND', 404, false],
+      ['errors.RATE_LIMITED', 500, true],
+    ]);
+  });
+
+  it('reads a member called errors of anything else as the helper it is', () => {
+    const body = bodyOf(`
+      const errors = { missing: () => new Error('x') };
+      function f() { throw errors.missing(); }`);
+    expect(throwsIn(body).map(({ exception, via }) => [exception, via])).toEqual([['errors.missing', 'helper']]);
+  });
+});
+
 describe('the status a domain error states (P87)', () => {
   it('reads a property, a member of HttpStatus, a getter, a getStatus() and a stored constructor argument', () => {
     expect(

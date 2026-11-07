@@ -16,9 +16,11 @@ import { Node } from 'ts-morph';
  * Identifiers that stand for a settings object written by hand.
  *
  * The two conventions a repository that does not use the bundler's own
- * mechanism falls back on. Anything else is a hole like any other.
+ * mechanism falls back on, and Nuxt's runtime configuration (P233): its keys
+ * under `public` and beside it, read through `useRuntimeConfig()` called in
+ * place or held by a name. Anything else is a hole like any other.
  */
-export const ENV_ROOTS = ['environment', 'env', 'config'] as const;
+export const ENV_ROOTS = ['environment', 'env', 'config', 'useRuntimeConfig().public', 'useRuntimeConfig()'] as const;
 
 /**
  * Where a bundler puts the settings a build swaps out.
@@ -313,50 +315,10 @@ export const analyzeClientBase = (node: TsNode, options: ReadAddressOptions = {}
 };
 
 /**
- * Whether an address says anything a path written under it would not.
+ * Whether an address is a base, and the address a request reaches under one.
  *
- * The test for "is this actually a base": a field or an option holding nothing,
- * or holding `/`, adds no segment to any address written under it, and treating
- * it as a base would make `underBase` a rewrite that changes nothing while
- * looking like a reading that succeeded. Asked in both places a base is written
- * — the class's own field and a call's own option — because a base is one fact
- * and two answers to what counts as one is how the two ends of a join come to
- * disagree (R114, R128).
+ * Both are the core's since P239: the Angular reader folds an interceptor's base
+ * with the same function, and a second copy is how two readers come to disagree
+ * about the same segment (R114).
  */
-export const isSomewhere = (address: ApiUrl): boolean =>
-  address.baseUrlEnv !== null ||
-  address.host !== null ||
-  (address.path !== null && address.path !== '/');
-
-/**
- * The whole address a request reaches, once the base in front of it is known.
- *
- * An address and a base are one fact read at two ends, and this is the one place
- * the two ends are put together — so what the graph records is the address the
- * request actually reaches, and everything that reads it afterwards, the linker
- * included, is looking at the same string the route side is (R114).
- *
- * The base does not apply to an address the call site rooted itself. A path
- * written with a host of its own, or rooted at a settings key of its own, is not
- * relative to anything the client holds, and putting the two together would
- * invent an address nobody writes.
- *
- * *Which* base stands in front is settled before this: the call's own option
- * where the call spells one, and the class's field where it does not (R128).
- */
-export const underBase = (base: ApiUrl | undefined, address: ApiUrl): ApiUrl => {
-  if (base === undefined || address.path === null) return address;
-  if (address.host !== null || address.baseUrlEnv !== null) return address;
-  const opening = base.path === null ? '' : base.path.replace(/\/+$/, '');
-  if (opening === '' && base.baseUrlEnv === null && base.host === null) return address;
-  return {
-    url: `${(base.url ?? '').replace(/\/+$/, '')}${address.url ?? address.path}`,
-    path: routePathOf(`${opening}${address.path}`),
-    baseUrlEnv: base.baseUrlEnv,
-    host: base.host,
-    // How the *address* was arrived at, and an address rooted at a settings key
-    // is that whichever end of it the key came from.
-    via: base.baseUrlEnv === null ? address.via : 'template-env',
-    guessed: address.guessed || base.guessed,
-  };
-};
+export { isSomewhere, underBase } from '@flowatlas/core';

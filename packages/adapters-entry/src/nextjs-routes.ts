@@ -40,6 +40,7 @@ import {
   repoSources,
   unwrapValue,
 } from './shared.js';
+import { listensByCall, nextListens } from './listen-ports.js';
 
 /** The dependency that gives the framework away. */
 const PACKAGE = 'next';
@@ -187,6 +188,8 @@ const applicationsOf = (ctx: ExtractContext): ApplicationMap =>
 export const nextjsRoutesAdapter: EntryAdapter = {
   name: 'nextjs-routes',
   detect: (pkg) => hasDependency(pkg, PACKAGE),
+  // A script's `next dev -p 3020`, and a custom server's own `listen` (P250).
+  listens: (ctx) => [...nextListens(ctx), ...listensByCall(ctx)],
   applications: (ctx) => applicationsOf(ctx),
 
   extractEntries(ctx: ExtractContext): EntryNode[] {

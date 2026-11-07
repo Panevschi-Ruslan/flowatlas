@@ -906,35 +906,137 @@ describe('what a nested path is compared against', () => {
   });
 });
 
-describe('a procedure asked for by its path', () => {
+describe('a procedure asked for by its path (P247)', () => {
   /**
-   * Typed on both sides on purpose. The handler's parameter is the envelope a
-   * procedure body is handed — a context and the input — and the caller's type
-   * is the input alone, so comparing the two would report a missing field on
-   * every procedure ever written, and comparing anything the client inferred
-   * from the server's own tree would agree with itself.
+   * The caller's input and answer against the procedure's declared input and
+   * answer, as a request's body and response are compared. Never the
+   * handler's own parameter, which is the envelope a procedure body is handed
+   * - a context and the input - and would be a missing field on every
+   * procedure ever written; it is typed here on purpose to show it is not used.
+   */
+  const asked = (
+    call: Record<string, unknown>,
+    entry: Record<string, unknown>,
+    sent: { params?: string[]; returns?: string } = {},
+  ): ContractReport =>
+    checkContracts(
+      graphOf({
+        nodes: [
+          node('worker#Fulfil', 'method', 'worker'),
+          node('http_out:worker#src/orders.ts:4:5', 'http_out', 'worker', {
+            kind: 'rpc',
+            meta: { procedure: 'orders.place', call: 'handler', ...call },
+          }),
+          node('entry:orders:rpc:orders.place', 'entry', 'orders', {
+            kind: 'rpc',
+            meta: { key: 'orders.place', call: 'handler', ...entry },
+          }),
+          node('orders#place', 'function', 'orders'),
+        ],
+        edges: [
+          edge('worker#Fulfil', 'calls', 'http_out:worker#src/orders.ts:4:5'),
+          edge('http_out:worker#src/orders.ts:4:5', 'hits', 'entry:orders:rpc:orders.place', sent),
+          edge('entry:orders:rpc:orders.place', 'handles', 'orders#place', {
+            params: ['{context:unknown;input:unknown}'],
+            returns: 'void',
+          }),
+        ],
+        types: {},
+      }),
+      { generatedAt: FIXED },
+    );
+  const DECLARED = {
+    input: 'NewOrder',
+    signature: { params: [{ name: 'input', type: '{sku:string;quantity:number}' }], returns: '{id:string}' },
+  };
+
+  it('compares both directions where both ends are typed, and agrees where they do', () => {
+    const report = asked(
+      { inputKeys: ['quantity', 'sku'], inputType: '{sku:string;quantity:number}', outputType: '{id:string}' },
+      DECLARED,
+      { params: ['{sku:string;quantity:number}'], returns: '{id:string}' },
+    );
+    expect(report.summary).toMatchObject({ edges: 2, identical: 2, unchecked: 0, errors: 0 });
+  });
+
+  it("finds a key the procedure requires that the caller does not send, and one it reads that nothing answers", () => {
+    const report = asked(
+      { inputKeys: ['qty', 'sku'], inputType: '{sku:string;qty:number}', outputType: '{id:string;total:number}' },
+      DECLARED,
+      { params: ['{sku:string;qty:number}'], returns: '{id:string;total:number}' },
+    );
+    expect(report.findings.map((finding) => [finding.direction, finding.kind, finding.field, finding.severity])).toEqual([
+      ['request', 'extra_field', 'qty', 'info'],
+      ['request', 'missing_required', 'quantity', 'error'],
+      ['response', 'missing_required', 'total', 'error'],
+    ]);
+    expect(report.findings[1]?.message).toBe('receiver orders requires `quantity: number`; sender worker does not send it');
+  });
+
+  it('says so where the procedure declares no input, or one whose type does not resolve', () => {
+    const undeclared = asked({ inputType: '{since:string}', outputType: 'number' }, { signature: { params: [], returns: 'number' } }, {
+      params: ['{since:string}'],
+      returns: 'number',
+    });
+    expect(undeclared.unchecked.map((row) => [row.direction, row.reason])).toEqual([['request', 'procedure-input-undeclared']]);
+    const unread = asked({ inputType: '{sku:string}', outputType: '{id:string}' }, { ...DECLARED, signature: { params: [{ name: 'input', type: 'any' }], returns: '{id:string}' } }, {
+      params: ['{sku:string}'],
+      returns: '{id:string}',
+    });
+    const [row] = unread.unchecked;
+    expect(row?.reason).toBe('procedure-input-unread');
+    expect(row?.message).toContain('takes NewOrder, whose type does not resolve here');
+  });
+
+  it('says so where the input is handed later or not written, and where the answer goes to a hook', () => {
+    const later = asked({ inputLater: true }, DECLARED);
+    expect(later.unchecked.map((row) => [row.direction, row.reason])).toEqual([
+      ['request', 'procedure-input-not-at-call'],
+      ['response', 'procedure-output-inferred'],
+    ]);
+    expect(later.unchecked[0]?.message).toContain('hands the input to what the call returns');
+    expect(later.unchecked[1]?.message).toContain('through a hook');
+    expect(asked({ inputNone: true }, DECLARED).unchecked[0]?.message).toContain('writes no input at the call');
+  });
+
+  it("says a client typed any states neither end, with the client's own way of stating them", () => {
+    const report = asked({ inputType: 'any', outputType: 'any' }, DECLARED, { params: ['any'], returns: 'any' });
+    expect(report.unchecked.map((row) => [row.direction, row.reason])).toEqual([
+      ['request', 'no-type-on-sender'],
+      ['response', 'no-type-on-receiver'],
+    ]);
+    expect(report.unchecked[0]?.hint).toContain('Type the client from the tree it calls');
+    expect(report.unchecked[1]?.message).toBe('worker#Fulfil reads what the procedure answers with no type');
+  });
+});
+
+describe('a route that answers for a procedure (P58)', () => {
+  /**
+   * An OpenAPI handler serves a procedure at a REST route of its own, and its
+   * handler is handed the same envelope whoever asks: a REST caller's body put
+   * against it would be a missing field on every route of the kind.
    */
   const report = checkContracts(
     graphOf({
       nodes: [
         node('web#Orders', 'ui_component', 'web'),
-        node('ui_api_call:web#src/Orders.tsx:4:5', 'ui_api_call', 'web', {
-          kind: 'rpc',
-          meta: { procedure: 'orders.list', call: 'query' },
+        node('ui_api_call:web#src/Orders.tsx:9:5', 'ui_api_call', 'web', {
+          kind: 'http',
+          meta: { method: 'GET', path: '/api/orders' },
         }),
-        node('entry:api:rpc:orders.list', 'entry', 'api', {
-          kind: 'rpc',
-          meta: { key: 'orders.list', call: 'query', input: 'OrderQuery' },
+        node('entry:api:http:GET:/api/orders', 'entry', 'api', {
+          kind: 'http',
+          meta: { method: 'GET', path: '/api/orders', procedure: 'orders.list', input: 'OrderQuery' },
         }),
         node('api#listOrders', 'function', 'api'),
       ],
       edges: [
-        edge('web#Orders', 'calls', 'ui_api_call:web#src/Orders.tsx:4:5'),
-        edge('ui_api_call:web#src/Orders.tsx:4:5', 'hits', 'entry:api:rpc:orders.list', {
+        edge('web#Orders', 'calls', 'ui_api_call:web#src/Orders.tsx:9:5'),
+        edge('ui_api_call:web#src/Orders.tsx:9:5', 'hits', 'entry:api:http:GET:/api/orders', {
           params: ['type:caller#Body'],
           returns: 'type:api#Answer',
         }),
-        edge('entry:api:rpc:orders.list', 'handles', 'api#listOrders', {
+        edge('entry:api:http:GET:/api/orders', 'handles', 'api#listOrders', {
           params: ['type:api#Body'],
           returns: 'type:api#Answer',
         }),
@@ -944,8 +1046,7 @@ describe('a procedure asked for by its path', () => {
     { generatedAt: FIXED },
   );
 
-  it('compares neither direction and says why for each', () => {
-    expect(report.summary).toMatchObject({ edges: 0, unchecked: 2, identical: 0, errors: 0 });
+  it('is unchecked for the reason a procedure is', () => {
     expect(report.findings).toEqual([]);
     expect(report.unchecked.map((row) => [row.direction, row.reason])).toEqual([
       ['request', 'procedure-input-by-name'],
@@ -953,9 +1054,41 @@ describe('a procedure asked for by its path', () => {
     ]);
   });
 
-  it('names the input the server declared, as the server wrote it', () => {
-    const request = report.unchecked.find((row) => row.direction === 'request');
-    expect(request?.message).toContain('takes OrderQuery');
+  /**
+   * A plain request is typed by what it writes, not by the server's tree
+   * (P252): the row names the caller's own type, which nothing ties to the
+   * procedure's output, rather than saying the two ends are one declaration.
+   */
+  it('says a plain caller types the answer itself, with a type nothing ties to the tree (P252)', () => {
+    const response = report.unchecked.find((row) => row.direction === 'response');
+    expect(response?.message).toContain('a plain request that types it as Answer itself');
+    expect(response?.message).not.toContain("inferred from the server's own tree");
+    expect(response?.hint).toContain('Nothing keeps Answer in step with the procedure');
+  });
+
+  it('says a plain caller that types no answer states no type for it, as any request would (P252)', () => {
+    const untyped = checkContracts(
+      graphOf({
+        nodes: [
+          node('web#Orders', 'ui_component', 'web'),
+          node('ui_api_call:web#src/Orders.tsx:9:5', 'ui_api_call', 'web', { kind: 'http', meta: { method: 'GET', path: '/api/orders' } }),
+          node('entry:api:http:GET:/api/orders', 'entry', 'api', { kind: 'http', meta: { method: 'GET', path: '/api/orders', procedure: 'orders.list', input: 'OrderQuery' } }),
+          node('api#listOrders', 'function', 'api'),
+        ],
+        edges: [
+          edge('web#Orders', 'calls', 'ui_api_call:web#src/Orders.tsx:9:5'),
+          edge('ui_api_call:web#src/Orders.tsx:9:5', 'hits', 'entry:api:http:GET:/api/orders', { params: ['type:caller#Body'] }),
+          edge('entry:api:http:GET:/api/orders', 'handles', 'api#listOrders', { params: ['type:api#Body'], returns: 'type:api#Answer' }),
+        ],
+        types: registry,
+      }),
+      { generatedAt: FIXED },
+    );
+    expect(untyped.unchecked.map((row) => [row.direction, row.reason])).toEqual([
+      ['request', 'procedure-input-by-name'],
+      ['response', 'no-type-on-receiver'],
+    ]);
+    expect(untyped.unchecked.find((row) => row.direction === 'response')?.message).toBe('web#Orders declares no type for what it expects');
   });
 });
 

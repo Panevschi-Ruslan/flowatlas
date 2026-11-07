@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "nest-fails-accurate",
-  "generatedAt": "2026-10-17T01:51:16.998Z",
+  "generatedAt": "2026-11-07T17:38:53.566Z",
   "nodes": [
     {
       "id": "entry:nest-fails-accurate:http:GET:/loans",
@@ -854,7 +854,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 11
+          }
+        ]
       }
     }
   ],

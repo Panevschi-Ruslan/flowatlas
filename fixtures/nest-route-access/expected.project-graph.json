@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T04:50:37.421Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:39:47.818Z",
   "services": [
     {
       "name": "catalog",
@@ -1297,7 +1297,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1321,7 +1328,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -1346,7 +1360,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 10
+          }
+        ]
       }
     },
     {

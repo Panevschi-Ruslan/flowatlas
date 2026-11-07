@@ -84,11 +84,11 @@ export const moduleFunctions = (sourceFile: SourceFile): NamedFunction[] => {
  * read alike are still two functions.
  */
 export const inlineFunction = (
-  fn: ArrowFunction | FunctionExpression,
+  fn: ArrowFunction | FunctionExpression | MethodDeclaration,
   label: string,
 ): NamedFunction => {
   const line = startLineOf(fn);
-  return { name: `${label}@${line}`, declaration: fn, body: fn.getBody(), line };
+  return { name: `${label}@${line}`, declaration: fn, body: fn.getBody() ?? fn, line };
 };
 
 /**
@@ -144,10 +144,13 @@ export const functionAt = (
   sourceFile: SourceFile,
   line: number,
   column: number,
-): ArrowFunction | FunctionExpression | undefined => {
-  let found: ArrowFunction | FunctionExpression | undefined;
+): ArrowFunction | FunctionExpression | MethodDeclaration | undefined => {
+  let found: ArrowFunction | FunctionExpression | MethodDeclaration | undefined;
   sourceFile.forEachDescendant((node) => {
-    if (!Node.isArrowFunction(node) && !Node.isFunctionExpression(node)) return;
+    // A method written in an object literal is a function written in place too:
+    // `resolvers: { Query: { orders() {…} } }` (P232).
+    const objectMethod = Node.isMethodDeclaration(node) && Node.isObjectLiteralExpression(node.getParent());
+    if (!Node.isArrowFunction(node) && !Node.isFunctionExpression(node) && !objectMethod) return;
     const at = lineAndColumnAt(sourceFile, node.getStart());
     if (at.line === line && at.column === column) found = node;
   });

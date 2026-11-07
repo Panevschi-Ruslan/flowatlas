@@ -1,0 +1,1382 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:32:43.964Z",
+  "services": [
+    {
+      "name": "club",
+      "repo": "./club",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/default/club.accounts/MemberJoined",
+      "type": "channel",
+      "label": "eventbridge/default/club.accounts/MemberJoined",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 75,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/club-dev-members",
+      "type": "channel",
+      "label": "sns/club-dev-members",
+      "repo": "club",
+      "file": "lib/mailbox.ts",
+      "line": 19,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/club-dev-staff",
+      "type": "channel",
+      "label": "sns/club-dev-staff",
+      "repo": "club",
+      "file": "lib/mailbox.ts",
+      "line": 19,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@ClubStack.Inbox",
+      "type": "channel",
+      "label": "sqs/${…}@ClubStack.Inbox",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 43,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/club-dev-renewal",
+      "type": "channel",
+      "label": "sqs/club-dev-renewal",
+      "repo": "club",
+      "file": "lib/workers.ts",
+      "line": 14,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/club-dev-welcome",
+      "type": "channel",
+      "label": "sqs/club-dev-welcome",
+      "repo": "club",
+      "file": "lib/workers.ts",
+      "line": 14,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "club#lib/club-stack.Welcome.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "club",
+      "file": "lib/club-stack.Welcome.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{userName:string}"
+            }
+          ],
+          "returns": "{userName:string}"
+        }
+      }
+    },
+    {
+      "id": "club#lib/club-stack.ts:ClubStack/Renewals/Charge",
+      "type": "function",
+      "label": "Charge [Task lambda:invoke]",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 81,
+      "kind": "state",
+      "meta": {
+        "workflow": "ClubStack/Renewals",
+        "stateType": "Task",
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "${…}@ClubStack.Sender"
+        },
+        "reaches": [
+          "invoke:${…}@ClubStack.Sender"
+        ],
+        "parameters": {
+          "FunctionName": "${ref0}",
+          "Payload.$": "$"
+        }
+      }
+    },
+    {
+      "id": "club#lib/club-stack.ts:ClubStack/Renewals/Paid?",
+      "type": "function",
+      "label": "Paid? [Choice]",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 82,
+      "kind": "state",
+      "meta": {
+        "workflow": "ClubStack/Renewals",
+        "stateType": "Choice"
+      }
+    },
+    {
+      "id": "club#lib/club-stack.ts:ClubStack/Renewals/Remind",
+      "type": "function",
+      "label": "Remind [Task sqs:sendMessage]",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 84,
+      "kind": "state",
+      "meta": {
+        "workflow": "ClubStack/Renewals",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "channel",
+          "service": "sqs",
+          "action": "sendMessage",
+          "pattern": "request-response",
+          "transport": "queue",
+          "targets": [
+            "${…}@ClubStack.Inbox"
+          ],
+          "channels": [
+            "sqs/${…}@ClubStack.Inbox"
+          ]
+        },
+        "parameters": {
+          "QueueUrl": "${ref1}",
+          "MessageBody.$": "$"
+        }
+      }
+    },
+    {
+      "id": "club#lib/club-stack.ts:ClubStack/Renewals/Renewed",
+      "type": "function",
+      "label": "Renewed [Succeed]",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 83,
+      "kind": "state",
+      "meta": {
+        "workflow": "ClubStack/Renewals",
+        "stateType": "Succeed",
+        "end": true
+      }
+    },
+    {
+      "id": "club#lib/mailbox.Handler.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "club",
+      "file": "lib/mailbox.Handler.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SNSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "mail",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "club#src/mail/read.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "club",
+      "file": "src/mail/read.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "read",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "club#src/mail/send.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "club",
+      "file": "src/mail/send.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "notice",
+              "type": "{to:string}"
+            }
+          ],
+          "returns": "{paid:boolean}"
+        }
+      }
+    },
+    {
+      "id": "club#src/workers/renewal.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "club",
+      "file": "src/workers/renewal.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "renewal",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "club#src/workers/welcome.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "club",
+      "file": "src/workers/welcome.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "welcome",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "club#statemachine/lapses.asl.json:club-dev-lapses/ReadInbox",
+      "type": "function",
+      "label": "ReadInbox [Task lambda:invoke]",
+      "repo": "club",
+      "file": "statemachine/lapses.asl.json",
+      "line": 5,
+      "kind": "state",
+      "meta": {
+        "workflow": "club-dev-lapses",
+        "stateType": "Task",
+        "end": true,
+        "task": {
+          "kind": "function",
+          "service": "lambda",
+          "action": "invoke",
+          "pattern": "request-response",
+          "name": "${…}@ClubStack.Reader"
+        },
+        "reaches": [
+          "invoke:${…}@ClubStack.Reader"
+        ],
+        "parameters": {
+          "FunctionName": "${ReaderArn}",
+          "Payload.$": "$"
+        }
+      }
+    },
+    {
+      "id": "config_key:club#INBOX_URL",
+      "type": "config_key",
+      "label": "INBOX_URL",
+      "repo": "club",
+      "file": "src/mail/send.ts",
+      "line": 7,
+      "meta": {
+        "key": "INBOX_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:club#lib/club-stack.ts:ClubStack/Audit/Target0",
+      "type": "consumer",
+      "label": "rule ClubStack/Audit/Target0",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 67,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "ClubStack/Audit/Target0",
+        "deployedBy": "cdk",
+        "rule": "ClubStack/Audit",
+        "conditional": "process.env.WITH_AUDIT === 'yes'",
+        "notMatchedOn": [
+          "detail-type"
+        ],
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        },
+        "channelPattern": {
+          "parts": [
+            {
+              "name": "service",
+              "filters": [
+                {
+                  "equals": "eventbridge"
+                }
+              ]
+            },
+            {
+              "name": "bus",
+              "filters": [
+                {
+                  "equals": "default"
+                }
+              ]
+            },
+            {
+              "name": "source",
+              "filters": [
+                {
+                  "equals": "club.mail"
+                }
+              ]
+            },
+            {
+              "name": "detail-type",
+              "filters": []
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "consumer:club#lib/club-stack.ts:ClubStack/MemberJoined/Target0",
+      "type": "consumer",
+      "label": "rule ClubStack/MemberJoined/Target0",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 75,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "ClubStack/MemberJoined/Target0",
+        "deployedBy": "cdk",
+        "rule": "ClubStack/MemberJoined",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        },
+        "reaches": [
+          "invoke:club-billing-charge"
+        ]
+      }
+    },
+    {
+      "id": "consumer:club#lib/club-stack.ts:ClubStack/Reader/SqsEventSource:ClubStack/Inbox",
+      "type": "consumer",
+      "label": "mapping ClubStack/Reader/SqsEventSource:ClubStack/Inbox",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 43,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "ClubStack/Reader/SqsEventSource:ClubStack/Inbox",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:club#lib/mailbox.ts:ClubStack/Members/Topic/ClubStack/Members/Handler",
+      "type": "consumer",
+      "label": "subscription ClubStack/Members/Topic/ClubStack/Members/Handler",
+      "repo": "club",
+      "file": "lib/mailbox.ts",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "ClubStack/Members/Topic/ClubStack/Members/Handler",
+        "deployedBy": "cdk",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:club#lib/mailbox.ts:ClubStack/Staff/Topic/ClubStack/Staff/Handler",
+      "type": "consumer",
+      "label": "subscription ClubStack/Staff/Topic/ClubStack/Staff/Handler",
+      "repo": "club",
+      "file": "lib/mailbox.ts",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "ClubStack/Staff/Topic/ClubStack/Staff/Handler",
+        "deployedBy": "cdk",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:club#lib/workers.ts:ClubStack/renewal-worker/SqsEventSource:ClubStack/renewal-queue",
+      "type": "consumer",
+      "label": "mapping ClubStack/renewal-worker/SqsEventSource:ClubStack/renewal-queue",
+      "repo": "club",
+      "file": "lib/workers.ts",
+      "line": 14,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "ClubStack/renewal-worker/SqsEventSource:ClubStack/renewal-queue",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:club#lib/workers.ts:ClubStack/welcome-worker/SqsEventSource:ClubStack/welcome-queue",
+      "type": "consumer",
+      "label": "mapping ClubStack/welcome-worker/SqsEventSource:ClubStack/welcome-queue",
+      "repo": "club",
+      "file": "lib/workers.ts",
+      "line": 14,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "ClubStack/welcome-worker/SqsEventSource:ClubStack/welcome-queue",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:club:event:cognito/club-members/post_confirmation",
+      "type": "entry",
+      "label": "event cognito/club-members/post_confirmation",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 96,
+      "kind": "event",
+      "meta": {
+        "key": "cognito/club-members/post_confirmation",
+        "by": "trigger",
+        "declaredAs": "ClubStack/MemberPool/post_confirmation",
+        "deployedBy": "cdk",
+        "service": "cognito",
+        "name": "post_confirmation",
+        "pool": "club-members",
+        "trigger": "post_confirmation",
+        "function": "club-dev-welcome",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:club:invoke:${…}@ClubStack.Reader",
+      "type": "entry",
+      "label": "ClubStack/Reader (name generated when deployed)",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@ClubStack.Reader",
+        "deployedBy": "cdk",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "ClubStack/Reader",
+        "constructPath": "ClubStack/Reader",
+        "nameGenerated": true,
+        "handler": "read.handler",
+        "packagedFrom": "dist/mail",
+        "compiledBy": "tsconfig.json",
+        "sourceDirectory": "src/mail",
+        "handlerVia": "function",
+        "environment": {
+          "ACCOUNT": {
+            "written": "a value not known from the files",
+            "unread": "Aws.ACCOUNT_ID is filled in when the stack is deployed"
+          },
+          "SHARED_QUEUE_URL": {
+            "written": "Fn.importValue(\"club-shared-queue-url\")",
+            "imported": "export:club-shared-queue-url",
+            "unread": "the value is imported from another stack, which exports it as club-shared-queue-url"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:club:invoke:${…}@ClubStack.Sender",
+      "type": "entry",
+      "label": "ClubStack/Sender (name generated when deployed)",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 31,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@ClubStack.Sender",
+        "deployedBy": "cdk",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "ClubStack/Sender",
+        "constructPath": "ClubStack/Sender",
+        "nameGenerated": true,
+        "handler": "send.handler",
+        "packagedFrom": "dist/mail",
+        "compiledBy": "tsconfig.json",
+        "sourceDirectory": "src/mail",
+        "handlerVia": "function",
+        "environment": {
+          "INBOX_URL": {
+            "written": "ClubStack/Inbox.queueUrl",
+            "value": "${…}@ClubStack.Inbox",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "{to:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:club:invoke:club-dev-members-handler",
+      "type": "entry",
+      "label": "club-dev-members-handler",
+      "repo": "club",
+      "file": "lib/mailbox.ts",
+      "line": 18,
+      "kind": "invoke",
+      "meta": {
+        "key": "club-dev-members-handler",
+        "deployedBy": "cdk",
+        "name": "club-dev-members-handler",
+        "declaredAs": "ClubStack/Members/Handler",
+        "constructPath": "ClubStack/Members/Handler",
+        "handler": "lib/mailbox.Handler.ts:handler",
+        "sourceDirectory": "lib",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SNSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:club:invoke:club-dev-renewal-worker",
+      "type": "entry",
+      "label": "club-dev-renewal-worker",
+      "repo": "club",
+      "file": "lib/workers.ts",
+      "line": 10,
+      "kind": "invoke",
+      "meta": {
+        "key": "club-dev-renewal-worker",
+        "deployedBy": "cdk",
+        "name": "club-dev-renewal-worker",
+        "declaredAs": "ClubStack/renewal-worker",
+        "constructPath": "ClubStack/renewal-worker",
+        "handler": "src/workers/renewal.ts:handler",
+        "sourceDirectory": "src/workers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:club:invoke:club-dev-staff-handler",
+      "type": "entry",
+      "label": "club-dev-staff-handler",
+      "repo": "club",
+      "file": "lib/mailbox.ts",
+      "line": 18,
+      "kind": "invoke",
+      "meta": {
+        "key": "club-dev-staff-handler",
+        "deployedBy": "cdk",
+        "name": "club-dev-staff-handler",
+        "declaredAs": "ClubStack/Staff/Handler",
+        "constructPath": "ClubStack/Staff/Handler",
+        "handler": "lib/mailbox.Handler.ts:handler",
+        "sourceDirectory": "lib",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SNSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:club:invoke:club-dev-welcome",
+      "type": "entry",
+      "label": "club-dev-welcome",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 95,
+      "kind": "invoke",
+      "meta": {
+        "key": "club-dev-welcome",
+        "deployedBy": "cdk",
+        "name": "club-dev-welcome",
+        "declaredAs": "ClubStack/Welcome",
+        "constructPath": "ClubStack/Welcome",
+        "handler": "lib/club-stack.Welcome.ts:handler",
+        "sourceDirectory": "lib",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{userName:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:club:invoke:club-dev-welcome-worker",
+      "type": "entry",
+      "label": "club-dev-welcome-worker",
+      "repo": "club",
+      "file": "lib/workers.ts",
+      "line": 10,
+      "kind": "invoke",
+      "meta": {
+        "key": "club-dev-welcome-worker",
+        "deployedBy": "cdk",
+        "name": "club-dev-welcome-worker",
+        "declaredAs": "ClubStack/welcome-worker",
+        "constructPath": "ClubStack/welcome-worker",
+        "handler": "src/workers/welcome.ts:handler",
+        "sourceDirectory": "src/workers",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:club:workflow:${…}@ClubStack.Renewals",
+      "type": "entry",
+      "label": "workflow ClubStack/Renewals",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 85,
+      "kind": "workflow",
+      "meta": {
+        "key": "${…}@ClubStack.Renewals",
+        "name": "ClubStack/Renewals",
+        "nameFrom": "deployment",
+        "startAt": "Charge",
+        "states": 4,
+        "queryLanguage": "JSONPath",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "cdk",
+        "declaredAs": "ClubStack/Renewals",
+        "nameGenerated": true,
+        "declaredIn": "lib/club-stack.ts:85",
+        "nameRead": false
+      }
+    },
+    {
+      "id": "entry:club:workflow:club-dev-lapses",
+      "type": "entry",
+      "label": "workflow club-dev-lapses",
+      "repo": "club",
+      "file": "statemachine/lapses.asl.json",
+      "line": 1,
+      "kind": "workflow",
+      "meta": {
+        "key": "club-dev-lapses",
+        "name": "club-dev-lapses",
+        "nameFrom": "deployment",
+        "startAt": "ReadInbox",
+        "states": 1,
+        "queryLanguage": "JSONPath",
+        "comment": "Reads the inbox for a lapsed member, then stops.",
+        "reads": {},
+        "carriesOn": true,
+        "deployedBy": "cdk",
+        "declaredAs": "ClubStack/Lapses",
+        "declaredIn": "lib/club-stack.ts:88"
+      }
+    },
+    {
+      "id": "producer:club#lib/club-stack.ts:84:1",
+      "type": "producer",
+      "label": "message sqs/${…}@ClubStack.Inbox",
+      "repo": "club",
+      "file": "lib/club-stack.ts",
+      "line": 84,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "definition",
+        "service": "sqs",
+        "action": "sendMessage"
+      }
+    },
+    {
+      "id": "producer:club#src/mail/send.ts:7:9",
+      "type": "producer",
+      "label": "message sqs/${…}@ClubStack.Inbox",
+      "repo": "club",
+      "file": "src/mail/send.ts",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "INBOX_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{to:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:club",
+      "type": "repo",
+      "label": "club",
+      "repo": "club",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "imports": [
+          {
+            "key": "export:club-shared-queue-url",
+            "file": "lib/club-stack.ts",
+            "line": 37,
+            "what": "the value of SHARED_QUEUE_URL ClubStack/Reader is deployed with"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:eventbridge/default/club.accounts/MemberJoined",
+      "to": "consumer:club#lib/club-stack.ts:ClubStack/MemberJoined/Target0",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/club-stack.ts",
+      "line": 75,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:sns/club-dev-members",
+      "to": "consumer:club#lib/mailbox.ts:ClubStack/Members/Topic/ClubStack/Members/Handler",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/mailbox.ts",
+      "line": 19,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sns/club-dev-staff",
+      "to": "consumer:club#lib/mailbox.ts:ClubStack/Staff/Topic/ClubStack/Staff/Handler",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/mailbox.ts",
+      "line": 19,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/${…}@ClubStack.Inbox",
+      "to": "consumer:club#lib/club-stack.ts:ClubStack/Reader/SqsEventSource:ClubStack/Inbox",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/club-stack.ts",
+      "line": 43,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/club-dev-renewal",
+      "to": "consumer:club#lib/workers.ts:ClubStack/renewal-worker/SqsEventSource:ClubStack/renewal-queue",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/workers.ts",
+      "line": 14,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/club-dev-welcome",
+      "to": "consumer:club#lib/workers.ts:ClubStack/welcome-worker/SqsEventSource:ClubStack/welcome-queue",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/workers.ts",
+      "line": 14,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "club#lib/club-stack.ts:ClubStack/Renewals/Charge",
+      "to": "club#lib/club-stack.ts:ClubStack/Renewals/Paid?",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/club-stack.ts",
+      "line": 81,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "next"
+          }
+        ]
+      }
+    },
+    {
+      "from": "club#lib/club-stack.ts:ClubStack/Renewals/Charge",
+      "to": "entry:club:invoke:${…}@ClubStack.Sender",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/club-stack.ts",
+      "line": 81,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:${…}@ClubStack.Sender"
+      }
+    },
+    {
+      "from": "club#lib/club-stack.ts:ClubStack/Renewals/Paid?",
+      "to": "club#lib/club-stack.ts:ClubStack/Renewals/Remind",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/club-stack.ts",
+      "line": 82,
+      "meta": {
+        "order": 1,
+        "transitions": [
+          {
+            "kind": "default"
+          }
+        ]
+      }
+    },
+    {
+      "from": "club#lib/club-stack.ts:ClubStack/Renewals/Paid?",
+      "to": "club#lib/club-stack.ts:ClubStack/Renewals/Renewed",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/club-stack.ts",
+      "line": 82,
+      "meta": {
+        "order": 0,
+        "transitions": [
+          {
+            "kind": "choice",
+            "rule": {
+              "Variable": "$.paid",
+              "BooleanEquals": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "from": "club#lib/club-stack.ts:ClubStack/Renewals/Remind",
+      "to": "producer:club#lib/club-stack.ts:84:1",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/club-stack.ts",
+      "line": 84
+    },
+    {
+      "from": "club#src/mail/send.ts:handler",
+      "to": "config_key:club#INBOX_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/mail/send.ts",
+      "line": 7,
+      "meta": {
+        "setBy": [
+          {
+            "function": "ClubStack/Sender (name generated when deployed)",
+            "written": "ClubStack/Inbox.queueUrl",
+            "value": "${…}@ClubStack.Inbox"
+          }
+        ]
+      }
+    },
+    {
+      "from": "club#src/mail/send.ts:handler",
+      "to": "producer:club#src/mail/send.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/mail/send.ts",
+      "line": 7
+    },
+    {
+      "from": "club#statemachine/lapses.asl.json:club-dev-lapses/ReadInbox",
+      "to": "entry:club:invoke:${…}@ClubStack.Reader",
+      "type": "calls",
+      "confidence": "static",
+      "file": "statemachine/lapses.asl.json",
+      "line": 5,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:${…}@ClubStack.Reader"
+      }
+    },
+    {
+      "from": "consumer:club#lib/club-stack.ts:ClubStack/Audit/Target0",
+      "to": "entry:club:invoke:${…}@ClubStack.Reader",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "lib/club-stack.ts",
+      "line": 67,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:club#lib/club-stack.ts:ClubStack/Reader/SqsEventSource:ClubStack/Inbox",
+      "to": "entry:club:invoke:${…}@ClubStack.Reader",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/club-stack.ts",
+      "line": 43,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:club#lib/mailbox.ts:ClubStack/Members/Topic/ClubStack/Members/Handler",
+      "to": "entry:club:invoke:club-dev-members-handler",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/mailbox.ts",
+      "line": 19,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:club#lib/mailbox.ts:ClubStack/Staff/Topic/ClubStack/Staff/Handler",
+      "to": "entry:club:invoke:club-dev-staff-handler",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/mailbox.ts",
+      "line": 19,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:club#lib/workers.ts:ClubStack/renewal-worker/SqsEventSource:ClubStack/renewal-queue",
+      "to": "entry:club:invoke:club-dev-renewal-worker",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/workers.ts",
+      "line": 14,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:club#lib/workers.ts:ClubStack/welcome-worker/SqsEventSource:ClubStack/welcome-queue",
+      "to": "entry:club:invoke:club-dev-welcome-worker",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/workers.ts",
+      "line": 14,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:club:event:cognito/club-members/post_confirmation",
+      "to": "club#lib/club-stack.Welcome.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "lib/club-stack.Welcome.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:club:invoke:${…}@ClubStack.Reader",
+      "to": "club#src/mail/read.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/mail/read.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:club:invoke:${…}@ClubStack.Sender",
+      "to": "club#src/mail/send.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/mail/send.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:club:invoke:club-dev-members-handler",
+      "to": "club#lib/mailbox.Handler.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "lib/mailbox.Handler.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:club:invoke:club-dev-renewal-worker",
+      "to": "club#src/workers/renewal.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/workers/renewal.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:club:invoke:club-dev-staff-handler",
+      "to": "club#lib/mailbox.Handler.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "lib/mailbox.Handler.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:club:invoke:club-dev-welcome",
+      "to": "club#lib/club-stack.Welcome.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "lib/club-stack.Welcome.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:club:invoke:club-dev-welcome-worker",
+      "to": "club#src/workers/welcome.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/workers/welcome.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:club:workflow:${…}@ClubStack.Renewals",
+      "to": "club#lib/club-stack.ts:ClubStack/Renewals/Charge",
+      "type": "handles",
+      "confidence": "static",
+      "file": "lib/club-stack.ts",
+      "line": 85
+    },
+    {
+      "from": "entry:club:workflow:club-dev-lapses",
+      "to": "club#statemachine/lapses.asl.json:club-dev-lapses/ReadInbox",
+      "type": "handles",
+      "confidence": "static",
+      "file": "statemachine/lapses.asl.json",
+      "line": 3
+    },
+    {
+      "from": "producer:club#lib/club-stack.ts:84:1",
+      "to": "channel:sqs/${…}@ClubStack.Inbox",
+      "type": "emits",
+      "confidence": "static",
+      "file": "lib/club-stack.ts",
+      "line": 84,
+      "meta": {
+        "payload": {
+          "MessageBody.$": "$"
+        }
+      }
+    },
+    {
+      "from": "producer:club#src/mail/send.ts:7:9",
+      "to": "channel:sqs/${…}@ClubStack.Inbox",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/mail/send.ts",
+      "line": 7,
+      "params": [
+        "{to:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "INBOX_URL"
+        ],
+        "functions": [
+          "ClubStack/Sender (name generated when deployed)"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#SNSEvent": {
+      "name": "SNSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "17e8e52b989c5abe",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "lib/archive-stack.ts",
+      "line": 6,
+      "reason": "construct-unreached",
+      "level": "info",
+      "message": "ArchiveStack is a construct the app declares and never creates, so it is not read",
+      "hint": "Nothing to do unless it is deployed some other way.",
+      "symbol": "ArchiveStack",
+      "adapter": "aws-lambda",
+      "service": "club"
+    },
+    {
+      "file": "lib/club-stack.ts",
+      "line": 30,
+      "reason": "deployed-name-generated",
+      "level": "info",
+      "sites": 4,
+      "message": "ClubStack/Inbox is a queue with no name of its own, so it is named by its place in the app; what the app points at it with joins to it, and nothing outside this deployment can",
+      "hint": "Give it a name of its own where other repositories reach it.",
+      "symbol": "ClubStack/Inbox",
+      "adapter": "aws-lambda",
+      "service": "club"
+    },
+    {
+      "service": "club",
+      "file": "lib/club-stack.ts",
+      "line": 37,
+      "reason": "export-not-found",
+      "message": "the value of SHARED_QUEUE_URL ClubStack/Reader is deployed with is the export club-shared-queue-url, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:export:club-shared-queue-url",
+      "meta": {
+        "key": "export:club-shared-queue-url"
+      }
+    },
+    {
+      "file": "lib/club-stack.ts",
+      "line": 54,
+      "reason": "construct-repeated-unread",
+      "message": "ClubStack/lib/club-stack.ts:54 is declared once per element of ssm.StringParameter.valueFromLookup(this, '/club/extra-qu..., which the files do not settle; one is read in their place",
+      "hint": "Write the collection out, or as a constant, and each is read under its own name.",
+      "symbol": "ClubStack/lib/club-stack.ts:54",
+      "adapter": "aws-lambda",
+      "service": "club"
+    },
+    {
+      "file": "lib/club-stack.ts",
+      "line": 67,
+      "reason": "construct-conditional",
+      "level": "info",
+      "message": "ClubStack/Audit is declared under process.env.WITH_AUDIT === 'yes', which the files do not settle; it is read as declared, and what reaches it is drawn heuristic",
+      "hint": "Set the value the condition reads under services[].infra.options, or in the app.",
+      "symbol": "ClubStack/Audit",
+      "adapter": "aws-lambda",
+      "service": "club"
+    },
+    {
+      "service": "club",
+      "file": "lib/club-stack.ts",
+      "line": 67,
+      "reason": "subscription-matches-nothing",
+      "level": "info",
+      "message": "rule ClubStack/Audit/Target0 takes events by a pattern that no publisher in the configured services matches",
+      "hint": "A rule for events nothing here puts is a way in from outside - another account, a partner, the platform itself - or its publisher is in a repository the configuration does not name. Nothing to fix if it is the first.",
+      "symbol": "consumer:club#lib/club-stack.ts:ClubStack/Audit/Target0"
+    },
+    {
+      "service": "club",
+      "file": "lib/club-stack.ts",
+      "line": 75,
+      "reason": "reference-not-found",
+      "message": "rule ClubStack/MemberJoined/Target0 reaches the function club-billing-charge, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "consumer:club#lib/club-stack.ts:ClubStack/MemberJoined/Target0",
+      "meta": {
+        "reference": "invoke:club-billing-charge"
+      }
+    }
+  ]
+}

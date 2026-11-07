@@ -1,0 +1,1136 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-06T18:11:10.797Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:GET:/api/brand",
+      "type": "entry",
+      "label": "GET /api/brand",
+      "repo": "shop",
+      "file": "../brand-layer/server/api/brand.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/brand",
+        "rawPath": "/api/brand",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/products",
+      "type": "entry",
+      "label": "GET /api/products",
+      "repo": "shop",
+      "file": "../ui-layer/server/api/products.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products",
+        "rawPath": "/api/products",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "shop",
+      "file": "server/routes/health.get.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/theme",
+      "type": "entry",
+      "label": "GET /theme",
+      "repo": "shop",
+      "file": "../tokens/server/routes/theme.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/theme",
+        "rawPath": "/theme",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/cart",
+      "type": "entry",
+      "label": "POST /api/cart",
+      "repo": "shop",
+      "file": "layers/base/server/api/cart.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/cart",
+        "rawPath": "/api/cart",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 29,
+          "filesRead": 29,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 14,
+          "components": 6,
+          "hooks": 4
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#../brand-layer/composables/useBrand.ts:useBrand",
+      "type": "function",
+      "label": "useBrand",
+      "repo": "shop",
+      "file": "../brand-layer/composables/useBrand.ts",
+      "line": 1,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{refresh:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#../brand-layer/server/api/brand.get.ts:GET /api/brand@1",
+      "type": "function",
+      "label": "GET /api/brand@1",
+      "repo": "shop",
+      "file": "../brand-layer/server/api/brand.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{name:'Corner Shop'}"
+        }
+      }
+    },
+    {
+      "id": "shop#../tokens/composables/useTheme.ts:useTheme",
+      "type": "function",
+      "label": "useTheme",
+      "repo": "shop",
+      "file": "../tokens/composables/useTheme.ts",
+      "line": 1,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#../tokens/server/routes/theme.get.ts:GET /theme@1",
+      "type": "function",
+      "label": "GET /theme@1",
+      "repo": "shop",
+      "file": "../tokens/server/routes/theme.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{mode:'light'}"
+        }
+      }
+    },
+    {
+      "id": "shop#../ui-layer/composables/useCatalog.ts:useCatalog",
+      "type": "function",
+      "label": "useCatalog",
+      "repo": "shop",
+      "file": "../ui-layer/composables/useCatalog.ts",
+      "line": 1,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#../ui-layer/pages/catalog.vue:applyTheme",
+      "type": "function",
+      "label": "applyTheme",
+      "repo": "shop",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../ui-layer/pages/catalog.vue:catalog",
+      "type": "ui_component",
+      "label": "catalog",
+      "repo": "shop",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/catalog"
+      }
+    },
+    {
+      "id": "shop#../ui-layer/pages/catalog.vue:loadAll",
+      "type": "function",
+      "label": "loadAll",
+      "repo": "shop",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../ui-layer/pages/index.vue:pages/index",
+      "type": "ui_component",
+      "label": "pages/index",
+      "repo": "shop",
+      "file": "../ui-layer/pages/index.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../ui-layer/server/api/products.get.ts:GET /api/products@1",
+      "type": "function",
+      "label": "GET /api/products@1",
+      "repo": "shop",
+      "file": "../ui-layer/server/api/products.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop#../ui-layer/server/utils/products.ts:allProducts",
+      "type": "function",
+      "label": "allProducts",
+      "repo": "shop",
+      "file": "../ui-layer/server/utils/products.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop#app/app.vue:app",
+      "type": "ui_component",
+      "label": "app",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/cart.vue:addOne",
+      "type": "function",
+      "label": "addOne",
+      "repo": "shop",
+      "file": "app/pages/cart.vue",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/cart.vue:cart",
+      "type": "ui_component",
+      "label": "cart",
+      "repo": "shop",
+      "file": "app/pages/cart.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/cart"
+      }
+    },
+    {
+      "id": "shop#app/pages/cart.vue:shown",
+      "type": "function",
+      "label": "shown",
+      "repo": "shop",
+      "file": "app/pages/cart.vue",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:pages/index",
+      "type": "ui_component",
+      "label": "pages/index",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:refreshBrand",
+      "type": "function",
+      "label": "refreshBrand",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#layers/base/app/components/CartBadge.vue:CartBadge",
+      "type": "ui_component",
+      "label": "CartBadge",
+      "repo": "shop",
+      "file": "layers/base/app/components/CartBadge.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#layers/base/app/composables/useCart.ts:useCart",
+      "type": "function",
+      "label": "useCart",
+      "repo": "shop",
+      "file": "layers/base/app/composables/useCart.ts",
+      "line": 1,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#layers/base/app/utils/money.ts:formatMoney",
+      "type": "function",
+      "label": "formatMoney",
+      "repo": "shop",
+      "file": "layers/base/app/utils/money.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "cents",
+              "type": "number"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop#layers/base/server/api/cart.post.ts:POST /api/cart@1",
+      "type": "function",
+      "label": "POST /api/cart@1",
+      "repo": "shop",
+      "file": "layers/base/server/api/cart.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop#layers/base/server/utils/cart.ts:addLine",
+      "type": "function",
+      "label": "addLine",
+      "repo": "shop",
+      "file": "layers/base/server/utils/cart.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/routes/health.get.ts:GET /health@2",
+      "type": "function",
+      "label": "GET /health@2",
+      "repo": "shop",
+      "file": "server/routes/health.get.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:true;by:'shop'}"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop#../ui-layer/pages/catalog.vue:4:13",
+      "type": "ui_action",
+      "label": "@click=\"loadAll\"",
+      "repo": "shop",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 4,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "loadAll",
+        "component": "shop#../ui-layer/pages/catalog.vue:catalog",
+        "template": "../ui-layer/pages/catalog.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#../ui-layer/pages/catalog.vue:5:13",
+      "type": "ui_action",
+      "label": "@click=\"applyTheme\"",
+      "repo": "shop",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 5,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "applyTheme",
+        "component": "shop#../ui-layer/pages/catalog.vue:catalog",
+        "template": "../ui-layer/pages/catalog.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/cart.vue:4:13",
+      "type": "ui_action",
+      "label": "@click=\"addOne\"",
+      "repo": "shop",
+      "file": "app/pages/cart.vue",
+      "line": 4,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "addOne",
+        "component": "shop#app/pages/cart.vue:cart",
+        "template": "app/pages/cart.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/index.vue:4:13",
+      "type": "ui_action",
+      "label": "@click=\"refreshBrand\"",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 4,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "refreshBrand",
+        "component": "shop#app/pages/index.vue:pages/index",
+        "template": "app/pages/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#../brand-layer/composables/useBrand.ts:2:18",
+      "type": "ui_api_call",
+      "label": "GET /api/brand",
+      "repo": "shop",
+      "file": "../brand-layer/composables/useBrand.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/brand",
+        "path": "/api/brand",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#../tokens/composables/useTheme.ts:2:15",
+      "type": "ui_api_call",
+      "label": "GET /theme",
+      "repo": "shop",
+      "file": "../tokens/composables/useTheme.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/theme",
+        "path": "/theme",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#../ui-layer/composables/useCatalog.ts:2:22",
+      "type": "ui_api_call",
+      "label": "GET /api/products",
+      "repo": "shop",
+      "file": "../ui-layer/composables/useCatalog.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/products",
+        "path": "/api/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#layers/base/app/composables/useCart.ts:2:33",
+      "type": "ui_api_call",
+      "label": "POST /api/cart",
+      "repo": "shop",
+      "file": "layers/base/app/composables/useCart.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/cart",
+        "path": "/api/cart",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{item:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "item"
+        ],
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:GET:/api/brand",
+      "to": "shop#../brand-layer/server/api/brand.get.ts:GET /api/brand@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{name:'Corner Shop'}",
+      "file": "../brand-layer/server/api/brand.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/products",
+      "to": "shop#../ui-layer/server/api/products.get.ts:GET /api/products@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string[]",
+      "file": "../ui-layer/server/api/products.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/health",
+      "to": "shop#server/routes/health.get.ts:GET /health@2",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:true;by:'shop'}",
+      "file": "server/routes/health.get.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/theme",
+      "to": "shop#../tokens/server/routes/theme.get.ts:GET /theme@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{mode:'light'}",
+      "file": "../tokens/server/routes/theme.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/cart",
+      "to": "shop#layers/base/server/api/cart.post.ts:POST /api/cart@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string[]",
+      "file": "layers/base/server/api/cart.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true,
+        "body": "{item:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "shop#../brand-layer/composables/useBrand.ts:useBrand",
+      "to": "ui_api_call:shop#../brand-layer/composables/useBrand.ts:2:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../brand-layer/composables/useBrand.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#../tokens/composables/useTheme.ts:useTheme",
+      "to": "ui_api_call:shop#../tokens/composables/useTheme.ts:2:15",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../tokens/composables/useTheme.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#../ui-layer/composables/useCatalog.ts:useCatalog",
+      "to": "ui_api_call:shop#../ui-layer/composables/useCatalog.ts:2:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../ui-layer/composables/useCatalog.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#../ui-layer/pages/catalog.vue:catalog",
+      "to": "shop#../tokens/composables/useTheme.ts:useTheme",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 11
+    },
+    {
+      "from": "shop#../ui-layer/pages/catalog.vue:catalog",
+      "to": "shop#../ui-layer/composables/useCatalog.ts:useCatalog",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 16
+    },
+    {
+      "from": "shop#../ui-layer/pages/catalog.vue:loadAll",
+      "to": "shop#../ui-layer/composables/useCatalog.ts:useCatalog",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 16
+    },
+    {
+      "from": "shop#../ui-layer/server/api/products.get.ts:GET /api/products@1",
+      "to": "shop#../ui-layer/server/utils/products.ts:allProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "../ui-layer/server/api/products.get.ts",
+      "line": 1
+    },
+    {
+      "from": "shop#app/pages/cart.vue:addOne",
+      "to": "shop#layers/base/app/composables/useCart.ts:useCart",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "app/pages/cart.vue",
+      "line": 18
+    },
+    {
+      "from": "shop#app/pages/cart.vue:cart",
+      "to": "shop#layers/base/app/composables/useCart.ts:useCart",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "app/pages/cart.vue",
+      "line": 18
+    },
+    {
+      "from": "shop#app/pages/cart.vue:cart",
+      "to": "shop#layers/base/app/utils/money.ts:formatMoney",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "string",
+      "file": "app/pages/cart.vue",
+      "line": 15
+    },
+    {
+      "from": "shop#app/pages/cart.vue:shown",
+      "to": "shop#layers/base/app/utils/money.ts:formatMoney",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "string",
+      "file": "app/pages/cart.vue",
+      "line": 15
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#../brand-layer/composables/useBrand.ts:useBrand",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{refresh:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "app/pages/index.vue",
+      "line": 15
+    },
+    {
+      "from": "shop#app/pages/index.vue:refreshBrand",
+      "to": "shop#../brand-layer/composables/useBrand.ts:useBrand",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{refresh:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "app/pages/index.vue",
+      "line": 15
+    },
+    {
+      "from": "shop#layers/base/app/composables/useCart.ts:useCart",
+      "to": "ui_api_call:shop#layers/base/app/composables/useCart.ts:2:33",
+      "type": "calls",
+      "confidence": "static",
+      "file": "layers/base/app/composables/useCart.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#layers/base/server/api/cart.post.ts:POST /api/cart@1",
+      "to": "shop#layers/base/server/utils/cart.ts:addLine",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "layers/base/server/api/cart.post.ts",
+      "line": 3
+    },
+    {
+      "from": "ui_action:shop#../ui-layer/pages/catalog.vue:4:13",
+      "to": "shop#../ui-layer/pages/catalog.vue:loadAll",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 4
+    },
+    {
+      "from": "ui_action:shop#../ui-layer/pages/catalog.vue:5:13",
+      "to": "shop#../ui-layer/pages/catalog.vue:applyTheme",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 5
+    },
+    {
+      "from": "ui_action:shop#app/pages/cart.vue:4:13",
+      "to": "shop#app/pages/cart.vue:addOne",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/cart.vue",
+      "line": 4
+    },
+    {
+      "from": "ui_action:shop#app/pages/index.vue:4:13",
+      "to": "shop#app/pages/index.vue:refreshBrand",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 4
+    },
+    {
+      "from": "ui_api_call:shop#../brand-layer/composables/useBrand.ts:2:18",
+      "to": "entry:shop:http:GET:/api/brand",
+      "type": "hits",
+      "confidence": "static",
+      "file": "../brand-layer/composables/useBrand.ts",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#../tokens/composables/useTheme.ts:2:15",
+      "to": "entry:shop:http:GET:/theme",
+      "type": "hits",
+      "confidence": "static",
+      "file": "../tokens/composables/useTheme.ts",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#../ui-layer/composables/useCatalog.ts:2:22",
+      "to": "entry:shop:http:GET:/api/products",
+      "type": "hits",
+      "confidence": "static",
+      "file": "../ui-layer/composables/useCatalog.ts",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#layers/base/app/composables/useCart.ts:2:33",
+      "to": "entry:shop:http:POST:/api/cart",
+      "type": "hits",
+      "confidence": "static",
+      "file": "layers/base/app/composables/useCart.ts",
+      "line": 2,
+      "params": [
+        "{item:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "../tokens/server/routes/health.get.ts",
+      "line": 1,
+      "reason": "framework-layer-overridden",
+      "level": "info",
+      "sites": 2,
+      "message": "../tokens/server/routes/health.get.ts would serve GET /health, and Nuxt serves server/routes/health.get.ts there instead: the application ranks above ../tokens among its layers",
+      "hint": "Nothing to do. Rename or remove the route of the lower layer to have it served.",
+      "symbol": "GET /health",
+      "adapter": "nitro-routes",
+      "meta": {
+        "key": "GET /health",
+        "chosen": "server/routes/health.get.ts",
+        "layer": "../tokens",
+        "causes": [
+          {
+            "cause": "framework-layer-overridden",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "../tokens/server/routes/health.get.ts",
+                "line": 1,
+                "symbol": "GET /health"
+              },
+              {
+                "file": "../ui-layer/pages/index.vue",
+                "line": 1,
+                "symbol": "/"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "../ui-layer/pages/catalog.vue",
+      "line": 13,
+      "reason": "implicit-import-ambiguous",
+      "message": "formatPrice is used with no import, and ../ui-layer/composables/price.ts and ../ui-layer/utils/price.ts both export it, so a call to it is not joined to either",
+      "hint": "Rename one of them, or import formatPrice from the file meant.",
+      "symbol": "formatPrice",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "implicit-import-ambiguous",
+        "candidates": [
+          "../ui-layer/composables/price.ts",
+          "../ui-layer/utils/price.ts"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "layers/base/app/components/CartBadge.vue",
+      "line": 7,
+      "reason": "framework-layer-alias",
+      "message": "~/utils/limits in layers/base/app/components/CartBadge.vue names the application's code, as `~` and `@` do in every Nuxt layer, and the application has no such file; the layer's own layers/base/app/utils/limits is not what it resolves to, so the import is not joined",
+      "hint": "Import it with a relative path or through `#layers/base/app/utils/limits`.",
+      "symbol": "~/utils/limits",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-layer-alias",
+        "layer": "layers/base",
+        "specifier": "~/utils/limits",
+        "layerFile": "layers/base/app/utils/limits"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-layer-read",
+      "level": "info",
+      "message": "4 Nuxt layers are read as part of the application, ranked after it as Nuxt ranks them: layers/base; ../ui-layer; ../tokens, extended by ../ui-layer; brand-layer (../brand-layer)",
+      "hint": "Nothing to do. A page, route or name the application and a layer both give is the higher one's, said as a row of its own.",
+      "symbol": "layers/base",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-layer-read",
+        "layers": [
+          "layers/base",
+          "../ui-layer",
+          "../tokens",
+          "../brand-layer"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-layer-unread",
+      "message": "github:example/analytics-layer is a Nuxt layer the application downloads when it builds, so nothing of it is read: its pages, routes, composables and aliases are not in the graph",
+      "hint": "Check the layer out beside the application and extend it by its path, or read it as a service of its own.",
+      "symbol": "github:example/analytics-layer",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-layer-unread",
+        "layer": "github:example/analytics-layer",
+        "why": "remote"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "implicit-import-overridden",
+      "level": "info",
+      "message": "formatMoney is imported from layers/base/app/utils/money.ts, not ../ui-layer/utils/money.ts, by the order of Nuxt's layers: the application, layers/base, ../ui-layer, ../tokens and ../brand-layer",
+      "hint": "Nothing to do. This is the file Nuxt imports; rename the other to use both.",
+      "symbol": "formatMoney",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "implicit-import-overridden",
+        "names": [
+          "formatMoney"
+        ],
+        "chosen": {
+          "formatMoney": "layers/base/app/utils/money.ts"
+        }
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "implicit-imports-from-convention",
+      "level": "info",
+      "message": "7 names used with no import in 5 files were read as Nuxt imports them: the application's from layers/base/app/composables/, layers/base/app/utils/, ../ui-layer/composables/, ../ui-layer/utils/, ../tokens/composables/ and ../brand-layer/composables/ and the server's from layers/base/server/utils/ and ../ui-layer/server/utils/",
+      "hint": "Nothing to do. These are the imports Nuxt adds when it builds; a name it gives two ways is a row of its own.",
+      "symbol": "Nuxt",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "implicit-imports-from-convention",
+        "names": [
+          "addLine",
+          "allProducts",
+          "formatMoney",
+          "useBrand",
+          "useCart",
+          "useCatalog",
+          "useTheme"
+        ],
+        "files": 5
+      },
+      "service": "shop"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> app, @ -> app, ~~ -> ., @@ -> ., #shared -> shared, #app -> node_modules/nuxt/dist/app, #layers/base -> layers/base, #brand -> ../brand-layer/assets resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "app"
+          ],
+          "~/*": [
+            "app/*"
+          ],
+          "@": [
+            "app"
+          ],
+          "@/*": [
+            "app/*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "shared"
+          ],
+          "#shared/*": [
+            "shared/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ],
+          "#layers/base": [
+            "layers/base"
+          ],
+          "#layers/base/*": [
+            "layers/base/*"
+          ],
+          "#brand": [
+            "../brand-layer/assets"
+          ],
+          "#brand/*": [
+            "../brand-layer/assets/*"
+          ]
+        }
+      },
+      "service": "shop"
+    }
+  ]
+}

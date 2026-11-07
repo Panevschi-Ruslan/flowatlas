@@ -151,6 +151,39 @@ describe('subscribers in other repositories (fixtures/multi-repo-events)', () =>
 });
 
 describe('what the fixtures do not cover', () => {
+  // Rowed as a name not read until P246; the provider names it, and the
+  // deployment's own references to it agree on where it is declared.
+  it('names a queue, a topic and a bucket the provider names by their declaration, and joins what points at them', () => {
+    const deployment = readHcl(`
+resource "aws_sqs_queue" "inbox" {}
+resource "aws_sns_topic" "alerts" { name = null }
+resource "aws_sqs_queue" "prefixed" { name_prefix = "library-" }
+resource "aws_lambda_function" "read" {
+  function_name = "library-read"
+  handler       = "read.handler"
+  runtime       = "nodejs20.x"
+  filename      = "read.zip"
+  environment {
+    variables = { INBOX_URL = aws_sqs_queue.inbox.url }
+  }
+}
+resource "aws_lambda_event_source_mapping" "read" {
+  event_source_arn = aws_sqs_queue.inbox.arn
+  function_name    = aws_lambda_function.read.arn
+}
+resource "aws_sns_topic_subscription" "inbox" {
+  topic_arn = aws_sns_topic.alerts.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.inbox.arn
+}`);
+    expect(deployment.deliveries.map(line)).toEqual([
+      'mapping queue ${…}@aws_sqs_queue.inbox -> function #0',
+      'subscription topic ${…}@aws_sns_topic.alerts -> queue ${…}@aws_sqs_queue.inbox',
+    ]);
+    expect(deployment.functions[0]?.environment?.['INBOX_URL']?.names).toEqual({ kind: 'queue', name: '${…}@aws_sqs_queue.inbox' });
+    expect(deployment.rows.filter((row) => row.reason === 'deployed-name-generated').map((row) => row.symbol)).toEqual(['aws_sqs_queue.inbox', 'aws_sns_topic.alerts', 'aws_sqs_queue.prefixed']);
+  });
+
   it('reads a pipe from a table\'s stream to a bus, with the event it puts', () => {
     const deployment = readHcl(`
 resource "aws_dynamodb_table" "loans" {

@@ -48,6 +48,13 @@ export interface ClassReading {
    * about the same segment (R114).
    */
   address(node: TsNode): ApiUrl;
+  /**
+   * The base each request a body makes through a client already described goes
+   * out under, or null for one with none (P239): a class holding
+   * `axios.create({ baseURL })` in a field and wrapping its verbs keeps its base
+   * there, not in a field of its own.
+   */
+  basesIn?(body: TsNode): ReadonlyArray<ApiUrl | null>;
 }
 
 /** What reading a local class made of it. */
@@ -178,6 +185,20 @@ const baseOf = (chain: readonly ClassDeclaration[], reading: ClassReading): ApiU
   return undefined;
 };
 
+/**
+ * The base of the instance a class's members make their requests through, when
+ * every request they make goes through instances holding one and the same base
+ * (P239). One member writing to the network any other way, or two bases, is no
+ * base: the class then does not put one opening in front of every path.
+ */
+const reachedBaseOf = (chain: readonly ClassDeclaration[], reading: ClassReading): ApiUrl | undefined => {
+  if (reading.basesIn === undefined) return undefined;
+  const bases = chain.flatMap((cls) => [...memberBodiesOf(cls).values()].flatMap((body) => reading.basesIn?.(body) ?? []));
+  const [first] = bases;
+  if (first === undefined || first === null) return undefined;
+  return bases.every((base) => base !== null && base.url === first.url) ? first : undefined;
+};
+
 /** Every class in an extends chain, the one written first. */
 const chainOf = (cls: ClassDeclaration): ClassDeclaration[] => {
   const chain: ClassDeclaration[] = [];
@@ -235,7 +256,7 @@ export const localClientOf = (
     const answered = verbs.size > 0 ? [...verbs.keys()] : Object.keys(VERB_CALLS);
     return {
       kind: 'client',
-      client: localClient(typeName, answered, baseOf(chain, reading)),
+      client: localClient(typeName, answered, baseOf(chain, reading) ?? reachedBaseOf(chain, reading)),
       via: 'declared',
     };
   }
@@ -253,7 +274,7 @@ export const localClientOf = (
   if (proved.length > 0) {
     return {
       kind: 'client',
-      client: localClient(typeName, proved, baseOf(chain, reading)),
+      client: localClient(typeName, proved, baseOf(chain, reading) ?? reachedBaseOf(chain, reading)),
       via: 'recognised',
     };
   }

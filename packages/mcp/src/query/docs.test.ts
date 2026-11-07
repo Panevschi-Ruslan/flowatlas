@@ -79,6 +79,8 @@ beforeAll(async () => {
   db.close();
   const index: DocsIndex = {
     docsFormatVersion: DOCS_FORMAT_VERSION,
+    mentions: [],
+    deadMentions: [],
     files: ['docs/carts.md'],
     blocks: [
       { file: 'docs/carts.md', line: 3, kind: 'flow', id: 'POST /carts', node: ROUTE, view: 'steps', state: 'ok', fingerprint },
