@@ -503,6 +503,36 @@ is planned the same way (`fixtures/graphql-federation-interfaces`).
   one port - by their code, or one by the port its setting files give it - is
   `graphql-subgraph-not-joined`, naming both.
 
+**Federation, what the resolvers leave (P252)** (`fixtures/graphql-federation-gaps`).
+
+- *A check on a field with no resolver of its own.* `Book.price
+  @authenticated`, read off the book `Query.book` returns: the router's check
+  hangs on the entries that answer the field - the resolvers of the fields
+  that return its type (or an interface or union it belongs to), followed up
+  through fields with no resolver either, and the reference resolvers of an
+  entity call for it - for that field only: the `guarded_by` edge and the
+  check on `meta.access` say `for: ["Book.price"]`, and `via` names the entry
+  (`@authenticated on Book.price, which Query.book answers, checked by
+  router`). The plan edge to the entry carries `answers` - the guarded fields
+  it answers for this request - and `flow` shows the check on that step only
+  where the request asks for one of them, as `!  @authenticated for
+  Book.price`; walked from the entry, every one, with `for`.
+- *`@inaccessible`.* A field the router does not serve (on it or its type)
+  has no check drawn for it, nor is it named by `graphql-auth-not-checked`;
+  an answering field that is `@inaccessible` answers nothing.
+- *An entity interface nobody can type.* An entity call for `Product` arrives
+  as `{ __typename: "Product", id }`; where the subgraph that owns it writes no
+  `Product.__resolveReference`, no `__resolveType` and no `__isTypeOf` on one
+  of its types (`resolveType` in `@InterfaceType`'s or `createUnionType`'s
+  options counts, and the subgraph's endpoint carries what it writes as
+  `meta.graphql.subgraph.typeResolvers`), it refuses the call:
+  `graphql-entity-type-unsaid` (a finding, wiring) at that subgraph, once per
+  interface another subgraph can call it for, and the plan edges of such a
+  call say `hop.untyped`.
+- *`@requires`, `@provides`, `@external`* are read and planned since P241:
+  required fields first, by their owners (`requiredBy`); a provided field
+  where its parent is.
+
 **A file-system router is four values.** Where the address is the path of a file
 rather than an argument of a call, what differs between one router and another
 is the root directory, which file names declare a route, the prefix in front,
@@ -6438,7 +6468,13 @@ of the same family.
   front of every procedure under it, before the procedure's own guards; the
   prefix applies to the REST route of each one that writes a path.
   `lazy(() => import('./reports'))` is followed into that module's default
-  export. A computed key is `procedure-key-dynamic`.
+  export - by the checker, or, where it cannot resolve the `import()` (an
+  alias with no `paths`, P252), by the one file of the service its path names
+  (relative to the importing file, or what follows `@/`, `~/`, `~~/` or `#`,
+  with the endings a bundler tries and `index`). A lazy branch neither finds
+  is `procedure-branch-unread`, saying it is a lazy branch, and a module whose
+  path ends as the `import()` writes it is not read as a root of its own (the
+  row names it). A computed key is `procedure-key-dynamic`.
 - **Contract-first.** `implement(contract)` hands back a builder whose property
   accesses name the contract's members: `os.orders.list.handler(fn)` reads its
   input, output, errors and route off `contract.orders.list`, through
@@ -6479,7 +6515,13 @@ of the same family.
   request crosses it.
 
 `contracts` treats a REST caller of a procedure's route as it treats a caller of
-the procedure: both directions unchecked, for the reasons above.
+the procedure: both directions unchecked. The answer's row says where the
+caller's type for it comes from (P252): a procedure client's is inferred from
+the server's own tree (`procedure-output-inferred`, nothing to compare); a
+plain request that types the answer itself (`fetch<Order>`, a cast of the
+parsed body) keeps that reason and names its own type, which nothing ties to
+the tree; one that types nothing is `no-type-on-receiver`, as any request that
+states no type for its answer is.
 
 **A server's client** of another service's tree is read the same way, by the
 same reader (`fixtures/rpc-server-to-server`). A NestJS, Express, Hono or plain

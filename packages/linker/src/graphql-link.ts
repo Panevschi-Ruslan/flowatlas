@@ -1,6 +1,6 @@
 import { makeEntryId, type Confidence, type GraphEdge, type GraphNode, type Unresolved } from '@flowatlas/core';
-import { GRAPHQL_META, namedTypeIn, planSelection, REFERENCE_FIELD, type GatewayMeta, type GraphqlCallMeta, type SchemaSummary } from '@flowatlas/graphql';
-import { weakest, type GatewayPlan } from './graphql-federation.js';
+import { GRAPHQL_META, namedTypeIn, planSelection, REFERENCE_FIELD, type GatewayMeta, type GraphqlCallMeta, type PlanStep, type SchemaSummary } from '@flowatlas/graphql';
+import { authOfField, weakest, type GatewayPlan } from './graphql-federation.js';
 import { edgeKey } from './order.js';
 
 /**
@@ -93,6 +93,11 @@ export const joinGraphqlFields = (nodes: ReadonlyMap<string, GraphNode>, edges: 
  * fetches from another subgraph - each no surer than the request's join, the
  * route to the subgraph and the composition, and `heuristic` where the router
  * chooses (D6).
+ *
+ * Through a router that checks its authorization directives (P252), the edge
+ * to an entry that answers a guarded field with no resolver of its own says
+ * so (`answers`), so the check hung on that entry for the field is shown on
+ * this step; an entity call its owner cannot type says `hop.untyped`.
  */
 const joinPlanned = (
   nodes: ReadonlyMap<string, GraphNode>,
@@ -113,7 +118,33 @@ const joinPlanned = (
     if (!edges.has(edgeKey(joined))) edges.set(edgeKey(joined), joined);
   };
   const rootTypes = new Set(Object.values(plan.composition.roots));
-  for (const step of planSelection(plan.composition, operation.operation, operation.fields)) {
+  const steps = planSelection(plan.composition, operation.operation, operation.fields, plan.saysType === undefined ? {} : { saysType: plan.saysType });
+  /** The entry a subgraph's step is answered by: its own resolver, under the type it resolves it as. */
+  const entryOf = (step: PlanStep, service: string, subgraph: string): string => makeEntryId(service, 'graphql', `${step.as?.[subgraph] ?? step.type}.${step.field}`);
+  /**
+   * The entry that answers a field with no resolver of its own (P252): the
+   * reference resolver of the entity call that fetched it, or the nearest
+   * resolver above it, in the same subgraph.
+   */
+  const answererOf = (step: PlanStep, service: string, subgraph: string): string | undefined => {
+    const referenceOf = (hop: NonNullable<PlanStep['hop']>): string | undefined => {
+      const reference = makeEntryId(service, 'graphql', `${hop.entity}.${REFERENCE_FIELD}`);
+      return nodes.has(reference) ? reference : undefined;
+    };
+    if (step.hop !== undefined) return referenceOf(step.hop);
+    let below = step;
+    for (let depth = 0; below.parent !== undefined && depth < steps.length; depth += 1) {
+      const above = steps[below.parent] as PlanStep;
+      if (!above.subgraphs.includes(subgraph)) return undefined;
+      if (nodes.has(entryOf(above, service, subgraph))) return entryOf(above, service, subgraph);
+      if (above.hop !== undefined) return referenceOf(above.hop);
+      below = above;
+    }
+    return undefined;
+  };
+  /** The guarded fields each entry answers for this request with no resolver of their own, which its checks for them stand in front of (P252). */
+  const answers = new Map<string, Set<string>>();
+  for (const step of steps) {
     const field = `${step.type}.${step.field}`;
     const file = step.selected.file ?? operation.document.file;
     const line = step.selected.line;
@@ -160,21 +191,27 @@ const joinPlanned = (
         ...(step.requiredBy === undefined ? {} : { requiredBy: step.requiredBy }),
         ...(step.fromContext === undefined ? {} : { fromContext: step.fromContext }),
       };
+      // An entity call for an interface its owner cannot say the type of is refused there (P252).
+      const untyped = step.hop?.untyped === true ? { untyped: true } : {};
       if (step.hop !== undefined) {
         const reference = makeEntryId(route.service, 'graphql', `${step.hop.entity}.${REFERENCE_FIELD}`);
         if (nodes.has(reference)) draw(reference, confidence, line, file, { ...graphql, field: `${step.hop.entity}.${REFERENCE_FIELD}`, hop: { entity: step.hop.entity, from: step.hop.from, for: field } });
       }
       // An interface object resolves an implementation's field as the interface's (P245).
       const resolvedAs = step.as?.[subgraph];
-      const entryId = makeEntryId(route.service, 'graphql', resolvedAs === undefined ? field : `${resolvedAs}.${step.field}`);
+      const entryId = entryOf(step, route.service, subgraph);
       if (nodes.has(entryId)) {
         draw(entryId, confidence, line, file, {
           ...graphql,
           field,
           ...(resolvedAs === undefined ? {} : { as: resolvedAs }),
           ...(step.selected.alias === undefined ? {} : { alias: step.selected.alias }),
-          ...(step.hop === undefined ? {} : { hop: { entity: step.hop.entity, from: step.hop.from } }),
+          ...(step.hop === undefined ? {} : { hop: { entity: step.hop.entity, from: step.hop.from, ...untyped } }),
         });
+      } else if (plan.checks === true && !rootTypes.has(step.type) && step.field !== '__typename' && authOfField(plan.composition, step.type, step.field).length > 0) {
+        // A guarded field no resolver of its own answers: the check is in front of the entry that does, for it (P252).
+        const answerer = answererOf(step, route.service, subgraph);
+        if (answerer !== undefined) answers.set(answerer, (answers.get(answerer) ?? new Set()).add(`${resolvedAs ?? step.type}.${step.field}`));
       } else if (rootTypes.has(step.type) && step.hop === undefined && step.requiredBy === undefined && !said.has(`${field} ${subgraph}`)) {
         said.add(`${field} ${subgraph}`);
         rows.push({
@@ -189,6 +226,12 @@ const joinPlanned = (
         });
       }
     }
+  }
+  // `answers`: the step to an entry carries the guarded fields it answers here, so its checks for them are shown on it (P252).
+  for (const [to, fields] of answers) {
+    const key = edgeKey({ from: call.id, to, type: edge.type, confidence: edge.confidence });
+    const joined = edges.get(key);
+    if (joined !== undefined) edges.set(key, { ...joined, meta: { ...joined.meta, answers: [...fields].sort() } });
   }
   return rows;
 };

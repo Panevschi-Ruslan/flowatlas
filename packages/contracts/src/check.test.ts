@@ -953,6 +953,10 @@ describe('a procedure asked for by its path', () => {
     ]);
   });
 
+  it("says a procedure client's answer is typed from the server's own tree (P252)", () => {
+    expect(report.unchecked.find((row) => row.direction === 'response')?.message).toContain("inferred from the server's own tree");
+  });
+
   it('names the input the server declared, as the server wrote it', () => {
     const request = report.unchecked.find((row) => row.direction === 'request');
     expect(request?.message).toContain('takes OrderQuery');
@@ -1001,6 +1005,43 @@ describe('a route that answers for a procedure (P58)', () => {
       ['request', 'procedure-input-by-name'],
       ['response', 'procedure-output-inferred'],
     ]);
+  });
+
+  /**
+   * A plain request is typed by what it writes, not by the server's tree
+   * (P252): the row names the caller's own type, which nothing ties to the
+   * procedure's output, rather than saying the two ends are one declaration.
+   */
+  it('says a plain caller types the answer itself, with a type nothing ties to the tree (P252)', () => {
+    const response = report.unchecked.find((row) => row.direction === 'response');
+    expect(response?.message).toContain('a plain request that types it as Answer itself');
+    expect(response?.message).not.toContain("inferred from the server's own tree");
+    expect(response?.hint).toContain('Nothing keeps Answer in step with the procedure');
+  });
+
+  it('says a plain caller that types no answer states no type for it, as any request would (P252)', () => {
+    const untyped = checkContracts(
+      graphOf({
+        nodes: [
+          node('web#Orders', 'ui_component', 'web'),
+          node('ui_api_call:web#src/Orders.tsx:9:5', 'ui_api_call', 'web', { kind: 'http', meta: { method: 'GET', path: '/api/orders' } }),
+          node('entry:api:http:GET:/api/orders', 'entry', 'api', { kind: 'http', meta: { method: 'GET', path: '/api/orders', procedure: 'orders.list', input: 'OrderQuery' } }),
+          node('api#listOrders', 'function', 'api'),
+        ],
+        edges: [
+          edge('web#Orders', 'calls', 'ui_api_call:web#src/Orders.tsx:9:5'),
+          edge('ui_api_call:web#src/Orders.tsx:9:5', 'hits', 'entry:api:http:GET:/api/orders', { params: ['type:caller#Body'] }),
+          edge('entry:api:http:GET:/api/orders', 'handles', 'api#listOrders', { params: ['type:api#Body'], returns: 'type:api#Answer' }),
+        ],
+        types: registry,
+      }),
+      { generatedAt: FIXED },
+    );
+    expect(untyped.unchecked.map((row) => [row.direction, row.reason])).toEqual([
+      ['request', 'procedure-input-by-name'],
+      ['response', 'no-type-on-receiver'],
+    ]);
+    expect(untyped.unchecked.find((row) => row.direction === 'response')?.message).toBe('web#Orders declares no type for what it expects');
   });
 });
 

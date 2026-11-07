@@ -131,6 +131,8 @@ const FINDINGS: readonly string[] = [
   'graphql-supergraph-drift',
   // The router's authorization directives composed by a gateway that does not check them (P245)
   'graphql-auth-not-checked',
+  // An entity call for an interface its owner can say no concrete type of (P252)
+  'graphql-entity-type-unsaid',
   'route-file-not-served',
   'wizard-step-conflict',
   'workflow-name-duplicate',
@@ -449,6 +451,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
       'graphql-field-resolved-twice',
       'graphql-composition-conflict',
       'graphql-supergraph-drift',
+      'graphql-entity-type-unsaid',
       'route-file-not-served',
       'wizard-step-conflict',
       'workflow-name-duplicate',

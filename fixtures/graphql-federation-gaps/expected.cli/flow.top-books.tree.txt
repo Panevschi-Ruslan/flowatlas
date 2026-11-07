@@ -1,0 +1,15 @@
+%  TopBooks                                    shop/src/TopBooks.tsx:18
+  ^  query TopBooks /graphql                   shop/src/TopBooks.tsx:19
+    => reviews @  Query.topProducts ?declared  reviews/src/index.ts:27
+      -> Query.topProducts@27                  reviews/src/index.ts:27
+        -> topProducts                         reviews/src/reviews.ts:9
+    => reviews @  Product.reviews ?declared    reviews/src/index.ts:31
+      -> Product.reviews@31                    reviews/src/index.ts:31
+        -> reviewsOf                           reviews/src/reviews.ts:7
+    => catalog @  Book.details ?declared       catalog/src/index.ts:18
+      -> Book.details@18                       catalog/src/index.ts:18
+        -> detailsOf                           catalog/src/books.ts:21
+    => router @  POST /graphql ?declared       router/router/supergraph.graphql
+      => catalog @  POST / ?declared           catalog/src/index.ts:22
+      => reviews @  POST / ?declared           reviews/src/index.ts:35
+unresolved on this path: 1

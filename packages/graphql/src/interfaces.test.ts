@@ -309,3 +309,41 @@ describe('a subgraph in code (P245)', () => {
     expect(schema.types['Clip']?.federation?.interfaceObject).toBe(true);
   });
 });
+
+describe('what a field is read off, and an entity call nobody can type (P252)', () => {
+  const { composition } = composed();
+
+  it('names the step whose resolver returned the object each field is read from', () => {
+    const steps = planSelection(composition, 'query', selected('media { title ... on Book { author rating } }'));
+    expect(steps.map((step) => [`${step.type}.${step.field}`, step.parent === undefined ? undefined : `${steps[step.parent]?.type}.${steps[step.parent]?.field}`])).toEqual([
+      ['Query.media', undefined],
+      ['Media.title', 'Query.media'],
+      ['Book.author', 'Query.media'],
+      ['Book.rating', 'Query.media'],
+    ]);
+  });
+
+  it('says an entity call for an interface is untyped where its owner says no type of it, and only then', () => {
+    const typed = planSelection(composition, 'query', selected('topRated { title }'), { saysType: () => true });
+    const untyped = planSelection(composition, 'query', selected('topRated { title }'), { saysType: (subgraph) => subgraph !== 'media' });
+    expect(typed.map((step) => step.hop?.untyped)).toEqual([undefined, undefined]);
+    expect(untyped.map((step) => [`${step.type}.${step.field}`, step.hop?.untyped])).toEqual([
+      ['Query.topRated', undefined],
+      ['Media.title', true],
+    ]);
+    // An entity call into the interface object is for an object type there, whatever the owner says.
+    expect(planSelection(composition, 'query', selected('media { reviews { score } }'), { saysType: () => false }).map((step) => step.hop?.untyped)).toEqual([undefined, undefined, undefined]);
+  });
+
+  it('reads the types whose concrete type the code says: a map, a schema-first resolver class, decorator and union options', () => {
+    const made = new Project({ useInMemoryFileSystem: true, compilerOptions: { experimentalDecorators: true } });
+    made.createSourceFile('map.ts', 'new ApolloServer({ resolvers: { Media: { __resolveType: (item) => item.kind }, Book: { __isTypeOf: (item) => true, title: () => "" } } });');
+    made.createSourceFile('nest.ts', "@Resolver('Result') class ResultResolver { @ResolveField() __resolveType(value) { return 'Book'; } }");
+    made.createSourceFile('first.ts', "@InterfaceType('Clip', { resolveType: (value) => 'Trailer' }) class ClipType { @Field() id: string; }");
+    made.createSourceFile('union.ts', "export const Found = createUnionType({ name: 'Found', types: () => [Book] as const, resolveType: (value) => 'Book' });");
+    const reading = readGraphqlServer(made.getSourceFiles(), { schemaFiles: [], dependencies: new Set() });
+    expect(reading.typeResolvers).toEqual(['Book', 'Clip', 'Found', 'Media', 'Result']);
+    // How a type picks its member is not a field anybody selects.
+    expect(reading.fields.map((field) => `${field.type}.${field.field}`)).toEqual(['Book.title']);
+  });
+});

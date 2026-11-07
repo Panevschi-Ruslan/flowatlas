@@ -140,12 +140,19 @@ export const uncheckedNote = (
     // The answer a client of a procedure gets is typed by inference from the
     // server's own tree, so both ends of it are one declaration. Comparing a
     // declaration with itself always agrees, which is the one verdict worse
-    // than none.
+    // than none. A plain request to the procedure's route (P252, `detail` the
+    // type it writes) is typed by nothing but itself: the server's answer is
+    // inferred from its handler, and nothing ties the caller's type to it.
     case 'procedure-output-inferred':
-      return {
-        message: `what ${subject} answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration`,
-        hint: 'Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls.',
-      };
+      return detail === undefined
+        ? {
+            message: `what ${subject} answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration`,
+            hint: 'Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls.',
+          }
+        : {
+            message: `what ${subject} answers is the procedure's output, inferred from its handler on the server, and its caller is a plain request that types it as ${detail} itself, which nothing ties to the server's tree; the graph holds the output by name, so the two are not compared`,
+            hint: `Nothing keeps ${detail} in step with the procedure: call it through a client typed from the server's router, or type the request with the output's own type, exported from the server.`,
+          };
     case 'channel-without-producer':
       return {
         message: `${subject} is handled and nothing publishes to it`,

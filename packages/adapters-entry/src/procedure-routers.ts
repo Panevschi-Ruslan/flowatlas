@@ -731,24 +731,87 @@ const valueOf = (member: Member, dialect?: ProcedureDialect): TsNode => {
   return (dialect === undefined ? undefined : loadedTree(value, dialect)) ?? value;
 };
 
-/**
- * The tree a member loads from a module when it is first asked for (P58):
- * `lazy(() => import('./reports'))` is the default export of that module,
- * found by asking the checker which module the `import()` names.
- */
-const loadedTree = (value: TsNode, dialect: ProcedureDialect): TsNode | undefined => {
+/** The `import()` a member that loads its tree lazily calls (P58): `lazy(() => import('./reports'))`. */
+const lazyLoad = (value: TsNode, dialect: ProcedureDialect): TsNode | undefined => {
   if (dialect.lazyBy.length === 0 || !Node.isCallExpression(value)) return undefined;
   const name = calleeName(value);
   if (name === undefined || !dialect.lazyBy.includes(name)) return undefined;
   const [loader] = value.getArguments();
   const fn = loader === undefined ? undefined : unwrapValue(loader);
   if (fn === undefined || !(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) return undefined;
-  const loading = fn
-    .getDescendantsOfKind(SyntaxKind.CallExpression)
-    .find((call) => call.getExpression().getKind() === SyntaxKind.ImportKeyword);
-  const promised = loading?.getType().getTypeArguments()[0];
-  const module = promised?.getSymbol()?.getDeclarations()[0];
-  if (module === undefined || !Node.isSourceFile(module)) return undefined;
+  return fn.getDescendantsOfKind(SyntaxKind.CallExpression).find((call) => call.getExpression().getKind() === SyntaxKind.ImportKeyword);
+};
+
+/** The path an `import()` names, as written. */
+const specifierOf = (loading: TsNode): string | undefined => {
+  const [written] = Node.isCallExpression(loading) ? loading.getArguments() : [];
+  return written !== undefined && (Node.isStringLiteral(written) || Node.isNoSubstitutionTemplateLiteral(written)) ? written.getLiteralValue() : undefined;
+};
+
+/** The endings a module path is written without, in the order a bundler tries them. */
+const MODULE_ENDINGS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
+
+/** A path with `.` and `..` segments folded away. */
+const folded = (path: string): string => {
+  const parts: string[] = [];
+  for (const part of path.split('/')) {
+    if (part === '.' || (part === '' && parts.length > 0)) continue;
+    if (part === '..') parts.pop();
+    else parts.push(part);
+  }
+  return parts.join('/');
+};
+
+/**
+ * The module an `import()` loads (P252): the one the checker resolves it to,
+ * or, where it cannot - an alias with no `paths` behind it, a file the
+ * configuration leaves out - the one file of the service its path names. A
+ * relative path is taken from the importing file; one under an alias (`@/`,
+ * `~/`, `~~/`, `#`) is the file whose path ends with what follows it. Each is
+ * tried with the endings a bundler tries and as a folder's `index`; two files
+ * that fit are not chosen between.
+ */
+const loadedModule = (loading: TsNode): SourceFile | undefined => {
+  const promised = loading.getType().getTypeArguments()[0];
+  const resolved = promised?.getSymbol()?.getDeclarations()[0];
+  if (resolved !== undefined && Node.isSourceFile(resolved)) return resolved;
+  const written = specifierOf(loading);
+  if (written === undefined) return undefined;
+  const bare = written.replace(/\.(?:[cm]?[jt]sx?)$/, '');
+  const from = loading.getSourceFile();
+  const files = from.getProject().getSourceFiles().filter((file) => !file.getFilePath().includes('/node_modules/'));
+  const stem = (file: SourceFile): string => file.getFilePath().replace(/\.(?:d\.)?(?:[cm]?[jt]sx?)$/, '');
+  if (bare.startsWith('.')) {
+    const target = folded(`${from.getDirectoryPath()}/${bare}`);
+    const found = files.filter((file) => {
+      const at = stem(file);
+      return MODULE_ENDINGS.some((ending) => file.getFilePath().endsWith(ending)) && (at === target || at === `${target}/index`);
+    });
+    return found.length === 1 ? found[0] : undefined;
+  }
+  const aliased = /^(?:~~\/|~\/|@\/|#)(.+)$/.exec(bare)?.[1];
+  if (aliased === undefined) return undefined;
+  const found = files.filter((file) => {
+    const at = stem(file);
+    return at.endsWith(`/${aliased}`) || at.endsWith(`/${aliased}/index`);
+  });
+  return found.length === 1 ? found[0] : undefined;
+};
+
+/**
+ * The tree a member loads from a module when it is first asked for (P58):
+ * `lazy(() => import('./reports'))` is the default export of that module,
+ * found by asking the checker which module the `import()` names, or by its
+ * path where the checker cannot say (P252).
+ */
+const loadedTree = (value: TsNode, dialect: ProcedureDialect): TsNode | undefined => {
+  const loading = lazyLoad(value, dialect);
+  const module = loading === undefined ? undefined : loadedModule(loading);
+  return module === undefined ? undefined : defaultExportOf(module);
+};
+
+/** What a module's `export default` is, through the name it is declared under. */
+const defaultExportOf = (module: SourceFile): TsNode | undefined => {
   for (const declaration of module.getDefaultExportSymbol()?.getDeclarations() ?? []) {
     if (Node.isExportAssignment(declaration)) {
       const exported = unwrapValue(declaration.getExpression());
@@ -756,6 +819,25 @@ const loadedTree = (value: TsNode, dialect: ProcedureDialect): TsNode | undefine
     }
   }
   return undefined;
+};
+
+/**
+ * Whether a tree is the default export of a module a lazy branch nothing
+ * could follow names (P252): the file whose path ends with what the
+ * `import()` writes after its alias or its `./` and `../`. Such a tree is the
+ * branch's, under the branch's key, and read as a root of its own it would
+ * answer at addresses nobody calls; so it is not read as one, and the
+ * branch's row names it.
+ */
+const standsFor = (tree: Tree, written: string): boolean => {
+  const tail = written
+    .replace(/\.(?:[cm]?[jt]sx?)$/, '')
+    .replace(/^(?:\.{1,2}\/)+/, '')
+    .replace(/^(?:~~\/|~\/|@\/|#|@[^/]+\/)/, '');
+  if (tail === '' || tail.startsWith('.')) return false;
+  const file = tree.call.getSourceFile();
+  const stem = file.getFilePath().replace(/\.(?:[cm]?[jt]sx?)$/, '');
+  return (stem.endsWith(`/${tail}`) || stem.endsWith(`/${tail}/index`)) && defaultExportOf(file) === tree.call;
 };
 
 /**
@@ -859,6 +941,19 @@ class Forest {
     return this.#trees.size;
   }
 }
+
+/** A member that is neither a way in nor a tree, and the module it loads lazily, where it is a lazy branch (P252). */
+interface UnreadMember {
+  site: Site;
+  address: string;
+  named: string;
+  lazily?: string;
+  /** The files whose default export may be the tree it loads, and so are not read as roots of their own. */
+  stands?: string[];
+}
+
+const LAZY_HINT =
+  'Write the import() as a relative path to the file in this service, or declare its alias under compilerOptions.paths, so the branch it loads can be read.';
 
 const MOUNT_HINT =
   'Import the tree from a file inside this service, or add the package it comes from to sharedPackages, so the ways in it serves can be read.';
@@ -1263,7 +1358,7 @@ export const procedureRoutersAdapter = (
 
     const entries: EntryNode[] = [];
     const seen = new Set<string>();
-    const unread: Array<{ site: Site; address: string; named: string }> = [];
+    const unread: UnreadMember[] = [];
     let members = 0;
 
     const emit = (address: string, procedure: Procedure, along: Along, tree: Tree): void => {
@@ -1428,7 +1523,10 @@ export const procedureRoutersAdapter = (
         }
         const nested = forest.at(value);
         if (nested === undefined) {
-          unread.push({ site: member.site, address, named: label(member.value) });
+          const loading = lazyLoad(value, dialect);
+          const lazily = loading === undefined ? undefined : specifierOf(loading);
+          const stands = lazily === undefined ? undefined : standIns.get(lazily);
+          unread.push({ site: member.site, address, named: label(member.value), ...(lazily === undefined ? {} : { lazily }), ...(stands === undefined ? {} : { stands }) });
           continue;
         }
         // A tree that holds itself, directly or through others. The framework
@@ -1438,7 +1536,31 @@ export const procedureRoutersAdapter = (
       }
     };
 
-    for (const root of forest.roots()) {
+    // A lazy branch nothing could follow leaves its module's tree as a root of
+    // its own unless it is told apart (P252): found before the walk, so the
+    // tree is not walked as one, and the branch's row names it.
+    const lazilyUnread = new Set<string>();
+    const looked = new Set<Tree>();
+    const look = (tree: Tree): void => {
+      if (looked.has(tree)) return;
+      looked.add(tree);
+      for (const member of tree.members) {
+        const value = valueOf(member, dialect);
+        const nested = forest.at(value);
+        if (nested !== undefined) look(nested);
+        const loading = nested === undefined && procedureOf(value, dialect, ctx) === undefined ? lazyLoad(value, dialect) : undefined;
+        const written = loading === undefined ? undefined : specifierOf(loading);
+        if (written !== undefined) lazilyUnread.add(written);
+      }
+    };
+    for (const root of forest.roots()) look(root);
+    const standIns = new Map<string, string[]>();
+    const roots = forest.roots().filter((root) => {
+      const named = [...lazilyUnread].filter((written) => standsFor(root, written));
+      for (const written of named) standIns.set(written, [...(standIns.get(written) ?? []), root.site.file].sort());
+      return named.length === 0;
+    });
+    for (const root of roots) {
       walk(root, '', new Set([root]), { guards: [], errors: [], routePrefix: '', mounts: [] });
     }
 
@@ -1519,7 +1641,7 @@ const reportUnreadPrefixes = (
  */
 const reportUnreadMembers = (
   ctx: ExtractContext,
-  unread: ReadonlyArray<{ site: Site; address: string; named: string }>,
+  unread: readonly UnreadMember[],
   dialect: ProcedureDialect,
 ): void => {
   for (const member of unread) {
@@ -1527,8 +1649,11 @@ const reportUnreadMembers = (
       file: member.site.file,
       line: member.site.line,
       reason: 'procedure-branch-unread',
-      message: `${member.address} is ${member.named}, a name this could follow to neither a way in nor a tree, so nothing under it was read.`,
-      hint: MOUNT_HINT,
+      message:
+        member.lazily === undefined
+          ? `${member.address} is ${member.named}, a name this could follow to neither a way in nor a tree, so nothing under it was read.`
+          : `${member.address} loads its tree lazily from ${member.lazily}, a module neither the checker nor its path among this service's files leads to one file of, so nothing under it was read${member.stands === undefined ? '' : `; the tree ${member.stands.join(' and ')} export${member.stands.length === 1 ? 's' : ''} by default may be it, and is not read as a root of its own`}.`,
+      hint: member.lazily === undefined ? MOUNT_HINT : LAZY_HINT,
       symbol: member.address,
       adapter: dialect.name,
     });

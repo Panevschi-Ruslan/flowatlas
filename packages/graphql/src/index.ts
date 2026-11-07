@@ -42,7 +42,7 @@ export type { AuthRequirement, ComposedDirective, FieldFederation, SchemaField, 
 export { apiSchemaOf, composeSubgraphs, contextName, fieldSetNames, isSupergraph, supergraphComposition, unreachableOwners } from './federation.js';
 export type { ComposedField, ComposedType, Composition, CompositionConflict, ContextArgument, FieldOwner, SubgraphSchema, SupergraphGraph } from './federation.js';
 export { planSelection } from './plan.js';
-export type { PlanStep } from './plan.js';
+export type { PlanOptions, PlanStep } from './plan.js';
 export { addressOf, addressOfText, besideFile, readGraphqlGateway, readRouterConfig, readRoverConfig, routeAddress } from './gateway.js';
 export type { Address, GatewayMeta, GatewayReading, GatewayRouteMeta, SubgraphRoute, UnreadDetail } from './gateway.js';
 export { fragmentsOf, operationsOf, reachedFields } from './operations.js';

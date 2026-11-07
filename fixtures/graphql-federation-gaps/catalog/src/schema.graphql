@@ -1,0 +1,29 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.8", import: ["@key", "@authenticated", "@requiresScopes", "@inaccessible"])
+
+type Query {
+  book(id: ID!): Book
+  products: [Product!]!
+}
+
+interface Product @key(fields: "id") {
+  id: ID!
+  name: String!
+}
+
+type Book implements Product @key(fields: "id") {
+  id: ID!
+  name: String!
+  price: Float! @authenticated
+  cost: Float! @inaccessible @authenticated
+  details: Details!
+}
+
+type Details {
+  pages: Int!
+  edition: Edition!
+}
+
+type Edition {
+  year: Int! @requiresScopes(scopes: [["catalog:staff"]])
+}

@@ -33,6 +33,14 @@ import { namedTypeIn } from './schema.js';
  * the nearest type above it in the selection that sets the context, by the
  * subgraph that fetched that type. Where nothing above it does, the step
  * says so (`unset`) rather than guess one.
+ *
+ * What a field is read off (P252). A field no resolver of its own answers is
+ * read off the object its parent's resolver returned, or the one an entity
+ * call fetched: `parent` names the step above it, so whatever stands in front
+ * of that resolver - the router's check on the field - can be put there. And
+ * an entity call for an interface to a subgraph that can say no concrete type
+ * of it (no reference resolver, no type resolver: `saysType`) is `untyped`,
+ * since the subgraph refuses it.
  */
 export interface PlanStep {
   readonly type: string;
@@ -42,7 +50,13 @@ export interface PlanStep {
   /** The subgraphs that resolve it here: more than one is a choice. */
   readonly subgraphs: readonly string[];
   /** An entity call: the entity fetched from `subgraphs`, with the subgraph that fetched its parent. */
-  readonly hop?: { readonly entity: string; readonly from: string; readonly resolvable: boolean };
+  readonly hop?: {
+    readonly entity: string;
+    readonly from: string;
+    readonly resolvable: boolean;
+    /** For an interface, to a subgraph that writes nothing that says which of its types a value is (P252). */
+    readonly untyped?: true;
+  };
   /** The field whose `@requires` asked for this one, or whose argument it fills from a context. */
   readonly requiredBy?: string;
   /** Planned under a field that was itself a choice. */
@@ -53,6 +67,19 @@ export interface PlanStep {
   readonly fromContext?: string;
   /** Arguments the field takes from a context no type above it in this selection sets, so not planned (P245). */
   readonly unset?: ReadonlyArray<{ readonly argument: string; readonly context: string }>;
+  /** The step whose resolver returned the object this field is read from, by its index in the plan (P252). */
+  readonly parent?: number;
+}
+
+/** What a plan is told beyond the composition (P252). */
+export interface PlanOptions {
+  /**
+   * Whether a subgraph's code says which concrete type a value of an abstract
+   * type is: its reference resolver for it, or a type resolver. Asked only of
+   * an entity call for an interface to a subgraph that owns it; not given,
+   * every one is taken to.
+   */
+  readonly saysType?: (subgraph: string, type: string) => boolean;
 }
 
 /** The deepest a selection is followed, as the linker follows one. */
@@ -90,6 +117,8 @@ const interfaceOwners = (type: ComposedType | undefined): string[] =>
 interface Level {
   readonly type: string;
   readonly subgraph: string | undefined;
+  /** The step that fetched it there, where one did (P252). */
+  readonly step?: number;
 }
 
 /** What a walk carries down: whether it is under a choice, and the field it plans a dependency of. */
@@ -99,8 +128,18 @@ interface Carried {
   readonly fromContext?: string;
 }
 
-export const planSelection = (composition: Composition, operation: 'query' | 'mutation' | 'subscription', fields: readonly MetaField[]): PlanStep[] => {
+export const planSelection = (
+  composition: Composition,
+  operation: 'query' | 'mutation' | 'subscription',
+  fields: readonly MetaField[],
+  options: PlanOptions = {},
+): PlanStep[] => {
   const steps: PlanStep[] = [];
+  /** An entity call for an interface its owner cannot say the type of (P252). */
+  const untyped = (entity: string, subgraphs: readonly string[]): boolean =>
+    options.saysType !== undefined &&
+    composition.types[entity]?.kind === 'interface' &&
+    subgraphs.some((subgraph) => interfaceOwners(composition.types[entity]).includes(subgraph) && options.saysType?.(subgraph, entity) !== true);
   const rootType = composition.roots[operation] ?? ({ query: 'Query', mutation: 'Mutation', subscription: 'Subscription' } as const)[operation];
 
   /** The nearest level that sets a context: the type it is set on there, and the subgraph that fetched it. */
@@ -108,7 +147,7 @@ export const planSelection = (composition: Composition, operation: 'query' | 'mu
     for (const level of levels) {
       const candidates = [level.type, ...(composition.types[level.type]?.possible ?? [])];
       const setter = candidates.find((name) => composition.types[name]?.contexts?.includes(context) === true);
-      if (setter !== undefined) return { type: setter, subgraph: level.subgraph };
+      if (setter !== undefined) return { type: setter, subgraph: level.subgraph, ...(level.step === undefined ? {} : { step: level.step }) };
     }
     return undefined;
   };
@@ -127,6 +166,7 @@ export const planSelection = (composition: Composition, operation: 'query' | 'mu
     context: Carried,
     ancestors: readonly Level[],
     depth: number,
+    parent: number | undefined,
   ): void => {
     if (depth > MAX_DEPTH) return;
     const parentType = composition.types[type];
@@ -135,7 +175,15 @@ export const planSelection = (composition: Composition, operation: 'query' | 'mu
     const asked = asObject ? selected.find((one) => (one.on !== undefined && one.on !== type) || one.field === '__typename') : undefined;
     const owning = interfaceOwners(parentType);
     if (asked !== undefined && current !== undefined && owning.length > 0) {
-      steps.push({ type, field: '__typename', selected: asked, subgraphs: owning, hop: { entity: type, from: current, resolvable: true }, ...marks(context) });
+      steps.push({
+        type,
+        field: '__typename',
+        selected: asked,
+        subgraphs: owning,
+        hop: { entity: type, from: current, resolvable: true, ...(untyped(type, owning) ? { untyped: true as const } : {}) },
+        ...marks(context),
+        ...(parent === undefined ? {} : { parent }),
+      });
     }
     for (const one of selected) {
       if (one.field === '__typename') continue;
@@ -153,9 +201,15 @@ export const planSelection = (composition: Composition, operation: 'query' | 'mu
       const entity = (Object.values(as)[0] as string | undefined) ?? (asObject && owner !== type ? type : owner);
       const hop =
         current !== undefined && !stays
-          ? { entity, from: current, resolvable: chosen.every((subgraph) => (composition.types[entity]?.keys?.[subgraph]?.length ?? 0) > 0) }
+          ? {
+              entity,
+              from: current,
+              resolvable: chosen.every((subgraph) => (composition.types[entity]?.keys?.[subgraph]?.length ?? 0) > 0),
+              ...(untyped(entity, chosen) ? { untyped: true as const } : {}),
+            }
           : undefined;
-      const levels: Level[] = [{ type: owner, subgraph: current }, ...(owner === type ? [] : [{ type, subgraph: current }]), ...[...ancestors].reverse()];
+      const here: Level = { type: owner, subgraph: current, ...(parent === undefined ? {} : { step: parent }) };
+      const levels: Level[] = [here, ...(owner === type ? [] : [{ ...here, type }]), ...[...ancestors].reverse()];
       const filled = chosen.flatMap((subgraph) => composed.owners.find((each) => each.subgraph === subgraph)?.context ?? []);
       const unset = filled.filter((argument) => setterOf(argument.context, levels) === undefined).map((argument) => ({ argument: argument.argument, context: contextName(argument.context) }));
       steps.push({
@@ -167,13 +221,15 @@ export const planSelection = (composition: Composition, operation: 'query' | 'mu
         ...marks(context),
         ...(Object.keys(as).length === 0 ? {} : { as }),
         ...(unset.length === 0 ? {} : { unset }),
+        ...(parent === undefined ? {} : { parent }),
       });
+      const index = steps.length - 1;
       const choice = context.underChoice || chosen.length > 1;
       for (const subgraph of chosen) {
         const declared = composed.owners.find((each) => each.subgraph === subgraph);
         // What the field requires is fetched by its owners, from the parent's subgraph.
         if (declared?.requires !== undefined && current !== undefined) {
-          walk(owner, asSelections(fieldSetSelections(declared.requires), one.line, one.file), current, undefined, { underChoice: choice, requiredBy: `${owner}.${one.field}` }, ancestors, depth + 1);
+          walk(owner, asSelections(fieldSetSelections(declared.requires), one.line, one.file), current, undefined, { underChoice: choice, requiredBy: `${owner}.${one.field}` }, ancestors, depth + 1, parent);
         }
         // What an argument takes from a context is fetched where the context is set, before the field (P245).
         for (const argument of declared?.context ?? []) {
@@ -187,17 +243,18 @@ export const planSelection = (composition: Composition, operation: 'query' | 'mu
             { underChoice: choice, requiredBy: `${owner}.${one.field}`, fromContext: contextName(argument.context) },
             [],
             depth + 1,
+            setter.step,
           );
         }
         if (one.selections === undefined) continue;
         // A field the parent provides is resolved where the parent is, and so is what it provides below it.
         const below = stays && current === subgraph && provided?.has(one.field) === true ? providedFrom(provided.get(one.field)) : providedBy(declared?.provides);
-        walk(namedTypeIn(composed.type), one.selections, subgraph, below, { underChoice: choice }, [...ancestors, { type: owner, subgraph: current }], depth + 1);
+        walk(namedTypeIn(composed.type), one.selections, subgraph, below, { underChoice: choice }, [...ancestors, here], depth + 1, index);
       }
     }
   };
 
-  walk(rootType, fields, undefined, undefined, { underChoice: false }, [], 0);
+  walk(rootType, fields, undefined, undefined, { underChoice: false }, [], 0, undefined);
   return steps;
 };
 

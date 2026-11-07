@@ -811,7 +811,10 @@ prove, and the path is given so you can run it.
   a `@fromContext` fills, and a subgraph found by the port its server listens
   on are planned too, and the router's `@authenticated`, `@requiresScopes`
   and `@policy` are checks in front of the fields they guard
-  (`fixtures/graphql-federation-interfaces`).
+  (`fixtures/graphql-federation-interfaces`) - on the resolver that answers a
+  field with no resolver of its own, for that field only - and an entity
+  interface whose owner can say no type of it is a finding
+  (`fixtures/graphql-federation-gaps`).
 - **Components in files of their own format.** A `.vue` or `.svelte` file's
   scripts are read by the checker as TypeScript, every position named by the
   component file at its own line, and the event bindings of its markup are the

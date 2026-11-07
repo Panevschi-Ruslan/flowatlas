@@ -337,6 +337,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The supergraph the router plans by and a subgraph\'s source disagree: a field it gives the subgraph is gone, or a root field the subgraph added is not in it. Compose the supergraph again and commit it.',
   'graphql-auth-not-checked': () =>
     'The subgraphs mark fields with the router\'s authorization directives (@authenticated, @requiresScopes, @policy), and the gateway that composes them is an Apollo Gateway, which does not check them: a request through it reaches those fields unchecked. Serve the graph with a router that checks them, or check who is asking in the subgraph\'s resolvers.',
+  'graphql-entity-type-unsaid': () =>
+    'A subgraph owns an entity interface other subgraphs make entity calls for, and writes neither its reference resolver nor a type resolver: the call arrives naming the interface, so the subgraph cannot say which of its types the item is, and refuses it. Write the interface\'s __resolveReference answering with the item and its __typename, or __resolveType.',
   'graphql-context-not-reached': () =>
     'A field takes an argument the router fills from a context (@fromContext), and no type above it in the selection sets that context (@context), so what the argument needs is not planned. Select the field under the type that sets the context, or pass the argument another way.',
   'graphql-shareable-choice': () =>
@@ -827,6 +829,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'graphql-composition-conflict': ['federated field composition refuses', 'federated fields composition refuses'],
   'graphql-supergraph-drift': ['supergraph field out of date', 'supergraph fields out of date'],
   'graphql-auth-not-checked': ['gateway that checks no authorization directive', 'gateways that check no authorization directive'],
+  'graphql-entity-type-unsaid': ['entity interface no subgraph can type', 'entity interfaces no subgraph can type'],
   'route-file-not-served': ['route file served at no address', 'route files served at no address'],
   'wizard-step-conflict': ['wizard step numbered twice', 'wizard steps numbered twice'],
   'workflow-name-duplicate': ['workflow defined twice', 'workflows defined twice'],

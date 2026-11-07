@@ -196,6 +196,15 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
     const input = lookup.node(edge.to)?.meta?.['input'];
     const callerParty = party(lookup, callerService, undefined, caller);
     const handlerParty = party(lookup, handlerService, undefined, handler);
+    // Where the answer's type comes from depends on who asks (P252): a
+    // procedure's client is typed from the server's tree, a plain request by
+    // whatever it writes itself - a type nothing ties to the tree, or none.
+    const client = typeof lookup.node(edge.from)?.meta?.['procedure'] === 'string';
+    const expects = client ? undefined : edge.returns;
+    const answered: Blocked =
+      client || namesAShape(expects)
+        ? { reason: 'procedure-output-inferred' as const, subject: edge.to, ...(expects === undefined ? {} : { detail: expects.replace(/^type:[^#]*#/, '') }) }
+        : { reason: 'no-type-on-receiver' as const, subject: caller };
     return [
       {
         ...both('request', callerParty, handlerParty),
@@ -205,10 +214,7 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
           ...(typeof input === 'string' ? { detail: input } : {}),
         },
       },
-      {
-        ...both('response', handlerParty, callerParty),
-        blocked: { reason: 'procedure-output-inferred' as const, subject: edge.to },
-      },
+      { ...both('response', handlerParty, callerParty), blocked: answered },
     ];
   }
 

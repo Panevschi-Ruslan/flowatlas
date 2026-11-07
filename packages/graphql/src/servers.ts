@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import type { ClassDeclaration, Decorator, MethodDeclaration, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import { documentOf } from './documents.js';
 import { isSupergraph } from './federation.js';
 import { followed, readGraphqlGateway, settingRead, type GatewayReading } from './gateway.js';
@@ -75,6 +75,14 @@ export interface ServerReading {
   readonly gateway?: GatewayReading;
   /** The ports the server listens on, where the code says (P245). */
   readonly listen: readonly ListenPort[];
+  /**
+   * The types whose concrete type the code says (P252): an abstract type with
+   * a type resolver (`__resolveType`, `resolveType` in its decorator's or
+   * `createUnionType`'s options), and an object type with `__isTypeOf`. An
+   * entity call for an interface is answered with one of its types only where
+   * the reference resolver, or one of these, says which.
+   */
+  readonly typeResolvers: readonly string[];
   /** Type definitions that could not be read, and why. */
   readonly unread: ReadonlyArray<{ readonly at: TsNode; readonly why: string }>;
 }
@@ -86,6 +94,9 @@ const ROOTS = new Map([
   ['Subscription', 'Subscription'],
 ]);
 const FIELD_DECORATORS = new Set(['ResolveField', 'FieldResolver', 'ResolveProperty', 'ResolveReference']);
+
+/** How a type says which concrete type a value is, rather than a field anybody selects (P252). */
+const TYPE_RESOLVERS = new Set(['__resolveType', '__isTypeOf']);
 
 /** A decorator of one of the GraphQL packages, by the name it is imported under. */
 const graphqlDecorator = (node: { getDecorators(): Decorator[] }, names: ReadonlySet<string> | readonly string[]): Decorator | undefined =>
@@ -160,8 +171,16 @@ const writtenDirectives = (node: { getDecorators(): Decorator[] }): AppliedDirec
 
 const plainName = (name: string): string => name;
 
-/** The GraphQL name of each class a code-first server decorates as a type, and its fields. */
-const codeFirstTypes = (sources: readonly SourceFile[]): { names: Map<string, string>; schema: SchemaSummary } => {
+/** Whether a type decorator's or `createUnionType`'s options say which concrete type a value is: `resolveType`, `isTypeOf` (P252). */
+const saysTypeIn = (options: ObjectLiteralExpression | undefined): boolean =>
+  options?.getProperties().some((property) => {
+    const name = (property as { getName?: () => string }).getName?.();
+    return name === 'resolveType' || name === 'isTypeOf';
+  }) === true;
+
+/** The GraphQL name of each class a code-first server decorates as a type, its fields, and the types whose options say a value's type. */
+const codeFirstTypes = (sources: readonly SourceFile[]): { names: Map<string, string>; schema: SchemaSummary; typeResolvers: Set<string> } => {
+  const typeResolvers = new Set<string>();
   const names = new Map<string, string>();
   const types: Record<string, { kind: 'object' | 'input' | 'interface'; fields: Record<string, SchemaField>; possible?: string[]; federation?: TypeFederation }> = {};
   /** `@ObjectType({ implements: () => [Media] })`: each interface's implementations, by class name until every name is known (P245). */
@@ -186,6 +205,7 @@ const codeFirstTypes = (sources: readonly SourceFile[]): { names: Map<string, st
         fields[stringOption(options, 'name') ?? member.getName()] = { type, ...(federation === undefined ? {} : { federation }) };
       }
       const federation = typeFederationOf(writtenDirectives(declaration), false, plainName);
+      if (saysTypeIn(optionsOf(decorator))) typeResolvers.add(name);
       types[name] = { kind: decorator.getName() === 'InputType' ? 'input' : decorator.getName() === 'InterfaceType' ? 'interface' : 'object', fields, ...(federation === undefined ? {} : { federation }) };
       const implemented = option(optionsOf(decorator), 'implements');
       const body = implemented !== undefined && (Node.isArrowFunction(implemented) || Node.isFunctionExpression(implemented)) ? implemented.getBody() : implemented;
@@ -199,7 +219,17 @@ const codeFirstTypes = (sources: readonly SourceFile[]): { names: Map<string, st
       if (known !== undefined && known.kind === 'interface') known.possible = [...new Set([...(known.possible ?? []), type])].sort();
     }
   }
-  return { names, schema: { roots: { query: 'Query', mutation: 'Mutation', subscription: 'Subscription' }, types } };
+  // `createUnionType({ name: 'Result', types, resolveType })` (P252).
+  for (const sourceFile of sources) {
+    if (!sourceFile.getFullText().includes('createUnionType')) continue;
+    for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      if (call.getExpression().getText().replace(/^.*\./, '') !== 'createUnionType') continue;
+      const options = call.getArguments().find((argument): argument is ObjectLiteralExpression => Node.isObjectLiteralExpression(argument));
+      const name = stringOption(options, 'name');
+      if (name !== undefined && saysTypeIn(options)) typeResolvers.add(name);
+    }
+  }
+  return { names, schema: { roots: { query: 'Query', mutation: 'Mutation', subscription: 'Subscription' }, types }, typeResolvers };
 };
 
 /**
@@ -238,8 +268,8 @@ const argumentsOf = (method: MethodDeclaration, argsTypes: ReadonlyMap<string, C
   return found;
 };
 
-/** Every field a decorated resolver class answers. */
-const decoratedFields = (sources: readonly SourceFile[], names: ReadonlyMap<string, string>): ResolvedField[] => {
+/** Every field a decorated resolver class answers, and the types whose concrete type one says (`@ResolveField() __resolveType`). */
+const decoratedFields = (sources: readonly SourceFile[], names: ReadonlyMap<string, string>, typeResolvers: Set<string>): ResolvedField[] => {
   const argsTypes = new Map<string, ClassDeclaration>();
   for (const sourceFile of sources) for (const declaration of sourceFile.getClasses()) if (graphqlDecorator(declaration, ['ArgsType']) !== undefined) argsTypes.set(declaration.getName() ?? '', declaration);
   const found: ResolvedField[] = [];
@@ -262,6 +292,10 @@ const decoratedFields = (sources: readonly SourceFile[], names: ReadonlyMap<stri
         const nullable = booleanOption(options, 'nullable');
         const type = root === undefined ? parent : ROOTS.get(root.getName());
         if (type === undefined) continue;
+        if (TYPE_RESOLVERS.has(named)) {
+          typeResolvers.add(type);
+          continue;
+        }
         const args = argumentsOf(method, argsTypes, names);
         const federation = fieldFederationOf(writtenDirectives(method), plainName);
         found.push({
@@ -327,8 +361,8 @@ const mapHandler = (property: TsNode, name: string): { fn: TsNode; name: string 
 /** The calls a server is made by, and the key of their options that holds its resolvers and its type definitions. */
 const SERVER_CALLS = new Set(['ApolloServer', 'createYoga', 'createSchema', 'makeExecutableSchema', 'buildSubgraphSchema', 'mercurius', 'createHandler', 'buildSchema']);
 
-/** Every field a resolver map answers, and the type definitions handed beside it. */
-const mappedFields = (sources: readonly SourceFile[], roots: ReadonlyMap<string, string>): { fields: ResolvedField[]; typeDefs: TsNode[] } => {
+/** Every field a resolver map answers, the type definitions handed beside it, and the types whose concrete type it says. */
+const mappedFields = (sources: readonly SourceFile[], roots: ReadonlyMap<string, string>, typeResolvers: Set<string>): { fields: ResolvedField[]; typeDefs: TsNode[] } => {
   const fields: ResolvedField[] = [];
   const typeDefs: TsNode[] = [];
   const seen = new Set<ObjectLiteralExpression>();
@@ -362,8 +396,12 @@ const mappedFields = (sources: readonly SourceFile[], roots: ReadonlyMap<string,
           for (const property of object.getProperties()) {
             if (Node.isSpreadAssignment(property)) continue;
             const field = (property as { getName?: () => string }).getName?.() ?? '';
-            // How an abstract type picks its member is not a field anybody selects.
-            if (field === '__resolveType' || field === '__isTypeOf') continue;
+            // How an abstract type picks its member is not a field anybody selects;
+            // it is what an entity call for an interface is typed by (P252).
+            if (TYPE_RESOLVERS.has(field)) {
+              typeResolvers.add(roots.get(type) ?? type);
+              continue;
+            }
             const handler = mapHandler(property, `${type}.${field}`);
             if (handler === undefined || field === '') continue;
             fields.push({
@@ -566,8 +604,9 @@ export const readGraphqlServer = (
   const filed = documents.filter((document): document is Document => document !== undefined && !isSupergraph(document));
   const roots = new Map(ROOTS);
   for (const document of filed) for (const definition of document.definitions) if (definition.kind === 'schema') for (const [operation, type] of Object.entries(definition.roots)) roots.set(type as string, operation === 'query' ? 'Query' : operation === 'mutation' ? 'Mutation' : 'Subscription');
-  const decorated = decoratedFields(sources, codeFirst.names);
-  const mapped = mappedFields(sources, roots);
+  const typeResolvers = new Set(codeFirst.typeResolvers);
+  const decorated = decoratedFields(sources, codeFirst.names, typeResolvers);
+  const mapped = mappedFields(sources, roots, typeResolvers);
   const written = mapped.typeDefs.flatMap((value) => sdlOf(value, unread));
   let schema = mergeSchemas(schemaOf([...filed, ...written]), codeFirst.schema);
   // The root fields a resolver answers are fields of its root type, with what the code says they return.
@@ -597,6 +636,7 @@ export const readGraphqlServer = (
     ...(federation === undefined ? {} : { federation }),
     ...(gateway === undefined ? {} : { gateway }),
     listen: listenPortsOf(sources),
+    typeResolvers: [...typeResolvers].sort(),
     unread,
   };
 };

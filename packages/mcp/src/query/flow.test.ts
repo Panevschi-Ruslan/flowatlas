@@ -143,6 +143,33 @@ describe('walking outward from an entry', () => {
     db.close();
   });
 
+  it('shows a check for some of what a node answers only on a step that asks it for one of them, and says which (P252)', () => {
+    const db = buildTestDb({
+      nodes: [
+        node('web#src/Book.tsx:Book', { repo: 'web', label: 'Book' }),
+        node('ui_api_call:web#src/Book.tsx:5:1', { type: 'ui_api_call', repo: 'web', label: 'query Price' }),
+        node('ui_api_call:web#src/Book.tsx:9:1', { type: 'ui_api_call', repo: 'web', label: 'query Name' }),
+        entry('entry:catalog:graphql:Query.book', { kind: 'graphql', repo: 'catalog', label: 'Query.book' }),
+        node('router#router/supergraph.graphql:@authenticated', { type: 'guard', repo: 'router', label: '@authenticated', file: 'router/supergraph.graphql', line: 20 }),
+      ],
+      edges: [
+        edge('web#src/Book.tsx:Book', 'ui_api_call:web#src/Book.tsx:5:1', { line: 5 }),
+        edge('web#src/Book.tsx:Book', 'ui_api_call:web#src/Book.tsx:9:1', { line: 9 }),
+        edge('ui_api_call:web#src/Book.tsx:5:1', 'entry:catalog:graphql:Query.book', { type: 'hits', meta: { through: 'router', answers: ['Book.price'] } }),
+        edge('ui_api_call:web#src/Book.tsx:9:1', 'entry:catalog:graphql:Query.book', { type: 'hits', meta: { through: 'router' } }),
+        edge('entry:catalog:graphql:Query.book', 'router#router/supergraph.graphql:@authenticated', { type: 'guarded_by', meta: { order: 0, through: 'router', for: ['Book.isbn', 'Book.price'] } }),
+      ],
+    });
+    // Each request walked on its own, so neither step is a reference to the other's.
+    const [asking] = buildFlowTree(db, 'ui_api_call:web#src/Book.tsx:5:1', {}).root.children;
+    const [notAsking] = buildFlowTree(db, 'ui_api_call:web#src/Book.tsx:9:1', {}).root.children;
+    expect(asking?.guards?.map((guard) => [guard.label, guard.for])).toEqual([['@authenticated', ['Book.price']]]);
+    expect([notAsking?.node.id, (notAsking?.node as { ref?: boolean } | undefined)?.ref, notAsking?.guards]).toEqual(['entry:catalog:graphql:Query.book', undefined, undefined]);
+    // Walked from the node itself, the check is said with every field it is for.
+    expect(buildFlowTree(db, 'entry:catalog:graphql:Query.book', {}).root.guards?.map((guard) => [guard.label, guard.for])).toEqual([['@authenticated', ['Book.isbn', 'Book.price']]]);
+    db.close();
+  });
+
   it('walks a bot callback exactly as it walks a route', () => {
     const asRoute = buildTestDb(straightLine('http', 'GET /orders'));
     const asCallback = buildTestDb(straightLine('bot_callback', 'order_confirm'));

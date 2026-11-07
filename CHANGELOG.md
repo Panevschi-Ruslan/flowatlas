@@ -8,6 +8,27 @@ only one of them moved.
 
 ### Added
 
+- **The router's check on a field no resolver of its own answers, and an
+  entity interface nobody can type (P252).** A field the router's
+  `@authenticated`, `@requiresScopes` or `@policy` guards and no resolver of
+  its own answers (`Book.price`, read off what `Query.book` returns) is
+  guarded on the entries that do answer it - the resolvers of the fields that
+  return its type, followed up through fields with no resolver either, and the
+  reference resolvers of an entity call for it - for that field only:
+  `meta.for` on the `guarded_by` edge and on the check in `meta.access`,
+  `meta.answers` on the plan edge of a request that asks for it, and `flow`
+  shows `@authenticated for Book.price` on that step and on no other. A field
+  the router does not serve (`@inaccessible`) has no check drawn and is not
+  named by `graphql-auth-not-checked`. An entity interface whose owning
+  subgraph writes no `__resolveReference`, no `__resolveType` and no
+  `__isTypeOf` on one of its types is `graphql-entity-type-unsaid` (a finding,
+  wiring), and the plan edges of an entity call into it say `hop.untyped`; a
+  subgraph's endpoint carries the types its code says the type of
+  (`meta.graphql.subgraph.typeResolvers`), and a NestJS schema-first
+  `@ResolveField() __resolveType` is no longer read as a field.
+  `@requires`, `@provides` and `@external` were already planned (P241). New
+  fixture `graphql-federation-gaps`.
+
 - **A function run before every request carries its base into each one
   (P244).** An axios request interceptor (`api.interceptors.request.use`, on an
   instance or on `axios` itself) that writes `config.baseURL`, answers
@@ -341,6 +362,22 @@ only one of them moved.
   there is none. No new tool: the list grew by one clause.
 
 ### Changed
+
+- **A plain request to a procedure's REST route is told where its answer's
+  type comes from (P252).** `contracts` said every caller of an oRPC or tRPC
+  procedure gets an answer "inferred from the server's own tree", which is
+  true of a client typed from the router and not of a `fetch`: a plain
+  request that types the answer itself keeps `procedure-output-inferred` with
+  a message naming its own type, which nothing ties to the tree, and one that
+  types nothing is `no-type-on-receiver`, as any request is
+  (`orpc-next`, `orpc-contract` snapshots).
+- **A lazy oRPC branch the checker cannot resolve is followed by its path
+  (P252).** `lazy(() => import('@/routers/reports'))` with no `paths` behind
+  the alias is followed into the one file of the service its path names
+  (relative, or after `@/`, `~/`, `~~/`, `#`, with a bundler's endings and
+  `index`); one that cannot be is `procedure-branch-unread` saying it is a
+  lazy branch, and the module it names is no longer read as a root of its
+  own, with its procedures at addresses nobody calls.
 
 - **A queue, a topic or a bucket Terraform gives no name is named by its
   declaration (P246)**, as the Serverless Framework and CDK readers name one:

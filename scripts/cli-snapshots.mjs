@@ -495,6 +495,13 @@ const INTERFACES_CASES = [
   ['impact.media-rating.tree.txt', (io) => runImpact('entry:reviews:graphql:Media.rating', { ...interfacesPlain, format: 'tree' }, io)],
 ];
 
+const gapsFixture = join(root, 'fixtures', 'graphql-federation-gaps');
+const gapsPlain = { config: join(gapsFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const GAPS_CASES = [
+  ['flow.book-page.tree.txt', (io) => runFlow('shop#src/BookPage.tsx:BookPage', { ...gapsPlain, format: 'tree' }, io)],
+  ['flow.top-books.tree.txt', (io) => runFlow('shop#src/TopBooks.tsx:TopBooks', { ...gapsPlain, format: 'tree' }, io)],
+];
+
 const lambdaFixture = join(root, 'fixtures', 'multi-repo-lambda');
 const lambdaConfig = join(lambdaFixture, 'flowatlas.config.json');
 
@@ -1212,6 +1219,7 @@ const SUITES = [
   { dir: join(federationFixture, 'expected.cli'), owned: true, cases: FEDERATION_CASES },
   { dir: join(composedFixture, 'expected.cli'), owned: true, cases: COMPOSED_CASES },
   { dir: join(interfacesFixture, 'expected.cli'), owned: true, cases: INTERFACES_CASES },
+  { dir: join(gapsFixture, 'expected.cli'), owned: true, cases: GAPS_CASES },
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },

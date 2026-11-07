@@ -36,6 +36,7 @@ export interface Builder {
 }
 export declare const os: Builder;
 export declare function implement<T>(contract: T): any;
+export declare function lazy<T>(load: () => Promise<{ default: T }>): T;
 export declare class ORPCError { constructor(code: string, options?: unknown) }
 `;
 
@@ -249,6 +250,50 @@ describe('oRPC procedures (P58)', () => {
       ['procedure-prefix-unread', 'info'],
       ['procedure-prefix-unread', 'action'],
     ]);
+  });
+
+  /**
+   * A lazy branch whose `import()` the checker cannot resolve (P252): an
+   * alias with no `paths` behind it. Followed by its path where one file of
+   * the service fits; where none does, a row that says it is a lazy branch,
+   * and the module's own tree is not read as a root of its own.
+   */
+  describe('a lazy branch the checker cannot resolve (P252)', () => {
+    const REPORTS = `
+      import { os } from '@orpc/server';
+      export default { summary: os.handler(async () => ({ total: 0 })) };
+    `;
+    const routerLoading = (written: string): string => `
+      import { lazy, os } from '@orpc/server';
+      export const router = { health: os.handler(() => 'ok'), reports: lazy(() => import('${written}')) };
+    `;
+
+    it('follows an alias to the one file of the service its path names', () => {
+      const aliased = read({ '/server/router.ts': routerLoading('@/server/reports'), '/server/reports.ts': REPORTS });
+      expect(keysOf(aliased, 'rpc')).toEqual(['health', 'reports.summary']);
+      expect(reasons(aliased)).toEqual([]);
+    });
+
+    it('follows a relative path written with the ending the bundler resolves', () => {
+      const relative = read({ '/server/router.ts': routerLoading('./reports/index.js'), '/server/reports/index.ts': REPORTS });
+      expect(keysOf(relative, 'rpc')).toEqual(['health', 'reports.summary']);
+    });
+
+    it('says a branch it cannot follow is a lazy branch, and does not read the module it names as a root', () => {
+      const unread = read({ '/server/router.ts': routerLoading('@lib/reports'), '/server/reports.ts': REPORTS });
+      expect(keysOf(unread, 'rpc')).toEqual(['health']);
+      expect(unread.unresolved.map((row) => [row.reason, row.symbol])).toEqual([['procedure-branch-unread', 'reports']]);
+      expect(unread.unresolved[0]?.message).toContain('loads its tree lazily from @lib/reports');
+      expect(unread.unresolved[0]?.message).toContain('the tree server/reports.ts exports by default may be it, and is not read as a root of its own');
+    });
+
+    it('says a branch whose module is nowhere is a lazy branch, and reads nothing else as its tree', () => {
+      const missing = read({ '/server/router.ts': routerLoading('./missing') });
+      expect(keysOf(missing, 'rpc')).toEqual(['health']);
+      expect(missing.unresolved.map((row) => row.reason)).toEqual(['procedure-branch-unread']);
+      expect(missing.unresolved[0]?.message).toContain('loads its tree lazily from ./missing');
+      expect(missing.unresolved[0]?.message).not.toContain('may be it');
+    });
   });
 
   it('ships a row that went in through the schema', () => {

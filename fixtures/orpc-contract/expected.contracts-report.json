@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-05T22:27:04.546Z",
+  "generatedAt": "2026-11-07T17:32:03.516Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -50,9 +50,9 @@
       },
       "edgeKey": "ui_api_call:shop#src/orders.ts:14:3|hits|entry:orders:http:DELETE:/api/shop/orders/:param",
       "direction": "response",
-      "reason": "procedure-output-inferred",
-      "message": "what entry:orders:http:DELETE:/api/shop/orders/:param answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/orders.ts:cancelByRoute declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {

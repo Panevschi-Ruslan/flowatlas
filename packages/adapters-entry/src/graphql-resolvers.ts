@@ -240,11 +240,13 @@ export const graphqlResolversAdapter: EntryAdapter = {
     const endpointId = makeEntryId(ctx.repo, 'http', makeHttpEntryKey('POST', reading.endpoint));
     // Where the server listens, so a gateway's `http://localhost:4001/graphql` reaches it (P245).
     const listen = reading.listen.map((port) => ({ port: port.port, file: fileOfNode(port.at, ctx), line: startLineOf(port.at), ...(port.setting === undefined ? {} : { setting: port.setting }) }));
+    // A subgraph says the types its code says the concrete type of, for an entity call for an interface (P252).
+    const subgraph = reading.federation === undefined ? undefined : { federation: reading.federation, ...(reading.typeResolvers.length === 0 ? {} : { typeResolvers: reading.typeResolvers }) };
     // A gateway serves the composition: a supergraph's is known now, one composed at start once the linker has the subgraphs.
     const served =
       gateway !== undefined
         ? { endpoint: true, gateway, ...(gateway.composition === undefined ? {} : { schema: apiSchemaOf(gateway.composition) }), ...(listen.length === 0 ? {} : { listen }) }
-        : { endpoint: true, schema: reading.schema, ...(reading.federation === undefined ? {} : { subgraph: { federation: reading.federation } }), ...(listen.length === 0 ? {} : { listen }) };
+        : { endpoint: true, schema: reading.schema, ...(subgraph === undefined ? {} : { subgraph }), ...(listen.length === 0 ? {} : { listen }) };
     // POST: what every client sends; a GET the server also answers is no way in anything here uses.
     for (const method of ['POST']) {
       const key = makeHttpEntryKey(method, reading.endpoint);
