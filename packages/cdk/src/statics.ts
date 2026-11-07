@@ -1,4 +1,5 @@
-import { Built, CdkRef, ObjectValue, textOf, Unread, type Site, type Value } from './values.js';
+import { exportKey } from '@flowatlas/core';
+import { Built, CdkRef, Imported, ObjectValue, textOf, Unread, type Site, type Value } from './values.js';
 
 /**
  * What the CDK's own static members and helpers stand for, where a reading of
@@ -113,7 +114,8 @@ const STATIC_CALLS: ReadonlyMap<string, StaticCall> = new Map<string, StaticCall
   ['aws-scheduler.ScheduleExpression.cron', (args) => cronOf(args[0], true)],
   ['aws-scheduler.ScheduleExpression.expression', expression],
   ['aws-applicationautoscaling.Schedule.expression', expression],
-  ['core.Fn.importValue', () => new Unread('the value is imported from another stack, whose outputs are not read', 'imported')],
+  // An output another stack exports, read back by its name (P249).
+  ['core.Fn.importValue', (args) => (typeof args[0] === 'string' ? new Imported(exportKey(args[0]), args[0]) : new Unread('the value is imported from another stack under a name that is not read', 'imported'))],
   ['core.Stack.of', () => new Unread('the stack is read through what it creates, not as a value', 'stack')],
   ['aws-ssm.StringParameter.valueForStringParameter', () => new Unread('the value is read from a parameter in the account', 'parameter')],
   ['aws-ssm.StringParameter.valueFromLookup', () => new Unread('the value is looked up in the account', 'parameter')],

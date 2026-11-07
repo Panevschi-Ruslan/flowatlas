@@ -319,6 +319,8 @@ const GAPS: readonly string[] = [
   'construct-repeated-unread',
   // A deployment nested in another whose description is published elsewhere (P246)
   'nested-deployment-unread',
+  // A service a composition of deployments lists that is not read (P249)
+  'compose-service-unread',
   // Workflows written down as state machine definitions
   'workflow-definition-unreadable',
   'workflow-target-dynamic',
@@ -329,6 +331,10 @@ const GAPS: readonly string[] = [
   // Joining the repositories (linker)
   'route-root-not-found',
   'route-root-ambiguous',
+  // A value one deployment reads from another's outputs, joined by its name (P249)
+  'export-not-found',
+  'export-ambiguous',
+  'export-mismatched',
   'invoke-target-not-found',
   'invoke-target-ambiguous',
   'unknown-base-url-env',

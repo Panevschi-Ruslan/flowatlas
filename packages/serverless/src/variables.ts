@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { extname, isAbsolute, join, normalize } from 'node:path';
-import type { PathStep } from '@flowatlas/core';
+import { stackOutputKey, type PathStep } from '@flowatlas/core';
 import { readServiceFile, UnreadMember } from './document.js';
 
 /**
@@ -37,6 +37,26 @@ export class Unread {
   ) {}
 }
 
+/**
+ * A value another stack publishes, by the key it is read under (P249): an
+ * output by its export name, or by its stack's name and its own.
+ *
+ * It is an {@link Unread}, because the files of this repository do not hold
+ * it, so every place that does not look for one says so as before; the places
+ * that do name what it is by its key's stand-in, which the linker finishes
+ * where the publisher is read.
+ */
+export class Imported extends Unread {
+  constructor(
+    /** `export:<name>` or `stack:<stack>#<output>`. */
+    readonly key: string,
+    text: string,
+    variable?: string,
+  ) {
+    super(text, variable);
+  }
+}
+
 /** Where the stage a service is deployed to was found. */
 export type StageFrom = 'option' | 'file' | 'default';
 
@@ -49,6 +69,11 @@ export interface VariableContext {
   readonly options: Readonly<Record<string, string>>;
   /** Absolute paths of every file a variable loaded, filled as they are. */
   readonly loaded: Set<string>;
+  /**
+   * The parameters a composition of services hands this one, which come
+   * before the file's own `params` (P249).
+   */
+  readonly params?: Readonly<Record<string, unknown>>;
 }
 
 /** The framework's own stage and region, when neither the options nor the file names one. */
@@ -263,10 +288,14 @@ export class Variables {
       case 'env':
         return this.#env(address);
       case 'param': {
+        const given = this.#context.params?.[address];
+        if (given !== undefined) return given;
         const stage = this.stage.value;
         const own = typeof stage === 'string' ? this.at(['params', stage, address]) : undefined;
         return own ?? this.at(['params', 'default', address]);
       }
+      case 'cf':
+        return outputOf(address, written);
       case 'aws':
         if (address === 'region') return this.at(['provider', 'region']) ?? this.#context.options['region'] ?? DEFAULT_REGION;
         return new Unread(`aws:${address} is the deployed account's, which the files do not say`, written);
@@ -280,6 +309,8 @@ export class Variables {
       const value = this.#string(argument.replace(/^(['"])(.*)\1$/, '$2'));
       return typeof value === 'string' ? ['true', '1'].includes(value.trim().toLowerCase()) : value;
     }
+    // `${cf(eu-west-1):orders-prod.QueueUrl}`: the same output, read in another region.
+    if (name === 'cf' && address !== undefined) return outputOf(address, written);
     if (name !== 'file') return new Unread(`${name}() is not a variable source this reads`, written);
     const relative = argument.replace(/^(['"])(.*)\1$/, '$2');
     const path = isAbsolute(relative) ? relative : normalize(join(this.#context.dir, relative));
@@ -317,6 +348,15 @@ export class Variables {
     return this.#dotenv[name];
   }
 }
+
+/** `${cf:<stack>.<output>}`: an output of a deployed stack, by the stack's name and its own (P249). */
+const outputOf = (address: string, written: string): Unread => {
+  const dot = address.indexOf('.');
+  const stack = dot < 0 ? '' : address.slice(0, dot);
+  const output = dot < 0 ? '' : address.slice(dot + 1);
+  if (stack === '' || output === '' || /[${}\u0001]/.test(address)) return new Unread(`\${${written}} names no stack and output the files settle`, written);
+  return new Imported(stackOutputKey(stack, output), `the value is the output ${output} of the stack ${stack}, which another deployment publishes`, written);
+};
 
 /** The text a resolved value is, when it is text with nothing unread in it. */
 export const textOf = (value: unknown): string | undefined =>

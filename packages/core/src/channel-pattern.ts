@@ -34,6 +34,49 @@ export interface EnvironmentValue {
   readonly variable?: string;
   /** The variable files that disagree on it, and what each says. */
   readonly files?: Readonly<Record<string, string>>;
+  /** The key of a value another deployment publishes, which this one is (P249). */
+  readonly imported?: string;
+  /** The service that declares what it refers to, where that is another one's: an API it publishes (P249). */
+  readonly service?: string;
+}
+
+/**
+ * On a repository's node, the values its deployments publish for other
+ * deployments to read (P249): a list of {@link ExportedValue}.
+ */
+export const EXPORTS_META = 'exports';
+
+/** One published value, as the graph keeps it. */
+export interface ExportedValue {
+  readonly keys: readonly string[];
+  readonly address: string;
+  readonly file: string;
+  readonly line: number;
+  /** What the value names, as an {@link EnvironmentValue} spells it: `kind` and the name in `value`. */
+  readonly kind?: string;
+  readonly value?: string;
+  /** The value as text, when it is text. */
+  readonly text?: string;
+  readonly unread?: string;
+  readonly deployedBy?: string;
+}
+
+/**
+ * On a repository's node, every place its deployments read a value another
+ * publishes (P249): a list of {@link ImportedValue}. Something imported is
+ * named by its key's stand-in, which the linker renames to what the value
+ * names, and a value of the environment carries the key under `imported`.
+ */
+export const IMPORTS_META = 'imports';
+
+/** One place a published value is read. */
+export interface ImportedValue {
+  readonly key: string;
+  readonly file: string;
+  readonly line: number;
+  readonly what: string;
+  /** The kinds it may be, where it is used; absent where it may be anything. */
+  readonly kinds?: readonly string[];
 }
 
 /**

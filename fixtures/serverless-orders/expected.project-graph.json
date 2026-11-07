@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T09:34:17.888Z",
+  "builtAt": "2026-11-07T17:36:40.244Z",
   "services": [
     {
       "name": "orders",
@@ -1586,7 +1586,53 @@
           "entry": [
             "aws-lambda"
           ]
-        }
+        },
+        "apiRoots": [
+          {
+            "key": "stack:orders-dev#HttpApiId",
+            "path": "/",
+            "api": "dev-orders",
+            "file": "serverless.yml",
+            "line": 8,
+            "deployedBy": "serverless"
+          }
+        ],
+        "exports": [
+          {
+            "keys": [
+              "export:sls-orders-dev-ServiceEndpoint",
+              "stack:orders-dev#ServiceEndpoint"
+            ],
+            "address": "Outputs.ServiceEndpoint",
+            "file": "serverless.yml",
+            "line": 8,
+            "kind": "api",
+            "value": "dev-orders",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "stack:orders-dev#HttpApiId"
+            ],
+            "address": "Outputs.HttpApiId",
+            "file": "serverless.yml",
+            "line": 8,
+            "kind": "api",
+            "value": "dev-orders",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "stack:orders-dev#HttpApiUrl"
+            ],
+            "address": "Outputs.HttpApiUrl",
+            "file": "serverless.yml",
+            "line": 8,
+            "kind": "api",
+            "value": "dev-orders",
+            "deployedBy": "serverless"
+          }
+        ]
       }
     }
   ],

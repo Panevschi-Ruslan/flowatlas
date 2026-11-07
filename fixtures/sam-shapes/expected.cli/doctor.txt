@@ -16,6 +16,9 @@ unresolved: 8 to act on · missed: 11 · notes: 3 · findings: 1
   deployment-plugin-unread: 1 row
     The template is read as it is written. Declare in it what the macro would add, or expect that missing from the map.
       library/tools/template.yaml:2  tools/template.yaml#Transform
+  export-not-found: 1 row
+    Add the repository whose deployment declares that output to the configuration, or check the name on both sides.
+      library/template.yaml:211  import:export:shared-notices-topic-arn
   function-handler-unread: 1 row
     Move the code into a file and name it with CodeUri and Handler.
       library/template.yaml:175  Resources.PingFunction is written inline in the template, so there is no module to point at
@@ -25,9 +28,6 @@ unresolved: 8 to act on · missed: 11 · notes: 3 · findings: 1
   nested-deployment-unread: 1 row
     Keep the nested template in the repository and point at it by a path relative to this one; one published elsewhere is read where its own repository is.
       library/template.yaml:404  Resources.Postcodes
-  subscription-source-unread: 1 row
-    Write it as a Ref or Fn::GetAtt of a resource the template declares, or as its ARN; a value from another stack or the account is not read.
-      library/template.yaml:211  Resources.DoorFunction.Events.Shared
   deployed-name-generated (note): 1 row over 4 places
     Give it a name of its own where other repositories reach it.
       library/template.yaml:48  Resources.LendFunction is a function with no name of its own, so it is named by where it is declared; what this file points at it by joins to it, and nothing outside this deployment can
@@ -55,23 +55,23 @@ markers: none
 
 desync: none
 
-contracts: no errors, 0 excused, 12 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 13 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 8 now, +8)
   no baseline at <root>/fixtures/sam-shapes/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   construct-repeated-unread: 0 → 1 (+1)
   deployment-plugin-unread: 0 → 1 (+1)
+  export-not-found: 0 → 1 (+1)
   function-handler-unread: 0 → 1 (+1)
   function-name-unread: 0 → 1 (+1)
   nested-deployment-unread: 0 → 1 (+1)
   route-target-unread: 0 → 2 (+2)
-  subscription-source-unread: 0 → 1 (+1)
   new (8):
     library|api/branches.yaml|Resources.BranchesApi.paths./branches.get|route-target-unread
     library|template.yaml|Resources.Branches|construct-repeated-unread
-    library|template.yaml|Resources.DoorFunction.Events.Shared|subscription-source-unread
     library|template.yaml|Resources.OverdueStateMachine.Events.Check|route-target-unread
     library|template.yaml|Resources.Postcodes|nested-deployment-unread
     library|template.yaml|entry:library:invoke:${…}@Resources.OwnerFunction|function-name-unread
     library|template.yaml|entry:library:invoke:library-prod-ping|function-handler-unread
+    library|template.yaml|import:export:shared-notices-topic-arn|export-not-found
     library|tools/template.yaml|tools/template.yaml#Transform|deployment-plugin-unread

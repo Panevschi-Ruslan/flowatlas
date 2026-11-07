@@ -6,12 +6,12 @@ unresolved: 3 to act on · missed: 6 · notes: 1 · findings: 0
   deployment-plugin-unread: 1 row
     Declare them under functions and resources, or expect them missing from the map.
       members/services/notices/serverless.yml:104  constructs
+  export-not-found: 1 row
+    Add the repository whose deployment declares that output to the configuration, or check the name on both sides.
+      members/services/notices/serverless.yml:68  import:export:shared-audit-queue-arn
   function-name-unread: 1 row
     Give ${ssm:/club/audit-function-name} a value the files settle.
       members/services/notices/serverless.yml:64  the name of functions.audit is not read: ssm: values are read from the deployed account or a service, which the files do not hold
-  subscription-source-unread: 1 row
-    Write it as the ARN of the resource, or a Ref or Fn::GetAtt of a resource under resources.Resources; a value from another stack or the account is not read.
-      members/services/notices/serverless.yml:68  functions.audit.events[0]
   deployed-name-generated (note): 1 row over 2 places
     Give it a name of its own where other repositories reach it.
       members/services/notices/serverless.yml:34  resources.Resources.NoticesQueue
@@ -30,14 +30,14 @@ markers: none
 
 desync: none
 
-contracts: no errors, 0 excused, 6 boundary directions nothing could be compared on
+contracts: no errors, 0 excused, 7 boundary directions nothing could be compared on
 
 baseline: missing (0 accepted, 3 now, +3)
   no baseline at <root>/fixtures/serverless-shapes/flowatlas.baseline.json; run flowatlas doctor --accept to write one
   deployment-plugin-unread: 0 → 1 (+1)
+  export-not-found: 0 → 1 (+1)
   function-name-unread: 0 → 1 (+1)
-  subscription-source-unread: 0 → 1 (+1)
   new (3):
     members|services/notices/serverless.yml|constructs|deployment-plugin-unread
     members|services/notices/serverless.yml|entry:members:invoke:${…}@functions.audit|function-name-unread
-    members|services/notices/serverless.yml|functions.audit.events[0]|subscription-source-unread
+    members|services/notices/serverless.yml|import:export:shared-audit-queue-arn|export-not-found

@@ -1,6 +1,6 @@
 import { deployedArn, deployedNameIn } from '@flowatlas/aws';
-import { generatedName, type DeployedKind, type PathStep } from '@flowatlas/core';
-import { HOLE, isRecord, textOf, Unread } from './variables.js';
+import { exportKey, generatedName, type DeployedKind, type PathStep } from '@flowatlas/core';
+import { HOLE, Imported, isRecord, textOf, Unread } from './variables.js';
 
 /**
  * CloudFormation's vocabulary: resources by type, and the intrinsic functions
@@ -232,22 +232,25 @@ export class Template {
   }
 
   /**
-   * The export a `Fn::ImportValue` names, as another template of the
-   * repository declares it; an `Unread` saying why where its name is not read,
-   * nothing read exports it, or two templates do.
+   * The export a `Fn::ImportValue` names: as another template of the
+   * repository declares it (P248), else the output another repository's stack
+   * exports under it, joined by the linker (P249); an `Unread` saying why where
+   * its name is not read or two templates of the repository export it.
    */
   #imported(argument: unknown): Exported | Unread {
     const name = this.text(argument);
     if (name instanceof Unread) return new Unread(`the name of the export it imports is not read: ${name.text}`, name.variable);
-    const found = this.#options.imported?.(name);
-    if (found === undefined) {
-      return new Unread(
-        this.#options.imported === undefined
-          ? 'the value is imported from another stack, whose outputs are not read'
-          : `the value is imported from the export ${name}, which no template of the repository declares`,
-      );
-    }
-    return found;
+    return this.#options.imported?.(name) ?? this.imported(argument);
+  }
+
+  /**
+   * `Fn::ImportValue` of a name: the output another stack exports under it
+   * (P249), or why the name is not read.
+   */
+  imported(argument: unknown): Imported | Unread {
+    const name = this.text(argument);
+    if (typeof name !== 'string') return new Unread(`the value is imported from another stack under a name that is not read: ${name.text}`, name.variable);
+    return new Imported(exportKey(name), `the value is imported from another stack, which exports it as ${name}`);
   }
 
   /** What `Ref` or an attribute of a resource is as text, a {@link HOLE} where it is known only once deployed. */

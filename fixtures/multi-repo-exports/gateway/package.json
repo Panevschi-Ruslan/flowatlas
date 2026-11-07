@@ -1,0 +1,12 @@
+{
+  "name": "shop-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The shop's REST and HTTP APIs, which the other services hang their routes from.",
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

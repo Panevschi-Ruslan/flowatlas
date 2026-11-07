@@ -1,13 +1,16 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { toPosixPath, type Deployment, type DeploymentReadOptions, type DeploymentReader } from '@flowatlas/core';
+import { COMPOSE_FILES, readCompose } from './compose.js';
 import { readServiceFile } from './document.js';
 import { emptyParts } from './reading.js';
 import { readService } from './service.js';
 
 export { readServiceFile, readServiceYaml, ServiceFileUnreadable } from './document.js';
+export { COMPOSE_FILES, readCompose } from './compose.js';
 export { Template, RESOURCE_KINDS, intrinsicOf, type Declares, type Deployed, type Exported, type Known, type Pseudo, type Resource, type TemplateOptions } from './cloudformation.js';
-export { Variables, Unread, HOLE, DEFAULT_STAGE, DEFAULT_REGION, isRecord, textOf } from './variables.js';
+export { Variables, Unread, Imported, HOLE, DEFAULT_STAGE, DEFAULT_REGION, isRecord, textOf } from './variables.js';
+export { readOutputs, type ApiReference, type ImplicitOutput, type OutputApi, type OutputsOptions } from './outputs.js';
 export { EVENT_READERS } from './events.js';
 export { functionLogicalId, normalizedName } from './service.js';
 export { asTarget, emptyParts, FileReading, writtenAs, type DeploymentParts, type Site } from './reading.js';
@@ -29,7 +32,13 @@ const MOST_DEPTH = 4;
  * directory holds one service; the first of its names the framework looks for
  * is the one it reads.
  */
-export const serviceFiles = (repoDir: string): string[] => {
+export const serviceFiles = (repoDir: string): string[] => filesNamed(repoDir, SERVICE_FILES);
+
+/** Every compose file of a repository (P249), repo-relative and sorted, found as service files are. */
+export const composeFiles = (repoDir: string): string[] => filesNamed(repoDir, COMPOSE_FILES);
+
+/** In each directory of a repository, the first of some names it holds. */
+const filesNamed = (repoDir: string, looked: readonly string[]): string[] => {
   const found: string[] = [];
   const walk = (dir: string, depth: number): void => {
     let entries;
@@ -39,7 +48,7 @@ export const serviceFiles = (repoDir: string): string[] => {
       return;
     }
     const names = new Set(entries.filter((entry) => entry.isFile()).map((entry) => entry.name));
-    const own = SERVICE_FILES.find((name) => names.has(name));
+    const own = looked.find((name) => names.has(name));
     if (own !== undefined) found.push(toPosixPath(relative(repoDir, join(dir, own))));
     if (depth >= MOST_DEPTH) return;
     for (const entry of entries) {
@@ -48,6 +57,12 @@ export const serviceFiles = (repoDir: string): string[] => {
   };
   walk(repoDir, 0);
   return found.sort();
+};
+
+/** The service file a repo-relative directory holds: the first name the framework looks for. */
+const serviceFileIn = (repoDir: string, dir: string): string | undefined => {
+  const name = SERVICE_FILES.find((candidate) => existsSync(join(repoDir, dir, candidate)));
+  return name === undefined ? undefined : dir === '.' || dir === '' ? name : `${dir}/${name}`;
 };
 
 const changedAt = (path: string): number | undefined => {
@@ -78,15 +93,22 @@ const readings = new Map<string, Reading>();
 
 const readingOf = (options: DeploymentReadOptions): Reading => {
   const { repoDir } = options;
+  const composed = composeFiles(repoDir);
   const files = serviceFiles(repoDir);
   const given = options.service?.infra?.options ?? {};
   const key = `${repoDir}\0${JSON.stringify(given)}`;
-  const stamp = stampOf(files.map((file) => join(repoDir, file)));
+  const stamp = stampOf([...composed, ...files].map((file) => join(repoDir, file)));
   const kept = readings.get(key);
   if (kept !== undefined && kept.stamp === stamp && stampOf(kept.loaded) === kept.loadedStamp) return kept;
   const parts = emptyParts();
   const loaded = new Set<string>();
-  for (const file of files) readService(parts, { repoDir, file, options: given, loaded });
+  // The services a compose file lists are read through it, with its params,
+  // and not again on their own (P249).
+  const read = new Set<string>();
+  for (const file of composed) {
+    for (const done of readCompose(parts, { repoDir, file, options: given, loaded, serviceFileIn: (dir) => serviceFileIn(repoDir, dir) })) read.add(done);
+  }
+  for (const file of files) if (!read.has(file)) readService(parts, { repoDir, file, options: given, loaded });
   const reading: Reading = { deployment: parts, stamp, loaded: [...loaded].sort(), loadedStamp: stampOf([...loaded].sort()) };
   readings.set(key, reading);
   return reading;
@@ -132,7 +154,7 @@ export const serverlessReader: DeploymentReader = {
   declares: (repoDir) => serviceFiles(repoDir).some((file) => deploysToAws(repoDir, file)),
   read: (options) => readingOf(options).deployment,
   files: (repoDir, options) => {
-    const files = serviceFiles(repoDir);
+    const files = [...composeFiles(repoDir), ...serviceFiles(repoDir)];
     if (files.length === 0) return [];
     const { loaded } = readingOf({ repoDir, config: options?.config as DeploymentReadOptions['config'], ...(options?.service === undefined ? {} : { service: options.service }) });
     return [...new Set([...files, ...loaded.map((path) => toPosixPath(relative(repoDir, path)))])].sort();

@@ -11,26 +11,33 @@ import {
   S3_EVENT_SOURCE,
 } from '@flowatlas/aws';
 import {
+  exportKey,
   generatedName,
+  importedName,
   makeFunctionUrlEntryKey,
   makeHttpEntryKey,
   normalizePath,
+  stackOutputKey,
   toPosixPath,
+  UNREAD_SPAN,
   type DeclaredStream,
   type DeliverySource,
   type DeliveryTarget,
   type DeployedDelivery,
+  type DeployedExport,
   type DeployedFunction,
   type DeployedHandler,
+  type DeployedImport,
   type DeployedKind,
   type DeployedRoute,
   type DeployedSetting,
   type DeployedWorkflow,
+  type PublishedRoot,
   type RouteTarget,
   type Unresolved,
 } from '@flowatlas/core';
 import { definitionOf } from './state-machine.js';
-import { Attribute, Built, Construct, ObjectValue, textOf, Unread, type Added, type Site, type Value } from './values.js';
+import { Attribute, Built, Construct, Imported, ObjectValue, textOf, Unread, type Added, type Site, type Value } from './values.js';
 
 /**
  * The constructs an app made, written out as P21's `Deployment` (P57, D1).
@@ -68,6 +75,11 @@ const DECLARES: ReadonlyMap<string, { readonly kind: DeployedKind; readonly name
   ['aws-s3.Bucket', { kind: 'bucket', name: 'bucketName' }],
   ['aws-stepfunctions.StateMachine', { kind: 'workflow', name: 'stateMachineName' }],
 ]);
+
+/** An API another stack creates, by the key of the point its routes hang from (P249). */
+interface SharedApi {
+  readonly root: string;
+}
 
 const REST_APIS = new Set(['aws-apigateway.RestApi', 'aws-apigateway.LambdaRestApi', 'aws-apigateway.SpecRestApi']);
 
@@ -111,6 +123,10 @@ export interface DeploymentParts {
   readonly workflows: DeployedWorkflow[];
   readonly deliveries: DeployedDelivery[];
   readonly streams: DeclaredStream[];
+  /** Points of the app's APIs it publishes for other deployments' routes (P249). */
+  readonly roots: PublishedRoot[];
+  readonly exports: DeployedExport[];
+  readonly imports: DeployedImport[];
   readonly rows: Unresolved[];
 }
 
@@ -166,6 +182,11 @@ export class AppDeployment {
       if (declares === undefined) return undefined;
       const index = this.#functionIndex.get(value);
       if (value.imported !== undefined) {
+        // Looked up by a value another stack exports: the thing it names, by the key's stand-in (P249).
+        if (value.imported.unread instanceof Imported) {
+          this.#importAt(value.imported.unread.key, value.site, value.path, [declares.kind]);
+          return { kind: declares.kind, name: importedName(value.imported.unread.key) };
+        }
         if (value.imported.unread !== undefined) return value.imported.unread;
         if (value.imported.name !== undefined) return { kind: declares.kind, name: value.imported.name };
         const named = value.imported.arn === undefined ? undefined : deployedNameIn(value.imported.arn);
@@ -193,8 +214,19 @@ export class AppDeployment {
     return value instanceof Unread ? value : undefined;
   }
 
+  /** That the app reads a value another stack exports, here: once per place (P249). */
+  #importAt(key: string, site: Site, what: string, kinds?: readonly DeployedKind[]): void {
+    if (this.parts.imports.some((found) => found.key === key && found.file === site.file && found.line === site.line)) return;
+    this.parts.imports.push({ key, ...site, what, ...(kinds === undefined ? {} : { kinds }) });
+  }
+
   /** A value a function is deployed with, read every way it can be. */
-  #setting(value: Value): DeployedSetting {
+  #setting(value: Value, site: Site, what: string): DeployedSetting {
+    // An output of another stack, whatever it names (P249).
+    if (value instanceof Imported) {
+      this.#importAt(value.key, site, what);
+      return { written: `Fn.importValue(${JSON.stringify(value.exportName)})`, imported: value.key, unread: { text: value.text } };
+    }
     const written =
       value instanceof Attribute ? `${value.construct.path}.${value.name}` : value instanceof Construct ? value.path : typeof value === 'string' ? JSON.stringify(value) : value instanceof Unread ? 'a value not known from the files' : String(value);
     const text = textOf(value);
@@ -285,6 +317,73 @@ export class AppDeployment {
     for (const table of this.#ofType('aws-dynamodb.Table', 'aws-dynamodb.TableV2', 'aws-kinesis.Stream')) this.#stream(table);
     for (const machine of this.#ofType('aws-stepfunctions.StateMachine')) this.#workflow(machine);
     for (const construct of this.constructs) this.#unreadHolder(construct);
+    for (const output of this.#ofType('core.CfnOutput')) this.#output(output);
+  }
+
+  // -------------------------------------------------------------- outputs
+
+  /**
+   * What an output's value is, when it is an API the app creates or a point of
+   * one: `restApiId`, `restApiRootResourceId` and a resource's `resourceId` are
+   * points other stacks hang routes from, as an HTTP API's `apiId` is; its
+   * `url` is its address (P249).
+   */
+  #outputApi(value: Value): { kind: 'rest' | 'http'; name: string; address: string; path?: string } | undefined {
+    if (!(value instanceof Attribute)) return undefined;
+    const { construct, name } = value;
+    if (construct.imported !== undefined) return undefined;
+    if (REST_APIS.has(construct.type)) {
+      const api = { kind: 'rest' as const, name: textOf(prop(construct, 'restApiName')) ?? construct.id, address: construct.path };
+      if (name === 'restApiId' || name === 'restApiRootResourceId') return { ...api, path: '/' };
+      return name === 'url' || name === 'urlForPath' ? api : undefined;
+    }
+    if (construct.type === 'aws-apigateway.Resource' && name === 'resourceId') {
+      const owner = construct.fields.get('api');
+      if (!(owner instanceof Construct) || owner.imported !== undefined) return undefined;
+      const parts: string[] = [];
+      for (let at: Value = construct; at instanceof Construct && at.fields.get('parent') !== undefined; at = at.fields.get('parent')) parts.unshift(textOf(at.fields.get('part')) ?? '?');
+      return { kind: 'rest', name: textOf(prop(owner, 'restApiName')) ?? owner.id, address: owner.path, path: normalizePath(`/${parts.join('/')}`) };
+    }
+    if (construct.type === 'aws-apigatewayv2.HttpApi') {
+      const api = { kind: 'http' as const, name: textOf(prop(construct, 'apiName')) ?? construct.id, address: construct.path };
+      if (name === 'apiId' || name === 'httpApiId') return { ...api, path: '/' };
+      return name === 'url' || name === 'apiEndpoint' ? api : undefined;
+    }
+    return undefined;
+  }
+
+  /**
+   * `new CfnOutput(scope, id, { value, exportName })`: a value the app
+   * publishes for other stacks to read, by its export name, and by its stack's
+   * name and its own id where it is a direct child of the stack - deeper, the
+   * CDK adds a hash to its logical id, which the files do not hold (P249).
+   */
+  #output(output: Construct): void {
+    const exportName = textOf(prop(output, 'exportName'));
+    const segments = output.path.split('/');
+    const stack = this.constructs.find((construct) => construct.path === segments[0]);
+    const stackName = segments.length === 2 && stack !== undefined ? (textOf(prop(stack, 'stackName')) ?? stack.id) : undefined;
+    const keys = [...(exportName === undefined ? [] : [exportKey(exportName)]), ...(stackName === undefined ? [] : [stackOutputKey(stackName, output.id)])];
+    if (keys.length === 0) return;
+    const value = prop(output, 'value');
+    const base = { keys, address: output.path, ...output.site };
+    const api = this.#outputApi(value);
+    if (api !== undefined) {
+      this.parts.exports.push({ ...base, names: { kind: 'api', name: api.name } });
+      if (api.path !== undefined) for (const key of keys) this.parts.roots.push({ key, path: api.path, api: api.name, ...output.site });
+      return;
+    }
+    const found = this.deployedOf(value);
+    if (found !== undefined && !(found instanceof Unread)) {
+      this.parts.exports.push({ ...base, names: { kind: found.kind, name: found.name } });
+      return;
+    }
+    const text = textOf(value);
+    if (text !== undefined) {
+      this.parts.exports.push({ ...base, text });
+      return;
+    }
+    this.parts.exports.push({ ...base, unread: found instanceof Unread ? found.text : value instanceof Unread ? value.text : 'it is a value known only once deployed' });
   }
 
   // ------------------------------------------------------------ functions
@@ -325,7 +424,7 @@ export class AppDeployment {
       ...(written instanceof ObjectValue ? [...written.entries] : []),
       ...fn.addedBy('addEnvironment').flatMap(({ args }): [string, Value][] => (typeof args[0] === 'string' ? [[args[0], args[1]]] : [])),
     ];
-    for (const [variable, value] of pairs.sort(([a], [b]) => a.localeCompare(b))) environment[variable] = this.#setting(value);
+    for (const [variable, value] of pairs.sort(([a], [b]) => a.localeCompare(b))) environment[variable] = this.#setting(value, fn.site, `the value of ${variable} ${fn.path} is deployed with`);
     this.parts.functions.push({
       ...fn.site,
       ...(name === undefined ? {} : { name }),
@@ -424,15 +523,17 @@ export class AppDeployment {
     return type === undefined || type === 'NONE' ? [] : [{ label: type, ...site }];
   }
 
-  #route(api: Construct, name: string, method: string, rawPath: string, target: RouteTarget | undefined, site: Site, declaredAs: string, guards: DeployedRoute['guards'], conditional?: string): void {
+  #route(api: Construct, name: string | SharedApi, method: string, rawPath: string, target: RouteTarget | undefined, site: Site, declaredAs: string, guards: DeployedRoute['guards'], conditional?: string): void {
     const verb = method.toUpperCase() === 'ANY' ? 'ALL' : method.toUpperCase();
-    const path = normalizePath(rawPath);
+    const below = normalizePath(rawPath);
+    // On an API another stack creates, the route hangs from the point it exports (P249).
+    const path = typeof name === 'string' ? below : normalizePath(`${UNREAD_SPAN}${below}`);
     this.parts.routes.push({
       ...site,
       method: verb,
       path,
       rawPath,
-      api: name,
+      ...(typeof name === 'string' ? { api: name } : { root: { key: name.root, below } }),
       ...(target === undefined ? {} : { target }),
       ...(guards === undefined || guards.length === 0 ? {} : { guards }),
       meta: { declaredAs, key: makeHttpEntryKey(verb, path), apiAddress: api.path, ...this.#conditional(api.conditional, conditional) },
@@ -448,12 +549,42 @@ export class AppDeployment {
     return undefined;
   }
 
+  /**
+   * An API the app looks up rather than creates (`RestApi.fromRestApiAttributes`,
+   * `HttpApi.fromHttpApiAttributes`): the point of it another stack exports that
+   * its routes hang from, by the attribute that holds it, or a row (P249).
+   */
+  #sharedApi(api: Construct, attributes: readonly string[], site: Site): SharedApi | undefined {
+    for (const attribute of attributes) {
+      const value = prop(api, attribute);
+      if (value instanceof Imported) return { root: value.key };
+    }
+    const [attribute] = attributes;
+    const written = attribute === undefined ? undefined : prop(api, attribute);
+    const why =
+      attribute === undefined || written === undefined
+        ? 'the point its routes hang from is not given'
+        : `its ${attribute} is ${written instanceof Unread ? `not read: ${written.text}` : 'not a value another stack exports'}`;
+    this.#row(site, api.path, {
+      reason: 'route-path-unread',
+      message: `${api.path} is an API another stack creates, and ${why}, so no route on it is drawn`,
+      hint: `Look the API up with ${attribute ?? 'its attributes'} as Fn.importValue of what the stack that creates it exports, and its routes are joined to it.`,
+    });
+    return undefined;
+  }
+
+  /** The name of an API the app creates, or the point of one it looks up, or `undefined` where neither is read. */
+  #apiNamed(api: Construct, nameProp: string, attributes: readonly string[], site: Site): string | SharedApi | undefined {
+    if (api.imported !== undefined) return this.#sharedApi(api, attributes, site);
+    return textOf(prop(api, nameProp)) ?? api.id;
+  }
+
   #restApi(api: Construct): void {
-    const name = textOf(prop(api, 'restApiName')) ?? api.id;
+    const name = api.imported === undefined ? (textOf(prop(api, 'restApiName')) ?? api.id) : undefined;
     const handler = api.type === 'aws-apigateway.LambdaRestApi' ? prop(api, 'handler') : undefined;
     const defaultIntegration = prop(api, 'defaultIntegration');
     const defaults = prop(api, 'defaultMethodOptions');
-    if (handler !== undefined && prop(api, 'proxy') !== false) {
+    if (name !== undefined && handler !== undefined && prop(api, 'proxy') !== false) {
       for (const rawPath of ['/', '/{proxy+}']) this.#route(api, name, 'ANY', rawPath, this.#routeTarget(handler), api.site, `${api.path}/Default${rawPath === '/' ? '' : rawPath}/ANY`, this.#guards(defaults, api.site));
     }
     const root = api.children.get('');
@@ -463,10 +594,13 @@ export class AppDeployment {
         const [method, integration, options] = args;
         const verb = textOf(method);
         if (verb === undefined) continue;
+        // A method of an API looked up hangs from the root it is looked up with.
+        const at = name ?? this.#sharedApi(api, ['rootResourceId'], site);
+        if (at === undefined) continue;
         const fn = this.#integrated(integration ?? defaultIntegration) ?? handler;
         const target = this.#routeTarget(fn);
         const guards = [...this.#guards(defaults, site), ...this.#guards(options, site)];
-        this.#route(api, name, verb, path || '/', target, site, `${resource.path}/${verb.toUpperCase()}`, guards, conditional);
+        this.#route(api, at, verb, path || '/', target, site, `${resource.path}/${verb.toUpperCase()}`, guards, conditional);
       }
       for (const child of resource.children.values()) walk(child, `${path}/${textOf(child.fields.get('part')) ?? '?'}`);
     };
@@ -474,9 +608,10 @@ export class AppDeployment {
   }
 
   #httpRoutes(api: Construct, options: ObjectValue, site: Site, conditional: string | undefined): void {
-    const name = textOf(prop(api, 'apiName')) ?? api.id;
     const path = textOf(options.get('path'));
     if (path === undefined) return;
+    const name = this.#apiNamed(api, 'apiName', ['httpApiId'], site);
+    if (name === undefined) return;
     const methods = listOf(options.get('methods')).map(textOf).filter((method): method is string => method !== undefined);
     const fn = this.#integrated(options.get('integration'));
     const guards = this.#guards(options, site);
@@ -487,7 +622,7 @@ export class AppDeployment {
 
   #httpApi(api: Construct): void {
     const defaultIntegration = prop(api, 'defaultIntegration');
-    if (defaultIntegration !== undefined) {
+    if (defaultIntegration !== undefined && api.imported === undefined) {
       this.#route(api, textOf(prop(api, 'apiName')) ?? api.id, 'ANY', '/{proxy+}', this.#routeTarget(this.#integrated(defaultIntegration)), api.site, `${api.path}/DefaultRoute`, []);
     }
     for (const { args, site, conditional } of api.addedBy('addRoutes')) {

@@ -6304,9 +6304,10 @@ loads them (`useDotenv`, or version 4), `${file(./x.yml):a.b}`,
 `${param:name}` from `params.<stage>` then `params.default`, `${aws:region}` and
 `${strToBool(...)}`. The stage is the option, else `provider.stage`, else the
 framework's own `dev`; the region likewise, else `us-east-1`. A value read from
-the deployed account - `${ssm:...}`, `${cf:...}`, `${s3:...}`,
-`${aws:accountId}` - is never read; a name that holds one is not a name, and
-the row names the variable. An ARN whose account is unread still names its
+the deployed account - `${ssm:...}`, `${s3:...}`, `${aws:accountId}` - is
+never read; a name that holds one is not a name, and the row names the
+variable. `${cf:<stack>.<output>}` is another stack's output, joined where that
+stack is read (see "Values shared between deployments"). An ARN whose account is unread still names its
 resource.
 
 ```json
@@ -6340,7 +6341,7 @@ by name, `heuristic`, as for a zip Terraform does not build.
 buckets and their `NotificationConfiguration`, mappings and state machines.
 `Ref`, `Fn::GetAtt`, `Fn::Sub` and `Fn::Join` are followed to what they name,
 the framework's own logical ids (`PlaceDashorderLambdaFunction`) included;
-`Fn::ImportValue` is another stack's, and a row. **A resource with no physical
+`Fn::ImportValue` is another stack's output, joined where that stack is read. **A resource with no physical
 name** is named by its declaration - `sqs/${…}@resources.Resources.NoticesQueue`
 - because CloudFormation names it when the stack is created: everything in the
 service that points at it spells it that way and joins, `static`, and nothing
@@ -6548,12 +6549,85 @@ that name in another is, read as statically as a `Ref`: the queue the storage
 stack declares is the queue a mapping in the functions stack reads and the
 queue a handler sends to through an imported environment value, by its name or
 its stand-in. Every template is read for its exports until a reading adds
-none, so an export of an import is settled too. An import no template of the
-repository exports, or one two templates export, is the row it was
-(`subscription-source-unread`, an unread value), saying which
-(`fixtures/cloudformation-orders`, where the deployment of `terraform-orders`
-is two stacks joined by their exports and reads as the same graph;
-`fixtures/cloudformation-shapes`).
+none, so an export of an import is settled too. An import two templates of
+the repository export is an unread value saying so; one no template of the
+repository exports is looked for in the other repositories' deployments, as
+the next section says (`fixtures/cloudformation-orders`, where the deployment
+of `terraform-orders` is two stacks joined by their exports and reads as the
+same graph; `fixtures/cloudformation-shapes`).
+
+### Values shared between deployments
+
+Repositories deployed with CloudFormation - a Serverless service, an AWS SAM
+template, an AWS CDK app - share what they create by writing it out as an
+**output**, and read it back in another stack (P249). Both halves are read, and
+the linker joins them on the name both write, as it joins a route to a shared
+Terraform root above:
+
+| Published as | Read back as | Key |
+|---|---|---|
+| an output with `Export.Name` (`resources.Outputs` of a service, `Outputs` of a template, `new CfnOutput(this, id, { exportName })`) | `Fn::ImportValue: <name>`, `!ImportValue <name>`, `Fn.importValue('<name>')` | `export:<name>` |
+| any output of a stack whose name the files settle (`<service>-<stage>` or `provider.stackName`, `samconfig.toml`'s `stack_name`, a CDK stack's `stackName` or id, for an output that is a direct child of the stack) | `${cf:<stack>.<output>}`, `${cf(<region>):<stack>.<output>}` | `stack:<stack>#<output>` |
+
+The framework's own outputs are published too, where it creates the API they
+describe: `ServiceEndpoint` (exported as `sls-<service>-<stage>-ServiceEndpoint`),
+`HttpApiId` and `HttpApiUrl`.
+
+**What an output names** is read as any value is: a queue, a topic, a bus, a
+table, a function, a function's URL - or an API. An output that is a REST API's
+id or its root (`!Ref ApiGatewayRestApi`, `!GetAtt Api.RootResourceId`,
+`api.restApiId`, `api.restApiRootResourceId`), an HTTP API's id
+(`!Ref HttpApi`, `httpApi.apiId`) or a REST resource of the stack
+(`!Ref V1Resource`, `resource.resourceId`) is also a **point of the API** other
+repositories hang routes from; its URL (`!Sub https://${ApiGatewayRestApi}...`,
+`api.url`) is its address.
+
+**Routes on an API another repository creates.** A Serverless service whose
+`provider.apiGateway.restApiId` (or `provider.httpApi.id`) is such an import, a
+CDK app that looks the API up with
+`RestApi.fromRestApiAttributes(this, id, { restApiId, rootResourceId })` or
+`HttpApi.fromHttpApiAttributes(this, id, { httpApiId })`, and a SAM template
+whose `AWS::ApiGateway::Resource` `ParentId` (or a `Method`'s `ResourceId`) or
+`AWS::ApiGatewayV2::Route` `ApiId` imports one, hang their routes from that
+point. The linker gives each its full path, and the route is a route of the
+publishing service as well as its own: a client whose base address is the
+publisher - by `baseUrlEnv`, by a host, or by an imported API address in the
+environment it is deployed with - lands on the handler in the repository that
+holds it. An API id written as anything else (a literal id, a parameter of the
+account) draws no route and is a `route-path-unread` row; so is a SAM `Api`
+event whose `RestApiId` is imported, which the transform refuses.
+
+**Queues, topics and values of the environment.** An `sqs`, `sns`, `stream` or
+`eventBridge` event, a SAM `SQS`, `SNS`, `DynamoDB`, `Kinesis` or
+`EventBridgeRule` event, and a CDK construct looked up by an import
+(`Queue.fromQueueArn(this, 'Q', Fn.importValue('orders-placed-arn'))`) read the
+thing the import names, drawn under a stand-in for its key
+(`sqs/${…}@import.export.orders-placed-arn`) that the linker renames to what the
+publisher says it is, before the repositories are merged: the producer's queue
+and its importer's are one channel. A value of the environment that is an
+import is given what the output names, so a publish through it lands on the
+channel and a request through an imported API address joins that API's routes.
+
+| Situation | Row |
+|---|---|
+| no configured service publishes the key | `export-not-found`, at the import |
+| two services publish it | `export-ambiguous` |
+| its value is not read, or is not the kind of thing the import reads (a topic where a queue is read) | `export-mismatched` |
+| a route hangs from a point no configured service publishes | `route-root-not-found` |
+
+(`fixtures/multi-repo-exports`: a Serverless gateway, a CDK orders app and a SAM
+catalog over one REST API and one HTTP API, a queue and a topic each side reads
+of the other, and an import nobody publishes.)
+
+**A `serverless-compose.yml`** (`.yaml`, `.json`, `.ts`, `.js`) is read as one
+deployment of the services it lists: each `services.<key>` with its `path` (and
+`config`) is read as a service of the repository, with the compose file's
+`params` given to its `${param:...}` ahead of the file's own `params`, and a
+param `${<service>.<Output>}` is the output of that service's stack, joined as
+any import is. A service file a compose file lists is not read again on its
+own, and its functions carry `meta.composedAs`. A service whose folder is
+outside the repository, missing, or holds no service file is a
+`compose-service-unread` row (`fixtures/serverless-compose`).
 
 ### Procedures
 

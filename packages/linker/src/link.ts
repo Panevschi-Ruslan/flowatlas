@@ -33,6 +33,7 @@ import {
   type RouteIndex,
 } from './http-link.js';
 import { joinDeployments } from './deployment-link.js';
+import { joinImports } from './import-link.js';
 import { keepWhereDeclared } from './declared-link.js';
 import { completeFromEnvironment, reachedBy } from './environment-link.js';
 import { functionUrlsOf } from './function-url-link.js';
@@ -134,11 +135,18 @@ const callsServicesOf = (method: GraphNode | undefined): CallsServiceMarker[] =>
 /** Which routes each service serves, which is what both matchers ask first. */
 const routesByServiceOf = (nodes: ReadonlyMap<string, GraphNode>): Map<string, GraphNode[]> => {
   const routesByService = new Map<string, GraphNode[]>();
+  const add = (service: string, node: GraphNode): void => {
+    const list = routesByService.get(service);
+    if (list === undefined) routesByService.set(service, [node]);
+    else list.push(node);
+  };
   for (const node of nodes.values()) {
     if (node.type !== 'entry' || node.kind !== 'http') continue;
-    const list = routesByService.get(node.repo);
-    if (list === undefined) routesByService.set(node.repo, [node]);
-    else list.push(node);
+    add(node.repo, node);
+    // A route hanging from another service's API is reached at that service's
+    // address too: a client of the API's owner lands on it (P249).
+    const rootedIn = node.meta?.['rootedIn'];
+    if (typeof rootedIn === 'string' && rootedIn !== node.repo) add(rootedIn, node);
   }
   return routesByService;
 };
@@ -793,11 +801,14 @@ export const linkGraphs = (
   config: FlowatlasConfig,
   options: LinkOptions = {},
 ): LinkResult => {
-  const merged = mergeGraphs(graphs, config);
+  // Before the merge: what one repository imports from another's outputs is
+  // renamed to what the other says it is, so the merge joins the two (P249).
+  const imported = joinImports(graphs);
+  const merged = mergeGraphs(imported.graphs, config);
   const { nodes, edges, types } = merged;
   // Before anything reads a route's address: a route hanging from another
   // repository's API only has its full path once both repositories are here.
-  const found: Unresolved[] = joinDeployments(nodes, edges, merged.unresolved);
+  const found: Unresolved[] = [...imported.rows, ...joinDeployments(nodes, edges, merged.unresolved)];
   // An address read from the environment, completed from the values each
   // function that runs it is deployed with; then every rule that takes its
   // channels by a pattern, matched against every channel, those included (P23).

@@ -3,6 +3,7 @@ import { generatedName, type PathStep, type PositionedDocument, type Unresolved 
 import {
   FileReading,
   isRecord,
+  readOutputs,
   readResources,
   readServiceFile,
   RESOURCE_KINDS,
@@ -16,7 +17,7 @@ import {
   type Exported,
   type ResourceReader,
 } from '@flowatlas/serverless';
-import { apiLookup, readApis } from './apis.js';
+import { apiLookup, apiReference, readApis } from './apis.js';
 import { deployConfigOf, TEMPLATE_FILES, type DeployConfig } from './config.js';
 import { functionEventReaders, readEvents } from './events.js';
 import { FUNCTION_TYPES, readDestinations, readFunction, readFunctionUrlConfig, withGlobals, type FunctionSite } from './functions.js';
@@ -339,6 +340,11 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   }
   const writtenOutputs = resolver.resolve(written['Outputs']);
   if (options.exports !== undefined) exportsOf(reading, writtenOutputs, options.exports);
+  // A template deployed as a stack of its own publishes its outputs for
+  // other stacks to read; a nested one's answer its parent (P249).
+  if (options.parent === undefined) {
+    readOutputs(fileReading, writtenOutputs, { at: ['Outputs'], scope, ...(stackName === undefined ? {} : { stackName }), apiOf: apiReference(reading) });
+  }
   return { outputs: outputsOf(reading, writtenOutputs) };
 };
 

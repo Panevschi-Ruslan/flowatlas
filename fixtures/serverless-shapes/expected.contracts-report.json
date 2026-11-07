@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-06T09:34:25.330Z",
+  "generatedAt": "2026-11-07T17:36:42.924Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -28,6 +28,18 @@
       "direction": "payload",
       "reason": "channel-without-producer",
       "message": "channel:sns/accounts-prod-lapsed is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "channel:sqs/${…}@import.export.shared-audit-queue-arn",
+        "to": "consumer:members#services/notices/serverless.yml:functions.audit.events[0]",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:sqs/${…}@import.export.shared-audit-queue-arn|consumes|consumer:members#services/notices/serverless.yml:functions.audit.events[0]",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:sqs/${…}@import.export.shared-audit-queue-arn is handled and nothing publishes to it",
       "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
     },
     {
@@ -84,7 +96,7 @@
     "shared": 0,
     "identical": 0,
     "hash_differs": 0,
-    "unchecked": 6,
+    "unchecked": 7,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

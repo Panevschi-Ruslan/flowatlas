@@ -3,13 +3,15 @@ import {
   makeFunctionUrlEntryKey,
   makeHttpEntryKey,
   normalizePath,
+  UNREAD_SPAN,
   type DeliverySource,
   type DeployedDelivery,
+  type DeployedKind,
   type PathStep,
 } from '@flowatlas/core';
 import { intrinsicOf, type Deployed } from './cloudformation.js';
 import type { FileReading } from './reading.js';
-import { isRecord, textOf, Unread } from './variables.js';
+import { Imported, isRecord, textOf, Unread } from './variables.js';
 
 /**
  * The events a function is run by, one reader per event type (P57).
@@ -36,11 +38,21 @@ export interface EventSite {
   readonly address: string;
 }
 
+/**
+ * An API another deployment creates and this service hangs its routes from
+ * (P249): the key of the point it is published under, or why that is not read.
+ */
+export type SharedApi = { readonly root: string } | { readonly unread: string };
+
 /** The APIs a service's events hang their routes from, by kind. */
 export interface Apis {
   readonly rest?: string;
   readonly http?: string;
   readonly socket?: string;
+  /** `provider.apiGateway.restApiId`: the REST API is another deployment's. */
+  readonly sharedRest?: SharedApi;
+  /** `provider.httpApi.id`: the HTTP API is another deployment's. */
+  readonly sharedHttp?: SharedApi;
 }
 
 /** What every event reader is handed. */
@@ -91,8 +103,11 @@ const eventRow = (reading: EventReading, site: EventSite, reason: string, messag
   reading.file.row(site.path, site.address, { reason, message, hint, ...(level === undefined ? {} : { level }) });
 
 /** The source a value names, of one kind, or why not. */
-const sourceNamed = (reading: EventReading, value: unknown, site: EventSite, what: string): Deployed | undefined => {
+const sourceNamed = (reading: EventReading, value: unknown, site: EventSite, what: string, kinds: readonly DeployedKind[] = []): Deployed | undefined => {
   const found = reading.file.template.deployedOf(value);
+  // Another stack's output, of the kind this event reads (P249).
+  const [kind] = kinds;
+  if (found instanceof Imported && kind !== undefined) return reading.file.importedAs(found, kind, site.path, what, kinds);
   if (found === undefined || found instanceof Unread) {
     eventRow(
       reading,
@@ -122,20 +137,29 @@ const guardsOf = (reading: EventReading, site: EventSite, settings: Record<strin
   return guards;
 };
 
-/** A route onto the function, keyed as Terraform keys one (P21). */
-const route = (reading: EventReading, site: EventSite, method: string, rawPath: string, api: string, settings: Record<string, unknown>, apiAddress: string): void => {
+/**
+ * A route onto the function, keyed as Terraform keys one (P21). On an API
+ * another deployment creates, it hangs from the point that deployment
+ * publishes, which the linker gives it its full path from (P249).
+ */
+const route = (reading: EventReading, site: EventSite, method: string, rawPath: string, api: string | SharedApi, settings: Record<string, unknown>, apiAddress: string): void => {
   const verb = method.toUpperCase() === 'ANY' || method === '*' ? 'ALL' : method.toUpperCase();
-  const path = normalizePath(`/${rawPath.replace(/^\/+/, '')}`);
+  const below = normalizePath(`/${rawPath.replace(/^\/+/, '')}`);
+  if (typeof api !== 'string' && 'unread' in api) {
+    eventRow(reading, site, 'route-path-unread', `${site.address} hangs from an API another deployment creates, and ${api.unread}`, 'Point restApiId or httpApi.id at an output of the deployment that creates the API - ${cf:<stack>.<output>} or Fn::ImportValue - so the route is joined to it.');
+    return;
+  }
+  const path = typeof api === 'string' ? below : normalizePath(`${UNREAD_SPAN}${below}`);
   const guards = guardsOf(reading, site, settings);
   reading.file.parts.routes.push({
     ...reading.file.siteOf(site.path),
     method: verb,
     path,
     rawPath,
-    api,
+    ...(typeof api === 'string' ? { api } : { root: { key: api.root, below } }),
     target: { function: site.index },
     ...(guards.length === 0 ? {} : { guards }),
-    meta: { declaredAs: site.address, key: makeHttpEntryKey(verb, path), apiAddress },
+    meta: { declaredAs: site.address, key: makeHttpEntryKey(verb, path), apiAddress: typeof api === 'string' ? apiAddress : `import:${api.root}` },
   });
 };
 
@@ -145,11 +169,12 @@ const readHttp: EventReader = (value, site, reading) => {
   const short = textOf(value)?.split(/\s+/);
   const method = textOf(settings['method']) ?? short?.[0];
   const path = textOf(settings['path']) ?? short?.[1] ?? (short === undefined ? undefined : '/');
-  if (method === undefined || path === undefined || reading.apis.rest === undefined) {
+  const api = reading.apis.sharedRest ?? reading.apis.rest;
+  if (method === undefined || path === undefined || api === undefined) {
     eventRow(reading, site, 'route-path-unread', `the ${method === undefined ? 'method' : path === undefined ? 'path' : 'API name'} of ${site.address} is not read`, 'Write the method and the path so the file settles them.');
     return;
   }
-  route(reading, site, method, path, reading.apis.rest, settings, `${reading.file.file}#rest-api`);
+  route(reading, site, method, path, api, settings, `${reading.file.file}#rest-api`);
 };
 
 /** `httpApi: 'GET /orders'`, `httpApi: '*'`, or `httpApi: { method, path, authorizer }`: an HTTP API route. */
@@ -159,11 +184,12 @@ const readHttpApi: EventReader = (value, site, reading) => {
   const [shortMethod, shortPath] = text === '*' ? ['*', '/{proxy+}'] : (text?.split(/\s+/) ?? []);
   const method = textOf(settings['method']) ?? shortMethod;
   const rawPath = textOf(settings['path']) ?? shortPath;
-  if (method === undefined || rawPath === undefined || reading.apis.http === undefined) {
+  const api = reading.apis.sharedHttp ?? reading.apis.http;
+  if (method === undefined || rawPath === undefined || api === undefined) {
     eventRow(reading, site, 'route-path-unread', `the route key of ${site.address} is not read`, 'Write the method and the path so the file settles them, such as "GET /orders".');
     return;
   }
-  route(reading, site, method, method === '*' && rawPath === '*' ? '/{proxy+}' : rawPath, reading.apis.http, settings, `${reading.file.file}#http-api`);
+  route(reading, site, method, method === '*' && rawPath === '*' ? '/{proxy+}' : rawPath, api, settings, `${reading.file.file}#http-api`);
 };
 
 /** `websocket: $connect`, or `websocket: { route }`: a way in of the socket API. */
@@ -187,7 +213,7 @@ const filtersOf = (settings: Record<string, unknown>): Record<string, unknown> =
 /** `sqs: <arn>`, or `sqs: { arn, batchSize, enabled, filterPatterns }`: a mapping from a queue. */
 const readSqs: EventReader = (value, site, reading) => {
   const settings = settingsOf(value, 'arn');
-  const found = sourceNamed(reading, settings['arn'], site, `the queue ${site.address} reads`);
+  const found = sourceNamed(reading, settings['arn'], site, `the queue ${site.address} reads`, ['queue']);
   if (found === undefined) return;
   if (found.kind !== 'queue') {
     eventRow(reading, site, 'subscription-source-unread', `${site.address} reads ${found.name}, which is a ${found.kind}, not a queue`, 'An sqs event reads a queue.', 'info');
@@ -209,6 +235,9 @@ const readSns: EventReader = (value, site, reading) => {
   if (fromArn !== undefined && !(fromArn instanceof Unread) && fromArn.kind === 'topic') {
     reading.file.generatedRow(fromArn, site.path);
     topic = fromArn.name;
+  } else if (fromArn instanceof Imported) {
+    // Another stack's topic (P249).
+    topic = reading.file.importedAs(fromArn, 'topic', site.path, `the topic ${site.address} subscribes to`).name;
   } else if (named !== undefined && deployedNameIn(named) === undefined) {
     topic = named;
   } else if (textOf(settings['topicName']) !== undefined) {
@@ -229,7 +258,7 @@ const readSns: EventReader = (value, site, reading) => {
 /** `stream: <arn>`, or `stream: { type, arn, enabled, filterPatterns }`: a table's stream or a Kinesis stream, read in order. */
 const readStream: EventReader = (value, site, reading) => {
   const settings = settingsOf(value, 'arn');
-  const found = sourceNamed(reading, settings['arn'], site, `the stream ${site.address} reads`);
+  const found = sourceNamed(reading, settings['arn'], site, `the stream ${site.address} reads`, [settings['type'] === 'kinesis' ? 'stream' : 'table']);
   if (found === undefined) return;
   const of = found.kind === 'stream' ? 'stream' : found.kind === 'table' ? 'table' : undefined;
   if (of === undefined) {
@@ -266,7 +295,7 @@ const busOf = (reading: EventReading, value: unknown, site: EventSite): string |
   if (value === undefined || value === null) return DEFAULT_EVENT_BUS;
   const text = textOf(value);
   if (text !== undefined) return deployedNameIn(text)?.name ?? text;
-  const found = sourceNamed(reading, value, site, `the bus ${site.address} takes events from`);
+  const found = sourceNamed(reading, value, site, `the bus ${site.address} takes events from`, ['bus']);
   return found?.kind === 'bus' ? found.name : undefined;
 };
 

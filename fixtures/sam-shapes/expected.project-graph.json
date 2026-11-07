@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:45:02.550Z",
+  "builtAt": "2026-11-07T18:40:41.731Z",
   "services": [
     {
       "name": "library",
@@ -55,6 +55,22 @@
           "aws-kinesis"
         ],
         "declaredBy": "Resources.ReturnsStream",
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/${…}@import.export.shared-notices-topic-arn",
+      "type": "channel",
+      "label": "sns/${…}@import.export.shared-notices-topic-arn",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 211,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
         "producers": 0,
         "consumers": 1
       }
@@ -172,6 +188,32 @@
         "adapter": "aws-sns",
         "by": "subscription",
         "declaredAs": "Notices.Resources.SenderFunction.Events.Lost",
+        "deployedBy": "sam",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:library#template.yaml:Resources.DoorFunction.Events.Shared",
+      "type": "consumer",
+      "label": "subscription Resources.DoorFunction.Events.Shared",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 211,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "Resources.DoorFunction.Events.Shared",
         "deployedBy": "sam",
         "protocol": "lambda",
         "envelope": {
@@ -1556,7 +1598,31 @@
           "entry": [
             "aws-lambda"
           ]
-        }
+        },
+        "exports": [
+          {
+            "keys": [
+              "stack:library-prod#LendArn"
+            ],
+            "address": "Outputs.LendArn",
+            "file": "template.yaml",
+            "line": 418,
+            "kind": "function",
+            "value": "${…}@Resources.LendFunction",
+            "deployedBy": "sam"
+          }
+        ],
+        "imports": [
+          {
+            "key": "export:shared-notices-topic-arn",
+            "file": "template.yaml",
+            "line": 211,
+            "what": "the topic Resources.DoorFunction.Events.Shared subscribes to",
+            "kinds": [
+              "topic"
+            ]
+          }
+        ]
       }
     }
   ],
@@ -1592,6 +1658,17 @@
       "line": 108,
       "meta": {
         "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sns/${…}@import.export.shared-notices-topic-arn",
+      "to": "consumer:library#template.yaml:Resources.DoorFunction.Events.Shared",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 211,
+      "meta": {
+        "by": "subscription"
       }
     },
     {
@@ -1637,6 +1714,17 @@
       "confidence": "static",
       "file": "notices/template.yaml",
       "line": 20,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:library#template.yaml:Resources.DoorFunction.Events.Shared",
+      "to": "entry:library:invoke:library-prod-door",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 211,
       "meta": {
         "via": "deployment"
       }
@@ -2370,14 +2458,16 @@
       "service": "library"
     },
     {
+      "service": "library",
       "file": "template.yaml",
       "line": 211,
-      "reason": "subscription-source-unread",
-      "message": "the topic Resources.DoorFunction.Events.Shared subscribes to is not read: the value is imported from the export shared-notices-topic-arn, which no template of the repository declares",
-      "hint": "Write it as a Ref or Fn::GetAtt of a resource the template declares, or as its ARN; a value from another stack or the account is not read.",
-      "symbol": "Resources.DoorFunction.Events.Shared",
-      "adapter": "aws-lambda",
-      "service": "library"
+      "reason": "export-not-found",
+      "message": "the topic Resources.DoorFunction.Events.Shared subscribes to is the export shared-notices-topic-arn, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:export:shared-notices-topic-arn",
+      "meta": {
+        "key": "export:shared-notices-topic-arn"
+      }
     },
     {
       "file": "template.yaml",

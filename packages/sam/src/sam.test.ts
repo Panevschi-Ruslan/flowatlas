@@ -766,7 +766,8 @@ describe('plain CloudFormation templates (P248)', () => {
     const environment = deployment.functions[0]?.environment ?? {};
     expect(environment['QUEUE_URL']?.names).toEqual({ kind: 'queue', name: holds });
     expect(environment['BUS']?.names).toEqual({ kind: 'bus', name: 'shop' });
-    expect(environment['NOWHERE']?.unread?.text).toBe('the value is imported from the export shop-nowhere, which no template of the repository declares');
+    // One no template of the repository exports is left for another repository's deployment to answer (P249).
+    expect(environment['NOWHERE']?.unread?.text).toBe('the value is imported from another stack, which exports it as shop-nowhere');
     expect(environment['TWICE']?.unread?.text).toContain('the export shop-twice is declared by 2 templates (c-storage.json, d-other.yaml)');
     expect(deployment.deliveries.filter((delivery) => delivery.by === 'mapping').map((delivery) => [delivery.address, delivery.from])).toEqual([
       ['a-functions.Resources.Holds', { kind: 'queue', name: holds }],

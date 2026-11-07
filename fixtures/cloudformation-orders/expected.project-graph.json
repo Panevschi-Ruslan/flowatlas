@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:45:08.896Z",
+  "builtAt": "2026-11-07T18:37:42.405Z",
   "services": [
     {
       "name": "orders",
@@ -521,7 +521,7 @@
         "handlerVia": "function",
         "environment": {
           "ORDERS_BUS_NAME": {
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-bus-name",
             "value": "orders-dev",
             "kind": "bus"
           }
@@ -577,7 +577,7 @@
         "handlerVia": "function",
         "environment": {
           "ORDERS_TABLE": {
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-table-name",
             "value": "orders-dev-orders",
             "kind": "table"
           }
@@ -633,7 +633,7 @@
         "handlerVia": "function",
         "environment": {
           "ORDERS_TABLE": {
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-table-name",
             "value": "orders-dev-orders",
             "kind": "table"
           }
@@ -689,7 +689,7 @@
         "handlerVia": "function",
         "environment": {
           "ORDERS_TABLE": {
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-table-name",
             "value": "orders-dev-orders",
             "kind": "table"
           }
@@ -770,17 +770,17 @@
         "handlerVia": "function",
         "environment": {
           "ORDERS_BUS_NAME": {
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-bus-name",
             "value": "orders-dev",
             "kind": "bus"
           },
           "ORDERS_QUEUE_URL": {
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-placed-queue-url",
             "value": "orders-dev-placed",
             "kind": "queue"
           },
           "ORDERS_TABLE": {
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-table-name",
             "value": "orders-dev-orders",
             "kind": "table"
           }
@@ -892,7 +892,7 @@
             "kind": "bucket"
           },
           "SHIPPED_TOPIC_ARN": {
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-shipped-topic",
             "value": "orders-dev-shipped",
             "kind": "topic"
           }
@@ -1536,7 +1536,75 @@
           "entry": [
             "aws-lambda"
           ]
-        }
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:orders-dev-table-name"
+            ],
+            "address": "stacks/storage.Outputs.OrdersTableName",
+            "file": "stacks/storage.json",
+            "line": 42,
+            "kind": "table",
+            "value": "orders-dev-orders",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:orders-dev-table-stream"
+            ],
+            "address": "stacks/storage.Outputs.OrdersTableStream",
+            "file": "stacks/storage.json",
+            "line": 46,
+            "kind": "table",
+            "value": "orders-dev-orders",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:orders-dev-placed-queue-url"
+            ],
+            "address": "stacks/storage.Outputs.PlacedQueueUrl",
+            "file": "stacks/storage.json",
+            "line": 50,
+            "kind": "queue",
+            "value": "orders-dev-placed",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:orders-dev-placed-queue-arn"
+            ],
+            "address": "stacks/storage.Outputs.PlacedQueueArn",
+            "file": "stacks/storage.json",
+            "line": 54,
+            "kind": "queue",
+            "value": "orders-dev-placed",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:orders-dev-shipped-topic"
+            ],
+            "address": "stacks/storage.Outputs.ShippedTopicArn",
+            "file": "stacks/storage.json",
+            "line": 58,
+            "kind": "topic",
+            "value": "orders-dev-shipped",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:orders-dev-bus-name"
+            ],
+            "address": "stacks/storage.Outputs.OrdersBusName",
+            "file": "stacks/storage.json",
+            "line": 62,
+            "kind": "bus",
+            "value": "orders-dev",
+            "deployedBy": "cloudformation"
+          }
+        ]
       }
     }
   ],
@@ -1910,7 +1978,7 @@
         "setBy": [
           {
             "function": "orders-dev-cancel-order",
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-bus-name",
             "value": "orders-dev"
           }
         ]
@@ -1935,7 +2003,7 @@
         "setBy": [
           {
             "function": "orders-dev-get-order",
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-table-name",
             "value": "orders-dev-orders"
           }
         ]
@@ -1952,7 +2020,7 @@
         "setBy": [
           {
             "function": "orders-dev-list-orders",
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-table-name",
             "value": "orders-dev-orders"
           }
         ]
@@ -1969,7 +2037,7 @@
         "setBy": [
           {
             "function": "orders-dev-place-order",
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-bus-name",
             "value": "orders-dev"
           }
         ]
@@ -1986,7 +2054,7 @@
         "setBy": [
           {
             "function": "orders-dev-place-order",
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-placed-queue-url",
             "value": "orders-dev-placed"
           }
         ]
@@ -2003,7 +2071,7 @@
         "setBy": [
           {
             "function": "orders-dev-place-order",
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-table-name",
             "value": "orders-dev-orders"
           }
         ]
@@ -2044,7 +2112,7 @@
         "setBy": [
           {
             "function": "orders-dev-nightly-report",
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-table-name",
             "value": "orders-dev-orders"
           }
         ]
@@ -2078,7 +2146,7 @@
         "setBy": [
           {
             "function": "orders-dev-ship-order",
-            "written": "!ImportValue ...",
+            "written": "!ImportValue orders-dev-shipped-topic",
             "value": "orders-dev-shipped"
           }
         ]

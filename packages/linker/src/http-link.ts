@@ -258,7 +258,10 @@ export const baseUrlTakenFinding = (found: FoundValue, target: string): Finding 
     : {
         reason: 'base-url-from-files',
         level: 'info',
-        message: `${found.variable} is ${found.value} in ${whereFound(found)}, which is taken as ${target}`,
+        message:
+          found.service === undefined
+            ? `${found.variable} is ${found.value} in ${whereFound(found)}, which is taken as ${target}`
+            : `${found.variable} is the address of the API ${found.value}, which ${found.service} publishes and ${whereFound(found)} imports, so the request is joined among the routes on it, here one ${target} declares`,
         hint: found.deployed
           ? 'The value is the one the function is deployed with.'
           : `The value is one the repository writes down for running it, not necessarily the deployed one. Add ${found.variable} to services[].baseUrlEnv of ${target} to say so outright.`,

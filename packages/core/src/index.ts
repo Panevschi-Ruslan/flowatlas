@@ -55,6 +55,10 @@ export {
   makeUnnamedInvokeKey,
   generatedName,
   isGeneratedName,
+  exportKey,
+  stackOutputKey,
+  importedName,
+  isImportedName,
   makeUnnamedWorkflowKey,
   makeTypeId,
   makeWorkflowEntryKey,
@@ -259,6 +263,8 @@ export type {
   MessagePattern,
   MessageTarget,
   PublishedRoot,
+  DeployedExport,
+  DeployedImport,
   RouteTarget,
   ValueFilter,
 } from './adapters/deployment.js';
@@ -270,6 +276,8 @@ export {
   CHANNEL_FORWARD_META,
   CHANNEL_PATTERN_META,
   ENVIRONMENT_META,
+  EXPORTS_META,
+  IMPORTS_META,
   forwardedName,
   matchChannelPattern,
   nameInForms,
@@ -281,6 +289,8 @@ export type {
   ChannelForward,
   ChannelPattern,
   EnvironmentValue,
+  ExportedValue,
+  ImportedValue,
   PatternMatch,
 } from './channel-pattern.js';
 export {

@@ -41,6 +41,22 @@ export class Unread {
   ) {}
 }
 
+/**
+ * A value another stack exports, by the key it is read under (P249):
+ * `Fn.importValue('<name>')`. Unread here, because no file of this repository
+ * holds it; what it names is the exporting stack's to say, which the linker
+ * asks where that stack is read.
+ */
+export class Imported extends Unread {
+  constructor(
+    /** `export:<name>`. */
+    readonly key: string,
+    readonly exportName: string,
+  ) {
+    super(`the value is imported from another stack, which exports it as ${exportName}`, 'imported');
+  }
+}
+
 /** An object literal, its members in the order written. */
 export class ObjectValue {
   readonly entries: Map<string, Value>;

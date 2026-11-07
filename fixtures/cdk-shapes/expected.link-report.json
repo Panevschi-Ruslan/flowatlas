@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T09:34:27.704Z",
+  "builtAt": "2026-11-07T17:32:43.964Z",
   "configHash": "bdc4a0cf4303",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 29,
       "types": 2,
       "unresolved": 2,
-      "durationMs": 1102,
+      "durationMs": 810,
       "packages": {
         "name": "club",
         "runtime": [
@@ -70,6 +70,18 @@
     {
       "service": "club",
       "file": "lib/club-stack.ts",
+      "line": 37,
+      "reason": "export-not-found",
+      "message": "the value of SHARED_QUEUE_URL ClubStack/Reader is deployed with is the export club-shared-queue-url, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:export:club-shared-queue-url",
+      "meta": {
+        "key": "export:club-shared-queue-url"
+      }
+    },
+    {
+      "service": "club",
+      "file": "lib/club-stack.ts",
       "line": 67,
       "reason": "subscription-matches-nothing",
       "level": "info",
@@ -94,10 +106,10 @@
     "nodes": 38,
     "edges": 32,
     "types": 2,
-    "missed": 2,
-    "sites": 2,
+    "missed": 3,
+    "sites": 3,
     "notes": 3,
     "findings": 1,
-    "unresolved": 2
+    "unresolved": 3
   }
 }

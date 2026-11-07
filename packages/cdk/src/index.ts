@@ -38,7 +38,7 @@ const readingOf = (options: DeploymentReadOptions): Reading => {
   const key = `${repoDir}\0${JSON.stringify(given)}`;
   const kept = readings.get(key);
   if (kept !== undefined && stampOf(repoDir, kept.files) === kept.stamp && appFiles(repoDir).every((file) => kept.files.includes(file))) return kept;
-  const parts: DeploymentParts & { roots: [] } = { functions: [], routes: [], roots: [], workflows: [], deliveries: [], streams: [], rows: [] };
+  const parts: DeploymentParts = { functions: [], routes: [], roots: [], workflows: [], deliveries: [], streams: [], exports: [], imports: [], rows: [] };
   const files = appFiles(repoDir).flatMap((file) => readApp(parts, { repoDir, file, options: given }));
   const reading: Reading = { deployment: parts, files: [...new Set(files)].sort(), stamp: '' };
   const stamped = { ...reading, stamp: stampOf(repoDir, reading.files) };

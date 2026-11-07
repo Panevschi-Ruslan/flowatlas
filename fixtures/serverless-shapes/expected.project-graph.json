@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T09:34:24.496Z",
+  "builtAt": "2026-11-07T17:36:42.449Z",
   "services": [
     {
       "name": "members",
@@ -53,6 +53,22 @@
         "channelKind": "topic",
         "adapters": [
           "aws-sns"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@import.export.shared-audit-queue-arn",
+      "type": "channel",
+      "label": "sqs/${…}@import.export.shared-audit-queue-arn",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 68,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
         ],
         "producers": 0,
         "consumers": 1
@@ -150,6 +166,30 @@
             "field": "Key",
             "suffix": ".json"
           }
+        }
+      }
+    },
+    {
+      "id": "consumer:members#services/notices/serverless.yml:functions.audit.events[0]",
+      "type": "consumer",
+      "label": "mapping functions.audit.events[0]",
+      "repo": "members",
+      "file": "services/notices/serverless.yml",
+      "line": 68,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "functions.audit.events[0]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
         }
       }
     },
@@ -985,7 +1025,52 @@
           "entry": [
             "aws-lambda"
           ]
-        }
+        },
+        "apiRoots": [
+          {
+            "key": "stack:accounts-prod#HttpApiId",
+            "path": "/",
+            "api": "club-accounts",
+            "file": "services/accounts/serverless.ts",
+            "line": 12,
+            "deployedBy": "serverless"
+          }
+        ],
+        "exports": [
+          {
+            "keys": [
+              "stack:accounts-prod#HttpApiId"
+            ],
+            "address": "Outputs.HttpApiId",
+            "file": "services/accounts/serverless.ts",
+            "line": 12,
+            "kind": "api",
+            "value": "club-accounts",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "stack:accounts-prod#HttpApiUrl"
+            ],
+            "address": "Outputs.HttpApiUrl",
+            "file": "services/accounts/serverless.ts",
+            "line": 12,
+            "kind": "api",
+            "value": "club-accounts",
+            "deployedBy": "serverless"
+          }
+        ],
+        "imports": [
+          {
+            "key": "export:shared-audit-queue-arn",
+            "file": "services/notices/serverless.yml",
+            "line": 68,
+            "what": "the queue functions.audit.events[0] reads",
+            "kinds": [
+              "queue"
+            ]
+          }
+        ]
       }
     }
   ],
@@ -1024,6 +1109,17 @@
       }
     },
     {
+      "from": "channel:sqs/${…}@import.export.shared-audit-queue-arn",
+      "to": "consumer:members#services/notices/serverless.yml:functions.audit.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 68,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
       "from": "channel:sqs/${…}@resources.Resources.NoticesQueue",
       "to": "consumer:members#services/notices/serverless.yml:functions.send-notice.events[0]",
       "type": "consumes",
@@ -1055,6 +1151,17 @@
       "confidence": "static",
       "file": "services/notices/serverless.yml",
       "line": 50,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:members#services/notices/serverless.yml:functions.audit.events[0]",
+      "to": "entry:members:invoke:${…}@functions.audit",
+      "type": "calls",
+      "confidence": "static",
+      "file": "services/notices/serverless.yml",
+      "line": 68,
       "meta": {
         "via": "deployment"
       }
@@ -1437,14 +1544,16 @@
       "service": "members"
     },
     {
+      "service": "members",
       "file": "services/notices/serverless.yml",
       "line": 68,
-      "reason": "subscription-source-unread",
-      "message": "the queue functions.audit.events[0] reads is not read: the value is imported from another stack, whose outputs are not read",
-      "hint": "Write it as the ARN of the resource, or a Ref or Fn::GetAtt of a resource under resources.Resources; a value from another stack or the account is not read.",
-      "symbol": "functions.audit.events[0]",
-      "adapter": "aws-lambda",
-      "service": "members"
+      "reason": "export-not-found",
+      "message": "the queue functions.audit.events[0] reads is the export shared-audit-queue-arn, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:export:shared-audit-queue-arn",
+      "meta": {
+        "key": "export:shared-audit-queue-arn"
+      }
     },
     {
       "file": "services/notices/serverless.yml",

@@ -1,7 +1,7 @@
 import { deployedNameIn } from '@flowatlas/aws';
 import { makeHttpEntryKey, normalizePath, type PathStep, type PositionedDocument } from '@flowatlas/core';
-import { HOLE, intrinsicOf, isRecord, ServiceFileUnreadable, textOf, Unread, type Deployed, type Resource } from '@flowatlas/serverless';
-import { pushRoute, type ApiLookup, type ApiOf, type EventSite } from './events.js';
+import { HOLE, Imported, intrinsicOf, isRecord, ServiceFileUnreadable, textOf, Unread, type ApiReference, type Deployed, type Resource } from '@flowatlas/serverless';
+import { pushRootedRoute, pushRoute, type ApiLookup, type ApiOf, type EventSite } from './events.js';
 import { withGlobals } from './functions.js';
 import type { TemplateReading } from './reading.js';
 
@@ -88,6 +88,15 @@ export const apiLookup =
     const intrinsic = intrinsicOf(reference);
     const id = intrinsic?.[0] === 'Ref' && typeof intrinsic[1] === 'string' ? intrinsic[1] : undefined;
     const resource = id === undefined ? undefined : reading.template.resources.get(id);
+    if (intrinsic?.[0] === 'Fn::ImportValue') {
+      // The transform takes an event's API only from the same template (P249).
+      reading.file.row(site.path, site.address, {
+        reason: 'route-path-unread',
+        message: `${site.address} is a route of an API another stack creates, which the transform does not take on an event: it requires an API the same template declares`,
+        hint: 'Hang the route from the shared API with AWS::ApiGateway::Resource and AWS::ApiGateway::Method (or an AWS::ApiGatewayV2::Route), whose ParentId or ApiId imports it; those are joined to it.',
+      });
+      return undefined;
+    }
     if (resource === undefined || !API_TYPES[kind].has(resource.type)) {
       reading.file.row(site.path, site.address, {
         reason: 'route-path-unread',
@@ -233,9 +242,17 @@ const v2ApiOf = (reading: TemplateReading, value: unknown): Resource | undefined
 const readV2Route = (reading: TemplateReading, route: Resource): void => {
   const { properties } = route;
   const api = v2ApiOf(reading, properties['ApiId']);
+  // A route of an HTTP API another stack creates hangs from that API (P249).
+  const shared = intrinsicOf(properties['ApiId'])?.[0] === 'Fn::ImportValue' ? reading.template.deployedOf(properties['ApiId']) : undefined;
   const routeKey = textOf(properties['RouteKey']);
   const integration = integrationOf(reading, properties['Target']);
   const fn = integration === undefined ? undefined : functionOfUri(reading, integration.properties['IntegrationUri']);
+  if (shared instanceof Imported && routeKey !== undefined && fn !== undefined && !(fn instanceof Unread) && fn.function !== undefined) {
+    const site: EventSite = { to: { kind: 'function', function: fn.function }, function: fn.function, label: fn.name, logicalId: route.logicalId, path: route.path, address: route.address };
+    const [method, path] = routeKey === '$default' ? ['ANY', '/{proxy+}'] : routeKey.split(/\s+/);
+    pushRootedRoute(reading, site, method ?? 'ANY', shared.key, path ?? '/', []);
+    return;
+  }
   if (api === undefined || routeKey === undefined || fn === undefined || fn instanceof Unread || fn.function === undefined) {
     const missing = api === undefined ? 'the API it belongs to' : routeKey === undefined ? 'its route key' : integration === undefined ? 'its integration' : 'the function its integration runs';
     reading.file.row(route.path, route.address, {
@@ -294,17 +311,29 @@ const readQuickCreate = (reading: TemplateReading, api: Resource): void => {
 
 // ----------------------------------------------------- REST, written out
 
-/** The path of an `AWS::ApiGateway::Resource`, built up its parents to the API's root. */
-const restPathOf = (reading: TemplateReading, value: unknown, depth = 0): string | undefined => {
+/**
+ * Where an `AWS::ApiGateway::Resource` is, built up its parents: a path from
+ * the API's root, or a path below a point of an API another stack creates and
+ * exports, which the linker places (P249).
+ */
+type RestPath = { readonly path: string } | { readonly root: string; readonly below: string };
+
+/** The point of a REST API a value is: the root, a resource of the template, or one another stack exports. */
+export const restPathOf = (reading: TemplateReading, value: unknown, depth = 0): RestPath | undefined => {
   const intrinsic = intrinsicOf(value);
   if (depth > 16 || intrinsic === undefined) return undefined;
-  if (intrinsic[0] === 'Fn::GetAtt') return '';
+  if (intrinsic[0] === 'Fn::ImportValue') {
+    const imported = reading.template.imported(intrinsic[1]);
+    return imported instanceof Imported ? { root: imported.key, below: '' } : undefined;
+  }
+  if (intrinsic[0] === 'Fn::GetAtt') return { path: '' };
   const id = intrinsic[0] === 'Ref' && typeof intrinsic[1] === 'string' ? intrinsic[1] : undefined;
   const resource = id === undefined ? undefined : reading.template.resources.get(id);
   if (resource?.type !== 'AWS::ApiGateway::Resource') return undefined;
   const parent = restPathOf(reading, resource.properties['ParentId'], depth + 1);
   const part = textOf(resource.properties['PathPart']);
-  return parent === undefined || part === undefined ? undefined : `${parent}/${part}`;
+  if (parent === undefined || part === undefined) return undefined;
+  return 'root' in parent ? { root: parent.root, below: `${parent.below}/${part}` } : { path: `${parent.path}/${part}` };
 };
 
 /** `AWS::ApiGateway::Method`: a route of a REST API, onto the function its integration runs. */
@@ -316,7 +345,9 @@ const readRestMethod = (reading: TemplateReading, method: Resource): void => {
   const fn = functionOfUri(reading, integration['Uri']);
   const apiId = intrinsicOf(properties['RestApiId']);
   const apiResource = apiId?.[0] === 'Ref' && typeof apiId[1] === 'string' ? reading.template.resources.get(apiId[1]) : undefined;
-  if (verb === undefined || path === undefined || apiResource === undefined || fn === undefined || fn instanceof Unread || fn.function === undefined) {
+  // A method on a point of an API another stack creates hangs from that point (P249).
+  const rooted = path !== undefined && 'root' in path ? path : undefined;
+  if (verb === undefined || path === undefined || (apiResource === undefined && rooted === undefined) || fn === undefined || fn instanceof Unread || fn.function === undefined) {
     const missing = verb === undefined ? 'its HttpMethod' : path === undefined ? 'the path of its resource' : apiResource === undefined ? 'the API it belongs to' : 'the function its integration runs';
     reading.file.row(method.path, method.address, {
       reason: 'route-target-unread',
@@ -332,8 +363,45 @@ const readRestMethod = (reading: TemplateReading, method: Resource): void => {
     ...(authorization === undefined || authorization === 'NONE' ? [] : [{ label: authorization, ...at }]),
     ...(properties['ApiKeyRequired'] === true ? [{ label: 'api key', ...at }] : []),
   ];
-  pushRoute(reading, site, verb, path === '' ? '/' : path, apiOf(reading, apiResource, 'rest'), guards);
+  if (rooted !== undefined) {
+    pushRootedRoute(reading, site, verb, rooted.root, rooted.below === '' ? '/' : rooted.below, guards);
+    return;
+  }
+  if (!('path' in path) || apiResource === undefined) return;
+  pushRoute(reading, site, verb, path.path === '' ? '/' : path.path, apiOf(reading, apiResource, 'rest'), guards);
 };
+
+/**
+ * What an output of the template that refers to one of its APIs is (P249): a
+ * `Ref` of the API, its `RootResourceId` or a `Ref` of one of its REST
+ * resources is a point of it, for other stacks' routes to hang from; any other
+ * attribute, or a URL built around it, is its address.
+ */
+export const apiReference =
+  (reading: TemplateReading): ApiReference =>
+  (logicalId, attribute) => {
+    const point = attribute === undefined || attribute === 'RootResourceId' ? '/' : undefined;
+    const implicit = (Object.entries(IMPLICIT) as ['rest' | 'http', string][]).find(([, id]) => id === logicalId);
+    if (implicit !== undefined && !reading.template.resources.has(logicalId)) {
+      const [kind] = implicit;
+      const stack = reading.template.pseudo.stackName;
+      return { kind, ...(stack === undefined || reading.scope !== '' ? {} : { name: stack }), address: `${reading.file.file}#${reading.scope}${logicalId}`, ...(point === undefined ? {} : { path: point }) };
+    }
+    const resource = reading.template.resources.get(logicalId);
+    if (resource === undefined) return undefined;
+    if (resource.type === 'AWS::ApiGateway::Resource') {
+      const at = attribute === undefined ? restPathOf(reading, { Ref: logicalId }) : undefined;
+      const owner = intrinsicOf(resource.properties['RestApiId']);
+      const api = owner?.[0] === 'Ref' && typeof owner[1] === 'string' ? reading.template.resources.get(owner[1]) : undefined;
+      if (at === undefined || !('path' in at) || api === undefined || !API_TYPES.rest.has(api.type)) return undefined;
+      const of = apiOf(reading, api, 'rest');
+      return { kind: 'rest', ...(of.name === undefined ? {} : { name: of.name }), address: of.address, path: at.path };
+    }
+    const kind = API_TYPES.rest.has(resource.type) ? 'rest' : API_TYPES.http.has(resource.type) ? 'http' : undefined;
+    if (kind === undefined) return undefined;
+    const of = apiOf(reading, resource, kind);
+    return { kind, ...(of.name === undefined ? {} : { name: of.name }), address: of.address, ...(point === undefined || (kind === 'http' && attribute !== undefined) ? {} : { path: point }) };
+  };
 
 /** Every route a template writes on its APIs rather than on its functions' events. */
 export const readApis = (reading: TemplateReading): void => {

@@ -1,7 +1,7 @@
 import { Node, Project } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { readExpressionDocument, UnreadMember } from './positioned-expression.js';
-import { generatedName, isGeneratedName, makeUnnamedInvokeKey, makeUnnamedWorkflowKey } from './ids.js';
+import { exportKey, generatedName, importedName, isGeneratedName, isImportedName, makeUnnamedInvokeKey, makeUnnamedWorkflowKey, stackOutputKey, wasRead } from './ids.js';
 import { parseConfig } from './config.js';
 
 /** The object a file exports with `module.exports =`, read as a document. */
@@ -64,6 +64,21 @@ describe('a name the platform generates (P57)', () => {
     expect(makeUnnamedWorkflowKey('ClubStack/lib/club-stack.ts:54')).toBe('${…}@ClubStack.lib.club-stack.ts.54');
     // An address with neither keeps its spelling, so no key read before changes.
     expect(makeUnnamedInvokeKey('aws_lambda_function.route["connect"]')).toBe('${…}@aws_lambda_function.route["connect"]');
+  });
+});
+
+describe('a value another deployment publishes (P249)', () => {
+  it('is keyed by its export name, or by its stack and its own name', () => {
+    expect(exportKey('orders-placed-arn')).toBe('export:orders-placed-arn');
+    expect(stackOutputKey('orders-prod', 'QueueUrl')).toBe('stack:orders-prod#QueueUrl');
+  });
+
+  it('is stood in for by its key, spelled to fit a channel name, and never taken for a deployed name', () => {
+    expect(importedName(exportKey('orders:placed/arn'))).toBe('${…}@import.export.orders.placed.arn');
+    expect(importedName(stackOutputKey('orders-prod', 'QueueUrl'))).toBe('${…}@import.stack.orders-prod.QueueUrl');
+    expect(isImportedName(importedName(exportKey('x')))).toBe(true);
+    expect(isImportedName(generatedName('ClubStack/Inbox'))).toBe(false);
+    expect(wasRead(importedName(exportKey('x')))).toBe(false);
   });
 });
 

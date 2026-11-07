@@ -103,6 +103,32 @@ only one of them moved.
   shared procedure reader. A server's request rooted at a setting nothing
   places keeps the values it was found with, so `doctor`'s *Probably missing*
   counts the hosts they name. New fixture `rpc-contracts`.
+- **Values shared between CloudFormation deployments, and
+  `serverless-compose.yml` (P249).** An output a Serverless service, a SAM
+  template or a CDK app publishes - by its `Export.Name` / `exportName`, and by
+  its stack's name and its own - is joined to every place another repository
+  reads it (`Fn::ImportValue`, `!ImportValue`, `Fn.importValue`,
+  `${cf:<stack>.<output>}`). Routes on an API another repository creates
+  (`provider.apiGateway.restApiId`, `provider.httpApi.id`,
+  `RestApi.fromRestApiAttributes`, `HttpApi.fromHttpApiAttributes`, an
+  `AWS::ApiGateway::Resource` whose `ParentId` or an `AWS::ApiGatewayV2::Route`
+  whose `ApiId` is imported) hang from the point the publisher exports, get its
+  full path, and are routes of the publishing service too, so a client of that
+  API - by `baseUrlEnv`, by host, or by an imported API address in its
+  environment - lands on the handler in the repository that holds it. A queue,
+  a topic, a bus or a table's stream an event, a CDK lookup or a value of the
+  environment imports is renamed, before the repositories are merged, to what
+  the publisher names, so the two are one channel. The framework's own
+  `ServiceEndpoint`, `HttpApiId` and `HttpApiUrl` outputs are published. A
+  `serverless-compose.yml` is read as one deployment: its services with its
+  `params` ahead of their own, a `${<service>.<Output>}` param the import of
+  that service's output, and a service it cannot read a
+  `compose-service-unread` row. Four new reasons: `export-not-found`,
+  `export-ambiguous`, `export-mismatched`, `compose-service-unread`.
+  `serverless-shapes`, `sam-shapes` and `cdk-shapes` now draw what they import
+  under its stand-in, with an `export-not-found` row where they drew a
+  `subscription-source-unread` one (`fixtures/multi-repo-exports`,
+  `fixtures/serverless-compose`).
 - **A function run before every request carries its base into each one
   (P244).** An axios request interceptor (`api.interceptors.request.use`, on an
   instance or on `axios` itself) that writes `config.baseURL`, answers

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:45:14.972Z",
+  "builtAt": "2026-11-07T18:37:43.925Z",
   "services": [
     {
       "name": "rides",
@@ -429,7 +429,7 @@
         "handlerVia": "function",
         "environment": {
           "DOCKS_QUEUE_URL": {
-            "written": "!ImportValue ...",
+            "written": "!ImportValue rides-harbour-recount-url",
             "value": "${…}@stacks.docks.Resources.RecountQueue",
             "kind": "queue"
           }
@@ -583,7 +583,64 @@
           "entry": [
             "aws-lambda"
           ]
-        }
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:rides-audit-queue"
+            ],
+            "address": "kiosk/kiosk.Outputs.KioskAuditQueueArn",
+            "file": "kiosk/kiosk.yaml",
+            "line": 25,
+            "kind": "queue",
+            "value": "rides-kiosk-audit",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:rides-harbour-recount-url"
+            ],
+            "address": "stacks/docks.Outputs.RecountQueueUrl",
+            "file": "stacks/docks.yaml",
+            "line": 35,
+            "kind": "queue",
+            "value": "${…}@stacks.docks.Resources.RecountQueue",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:rides-harbour-recount-arn"
+            ],
+            "address": "stacks/docks.Outputs.RecountQueueArn",
+            "file": "stacks/docks.yaml",
+            "line": 39,
+            "kind": "queue",
+            "value": "${…}@stacks.docks.Resources.RecountQueue",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:rides-harbour-docks-stream"
+            ],
+            "address": "stacks/docks.Outputs.DocksStream",
+            "file": "stacks/docks.yaml",
+            "line": 43,
+            "kind": "table",
+            "value": "rides-harbour-docks",
+            "deployedBy": "cloudformation"
+          },
+          {
+            "keys": [
+              "export:rides-audit-queue"
+            ],
+            "address": "stacks/docks.Outputs.AuditQueueArn",
+            "file": "stacks/docks.yaml",
+            "line": 47,
+            "kind": "queue",
+            "value": "rides-audit",
+            "deployedBy": "cloudformation"
+          }
+        ]
       }
     },
     {
@@ -1148,7 +1205,7 @@
         "setBy": [
           {
             "function": "rides-harbour-start-ride",
-            "written": "!ImportValue ...",
+            "written": "!ImportValue rides-harbour-recount-url",
             "value": "${…}@stacks.docks.Resources.RecountQueue"
           }
         ]
@@ -1233,7 +1290,7 @@
       "file": "stacks/rides.yaml",
       "line": 189,
       "reason": "subscription-source-unread",
-      "message": "the topic stacks/rides.Resources.LostSubscription subscribes to is not read: the value is imported from the export fleet-lost-topic, which no template of the repository declares",
+      "message": "the topic stacks/rides.Resources.LostSubscription subscribes to is not read: the value is imported from another stack, which exports it as fleet-lost-topic",
       "hint": "Write TopicArn as a Ref of a topic the file declares, or its ARN.",
       "symbol": "stacks/rides.Resources.LostSubscription",
       "adapter": "aws-lambda",

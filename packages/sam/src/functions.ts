@@ -151,7 +151,7 @@ export const readFunction = (reading: TemplateReading, site: FunctionSite): void
   const handler = 'image' in code || (runtime !== undefined && !runtime.startsWith('nodejs')) ? undefined : handlerOf(reading, site, code);
   const environment: Record<string, DeployedSetting> = {};
   const variables = isRecord(properties['Environment']) ? properties['Environment']['Variables'] : undefined;
-  if (isRecord(variables)) for (const name of Object.keys(variables).sort()) environment[name] = reading.file.settingOf(variables[name]);
+  if (isRecord(variables)) for (const name of Object.keys(variables).sort()) environment[name] = reading.file.settingOf(variables[name], [...path, 'Properties', 'Environment', 'Variables', name], `the value of ${name} ${resource.address} is deployed with`);
   const deployed: DeployedFunction = {
     ...reading.file.siteOf(path),
     ...(typeof fn.name === 'string' && !fn.generated ? { name: fn.name } : {}),

@@ -1,6 +1,6 @@
 import { cognitoTriggerKey, DEFAULT_EVENT_BUS, deployedNameIn, eventPatternOf } from '@flowatlas/aws';
-import { makeHttpEntryKey, normalizePath, type DeliveryKind, type DeliverySource, type DeliveryTarget, type PathStep } from '@flowatlas/core';
-import { isRecord, textOf, Unread, userPoolName, type Deployed } from '@flowatlas/serverless';
+import { makeHttpEntryKey, normalizePath, UNREAD_SPAN, type DeliveryKind, type DeliverySource, type DeliveryTarget, type DeployedKind, type PathStep } from '@flowatlas/core';
+import { Imported, isRecord, textOf, Unread, userPoolName, type Deployed } from '@flowatlas/serverless';
 import type { TemplateReading } from './reading.js';
 
 /**
@@ -54,8 +54,10 @@ const deliver = (reading: TemplateReading, site: EventSite, by: DeliveryKind, fr
 };
 
 /** The source a property names, or a row saying why not. */
-const sourceNamed = (reading: TemplateReading, value: unknown, site: EventSite, what: string): Deployed | undefined => {
+const sourceNamed = (reading: TemplateReading, value: unknown, site: EventSite, what: string, kind?: DeployedKind): Deployed | undefined => {
   const found = reading.deployedOf(value);
+  // Another stack's output, of the kind this event reads (P249).
+  if (found instanceof Imported && kind !== undefined) return reading.file.importedAs(found, kind, site.path, what);
   if (found === undefined || found instanceof Unread) {
     eventRow(
       reading,
@@ -130,6 +132,28 @@ export const pushRoute = (reading: TemplateReading, site: EventSite, method: str
   });
 };
 
+/**
+ * A route onto the function that hangs from a point of an API another stack
+ * creates and exports (P249): its path is the part below that point, behind an
+ * unread span the linker fills with the point's own path.
+ */
+export const pushRootedRoute = (reading: TemplateReading, site: EventSite, method: string, root: string, rawBelow: string, guards: readonly { label: string; file: string; line: number }[]): void => {
+  if (site.function === undefined) return;
+  const verb = method.toUpperCase() === 'ANY' || method === '*' ? 'ALL' : method.toUpperCase();
+  const below = normalizePath(`/${rawBelow.replace(/^\/+/, '')}`);
+  const path = normalizePath(`${UNREAD_SPAN}${below}`);
+  reading.file.parts.routes.push({
+    ...reading.file.siteOf(site.path),
+    method: verb,
+    path,
+    rawPath: rawBelow,
+    target: { function: site.function },
+    root: { key: root, below },
+    ...(guards.length === 0 ? {} : { guards }),
+    meta: { declaredAs: site.address, key: makeHttpEntryKey(verb, path), apiAddress: `import:${root}`, ...reading.conditionOf(site.logicalId) },
+  });
+};
+
 const routeReader =
   (kind: 'rest' | 'http', apis: ApiLookup): EventReader =>
   (properties, site, reading) => {
@@ -156,7 +180,7 @@ const routeReader =
 // ---------------------------------------------------------------- channels
 
 const readSqs: EventReader = (properties, site, reading) => {
-  const found = sourceNamed(reading, properties['Queue'], site, `the queue ${site.address} reads`);
+  const found = sourceNamed(reading, properties['Queue'], site, `the queue ${site.address} reads`, 'queue');
   if (found === undefined) return;
   if (found.kind !== 'queue') {
     eventRow(reading, site, 'subscription-source-unread', `${site.address} reads ${found.name}, which is a ${found.kind}, not a queue`, 'An SQS event reads a queue.', 'info');
@@ -168,7 +192,7 @@ const readSqs: EventReader = (properties, site, reading) => {
 const readSns: EventReader = (properties, site, reading) => {
   const written = properties['Topic'];
   const text = textOf(written);
-  const found = text !== undefined && deployedNameIn(text) === undefined ? ({ kind: 'topic', name: text } as const) : sourceNamed(reading, written, site, `the topic ${site.address} subscribes to`);
+  const found = text !== undefined && deployedNameIn(text) === undefined ? ({ kind: 'topic', name: text } as const) : sourceNamed(reading, written, site, `the topic ${site.address} subscribes to`, 'topic');
   if (found === undefined) return;
   if (found.kind !== 'topic') {
     eventRow(reading, site, 'subscription-source-unread', `${site.address} subscribes to ${found.name}, which is a ${found.kind}, not a topic`, 'An SNS event subscribes to a topic.', 'info');
@@ -187,7 +211,7 @@ const readSns: EventReader = (properties, site, reading) => {
 const streamReader =
   (of: 'table' | 'stream'): EventReader =>
   (properties, site, reading) => {
-    const found = sourceNamed(reading, properties['Stream'], site, `the stream ${site.address} reads`);
+    const found = sourceNamed(reading, properties['Stream'], site, `the stream ${site.address} reads`, of);
     if (found === undefined) return;
     if (found.kind !== of) {
       eventRow(reading, site, 'subscription-source-unread', `${site.address} reads ${found.name}, which is a ${found.kind}, not a ${of === 'table' ? "table's stream" : 'stream'}`, 'Point Stream at the StreamArn of a table, or the Arn of a stream.', 'info');
@@ -242,7 +266,7 @@ const busOf = (reading: TemplateReading, value: unknown, site: EventSite): strin
   if (value === undefined || value === null) return DEFAULT_EVENT_BUS;
   const text = textOf(value);
   if (text !== undefined) return deployedNameIn(text)?.name ?? text;
-  const found = sourceNamed(reading, value, site, `the bus ${site.address} takes events from`);
+  const found = sourceNamed(reading, value, site, `the bus ${site.address} takes events from`, 'bus');
   return found?.kind === 'bus' ? found.name : undefined;
 };
 

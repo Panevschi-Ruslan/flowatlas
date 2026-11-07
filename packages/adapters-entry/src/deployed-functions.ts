@@ -2,7 +2,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import {
   boundDeclaration,
+  EXPORTS_META,
   hasAnyDependency,
+  IMPORTS_META,
   makeEntryId,
   makeApiRouteEntryKey,
   makeHttpEntryKey,
@@ -18,7 +20,9 @@ import {
   type EntryHandler,
   type EntryNode,
   type EntryWrapping,
+  type ExportedValue,
   type ExtractContext,
+  type ImportedValue,
   type Unresolved,
   lineAndColumnAt,
   startLineOf,
@@ -596,6 +600,8 @@ export const deployedFunctionsAdapter: EntryAdapter = {
 
     const entries: EntryNode[] = [];
     const roots: Array<Record<string, unknown>> = [];
+    const exported: ExportedValue[] = [];
+    const imported: ImportedValue[] = [];
     const deployments = readers.map((reader) => {
       const deployment: Deployment = reader.read({ repoDir: ctx.repoDir, service: ctx.service, config: ctx.config });
       return { reader, deployment };
@@ -731,6 +737,20 @@ export const deployedFunctionsAdapter: EntryAdapter = {
       );
 
       for (const root of deployment.roots) roots.push({ ...root, deployedBy: reader.name });
+      // What it publishes for other deployments to read, and where it reads theirs (P249).
+      for (const value of deployment.exports ?? []) {
+        exported.push({
+          keys: value.keys,
+          address: value.address,
+          file: value.file,
+          line: value.line,
+          ...(value.names === undefined ? {} : { kind: value.names.kind, value: value.names.name }),
+          ...(value.text === undefined ? {} : { text: value.text }),
+          ...(value.unread === undefined ? {} : { unread: value.unread }),
+          deployedBy: reader.name,
+        });
+      }
+      for (const value of deployment.imports ?? []) imported.push({ ...value });
       drawDeployedWorkflows(ctx, deployment.workflows, reader.name, DEPLOYED_FUNCTIONS, drawn);
       reportRows(ctx, rows, drawn);
     }
@@ -738,13 +758,17 @@ export const deployedFunctionsAdapter: EntryAdapter = {
     // What this repository publishes for other repositories' routes to hang
     // from is a fact about the repository rather than about any one entry, and
     // the linker reads it from the repository's own node.
-    if (roots.length > 0) {
+    if (roots.length > 0 || exported.length > 0 || imported.length > 0) {
       ctx.builder.addNode({
         id: `repo:${ctx.repo}`,
         type: 'repo',
         label: ctx.repo,
         repo: ctx.repo,
-        meta: { apiRoots: roots },
+        meta: {
+          ...(roots.length === 0 ? {} : { apiRoots: roots }),
+          ...(exported.length === 0 ? {} : { [EXPORTS_META]: exported }),
+          ...(imported.length === 0 ? {} : { [IMPORTS_META]: imported }),
+        },
       });
     }
     return entries;

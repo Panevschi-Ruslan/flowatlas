@@ -3,11 +3,12 @@ import { destinationOf } from '@flowatlas/aws';
 import { type DeployedFunction, type DeployedHandler, type DeployedSetting, type PathStep, type PositionedDocument } from '@flowatlas/core';
 import { intrinsicOf, Template, type Deployed } from './cloudformation.js';
 import { readServiceFile, ServiceFileUnreadable } from './document.js';
-import { readEvent, readFunctionUrl, type Apis, type EventReading, type EventSite } from './events.js';
+import { readEvent, readFunctionUrl, type Apis, type EventReading, type EventSite, type SharedApi } from './events.js';
+import { readOutputs, type ImplicitOutput } from './outputs.js';
 import { FileReading, type DeploymentParts } from './reading.js';
 import { readResources } from './resources.js';
 import { readPluginStateMachines, readStateMachineResource } from './state-machines.js';
-import { isRecord, textOf, Unread, Variables, type StageFrom } from './variables.js';
+import { Imported, isRecord, textOf, Unread, Variables, type StageFrom } from './variables.js';
 
 /**
  * One service file, read into the parts of a deployment (P57).
@@ -52,6 +53,8 @@ export interface ServiceOptions {
   readonly options: Readonly<Record<string, string>>;
   /** Absolute paths of every file a variable loaded, filled as they are. */
   readonly loaded: Set<string>;
+  /** What a composition of services hands this one as its params (P249). */
+  readonly params?: Readonly<Record<string, unknown>>;
 }
 
 export const readService = (parts: DeploymentParts, options: ServiceOptions): void => {
@@ -70,7 +73,13 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
     return;
   }
   const dir = posix.dirname(file);
-  const variables = new Variables({ document: document.value, dir: join(repoDir, dir), options: options.options, loaded: options.loaded });
+  const variables = new Variables({
+    document: document.value,
+    dir: join(repoDir, dir),
+    options: options.options,
+    loaded: options.loaded,
+    ...(options.params === undefined ? {} : { params: options.params }),
+  });
   const resolved = variables.at([]);
   if (!isRecord(resolved)) return;
   const provider = isRecord(resolved['provider']) ? resolved['provider'] : {};
@@ -140,6 +149,9 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
     file,
   );
   const reading = new FileReading(parts, file, document, template, functionIndex);
+  // An API another deployment creates, which this service's routes hang from (P249).
+  const sharedRest = sharedApiOf(template, isRecord(provider['apiGateway']) ? provider['apiGateway']['restApiId'] : undefined);
+  const sharedHttp = sharedApiOf(template, isRecord(provider['httpApi']) ? provider['httpApi']['id'] : undefined);
   const apis: Apis = {
     ...(service === undefined || stageText === undefined
       ? {}
@@ -148,6 +160,8 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
           http: (isRecord(provider['httpApi']) ? textOf(provider['httpApi']['name']) : undefined) ?? `${stageText}-${service}`,
           socket: textOf(provider['websocketsApiName']) ?? `${stageText}-${service}-websockets`,
         }),
+    ...(sharedRest === undefined ? {} : { sharedRest }),
+    ...(sharedHttp === undefined ? {} : { sharedHttp }),
   };
   const events: EventReading = { file: reading, apis };
 
@@ -175,6 +189,7 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
   readResources(reading);
   for (const resource of template.ofType('AWS::StepFunctions::StateMachine')) readStateMachineResource(reading, resource);
   readPluginStateMachines(reading, machines);
+  readServiceOutputs(reading, resolved, { apis, stackName: service === undefined || stageText === undefined ? undefined : (textOf(provider['stackName']) ?? `${service}-${stageText}`), service, stage: stageText });
 
   if (resolved['constructs'] !== undefined) {
     reading.row(['constructs'], 'constructs', {
@@ -183,6 +198,56 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
       hint: 'Declare them under functions and resources, or expect them missing from the map.',
     });
   }
+};
+
+/**
+ * The API another deployment creates that a service's routes hang from, by
+ * the output its id is read from (P249); `undefined` where the service makes
+ * its own.
+ */
+const sharedApiOf = (template: Template, value: unknown): SharedApi | undefined => {
+  if (value === undefined || value === null) return undefined;
+  const found = value instanceof Unread ? value : template.deployedOf(value);
+  if (found instanceof Imported) return { root: found.key };
+  if (found instanceof Unread) return { unread: `its id is not read: ${found.text}` };
+  const text = textOf(value);
+  return { unread: text === undefined ? 'its id is not read' : `its id is written as ${text}, which no deployment publishes under a name to join by` };
+};
+
+/** What the framework writes out of a service's own, beside `resources.Outputs`, and what each is. */
+const readServiceOutputs = (
+  reading: FileReading,
+  resolved: Record<string, unknown>,
+  service: { readonly apis: Apis; readonly stackName: string | undefined; readonly service: string | undefined; readonly stage: string | undefined },
+): void => {
+  const { apis } = service;
+  const rest = apis.sharedRest === undefined && apis.rest !== undefined ? { kind: 'rest' as const, name: apis.rest, address: `${reading.file}#rest-api` } : undefined;
+  const http = apis.sharedHttp === undefined && apis.http !== undefined ? { kind: 'http' as const, name: apis.http, address: `${reading.file}#http-api` } : undefined;
+  const routed = (address: string): boolean => reading.parts.routes.some((route) => route.meta?.['apiAddress'] === address);
+  // The framework's own outputs, where it creates the API they describe:
+  // `ServiceEndpoint`, exported as `sls-<service>-<stage>-ServiceEndpoint`, and the HTTP API's id and URL.
+  const implicit: ImplicitOutput[] = [
+    ...(rest !== undefined && routed(rest.address)
+      ? [{ name: 'ServiceEndpoint', api: rest, path: ['provider'], ...(service.service === undefined || service.stage === undefined ? {} : { exportName: `sls-${service.service}-${service.stage}-ServiceEndpoint` }) }]
+      : []),
+    ...(http !== undefined && routed(http.address)
+      ? [
+          { name: 'HttpApiId', api: { ...http, path: '/' }, path: ['provider'] },
+          { name: 'HttpApiUrl', api: http, path: ['provider'] },
+        ]
+      : []),
+  ];
+  const resources = isRecord(resolved['resources']) ? resolved['resources'] : {};
+  readOutputs(reading, resources['Outputs'], {
+    at: ['resources', 'Outputs'],
+    ...(service.stackName === undefined ? {} : { stackName: service.stackName }),
+    implicit,
+    apiOf: (logicalId, attribute) => {
+      if (logicalId === 'ApiGatewayRestApi' && rest !== undefined) return attribute === undefined || attribute === 'RootResourceId' ? { ...rest, path: '/' } : rest;
+      if (logicalId === 'HttpApi' && http !== undefined) return attribute === undefined ? { ...http, path: '/' } : http;
+      return undefined;
+    },
+  });
 };
 
 interface FunctionDeclaration {
@@ -237,7 +302,12 @@ const readFunction = (reading: FileReading, declaration: FunctionDeclaration): v
   const environment: Record<string, DeployedSetting> = {};
   const own = isRecord(fn['environment']) ? fn['environment'] : {};
   for (const variable of Object.keys({ ...declaration.providerEnvironment, ...own }).sort()) {
-    environment[variable] = reading.settingOf(own[variable] ?? declaration.providerEnvironment[variable]);
+    const inFunction = own[variable] !== undefined;
+    environment[variable] = reading.settingOf(
+      own[variable] ?? declaration.providerEnvironment[variable],
+      inFunction ? [...path, 'environment', variable] : ['provider', 'environment', variable],
+      inFunction ? `the value of ${variable} ${address} is deployed with` : `the value of ${variable} the functions of ${reading.file} are deployed with`,
+    );
   }
   const deployed: DeployedFunction = {
     ...at,

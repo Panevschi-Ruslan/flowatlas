@@ -971,7 +971,13 @@ prove, and the path is given so you can run it.
   applications. A queue or a function the platform names when it is deployed
   is named by its declaration, so everything in the deployment that points at
   it joins (`fixtures/serverless-shapes`, `fixtures/cdk-shapes`,
-  `fixtures/sam-shapes`).
+  `fixtures/sam-shapes`). What one repository exports as an output and
+  another imports - an API's id or root, a queue's ARN, an API's URL - is
+  joined on the export's name: routes hung from another repository's API get
+  its full path and are reached at its address, and an imported queue is the
+  producer's queue (`fixtures/multi-repo-exports`). A `serverless-compose.yml`
+  is read as one deployment of the services it lists, its params and
+  `${service.Output}` references included (`fixtures/serverless-compose`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —

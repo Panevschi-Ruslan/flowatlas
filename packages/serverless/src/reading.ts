@@ -2,7 +2,10 @@ import { posix } from 'node:path';
 import type {
   DeclaredStream,
   DeployedDelivery,
+  DeployedExport,
   DeployedFunction,
+  DeployedImport,
+  DeployedKind,
   DeployedRoute,
   DeployedSetting,
   DeployedWorkflow,
@@ -12,9 +15,9 @@ import type {
   PublishedRoot,
   Unresolved,
 } from '@flowatlas/core';
-import { generatedName, UNREAD_SPAN } from '@flowatlas/core';
+import { generatedName, importedName, UNREAD_SPAN } from '@flowatlas/core';
 import type { Deployed, Template } from './cloudformation.js';
-import { textOf, Unread } from './variables.js';
+import { Imported, isRecord, textOf, Unread } from './variables.js';
 
 /**
  * What every part of reading one service file shares: where things are put,
@@ -33,6 +36,8 @@ export interface DeploymentParts {
   readonly workflows: DeployedWorkflow[];
   readonly deliveries: DeployedDelivery[];
   readonly streams: DeclaredStream[];
+  readonly exports: DeployedExport[];
+  readonly imports: DeployedImport[];
   readonly rows: Unresolved[];
 }
 
@@ -43,6 +48,8 @@ export const emptyParts = (): DeploymentParts => ({
   workflows: [],
   deliveries: [],
   streams: [],
+  exports: [],
+  imports: [],
   rows: [],
 });
 
@@ -124,11 +131,35 @@ export class FileReading {
     return target;
   }
 
+  /** That this deployment reads a value another publishes, here (P249). */
+  importAt(key: string, path: readonly PathStep[], what: string, kinds?: readonly (DeployedKind | 'url' | 'api')[]): void {
+    const site = this.siteOf(path);
+    // A value of the provider's is every function's, and one place it is read.
+    if (this.parts.imports.some((found) => found.key === key && found.file === site.file && found.line === site.line)) return;
+    this.parts.imports.push({ key, ...site, what, ...(kinds === undefined ? {} : { kinds }) });
+  }
+
+  /**
+   * Something another deployment publishes, used where what it is - a queue an
+   * event reads, a topic it subscribes to - is said by the use: named by its
+   * key's stand-in, which the linker finishes where the publisher is read.
+   */
+  importedAs(found: Imported, kind: DeployedKind, path: readonly PathStep[], what: string, kinds: readonly DeployedKind[] = [kind]): Deployed {
+    this.importAt(found.key, path, what, kinds);
+    return { kind, name: importedName(found.key) };
+  }
+
   /** A value a function is deployed with, read every way it can be. */
-  settingOf(value: unknown): DeployedSetting {
+  settingOf(value: unknown, path?: readonly PathStep[], what?: string): DeployedSetting {
     const written = writtenAs(value);
     const text = textOf(value);
     const found = this.template.deployedOf(value);
+    // An output of another stack: what it names is the publisher's to say (P249).
+    const imported = found instanceof Imported ? found : value instanceof Imported ? value : undefined;
+    if (imported !== undefined) {
+      if (path !== undefined) this.importAt(imported.key, path, what ?? 'a value a function is deployed with');
+      return { written, imported: imported.key, unread: { text: imported.text, ...(imported.variable === undefined ? {} : { variable: imported.variable }) } };
+    }
     if (found !== undefined && !(found instanceof Unread)) {
       return { written, ...(text === undefined ? {} : { text }), names: { kind: found.kind, name: found.name } };
     }
@@ -167,6 +198,10 @@ export const asTarget = (found: Deployed): DeliveryTarget | undefined => {
 export const writtenAs = (value: unknown): string => {
   if (typeof value === 'string') return JSON.stringify(value);
   if (value instanceof Unread) return value.variable === undefined ? 'a value not known from the files' : `\${${value.variable}}`;
+  if (isRecord(value) && 'Fn::ImportValue' in value) {
+    const name = textOf(value['Fn::ImportValue']);
+    return name === undefined ? '!ImportValue ...' : `!ImportValue ${name}`;
+  }
   if (value !== null && typeof value === 'object') {
     const [key] = Object.keys(value as object);
     const argument = key === undefined ? undefined : (value as Record<string, unknown>)[key];

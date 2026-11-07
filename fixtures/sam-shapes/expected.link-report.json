@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T18:33:37.411Z",
+  "builtAt": "2026-11-07T17:36:35.522Z",
   "configHash": "e187e7f2c153",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./library",
       "type": "lambda",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 74,
-      "edges": 58,
+      "nodes": 76,
+      "edges": 60,
       "types": 0,
-      "unresolved": 12,
-      "durationMs": 775,
+      "unresolved": 11,
+      "durationMs": 1027,
       "packages": {
         "name": "library-desk",
         "runtime": [
@@ -43,7 +43,7 @@
     "byReason": {}
   },
   "channels": {
-    "total": 7,
+    "total": 8,
     "linked": 2,
     "noConsumers": [
       "channel:sqs/library-prod-failed-loans"
@@ -52,6 +52,7 @@
       "channel:eventbridge/default/library.loans/LoanOverdue",
       "channel:eventbridge/default/library.loans/LoanRenewed",
       "channel:kinesis/library-prod-returns",
+      "channel:sns/${…}@import.export.shared-notices-topic-arn",
       "channel:sqs/library-prod-fiction-shelf"
     ]
   },
@@ -81,11 +82,23 @@
       "message": "kinesis/library-prod-returns is read by a function and nothing in the configured services writes to it",
       "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
       "symbol": "channel:kinesis/library-prod-returns"
+    },
+    {
+      "service": "library",
+      "file": "template.yaml",
+      "line": 211,
+      "reason": "export-not-found",
+      "message": "the topic Resources.DoorFunction.Events.Shared subscribes to is the export shared-notices-topic-arn, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:export:shared-notices-topic-arn",
+      "meta": {
+        "key": "export:shared-notices-topic-arn"
+      }
     }
   ],
   "totals": {
-    "nodes": 74,
-    "edges": 65,
+    "nodes": 76,
+    "edges": 67,
     "types": 0,
     "missed": 11,
     "sites": 11,

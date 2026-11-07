@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:50:10.791Z",
+  "configHash": "b9aff0628b36",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 12,
+      "types": 3,
+      "unresolved": 2,
+      "durationMs": 955,
+      "packages": {
+        "name": "shop-catalog",
+        "runtime": [
+          "@aws-sdk/client-sns"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 9,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 937,
+      "packages": {
+        "name": "shop-gateway",
+        "runtime": [
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 16,
+      "edges": 11,
+      "types": 3,
+      "unresolved": 1,
+      "durationMs": 1064,
+      "packages": {
+        "name": "shop-orders",
+        "runtime": [
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 1,
+    "uncalled": [
+      "entry:catalog:http:GET:/products",
+      "entry:catalog:http:GET:/products/:param",
+      "entry:gateway:http:GET:/health",
+      "entry:gateway:http:GET:/status",
+      "entry:orders:http:GET:/orders",
+      "entry:orders:http:GET:/orders/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "catalog",
+      "file": "src/reorder.ts",
+      "line": 14,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHOP_API_URL is the address of the API shop, which gateway publishes and the environment catalog-reorder is deployed with imports, so the request is joined among the routes on it, here one orders declares",
+      "hint": "The value is the one the function is deployed with.",
+      "symbol": "http_out:catalog#src/reorder.ts:14:11",
+      "meta": {
+        "variable": "SHOP_API_URL",
+        "value": "shop",
+        "from": "the environment catalog-reorder is deployed with"
+      }
+    },
+    {
+      "service": "gateway",
+      "file": "serverless.yml",
+      "line": 14,
+      "reason": "export-not-found",
+      "message": "the value of AUDIT_QUEUE_URL the functions of serverless.yml are deployed with is the output AuditQueueUrl of the stack billing-prod, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:stack:billing-prod#AuditQueueUrl",
+      "meta": {
+        "key": "stack:billing-prod#AuditQueueUrl"
+      }
+    },
+    {
+      "service": "gateway",
+      "file": "src/audit.ts",
+      "line": 9,
+      "reason": "environment-value-unread",
+      "message": "the call at src/audit.ts:9 sends to the value of AUDIT_QUEUE_URL, which shop-gateway-prod-audit is deployed with as ${cf:billing-prod.AuditQueueUrl}, and that is not read: the value is the output AuditQueueUrl of the stack billing-prod, which another deployment publishes",
+      "hint": "The value is an output another deployment publishes: add the repository that declares it to the configuration, and it is joined to what it names.",
+      "symbol": "producer:gateway#src/audit.ts:9:11",
+      "meta": {
+        "function": "entry:gateway:invoke:shop-gateway-prod-audit",
+        "variable": "AUDIT_QUEUE_URL"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 45,
+    "edges": 35,
+    "types": 4,
+    "missed": 3,
+    "sites": 3,
+    "notes": 1,
+    "findings": 2,
+    "unresolved": 3
+  }
+}

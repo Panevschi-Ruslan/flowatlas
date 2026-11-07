@@ -285,7 +285,9 @@ export const completeFromEnvironment = (
                 hint:
                   done.value.files !== undefined
                     ? `The variable files set it differently (${Object.keys(done.value.files).join(', ')}). Choose the environment to read under services[].infra.vars.`
-                    : done.value.variable !== undefined
+                    : done.value.imported !== undefined
+                      ? 'The value is an output another deployment publishes: add the repository that declares it to the configuration, and it is joined to what it names.'
+                      : done.value.variable !== undefined
                       ? `Give var.${done.value.variable} a value the files settle: a default, or a variable file.`
                       : 'Write the value so the files settle it: a literal, or a reference to the queue, topic or bus the deployment declares.',
                 symbol: producer.id,

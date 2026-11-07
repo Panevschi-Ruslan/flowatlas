@@ -368,6 +368,35 @@ export const generatedName = (declaration: string): string => makeUnnamedInvokeK
 export const isGeneratedName = (name: string): boolean => name.startsWith(`${UNREAD_SPAN}@`) && name.length > UNREAD_SPAN.length + 1;
 
 /**
+ * The key of a value one deployment publishes under a name for others to read
+ * (P249): by the name it is exported under, which is unique where both are
+ * deployed, or by the deployment's name and the value's own, which a reader of
+ * that deployment can also spell.
+ */
+export const exportKey = (name: string): string => `export:${required('name', name)}`;
+export const stackOutputKey = (stack: string, output: string): string => `stack:${required('stack', stack)}#${required('output', output)}`;
+
+/** Where an imported name's stand-in starts. */
+const IMPORTED_AT = `${UNREAD_SPAN}@import.`;
+
+/**
+ * The name a reader gives something another deployment publishes and this one
+ * imports: a queue, a topic, a bus, a function known here only by the key of
+ * the value that names it (P249).
+ *
+ * Like a {@link generatedName}, it is a name nothing deployed has, so every
+ * part of the importing deployment that points at it agrees on it and nothing
+ * else joins to it by accident; unlike one, the linker can finish it, by the
+ * value another repository publishes under the same key, before the graphs
+ * are merged. The key is spelled as a declaration is, with the `#` between a
+ * stack and its output a dot too, which nothing an id is split on holds.
+ */
+export const importedName = (key: string): string => `${IMPORTED_AT}${standIn(key).replace(/#/g, '.')}`;
+
+/** Whether a name is one {@link importedName} stood in for. */
+export const isImportedName = (name: string): boolean => name.startsWith(IMPORTED_AT) && name.length > IMPORTED_AT.length;
+
+/**
  * The `key` half of a `workflow` entry id: the name the workflow is deployed
  * under, exactly as the deployment spells it.
  *

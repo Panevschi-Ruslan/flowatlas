@@ -573,6 +573,14 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'A route hangs from a point of an API that no configured service publishes, so its full path is not known. Add the repository that declares that API to the configuration.',
   'route-root-ambiguous': () =>
     'A route hangs from a point of an API that two declarations place differently. One of them is stale.',
+  'export-not-found': () =>
+    'A deployment reads a value another one publishes - an output, by the name it is exported under or by its stack and its own name - and no configured service publishes it, so what it names is not joined. Add the repository whose deployment declares that output to the configuration, or check the name on both sides.',
+  'export-ambiguous': () =>
+    'Two configured services publish a value under the same name, so a deployment reading it cannot be joined to either. A name is exported once where both are deployed; one of the two is stale, or they are two environments the configuration should tell apart.',
+  'export-mismatched': () =>
+    'A deployment reads a value another publishes, and that value is not read on the publishing side or is another kind of thing than the reader takes - a topic where a queue is read - so the two are not joined. Fix the output, or what reads it.',
+  'compose-service-unread': () =>
+    'A composition of deployments lists a service that is not read: its folder is outside the repository, is not there, or holds no service file. Point it at a folder of the repository with a service file; one in another repository is read where that repository is.',
   'invoke-target-not-found': () =>
     'A route names its function by the name it is deployed under, and no configured service deploys a function of that name. Add the repository that deploys it to the configuration.',
   'invoke-target-ambiguous': () =>

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T09:34:27.704Z",
+  "builtAt": "2026-11-07T17:32:43.964Z",
   "services": [
     {
       "name": "club",
@@ -630,8 +630,9 @@
             "unread": "Aws.ACCOUNT_ID is filled in when the stack is deployed"
           },
           "SHARED_QUEUE_URL": {
-            "written": "a value not known from the files",
-            "unread": "the value is imported from another stack, whose outputs are not read"
+            "written": "Fn.importValue(\"club-shared-queue-url\")",
+            "imported": "export:club-shared-queue-url",
+            "unread": "the value is imported from another stack, which exports it as club-shared-queue-url"
           }
         },
         "reads": {
@@ -908,7 +909,15 @@
           "entry": [
             "aws-lambda"
           ]
-        }
+        },
+        "imports": [
+          {
+            "key": "export:club-shared-queue-url",
+            "file": "lib/club-stack.ts",
+            "line": 37,
+            "what": "the value of SHARED_QUEUE_URL ClubStack/Reader is deployed with"
+          }
+        ]
       }
     }
   ],
@@ -1313,6 +1322,18 @@
       "symbol": "ClubStack/Inbox",
       "adapter": "aws-lambda",
       "service": "club"
+    },
+    {
+      "service": "club",
+      "file": "lib/club-stack.ts",
+      "line": 37,
+      "reason": "export-not-found",
+      "message": "the value of SHARED_QUEUE_URL ClubStack/Reader is deployed with is the export club-shared-queue-url, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:export:club-shared-queue-url",
+      "meta": {
+        "key": "export:club-shared-queue-url"
+      }
     },
     {
       "file": "lib/club-stack.ts",

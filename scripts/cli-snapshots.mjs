@@ -1180,6 +1180,12 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.renewals.tree.txt', 'workflow:${…}@ClubStack.Renewals'],
     ['flow.lapses.tree.txt', 'workflow:club-dev-lapses'],
   ]),
+  // Routes on another repository's API and values read from its outputs (P249).
+  terraformShape('multi-repo-exports', [
+    ['flow.reorder.tree.txt', 'invoke:catalog-reorder'],
+    ['flow.post-orders.tree.txt', 'POST /orders'],
+  ]),
+  terraformShape('serverless-compose', [['flow.post-jobs.tree.txt', 'POST /jobs']]),
   terraformShape('lambda-terraform-bucket-module', [
     ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
     ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],
