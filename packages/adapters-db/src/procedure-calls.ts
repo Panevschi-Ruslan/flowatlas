@@ -38,12 +38,19 @@ export const procedureCallsPass: NestExtractorPass = definePass('procedure-calls
         ...(info.baseUrlDefault === undefined ? {} : { baseUrlDefault: info.baseUrlDefault }),
       };
     },
+    types: ctx.types,
     report: (row) => ctx.report(row),
     applicationOf: (file) => applicationOfFile(ctx.meta, file),
     readAlready: (file, line, column) => ctx.builder.getNode(makeLeafId('ui_api_call', ctx.repo, file, line, column)) !== undefined,
   });
   // A proxy's type is `any` wherever the other service's tree is not
   // installed, and the calls reader says it could not follow the receiver.
-  // Read here, the call is followed: the row goes (R173).
-  withdrawDescribedCalls(ctx.builder, new Set(read.map(({ file, line, call }) => describedCallKey(file, line, call))));
+  // Read here, the call is followed: the row goes (R173). So does the one
+  // saying a value provided for a token cannot be followed, where the token's
+  // factory built the client this read the call through (P247).
+  withdrawDescribedCalls(
+    ctx.builder,
+    new Set(read.map(({ file, line, call }) => describedCallKey(file, line, call))),
+    ['call-dynamic-receiver', 'call-through-token'],
+  );
 });

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:27:05.730Z",
+  "builtAt": "2026-11-07T17:42:44.978Z",
   "services": [
     {
       "name": "api",
@@ -1003,6 +1003,8 @@
         "inputKeys": [
           "id"
         ],
+        "inputType": "{id:'o-1'}",
+        "outputType": "any",
         "procedureAt": "src/server/orders.ts:11",
         "inProcess": true,
         "targetService": "api"
@@ -1024,6 +1026,8 @@
         "inputKeys": [
           "status"
         ],
+        "inputType": "{status:'open'}",
+        "outputType": "any",
         "procedureAt": "src/server/orders.ts:5",
         "inProcess": true,
         "targetService": "api"
@@ -1045,6 +1049,8 @@
         "inputKeys": [
           "id"
         ],
+        "inputType": "{id:string}",
+        "outputType": "any",
         "link": {
           "protocol": "rpc",
           "path": "/rpc",
@@ -1069,6 +1075,8 @@
         "inputKeys": [
           "id"
         ],
+        "inputType": "{id:string}",
+        "outputType": "any",
         "link": {
           "protocol": "rpc",
           "path": "/rpc",
@@ -1089,6 +1097,8 @@
         "call": "handler",
         "operation": "call",
         "client": "orpc-client",
+        "inputNone": true,
+        "outputType": "any",
         "link": {
           "protocol": "rpc",
           "path": "/rpc",
@@ -1133,6 +1143,7 @@
         "inputKeys": [
           "status"
         ],
+        "inputType": "{status:'open'}",
         "link": {
           "protocol": "rpc",
           "path": "/rpc",
@@ -1154,6 +1165,7 @@
         "call": "handler",
         "operation": "mutationOptions",
         "client": "orpc-client",
+        "inputLater": true,
         "link": {
           "protocol": "rpc",
           "path": "/rpc",
@@ -1175,6 +1187,8 @@
         "call": "handler",
         "operation": "call",
         "client": "orpc-client",
+        "inputNone": true,
+        "outputType": "any",
         "link": {
           "protocol": "rpc",
           "dynamic": true
@@ -1196,6 +1210,8 @@
         "operation": "call",
         "client": "orpc-client",
         "inputKeys": [],
+        "inputType": "{}",
+        "outputType": "any",
         "link": {
           "protocol": "rpc",
           "path": "/api",
@@ -1731,6 +1747,10 @@
       "confidence": "static",
       "file": "app/orders/page.tsx",
       "line": 10,
+      "params": [
+        "{id:'o-1'}"
+      ],
+      "returns": "any",
       "meta": {
         "via": "same-service",
         "targetService": "api"
@@ -1743,6 +1763,10 @@
       "confidence": "static",
       "file": "app/orders/page.tsx",
       "line": 9,
+      "params": [
+        "{status:'open'}"
+      ],
+      "returns": "any",
       "meta": {
         "via": "same-service",
         "targetService": "api"
@@ -1755,6 +1779,10 @@
       "confidence": "static",
       "file": "src/Orders.tsx",
       "line": 16,
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "any",
       "meta": {
         "via": "link-url",
         "targetService": "api"
@@ -1779,6 +1807,9 @@
       "confidence": "static",
       "file": "src/Orders.tsx",
       "line": 5,
+      "params": [
+        "{status:'open'}"
+      ],
       "meta": {
         "via": "link-url",
         "targetService": "api"
@@ -1803,6 +1834,7 @@
       "confidence": "static",
       "file": "src/legacy.ts",
       "line": 10,
+      "returns": "any",
       "meta": {
         "via": "api-target",
         "targetService": "api"
@@ -1815,6 +1847,10 @@
       "confidence": "static",
       "file": "src/legacy.ts",
       "line": 12,
+      "params": [
+        "{}"
+      ],
+      "returns": "any",
       "meta": {
         "via": "link-url",
         "targetService": "api"

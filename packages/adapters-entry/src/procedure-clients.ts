@@ -42,6 +42,13 @@ export interface ProcedureOperation {
    * options object rather than the input itself: `queryOptions({ input })` (P58).
    */
   readonly inputKey?: string;
+  /**
+   * Whether the call returns what the procedure answers, a promise of it
+   * (P247): `client.orders.get(input)`, `.query(input)`, `.mutate(input)`. A
+   * hook or an options factory hands the answer to a cache instead, and
+   * nothing at the call says what it reads.
+   */
+  readonly answers?: boolean;
 }
 
 /**
@@ -88,6 +95,8 @@ export interface ProcedureCaller {
   readonly inputAt: number;
   /** What the server must have ended the procedure with. */
   readonly call: string;
+  /** Whether the call returns what the procedure answers (P247). */
+  readonly answers?: boolean;
 }
 
 export interface ProcedureClient {
@@ -144,7 +153,9 @@ export interface ProcedureClient {
 }
 
 const QUERY: ProcedureOperation = { call: 'query', inputAt: 0 };
-const MUTATION_NOW: ProcedureOperation = { call: 'mutation', inputAt: 0 };
+/** A query whose call returns the answer itself, the plain client's `query` (P247). */
+const QUERY_ANSWERED: ProcedureOperation = { call: 'query', inputAt: 0, answers: true };
+const MUTATION_NOW: ProcedureOperation = { call: 'mutation', inputAt: 0, answers: true };
 /** A mutation whose input is handed over later, to what the hook returns. */
 const MUTATION_LATER: ProcedureOperation = { call: 'mutation' };
 const SUBSCRIPTION: ProcedureOperation = { call: 'subscription', inputAt: 0 };
@@ -205,7 +216,7 @@ export const TRPC_CLIENT: ProcedureClient = {
   ],
   separator: '.',
   operations: {
-    query: QUERY,
+    query: QUERY_ANSWERED,
     mutate: MUTATION_NOW,
     subscribe: SUBSCRIPTION,
     useQuery: QUERY,
@@ -220,11 +231,11 @@ export const TRPC_CLIENT: ProcedureClient = {
     infiniteQueryOptions: QUERY,
     mutationOptions: MUTATION_LATER,
     subscriptionOptions: SUBSCRIPTION,
-    fetch: QUERY,
+    fetch: QUERY_ANSWERED,
     prefetch: QUERY,
     fetchInfinite: QUERY,
     prefetchInfinite: QUERY,
-    ensureData: QUERY,
+    ensureData: QUERY_ANSWERED,
   },
   links: [
     ...TRPC_HTTP_LINKS.map((name): ProcedureLink => ({ name, protocol: 'trpc', made: 'call', optionsAt: 0, urlKey: 'url' })),
@@ -235,17 +246,26 @@ export const TRPC_CLIENT: ProcedureClient = {
   untyped: {
     proxies: ['createTRPCUntypedClient'],
     operations: {
-      query: { call: 'query', pathAt: 0, inputAt: 1 },
-      mutation: { call: 'mutation', pathAt: 0, inputAt: 1 },
+      query: { call: 'query', pathAt: 0, inputAt: 1, answers: true },
+      mutation: { call: 'mutation', pathAt: 0, inputAt: 1, answers: true },
       subscription: { call: 'subscription', pathAt: 0, inputAt: 1 },
     },
   },
 };
 
-/** What every oRPC request asks for: the one ending its server writes (P58). */
-const HANDLER: ProcedureOperation = { call: 'handler', inputAt: 0 };
+/**
+ * What every oRPC request asks for: the one ending its server writes (P58),
+ * called with the input and returning the answer.
+ */
+const HANDLER: ProcedureOperation = { call: 'handler', inputAt: 0, answers: true };
 /** The same, with the input under `input` in the options the call is handed. */
 const HANDLER_OPTIONS: ProcedureOperation = { call: 'handler', inputAt: 0, inputKey: 'input' };
+/**
+ * A mutation's options, whose input is handed later to what the query library
+ * makes of them (P247): `mutationOptions({ onSuccess })` takes callbacks, not
+ * the input.
+ */
+const HANDLER_LATER: ProcedureOperation = { call: 'handler' };
 
 /**
  * oRPC, the second of the family (P58).
@@ -286,7 +306,7 @@ export const ORPC_CLIENT: ProcedureClient = {
   operations: {
     queryOptions: HANDLER_OPTIONS,
     infiniteOptions: HANDLER_OPTIONS,
-    mutationOptions: HANDLER,
+    mutationOptions: HANDLER_LATER,
     streamedOptions: HANDLER_OPTIONS,
     liveOptions: HANDLER_OPTIONS,
     experimental_streamedOptions: HANDLER_OPTIONS,
@@ -299,7 +319,7 @@ export const ORPC_CLIENT: ProcedureClient = {
     { name: 'RPCLink', protocol: 'rpc', optionsAt: 0, urlKey: 'url' },
     { name: 'OpenAPILink', protocol: 'openapi', optionsAt: 1, urlKey: 'url' },
   ],
-  callers: [{ name: 'call', procedureAt: 0, inputAt: 1, call: 'handler' }],
+  callers: [{ name: 'call', procedureAt: 0, inputAt: 1, call: 'handler', answers: true }],
 };
 
 /** Every client this extractor reads a procedure path from. */

@@ -45,7 +45,12 @@ export type ProcedureAddress =
     }
   | { readonly kind: 'external'; readonly host?: string; readonly baseUrl?: FoundValue }
   /** The address is read and names no service: the row the address machinery gives says why. */
-  | { readonly kind: 'unplaced'; readonly finding: Finding };
+  | {
+      readonly kind: 'unplaced';
+      readonly finding: Finding;
+      /** The values the setting is given that name no service, for the missing-repository survey (P247). */
+      readonly values?: readonly string[];
+    };
 
 /**
  * Whether an entry is a procedure, by what it says about itself.
@@ -89,7 +94,7 @@ interface Details {
   /** The link sends to a host no configured service is reached at (P242). */
   external: { host?: string; baseUrl?: FoundValue };
   /** The link's address is read and names no service; the address machinery's row says why (P242). */
-  unplaced: { finding: Finding };
+  unplaced: { finding: Finding; values?: readonly string[] };
   /** Nothing the caller may reach declares it. */
   noProcedure: {
     procedure: string;
@@ -188,7 +193,9 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
   if (address?.kind === 'external') {
     return { kind: 'external', ...(address.host === undefined ? {} : { host: address.host }), ...(address.baseUrl === undefined ? {} : { baseUrl: address.baseUrl }) };
   }
-  if (address?.kind === 'unplaced') return { kind: 'unplaced', finding: address.finding };
+  if (address?.kind === 'unplaced') {
+    return { kind: 'unplaced', finding: address.finding, ...(address.values === undefined ? {} : { values: address.values }) };
+  }
 
   // The link says where it sends, by a settings key the configuration maps to
   // a service; that service is asked and no other (P58).

@@ -657,7 +657,7 @@ export const checkContracts = (
     const verdict = judge(lookup, exchange, options);
     if (verdict.blocked !== undefined) {
       const { reason, subject, detail } = verdict.blocked;
-      const note = uncheckedNote(reason, subject, exchange.direction, detail, exchange.described === true, exchange.statusUnknown);
+      const note = uncheckedNote(reason, subject, exchange.direction, detail, exchange.described === true, exchange.statusUnknown, exchange.procedure === true);
       unchecked.push({
         edge: exchange.edge,
         edgeKey: exchange.edgeKey,

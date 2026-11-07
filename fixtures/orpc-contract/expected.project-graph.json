@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:40:29.952Z",
+  "builtAt": "2026-11-07T18:28:58.633Z",
   "services": [
     {
       "name": "orders",
@@ -636,6 +636,8 @@
         "inputKeys": [
           "id"
         ],
+        "inputType": "{id:string}",
+        "outputType": "any",
         "link": {
           "protocol": "openapi",
           "path": "/api",
@@ -681,6 +683,8 @@
         "inputKeys": [
           "sku"
         ],
+        "inputType": "{sku:string}",
+        "outputType": "any",
         "link": {
           "protocol": "openapi",
           "path": "/api",
@@ -890,6 +894,10 @@
       "confidence": "static",
       "file": "src/orders.ts",
       "line": 10,
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "any",
       "meta": {
         "via": "link-url",
         "targetService": "orders"
@@ -914,6 +922,10 @@
       "confidence": "static",
       "file": "src/orders.ts",
       "line": 8,
+      "params": [
+        "{sku:string}"
+      ],
+      "returns": "any",
       "meta": {
         "via": "link-url",
         "targetService": "orders"

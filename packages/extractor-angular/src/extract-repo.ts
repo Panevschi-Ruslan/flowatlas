@@ -35,6 +35,7 @@ import { buildAngularClassIndex } from './index-classes.js';
 import { callsPass } from './passes/calls.js';
 import { classesPass } from './passes/classes.js';
 import { graphqlPass } from './passes/graphql.js';
+import { proceduresPass } from './passes/procedures.js';
 import { httpPass } from './passes/http.js';
 import { markersPass } from './passes/markers.js';
 import { modulesPass } from './passes/modules.js';
@@ -139,6 +140,8 @@ export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   httpPass,
   // After the requests, so a request that sends an operation is one node (P232).
   graphqlPass,
+  // Requests for procedures, read by the reader the other halves share (P247).
+  proceduresPass,
   ssePass,
   socketsPass,
   markersPass,

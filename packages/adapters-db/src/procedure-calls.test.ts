@@ -56,3 +56,29 @@ describe("a server's oRPC and tRPC clients", () => {
     ]);
   });
 });
+
+/** A client built in a module's factory and injected by its token (P247). */
+describe('a client a NestJS module provides for a token', () => {
+  let graph: RepoGraph;
+  beforeAll(async () => {
+    graph = await extractRepo({
+      rootDir: resolve(import.meta.dirname, '../../../fixtures/rpc-contracts/worker'),
+      repo: 'worker',
+      registry: registerEntryAdapters(new AdapterRegistry()),
+      extraPasses: [procedureCallsPass],
+    });
+  });
+
+  it("is followed from @Inject(TOKEN) to the client the factory builds, and the link it is built with", () => {
+    const create = graph.nodes.find((node) => node.kind === 'rpc' && node.meta?.['procedure'] === 'invoices.create');
+    expect(create?.meta?.['link']).toEqual({ protocol: 'trpc', path: '/trpc', baseUrlEnv: 'BILLING_URL' });
+    expect(create?.meta?.['inputType']).toBe('{orderId:string}');
+    const voided = graph.nodes.find((node) => node.kind === 'rpc' && node.meta?.['procedure'] === 'invoices.void');
+    expect(voided?.meta?.['link']).toEqual({ protocol: 'trpc', path: '/trpc', baseUrlEnv: 'BILLING_URL' });
+  });
+
+  it('leaves no row saying a call through the token could not be followed', () => {
+    const at = graph.unresolved.filter((row) => row.file === 'src/billing.service.ts');
+    expect(at).toEqual([]);
+  });
+});

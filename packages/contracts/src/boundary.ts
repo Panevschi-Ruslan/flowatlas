@@ -56,6 +56,11 @@ export interface Exchange {
    * that could be its answer or a failure, so nothing is compared with it.
    */
   statusUnknown?: string;
+  /**
+   * The boundary is a request for a procedure (P247), so a missing type is
+   * one a client of a tree states in its own way, and the hint says that way.
+   */
+  procedure?: boolean;
 }
 
 /** References that name no shape, so there is nothing to compare against. */
@@ -156,6 +161,83 @@ const REQUEST_KIND = 'rpc';
 const asksForAnswer = (lookup: GraphLookup, emit: GraphEdge): boolean =>
   lookup.node(emit.from)?.kind === REQUEST_KIND;
 
+/** A request a client made for a procedure, by what its reader wrote on it (R95, P242). */
+const isProcedureRequest = (node: GraphNode | undefined): boolean =>
+  node !== undefined && node.kind === 'rpc' && (node.type === 'ui_api_call' || node.type === 'http_out');
+
+/** The signature a procedure's entry carries: the input a caller hands, and what it answers (P35, P247). */
+const signatureOf = (entry: GraphNode | undefined): { input?: string; returns?: string } => {
+  const signature = entry?.meta?.['signature'];
+  if (signature === null || typeof signature !== 'object') return {};
+  const { params, returns } = signature as { params?: unknown; returns?: unknown };
+  const [first] = Array.isArray(params) ? (params as Array<{ type?: unknown }>) : [];
+  return {
+    ...(typeof first?.type === 'string' ? { input: first.type } : {}),
+    ...(typeof returns === 'string' ? { returns } : {}),
+  };
+};
+
+/**
+ * The two directions of a request for a procedure (P247).
+ *
+ * Compared as a request and its answer are: what the caller hands - the type
+ * of the argument written at the call, its keys where a literal is written -
+ * against the input the procedure declares, the schema's input side; and what
+ * the procedure answers against what the call reads back, where the call
+ * returns it. Where an end says nothing to compare, the row says which end
+ * and why, rather than a verdict that compared nothing: a procedure that
+ * declares no input, an input schema whose type does not resolve here, an
+ * input the call hands to something else, an answer handed to a cache.
+ */
+const procedureExchanges = (
+  lookup: GraphLookup,
+  edge: GraphEdge,
+  both: (direction: Direction, sender: ContractParty, receiver: ContractParty) => Exchange,
+  caller: { service: string; symbol: string },
+  handler: { service: string; symbol: string },
+): Exchange[] => {
+  const asked = lookup.node(edge.from)?.meta ?? {};
+  const entry = lookup.node(edge.to);
+  const declared = signatureOf(entry);
+  const schema = entry?.meta?.['input'];
+  const written = asked['inputKeys'];
+  const keys = Array.isArray(written) && written.every((key) => typeof key === 'string') ? (written as string[]) : undefined;
+
+  const sender = {
+    ...party(lookup, caller.service, edge.params?.[0], caller.symbol),
+    ...(keys === undefined ? {} : { writes: keys, writesEvery: true }),
+  };
+  const receiver = party(lookup, handler.service, declared.input, handler.symbol);
+  const inputBlocked: Blocked | undefined =
+    typeof schema !== 'string' && declared.input === undefined
+      ? { reason: 'procedure-input-undeclared', subject: edge.to }
+      : !namesAShape(declared.input)
+        ? { reason: 'procedure-input-unread', subject: edge.to, ...(typeof schema === 'string' ? { detail: schema } : {}) }
+        : asked['inputLater'] === true
+          ? { reason: 'procedure-input-not-at-call', subject: caller.symbol, detail: 'later' }
+          : asked['inputNone'] === true
+            ? { reason: 'procedure-input-not-at-call', subject: caller.symbol, detail: 'none' }
+            : undefined;
+  const request: Exchange = {
+    ...both('request', sender, receiver),
+    procedure: true,
+    ...(inputBlocked === undefined ? {} : { blocked: inputBlocked }),
+  };
+
+  const answering = party(lookup, handler.service, declared.returns, handler.symbol);
+  const reading = party(lookup, caller.service, edge.returns, caller.symbol);
+  // No answer type on the request: the call hands the answer to a hook or a
+  // query's options, typed there by the binding's inference (P58).
+  const response: Exchange = {
+    ...both('response', answering, reading),
+    procedure: true,
+    ...(typeof asked['outputType'] === 'string'
+      ? {}
+      : { blocked: { reason: 'procedure-output-inferred' as const, subject: edge.to, detail: 'hook' } }),
+  };
+  return [request, response];
+};
+
 /**
  * Both halves of a request, whichever way the request was made.
  *
@@ -181,18 +263,19 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
     symbols: [caller, handler],
   });
 
-  // A procedure asked for by its path. Neither direction has two shapes to
-  // compare: the input is on the entry by name only, and the answer is typed on
-  // the client by inference from the server's tree. Said per direction, so the
-  // report names what is missing on each rather than putting the handler's
-  // parameters — a context and an envelope — against what the caller sends.
+  // A procedure asked for by its path (P247): the caller's input against the
+  // input the procedure declares, and what it answers against what the caller
+  // reads back, each where both ends say a type. Never the handler's own
+  // parameters, which are a context and an envelope rather than what the
+  // caller sends.
+  if (isProcedureRequest(lookup.node(edge.from))) {
+    return procedureExchanges(lookup, edge, both, { service: callerService, symbol: caller }, { service: handlerService, symbol: handler });
+  }
   // A route that answers for a procedure (P58) is the same boundary reached by
   // its address: its handler is handed the same envelope, and the route
-  // carries the procedure's input as the procedure does.
-  if (
-    typeof lookup.node(edge.from)?.meta?.['procedure'] === 'string' ||
-    typeof lookup.node(edge.to)?.meta?.['procedure'] === 'string'
-  ) {
+  // carries the procedure's input by name, assembled from the path, the query
+  // and the body, which a request's body alone is not compared with.
+  if (typeof lookup.node(edge.to)?.meta?.['procedure'] === 'string') {
     const input = lookup.node(edge.to)?.meta?.['input'];
     const callerParty = party(lookup, callerService, undefined, caller);
     const handlerParty = party(lookup, handlerService, undefined, handler);

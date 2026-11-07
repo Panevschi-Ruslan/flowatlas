@@ -281,6 +281,9 @@ importers:
       '@flowatlas/adapters-broker':
         specifier: workspace:*
         version: link:../adapters-broker
+      '@flowatlas/adapters-entry':
+        specifier: workspace:*
+        version: link:../adapters-entry
       '@flowatlas/core':
         specifier: workspace:*
         version: link:../core

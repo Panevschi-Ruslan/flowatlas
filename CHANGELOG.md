@@ -77,6 +77,32 @@ only one of them moved.
   no reader follows is an `invoker-not-read` note, as Terraform's is; a REST
   method's `ApiKeyRequired` and an HTTP route's `AuthorizationType` are guards;
   an API written as resources records the one stage it is deployed to.
+- **A procedure call's input and answer are compared with the procedure's
+  (P247).** A call through an oRPC or tRPC client, in a browser, an Angular
+  application or a server, records the type of the input it hands (the type
+  the client declares for the argument, or the argument's own where the client
+  is `any`) and, where the call returns the answer, the type it reads back;
+  the joined edge carries both as a request's carries its body. `contracts`
+  compares them with the procedure's input (the schema's input side) and its
+  output or resolver's return, by the rules and at the severities a request
+  body and a response are compared by. What cannot be compared is a row:
+  `procedure-input-undeclared`, `procedure-input-unread` (the schema's library
+  is not installed), `procedure-input-not-at-call` (an input handed later or not
+  written), `procedure-output-inferred` (an answer handed to a hook or a query's
+  options), `no-type-on-sender` / `no-type-on-receiver` for a client typed
+  `any`. oRPC's `mutationOptions(…)` is now read as options, its input handed
+  later. tRPC mounts say where they serve the tree - the path of the `use` call
+  `createExpressMiddleware` is handed to, `fetchRequestHandler`'s `endpoint`,
+  the standalone server's `basePath`, a Next.js handler's file - into
+  `meta.mounted` (protocol `trpc`), so a tRPC link sent elsewhere is
+  `procedure-link-unserved`; the mount description gains `prefixKey`,
+  `prefixDefault`, `handedTo` and `fileRoute`. A class member injected by a
+  token (`@Inject(TOKEN)`, Angular's `inject(TOKEN)`) is followed to the client
+  the repository's one `{ provide: TOKEN, useFactory | useValue }` builds, and
+  the `call-through-token` row at such a call goes. The Angular reader runs the
+  shared procedure reader. A server's request rooted at a setting nothing
+  places keeps the values it was found with, so `doctor`'s *Probably missing*
+  counts the hosts they name. New fixture `rpc-contracts`.
 - **A function run before every request carries its base into each one
   (P244).** An axios request interceptor (`api.interceptors.request.use`, on an
   instance or on `axios` itself) that writes `config.baseURL`, answers

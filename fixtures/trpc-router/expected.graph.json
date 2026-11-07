@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "trpc-router",
-  "generatedAt": "2026-11-06T18:10:55.484Z",
+  "generatedAt": "2026-11-07T17:47:20.385Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -70,6 +70,13 @@
         "served": [
           "src/pages/api/trpc/[trpc].ts"
         ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc",
+            "file": "src/pages/api/trpc/[trpc].ts"
+          }
+        ],
         "fails": [
           {
             "status": 400,
@@ -111,6 +118,13 @@
         "served": [
           "src/pages/api/trpc/[trpc].ts"
         ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc",
+            "file": "src/pages/api/trpc/[trpc].ts"
+          }
+        ],
         "fails": [
           {
             "status": 400,
@@ -144,6 +158,13 @@
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc",
+            "file": "src/pages/api/trpc/[trpc].ts"
+          }
         ]
       }
     },
@@ -331,6 +352,8 @@
         "inputKeys": [
           "customerId"
         ],
+        "inputType": "{customerId:string}",
+        "outputType": "any",
         "link": {
           "protocol": "trpc",
           "path": "/api/trpc"
@@ -354,6 +377,8 @@
           "quantity",
           "sku"
         ],
+        "inputType": "{sku:string;quantity:number}",
+        "outputType": "any",
         "link": {
           "protocol": "trpc",
           "path": "/api/trpc"

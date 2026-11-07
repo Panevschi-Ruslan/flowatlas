@@ -389,6 +389,7 @@ to look for.
 | [`orpc-next`](../fixtures/orpc-next) | an oRPC router mounted for RPC and OpenAPI, its REST routes, and a client joined through its link's URL |
 | [`orpc-contract`](../fixtures/orpc-contract) | a contract-first oRPC service, its routes and failures read off the contract |
 | [`rpc-server-to-server`](../fixtures/rpc-server-to-server) | a NestJS worker's oRPC and tRPC clients joined to the procedures of two other services by their links' settings and hosts |
+| [`rpc-contracts`](../fixtures/rpc-contracts) | each procedure call's input and answer compared with the procedure's, a tRPC link checked against its mount, a client injected by a token, and an Angular client |
 | [`next-caller-application`](../fixtures/next-caller-application) | one service holding three Next.js applications, and a request reaching its own application's route |
 | [`nest-two-applications`](../fixtures/nest-two-applications) | an API and a worker in one repository, each serving `GET /health` |
 | [`socket-namespaces`](../fixtures/socket-namespaces) | socket.io read from both ends, with the namespace opened by `io.of(…)` |

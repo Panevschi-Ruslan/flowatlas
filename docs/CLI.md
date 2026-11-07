@@ -1247,9 +1247,11 @@ read as "nothing broken" rather than "nothing looked at". The reasons:
 type named that is not in the registry), `type-kind-unsupported` (a type from a
 package that was not read), `ambiguous-handler` (two handlers declare the
 route), `channel-without-producer` and `channel-without-consumer`,
-`procedure-input-by-name` and `procedure-output-inferred` (see *What is not
-compared, and says so* under [Top level](#top-level)), and the
-delivered-message reasons in the table further down.
+`procedure-input-undeclared`, `procedure-input-unread`,
+`procedure-input-not-at-call`, `procedure-input-by-name` and
+`procedure-output-inferred` (see *What is not compared, and says so* under
+[Top level](#top-level)), and the delivered-message reasons in the table
+further down.
 
 **Traffic as a third side (P113).** Beside an observed file `observe --shapes`
 wrote, the report gains a `traffic` section: for each route traffic carried
@@ -4529,12 +4531,21 @@ With `observe --shapes` beside the graph, a finding may carry `seenIn` and `of`
 never fails a contract.
 
 **What is not compared, and says so.** A boundary nothing can compare is listed
-under `unchecked` with the reason, never counted as agreeing. A procedure is one:
-its input is recorded on the entry by the name it was written under, and a real
-input is nearly always a validation schema whose type is the library's inference,
-so the request half is unchecked as `procedure-input-by-name`, and the answer,
-which the client infers from the server's own tree, as
-`procedure-output-inferred`. A handler that takes
+under `unchecked` with the reason, never counted as agreeing. A request for a
+procedure is compared like any request (P247): what the call hands - the type
+the client declares for its argument, or the argument's own where the client is
+typed `any`, with the keys a literal writes - against the input the procedure
+declares (the schema's input side, through the validation library's inference),
+and what the procedure answers against what the call reads back, where the call
+returns it. An end with nothing to compare is a row: a procedure that declares
+no input (`procedure-input-undeclared`), an input schema whose type does not
+resolve here because its library is not installed (`procedure-input-unread`),
+an input handed later - `useMutation()`, `mutationOptions()` - or not written
+(`procedure-input-not-at-call`), an answer handed to a hook or a query's options
+(`procedure-output-inferred`), and a client typed `any` (`no-type-on-sender`,
+`no-type-on-receiver`, with a hint for a client of a tree). A REST caller of a
+procedure's own route keeps `procedure-input-by-name`: that route's input is
+assembled from its path, query and body. A handler that takes
 a `string` and parses it on the next line is another, `body-already-serialised`,
 because that is where the shape was lost rather than an end that disagrees about
 it.
@@ -6637,14 +6648,32 @@ of the same family.
   procedure is, and the catch-all route of the file that mounts the tree when a
   request crosses it.
 
-`contracts` treats a REST caller of a procedure's route as it treats a caller of
-the procedure: both directions unchecked. The answer's row says where the
-caller's type for it comes from (P252): a procedure client's is inferred from
-the server's own tree (`procedure-output-inferred`, nothing to compare); a
-plain request that types the answer itself (`fetch<Order>`, a cast of the
-parsed body) keeps that reason and names its own type, which nothing ties to
+`contracts` compares a caller of a procedure with it in both directions (P247,
+`fixtures/rpc-contracts`): the input the call hands against the procedure's
+`.input(…)`, and, where the call returns the answer - `client.orders.get(input)`,
+`.query(input)`, `.mutate(input)`, `call(procedure, input)` - what it reads back
+against the procedure's `.output(…)` or its resolver's return. A worker whose
+hand-copied type of the tree says `qty` where the procedure takes `quantity` is
+a `missing_required` error and an `extra_field` note, as a request body would
+be. An answer handed to a hook or a query's options is typed where it is read,
+so nothing at the call states it (`procedure-output-inferred`).
+
+A REST caller of a procedure's route keeps both directions unchecked, and the
+answer's row says where the caller's type for it comes from (P252): a plain
+request that types the answer itself (`fetch<Order>`, a cast of the parsed
+body) is `procedure-output-inferred` naming its own type, which nothing ties to
 the tree; one that types nothing is `no-type-on-receiver`, as any request that
 states no type for its answer is.
+
+**Where a tRPC tree is served** (P247) is read from its mount, so a tRPC link's
+path is checked against it as an oRPC one is (`procedure-link-unserved`):
+`app.use('/trpc', createExpressMiddleware({ router }))` (the path of the `use`
+call it is handed to, in place or by its name), `fetchRequestHandler({ endpoint
+})`, `createHTTPServer({ router, basePath })` and `createHTTPHandler` (`/`
+without one), and a Next.js handler by the file it is in, its last parameter
+taken off (`pages/api/trpc/[trpc].ts` and `app/api/trpc/[trpc]/route.ts` are
+`/api/trpc`). Every tRPC procedure records it in `meta.mounted` with protocol
+`trpc`; an address that cannot be read is `procedure-prefix-unread` (info).
 
 **A server's client** of another service's tree is read the same way, by the
 same reader (`fixtures/rpc-server-to-server`). A NestJS, Express, Hono or plain
@@ -6659,7 +6688,14 @@ link's address names:
 
 - **Where the client is.** A module-level name, a hook's result, or the class
   member a provider keeps it in, set where the member is declared or in the
-  constructor (`this.orders.orders.place(…)`).
+  constructor (`this.orders.orders.place(…)`). A member injected by a token -
+  `@Inject(BILLING) private readonly billing`, or Angular's `inject(BILLING)` -
+  holds what the repository provides for the token, `{ provide: BILLING,
+  useFactory }` (the client the factory returns, written in place, named, or one
+  call of the repository's own away) or `{ provide: BILLING, useValue }` (P247).
+  One provider of the token is followed; none or several is nothing, and the
+  injection reader's rows say why. The `call-through-token` row at a call read
+  this way goes.
 - **The address.** Read by the server's own address reading, the one every
   request between services gets: `process.env.ORDERS_URL`, a configuration
   service's `get('ORDERS_URL')`, a constant. A setting goes to the service that
@@ -6688,8 +6724,14 @@ link's address names:
   call is two requests. A receiver the calls reader could not type because the
   client is `any` is no longer a `call-dynamic-receiver` row once the call is
   read as a request.
-- Comparing what a caller sends with a procedure's input is still not done, for
-  either library (both directions are listed unchecked).
+- **A setting nothing places** is evidence of a repository that is not here,
+  as for any request rooted at it: `doctor`'s *Probably missing* counts the
+  link's setting and the hosts its values name (P247).
+
+**An Angular application's client** is read by the same reader too (P247): a
+tRPC or oRPC client made at the top of a module, or provided for a token and
+injected, called from a component's or a service's method, is a `ui_api_call`
+of kind `rpc`, its link read by the Angular reader's address reading.
 
 ### Workflows written as state machines
 

@@ -338,5 +338,56 @@ describe("a server's request for another service's procedure (P242)", () => {
     expect(report.unresolved).toMatchObject([{ reason: 'procedure-not-found', message: 'no procedure invoices.create in worker or orders' }]);
     expect(report.httpOut).toMatchObject({ noRoute: 1 });
   });
-});
 
+  it('carries what the caller hands and reads back on the edge, as a request carries its body (P247)', () => {
+    const typed: GraphNode = {
+      ...sent('orders.place', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ORDERS_URL' }),
+      meta: {
+        procedure: 'orders.place',
+        call: 'handler',
+        operation: 'call',
+        client: 'orpc-client',
+        link: { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ORDERS_URL' },
+        inputType: 'type:worker#NewOrder',
+        outputType: 'type:worker#PlacedOrder',
+      },
+    };
+    const { project } = linked([typed]);
+    expect(project.edges.filter((edge) => edge.type === 'hits')).toMatchObject([
+      { params: ['type:worker#NewOrder'], returns: 'type:worker#PlacedOrder' },
+    ]);
+  });
+
+  it("checks a tRPC link's path against where the tree is mounted (P247)", () => {
+    const { report } = linkGraphs(
+      [
+        graph('ledger', [
+          {
+            ...procedure('ledger', 'entries.record', 'mutation'),
+            meta: { key: 'entries.record', call: 'mutation', mounted: [{ protocol: 'trpc', prefix: '/api', file: 'src/server.ts' }] },
+          },
+        ]),
+        graph('worker', [sent('entries.record', { protocol: 'trpc', path: '/trpc', baseUrlEnv: 'LEDGER_URL' }, 'mutation')]),
+      ],
+      parseConfig({
+        services: [
+          { name: 'ledger', repo: './ledger', type: 'express', baseUrlEnv: ['LEDGER_URL'] },
+          { name: 'worker', repo: './worker', type: 'nestjs' },
+        ],
+      } as Parameters<typeof parseConfig>[0]),
+      { builtAt: FIXED },
+    );
+    expect(report.unresolved).toMatchObject([
+      { reason: 'procedure-link-unserved', message: 'entries.record is sent to /trpc and served over trpc at /api' },
+    ]);
+  });
+
+  it('keeps the values a setting nothing places was given, for the survey of missing repositories (P247)', () => {
+    const settings = {
+      worker: { values: { ARCHIVE_URL: [{ value: 'http://archive.shop.internal:7000', file: '.env.example' }] }, namedOnly: {}, hosts: [] },
+    };
+    const { project, report } = linked([sent('orders.store', { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ARCHIVE_URL' })], settings);
+    expect(report.unresolved.map((row) => row.reason)).toEqual(['unknown-base-url-env']);
+    expect(project.nodes.find((node) => node.type === 'http_out')?.meta?.['baseUrlValues']).toEqual(['http://archive.shop.internal:7000']);
+  });
+});

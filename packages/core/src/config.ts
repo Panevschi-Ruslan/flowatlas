@@ -860,6 +860,32 @@ export const entryProcedureMountSchema = z.strictObject({
       arg: z.number().int().min(0).default(1),
     })
     .optional(),
+  /**
+   * The key of the mount call's own options that names the address it
+   * answers under (P247): `endpoint` in `fetchRequestHandler({ endpoint })`,
+   * `basePath` in `createHTTPServer({ basePath })`.
+   */
+  prefixKey: z.string().min(1).optional(),
+  /** The address where the options name none under `prefixKey`; absent, another way is tried (P247). */
+  prefixDefault: z.string().optional(),
+  /**
+   * The address is the path argument of the call the mount is handed to,
+   * written in place or by the name it was assigned (P247): `use` and `0` in
+   * `app.use('/trpc', createExpressMiddleware(…))`. Handed as that argument
+   * itself, it answers at the root.
+   */
+  handedTo: z
+    .strictObject({
+      method: z.string().min(1),
+      pathAt: z.number().int().min(0).default(0),
+    })
+    .optional(),
+  /**
+   * The address is the file's own, as the framework's file-system router
+   * serves it, with its last parameter segment taken off (P247): a mount in
+   * `pages/api/trpc/[trpc].ts` answers under `/api/trpc`.
+   */
+  fileRoute: z.boolean().default(false),
   /** What the mount's protocol is called in `meta.mounted`, so a caller's link can be checked against it. */
   protocol: z.string().min(1).optional(),
 });

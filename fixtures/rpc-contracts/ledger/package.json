@@ -1,0 +1,9 @@
+{
+  "name": "rpc-contracts-ledger",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@trpc/server": "^11.0.0",
+    "zod": "^3.24.0"
+  }
+}

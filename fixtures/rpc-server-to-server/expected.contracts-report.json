@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-06T18:10:18.832Z",
+  "generatedAt": "2026-11-07T17:39:00.786Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -14,9 +14,9 @@
       },
       "edgeKey": "http_out:worker#src/billing.client.ts:28:12|hits|entry:billing:rpc:invoices.create",
       "direction": "request",
-      "reason": "procedure-input-by-name",
-      "message": "entry:billing:rpc:invoices.create declares no input the procedure reader could name, so what the caller sends is not compared with anything",
-      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+      "reason": "procedure-input-undeclared",
+      "message": "entry:billing:rpc:invoices.create declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
     },
     {
       "edge": {
@@ -26,9 +26,9 @@
       },
       "edgeKey": "http_out:worker#src/billing.client.ts:28:12|hits|entry:billing:rpc:invoices.create",
       "direction": "response",
-      "reason": "procedure-output-inferred",
-      "message": "what entry:billing:rpc:invoices.create answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/billing.client.ts:BillingClient.invoice reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
     },
     {
       "edge": {
@@ -38,9 +38,9 @@
       },
       "edgeKey": "http_out:worker#src/billing.client.ts:32:12|hits|entry:billing:rpc:invoices.byOrder",
       "direction": "request",
-      "reason": "procedure-input-by-name",
-      "message": "entry:billing:rpc:invoices.byOrder declares no input the procedure reader could name, so what the caller sends is not compared with anything",
-      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+      "reason": "procedure-input-undeclared",
+      "message": "entry:billing:rpc:invoices.byOrder declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
     },
     {
       "edge": {
@@ -50,9 +50,9 @@
       },
       "edgeKey": "http_out:worker#src/billing.client.ts:32:12|hits|entry:billing:rpc:invoices.byOrder",
       "direction": "response",
-      "reason": "procedure-output-inferred",
-      "message": "what entry:billing:rpc:invoices.byOrder answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/billing.client.ts:BillingClient.invoicesOf reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
     },
     {
       "edge": {
@@ -62,9 +62,9 @@
       },
       "edgeKey": "http_out:worker#src/orders.client.ts:15:12|hits|entry:orders:rpc:orders.place",
       "direction": "request",
-      "reason": "procedure-input-by-name",
-      "message": "entry:orders:rpc:orders.place declares no input the procedure reader could name, so what the caller sends is not compared with anything",
-      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+      "reason": "procedure-input-undeclared",
+      "message": "entry:orders:rpc:orders.place declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
     },
     {
       "edge": {
@@ -74,9 +74,9 @@
       },
       "edgeKey": "http_out:worker#src/orders.client.ts:15:12|hits|entry:orders:rpc:orders.place",
       "direction": "response",
-      "reason": "procedure-output-inferred",
-      "message": "what entry:orders:rpc:orders.place answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/orders.client.ts:OrdersClient.place reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
     },
     {
       "edge": {
@@ -86,9 +86,9 @@
       },
       "edgeKey": "http_out:worker#src/orders.client.ts:19:12|hits|entry:orders:rpc:orders.get",
       "direction": "request",
-      "reason": "procedure-input-by-name",
-      "message": "entry:orders:rpc:orders.get declares no input the procedure reader could name, so what the caller sends is not compared with anything",
-      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+      "reason": "procedure-input-undeclared",
+      "message": "entry:orders:rpc:orders.get declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
     },
     {
       "edge": {
@@ -98,9 +98,9 @@
       },
       "edgeKey": "http_out:worker#src/orders.client.ts:19:12|hits|entry:orders:rpc:orders.get",
       "direction": "response",
-      "reason": "procedure-output-inferred",
-      "message": "what entry:orders:rpc:orders.get answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/orders.client.ts:OrdersClient.find reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
     },
     {
       "edge": {
@@ -110,9 +110,9 @@
       },
       "edgeKey": "http_out:worker#src/refunds.ts:12:53|hits|entry:billing:rpc:invoices.refund",
       "direction": "request",
-      "reason": "procedure-input-by-name",
-      "message": "entry:billing:rpc:invoices.refund declares no input the procedure reader could name, so what the caller sends is not compared with anything",
-      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
+      "reason": "procedure-input-undeclared",
+      "message": "entry:billing:rpc:invoices.refund declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
     },
     {
       "edge": {
@@ -122,9 +122,9 @@
       },
       "edgeKey": "http_out:worker#src/refunds.ts:12:53|hits|entry:billing:rpc:invoices.refund",
       "direction": "response",
-      "reason": "procedure-output-inferred",
-      "message": "what entry:billing:rpc:invoices.refund answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/refunds.ts:refundInvoice reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
     }
   ],
   "summary": {

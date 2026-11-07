@@ -848,7 +848,12 @@ prove, and the path is given so you can run it.
   provider's, a worker's - is read the same way: each call is a request
   between services, joined to the procedure of the service its link's setting
   or host names, and tRPC's `links: [...]` chains are read in a browser too
-  (`fixtures/rpc-server-to-server`).
+  (`fixtures/rpc-server-to-server`). `contracts` compares what each call hands
+  and reads back with the procedure's declared input and answer, as it compares
+  a request body; a tRPC link's path is checked against where the tree is
+  mounted; a client built in a DI factory and injected by its token is followed
+  to the client; and an Angular application's clients are read by the same
+  reader (`fixtures/rpc-contracts`).
 - **Applications.** Two applications in one service — a NestJS API and a worker,
   or a second Next.js application under `examples/` — serving the same path are
   two entries, and a request written inside one reaches its own

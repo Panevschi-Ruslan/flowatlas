@@ -46,6 +46,14 @@ export interface ProcedureMount {
   readonly routes: boolean;
   /** Where the address it answers under is written: an option of a method called on what it made (P58). */
   readonly prefixFrom?: { readonly method: string; readonly key: string; readonly arg: number };
+  /** The key of its own options naming the address it answers under (P247). */
+  readonly prefixKey?: string;
+  /** The address where its options name none under `prefixKey` (P247). */
+  readonly prefixDefault?: string;
+  /** The address is the path argument of the call it is handed to (P247). */
+  readonly handedTo?: { readonly method: string; readonly pathAt: number };
+  /** The address is the file's own route, its last parameter taken off (P247). */
+  readonly fileRoute: boolean;
   /** What its protocol is called in `meta.mounted` (P58). */
   readonly protocol?: string;
 }
@@ -98,6 +106,10 @@ const mountOf = (mount: EntryProcedureConfig['mounts'][number]): ProcedureMount 
   constructed: mount.constructed,
   routes: mount.routes,
   ...(mount.prefixFrom === undefined ? {} : { prefixFrom: { ...mount.prefixFrom } }),
+  ...(mount.prefixKey === undefined ? {} : { prefixKey: mount.prefixKey }),
+  ...(mount.prefixDefault === undefined ? {} : { prefixDefault: mount.prefixDefault }),
+  ...(mount.handedTo === undefined ? {} : { handedTo: { ...mount.handedTo } }),
+  fileRoute: mount.fileRoute,
   ...(mount.protocol === undefined ? {} : { protocol: mount.protocol }),
 });
 
@@ -198,15 +210,21 @@ export const TRPC: ProcedureDialect = described({
   // checker has no tRPC to carry the type across. A scheduling app's three read-gate
   // files that query through `ctx.prisma` were unread for exactly that (R157).
   context: { method: 'context', key: 'ctx' },
+  //
+  // Each says where it answers (P247), so a client's link can be checked
+  // against it as an oRPC one is: a Next.js handler by the file it is in, the
+  // fetch adapter by its `endpoint` (or its file), the Express middleware by
+  // the `use` call it is handed to, the standalone server by its `basePath`.
   mounts: [
     // The Next.js adapter, and the one a scheduling app wraps under the same name. The
     // library's own spelling hands it an options object; a project's wrapper
     // usually takes the tree alone, so both are accepted on one row.
-    { call: 'createNextApiHandler', treeKey: 'router' },
-    { call: 'fetchRequestHandler', treeKey: 'router' },
-    { call: 'createExpressMiddleware', treeKey: 'router' },
-    { call: 'createHTTPHandler', treeKey: 'router' },
-    { call: 'createNextRouteHandler', treeKey: 'router' },
+    { call: 'createNextApiHandler', treeKey: 'router', protocol: 'trpc', fileRoute: true },
+    { call: 'fetchRequestHandler', treeKey: 'router', protocol: 'trpc', prefixKey: 'endpoint', fileRoute: true },
+    { call: 'createExpressMiddleware', treeKey: 'router', protocol: 'trpc', handedTo: { method: 'use', pathAt: 0 } },
+    { call: 'createHTTPHandler', treeKey: 'router', protocol: 'trpc', prefixKey: 'basePath', prefixDefault: '/' },
+    { call: 'createHTTPServer', treeKey: 'router', protocol: 'trpc', prefixKey: 'basePath', prefixDefault: '/' },
+    { call: 'createNextRouteHandler', treeKey: 'router', protocol: 'trpc', fileRoute: true },
   ],
 });
 

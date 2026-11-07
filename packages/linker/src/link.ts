@@ -273,6 +273,10 @@ const buildProcedureIndex = (
  * configuration named, or the one the link's address names. Nothing about it
  * was guessed - except where that address was placed by a value the
  * deployment does not give, which is as sure as the value (P77, P242).
+ *
+ * It carries what the caller hands and reads back where the caller typed
+ * them (P247), as a request's edge carries its body and response, so the
+ * contract check compares a procedure's two ends as it compares a route's.
  */
 const procedureEdge = (
   call: GraphNode,
@@ -284,6 +288,8 @@ const procedureEdge = (
   confidence: boundedByRoute(outcome.confidence ?? 'static', outcome.entry),
   ...(call.file === undefined ? {} : { file: call.file }),
   ...(call.line === undefined ? {} : { line: call.line }),
+  ...(typeof call.meta?.['inputType'] === 'string' ? { params: [call.meta['inputType'] as string] } : {}),
+  ...(typeof call.meta?.['outputType'] === 'string' ? { returns: call.meta['outputType'] as string } : {}),
   meta: {
     via: outcome.via,
     targetService: outcome.targetService,
@@ -331,7 +337,14 @@ const procedureAddressLookup = (
       return { kind: 'external', ...(outcome.host === undefined ? {} : { host: outcome.host }), ...(baseUrl === undefined ? {} : { baseUrl }) };
     }
     const finding = findingFor(outcome);
-    return finding === undefined ? undefined : { kind: 'unplaced', finding };
+    // The values a setting nobody claims was found with, where they named no
+    // service: what they name is evidence of the repository that is not here
+    // (P122, P247), as for any request rooted at it.
+    const values =
+      outcome.kind === 'unknownEnv' && outcome.values !== undefined
+        ? [...new Set(outcome.values.values.map((found) => found.value))].sort()
+        : [];
+    return finding === undefined ? undefined : { kind: 'unplaced', finding, ...(values.length === 0 ? {} : { values }) };
   }
   if (typeof host === 'string') {
     const found = serviceAtHost(host);
@@ -901,6 +914,7 @@ export const linkGraphs = (
       } else {
         httpOut[PROCEDURE_COUNTED[outcome.kind]] += 1;
       }
+      if (outcome.kind === 'unplaced' && outcome.values !== undefined) call.meta = { ...call.meta, baseUrlValues: outcome.values };
       if (outcome.kind === 'external' && outcome.host !== undefined) {
         // A third party, drawn as one written in the call is, and as sure as
         // the value it was found from where a value found it.

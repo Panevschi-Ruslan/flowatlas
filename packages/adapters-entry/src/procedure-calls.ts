@@ -6,11 +6,16 @@ import {
   siteOf,
   startLineOf,
   writtenKeysOf,
+  formatTypeRef,
+  parseTypeRef,
   type GraphBuilder,
   type PackageJson,
+  type TypeCollector,
+  type TypeRefAst,
+  type TypeRefField,
   type Unresolved,
 } from '@flowatlas/core';
-import type { ArrayLiteralExpression, CallExpression, Node as TsNode, SourceFile } from 'ts-morph';
+import type { ArrayLiteralExpression, CallExpression, Node as TsNode, SourceFile, Type } from 'ts-morph';
 import { Node } from 'ts-morph';
 import {
   PROCEDURE_CLIENTS,
@@ -69,6 +74,12 @@ export interface ProcedureCallReading {
   fileOf(node: TsNode): string;
   /** A link's URL, read as this half reads any address. */
   addressOf(url: TsNode): LinkAddress;
+  /**
+   * The half's type collector, which types what a call hands a procedure and
+   * what it reads back (P247), so `contracts` can compare both with the
+   * procedure's. Without one nothing is typed.
+   */
+  readonly types?: Pick<TypeCollector, 'collectType' | 'unwrapAsync'>;
   report(row: Unresolved): void;
   /** The application a file is part of, where the service's applications are directories. */
   applicationOf?(file: string): string | undefined;
@@ -127,19 +138,64 @@ const initializerOf = (identifier: TsNode): TsNode | undefined => {
   return undefined;
 };
 
+/** Whether a name is imported from one of these packages, or from a module below one. */
+const importedFrom = (identifier: TsNode, packages: readonly string[]): boolean => {
+  const declaration = identifier.getSymbol()?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isImportSpecifier(declaration)) return false;
+  const module = declaration.getImportDeclaration().getModuleSpecifierValue();
+  return packages.some((name) => module === name || module.startsWith(`${name}/`));
+};
+
+/** The containers whose `@Inject(TOKEN)` hands a parameter what is provided for a token (P247). */
+const INJECTING = ['@nestjs/common', '@angular/core'] as const;
+
+/** The value a repository provides for an injection token, or nothing (P247). */
+export type ProvidedValue = (token: TsNode) => TsNode | undefined;
+
+/** The token a field initialised `inject(BILLING)` is handed by (P247). */
+const injectedToken = (value: TsNode | undefined): TsNode | undefined => {
+  if (value === undefined || !Node.isCallExpression(value)) return undefined;
+  const callee = unwrap(value.getExpression());
+  if (!Node.isIdentifier(callee) || callee.getText() !== 'inject' || !importedFrom(callee, ['@angular/core'])) return undefined;
+  return value.getArguments()[0];
+};
+
+/** The token a constructor parameter property is decorated with, `@Inject(BILLING)` (P247). */
+const tokenOfParameter = (owner: TsNode, name: string): TsNode | undefined => {
+  if (!Node.isClassDeclaration(owner) && !Node.isClassExpression(owner)) return undefined;
+  for (const constructor of owner.getConstructors()) {
+    for (const parameter of constructor.getParameters()) {
+      if (parameter.getName() !== name || !parameter.isParameterProperty()) continue;
+      for (const decorator of parameter.getDecorators()) {
+        const called = decorator.getCallExpression();
+        const callee = called === undefined ? undefined : unwrap(called.getExpression());
+        if (callee === undefined || !Node.isIdentifier(callee) || callee.getText() !== 'Inject' || !importedFrom(callee, INJECTING)) continue;
+        return called?.getArguments()[0];
+      }
+    }
+  }
+  return undefined;
+};
+
 /**
  * The value a class's own member holds, `this.orders` (P242): the member's
  * initializer, or what the constructor assigns it. A service keeps its client
- * there far more often than in a module-level name.
+ * there far more often than in a module-level name. A member injected by a
+ * token holds what the repository provides for the token (P247): the client
+ * a module's `useFactory` builds, which is how a NestJS service is most often
+ * handed one.
  */
-const memberValueOf = (access: TsNode): TsNode | undefined => {
+const memberValueOf = (access: TsNode, provided?: ProvidedValue): TsNode | undefined => {
   if (!Node.isPropertyAccessExpression(access) || !Node.isThisExpression(unwrap(access.getExpression()))) return undefined;
   const name = access.getName();
   const owner = access.getFirstAncestor((node) => Node.isClassDeclaration(node) || Node.isClassExpression(node));
   if (owner === undefined || !(Node.isClassDeclaration(owner) || Node.isClassExpression(owner))) return undefined;
   const property = owner.getProperty(name);
   const initializer = property?.getInitializer();
-  if (initializer !== undefined) return unwrap(initializer);
+  const written = initializer === undefined ? undefined : unwrap(initializer);
+  const token = injectedToken(written) ?? (written === undefined ? tokenOfParameter(owner, name) : undefined);
+  if (token !== undefined) return provided?.(token);
+  if (written !== undefined) return written;
   for (const constructor of owner.getConstructors()) {
     let found: TsNode | undefined;
     constructor.getBody()?.forEachDescendant((node, traversal) => {
@@ -165,9 +221,9 @@ const propertyValue = (property: TsNode): TsNode | undefined =>
       : undefined;
 
 /** What a name or a class member holds, or the expression itself. */
-const valueOf = (expression: TsNode): TsNode => {
+const valueOf = (expression: TsNode, provided?: ProvidedValue): TsNode => {
   const at = unwrap(expression);
-  return (Node.isIdentifier(at) ? initializerOf(at) : memberValueOf(at)) ?? at;
+  return (Node.isIdentifier(at) ? initializerOf(at) : memberValueOf(at, provided)) ?? at;
 };
 
 /**
@@ -182,15 +238,108 @@ const valueOf = (expression: TsNode): TsNode => {
  * noise, and the chains that are requests are nearly always spelled on a
  * module-level proxy, a hook's result or a service's own member.
  */
-const factoryOf = (expression: TsNode, factories: readonly string[], depth = 0): CallExpression | undefined => {
+const factoryOf = (
+  expression: TsNode,
+  factories: readonly string[],
+  provided?: ProvidedValue,
+  depth = 0,
+): CallExpression | undefined => {
   const at = unwrap(expression);
   if (Node.isCallExpression(at)) {
     const name = calleeName(at);
     return name !== undefined && factories.includes(name) ? at : undefined;
   }
   if (depth >= MAX_ALIASES) return undefined;
-  const assigned = Node.isIdentifier(at) ? initializerOf(at) : memberValueOf(at);
-  return assigned === undefined ? undefined : factoryOf(assigned, factories, depth + 1);
+  const assigned = Node.isIdentifier(at) ? initializerOf(at) : memberValueOf(at, provided);
+  return assigned === undefined ? undefined : factoryOf(assigned, factories, provided, depth + 1);
+};
+
+/** The one expression a function returns: an arrow's body, or its only `return`. */
+const returnedBy = (fn: TsNode | undefined): TsNode | undefined => {
+  if (fn === undefined) return undefined;
+  const at = Node.isIdentifier(fn)
+    ? (initializerOf(fn) ?? (fn.getSymbol()?.getAliasedSymbol() ?? fn.getSymbol())?.getDeclarations().find((declaration) => Node.isFunctionDeclaration(declaration)))
+    : unwrap(fn);
+  if (at === undefined) return undefined;
+  if (Node.isArrowFunction(at)) {
+    const body = at.getBody();
+    if (!Node.isBlock(body)) return unwrap(body);
+  }
+  if (!Node.isArrowFunction(at) && !Node.isFunctionExpression(at) && !Node.isFunctionDeclaration(at) && !Node.isMethodDeclaration(at)) {
+    return undefined;
+  }
+  const body = at.getBody();
+  if (body === undefined || !Node.isBlock(body)) return undefined;
+  const returns = body.getStatements().filter((statement) => Node.isReturnStatement(statement));
+  const [only] = returns;
+  const value = returns.length === 1 && only !== undefined && Node.isReturnStatement(only) ? only.getExpression() : undefined;
+  return value === undefined ? undefined : unwrap(value);
+};
+
+/**
+ * What a call to one of the repository's own functions returns, one step
+ * (P247): a factory written `useFactory() { return build(); }`. A call to a
+ * function with no body here - a library's - is the value itself.
+ */
+const madeBy = (value: TsNode): TsNode => {
+  if (!Node.isCallExpression(value)) return value;
+  const callee = unwrap(value.getExpression());
+  return (Node.isIdentifier(callee) ? returnedBy(callee) : undefined) ?? value;
+};
+
+/** Whether two tokens are the same: one symbol, or one string written twice (P247). */
+const sameToken = (a: TsNode, b: TsNode): boolean => {
+  const left = unwrap(a);
+  const right = unwrap(b);
+  const text = (node: TsNode): string | undefined =>
+    Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node) ? node.getLiteralText() : undefined;
+  if (text(left) !== undefined || text(right) !== undefined) return text(left) === text(right);
+  const symbolOf = (node: TsNode) => {
+    const symbol = node.getSymbol();
+    return symbol?.getAliasedSymbol() ?? symbol;
+  };
+  const one = symbolOf(left);
+  return one !== undefined ? one === symbolOf(right) : left.getText() === right.getText();
+};
+
+/**
+ * What the repository provides for each injection token (P247), as both
+ * containers write it: `{ provide: TOKEN, useFactory }` - the expression the
+ * factory returns - or `{ provide: TOKEN, useValue }`. Read once, over the
+ * repository's own sources, when a member injected by a token is first asked
+ * about. One provider of a token is its value; none or several is nothing:
+ * which one a container hands is its business at run time, and the injection
+ * reader already says a token is ambiguous or unknown.
+ */
+const providedValues = (sources: () => readonly SourceFile[]): ProvidedValue => {
+  let providers: Array<{ readonly token: TsNode; readonly value: TsNode }> | undefined;
+  const all = (): ReadonlyArray<{ readonly token: TsNode; readonly value: TsNode }> => {
+    if (providers !== undefined) return providers;
+    const found: Array<{ readonly token: TsNode; readonly value: TsNode }> = [];
+    for (const source of sources()) {
+      source.forEachDescendant((node) => {
+        if (!Node.isObjectLiteralExpression(node)) return;
+        const provide = node.getProperty('provide');
+        const token = provide === undefined ? undefined : propertyValue(provide);
+        if (token === undefined) return;
+        const factory = node.getProperty('useFactory');
+        const given = node.getProperty('useValue');
+        const value =
+          factory !== undefined
+            ? returnedBy(Node.isMethodDeclaration(factory) ? factory : propertyValue(factory))
+            : given === undefined
+              ? undefined
+              : propertyValue(given);
+        if (value !== undefined) found.push({ token, value: madeBy(unwrap(value)) });
+      });
+    }
+    providers = found;
+    return found;
+  };
+  return (token) => {
+    const values = [...new Set(all().filter((provider) => sameToken(provider.token, token)).map((provider) => provider.value))];
+    return values.length === 1 ? values[0] : undefined;
+  };
 };
 
 /** The names between a proxy and the method that ends the chain. */
@@ -284,7 +433,7 @@ const together = (readings: readonly LinkReading[], protocol: string, why: strin
  * several (P242). Nothing where no link the description names is found, which
  * says nothing about the address rather than something wrong.
  */
-const linkReader = (client: ProcedureClient, reading: ProcedureCallReading) => {
+const linkReader = (client: ProcedureClient, reading: ProcedureCallReading, provided: ProvidedValue) => {
   const links = client.links ?? [];
 
   /** The URL a link's options carry, or why it cannot be read as an address. */
@@ -293,7 +442,7 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading) => {
       return { kind: 'dynamic', protocol: link.protocol, why: 'the link is not built here' };
     }
     const options = made.getArguments()[link.optionsAt];
-    const written = options === undefined ? undefined : valueOf(options);
+    const written = options === undefined ? undefined : valueOf(options, provided);
     if (written === undefined || !Node.isObjectLiteralExpression(written)) {
       return { kind: 'dynamic', protocol: link.protocol, why: 'its options are not written where it is built' };
     }
@@ -315,7 +464,7 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading) => {
     if (link.branches === undefined) return urlOf(made, link);
     if (!Node.isCallExpression(made) && !Node.isNewExpression(made)) return undefined;
     const options = made.getArguments()[link.optionsAt];
-    const written = options === undefined ? undefined : valueOf(options);
+    const written = options === undefined ? undefined : valueOf(options, provided);
     if (written === undefined || !Node.isObjectLiteralExpression(written)) {
       return { kind: 'dynamic', protocol: link.protocol, why: `the links ${link.name} chooses between are not written where it is built` };
     }
@@ -337,7 +486,7 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading) => {
     if (last === undefined) return undefined;
     const protocol = links[0]?.protocol ?? client.name;
     if (Node.isSpreadElement(last)) return { kind: 'dynamic', protocol, why: 'its last link is spread from another list' };
-    const made = valueOf(last);
+    const made = valueOf(last, provided);
     const link = linkMade(made, links);
     if (link === undefined) {
       return { kind: 'dynamic', protocol, why: `its last link, ${unwrap(last).getText().slice(0, 40)}, is not one this reads` };
@@ -348,7 +497,7 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading) => {
   /** What a value handed to a factory or a link says about where requests go. */
   const readSending = (handed: TsNode, depth: number): LinkReading | undefined => {
     if (depth >= MAX_LINK_DEPTH) return undefined;
-    const at = valueOf(handed);
+    const at = valueOf(handed, provided);
     if (Node.isArrayLiteralExpression(at)) return readChain(at, depth);
     const link = linkMade(at, links);
     if (link !== undefined) return readLink(at, link, depth);
@@ -370,7 +519,7 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading) => {
     for (const argument of factory.getArguments()) {
       const found = readSending(argument, 0);
       if (found !== undefined) return found;
-      const inner = factoryOf(argument, [...client.proxies, ...(client.untyped?.proxies ?? [])]);
+      const inner = factoryOf(argument, [...client.proxies, ...(client.untyped?.proxies ?? [])], provided);
       if (inner !== undefined) {
         const through = linkOf(inner, depth + 1);
         if (through !== undefined) return through;
@@ -464,12 +613,75 @@ const declaredAt = (root: TsNode, names: readonly string[], reading: ProcedureCa
   return `${reading.fileOf(at)}:${startLineOf(at)}`;
 };
 
-/** Whether a name is imported from one of these packages, or from a module below one. */
-const importedFrom = (identifier: TsNode, packages: readonly string[]): boolean => {
-  const declaration = identifier.getSymbol()?.getDeclarations()[0];
-  if (declaration === undefined || !Node.isImportSpecifier(declaration)) return false;
-  const module = declaration.getImportDeclaration().getModuleSpecifierValue();
-  return packages.some((name) => module === name || module.startsWith(`${name}/`));
+/**
+ * The type of what a call hands a procedure (P247): the type the client
+ * declares for the argument, where it declares one - a client typed from the
+ * tree it calls, or from a copy of it - and otherwise the argument's own. The
+ * declared type is the better answer for what each field is (an empty list
+ * written in place is `never[]` on its own); a client typed `any` declares
+ * nothing, and what is written is all there is. The keys a literal writes are
+ * recorded beside it either way.
+ */
+const declaredFor = (input: TsNode): Type | undefined => {
+  const declared = Node.isExpression(input) ? input.getContextualType() : undefined;
+  return declared === undefined || declared.isAny() || declared.isUnknown() || declared.isTypeParameter() ? undefined : declared;
+};
+
+/**
+ * A type's reference, where it names something (P247). A type the checker
+ * could not resolve - a client whose package is not installed - is `any`
+ * here and says so on the edge; collecting it would add a row about an
+ * unresolved type at every call, where the contract check already says the
+ * end has no type.
+ */
+const typeRefOf = (types: Pick<TypeCollector, 'collectType'>, type: Type, at: TsNode): string =>
+  type.isAny() ? 'any' : type.isUnknown() ? 'unknown' : types.collectType(type, at);
+
+/** How deep an object written in place is read field by field. */
+const MAX_WRITTEN_DEPTH = 4;
+
+/**
+ * The shape of an object written in place, field by field, each as its value
+ * is written (P247): `{ status: 'open' }` sends `'open'`, which the
+ * language's own type of the object widens to `string` - and a `string`
+ * against a procedure's `'open' | 'shipped'` would be a mismatch nobody wrote.
+ * Nothing where it is not an object written in place, or holds a spread or a
+ * method, and its type is read whole.
+ */
+const writtenShape = (node: TsNode, types: Pick<TypeCollector, 'collectType'>, depth = 0): TypeRefAst | undefined => {
+  const at = unwrap(node);
+  if (!Node.isObjectLiteralExpression(at)) {
+    if (depth === 0) return undefined;
+    try {
+      return parseTypeRef(typeRefOf(types, at.getType(), at));
+    } catch {
+      return undefined;
+    }
+  }
+  if (depth >= MAX_WRITTEN_DEPTH) return undefined;
+  const fields: TypeRefField[] = [];
+  for (const property of at.getProperties()) {
+    const name = property.getSymbol()?.getName();
+    if (name === undefined || name === '') return undefined;
+    const value = Node.isPropertyAssignment(property)
+      ? property.getInitializer()
+      : Node.isShorthandPropertyAssignment(property)
+        ? property.getNameNode()
+        : undefined;
+    const type = value === undefined ? undefined : writtenShape(value, types, depth + 1);
+    if (type === undefined) return undefined;
+    fields.push({ name, optional: false, type });
+  }
+  // In the order written, as the language writes an object's own type.
+  return { kind: 'object', fields };
+};
+
+/** The reference of what a call hands a procedure (P247): declared, else written, else its own type. */
+const sentType = (input: TsNode, types: Pick<TypeCollector, 'collectType'>): string => {
+  const declared = declaredFor(input);
+  if (declared !== undefined) return types.collectType(declared, input);
+  const written = writtenShape(input, types);
+  return written === undefined ? typeRefOf(types, input.getType(), input) : formatTypeRef(written);
 };
 
 /** One request for a procedure, as the reader found it. */
@@ -522,7 +734,8 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
   const clients = PROCEDURE_CLIENTS.filter((client) => hasAnyDependency(reading.pkg, client.packages));
   const read: ReadProcedureCall[] = [];
   if (clients.length === 0) return read;
-  const readers = new Map(clients.map((client) => [client, linkReader(client, reading)]));
+  const provided = providedValues(() => reading.sources());
+  const readers = new Map(clients.map((client) => [client, linkReader(client, reading, provided)]));
   /** A link read once per proxy factory, however many requests go through it. */
   const links = new Map<CallExpression, LinkReading | undefined>();
   const linkFor = (factory: CallExpression, client: ProcedureClient): LinkReading | undefined => {
@@ -574,6 +787,12 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
             ? { protocol: link.protocol, socket: true }
             : { protocol: link.protocol, dynamic: true };
     const named = procedure ?? (path.names.length > 0 ? path.names.join(client.separator) : unwrap(path.root).getText().slice(0, 60));
+    // What the call hands the procedure and what it reads back, typed as the
+    // code here sees them (P247), and the answer only where the call returns it.
+    const { types } = reading;
+    const inputType = input === undefined || types === undefined ? undefined : sentType(input, types);
+    const outputType =
+      shape.answers !== true || types === undefined ? undefined : typeRefOf(types, types.unwrapAsync(call.getType()), call);
 
     reading.builder.addNode({
       id,
@@ -594,6 +813,11 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
         operation,
         client: client.name,
         ...(inputKeys === undefined ? {} : { inputKeys }),
+        ...(inputType === undefined ? {} : { inputType }),
+        // An input handed to what the call returns, `useMutation()` (P247),
+        // or none written where this spelling takes one.
+        ...(shape.inputAt === undefined ? { inputLater: true } : input === undefined ? { inputNone: true } : {}),
+        ...(outputType === undefined ? {} : { outputType }),
         ...(application === undefined ? {} : { application }),
         ...(linkMeta === undefined ? {} : { link: linkMeta }),
         ...(asked.procedureAt === undefined ? {} : { procedureAt: asked.procedureAt }),
@@ -657,7 +881,7 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
       const procedureAt = declaredAt(path.root, path.names, reading);
       return {
         operation: caller.name,
-        shape: { call: caller.call, inputAt: caller.inputAt },
+        shape: { call: caller.call, inputAt: caller.inputAt, ...(caller.answers === true ? { answers: true } : {}) },
         path,
         ...(procedureAt === undefined ? {} : { procedureAt }),
         inProcess: true,
@@ -669,7 +893,7 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
     // Own keys only: `toString` is on every object and ends no chain.
     const untyped = client.untyped !== undefined && Object.hasOwn(client.untyped.operations, operation) ? client.untyped.operations[operation] : undefined;
     if (untyped !== undefined && client.untyped !== undefined) {
-      const factory = factoryOf(callee.getExpression(), client.untyped.proxies);
+      const factory = factoryOf(callee.getExpression(), client.untyped.proxies, provided);
       if (factory !== undefined) {
         return { operation, shape: untyped, path: writtenPath(node, untyped.pathAt, client.separator), factory };
       }
@@ -677,13 +901,13 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
     const shape = Object.hasOwn(client.operations, operation) ? client.operations[operation] : undefined;
     if (shape !== undefined) {
       const path = pathOf(callee.getExpression());
-      const factory = path.names.length === 0 ? undefined : factoryOf(path.root, client.proxies);
+      const factory = path.names.length === 0 ? undefined : factoryOf(path.root, client.proxies, provided);
       if (factory !== undefined) return { operation, shape, path, factory };
     }
     // The path itself called, on a proxy that is a client (P58).
     if (client.direct === undefined) return undefined;
     const path = pathOf(callee);
-    const factory = factoryOf(path.root, client.proxies);
+    const factory = factoryOf(path.root, client.proxies, provided);
     const made = factory === undefined ? undefined : calleeName(factory);
     if (factory === undefined || made === undefined || !client.direct.proxies.includes(made)) return undefined;
     const inProcess = client.inProcess?.includes(made) === true;

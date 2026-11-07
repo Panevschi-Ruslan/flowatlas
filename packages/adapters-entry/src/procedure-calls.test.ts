@@ -1,4 +1,4 @@
-import { GraphBuilder, type GraphNode, type RepoGraph } from '@flowatlas/core';
+import { GraphBuilder, TypeCollector, type GraphNode, type RepoGraph } from '@flowatlas/core';
 import { Node, Project, type Node as TsNode } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { readProcedureCalls, type LinkAddress, type ProcedureCallReading } from './procedure-calls.js';
@@ -31,7 +31,7 @@ const ORPC = { '@orpc/client': '^1.0.0' };
 const read = (
   files: Record<string, string>,
   dependencies: Record<string, string>,
-  options: Partial<Pick<ProcedureCallReading, 'type' | 'readAlready'>> = {},
+  options: Partial<Pick<ProcedureCallReading, 'type' | 'readAlready'>> & { typed?: boolean } = {},
 ): RepoGraph => {
   const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { strict: false, experimentalDecorators: true } });
   for (const [path, source] of Object.entries(files)) project.createSourceFile(path, source);
@@ -65,6 +65,7 @@ const read = (
       addressOf,
       report: (row) => builder.addUnresolved(row),
       ...(options.readAlready === undefined ? {} : { readAlready: options.readAlready }),
+      ...(options.typed === true ? { types: new TypeCollector({ builder, repo: 'worker' }) } : {}),
     },
   );
   return builder.build();
@@ -260,5 +261,164 @@ describe('a proxy whose factory is handed no link (P242)', () => {
     expect(two.unresolved.map((row) => row.message)).toEqual([
       'orders.list is sent through a link whose address cannot be read: the repository builds links to more than one address, and which one this proxy is given is decided where it is provided, so the service it reaches is the one apiTarget names.',
     ]);
+  });
+});
+
+describe('what a call hands a procedure and reads back (P247)', () => {
+  it("types a literal input by the client's declared type, its keys beside it, and the answer it returns", () => {
+    const graph = read(
+      {
+        '/src/orders.ts': `
+          import { createORPCClient } from '@orpc/client';
+          import { RPCLink } from '@orpc/client/fetch';
+          interface NewOrder { sku: string; qty: number }
+          interface Placed { id: string }
+          interface OrdersApi { orders: { place(input: NewOrder): Promise<Placed> } }
+          const orders: OrdersApi = createORPCClient(new RPCLink({ url: 'http://orders.internal/rpc' }));
+          export const place = (sku: string) => orders.orders.place({ sku, qty: 1 });
+        `,
+      },
+      ORPC,
+      { typed: true },
+    );
+    const request = requestFor(graph, 'orders.place');
+    expect(request?.meta?.['inputType']).toBe('type:worker#NewOrder');
+    expect(request?.meta?.['inputKeys']).toEqual(['qty', 'sku']);
+    expect(request?.meta?.['outputType']).toBe('type:worker#Placed');
+  });
+
+  it('types the input as written where the client is not typed, and its answer as nothing', () => {
+    const graph = read(
+      {
+        '/src/billing.ts': `
+          import { createTRPCClient, httpBatchLink } from '@trpc/client';
+          const billing = createTRPCClient<any>({ links: [httpBatchLink({ url: 'http://billing.internal/trpc' })] });
+          export const invoice = (orderId: string) => billing.invoices.create.mutate({ orderId });
+        `,
+      },
+      TRPC,
+      { typed: true },
+    );
+    const request = requestFor(graph, 'invoices.create');
+    expect(request?.meta?.['inputType']).toBe('{orderId:string}');
+    // No client installed here: what the call answers names no shape.
+    expect(['any', 'unknown']).toContain(request?.meta?.['outputType']);
+  });
+
+  it('records no answer for a hook, an input written in place field by field, and one handed later or not written', () => {
+    const graph = read(
+      {
+        '/src/trpc.ts': `
+          import { createTRPCReact } from '@trpc/react-query';
+          export const trpc = createTRPCReact<any>();
+          export const useOrders = () => trpc.orders.list.useQuery({ status: 'open' });
+          export const usePlace = () => trpc.orders.place.useMutation();
+          export const useAll = () => trpc.orders.all.useQuery();
+        `,
+      },
+      { '@trpc/react-query': '^11.0.0' },
+      { type: 'ui_api_call', typed: true },
+    );
+    const list = requestFor(graph, 'orders.list');
+    // The value written, not the `string` the language widens it to.
+    expect(list?.meta?.['inputType']).toBe("{status:'open'}");
+    expect(list?.meta?.['outputType']).toBeUndefined();
+    expect(requestFor(graph, 'orders.place')?.meta?.['inputLater']).toBe(true);
+    expect(requestFor(graph, 'orders.all')?.meta?.['inputNone']).toBe(true);
+  });
+
+  it("reads an oRPC mutation's options as options, its input handed later", () => {
+    const graph = read(
+      {
+        '/src/orpc.ts': `
+          import { createORPCClient } from '@orpc/client';
+          import { createTanstackQueryUtils } from '@orpc/tanstack-query';
+          import { RPCLink } from '@orpc/client/fetch';
+          const orpc = createTanstackQueryUtils(createORPCClient<any>(new RPCLink({ url: '/rpc' })));
+          export const options = () => orpc.orders.place.mutationOptions({ onSuccess: () => undefined });
+        `,
+      },
+      { ...ORPC, '@orpc/tanstack-query': '^1.0.0' },
+      { type: 'ui_api_call', typed: true },
+    );
+    const request = requestFor(graph, 'orders.place');
+    expect(request?.meta?.['inputLater']).toBe(true);
+    expect(request?.meta?.['inputKeys']).toBeUndefined();
+    expect(request?.meta?.['inputType']).toBeUndefined();
+  });
+});
+
+describe('a client injected by a token (P247)', () => {
+  const module = (providers: string): Record<string, string> => ({
+    '/src/billing.module.ts': `
+      import { Module } from '@nestjs/common';
+      import { createTRPCClient, httpBatchLink } from '@trpc/client';
+      import { client } from './client';
+      export const BILLING = 'BILLING';
+      export const OTHER = 'OTHER';
+      const build = () => createTRPCClient<any>({ links: [httpBatchLink({ url: \`\${process.env.BILLING_URL}/trpc\` })] });
+      @Module({ providers: [${providers}] })
+      export class BillingModule {}
+    `,
+    '/src/client.ts': `
+      import { createTRPCClient, httpBatchLink } from '@trpc/client';
+      export const client = createTRPCClient<any>({ links: [httpBatchLink({ url: 'http://billing.internal/trpc' })] });
+    `,
+    '/src/billing.service.ts': `
+      import { Inject, Injectable } from '@nestjs/common';
+      import { BILLING } from './billing.module';
+      @Injectable()
+      export class BillingService {
+        constructor(@Inject(BILLING) private readonly billing: any) {}
+        invoice(orderId: string) {
+          return this.billing.invoices.create.mutate({ orderId });
+        }
+      }
+    `,
+  });
+  const linkOf = (providers: string) => requestFor(read(module(providers), TRPC), 'invoices.create')?.meta?.['link'];
+  const BILLING_LINK = { protocol: 'trpc', path: '/trpc', baseUrlEnv: 'BILLING_URL' };
+
+  it('follows @Inject(TOKEN) to the client a useFactory returns, written in place, named or as a method', () => {
+    expect(linkOf('{ provide: BILLING, useFactory: () => createTRPCClient<any>({ links: [httpBatchLink({ url: `${process.env.BILLING_URL}/trpc` })] }) }')).toEqual(BILLING_LINK);
+    expect(linkOf('{ provide: BILLING, useFactory: build }')).toEqual(BILLING_LINK);
+    expect(linkOf('{ provide: BILLING, useFactory() { return build(); } }')).toEqual(BILLING_LINK);
+    expect(linkOf('{ provide: BILLING, useFactory: () => { const made = client; return made; } }')).toEqual({ protocol: 'trpc', path: '/trpc', host: 'billing.internal' });
+  });
+
+  it('follows a token provided with a value', () => {
+    expect(linkOf('{ provide: BILLING, useValue: client }')).toEqual({ protocol: 'trpc', path: '/trpc', host: 'billing.internal' });
+  });
+
+  it('follows nothing, and reads no request, where two providers give the token or none does', () => {
+    expect(requestFor(read(module('{ provide: BILLING, useFactory: build }, { provide: BILLING, useValue: client }'), TRPC), 'invoices.create')).toBeUndefined();
+    expect(requestFor(read(module('{ provide: OTHER, useFactory: build }'), TRPC), 'invoices.create')).toBeUndefined();
+  });
+
+  it('follows an Angular field initialised with inject(TOKEN)', () => {
+    const graph = read(
+      {
+        '/src/app/trpc.ts': `
+          import { InjectionToken } from '@angular/core';
+          import { createTRPCClient, httpBatchLink } from '@trpc/client';
+          export const TRPC = new InjectionToken<any>('trpc');
+          export const appConfig = { providers: [{ provide: TRPC, useFactory: () => createTRPCClient<any>({ links: [httpBatchLink({ url: '/trpc' })] }) }] };
+        `,
+        '/src/app/invoices.service.ts': `
+          import { Injectable, inject } from '@angular/core';
+          import { TRPC } from './trpc';
+          @Injectable()
+          export class InvoicesService {
+            private readonly trpc = inject(TRPC);
+            invoicesOf(orderId: string) {
+              return this.trpc.invoices.byOrder.query({ orderId });
+            }
+          }
+        `,
+      },
+      TRPC,
+      { type: 'ui_api_call' },
+    );
+    expect(requestFor(graph, 'invoices.byOrder')?.meta?.['link']).toEqual({ protocol: 'trpc', path: '/trpc' });
   });
 });

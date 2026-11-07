@@ -27,6 +27,8 @@ import type {
   Type,
 } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
+import { routeAddressOfFile } from './fs-routes.js';
+import { APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 import type { ProcedureDialect, ProcedureMount } from './procedure-dialects.js';
 import { ORPC, TRPC } from './procedure-dialects.js';
 import {
@@ -508,7 +510,35 @@ const schemaOutput = (schema: TsNode): Type => {
   return type;
 };
 
-/** A procedure's input, and what its resolver answers - the promise it returns settled by the collector. */
+/**
+ * What a schema accepts from a caller, before its defaults and transforms run
+ * (P247), where the library says so apart from what it hands on: zod's
+ * `_input`, a Standard Schema's `~standard.types.input`, valibot's
+ * `_types.input`. A library that says only one side has one, and the output
+ * side is it.
+ */
+const SCHEMA_INPUT: ReadonlyArray<(type: Type, site: TsNode) => Type | undefined> = [
+  (type, site) => type.getProperty('_input')?.getTypeAtLocation(site),
+  (type, site) =>
+    type.getProperty('~standard')?.getTypeAtLocation(site).getProperty('types')?.getTypeAtLocation(site).getNonNullableType().getProperty('input')?.getTypeAtLocation(site),
+  (type, site) => type.getProperty('_types')?.getTypeAtLocation(site).getNonNullableType().getProperty('input')?.getTypeAtLocation(site),
+];
+
+const schemaInput = (schema: TsNode): Type => {
+  const type = schema.getType();
+  for (const read of SCHEMA_INPUT) {
+    const found = read(type, schema);
+    if (found !== undefined) return found;
+  }
+  return schemaOutput(schema);
+};
+
+/**
+ * A procedure's input, and what its resolver answers - the promise it returns
+ * settled by the collector. The input is the one a caller hands (P247), which
+ * is what a way in takes from outside; the resolver's own parameter is on its
+ * function.
+ */
 const procedureSignature = (input: TsNode | undefined, resolver: TsNode, output?: TsNode): StatedSignature => {
   // A schema the answer is checked against is what a caller gets, where one is
   // written (P58); otherwise what the resolver returns.
@@ -517,7 +547,7 @@ const procedureSignature = (input: TsNode | undefined, resolver: TsNode, output?
       ? resolver.getType().getCallSignatures()[0]?.getReturnType()
       : schemaOutput(output);
   return {
-    params: input === undefined ? [] : [{ name: 'input', type: schemaOutput(input), site: input }],
+    params: input === undefined ? [] : [{ name: 'input', type: schemaInput(input), site: input }],
     ...(answered === undefined ? {} : { returns: { type: answered, site: output ?? resolver } }),
   };
 };
@@ -1053,6 +1083,107 @@ const prefixesOf = (
   return { prefixes: [...prefixes].sort() };
 };
 
+/** An address a mount answers under, as text with no trailing slash; the root is empty. */
+const addressText = (text: string): string => text.replace(/\/+$/, '');
+
+/**
+ * The address a mount's own options give it (P247): `fetchRequestHandler({
+ * endpoint: '/api/trpc' })`. Nothing where the options are not written here
+ * (a wrapper handed the tree alone) or name no address and no default stands
+ * in, so another way is asked.
+ */
+const ownOptionsAddress = (call: TsNode, mount: ProcedureMount): { prefixes: string[] } | { unread: string } | undefined => {
+  if (mount.prefixKey === undefined || (!Node.isCallExpression(call) && !Node.isNewExpression(call))) return undefined;
+  const at = call.getArguments()[mount.treeAt];
+  const written = at === undefined ? undefined : unwrapValue(at);
+  const options = written === undefined ? undefined : Node.isObjectLiteralExpression(written) ? written : declaredValue(written);
+  if (options === undefined || !Node.isObjectLiteralExpression(options)) return undefined;
+  const property = options.getProperty(mount.prefixKey);
+  if (property === undefined) return mount.prefixDefault === undefined ? undefined : { prefixes: [addressText(mount.prefixDefault)] };
+  const text = Node.isPropertyAssignment(property) ? literalText(property.getInitializer()) : undefined;
+  if (text === undefined) return { unread: `its ${mount.prefixKey} is given as ${label(property)}, which is not written as text` };
+  return { prefixes: [addressText(text)] };
+};
+
+/**
+ * The address of the call a mount is handed to (P247): the path argument of
+ * `app.use('/trpc', createExpressMiddleware(…))`, or of the `use` the name it
+ * was assigned is handed to, in its file. Handed as that argument itself, it
+ * answers at the root; nothing where it is handed to no such call here.
+ */
+const handedAddress = (call: TsNode, mount: ProcedureMount): { prefixes: string[] } | { unread: string } | undefined => {
+  const handed = mount.handedTo;
+  if (handed === undefined) return undefined;
+  const holder = call.getParent();
+  const symbol = holder !== undefined && Node.isVariableDeclaration(holder) ? holder.getNameNode().getSymbol() : undefined;
+  const isMount = (argument: TsNode): boolean => {
+    const value = unwrapValue(argument);
+    return value === call || (symbol !== undefined && Node.isIdentifier(value) && value.getSymbol() === symbol);
+  };
+  const prefixes = new Set<string>();
+  for (const used of call.getSourceFile().getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    const callee = used.getExpression();
+    if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== handed.method) continue;
+    const args = used.getArguments();
+    const at = args.findIndex(isMount);
+    if (at < 0) continue;
+    if (at <= handed.pathAt) {
+      prefixes.add('');
+      continue;
+    }
+    const text = literalText(args[handed.pathAt]);
+    if (text === undefined) return { unread: `it is handed to ${label(used)}, whose path is not written as text` };
+    prefixes.add(addressText(text));
+  }
+  return prefixes.size === 0 ? undefined : { prefixes: [...prefixes].sort() };
+};
+
+/** The routers a mount's own file may be served by (P247). */
+const FILE_ROUTERS = [PAGES_API, APP_ROUTER] as const;
+
+/**
+ * The address of the file a mount is written in, as the framework serves it,
+ * with its last parameter segment taken off (P247): the segment is where the
+ * procedure's path arrives, `pages/api/trpc/[trpc].ts` answering
+ * `/api/trpc/orders.list`.
+ */
+const fileAddress = (file: string): { prefixes: string[] } | undefined => {
+  for (const router of FILE_ROUTERS) {
+    const found = routeAddressOfFile(file, router);
+    if (found === null) continue;
+    const segments = found.path.split('/');
+    const last = segments[segments.length - 1] ?? '';
+    const served = last.startsWith(':') || last === '*' ? segments.slice(0, -1).join('/') : found.path;
+    return { prefixes: [addressText(served)] };
+  }
+  return undefined;
+};
+
+/**
+ * The addresses a mount answers under, by the first way its description says
+ * that applies (P58, P247): a method called on what it made, its own options,
+ * the call it is handed to, the file it is in. A mount that says where it
+ * answers and none of whose ways apply says so; one that says nothing is
+ * nothing.
+ */
+const addressOfMount = (
+  call: TsNode,
+  mount: ProcedureMount,
+  file: string,
+): { prefixes: string[] } | { unread: string } | undefined => {
+  if (mount.prefixFrom !== undefined) return prefixesOf(call, mount.prefixFrom);
+  const found =
+    ownOptionsAddress(call, mount) ?? handedAddress(call, mount) ?? (mount.fileRoute ? fileAddress(file) : undefined);
+  if (found !== undefined) return found;
+  if (mount.prefixKey === undefined && mount.handedTo === undefined && !mount.fileRoute) return undefined;
+  const ways = [
+    ...(mount.prefixKey === undefined ? [] : [`no ${mount.prefixKey} is written in its options`]),
+    ...(mount.handedTo === undefined ? [] : [`it is handed to no ${mount.handedTo.method} call in this file`]),
+    ...(mount.fileRoute ? ['its file is not one the framework serves'] : []),
+  ];
+  return { unread: ways.join(', and ') };
+};
+
 const mountsIn = function* (
   sourceFile: SourceFile,
   dialect: ProcedureDialect,
@@ -1087,9 +1218,10 @@ const mountsIn = function* (
     const value = keyed === undefined ? written : (memberOf(keyed, ctx)?.value ?? written);
     const resolved = unwrapValue(value);
     const tree = forest.at(resolved) ?? forest.at(declaredValue(resolved) ?? resolved);
-    const answered = mount.prefixFrom === undefined ? undefined : prefixesOf(call, mount.prefixFrom);
+    const site = siteOf(call, ctx);
+    const answered = addressOfMount(call, mount, site.file);
     yield {
-      site: siteOf(call, ctx),
+      site,
       ...(tree === undefined ? {} : { tree }),
       named: label(value),
       registration: Node.isNewExpression(call) ? `new ${name}(…)` : `${name}(…)`,

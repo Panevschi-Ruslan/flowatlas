@@ -1,8 +1,61 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-07T17:32:03.516Z",
-  "edges": [],
+  "generatedAt": "2026-11-07T18:28:59.082Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:10:44",
+        "to": "entry:orders:rpc:orders.cancel",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:10:44|hits|entry:orders:rpc:orders.cancel",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "shop",
+        "typeId": "{id:string}",
+        "symbol": "shop#src/orders.ts:cancelOrder",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{id:string}",
+        "symbol": "orders#src/router.ts:orders.cancel@22"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:shop#src/orders.ts:8:45",
+        "to": "entry:orders:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:shop#src/orders.ts:8:45|hits|entry:orders:rpc:orders.list",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "shop",
+        "typeId": "{sku:string}",
+        "symbol": "shop#src/orders.ts:listOrders",
+        "writes": [
+          "sku"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{sku:string}",
+        "symbol": "orders#src/store.ts:listOrders"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
   "findings": [],
   "ignored": [],
   "unchecked": [
@@ -13,22 +66,10 @@
         "type": "hits"
       },
       "edgeKey": "ui_api_call:shop#src/orders.ts:10:44|hits|entry:orders:rpc:orders.cancel",
-      "direction": "request",
-      "reason": "procedure-input-by-name",
-      "message": "entry:orders:rpc:orders.cancel takes z.object({ id: z.string() }), which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
-      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
-    },
-    {
-      "edge": {
-        "from": "ui_api_call:shop#src/orders.ts:10:44",
-        "to": "entry:orders:rpc:orders.cancel",
-        "type": "hits"
-      },
-      "edgeKey": "ui_api_call:shop#src/orders.ts:10:44|hits|entry:orders:rpc:orders.cancel",
       "direction": "response",
-      "reason": "procedure-output-inferred",
-      "message": "what entry:orders:rpc:orders.cancel answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/orders.ts:cancelOrder reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
     },
     {
       "edge": {
@@ -61,30 +102,18 @@
         "type": "hits"
       },
       "edgeKey": "ui_api_call:shop#src/orders.ts:8:45|hits|entry:orders:rpc:orders.list",
-      "direction": "request",
-      "reason": "procedure-input-by-name",
-      "message": "entry:orders:rpc:orders.list takes z.object({ sku: z.string().optional() }), which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
-      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
-    },
-    {
-      "edge": {
-        "from": "ui_api_call:shop#src/orders.ts:8:45",
-        "to": "entry:orders:rpc:orders.list",
-        "type": "hits"
-      },
-      "edgeKey": "ui_api_call:shop#src/orders.ts:8:45|hits|entry:orders:rpc:orders.list",
       "direction": "response",
-      "reason": "procedure-output-inferred",
-      "message": "what entry:orders:rpc:orders.list answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls."
+      "reason": "no-type-on-receiver",
+      "message": "shop#src/orders.ts:listOrders reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
     }
   ],
   "summary": {
-    "edges": 0,
+    "edges": 2,
     "shared": 0,
-    "identical": 0,
+    "identical": 2,
     "hash_differs": 0,
-    "unchecked": 6,
+    "unchecked": 4,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

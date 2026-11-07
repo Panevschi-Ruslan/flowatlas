@@ -31,6 +31,7 @@ export const proceduresPass = definePass('procedures', (ctx: ReactExtractContext
       sources: () => ctx.project.getSourceFiles().filter((file) => !file.getFilePath().includes('/node_modules/')),
       fileOf: (node) => ctx.fileOf(node),
       addressOf: (url) => analyzeApiUrl(url, { sharedPackages: ctx.config.sharedPackages }),
+      types: ctx.types,
       report: (row) => ctx.report(row),
       applicationOf: (file) => applicationOfFile(ctx.meta, file),
     },

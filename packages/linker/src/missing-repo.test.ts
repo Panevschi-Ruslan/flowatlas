@@ -67,6 +67,22 @@ describe('missingRepoSignals', () => {
     expect(signals[1]?.places).toEqual([{ service: 'gateway', file: 'src/pay.ts', line: 10, gapId: 'gap:gateway|src/pay.ts|unknown-base-url-env' }]);
   });
 
+  it("reads a server's request for a procedure by the setting its link is rooted at, and the hosts its values name (P247)", () => {
+    const node = {
+      ...call('http_out:worker#a', 'worker', {
+        procedure: 'orders.store',
+        link: { protocol: 'rpc', path: '/rpc', baseUrlEnv: 'ARCHIVE_URL' },
+        baseUrlValues: ['http://archive.shop.internal:7000'],
+      }),
+      kind: 'rpc',
+    };
+    const signals = missingRepoSignals({ nodes: [node], unresolved: [unclaimed(node.id, 'ARCHIVE_URL', 10, 'worker')] }, REPORT);
+    expect(signals.map((signal) => [signal.kind, signal.name, signal.token])).toEqual([
+      ['host', 'archive.shop.internal:7000', 'archive'],
+      ['setting', 'ARCHIVE_URL', 'archive'],
+    ]);
+  });
+
   it('leaves a setting two services claim alone', () => {
     const row = { ...unclaimed('x', 'PAYMENTS_URL'), message: 'PAYMENTS_URL is declared on services a and b' };
     expect(missingRepoSignals({ nodes: [], unresolved: [row] }, REPORT)).toEqual([]);
