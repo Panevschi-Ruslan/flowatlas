@@ -1,0 +1,32 @@
+{
+  "byArm": {
+    "A": {
+      "sessions": 90,
+      "tokens": 7588395,
+      "minutes": 14,
+      "costUsd": 5.5
+    },
+    "B": {
+      "sessions": 90,
+      "tokens": 11057805,
+      "minutes": 18,
+      "costUsd": 5.97
+    },
+    "C": {
+      "sessions": 90,
+      "tokens": 9762289,
+      "minutes": 13,
+      "costUsd": 6.26
+    },
+    "D": {
+      "sessions": 90,
+      "tokens": 8648089,
+      "minutes": 13,
+      "costUsd": 4.58
+    }
+  },
+  "sessions": 360,
+  "tokens": 37056578,
+  "hours": 4,
+  "costUsd": 22.31
+}
