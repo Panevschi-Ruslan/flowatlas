@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  The docks of the bike-share: a queue the platform names, a table with a
+  stream, and a queue of audits, each exported for the rides stack.
+
+Parameters:
+  City:
+    Type: String
+    Default: harbour
+
+Resources:
+  RecountQueue:
+    Type: AWS::SQS::Queue
+
+  DocksTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub rides-${City}-docks
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: dockId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: dockId
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  AuditQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: rides-audit
+
+Outputs:
+  RecountQueueUrl:
+    Value: !Ref RecountQueue
+    Export:
+      Name: !Sub rides-${City}-recount-url
+  RecountQueueArn:
+    Value: !GetAtt RecountQueue.Arn
+    Export:
+      Name: !Sub rides-${City}-recount-arn
+  DocksStream:
+    Value: !GetAtt DocksTable.StreamArn
+    Export:
+      Name: !Sub rides-${City}-docks-stream
+  AuditQueueArn:
+    Value: !GetAtt AuditQueue.Arn
+    Export:
+      Name: rides-audit-queue

@@ -376,6 +376,7 @@ export const PAGE_WORDS = Object.freeze({
     'invoker-not-read': 'who runs the function not read',
     'iot-action-not-read': 'rule action not followed',
     'layer-not-followed': 'layer import not followed',
+    'deployment-copy-not-read': 'packaged copy not read again',
     'marker-reason-missing': 'public marker gives no reason',
     'marker-route-not-found': 'annotated route not found',
     'marker-service-unknown': 'annotated service not configured',

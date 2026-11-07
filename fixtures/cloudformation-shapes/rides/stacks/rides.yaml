@@ -1,0 +1,243 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  The rides of the bike-share: its functions, the APIs in front of them, what
+  runs the rest, the billing workflow, and the alerts stack it nests. What the
+  docks stack declares is imported by the names it exports.
+
+Parameters:
+  City:
+    Type: String
+    Default: harbour
+
+Resources:
+  # ------------------------------------------------------- the functions
+
+  StartRideFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub rides-${City}-start-ride
+      Runtime: nodejs20.x
+      Handler: rides/start-ride.handler
+      Code: ../src
+      Environment:
+        Variables:
+          DOCKS_QUEUE_URL:
+            Fn::ImportValue: !Sub rides-${City}-recount-url
+
+  GetRideFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub rides-${City}-get-ride
+      Runtime: nodejs20.x
+      Handler: rides/get-ride.handler
+      Code: ../src
+
+  StatusFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub rides-${City}-status
+      Runtime: nodejs20.x
+      Handler: rides/status.handler
+      Code: ../src
+
+  MapFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub rides-${City}-map
+      Runtime: nodejs20.x
+      Handler: rides/map.handler
+      Code: ../src
+
+  DockFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub rides-${City}-dock
+      Runtime: nodejs20.x
+      Handler: docks/dock.handler
+      Code: ../src
+
+  TallyFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub rides-${City}-tally
+      Runtime: nodejs20.x
+      Handler: docks/tally.handler
+      Code: ../src
+
+  LostFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub rides-${City}-lost
+      Runtime: nodejs20.x
+      Handler: docks/lost.handler
+      Code: ../src
+
+  AuditFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub rides-${City}-audit
+      Runtime: nodejs20.x
+      Handler: docks/audit.handler
+      Code: ../src
+
+  ChargeFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub rides-${City}-charge
+      Runtime: nodejs20.x
+      Handler: billing/charge.handler
+      Code: ../src
+
+  # ------------------------------------------------------------ the APIs
+
+  RidesApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub rides-${City}
+      Body:
+        openapi: 3.0.1
+        paths:
+          /rides:
+            post:
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StartRideFunction.Arn}/invocations
+
+  RidesStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref RidesApi
+      DeploymentId: !Ref RidesDeployment
+      StageName: v1
+
+  RidesDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref RidesApi
+
+  LookupApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub rides-${City}-lookup
+
+  LookupRides:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref LookupApi
+      ParentId: !GetAtt LookupApi.RootResourceId
+      PathPart: rides
+
+  LookupRide:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref LookupApi
+      ParentId: !Ref LookupRides
+      PathPart: '{rideId}'
+
+  GetRideMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref LookupApi
+      ResourceId: !Ref LookupRide
+      HttpMethod: GET
+      AuthorizationType: COGNITO_USER_POOLS
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetRideFunction.Arn}/invocations
+
+  StatusApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub rides-${City}-status
+      ProtocolType: HTTP
+      Target: !GetAtt StatusFunction.Arn
+
+  MapsApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub rides-${City}-maps
+      BodyS3Location: ../api/maps.yaml
+
+  ArchiveApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub rides-${City}-archive
+      BodyS3Location:
+        Bucket: rides-specs
+        Key: archive.yaml
+
+  # ------------------------------------------- what runs the other functions
+
+  DockMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::ImportValue: !Sub rides-${City}-recount-arn
+      FunctionName: !Ref DockFunction
+
+  TallyMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::ImportValue: !Sub rides-${City}-docks-stream
+      FunctionName: !Ref TallyFunction
+      StartingPosition: LATEST
+
+  LostSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !ImportValue fleet-lost-topic
+      Protocol: lambda
+      Endpoint: !GetAtt LostFunction.Arn
+
+  AuditMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !ImportValue rides-audit-queue
+      FunctionName: !Ref AuditFunction
+
+  AuditLogsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AuditFunction
+      Principal: logs.amazonaws.com
+
+  # -------------------------------------------------------- the workflows
+
+  BillingStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub rides-${City}-billing
+      DefinitionS3Location: ../workflows/billing.asl.json
+      DefinitionSubstitutions:
+        charge_arn: !GetAtt ChargeFunction.Arn
+
+  BillingRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub rides-${City}-billing-daily
+      ScheduleExpression: rate(1 day)
+      Targets:
+        - Id: billing
+          Arn: !Ref BillingStateMachine
+
+  ArchiveStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub rides-${City}-archive
+      DefinitionS3Location:
+        Bucket: rides-workflows
+        Key: archive.asl.json
+
+  # ------------------------------------------------------ a nested stack
+
+  Alerts:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ../alerts/alerts.yaml
+      Parameters:
+        City: !Ref City

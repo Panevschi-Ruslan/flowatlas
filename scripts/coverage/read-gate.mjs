@@ -166,6 +166,11 @@ const GATED = {
       // A route a lower layer of the application serves, which the higher one's
       // takes the place of (P243).
       'framework-layer-overridden',
+      // A template whose functions are declared and deliberately not drawn: the
+      // copy a package command wrote of another, or types of a transform the
+      // template does not name (P248).
+      'deployment-copy-not-read',
+      'deployment-plugin-unread',
     ],
     perFile: true,
   },

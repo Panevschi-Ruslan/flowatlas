@@ -54,4 +54,4 @@ export {
 } from './buckets.js';
 export { SDK_SENDS, SDK_WRITES, type SendingService, type SendOperation, type WriteOperation, type WritingService } from './sends.js';
 export { eventFilterOf, eventPatternOf, type PatternUnread } from './event-pattern.js';
-export { cognitoTriggerKey, destinationOf, RESULT_DETAIL_TYPES } from './triggers.js';
+export { cognitoTriggerKey, destinationOf, READ_PRINCIPALS, RESULT_DETAIL_TYPES } from './triggers.js';

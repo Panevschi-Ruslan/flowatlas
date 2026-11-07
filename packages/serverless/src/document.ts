@@ -180,21 +180,22 @@ const readServiceModule = (path: string): PositionedDocument => {
   return readExpressionDocument(exported);
 };
 
+const readJsonFile = (path: string): PositionedDocument => {
+  try {
+    return readJson(readFileSync(path, 'utf8'));
+  } catch (cause) {
+    const line = (cause as { position?: { line: number } }).position?.line ?? 1;
+    throw new ServiceFileUnreadable(cause instanceof Error ? cause.message : 'not JSON', line);
+  }
+};
+
 /** The formats, by what a file's name ends in. */
 const READERS: ReadonlyMap<string, (path: string) => PositionedDocument> = new Map([
   ['.yml', (path: string) => readServiceYaml(readFileSync(path, 'utf8'))],
   ['.yaml', (path: string) => readServiceYaml(readFileSync(path, 'utf8'))],
-  [
-    '.json',
-    (path: string) => {
-      try {
-        return readJson(readFileSync(path, 'utf8'));
-      } catch (cause) {
-        const line = (cause as { position?: { line: number } }).position?.line ?? 1;
-        throw new ServiceFileUnreadable(cause instanceof Error ? cause.message : 'not JSON', line);
-      }
-    },
-  ],
+  ['.json', readJsonFile],
+  // A CloudFormation template by its older name (P248): JSON where it opens with a brace, YAML otherwise.
+  ['.template', (path: string) => (/^\s*\{/.test(readFileSync(path, 'utf8')) ? readJsonFile(path) : readServiceYaml(readFileSync(path, 'utf8')))],
   ['.ts', readServiceModule],
   ['.js', readServiceModule],
   ['.mjs', readServiceModule],

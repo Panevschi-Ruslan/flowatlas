@@ -112,9 +112,23 @@ describe('a function a SAM template declares (P246)', () => {
     assert.equal(isSourceFile('services/orders/template.yml'), true);
   });
 
-  it('reads no other YAML file', () => {
-    assert.equal(isSourceFile('openapi.yaml'), false);
+  it('reads every YAML file and a JSON one named as a template, and no probe of code looks in one (P248)', () => {
+    assert.equal(isSourceFile('openapi.yaml'), true);
+    assert.equal(isSourceFile('legacy/fleet.template'), true);
+    assert.equal(isSourceFile('stacks/orders.template.json'), true);
+    assert.equal(isSourceFile('package.json'), false);
     assert.equal(isSourceFile('.github/workflows/template.yaml.bak'), false);
+    assert.deepEqual(sitesIn('docs.yaml', "example: app.get('/orders', handler)\nfetch: fetch('/orders')\n"), {});
+  });
+});
+
+describe('a function a plain CloudFormation template declares (P248)', () => {
+  it('counts each by its Type, in YAML under any name and in JSON named as a template', () => {
+    const yaml = ['Resources:', '  Kiosk:', '    Type: AWS::Lambda::Function', '  Url:', '    Type: AWS::Lambda::Url'].join('\n');
+    assert.deepEqual(sitesIn('stacks/rides.yaml', yaml), { routes: 1 });
+    const json = JSON.stringify({ Resources: { A: { Type: 'AWS::Lambda::Function' }, B: { Type: 'AWS::Serverless::Function' } } }, null, 2);
+    assert.deepEqual(sitesIn('stacks/rides.template.json', json), { routes: 2 });
+    assert.deepEqual(sitesIn('legacy/fleet.template', json), { routes: 2 });
   });
 });
 

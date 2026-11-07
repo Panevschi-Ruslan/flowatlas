@@ -90,6 +90,18 @@ export interface TemplateOptions {
   readonly attributeOf?: (logicalId: string, attribute: string) => Deployed | Unread | undefined;
   /** Where a resource is written when it is not under its own logical id: one a loop makes. */
   readonly paths?: ReadonlyMap<string, readonly PathStep[]>;
+  /**
+   * What another template exports under a name, where the caller has read the
+   * templates beside this one (P248): `Fn::ImportValue` of it is that value.
+   * `Unread` where the name is exported twice; `undefined` where nothing read exports it.
+   */
+  readonly imported?: (name: string) => Exported | Unread | undefined;
+}
+
+/** What a template exports under a name (`Outputs.<Name>.Export.Name`): the deployed thing its value names, and the value as text. */
+export interface Exported {
+  readonly deployed?: Deployed;
+  readonly text: string | Unread;
 }
 
 /** A value as plain text, or `undefined` when it is not a string. */
@@ -201,7 +213,12 @@ export class Template {
         if (parts === undefined) return new Unread('Fn::GetAtt names no resource');
         return this.#attribute(parts[0], parts[1]);
       }
-      if (fn === 'Fn::ImportValue') return new Unread('the value is imported from another stack, whose outputs are not read');
+      if (fn === 'Fn::ImportValue') {
+        const found = this.#imported(argument);
+        if (found instanceof Unread) return found;
+        if (found.deployed !== undefined) return found.deployed;
+        return typeof found.text === 'string' ? deployedInText(found.text) : found.text;
+      }
       if (fn === 'Fn::Sub' || fn === 'Fn::Join') {
         const text = this.text(value);
         if (typeof text === 'string') return deployedInText(text);
@@ -212,6 +229,25 @@ export class Template {
     if (value instanceof Unread) return value.partial === undefined ? value : (deployedInText(value.partial) ?? value);
     const text = textOf(value);
     return text === undefined ? undefined : deployedInText(text);
+  }
+
+  /**
+   * The export a `Fn::ImportValue` names, as another template of the
+   * repository declares it; an `Unread` saying why where its name is not read,
+   * nothing read exports it, or two templates do.
+   */
+  #imported(argument: unknown): Exported | Unread {
+    const name = this.text(argument);
+    if (name instanceof Unread) return new Unread(`the name of the export it imports is not read: ${name.text}`, name.variable);
+    const found = this.#options.imported?.(name);
+    if (found === undefined) {
+      return new Unread(
+        this.#options.imported === undefined
+          ? 'the value is imported from another stack, whose outputs are not read'
+          : `the value is imported from the export ${name}, which no template of the repository declares`,
+      );
+    }
+    return found;
   }
 
   /** What `Ref` or an attribute of a resource is as text, a {@link HOLE} where it is known only once deployed. */
@@ -292,6 +328,10 @@ export class Template {
     else if (fn === 'Fn::GetAtt') {
       const parts = getAttOf(argument);
       built = parts === undefined ? HOLE : this.#attributeText(parts[0], parts[1]);
+    } else if (fn === 'Fn::ImportValue') {
+      // The value as the template exporting it wrote it, or why it is not read.
+      const found = this.#imported(argument);
+      return found instanceof Unread ? found : found.text;
     } else if (fn === 'Fn::Join' && Array.isArray(argument) && typeof argument[0] === 'string' && Array.isArray(argument[1])) {
       const delimiter = argument[0];
       built = argument[1].map((part) => this.#part(part, depth + 1)).join(delimiter);

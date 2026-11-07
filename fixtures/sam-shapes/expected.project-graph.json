@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T18:33:37.411Z",
+  "builtAt": "2026-11-07T17:45:02.550Z",
   "services": [
     {
       "name": "library",
@@ -2373,7 +2373,7 @@
       "file": "template.yaml",
       "line": 211,
       "reason": "subscription-source-unread",
-      "message": "the topic Resources.DoorFunction.Events.Shared subscribes to is not read: the value is imported from another stack, whose outputs are not read",
+      "message": "the topic Resources.DoorFunction.Events.Shared subscribes to is not read: the value is imported from the export shared-notices-topic-arn, which no template of the repository declares",
       "hint": "Write it as a Ref or Fn::GetAtt of a resource the template declares, or as its ARN; a value from another stack or the account is not read.",
       "symbol": "Resources.DoorFunction.Events.Shared",
       "adapter": "aws-lambda",

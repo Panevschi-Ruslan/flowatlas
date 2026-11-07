@@ -6155,8 +6155,8 @@ and the inputs it was given — at `info` unless one of those inputs looks like 
 handler, a function or a route (`fixtures/lambda-terraform-modules`).
 
 Terraform is one reader of the interface the adapter is written against; the
-Serverless Framework, the CDK and SAM are three more (below), each into the
-same shape. SST and Architect are named when a repository is written for one
+Serverless Framework, the CDK, SAM and plain CloudFormation are four more
+(below), each into the same shape. SST and Architect are named when a repository is written for one
 (`deployment-unread`), and read by none.
 
 ### Subscribers declared in Terraform
@@ -6398,15 +6398,17 @@ it is handed unread (`fixtures/cdk-orders`, `fixtures/cdk-shapes`).
 
 ### Functions declared in an AWS SAM template
 
-A `template.yaml`, `template.yml` or `template.json` written for the
-`AWS::Serverless-2016-10-31` transform - at the top of the repository or in a
-directory below it, or the one `samconfig.toml`'s `template_file` names - is
-read into what the Terraform reader gives for the same deployment (P246).
-Nothing is run: no `sam build`, no transform, no account; `.aws-sam` is the
-CLI's own output and is not read. `init` and `link` propose the `lambda` type.
+A template written for the `AWS::Serverless-2016-10-31` transform - a
+`template.yaml`, the one `samconfig.toml`'s `template_file` names, or any YAML
+or JSON file of the repository that is a template naming the transform (see
+"which files are templates" below) - is read into what the Terraform reader
+gives for the same deployment (P246). Nothing is run: no `sam build`, no
+transform, no account; `.aws-sam` is the CLI's own output and is not read.
+`init` and `link` propose the `lambda` type.
 
-**What a template is deployed with** is read from `samconfig.toml` (or
-`samconfig.yaml`) beside it: the stack's `stack_name` and `region`, and each
+**What a template is deployed with** is read from the `samconfig.toml` (or
+`samconfig.yaml`) that deploys it - the one beside a `template.yaml`, or the
+one in its directory or above whose `template_file` names it: the stack's `stack_name` and `region`, and each
 parameter's value from `parameter_overrides`, `deploy` over `global`, in the
 environment `services[].infra.options.config_env` names, else `default`. Any
 other option is a parameter's value (`--parameter-overrides` written down), and
@@ -6454,8 +6456,11 @@ code and a runtime other than Node.js are rows.
 `AWS::Serverless::Api` or `HttpApi` - in place, through `AWS::Include`, or a
 `DefinitionUri` file of the repository - each path whose integration URI holds
 the ARN of a function of the template; an HTTP or WebSocket API written as
-`AWS::ApiGatewayV2` routes and integrations; and a REST API written as
-`AWS::ApiGateway` resources and methods, its path built up from `ParentId`.
+`AWS::ApiGatewayV2` routes and integrations, or made in one resource with
+`Target` (the `$default` route, or the `RouteKey` it names, onto that function,
+P248); and a REST API written as `AWS::ApiGateway` resources and methods, its
+path built up from `ParentId`, `AuthorizationType` and `ApiKeyRequired` its
+guards.
 
 **State machines** (`AWS::Serverless::StateMachine`) are workflows: a
 `Definition` written in place, each state drawn at its line, or a
@@ -6476,6 +6481,68 @@ layer is a `layer-not-followed` note, a macro the template names in
 `Transform` other than the language extensions is `deployment-plugin-unread`,
 and a loop over a collection nothing settles is `construct-repeated-unread`
 (`fixtures/sam-orders`, `fixtures/sam-shapes`).
+
+### Functions declared in a plain CloudFormation template
+
+A CloudFormation template with no SAM transform is read by the same code as a
+SAM template, as a reader of its own (`cloudformation`, in `meta.deployedBy`):
+it is a SAM template with none of the transform's types, no `Globals` and no
+API made for events, so everything above that is plain CloudFormation reads
+the same - parameters, conditions, mappings, `Fn::If`, `Fn::ForEach`, functions
+(`AWS::Lambda::Function`, its code in the local directory `Code` names for
+`aws cloudformation package`), mappings, URLs, destinations, APIs written as
+resources or as an OpenAPI `Body`, rules, schedules, subscriptions, bucket
+notifications, user pools, state machines and nested stacks (P248). `init` and
+`link` propose the `lambda` type.
+
+**Which files are templates.** Any `.yaml`, `.yml`, `.json` or `.template`
+file of the repository, to four directories down, that says it is one: an
+`AWSTemplateFormatVersion`, or a `Resources` map with an `AWS::` type in it. A
+template that names the SAM transform is SAM's; any other is this reader's.
+Not read as templates of their own:
+
+| Left out | Because |
+|---|---|
+| `node_modules`, `dist`, `build`, `coverage`, `__snapshots__`, any directory starting with `.` (`.aws-sam`, `.serverless`) | installs and build output |
+| a template another nests (`AWS::CloudFormation::Stack`'s `TemplateURL`, a SAM application's `Location`) | read in place through its parent |
+| the copy `aws cloudformation package` or `sam package` writes of a template | the same resources as a template of the repository, its local paths swapped for uploads |
+| a file a Serverless Framework service loads into its `resources` (`${file(...)}`) | the Serverless reader's |
+| `cdk.out` beside a `cdk.json` | the templates `cdk synth` writes for an app the CDK reader reads itself; a `cdk.out` with no app beside it is read |
+
+**What a template is deployed with**: the `samconfig.toml` that names it in
+`template_file`, as `sam deploy` deploys a plain template too; otherwise
+`services[].infra.options`, each option a parameter's value as
+`aws cloudformation deploy --parameter-overrides` takes them, and `stack_name`
+and `region` the pseudo parameters:
+
+```json
+{ "name": "orders", "repo": "./orders", "type": "lambda", "infra": { "options": { "Stage": "dev", "region": "eu-west-1" } } }
+```
+
+Each template's addresses are under its file (`stacks/orders.Resources.PlaceOrderFunction`),
+since a repository often keeps several in one directory. A `.template` file is
+JSON where it opens with a brace and YAML otherwise; `DefinitionS3Location` and
+`BodyS3Location` naming a file of the repository are read like SAM's
+`DefinitionUri` (one in a bucket is `workflow-definition-not-loaded` /
+`api-body-unread`). An `AWS::Lambda::Permission` for a principal no reader
+follows (`logs.amazonaws.com`, an account) is an `invoker-not-read` note, as
+Terraform's is; the permission behind a function URL, or for a service whose
+invocations are read from the resources that make them, adds nothing. An
+`AWS::Serverless::*` type or `Globals` in a template that names no transform is
+`deployment-plugin-unread`, and none of it is read.
+
+**Stacks of one repository import from one another.** An output with
+`Export.Name` in one template - SAM or plain - is what `Fn::ImportValue` of
+that name in another is, read as statically as a `Ref`: the queue the storage
+stack declares is the queue a mapping in the functions stack reads and the
+queue a handler sends to through an imported environment value, by its name or
+its stand-in. Every template is read for its exports until a reading adds
+none, so an export of an import is settled too. An import no template of the
+repository exports, or one two templates export, is the row it was
+(`subscription-source-unread`, an unread value), saying which
+(`fixtures/cloudformation-orders`, where the deployment of `terraform-orders`
+is two stacks joined by their exports and reads as the same graph;
+`fixtures/cloudformation-shapes`).
 
 ### Procedures
 

@@ -50,6 +50,33 @@ only one of them moved.
   front of the old path. The coverage counting rule gains the family `listens`
   (`fixtures/listen-port-joins`).
 
+- **Lambdas declared in a plain CloudFormation template (P248).** A template
+  with no SAM transform - any `.yaml`, `.yml`, `.json` or `.template` file
+  that says it is one (an `AWSTemplateFormatVersion`, or `Resources` of `AWS::`
+  types), wherever the repository keeps it - is read by the SAM reader's code
+  as a reader of its own, `cloudformation`: functions with their code in a
+  local `Code` directory, mappings from queues and streams, URLs, permissions,
+  APIs written as `AWS::ApiGateway` and `AWS::ApiGatewayV2` resources or as an
+  OpenAPI `Body` / `BodyS3Location`, rules, schedules, subscriptions, bucket
+  notifications and state machines from a `DefinitionS3Location` file. The
+  deployment of `terraform-orders` written as two such stacks reads as the
+  same graph as the other four formats (`fixtures/cloudformation-orders`).
+  Not read as templates of their own: a template another nests, the copy
+  `aws cloudformation package` or `sam package` writes of one, a file a
+  Serverless service loads into its `resources`, and a `cdk.out` beside the
+  `cdk.json` of an app the CDK reader reads. A template is deployed with the
+  `samconfig.toml` that names it, else `services[].infra.options`.
+- **`Fn::ImportValue` across the stacks of one repository (P248).** An
+  output's `Export.Name` in one template, SAM or plain, is what
+  `Fn::ImportValue` of that name is in another, settled however the templates
+  are ordered; one no template exports, or two do, is the row it was and says
+  which (`fixtures/cloudformation-shapes`).
+- **An HTTP API made in one resource (P248).** `AWS::ApiGatewayV2::Api` with
+  `Target` is a route - `$default`, or its `RouteKey` - onto that function, in
+  a SAM template and a plain one. An `AWS::Lambda::Permission` for a principal
+  no reader follows is an `invoker-not-read` note, as Terraform's is; a REST
+  method's `ApiKeyRequired` and an HTTP route's `AuthorizationType` are guards;
+  an API written as resources records the one stage it is deployed to.
 - **A function run before every request carries its base into each one
   (P244).** An axios request interceptor (`api.interceptors.request.use`, on an
   instance or on `axios` itself) that writes `config.baseURL`, answers
@@ -406,6 +433,11 @@ only one of them moved.
   are a guess. A GraphQL endpoint's `meta.graphql.listen` says `default: true`
   for a library's default.
 
+- **SAM templates are found by what they say (P248).** A file naming the SAM
+  transform is read wherever it is kept, not only as `template.yaml` or the
+  file a `samconfig.toml` names, and a `samconfig.toml` gives its parameters
+  only to the template it deploys - the one beside it, or the one its
+  `template_file` names from a directory above.
 - **A queue, a topic or a bucket Terraform gives no name is named by its
   declaration (P246)**, as the Serverless Framework and CDK readers name one:
   `sqs/${…}@aws_sqs_queue.inbox`, joined by what the configuration points at it

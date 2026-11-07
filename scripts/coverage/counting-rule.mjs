@@ -94,11 +94,15 @@ export const SOURCE_EXTENSIONS = [
 
 /**
  * Files that are not code and still declare ways in, by name: a template a
- * deployment of functions is written in (P246). Only a probe that names the
- * file by its `path` finds anything in one, and its comments are a `#` to the
- * end of the line.
+ * deployment of functions is written in (P246). A CloudFormation template may
+ * be called anything (P248), so every YAML file and every `.template` is one
+ * of these; a JSON file is only where its name says it is a template
+ * (`template.json`, `*.template.json`, `*.cfn.json`), since most JSON is
+ * something else. Only a probe that names the file by its `path` finds
+ * anything in one, and its comments - outside JSON - are a `#` to the end of
+ * the line.
  */
-export const DECLARATION_FILES = /(?:^|\/)template\.ya?ml$/;
+export const DECLARATION_FILES = /\.(?:ya?ml|template)$|(?:^|[/.])(?:template|cfn)\.json$/;
 
 /**
  * Path segments that take a file out of the count, a test's apart.
@@ -278,14 +282,24 @@ export const PROBES = [
   },
   {
     // A function a SAM template declares is a way in, as a route is: the
-    // platform runs it (P246). Counted by its `Type`, the SAM function and the
-    // plain CloudFormation one alike, in the template a deployment is read from.
+    // platform runs it (P246). Counted by its `Type`, written as YAML or JSON,
+    // in any file a template may be.
     name: 'sam-function-resource',
     family: 'routes',
     scope: 'line',
-    what: 'a Lambda function a SAM template declares (`Type: AWS::Serverless::Function`, `Type: AWS::Lambda::Function`)',
+    what: 'a Lambda function a SAM template declares (`Type: AWS::Serverless::Function`)',
     path: DECLARATION_FILES,
-    pattern: /^\s*Type:\s*['"]?AWS::(?:Serverless|Lambda)::Function['"]?\s*$/gm,
+    pattern: /^\s*Type:\s*['"]?AWS::Serverless::Function['"]?\s*$|"Type"\s*:\s*"AWS::Serverless::Function"/gm,
+  },
+  {
+    // The plain CloudFormation function (P248), in a SAM template or a plain
+    // one, wherever the repository keeps it.
+    name: 'cloudformation-function-resource',
+    family: 'routes',
+    scope: 'line',
+    what: 'a Lambda function a CloudFormation template declares (`Type: AWS::Lambda::Function`)',
+    path: DECLARATION_FILES,
+    pattern: /^\s*Type:\s*['"]?AWS::Lambda::Function['"]?\s*$|"Type"\s*:\s*"AWS::Lambda::Function"/gm,
   },
   {
     name: 'nitro-route-file',
@@ -506,10 +520,12 @@ const withoutHashComments = (text) => text.replace(/(^|\s)#[^\n]*/g, (comment, b
 
 /** What a probe reads: the file, with its comments blanked where it has any. */
 const codeOf = (path, text) =>
-  COMMENTED.has(extensionOf(path)) ? withoutComments(text) : DECLARATION_FILES.test(path) ? withoutHashComments(text) : text;
+  COMMENTED.has(extensionOf(path)) ? withoutComments(text) : DECLARATION_FILES.test(path) && !path.endsWith('.json') ? withoutHashComments(text) : text;
 
 const countLine = (probe, path, text) => {
   if (probe.path !== undefined && !probe.path.test(path)) return 0;
+  // A declaration file is not code: a probe of code that names no path does not look in one.
+  if (probe.path === undefined && !SOURCE_EXTENSIONS.includes(extensionOf(path))) return 0;
   probe.pattern.lastIndex = 0;
   let sites = 0;
   while (probe.pattern.exec(text) !== null) sites += 1;

@@ -1,4 +1,4 @@
-import { cognitoTriggerKey, DEFAULT_EVENT_BUS, deployedNameIn, destinationOf, eventPatternOf } from '@flowatlas/aws';
+import { cognitoTriggerKey, DEFAULT_EVENT_BUS, deployedNameIn, destinationOf, eventPatternOf, READ_PRINCIPALS } from '@flowatlas/aws';
 import { generatedName, makeFunctionUrlEntryKey, type DeliverySource, type PathStep } from '@flowatlas/core';
 import { intrinsicOf, type Deployed, type Resource } from './cloudformation.js';
 import type { FileReading } from './reading.js';
@@ -323,6 +323,28 @@ const readFunctionUrl: ResourceReader = (resource, reading) => {
   pushFunctionUrl(reading, resource.path, resource.address, fn, textOf(resource.properties['AuthType']));
 };
 
+/**
+ * A permission for a principal no reader follows to run a function (P248),
+ * said as Terraform's reading says one: a service whose invocations are read
+ * from the resources that make them adds nothing, and neither does the
+ * permission behind a function URL, whose route the URL itself gives.
+ */
+const readPermission: ResourceReader = (resource, reading) => {
+  const { properties } = resource;
+  const principal = textOf(properties['Principal']);
+  if (principal === undefined || READ_PRINCIPALS.has(principal)) return;
+  if (properties['FunctionUrlAuthType'] !== undefined || textOf(properties['Action']) === 'lambda:InvokeFunctionUrl') return;
+  const fn = functionIn(reading, properties['FunctionName']);
+  const named = fn !== undefined && !(fn instanceof Unread) && fn.kind === 'function' ? fn.name : undefined;
+  reading.row(resource.path, resource.address, {
+    reason: 'invoker-not-read',
+    level: 'info',
+    message: `${named ?? resource.address} may be run by ${principal}, which is not read, so what runs it from there is not drawn`,
+    hint: 'The function is still a way in of its own; nothing here says it is unused because nothing drawn reaches it.',
+    meta: { principal, ...(named === undefined ? {} : { function: named }) },
+  });
+};
+
 /** A function URL as a route, by the function it is the address of. */
 export const pushFunctionUrl = (reading: FileReading, path: readonly PathStep[], address: string, fn: Deployed, authType: string | undefined): void => {
   const at = reading.siteOf(path);
@@ -351,6 +373,7 @@ export const RESOURCE_READERS: ReadonlyMap<string, ResourceReader> = new Map<str
   ['AWS::Lambda::EventSourceMapping', readMapping],
   ['AWS::Lambda::EventInvokeConfig', readInvokeConfig],
   ['AWS::Lambda::Url', readFunctionUrl],
+  ['AWS::Lambda::Permission', readPermission],
   ['AWS::Scheduler::Schedule', readSchedule],
   ['AWS::Cognito::UserPool', readUserPool],
   ['AWS::S3::Bucket', readBucket],

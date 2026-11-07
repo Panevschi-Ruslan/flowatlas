@@ -5,7 +5,6 @@ import {
   isRecord,
   readResources,
   readServiceFile,
-  readStateMachineResource,
   RESOURCE_KINDS,
   ServiceFileUnreadable,
   Template,
@@ -14,15 +13,16 @@ import {
   type Declares,
   type Deployed,
   type DeploymentParts,
+  type Exported,
   type ResourceReader,
 } from '@flowatlas/serverless';
 import { apiLookup, readApis } from './apis.js';
-import { deployConfigOf, type DeployConfig } from './config.js';
+import { deployConfigOf, TEMPLATE_FILES, type DeployConfig } from './config.js';
 import { functionEventReaders, readEvents } from './events.js';
 import { FUNCTION_TYPES, readDestinations, readFunction, readFunctionUrlConfig, withGlobals, type FunctionSite } from './functions.js';
 import { expandLoops, Resolver, type ParameterFrom } from './intrinsics.js';
 import { localPath, TemplateReading, type DeclaredFunction } from './reading.js';
-import { readStateMachine } from './state-machines.js';
+import { readStateMachine, readStepFunctionsStateMachine } from './state-machines.js';
 
 /**
  * One SAM template, read into the parts of a deployment (P246).
@@ -37,6 +37,13 @@ import { readStateMachine } from './state-machines.js';
  * nested application in the repository, read the same way under the
  * parameters handed to it. Every part is the shape Terraform's reading of the
  * same deployment has.
+ *
+ * A plain CloudFormation template (P248) is read by the same code: it is a
+ * SAM template with none of the transform's types, no `Globals` and no API
+ * made for events, so what is left - functions, mappings, permissions, APIs
+ * written as resources, rules, subscriptions, notifications, state machines -
+ * is read exactly as it is in a SAM template. What another template of the
+ * repository exports is handed in, so `Fn::ImportValue` of it is what it names.
  */
 
 /** What the transform adds to CloudFormation's types: what each declares and the property naming it. */
@@ -62,6 +69,16 @@ const NESTED: ReadonlyMap<string, string> = new Map([
 /** How deep nested templates are followed. */
 const MOST_NESTED = 4;
 
+/**
+ * What a template is written for (P248): the SAM transform, which adds its
+ * types, `Globals` and the API it makes for events; or CloudFormation alone,
+ * whose resources the rest of this reads the same way in both.
+ */
+export type Dialect = 'sam' | 'cloudformation';
+
+/** Every export a reading met, by its name: where each was declared, and what it is. */
+export type ExportSink = Map<string, Array<{ readonly file: string; readonly exported: Exported }>>;
+
 export interface TemplateReadOptions {
   readonly repoDir: string;
   /** Repo-relative path of the template. */
@@ -70,14 +87,39 @@ export interface TemplateReadOptions {
   readonly options: Readonly<Record<string, string>>;
   /** Absolute paths of every file read beside it, filled as they are. */
   readonly loaded: Set<string>;
+  /** What the other templates of the repository export, by name, for `Fn::ImportValue` (P248). */
+  readonly imports?: (name: string) => Exported | Unread | undefined;
+  /** Where the exports of this template, and of those it nests, are put as they are read. */
+  readonly exports?: ExportSink;
   /** What a parent template hands it, when it is nested. */
   readonly parent?: {
     readonly scope: string;
     readonly parameters: Readonly<Record<string, string | Unread>>;
     readonly region?: string;
     readonly chain: readonly string[];
+    readonly dialect: Dialect;
   };
 }
+
+/**
+ * What a template is deployed with (P248): the `samconfig` that deploys it -
+ * the one in its directory or above it whose `template_file` names it, else
+ * the one in its directory where it has the name the CLI looks for and the
+ * file names none - over the options; the options alone for a template no
+ * `samconfig` deploys, as `aws cloudformation deploy` would be run with them.
+ */
+const configFor = (repoDir: string, file: string, options: Readonly<Record<string, string>>): DeployConfig => {
+  const own = posix.dirname(file) === '' ? '.' : posix.dirname(file);
+  for (let dir = own; ; dir = posix.dirname(dir)) {
+    const config = deployConfigOf(repoDir, dir, options);
+    if (config.file !== undefined) {
+      if (config.template !== undefined ? localPath(dir, config.template) === file : dir === own && TEMPLATE_FILES.includes(posix.basename(file))) return config;
+      // A file that does not parse names nothing; the template it sits beside is still the one it was written for.
+      if (config.unreadable !== undefined && dir === own) return config;
+    }
+    if (dir === '.' || dir === '') return deployConfigOf(repoDir, own, options, false);
+  }
+};
 
 /** What a template gives the one it is nested in: its outputs, by name. */
 export interface TemplateResult {
@@ -110,7 +152,10 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   }
   const written = isRecord(document.value) ? document.value : {};
   const dir = posix.dirname(file) === '' ? '.' : posix.dirname(file);
-  const config: DeployConfig = options.parent === undefined ? deployConfigOf(repoDir, dir, options.options) : { parameters: {}, from: {} };
+  // A template nested in one of the transform's is read as the transform reads it.
+  const dialect: Dialect = options.parent?.dialect === 'sam' || transformsOf(written).includes(SAM_TRANSFORM) ? 'sam' : 'cloudformation';
+  // `sam deploy` deploys a plain template too, the one its samconfig names; a nested one is handed its parent's parameters instead.
+  const config: DeployConfig = options.parent === undefined ? configFor(repoDir, file, options.options) : { parameters: {}, from: {} };
   if (config.file !== undefined) options.loaded.add(join(repoDir, config.file));
   if (config.unreadable !== undefined && config.file !== undefined) {
     parts.rows.push({
@@ -138,7 +183,8 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
     },
     configFile: config.file ?? 'samconfig.toml',
   });
-  const scope = options.parent?.scope ?? (dir === '.' ? '' : `${dir}/`);
+  // A SAM template is one to a directory, as the CLI finds it; plain templates are often several, each kept apart by its name.
+  const scope = options.parent?.scope ?? (dialect === 'cloudformation' ? `${file.replace(/\.[^./]+$/, '')}.` : dir === '.' ? '' : `${dir}/`);
   const row = (path: readonly PathStep[], symbol: string, rest: Omit<Unresolved, 'file' | 'line' | 'symbol'>): void => {
     for (let depth = path.length; depth >= 0; depth -= 1) {
       const at = document.at(path.slice(0, depth));
@@ -170,15 +216,29 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   }
   const resources: Record<string, unknown> = {};
   const conditional = new Map<string, string>();
+  const transformed = new Set<string>();
   for (const [logicalId, resource] of Object.entries(expanded.resources)) {
     if (!isRecord(resource)) continue;
+    // A type of the transform in a template that does not name it is one CloudFormation refuses.
+    if (dialect === 'cloudformation' && String(resource['Type']).startsWith('AWS::Serverless::')) {
+      transformed.add(String(resource['Type']));
+      continue;
+    }
     const decided = resolver.resourceCondition(resource);
     if (decided === false) continue;
     if (decided instanceof Unread) conditional.set(logicalId, textOf(resource['Condition']) ?? 'a condition');
     resources[logicalId] = { ...resource, Properties: resolver.resolve(resource['Properties'] ?? {}) };
   }
+  if (transformed.size > 0 || (dialect === 'cloudformation' && written['Globals'] !== undefined)) {
+    const what = [...[...transformed].sort(), ...(written['Globals'] === undefined ? [] : ['Globals'])].join(', ');
+    row(transformed.size > 0 ? ['Resources'] : ['Globals'], `${file}#Transform`, {
+      reason: 'deployment-plugin-unread',
+      message: `${file} declares ${what}, which only the SAM transform reads, and names no Transform: ${SAM_TRANSFORM}; CloudFormation refuses it, and none of it is read`,
+      hint: `Add Transform: ${SAM_TRANSFORM} to the template, and it is read as a SAM template.`,
+    });
+  }
   const globals: Record<string, Record<string, unknown>> = {};
-  const writtenGlobals = resolver.resolve(written['Globals']);
+  const writtenGlobals = dialect === 'sam' ? resolver.resolve(written['Globals']) : undefined;
   if (isRecord(writtenGlobals)) for (const [kind, value] of Object.entries(writtenGlobals)) if (isRecord(value)) globals[kind] = value;
 
   // Every function first, by logical id, because everything else points at one.
@@ -210,6 +270,7 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
       functionOf: (logicalId) => functions.get(logicalId)?.index,
       attributeOf: (logicalId, attribute) => (attribute.startsWith('Outputs.') ? outputs.get(logicalId)?.get(attribute.slice('Outputs.'.length)) : undefined),
       paths: expanded.paths,
+      ...(options.imports === undefined ? {} : { imported: options.imports }),
     },
   );
   const functionIndex = new Map<string, number>();
@@ -221,7 +282,7 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   for (const resource of template.resources.values()) {
     const property = NESTED.get(resource.type);
     if (property === undefined) continue;
-    outputs.set(resource.logicalId, readNested(parts, reading, resource, property, options));
+    outputs.set(resource.logicalId, readNested(parts, reading, resource, property, options, dialect));
   }
 
   const base = parts.functions.length;
@@ -264,7 +325,7 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   }
   readApis(reading);
   readResources(fileReading, ownReaders(reading));
-  for (const resource of template.ofType('AWS::StepFunctions::StateMachine')) readStateMachineResource(fileReading, resource);
+  for (const resource of template.ofType('AWS::StepFunctions::StateMachine')) readStepFunctionsStateMachine(reading, resource);
 
   for (const [logicalId, condition] of conditional) {
     const resource = template.resources.get(logicalId);
@@ -276,7 +337,31 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
       hint: 'Give the parameters the condition reads a value - a Default, samconfig.toml, or services[].infra.options - and it is decided.',
     });
   }
-  return { outputs: outputsOf(reading, resolver.resolve(written['Outputs'])) };
+  const writtenOutputs = resolver.resolve(written['Outputs']);
+  if (options.exports !== undefined) exportsOf(reading, writtenOutputs, options.exports);
+  return { outputs: outputsOf(reading, writtenOutputs) };
+};
+
+/**
+ * The outputs a template exports (`Export.Name`), into the sink, so another
+ * template of the repository importing one by its name is handed what it
+ * names (P248). A function is handed on by its name: its position is this
+ * reading's, and the importer's is another.
+ */
+const exportsOf = (reading: TemplateReading, written: unknown, sink: ExportSink): void => {
+  if (!isRecord(written)) return;
+  for (const output of Object.values(written)) {
+    if (!isRecord(output) || !isRecord(output['Export'])) continue;
+    const name = reading.template.text(output['Export']['Name']);
+    if (typeof name !== 'string') continue;
+    const found = reading.deployedOf(output['Value']);
+    const deployed: Deployed | undefined =
+      found === undefined || found instanceof Unread
+        ? undefined
+        : { kind: found.kind, name: found.name, ...(found.changes === true ? { changes: true } : {}), ...(found.generated === true ? { generated: true } : {}) };
+    const exported: Exported = { ...(deployed === undefined ? {} : { deployed }), text: reading.template.text(output['Value']) };
+    sink.set(name, [...(sink.get(name) ?? []), { file: reading.file.file, exported }]);
+  }
 };
 
 /** The resources the transform adds, each read by this reader; the rest go through the Serverless reader's table. */
@@ -324,7 +409,7 @@ const outputsOf = (reading: TemplateReading, written: unknown): Map<string, Depl
  * of the repository, with the parameters this one hands it; said where it is
  * published somewhere else, which no file here holds.
  */
-const readNested = (parts: DeploymentParts, reading: TemplateReading, resource: { logicalId: string; path: readonly PathStep[]; address: string; properties: Record<string, unknown> }, property: string, options: TemplateReadOptions): ReadonlyMap<string, Deployed | Unread> => {
+const readNested = (parts: DeploymentParts, reading: TemplateReading, resource: { logicalId: string; path: readonly PathStep[]; address: string; properties: Record<string, unknown> }, property: string, options: TemplateReadOptions, dialect: Dialect): ReadonlyMap<string, Deployed | Unread> => {
   const location = resource.properties[property];
   const text = textOf(location);
   const file = text === undefined ? undefined : localPath(reading.dir, text);
@@ -353,11 +438,14 @@ const readNested = (parts: DeploymentParts, reading: TemplateReading, resource: 
     file,
     options: options.options,
     loaded: options.loaded,
+    ...(options.imports === undefined ? {} : { imports: options.imports }),
+    ...(options.exports === undefined ? {} : { exports: options.exports }),
     parent: {
       scope: `${reading.scope}${resource.logicalId}.`,
       parameters,
       ...(reading.template.pseudo.region === undefined ? {} : { region: reading.template.pseudo.region }),
       chain: [...chain, file],
+      dialect,
     },
   }).outputs;
 };

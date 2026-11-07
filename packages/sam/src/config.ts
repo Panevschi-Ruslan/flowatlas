@@ -20,6 +20,9 @@ import { readToml, TomlUnreadable } from './toml.js';
 /** The names the CLI looks for, in its order. */
 export const CONFIG_FILES = ['samconfig.toml', 'samconfig.yaml', 'samconfig.yml'];
 
+/** The names `sam` looks for a template under, in its order, where its `samconfig` names none. */
+export const TEMPLATE_FILES = ['template.yaml', 'template.yml', 'template.json'];
+
 /** The environment the CLI reads when none is named. */
 export const DEFAULT_CONFIG_ENV = 'default';
 
@@ -66,13 +69,17 @@ const readConfigFile = (path: string): Record<string, unknown> => {
   return isTable(value) ? value : {};
 };
 
-/** What the deployment of the template in `dir` is run with. */
-export const deployConfigOf = (repoDir: string, dir: string, options: Readonly<Record<string, string>>): DeployConfig => {
+/**
+ * What the deployment of the template in `dir` is run with: the `samconfig`
+ * there and the options, or the options alone where `withFile` is false - a
+ * template the file beside it is not written for (P248).
+ */
+export const deployConfigOf = (repoDir: string, dir: string, options: Readonly<Record<string, string>>, withFile = true): DeployConfig => {
   const environment = options['config_env'] ?? DEFAULT_CONFIG_ENV;
   let file: string | undefined;
   let document: Record<string, unknown> = {};
   let unreadable: DeployConfig['unreadable'];
-  for (const name of CONFIG_FILES) {
+  for (const name of withFile ? CONFIG_FILES : []) {
     const relative = dir === '.' ? name : `${dir}/${name}`;
     try {
       document = readConfigFile(join(repoDir, relative));

@@ -1,0 +1,12 @@
+openapi: 3.0.1
+info:
+  title: rides-harbour-maps
+  version: '1'
+paths:
+  /maps/{zone}:
+    get:
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        payloadFormatVersion: '2.0'
+        uri: arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-central-1:111122223333:function:rides-harbour-map/invocations

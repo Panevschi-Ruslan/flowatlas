@@ -297,8 +297,11 @@ describe('what a repository looks like', () => {
   });
 
   // The Serverless Framework and the CDK were named as unread until P57 read
-  // them, AWS SAM until P246.
+  // them, AWS SAM until P246; a plain CloudFormation template under any name read nothing before P248.
   it('names the lambda type for a deployment that is read, whatever the manifest says', () => {
+    expect(
+      looksLike(repository({ 'orders-stack.yaml': 'AWSTemplateFormatVersion: "2010-09-09"\nResources:\n  Fn: { Type: AWS::Lambda::Function }\n', 'package.json': {} }), 'nestjs'),
+    ).toBe('it looks like lambda rather than nestjs; set its type to "lambda"');
     expect(looksLike(repository({ 'template.yaml': 'Transform: AWS::Serverless-2016-10-31\nResources: {}\n', 'package.json': {} }), 'nestjs')).toBe(
       'it looks like lambda rather than nestjs; set its type to "lambda"',
     );

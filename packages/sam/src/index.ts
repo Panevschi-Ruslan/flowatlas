@@ -1,75 +1,21 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, posix, relative } from 'node:path';
+import { statSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { toPosixPath, type Deployment, type DeploymentReadOptions, type DeploymentReader } from '@flowatlas/core';
-import { emptyParts, readServiceFile } from '@flowatlas/serverless';
-import { CONFIG_FILES, deployConfigOf } from './config.js';
-import { localPath } from './reading.js';
-import { nestedFilesOf, readTemplate, SAM_TRANSFORM } from './template.js';
+import { emptyParts } from '@flowatlas/serverless';
+import { importsAny, repositoryExports } from './exports.js';
+import { cloudFormationFiles, templateCopies, templateFiles } from './files.js';
+import { readTemplate } from './template.js';
 
 export { readToml, TomlUnreadable } from './toml.js';
-export { deployConfigOf, parameterOverrides, CONFIG_FILES, type DeployConfig } from './config.js';
+export { deployConfigOf, parameterOverrides, CONFIG_FILES, TEMPLATE_FILES, type DeployConfig } from './config.js';
 export { Resolver, expandLoops } from './intrinsics.js';
-export { SAM_KINDS, SAM_TRANSFORM, readTemplate, transformsOf } from './template.js';
+export { SAM_KINDS, SAM_TRANSFORM, readTemplate, transformsOf, type Dialect, type ExportSink } from './template.js';
 export { withGlobals } from './functions.js';
+export { cloudFormationFiles, isTemplateDocument, templateCopies, templateFiles } from './files.js';
+export { repositoryExports, type Imports } from './exports.js';
 
-/** The names `sam` looks for a template under, in its order. */
-export const TEMPLATE_FILES = ['template.yaml', 'template.yml', 'template.json'];
-
-/** Directories that never hold a template of their own: installs, build output, the CLI's own (`.aws-sam`). */
-const NOT_TEMPLATES = new Set(['node_modules', 'dist', 'build', 'cdk.out', '.aws-sam', '.serverless', '.flowatlas', '.git']);
-
-/** How far below the repository a template is looked for: `services/orders/template.yaml` is two. */
-const MOST_DEPTH = 4;
-
-/** Whether a file is a template written for the SAM transform: cheap, before anything is parsed. */
-const isSamTemplate = (path: string): boolean => {
-  try {
-    return readFileSync(path, 'utf8').includes(SAM_TRANSFORM);
-  } catch {
-    return false;
-  }
-};
-
-/**
- * Every SAM template of a repository, repo-relative and sorted: in a
- * directory, the one its `samconfig` names, else the first of the names the
- * CLI looks for, when it is written for the transform. A template another
- * one nests is read as part of it, not again on its own.
- */
-export const templateFiles = (repoDir: string): string[] => {
-  const found: string[] = [];
-  const walk = (dir: string, depth: number): void => {
-    let entries;
-    try {
-      entries = readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    const rel = toPosixPath(relative(repoDir, dir)) || '.';
-    const names = new Set(entries.filter((entry) => entry.isFile()).map((entry) => entry.name));
-    const configured = CONFIG_FILES.some((name) => names.has(name)) ? deployConfigOf(repoDir, rel, {}).template : undefined;
-    const named = configured === undefined ? undefined : localPath(rel, configured);
-    const own = named ?? TEMPLATE_FILES.map((name) => (rel === '.' ? name : `${rel}/${name}`)).find((file) => names.has(posix.basename(file)));
-    if (own !== undefined && isSamTemplate(join(repoDir, own))) found.push(own);
-    if (depth >= MOST_DEPTH) return;
-    for (const entry of entries) {
-      if (entry.isDirectory() && !entry.name.startsWith('.') && !NOT_TEMPLATES.has(entry.name)) walk(join(dir, entry.name), depth + 1);
-    }
-  };
-  walk(repoDir, 0);
-  const all = [...new Set(found)].sort();
-  const nested = new Set<string>();
-  for (const file of all) {
-    try {
-      for (const child of nestedFilesOf(readServiceFile(join(repoDir, file)).value, posix.dirname(file))) if (child !== file) nested.add(child);
-    } catch {
-      // A template that does not parse nests nothing; its own reading says why.
-    }
-  }
-  const roots = all.filter((file) => !nested.has(file));
-  // Templates that only nest one another have no root: the first is read as one.
-  return roots.length === 0 ? all.slice(0, 1) : roots;
-};
+/** Every template of a repository, SAM and plain: what one stack's `Fn::ImportValue` of another's export is read across. */
+const allTemplates = (repoDir: string): string[] => [...new Set([...templateFiles(repoDir), ...cloudFormationFiles(repoDir)])].sort();
 
 const changedAt = (path: string): number | undefined => {
   try {
@@ -90,27 +36,59 @@ interface Reading {
 }
 
 /**
- * The last reading of each repository, by what it is read with, taken again
- * only once a template or a file read beside one has changed, as the other
- * readers keep theirs (R176).
+ * A reader of the SAM templates of a repository, or of its plain ones, and of
+ * the copies a package command wrote of them, each a note. Its last reading
+ * of each repository, by what it is read with, is taken again only once a
+ * template of the repository - its own, or one whose exports its own import -
+ * or a file read beside one has changed, as the other readers keep theirs
+ * (R176).
  */
-const readings = new Map<string, Reading>();
-
-const readingOf = (options: DeploymentReadOptions): Reading => {
-  const { repoDir } = options;
-  const files = templateFiles(repoDir);
-  const given = options.service?.infra?.options ?? {};
-  const key = `${repoDir}\0${JSON.stringify(given)}`;
-  const stamp = stampOf(files.map((file) => join(repoDir, file)));
-  const kept = readings.get(key);
-  if (kept !== undefined && kept.stamp === stamp && stampOf(kept.loaded) === kept.loadedStamp) return kept;
-  const parts = emptyParts();
-  const loaded = new Set<string>();
-  for (const file of files) readTemplate(parts, { repoDir, file, options: given, loaded });
-  const sorted = [...loaded].sort();
-  const reading: Reading = { deployment: parts, stamp, loaded: sorted, loadedStamp: stampOf(sorted) };
-  readings.set(key, reading);
-  return reading;
+const templateReader = (name: string, sam: boolean): DeploymentReader => {
+  const filesOf = sam ? templateFiles : cloudFormationFiles;
+  const readings = new Map<string, Reading>();
+  const readingOf = (options: DeploymentReadOptions): Reading => {
+    const { repoDir } = options;
+    const files = filesOf(repoDir);
+    const all = allTemplates(repoDir);
+    const copies = templateCopies(repoDir, sam);
+    const given = options.service?.infra?.options ?? {};
+    const key = `${repoDir}\0${JSON.stringify(given)}`;
+    const stamp = `${files.join('|')}\0${copies.map((copy) => copy.file).join('|')}\0${stampOf(all.map((file) => join(repoDir, file)))}`;
+    const kept = readings.get(key);
+    if (kept !== undefined && kept.stamp === stamp && stampOf(kept.loaded) === kept.loadedStamp) return kept;
+    const parts = emptyParts();
+    const loaded = new Set<string>();
+    const imports = repositoryExports(repoDir, all, given);
+    for (const file of files) readTemplate(parts, { repoDir, file, options: given, loaded, imports });
+    for (const copy of copies) {
+      parts.rows.push({
+        file: copy.file,
+        line: 1,
+        symbol: copy.file,
+        reason: 'deployment-copy-not-read',
+        level: 'info',
+        message: `${copy.file} declares what ${copy.of} does, with uploads where ${copy.of} names files of the repository: it is the copy a package command writes, and is read once, as ${copy.of}`,
+        hint: 'Nothing to fix. Keep the packaged copy out of the repository, and this note goes too.',
+      });
+    }
+    const sorted = [...loaded].sort();
+    const reading: Reading = { deployment: parts, stamp, loaded: sorted, loadedStamp: stampOf(sorted) };
+    readings.set(key, reading);
+    return reading;
+  };
+  return {
+    name,
+    declares: (repoDir) => filesOf(repoDir).length > 0,
+    read: (options) => readingOf(options).deployment,
+    files: (repoDir, options) => {
+      const files = filesOf(repoDir);
+      if (files.length === 0) return [];
+      const { loaded } = readingOf({ repoDir, config: options?.config as DeploymentReadOptions['config'], ...(options?.service === undefined ? {} : { service: options.service }) });
+      // A template whose exports these import is read with them, so a change to it is a change to this reading.
+      const exporters = importsAny(repoDir, files) ? allTemplates(repoDir) : [];
+      return [...new Set([...files, ...exporters, ...loaded.map((path) => toPosixPath(relative(repoDir, path)))])].sort();
+    },
+  };
 };
 
 /**
@@ -122,14 +100,17 @@ const readingOf = (options: DeploymentReadOptions): Reading => {
  * know - a name the platform generates, a value from another stack, a branch
  * under a condition nothing settles - is a stand-in or a row that says so.
  */
-export const samReader: DeploymentReader = {
-  name: 'sam',
-  declares: (repoDir) => templateFiles(repoDir).length > 0,
-  read: (options) => readingOf(options).deployment,
-  files: (repoDir, options) => {
-    const files = templateFiles(repoDir);
-    if (files.length === 0) return [];
-    const { loaded } = readingOf({ repoDir, config: options?.config as DeploymentReadOptions['config'], ...(options?.service === undefined ? {} : { service: options.service }) });
-    return [...new Set([...files, ...loaded.map((path) => toPosixPath(relative(repoDir, path)))])].sort();
-  },
-};
+export const samReader: DeploymentReader = templateReader('sam', true);
+
+/**
+ * Plain CloudFormation templates, read the same way (P248).
+ *
+ * A template with no SAM transform is a SAM template with none of its types:
+ * the functions, mappings, APIs written as resources, rules, subscriptions,
+ * notifications and state machines are read by the same code, so it is a
+ * second reader of the same package rather than a package of its own. It
+ * has its own name, because `meta.deployedBy` says which tool a deployment is
+ * written for, and its own way of finding files: a template of this kind may
+ * be called anything and kept anywhere.
+ */
+export const cloudFormationReader: DeploymentReader = templateReader('cloudformation', false);

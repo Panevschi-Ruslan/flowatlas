@@ -1,0 +1,14 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "An older template of the fleet, by the extension templates once had, that declares a SAM function and names no transform.",
+  "Resources": {
+    "RetiredTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": { "TopicName": "rides-fleet-retired" }
+    },
+    "RetireFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": { "Handler": "fleet/retire.handler", "Runtime": "nodejs20.x" }
+    }
+  }
+}

@@ -548,15 +548,17 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'api-body-unread': () =>
     'An API is created from an OpenAPI body that is not read, so none of its routes are drawn. Write the body as templatefile(), file(), jsonencode() or a heredoc, with a path the files settle and text that is JSON or YAML with paths.',
   'deployment-unread': () =>
-    'The repository declares Lambda packages and no deployment description this reads. Functions are read from Terraform, a Serverless Framework file, an AWS CDK app in TypeScript or an AWS SAM template; the handlers are still read as code, and nothing reaches them.',
+    'The repository declares Lambda packages and no deployment description this reads. Functions are read from Terraform, a Serverless Framework file, an AWS CDK app in TypeScript, an AWS SAM template or a CloudFormation template; the handlers are still read as code, and nothing reaches them.',
   'nested-deployment-unread': () =>
     'A deployment nests another whose description is published somewhere else - an application of a registry, a template at a web or storage address - so nothing it declares is read. Keep the nested description in the repository and point at it by a relative path; one published elsewhere is read where its own repository is.',
   'layer-not-followed': () =>
     'Shared code is deployed as a layer that functions load when they run. Its sources are read as code where they are in the repository, but an import of the layer is not followed to them. Nothing to fix unless the calls into it matter; import it by a path or a package the repository resolves and they are followed.',
+  'deployment-copy-not-read': () =>
+    'A deployment description declares exactly what another one of the repository does, with uploads where the other names files of the repository: it is the copy a packaging step wrote, and it is read once, as the description it was written from. Nothing to fix; keep such copies out of the repository and this note goes too.',
   'deployment-app-unread': () =>
     'The program that declares the deployment was not read from its start - no cdk.json, an app that is not TypeScript, or a bound on how far it is followed - so what its stacks are handed is not known. Name a TypeScript app in cdk.json; the stacks are still read on their own.',
   'deployment-plugin-unread': () =>
-    'A plugin or a macro of the deployment declares functions, queues or routes in a section of its own, or rewrites the description when it is deployed, and what it adds is not read. Declare them in the description itself, or expect them missing from the map.',
+    'A plugin or a macro of the deployment declares functions, queues or routes in a section of its own, or rewrites the description when it is deployed - or the description uses the types of one it does not name, such as the SAM transform - and what it adds is not read. Declare them in the description itself, name the transform it is written for, or expect them missing from the map.',
   'construct-repeated-unread': () =>
     'Something is declared once per element of a collection the files do not settle, so neither how many there are nor their names are known; one is read in their place. Write the collection out, or as a constant, and each is read under its own name.',
   'deployed-name-generated': () =>

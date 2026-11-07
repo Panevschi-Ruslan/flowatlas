@@ -31,11 +31,35 @@ const authOf = (properties: Record<string, unknown>): Pick<ApiOf, 'defaultAuthor
   return { ...(authorizer === undefined ? {} : { defaultAuthorizer: authorizer }), ...(auth['ApiKeyRequired'] === true ? { apiKeyRequired: true } : {}) };
 };
 
+/** The resources that deploy an API written as resources to a stage, and the property naming the API. */
+const STAGES: ReadonlyMap<string, string> = new Map([
+  ['AWS::ApiGateway::Stage', 'RestApiId'],
+  ['AWS::ApiGateway::Deployment', 'RestApiId'],
+  ['AWS::ApiGatewayV2::Stage', 'ApiId'],
+]);
+
+/**
+ * The stage an API written as resources is deployed to (P248): the one name
+ * every stage and deployment of it gives, by a `Ref` of it; none where it has
+ * several, or none is written.
+ */
+const stageOf = (reading: TemplateReading, api: Resource): string | undefined => {
+  const names = new Set<string>();
+  for (const resource of reading.template.resources.values()) {
+    const property = STAGES.get(resource.type);
+    const ref = property === undefined ? undefined : intrinsicOf(resource.properties[property]);
+    const name = textOf(resource.properties['StageName']);
+    if (ref?.[0] === 'Ref' && ref[1] === api.logicalId && name !== undefined) names.add(name);
+  }
+  return names.size === 1 ? [...names][0] : undefined;
+};
+
 /** An API resource, as an event or a route sees it. */
 const apiOf = (reading: TemplateReading, resource: Resource, kind: 'rest' | 'http'): ApiOf => {
-  const properties = resource.type.startsWith('AWS::Serverless::') ? withGlobals(reading.globals[kind === 'rest' ? 'Api' : 'HttpApi'], resource.properties) : resource.properties;
+  const serverless = resource.type.startsWith('AWS::Serverless::');
+  const properties = serverless ? withGlobals(reading.globals[kind === 'rest' ? 'Api' : 'HttpApi'], resource.properties) : resource.properties;
   const name = textOf(properties['Name']);
-  const stage = textOf(properties['StageName']);
+  const stage = serverless ? textOf(properties['StageName']) : stageOf(reading, resource);
   return {
     ...(name === undefined ? {} : { name }),
     address: `${reading.file.file}#${resource.address}`,
@@ -102,18 +126,31 @@ const drawn = (reading: TemplateReading, api: ApiOf, method: string, path: strin
   return reading.file.parts.routes.some((route) => route.meta?.['apiAddress'] === api.address && route.meta?.['key'] === key);
 };
 
+/**
+ * Where each API type keeps its OpenAPI body: written in place, and in a file
+ * - SAM's `DefinitionUri`, and the `BodyS3Location` a plain template names a
+ * local file in for `aws cloudformation package` to upload (P248).
+ */
+const BODIES: ReadonlyMap<string, readonly [body: string, location: string]> = new Map([
+  ['AWS::Serverless::Api', ['DefinitionBody', 'DefinitionUri']],
+  ['AWS::Serverless::HttpApi', ['DefinitionBody', 'DefinitionUri']],
+  ['AWS::ApiGateway::RestApi', ['Body', 'BodyS3Location']],
+  ['AWS::ApiGatewayV2::Api', ['Body', 'BodyS3Location']],
+]);
+
 /** The body an API is defined by: written in place, included with `AWS::Include`, or a file of its own. */
 const bodyOf = (
   reading: TemplateReading,
   resource: Resource,
 ): { readonly file: string; readonly document: PositionedDocument; readonly at: readonly PathStep[] } | Unread | undefined => {
-  const body = resource.properties['DefinitionBody'];
+  const [bodyKey, locationKey] = BODIES.get(resource.type) ?? ['DefinitionBody', 'DefinitionUri'];
+  const body = resource.properties[bodyKey];
   const include = intrinsicOf(body);
   const location =
-    include?.[0] === 'Fn::Transform' && isRecord(include[1]) && isRecord(include[1]['Parameters']) ? textOf(include[1]['Parameters']['Location']) : textOf(resource.properties['DefinitionUri']);
-  if (body !== undefined && include === undefined && isRecord(body)) return { file: reading.file.file, document: reading.file.document, at: [...resource.path, 'Properties', 'DefinitionBody'] };
+    include?.[0] === 'Fn::Transform' && isRecord(include[1]) && isRecord(include[1]['Parameters']) ? textOf(include[1]['Parameters']['Location']) : textOf(resource.properties[locationKey]);
+  if (body !== undefined && include === undefined && isRecord(body)) return { file: reading.file.file, document: reading.file.document, at: [...resource.path, 'Properties', bodyKey] };
   if (body instanceof Unread) return body;
-  if (location === undefined) return resource.properties['DefinitionUri'] === undefined && body === undefined ? undefined : new Unread('the body is in a location that is not a file of the repository');
+  if (location === undefined) return resource.properties[locationKey] === undefined && body === undefined ? undefined : new Unread('the body is in a location that is not a file of the repository');
   try {
     const local = reading.local(location);
     return local === undefined ? new Unread(`${location} is not a file of the repository`) : { ...local, at: [] };
@@ -131,13 +168,15 @@ const readBody = (reading: TemplateReading, resource: Resource, kind: 'rest' | '
     reading.file.row(site.path, site.address, {
       reason: 'api-body-unread',
       message: `the OpenAPI body of ${resource.address} is not read: ${body.text}`,
-      hint: 'Write the body under DefinitionBody, include it with AWS::Include, or point DefinitionUri at a file of the repository.',
+      hint: resource.type.startsWith('AWS::Serverless::')
+        ? 'Write the body under DefinitionBody, include it with AWS::Include, or point DefinitionUri at a file of the repository.'
+        : 'Write the body under Body, include it with AWS::Include, or point BodyS3Location at a file of the repository for aws cloudformation package to upload.',
     });
     return;
   }
   const own = body.file === reading.file.file;
   // A body in place has been resolved with the template; one in a file of its own is read as written.
-  const value = own ? resource.properties['DefinitionBody'] : body.document.value;
+  const value = own ? resource.properties[(BODIES.get(resource.type) ?? ['DefinitionBody'])[0]] : body.document.value;
   const paths = isRecord(value) && isRecord(value['paths']) ? value['paths'] : {};
   const api = apiOf(reading, resource, kind);
   for (const [path, item] of Object.entries(paths)) {
@@ -222,7 +261,35 @@ const readV2Route = (reading: TemplateReading, route: Resource): void => {
     return;
   }
   const [method, path] = routeKey === '$default' ? ['ANY', '/{proxy+}'] : routeKey.split(/\s+/);
-  pushRoute(reading, site, method ?? 'ANY', path ?? '/', apiOf(reading, api, 'http'), []);
+  const authorization = textOf(properties['AuthorizationType']);
+  const guards = authorization === undefined || authorization === 'NONE' ? [] : [{ label: authorization, ...reading.file.siteOf(route.path) }];
+  pushRoute(reading, site, method ?? 'ANY', path ?? '/', apiOf(reading, api, 'http'), guards);
+};
+
+/**
+ * An HTTP API made in one resource (P248): `Target` is the function every
+ * request runs, on the route `RouteKey` names, `$default` where it names none
+ * - what `aws apigatewayv2 create-api --target` makes, written in a template.
+ */
+const readQuickCreate = (reading: TemplateReading, api: Resource): void => {
+  const { properties } = api;
+  const address = `${api.address}.Target`;
+  const path = [...api.path, 'Properties', 'Target'];
+  const routeKey = properties['RouteKey'] === undefined ? '$default' : textOf(properties['RouteKey']);
+  const fn = functionOfUri(reading, properties['Target']);
+  if (routeKey === undefined || fn === undefined || fn instanceof Unread || fn.function === undefined) {
+    const proxied = /^https?:/.test(textOf(properties['Target']) ?? '');
+    reading.file.row(path, address, {
+      reason: 'route-target-unread',
+      ...(proxied ? { level: 'info' as const } : {}),
+      message: `${api.address} is not drawn: ${routeKey === undefined ? 'its RouteKey is not read' : proxied ? 'its Target is an HTTP address, which no function answers' : `the function its Target runs is not read${fn instanceof Unread ? `: ${fn.text}` : ''}`}`,
+      hint: 'Write Target as a Ref or Fn::GetAtt of a function the template declares, or its ARN.',
+    });
+    return;
+  }
+  const site: EventSite = { to: { kind: 'function', function: fn.function }, function: fn.function, label: fn.name, logicalId: api.logicalId, path, address };
+  const [method, routePath] = routeKey === '$default' ? ['ANY', '/{proxy+}'] : routeKey.split(/\s+/);
+  pushRoute(reading, site, method ?? 'ANY', routePath ?? '/', apiOf(reading, api, 'http'), []);
 };
 
 // ----------------------------------------------------- REST, written out
@@ -260,16 +327,23 @@ const readRestMethod = (reading: TemplateReading, method: Resource): void => {
   }
   const site: EventSite = { to: { kind: 'function', function: fn.function }, function: fn.function, label: fn.name, logicalId: method.logicalId, path: method.path, address: method.address };
   const authorization = textOf(properties['AuthorizationType']);
-  const guards = authorization === undefined || authorization === 'NONE' ? [] : [{ label: authorization, ...reading.file.siteOf(method.path) }];
+  const at = reading.file.siteOf(method.path);
+  const guards = [
+    ...(authorization === undefined || authorization === 'NONE' ? [] : [{ label: authorization, ...at }]),
+    ...(properties['ApiKeyRequired'] === true ? [{ label: 'api key', ...at }] : []),
+  ];
   pushRoute(reading, site, verb, path === '' ? '/' : path, apiOf(reading, apiResource, 'rest'), guards);
 };
 
 /** Every route a template writes on its APIs rather than on its functions' events. */
 export const readApis = (reading: TemplateReading): void => {
   for (const resource of reading.template.resources.values()) {
-    if (resource.type === 'AWS::Serverless::Api') readBody(reading, resource, 'rest');
+    if (resource.type === 'AWS::Serverless::Api' || resource.type === 'AWS::ApiGateway::RestApi') readBody(reading, resource, 'rest');
     else if (resource.type === 'AWS::Serverless::HttpApi') readBody(reading, resource, 'http');
-    else if (resource.type === 'AWS::ApiGatewayV2::Route') readV2Route(reading, resource);
+    else if (resource.type === 'AWS::ApiGatewayV2::Api') {
+      if (textOf(resource.properties['ProtocolType']) !== 'WEBSOCKET') readBody(reading, resource, 'http');
+      if (resource.properties['Target'] !== undefined) readQuickCreate(reading, resource);
+    } else if (resource.type === 'AWS::ApiGatewayV2::Route') readV2Route(reading, resource);
     else if (resource.type === 'AWS::ApiGateway::Method') readRestMethod(reading, resource);
   }
 };

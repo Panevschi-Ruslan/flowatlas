@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:45:14.972Z",
+  "configHash": "77e23ae62b03",
+  "services": [
+    {
+      "name": "rides",
+      "repo": "./rides",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 42,
+      "edges": 28,
+      "types": 0,
+      "unresolved": 7,
+      "durationMs": 2290,
+      "packages": {
+        "name": "rides",
+        "runtime": [
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": [
+      "channel:dynamodb/rides-harbour-docks"
+    ]
+  },
+  "routes": {
+    "total": 5,
+    "called": 0,
+    "uncalled": [
+      "entry:rides:http:ALL:/*@rides-kiosk",
+      "entry:rides:http:ALL:/:param",
+      "entry:rides:http:GET:/maps/:param",
+      "entry:rides:http:GET:/rides/:param",
+      "entry:rides:http:POST:/rides"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "rides",
+      "file": "stacks/docks.yaml",
+      "line": 15,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "dynamodb/rides-harbour-docks is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:dynamodb/rides-harbour-docks"
+    }
+  ],
+  "totals": {
+    "nodes": 42,
+    "edges": 31,
+    "types": 0,
+    "missed": 6,
+    "sites": 6,
+    "notes": 2,
+    "findings": 1,
+    "unresolved": 6
+  }
+}

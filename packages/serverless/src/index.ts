@@ -6,7 +6,7 @@ import { emptyParts } from './reading.js';
 import { readService } from './service.js';
 
 export { readServiceFile, readServiceYaml, ServiceFileUnreadable } from './document.js';
-export { Template, RESOURCE_KINDS, intrinsicOf, type Declares, type Deployed, type Known, type Pseudo, type Resource, type TemplateOptions } from './cloudformation.js';
+export { Template, RESOURCE_KINDS, intrinsicOf, type Declares, type Deployed, type Exported, type Known, type Pseudo, type Resource, type TemplateOptions } from './cloudformation.js';
 export { Variables, Unread, HOLE, DEFAULT_STAGE, DEFAULT_REGION, isRecord, textOf } from './variables.js';
 export { EVENT_READERS } from './events.js';
 export { functionLogicalId, normalizedName } from './service.js';

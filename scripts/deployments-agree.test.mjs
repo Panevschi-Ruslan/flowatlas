@@ -1,10 +1,11 @@
 /**
  * One deployment written in Terraform, as a Serverless Framework service, as a
- * CDK app and as a SAM template reads as one graph (P57, P246).
+ * CDK app, as a SAM template and as plain CloudFormation reads as one graph
+ * (P57, P246, P248).
  *
  *   node --test scripts/deployments-agree.test.mjs
  *
- * The four snapshots are the build's own, written by `fixtures-check.mjs
+ * The five snapshots are the build's own, written by `fixtures-check.mjs
  * --update`; this compares what they hold, set apart from where each part is
  * written, and checks that the comparison is not one that passes on anything.
  */
@@ -18,7 +19,7 @@ import { differences, ORDERS_FIXTURES, projection } from './deployments-agree.mj
 const root = join(fileURLToPath(new URL('.', import.meta.url)), '..');
 const graphOf = (name) => JSON.parse(readFileSync(join(root, 'fixtures', name, 'expected.project-graph.json'), 'utf8'));
 
-describe('one deployment, four formats', () => {
+describe('one deployment, five formats', () => {
   const [terraform, ...others] = ORDERS_FIXTURES;
   const base = projection(graphOf(terraform));
 

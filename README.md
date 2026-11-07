@@ -948,13 +948,17 @@ prove, and the path is given so you can run it.
   start in one call and starts it by id in the next as well - so a route leads
   into the workflow it starts (`fixtures/start-workflow-sdk`,
   `fixtures/start-workflow-helper`, `fixtures/start-workflow-by-record`).
-- **Serverless on AWS, declared with the Serverless Framework, the CDK or
-  SAM.** A `serverless.yml` (or `.yaml`, `.json`, `.ts`, `.js`), a CDK app in
-  TypeScript and an AWS SAM `template.yaml` are read into the same functions,
-  routes, subscribers, streams and workflows the Terraform reader gives - one
-  deployment written all four ways reads as one graph
+- **Serverless on AWS, declared with the Serverless Framework, the CDK, SAM or
+  CloudFormation.** A `serverless.yml` (or `.yaml`, `.json`, `.ts`, `.js`), a
+  CDK app in TypeScript, an AWS SAM `template.yaml` and a plain CloudFormation
+  template under any name are read into the same functions, routes,
+  subscribers, streams and workflows the Terraform reader gives - one
+  deployment written all five ways reads as one graph
   (`fixtures/terraform-orders`, `fixtures/serverless-orders`,
-  `fixtures/cdk-orders`, `fixtures/sam-orders`). The framework's variables are
+  `fixtures/cdk-orders`, `fixtures/sam-orders`,
+  `fixtures/cloudformation-orders`), and a stack's `Fn::ImportValue` of
+  another stack's export in the same repository is what that export names
+  (`fixtures/cloudformation-shapes`). The framework's variables are
   resolved where the files settle them; the CDK app is followed from the entry
   `cdk.json` names, through its constructs, helpers, loops and conditions,
   without being run or installed; a SAM template is read with its parameters

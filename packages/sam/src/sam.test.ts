@@ -5,7 +5,7 @@ import { generatedName, parseConfig, type Deployment } from '@flowatlas/core';
 import { Unread } from '@flowatlas/serverless';
 import { describe, expect, it } from 'vitest';
 import { deployConfigOf, parameterOverrides } from './config.js';
-import { samReader, templateFiles } from './index.js';
+import { cloudFormationFiles, cloudFormationReader, samReader, templateFiles } from './index.js';
 import { expandLoops, Resolver } from './intrinsics.js';
 import { readToml, TomlUnreadable } from './toml.js';
 
@@ -621,5 +621,257 @@ describe('the reader', () => {
     const config = parseConfig({});
     expect(samReader.read({ repoDir, config }).functions[0]?.name).toBe('shop-dev-fn');
     expect(samReader.files(repoDir, { config })).toEqual(['samconfig.toml', 'template.yaml']);
+  });
+});
+
+/** The plain CloudFormation reader over a repository of the files given (P248). */
+const readPlain = (files: Record<string, string>, options?: Record<string, string>): Deployment => {
+  const repoDir = repository(files);
+  return cloudFormationReader.read({
+    repoDir,
+    config: parseConfig({}),
+    service: { name: 'svc', repo: repoDir, type: 'lambda', ...(options === undefined ? {} : { infra: { vars: [], options } }) },
+  });
+};
+
+/** A plain template, its resources indented under `Resources:`. */
+const plain = (resources: string, head = ''): string => `AWSTemplateFormatVersion: '2010-09-09'\n${head}Resources:\n${resources.replace(/^/gm, '  ')}\n`;
+
+describe('plain CloudFormation templates (P248)', () => {
+  it('finds a template by what it says, under any name and anywhere, and leaves out what another reader reads or a template nests', () => {
+    const repoDir = repository({
+      'stacks/queues.yaml': plain('Q: { Type: AWS::SQS::Queue }'),
+      'infra/network/vpc.json': JSON.stringify({ Resources: { Vpc: { Type: 'AWS::EC2::VPC' } } }),
+      'legacy/orders.template': plain('T: { Type: AWS::SNS::Topic }'),
+      'template.yaml': template('Fn: { Type: AWS::Serverless::Function }'),
+      'openapi.yaml': 'openapi: 3.0.0\npaths: {}\n',
+      'package.json': '{ "name": "svc", "description": "Resources for AWS::Lambda" }',
+      'broken.yaml': 'AWSTemplateFormatVersion: [\n',
+      'node_modules/kit/stack.yaml': plain('Q: { Type: AWS::SQS::Queue }'),
+      'dist/stack.yaml': plain('Q: { Type: AWS::SQS::Queue }'),
+      // The CDK reads the app beside this one; the other is checked in with no app.
+      'app/cdk.json': '{ "app": "npx ts-node bin/app.ts" }',
+      'app/cdk.out/AppStack.template.json': JSON.stringify({ Resources: { Q: { Type: 'AWS::SQS::Queue' } } }),
+      'old/cdk.out/OldStack.template.json': JSON.stringify({ Resources: { Q: { Type: 'AWS::SQS::Queue' } } }),
+      // What a service of the framework loads into its resources is the Serverless reader's.
+      'svc/serverless.yml': 'service: svc\nprovider:\n  name: aws\nresources: ${file(./resources.yml)}\n',
+      'svc/resources.yml': 'Resources:\n  Q: { Type: AWS::SQS::Queue }\n',
+      'parent.yaml': plain('Child: { Type: AWS::CloudFormation::Stack, Properties: { TemplateURL: nested/child.yaml } }'),
+      'nested/child.yaml': plain('Q: { Type: AWS::SQS::Queue }'),
+      // What `aws cloudformation package` and `sam package` write: the same resources, uploaded.
+      'fns/stack.yaml': plain('Fn: { Type: AWS::Lambda::Function, Properties: { Code: ../src } }'),
+      'fns/packaged.yaml': plain('Fn: { Type: AWS::Lambda::Function, Properties: { Code: { S3Bucket: b, S3Key: k } } }'),
+      'api/packaged.yaml': template('Fn: { Type: AWS::Serverless::Function, Properties: { CodeUri: s3://b/k } }'),
+      'api/api.yaml': template('Fn: { Type: AWS::Serverless::Function }'),
+    });
+    expect(cloudFormationFiles(repoDir)).toEqual(['fns/stack.yaml', 'infra/network/vpc.json', 'legacy/orders.template', 'old/cdk.out/OldStack.template.json', 'parent.yaml', 'stacks/queues.yaml']);
+    expect(templateFiles(repoDir)).toEqual(['api/api.yaml', 'template.yaml']);
+    const copies = (reader: typeof samReader): string[] =>
+      reader
+        .read({ repoDir, config: parseConfig({}) })
+        .rows.filter((row) => row.reason === 'deployment-copy-not-read')
+        .map((row) => row.file);
+    expect(copies(cloudFormationReader)).toEqual(['fns/packaged.yaml']);
+    expect(copies(samReader)).toEqual(['api/packaged.yaml']);
+    expect(cloudFormationReader.declares(repository({ 'readme.md': '# no template' }), parseConfig({}))).toBe(false);
+  });
+
+  it('reads a plain template as the SAM reader reads its resources, its addresses under the file, and says what only the transform reads', () => {
+    const deployment = readPlain({
+      'stacks/shop.yaml': plain(
+        [
+          'Fn:',
+          '  Type: AWS::Lambda::Function',
+          '  Properties: { FunctionName: shop-fn, Runtime: nodejs20.x, Handler: orders/place.handler, Code: ../src }',
+          'Queue: { Type: AWS::SQS::Queue }',
+          'Mapping:',
+          '  Type: AWS::Lambda::EventSourceMapping',
+          '  Properties: { EventSourceArn: !GetAtt Queue.Arn, FunctionName: !Ref Fn }',
+          'Logs:',
+          '  Type: AWS::Lambda::Permission',
+          '  Properties: { Action: lambda:InvokeFunction, FunctionName: !Ref Fn, Principal: logs.amazonaws.com }',
+          'Bucket:',
+          '  Type: AWS::Lambda::Permission',
+          '  Properties: { Action: lambda:InvokeFunction, FunctionName: !Ref Fn, Principal: s3.amazonaws.com }',
+          'Public:',
+          '  Type: AWS::Lambda::Permission',
+          "  Properties: { Action: lambda:InvokeFunctionUrl, FunctionName: !Ref Fn, Principal: '*', FunctionUrlAuthType: NONE }",
+          'Other: { Type: AWS::Serverless::Function, Properties: { Handler: x.handler } }',
+        ].join('\n'),
+        'Globals:\n  Function: { Runtime: nodejs20.x }\n',
+      ),
+    });
+    expect(deployment.functions).toEqual([expect.objectContaining({ name: 'shop-fn', address: 'stacks/shop.Resources.Fn', handler: expect.objectContaining({ module: 'orders/place', directory: 'src' }) })]);
+    expect(deployment.deliveries).toEqual([
+      expect.objectContaining({ by: 'mapping', from: { kind: 'queue', name: generatedName('stacks/shop.Resources.Queue') }, to: { kind: 'function', function: 0 } }),
+    ]);
+    expect(deployment.rows.map((row) => [row.reason, row.symbol])).toEqual([
+      ['deployment-plugin-unread', 'stacks/shop.yaml#Transform'],
+      // A stand-in is spelled as an unnamed function's key is, a dot for each slash.
+      ['deployed-name-generated', 'stacks.shop.Resources.Queue'],
+      ['invoker-not-read', 'stacks/shop.Resources.Logs'],
+    ]);
+    expect(deployment.rows[0]?.message).toContain('AWS::Serverless::Function, Globals');
+  });
+
+  it("joins an import to another template's export, however the templates are ordered, and says one no template or two declare", () => {
+    const deployment = readPlain(
+      {
+        // Read first, and imports what the last one exports.
+        'a-functions.yaml': plain(
+          [
+            'Fn:',
+            '  Type: AWS::Lambda::Function',
+            '  Properties:',
+            '    FunctionName: shop-fn',
+            '    Handler: fn.handler',
+            '    Code: src/',
+            '    Environment:',
+            '      Variables:',
+            '        QUEUE_URL: { "Fn::ImportValue": !Sub "${Stage}-holds-url" }',
+            '        BUS: !ImportValue shop-bus',
+            '        NOWHERE: !ImportValue shop-nowhere',
+            '        TWICE: !ImportValue shop-twice',
+            'Holds:',
+            '  Type: AWS::Lambda::EventSourceMapping',
+            '  Properties: { EventSourceArn: { "Fn::ImportValue": !Sub "${Stage}-holds-arn" }, FunctionName: !Ref Fn }',
+            'Changes:',
+            '  Type: AWS::Lambda::EventSourceMapping',
+            '  Properties: { EventSourceArn: !ImportValue shop-table-stream, FunctionName: !Ref Fn, StartingPosition: LATEST }',
+          ].join('\n'),
+          'Parameters:\n  Stage: { Type: String }\n',
+        ),
+        // Exports what it imports in turn: settled on a later pass.
+        'b-relay.yaml': plain('Unused: { Type: AWS::SNS::Topic, Properties: { TopicName: shop-unused } }') + 'Outputs:\n  Bus:\n    Value: !ImportValue shop-bus-source\n    Export: { Name: shop-bus }\n',
+        'c-storage.json': JSON.stringify({
+          Parameters: { Stage: { Type: 'String' } },
+          Resources: {
+            Holds: { Type: 'AWS::SQS::Queue' },
+            Bus: { Type: 'AWS::Events::EventBus', Properties: { Name: 'shop' } },
+            Table: { Type: 'AWS::DynamoDB::Table', Properties: { TableName: 'shop-orders', StreamSpecification: { StreamViewType: 'NEW_IMAGE' } } },
+          },
+          Outputs: {
+            HoldsUrl: { Value: { Ref: 'Holds' }, Export: { Name: { 'Fn::Sub': '${Stage}-holds-url' } } },
+            HoldsArn: { Value: { 'Fn::GetAtt': ['Holds', 'Arn'] }, Export: { Name: { 'Fn::Sub': '${Stage}-holds-arn' } } },
+            BusName: { Value: { Ref: 'Bus' }, Export: { Name: 'shop-bus-source' } },
+            Stream: { Value: { 'Fn::GetAtt': ['Table', 'StreamArn'] }, Export: { Name: 'shop-table-stream' } },
+            One: { Value: 'a', Export: { Name: 'shop-twice' } },
+          },
+        }),
+        'd-other.yaml': plain('T: { Type: AWS::SNS::Topic, Properties: { TopicName: shop-other } }') + 'Outputs:\n  Two:\n    Value: b\n    Export: { Name: shop-twice }\n',
+      },
+      { Stage: 'dev' },
+    );
+    const holds = generatedName('c-storage.Resources.Holds');
+    const environment = deployment.functions[0]?.environment ?? {};
+    expect(environment['QUEUE_URL']?.names).toEqual({ kind: 'queue', name: holds });
+    expect(environment['BUS']?.names).toEqual({ kind: 'bus', name: 'shop' });
+    expect(environment['NOWHERE']?.unread?.text).toBe('the value is imported from the export shop-nowhere, which no template of the repository declares');
+    expect(environment['TWICE']?.unread?.text).toContain('the export shop-twice is declared by 2 templates (c-storage.json, d-other.yaml)');
+    expect(deployment.deliveries.filter((delivery) => delivery.by === 'mapping').map((delivery) => [delivery.address, delivery.from])).toEqual([
+      ['a-functions.Resources.Holds', { kind: 'queue', name: holds }],
+      ['a-functions.Resources.Changes', { kind: 'changes', of: 'table', name: 'shop-orders' }],
+    ]);
+    // The SAM reader of the same repository is handed the same exports.
+    expect(read({ 'template.yaml': template('Q: { Type: AWS::SQS::Queue, Properties: { QueueName: shop-q } }') + 'Outputs:\n  Q:\n    Value: !GetAtt Q.Arn\n    Export: { Name: shop-q-arn }\n', 'fns.yaml': plain('M:\n  Type: AWS::Lambda::EventSourceMapping\n  Properties: { EventSourceArn: !ImportValue shop-q-arn, FunctionName: shop-elsewhere }') }).rows).toEqual([]);
+  });
+
+  it('reads an HTTP API made in one resource, onto the function its Target runs, in a plain template and a SAM one', () => {
+    const resources = [
+      'Fn: { Type: AWS::Lambda::Function, Properties: { FunctionName: shop-fn, Handler: fn.handler, Code: src/ } }',
+      'Quick: { Type: AWS::ApiGatewayV2::Api, Properties: { Name: shop-quick, ProtocolType: HTTP, Target: !GetAtt Fn.Arn } }',
+      'Keyed: { Type: AWS::ApiGatewayV2::Api, Properties: { Name: shop-keyed, ProtocolType: HTTP, RouteKey: GET /status, Target: !Ref Fn } }',
+      'Proxy: { Type: AWS::ApiGatewayV2::Api, Properties: { Name: shop-proxy, ProtocolType: HTTP, Target: "https://example.com" } }',
+    ].join('\n');
+    for (const deployment of [readPlain({ 'stack.yaml': plain(resources) }), read({ 'template.yaml': template(resources) })]) {
+      expect(deployment.routes.map((route) => [route.method, route.path, route.api, route.target])).toEqual([
+        ['ALL', '/:param', 'shop-quick', { function: 0 }],
+        ['GET', '/status', 'shop-keyed', { function: 0 }],
+      ]);
+      expect(deployment.rows.filter((row) => row.reason === 'route-target-unread').map((row) => row.level)).toEqual(['info']);
+    }
+  });
+
+  it('reads the OpenAPI body of a REST or HTTP API in place and from BodyS3Location, the stage it is deployed to, and the guards of its methods and routes', () => {
+    const deployment = readPlain({
+      'stacks/api.yaml': plain(
+        [
+          'Fn: { Type: AWS::Lambda::Function, Properties: { FunctionName: shop-fn, Handler: fn.handler, Code: ../src } }',
+          'Rest:',
+          '  Type: AWS::ApiGateway::RestApi',
+          '  Properties:',
+          '    Name: shop-rest',
+          '    Body:',
+          '      paths:',
+          '        /books:',
+          '          get:',
+          '            x-amazon-apigateway-integration:',
+          '              uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Fn.Arn}/invocations',
+          'RestStage: { Type: AWS::ApiGateway::Stage, Properties: { RestApiId: !Ref Rest, StageName: v1 } }',
+          'Http: { Type: AWS::ApiGatewayV2::Api, Properties: { Name: shop-http, BodyS3Location: ../api/http.yaml } }',
+          'Remote: { Type: AWS::ApiGateway::RestApi, Properties: { Name: shop-remote, BodyS3Location: { Bucket: specs, Key: api.yaml } } }',
+          'Items: { Type: AWS::ApiGateway::Resource, Properties: { RestApiId: !Ref Rest, ParentId: !GetAtt Rest.RootResourceId, PathPart: items } }',
+          'Put:',
+          '  Type: AWS::ApiGateway::Method',
+          '  Properties: { RestApiId: !Ref Rest, ResourceId: !Ref Items, HttpMethod: PUT, AuthorizationType: COGNITO_USER_POOLS, ApiKeyRequired: true, Integration: { Uri: !Sub "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/${Fn.Arn}/invocations" } }',
+          'Integration: { Type: AWS::ApiGatewayV2::Integration, Properties: { ApiId: !Ref Http, IntegrationUri: !GetAtt Fn.Arn } }',
+          'Route: { Type: AWS::ApiGatewayV2::Route, Properties: { ApiId: !Ref Http, RouteKey: DELETE /items, AuthorizationType: JWT, Target: !Sub "integrations/${Integration}" } }',
+        ].join('\n'),
+      ),
+      'api/http.yaml': "paths:\n  /shelves:\n    post:\n      x-amazon-apigateway-integration:\n        uri: !Sub 'arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/${Fn.Arn}/invocations'\n",
+    });
+    expect(deployment.routes.map((route) => [route.method, route.path, route.file, route.meta?.['stage'], route.guards?.map((guard) => guard.label)])).toEqual([
+      ['GET', '/books', 'stacks/api.yaml', 'v1', undefined],
+      ['POST', '/shelves', 'api/http.yaml', undefined, undefined],
+      ['PUT', '/items', 'stacks/api.yaml', 'v1', ['COGNITO_USER_POOLS', 'api key']],
+      ['DELETE', '/items', 'stacks/api.yaml', undefined, ['JWT']],
+    ]);
+    expect(reasons(deployment)).toEqual(['api-body-unread']);
+  });
+
+  it('reads a state machine from the file DefinitionS3Location names, and says one kept in a bucket', () => {
+    const deployment = readPlain({
+      'stacks/flow.yaml': plain(
+        [
+          'Fn: { Type: AWS::Lambda::Function, Properties: { FunctionName: shop-fn, Handler: fn.handler, Code: ../src } }',
+          'Local:',
+          '  Type: AWS::StepFunctions::StateMachine',
+          '  Properties:',
+          '    StateMachineName: shop-flow',
+          '    StateMachineType: EXPRESS',
+          '    DefinitionS3Location: ../flows/flow.asl.json',
+          '    DefinitionSubstitutions: { fn_arn: !GetAtt Fn.Arn }',
+          'Remote:',
+          '  Type: AWS::StepFunctions::StateMachine',
+          '  Properties: { StateMachineName: shop-remote, DefinitionS3Location: { Bucket: flows, Key: remote.json } }',
+        ].join('\n'),
+      ),
+      'flows/flow.asl.json': JSON.stringify({ StartAt: 'Run', States: { Run: { Type: 'Task', Resource: '${fn_arn}', End: true } } }),
+    });
+    expect(deployment.workflows).toEqual([
+      expect.objectContaining({ name: 'shop-flow', definition: expect.objectContaining({ kind: 'text', file: 'flows/flow.asl.json', format: 'json' }), meta: expect.objectContaining({ type: 'EXPRESS' }) }),
+    ]);
+    expect(deployment.workflows[0]?.fill?.('fn_arn')).toBe('arn:aws:lambda:::function:shop-fn');
+    expect(deployment.rows.map((row) => [row.reason, row.symbol])).toEqual([['workflow-definition-not-loaded', 'stacks/flow.Resources.Remote']]);
+  });
+
+  it('reads with a samconfig only the template it deploys, in its directory or below, and stamps the templates whose exports it imports', () => {
+    const repoDir = repository({
+      'samconfig.toml': '[default.deploy.parameters]\nstack_name = "shop-dev"\ntemplate_file = "infra/deployed.yaml"\nparameter_overrides = "Stage=dev"\n',
+      'infra/deployed.yaml': plain(
+        'Fn: { Type: AWS::Lambda::Function, Properties: { FunctionName: !Sub "${AWS::StackName}-${Stage}", Handler: fn.handler, Code: src/, Environment: { Variables: { Q: !ImportValue shop-q-arn } } } }',
+        'Parameters:\n  Stage: { Type: String }\n',
+      ),
+      'other.yaml': plain('Fn: { Type: AWS::Lambda::Function, Properties: { FunctionName: !Sub "other-${Stage}", Handler: fn.handler, Code: src/ } }', 'Parameters:\n  Stage: { Type: String }\n'),
+      'shared.yaml': template('Q: { Type: AWS::SQS::Queue, Properties: { QueueName: shop-q } }') + 'Outputs:\n  Q:\n    Value: !GetAtt Q.Arn\n    Export: { Name: shop-q-arn }\n',
+    });
+    const config = parseConfig({});
+    const deployment = cloudFormationReader.read({ repoDir, config });
+    expect(deployment.functions.map((fn) => fn.name ?? fn.meta?.['nameUnread'])).toEqual(['shop-dev-dev', expect.stringContaining('the parameter Stage has no value')]);
+    expect(deployment.functions[0]?.environment?.['Q']?.names).toEqual({ kind: 'queue', name: 'shop-q' });
+    expect(reasons(deployment)).toEqual(['function-name-unread']);
+    expect(cloudFormationReader.files(repoDir, { config })).toEqual(['infra/deployed.yaml', 'other.yaml', 'samconfig.toml', 'shared.yaml']);
+    // The SAM template beside the file is not the one it deploys, and imports nothing.
+    expect(samReader.files(repoDir, { config })).toEqual(['shared.yaml']);
   });
 });
