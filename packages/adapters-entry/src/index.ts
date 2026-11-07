@@ -120,9 +120,35 @@ export type {
 } from './fs-routes.js';
 export { MEDUSA_API } from './medusa-routes.js';
 export { GRAPHQL_SERVER_PACKAGES, graphqlResolversAdapter } from './graphql-resolvers.js';
-export { NITRO_API, NITRO_REQUEST, NITRO_ROUTES, nitroAddressOf, nitroRoutesAdapter, nuxtPagesOf, NUXT_PAGES, SVELTEKIT_PAGES } from './nuxt-routes.js';
-export { keptByLayer, nuxtConventions, nuxtLayerOf, nuxtLayersOf, nuxtLayoutOf, sveltekitConventions, withinLayer } from './framework-conventions.js';
-export type { LayerClaim, NuxtLayer, NuxtLayers, NuxtLayout } from './framework-conventions.js';
+export { NITRO_API, NITRO_REQUEST, NITRO_ROUTES, nitroAddressOf, nitroRoutesAdapter, nuxtPagesOf, NUXT_PAGES, SVELTEKIT_PAGES, sveltekitPagesOf } from './nuxt-routes.js';
+export {
+  keptByLayer,
+  NUXT_PRODUCTION,
+  nuxtApplicationOf,
+  nuxtConventions,
+  nuxtLayerOf,
+  nuxtLayersOf,
+  nuxtLayoutOf,
+  sveltekitConventions,
+  sveltekitRoutesOf,
+  SVELTEKIT_ROUTES_DIR,
+  withinLayer,
+  type NuxtApplication,
+  type NuxtDirs,
+  type NuxtEnvironment,
+  type NuxtLayer,
+  type NuxtLayers,
+  type NuxtLayout,
+} from './framework-conventions.js';
+export {
+  NUXT_KNOWN_MODULES,
+  nuxtModulesOf,
+  type InstalledModule,
+  type NuxtModule,
+  type NuxtModuleAdditions,
+  type NuxtModules,
+} from './nuxt-modules.js';
+export type { LayerClaim } from './framework-conventions.js';
 export {
   fsRoutesAdapter,
   REMIX_ROUTES,

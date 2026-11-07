@@ -10,8 +10,6 @@ import {
   readConfigLiteral,
   scriptFilesIn,
   toPosixPath,
-  workspaceGlobs,
-  workspacePackages,
   workspaceRootsAbove,
   type ConfigLiteral,
   type ConventionsOf,
@@ -21,6 +19,7 @@ import {
   type ProjectConventions,
   type Unresolved,
 } from '@flowatlas/core';
+import { modulesInstalledRow, modulesReadRow, moduleDirsOf, nuxtModulesOf, nuxtPackageDir, type NuxtModules } from './nuxt-modules.js';
 
 /**
  * What Nuxt and SvelteKit write for the compiler before anything is built
@@ -45,6 +44,12 @@ import {
  * the layers those extend in turn. Their pages, routes, composables and
  * aliases are the application's, ranked as Nuxt ranks them; a layer fetched
  * from elsewhere, or named in code, is a row.
+ *
+ * And it is what its build still decides (P251): what the modules of the
+ * repository add (`nuxt-modules.ts`), the directories `dir` moves in every
+ * part, and the configuration as the production build reads it, with every
+ * other environment's build compared to it. SvelteKit's routes are where
+ * `kit.files.routes` puts them.
  */
 
 const NUXT_CONFIGS = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs', 'nuxt.config.mts', 'nuxt.config.cjs'];
@@ -112,17 +117,44 @@ const inWords = (items: readonly string[]): string =>
 // ---------------------------------------------------------------------------
 // Nuxt
 
+/**
+ * The directories one part of a Nuxt application keeps by kind (P251), each
+ * repo-relative: what `dir` writes, else Nuxt's default.
+ */
+export interface NuxtDirs {
+  /** Its pages, under `srcDir`: `dir.pages`, else `pages`. */
+  readonly pages: string;
+  /** Its layouts, under `srcDir`: `dir.layouts`, else `layouts`. */
+  readonly layouts: string;
+  /** Its route middleware, under `srcDir`: `dir.middleware`, else `middleware`. */
+  readonly middleware: string;
+  /** What both halves share, under its root: `dir.shared`, else `shared`. */
+  readonly shared: string;
+  /** The modules Nuxt registers by itself: `dir.modules`, else `modules`, under its root from 4 and under `srcDir` before. */
+  readonly modules: string;
+}
+
+/** The build a configuration is read for (P251): `production`, `development`, or a name `$env` writes. */
+export type NuxtEnvironment = string;
+
 /** Where a Nuxt application, or one of its layers, keeps its code, as its version and configuration say. */
 export interface NuxtLayout {
   /** The code, repo-relative; `''` is the root, `../ui-layer` a layer beside it. */
   readonly srcDir: string;
   /** The server's code, repo-relative. */
   readonly serverDir: string;
+  /** Its directories by kind (P251). */
+  readonly dirs: NuxtDirs;
   /** 4 for the `app/` layout, 3 for the one before it: the application's, for each of its layers too. */
   readonly version: 3 | 4;
+  /** The configuration as the build of {@link environment} reads it: its overrides merged in. */
   readonly config: ConfigLiteral | undefined;
   /** Repo-relative path of the configuration, or `package.json` without one. */
   readonly configFile: string;
+  /** The build this layout was read for (P251). */
+  readonly environment: NuxtEnvironment;
+  /** Every build the configuration writes an override for (`$development`, `$production`, each of `$env`). */
+  readonly environments: readonly NuxtEnvironment[];
   /** Settings written as code, as rows. */
   readonly rows: readonly Unresolved[];
 }
@@ -150,11 +182,70 @@ const settingDir = (repoDir: string, dir: string, value: unknown): string | unde
   return fromRepo(repoDir, path).replace(/\/+$/, '');
 };
 
-/** The configuration a Nuxt directory holds, and the path the rows name it by. */
-const nuxtConfigAt = (repoDir: string, dir: string): { config: ConfigLiteral | undefined; configFile: string } => {
-  const config = readConfigLiteral(dir, NUXT_CONFIGS);
+/** The build Nuxt reads when nothing else is said, and the one the graph is of (P251). */
+export const NUXT_PRODUCTION: NuxtEnvironment = 'production';
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof ConfigPath) && !(value instanceof NotLiteral);
+
+/**
+ * One configuration value merged over another as `defu` merges them, which
+ * is how an environment's overrides are laid over the rest: objects key by
+ * key, two lists into one with the override's first, and anything else the
+ * override's where it writes one.
+ */
+const mergedOver = (override: unknown, base: unknown): unknown => {
+  if (override === undefined || override === null) return base;
+  if (Array.isArray(override) && Array.isArray(base)) return [...override, ...base];
+  if (isPlainObject(override) && isPlainObject(base)) {
+    const out: Record<string, unknown> = { ...base };
+    for (const [key, value] of Object.entries(override)) out[key] = mergedOver(value, base[key]);
+    return out;
+  }
+  return override;
+};
+
+/** The builds a configuration writes overrides for: `$development`, `$production`, and each name of `$env`. */
+const environmentsIn = (value: unknown): NuxtEnvironment[] => {
+  if (!isPlainObject(value)) return [];
+  const named = isPlainObject(value.$env) ? Object.keys(value.$env) : [];
+  return [...new Set([...['development', 'production'].filter((name) => value[`$${name}`] !== undefined), ...named])];
+};
+
+/**
+ * A configuration as the build of one environment reads it (P251): what
+ * `$<environment>` and `$env.<environment>` write, laid over the rest, as the
+ * configuration loader lays them. A override written as code is a row, and
+ * the rest is read without it.
+ */
+const forEnvironment = (config: ConfigLiteral, configFile: string, environment: NuxtEnvironment, rows: Unresolved[]): ConfigLiteral => {
+  const value = config.value;
+  if (!isPlainObject(value)) return config;
+  for (const key of ['$production', '$development', '$env']) {
+    if (value[key] instanceof NotLiteral) rows.push(settingRow(configFile, NUXT_ADAPTER, 'Nuxt', key, 'the configuration without it'));
+  }
+  const own = value[`$${environment}`];
+  const named = configValueAt(value, `$env.${environment}`);
+  if (named instanceof NotLiteral) rows.push(settingRow(configFile, NUXT_ADAPTER, 'Nuxt', `$env.${environment}`, 'the configuration without it'));
+  const override = { ...(isPlainObject(own) ? own : {}), ...(isPlainObject(named) ? named : {}) };
+  return Object.keys(override).length === 0 ? config : { file: config.file, value: mergedOver(override, value) };
+};
+
+/** The configuration a Nuxt directory holds as one environment's build reads it, and the path the rows name it by. */
+const nuxtConfigAt = (
+  repoDir: string,
+  dir: string,
+  environment: NuxtEnvironment,
+  rows: Unresolved[],
+): { config: ConfigLiteral | undefined; configFile: string; environments: NuxtEnvironment[] } => {
+  const written = readConfigLiteral(dir, NUXT_CONFIGS);
   const at = fromRepo(repoDir, dir);
-  return { config, configFile: config === undefined ? under(at, 'package.json') : fromRepo(repoDir, config.file) };
+  const configFile = written === undefined ? under(at, 'package.json') : fromRepo(repoDir, written.file);
+  return {
+    config: written === undefined ? undefined : forEnvironment(written, configFile, environment, rows),
+    configFile,
+    environments: environmentsIn(written?.value),
+  };
 };
 
 /** The layout of the version the application declares: 4 from `nuxt` 4 or `future.compatibilityVersion: 4`. */
@@ -163,21 +254,45 @@ const nuxtVersionOf = (pkg: PackageJson, config: ConfigLiteral | undefined): 3 |
   return (typeof compatibility === 'number' && compatibility >= 4) || (majorOf(rangeOf(pkg, 'nuxt')) ?? 3) >= 4 ? 4 : 3;
 };
 
+/**
+ * One of a part's directories by kind (P251): what `dir.<key>` writes, under
+ * `base`, else the default there; written as code, a row and the default.
+ */
+const kindDir = (repoDir: string, layout: { value: unknown; configFile: string; rows: Unresolved[] }, key: keyof NuxtDirs, base: string): string => {
+  const fallback = under(base, key);
+  const written = configValueAt(layout.value, `dir.${key}`);
+  if (written instanceof NotLiteral) {
+    layout.rows.push(settingRow(layout.configFile, NUXT_ADAPTER, 'Nuxt', `dir.${key}`, fallback));
+    return fallback;
+  }
+  return settingDir(repoDir, join(repoDir, base), written) ?? fallback;
+};
+
 /** Where the code of a Nuxt directory - the application or a layer - is, under the application's version. */
-const layoutAt = (repoDir: string, dir: string, version: 3 | 4): NuxtLayout => {
-  const { config, configFile } = nuxtConfigAt(repoDir, dir);
+const layoutAt = (repoDir: string, dir: string, version: 3 | 4, environment: NuxtEnvironment = NUXT_PRODUCTION): NuxtLayout => {
+  const rows: Unresolved[] = [];
+  const { config, configFile, environments } = nuxtConfigAt(repoDir, dir, environment, rows);
   const at = fromRepo(repoDir, dir);
   const value = config?.value;
-  const rows: Unresolved[] = [];
   const fallbackSrc = version === 4 && isDirectory(join(dir, 'app')) ? under(at, 'app') : at;
   const writtenSrc = configValueAt(value, 'srcDir');
   if (writtenSrc instanceof NotLiteral) rows.push(settingRow(configFile, NUXT_ADAPTER, 'Nuxt', 'srcDir', `${fallbackSrc || 'the root'}`));
-  const srcDir = settingDir(repoDir, dir, writtenSrc) ?? fallbackSrc;
+  const placedSrc = settingDir(repoDir, dir, writtenSrc) ?? fallbackSrc;
+  const srcDir = placedSrc === '.' ? '' : placedSrc;
   const fallbackServer = version === 4 ? under(at, 'server') : under(srcDir, 'server');
   const writtenServer = configValueAt(value, 'serverDir');
   if (writtenServer instanceof NotLiteral) rows.push(settingRow(configFile, NUXT_ADAPTER, 'Nuxt', 'serverDir', fallbackServer));
   const serverDir = settingDir(repoDir, dir, writtenServer) ?? fallbackServer;
-  return { srcDir: srcDir === '.' ? '' : srcDir, serverDir, version, config, configFile, rows };
+  if (configValueAt(value, 'dir') instanceof NotLiteral) rows.push(settingRow(configFile, NUXT_ADAPTER, 'Nuxt', 'dir', "Nuxt's own directories"));
+  const reading = { value, configFile, rows };
+  const dirs: NuxtDirs = {
+    pages: kindDir(repoDir, reading, 'pages', srcDir),
+    layouts: kindDir(repoDir, reading, 'layouts', srcDir),
+    middleware: kindDir(repoDir, reading, 'middleware', srcDir),
+    shared: kindDir(repoDir, reading, 'shared', at),
+    modules: kindDir(repoDir, reading, 'modules', version === 4 ? at : srcDir),
+  };
+  return { srcDir, serverDir, dirs, version, config, configFile, environment, environments, rows };
 };
 
 /**
@@ -185,9 +300,13 @@ const layoutAt = (repoDir: string, dir: string, version: 3 | 4): NuxtLayout => {
  * writes one, else `app/` from version 4 on (or with
  * `future.compatibilityVersion: 4`) when that directory is there, else the
  * root. The server is beside `app/` from version 4, inside `srcDir` before.
+ * Read for the production build unless another is named (P251).
  */
-export const nuxtLayoutOf = (repoDir: string, pkg: PackageJson = {}): NuxtLayout =>
-  layoutAt(repoDir, repoDir, nuxtVersionOf(pkg, readConfigLiteral(repoDir, NUXT_CONFIGS)));
+export const nuxtLayoutOf = (repoDir: string, pkg: PackageJson = {}, environment: NuxtEnvironment = NUXT_PRODUCTION): NuxtLayout => {
+  const scratch: Unresolved[] = [];
+  const { config } = nuxtConfigAt(repoDir, repoDir, environment, scratch);
+  return layoutAt(repoDir, repoDir, nuxtVersionOf(pkg, config), environment);
+};
 
 /** One part of a Nuxt application (P243): the application itself, or a layer it is built with. */
 export interface NuxtLayer {
@@ -212,6 +331,8 @@ export interface NuxtLayers {
   readonly layers: readonly NuxtLayer[];
   /** A layer that is not read and why, and the settings of a layer written as code. */
   readonly rows: readonly Unresolved[];
+  /** Absolute directories a local part, or a module, must be inside: the application, its workspace, its repository. */
+  readonly bounds: readonly string[];
 }
 
 /** Why a layer `extends` names is not read. */
@@ -278,36 +399,6 @@ const repositoryTopOf = (dir: string): string | undefined => {
   }
 };
 
-/** A package name and the path inside it an entry names: `@shop/base/layer` is `@shop/base` and `layer`. */
-const packageOf = (specifier: string): { name: string; subpath: string } => {
-  const parts = specifier.split('/');
-  const width = specifier.startsWith('@') ? 2 : 1;
-  return { name: parts.slice(0, width).join('/'), subpath: parts.slice(width).join('/') };
-};
-
-/**
- * The directory of a layer named as a package (P243): a package of the
- * workspace by that name, or what `node_modules` links it to when the link
- * leads out of every `node_modules` - a workspace package installed. One
- * installed from a registry is no code of the repository.
- */
-const packageLayer = (root: string, from: string, specifier: string): { dir: string } | { why: UnreadLayer } => {
-  const { name, subpath } = packageOf(specifier.replace(/^npm:/, ''));
-  const workspaces = [...(workspaceGlobs(root).length > 0 ? [root] : []), ...workspaceRootsAbove(root)];
-  for (const workspace of workspaces) {
-    const member = workspacePackages(workspace).find((pkg) => pkg.name === name);
-    if (member !== undefined) return { dir: join(member.dir, subpath) };
-  }
-  for (let at = from; ; at = dirname(at)) {
-    const linked = join(at, 'node_modules', name);
-    if (existsSync(linked)) {
-      const real = toPosixPath(realOf(linked));
-      return real.includes('/node_modules/') ? { why: 'installed' } : { dir: join(real, subpath) };
-    }
-    if (dirname(at) === at) return { why: 'not-installed' };
-  }
-};
-
 /** The directory one `extends` entry names, or why it is not read. */
 const placeLayer = (
   root: string,
@@ -324,7 +415,7 @@ const placeLayer = (
   if (entry instanceof ConfigPath || entry.startsWith('.') || isAbsolute(entry)) {
     dir = entry instanceof ConfigPath ? entry.path : resolve(from.dir, entry);
   } else {
-    const placed = packageLayer(root, from.dir, entry);
+    const placed = nuxtPackageDir(root, from.dir, entry);
     if ('why' in placed) return { text, why: placed.why };
     dir = placed.dir;
   }
@@ -359,11 +450,12 @@ const localLayerNames = (root: string): string[] => {
  * directory is in the repository or the workspace the application is in -
  * written as a path, or as a package the workspace has - and every one of
  * those is read under the application's version; a layer read once is not read
- * again, so a cycle ends where it started.
+ * again, so a cycle ends where it started. Every configuration is read as the
+ * build of `environment` reads it, production unless another is named (P251).
  */
-export const nuxtLayersOf = (repoDir: string, pkg: PackageJson = {}): NuxtLayers => {
+export const nuxtLayersOf = (repoDir: string, pkg: PackageJson = {}, environment: NuxtEnvironment = NUXT_PRODUCTION): NuxtLayers => {
   const root = resolve(repoDir);
-  const app = nuxtLayoutOf(root, pkg);
+  const app = nuxtLayoutOf(root, pkg, environment);
   const application: NuxtLayer = { dir: root, at: '', name: 'the application', layout: app };
   const layers: NuxtLayer[] = [application];
   const rows: Unresolved[] = [];
@@ -389,7 +481,7 @@ export const nuxtLayersOf = (repoDir: string, pkg: PackageJson = {}): NuxtLayers
     const real = realOf(dir);
     if (seen.has(real)) return;
     seen.add(real);
-    const layout = layoutAt(root, dir, app.version);
+    const layout = layoutAt(root, dir, app.version, environment);
     const layer: NuxtLayer = { dir, at: fromRepo(root, dir), name, ...(by === application ? {} : { extendedBy: by.at }), layout };
     layers.push(layer);
     rows.push(...layout.rows);
@@ -398,7 +490,22 @@ export const nuxtLayersOf = (repoDir: string, pkg: PackageJson = {}): NuxtLayers
 
   for (const name of localLayerNames(root)) take(join(root, 'layers', name), `layers/${name}`, application);
   follow(application);
-  return { layers, rows };
+  return { layers, rows, bounds };
+};
+
+/** A Nuxt application's parts, and the modules of the repository they are built with (P251). */
+export interface NuxtApplication extends NuxtLayers {
+  readonly modules: NuxtModules;
+}
+
+/**
+ * Every part of a Nuxt application and every module of the repository it is
+ * built with (P251), as the build of `environment` reads them: the one answer
+ * the conventions, the pages and the routes each ask.
+ */
+export const nuxtApplicationOf = (repoDir: string, pkg: PackageJson = {}, environment: NuxtEnvironment = NUXT_PRODUCTION): NuxtApplication => {
+  const read = nuxtLayersOf(repoDir, pkg, environment);
+  return { ...read, modules: nuxtModulesOf(repoDir, read.layers, read.bounds) };
 };
 
 /** The part of the application a repo-relative file is in: the layer whose directory holds it most nearly. */
@@ -561,7 +668,14 @@ const listedDirs = (
  * directories, each file ranked by the part of the application it is in. A
  * file two directories name is the first one's.
  */
-const groupOf = (repoDir: string, label: string, within: string[], except: string[], dirs: readonly ScannedDir[]): ImplicitImports => {
+const groupOf = (
+  repoDir: string,
+  label: string,
+  within: string[],
+  except: string[],
+  dirs: readonly ScannedDir[],
+  named: readonly ImplicitImportSource[] = [],
+): ImplicitImports => {
   const ranked = new Map<string, number>();
   for (const { dir, nested, rank } of dirs) {
     for (const file of scriptFilesIn(repoDir, dir, nested)) if (!ranked.has(file)) ranked.set(file, rank);
@@ -575,15 +689,16 @@ const groupOf = (repoDir: string, label: string, within: string[], except: strin
     within,
     except,
     // Only the directories that are there, for the row that names them.
-    from: [...new Set(dirs.filter(({ dir }) => isDirectory(join(repoDir, dir))).map(({ dir }) => `${dir}/`))],
-    sources,
+    from: [...new Set([...dirs.filter(({ dir }) => isDirectory(join(repoDir, dir))).map(({ dir }) => `${dir}/`), ...named.map((source) => source.file)])],
+    // One name a module adds from one file (P251), beside what the directories give.
+    sources: [...sources, ...named],
   };
 };
 
 const LAYER_FILE = /\.(?:[cm]?[jt]sx?|vue)$/;
 
-/** The script and component files of a layer, repo-relative: what it holds of the application's code. */
-const layerFiles = (repoDir: string, layer: NuxtLayer): string[] => {
+/** The script and component files of a directory a part or a module is built in from, repo-relative. */
+const heldFiles = (repoDir: string, dir: string): string[] => {
   const out: string[] = [];
   const walk = (at: string): void => {
     let entries: string[];
@@ -597,12 +712,12 @@ const layerFiles = (repoDir: string, layer: NuxtLayer): string[] => {
       const path = join(at, entry);
       if (isDirectory(path)) {
         // A layer of its own inside this one is read as itself.
-        if (entry === 'layers' && at === layer.dir) continue;
+        if (entry === 'layers' && at === dir) continue;
         walk(path);
       } else if (LAYER_FILE.test(entry) && !entry.endsWith('.d.ts')) out.push(fromRepo(repoDir, path));
     }
   };
-  walk(layer.dir);
+  walk(dir);
   return out;
 };
 
@@ -679,14 +794,119 @@ const layersReadRow = (app: NuxtLayout, layers: readonly NuxtLayer[]): Unresolve
   };
 };
 
-/** Nuxt's conventions for one repository (P240, P243), or none where Nuxt is not declared. */
+/** What one reading of a Nuxt application is built with, keyed for comparing two environments' readings (P251). */
+interface BuiltWith {
+  /** Parts and modules, as a row names them: `../dev-layer as a layer`, `the module modules/x.ts`. */
+  readonly present: ReadonlySet<string>;
+  /** Each part's settings, by part and then by setting as a row names it, with the value read. */
+  readonly settings: ReadonlyMap<string, ReadonlyMap<string, string>>;
+}
+
+const builtWith = (application: NuxtApplication): BuiltWith => {
+  const present = new Set<string>();
+  const settings = new Map<string, Map<string, string>>();
+  for (const layer of application.layers) {
+    if (layer.at !== '') present.add(`${layer.at} as a layer`);
+    const { layout } = layer;
+    const own = new Map<string, string>([
+      ['code', layout.srcDir || 'the root'],
+      ['server', layout.serverDir],
+      ...Object.entries(layout.dirs).map(([key, dir]): [string, string] => [key, dir]),
+      ...['alias', 'imports'].map((key): [string, string] => [`\`${key}\``, JSON.stringify(configValueAt(layout.config?.value, key)) ?? '']),
+    ]);
+    settings.set(layer.at === '' ? 'the application' : layer.at, own);
+  }
+  for (const module of application.modules.modules) present.add(`the module ${module.file}`);
+  for (const module of application.modules.installed) present.add(`the module ${module.name}`);
+  return { present, settings };
+};
+
+/** How one environment's build differs from production's (P251). */
+interface EnvironmentDifference {
+  readonly environment: NuxtEnvironment;
+  /** Parts and modules only it builds with. */
+  readonly only: readonly string[];
+  /** Parts and modules only production builds with. */
+  readonly without: readonly string[];
+  /** Settings of a part both have that it reads otherwise. */
+  readonly changed: readonly string[];
+}
+
+/**
+ * What one environment's build of the application has that production's
+ * does not, and the other way round, or none when the two are built alike.
+ * A part only one of them has is said as that part; a setting is compared
+ * only for a part both have.
+ */
+const differenceOf = (environment: NuxtEnvironment, production: BuiltWith, other: BuiltWith): EnvironmentDifference | undefined => {
+  const only = [...other.present].filter((fact) => !production.present.has(fact));
+  const without = [...production.present].filter((fact) => !other.present.has(fact));
+  const changed: string[] = [];
+  for (const [part, settings] of other.settings) {
+    const before = production.settings.get(part);
+    if (before === undefined) continue;
+    for (const [key, value] of settings) {
+      const was = before.get(key) ?? '';
+      if (value === was) continue;
+      changed.push(key.startsWith('`') ? `a different ${key} in ${part}` : `${part}'s ${key} in ${value} (${was} in production)`);
+    }
+  }
+  return only.length === 0 && without.length === 0 && changed.length === 0 ? undefined : { environment, only, without, changed };
+};
+
+/** The note that says how every other environment's build differs from production's, which is the one read (P251). */
+const environmentsRow = (app: NuxtLayout, differences: readonly EnvironmentDifference[]): Unresolved => {
+  const sentences = differences.map(({ environment, only, without, changed }) => {
+    const differs = [
+      ...(only.length === 0 ? [] : [`with ${inWords(only)}`]),
+      ...(without.length === 0 ? [] : [`without ${inWords(without)}`]),
+      ...(changed.length === 0 ? [] : [`with ${inWords(changed)}`]),
+    ];
+    return `for ${environment}, Nuxt builds the application ${differs.join(', and ')}`;
+  });
+  return {
+    file: app.configFile,
+    line: 1,
+    reason: 'framework-environment-differs',
+    level: 'info',
+    symbol: inWords(differences.map((difference) => difference.environment)),
+    message: `The configuration overrides settings by environment, and the graph is the production build's: ${sentences.join('; ')}. What only another environment builds is not read`,
+    hint: 'Nothing to do. Write what every build shares outside `$development`, `$production` and `$env`, so each reads it.',
+    adapter: NUXT_ADAPTER,
+    meta: { cause: 'framework-environment-differs', environments: differences.map((difference) => ({ ...difference })) },
+  };
+};
+
+/** The builds the configurations of an application write overrides for, beside production (P251). */
+const otherEnvironments = (layers: readonly NuxtLayer[]): NuxtEnvironment[] => {
+  const written = new Set(layers.flatMap((layer) => layer.layout.environments));
+  // An override for production is a difference from development, which is the build Nuxt makes beside it.
+  if (written.has(NUXT_PRODUCTION)) written.add('development');
+  written.delete(NUXT_PRODUCTION);
+  return [...written].sort((a, b) => (a === 'development' ? -1 : b === 'development' ? 1 : a < b ? -1 : a > b ? 1 : 0));
+};
+
+/** The aliases a module sets (P251), as `paths` laid over the ones there: `=` replaces, `||=` only fills in. */
+const moduleAliases = (repoDir: string, modules: NuxtModules, paths: Record<string, string[]>): void => {
+  for (const module of modules.modules) {
+    for (const alias of module.additions.aliases) {
+      for (const [key, targets] of aliasEntries(repoDir, alias.key, alias.target || '.')) {
+        if (alias.replaces || paths[key] === undefined) paths[key] = targets;
+      }
+    }
+  }
+};
+
+/** Nuxt's conventions for one repository (P240, P243, P251), or none where Nuxt is not declared. */
 export const nuxtConventions: ConventionsOf = (repoDir, pkg): ProjectConventions | undefined => {
   if (!hasDependency(pkg, 'nuxt')) return undefined;
-  const { layers, rows: layerRows } = nuxtLayersOf(repoDir, pkg);
-  const [application] = layers as [NuxtLayer, ...NuxtLayer[]];
-  const layout = application.layout;
+  const application = nuxtApplicationOf(repoDir, pkg);
+  const { layers, rows: layerRows, modules } = application;
+  const [first] = layers as [NuxtLayer, ...NuxtLayer[]];
+  const layout = first.layout;
   const rows: Unresolved[] = [...layout.rows, ...layerRows];
   const src = layout.srcDir || '.';
+  const shared = layout.dirs.shared || '.';
   const paths: Record<string, string[]> = {
     '~': [src],
     '~/*': [`${src}/*`],
@@ -696,8 +916,8 @@ export const nuxtConventions: ConventionsOf = (repoDir, pkg): ProjectConventions
     '~~/*': ['./*'],
     '@@': ['.'],
     '@@/*': ['./*'],
-    '#shared': ['shared'],
-    '#shared/*': ['shared/*'],
+    '#shared': [shared],
+    '#shared/*': [`${shared}/*`],
     '#app': ['node_modules/nuxt/dist/app'],
     '#app/*': ['node_modules/nuxt/dist/app/*'],
     // A directory of `layers/` by its name (P243).
@@ -717,14 +937,16 @@ export const nuxtConventions: ConventionsOf = (repoDir, pkg): ProjectConventions
       if (paths[key] === undefined) paths[key] = targets;
     }
   }
+  // A module runs after the configuration is merged, so its aliases are laid over all of it.
+  moduleAliases(repoDir, modules, paths);
 
   const autoImport = mergedSetting(layers, 'imports.autoImport') !== false;
   const scan = mergedSetting(layers, 'imports.scan') !== false;
   const sharedOf = (layer: NuxtLayer, rank: number): ScannedDir[] =>
     layout.version === 4
       ? [
-          { dir: under(layer.at, 'shared/utils'), nested: false, rank },
-          { dir: under(layer.at, 'shared/types'), nested: false, rank },
+          { dir: under(layer.layout.dirs.shared, 'utils'), nested: false, rank },
+          { dir: under(layer.layout.dirs.shared, 'types'), nested: false, rank },
         ]
       : [];
   // `@pinia/nuxt` scans `stores/` of each part unless `storesDirs` names others, from the root.
@@ -738,7 +960,13 @@ export const nuxtConventions: ConventionsOf = (repoDir, pkg): ProjectConventions
         : rank === 0
           ? listedDirs(repoDir, layout, 'pinia.storesDirs', '', rows).map((dir) => ({ ...dir, rank }))
           : [];
-  const serverDirs = layers.map((layer) => layer.layout.serverDir);
+  // A handler a module serves is the server's code wherever it is (P251).
+  const handlerDirs = [...new Set(modules.modules.flatMap((module) => module.additions.handlers.map((handler) => dirname(handler.handler))))];
+  const serverDirs = [...layers.map((layer) => layer.layout.serverDir), ...handlerDirs];
+  const namedBy = (pick: (module: NuxtModules['modules'][number]) => ReadonlyArray<{ file: string; name: string; export: string }>): ImplicitImportSource[] =>
+    modules.modules.flatMap((module) =>
+      pick(module).map((named) => ({ file: named.file, names: [{ name: named.name, export: named.export }], ...(module.rank === 0 ? {} : { rank: module.rank }) })),
+    );
   const implicit: ImplicitImports[] =
     !autoImport || !scan
       ? []
@@ -748,20 +976,28 @@ export const nuxtConventions: ConventionsOf = (repoDir, pkg): ProjectConventions
             'the application',
             [''],
             [...serverDirs, 'node_modules', '.nuxt', '.output'],
-            layers.flatMap((layer, rank) => [
-              { dir: under(layer.layout.srcDir, 'composables'), nested: false, rank },
-              { dir: under(layer.layout.srcDir, 'utils'), nested: false, rank },
-              ...storesOf(layer, rank),
-              ...listedDirs(repoDir, layer.layout, 'imports.dirs', layer.layout.srcDir, rows).map((dir) => ({ ...dir, rank })),
-              ...sharedOf(layer, rank),
-            ]),
+            [
+              ...layers.flatMap((layer, rank) => [
+                { dir: under(layer.layout.srcDir, 'composables'), nested: false, rank },
+                { dir: under(layer.layout.srcDir, 'utils'), nested: false, rank },
+                ...storesOf(layer, rank),
+                ...listedDirs(repoDir, layer.layout, 'imports.dirs', layer.layout.srcDir, rows).map((dir) => ({ ...dir, rank })),
+                ...sharedOf(layer, rank),
+              ]),
+              ...moduleDirsOf(modules.modules, (added) => added.importDirs),
+            ],
+            namedBy((module) => module.additions.imports),
           ),
           groupOf(
             repoDir,
             'the server',
             serverDirs,
             [],
-            layers.flatMap((layer, rank) => [{ dir: under(layer.layout.serverDir, 'utils'), nested: false, rank }, ...sharedOf(layer, rank)]),
+            [
+              ...layers.flatMap((layer, rank) => [{ dir: under(layer.layout.serverDir, 'utils'), nested: false, rank }, ...sharedOf(layer, rank)]),
+              ...moduleDirsOf(modules.modules, (added) => added.serverImportDirs),
+            ],
+            namedBy((module) => module.additions.serverImports),
           ),
         ];
   for (const layer of layers) {
@@ -772,11 +1008,23 @@ export const nuxtConventions: ConventionsOf = (repoDir, pkg): ProjectConventions
 
   // What each layer holds, for the imports it writes with `~` or `@`, and
   // for the build to see a change to a layer outside the repository's own files.
-  const held = new Map(layers.slice(1).map((layer) => [layer, layerFiles(repoDir, layer)]));
+  const held = new Map(layers.slice(1).map((layer) => [layer, heldFiles(repoDir, layer.dir)]));
   for (const [layer, files] of held) rows.push(...layerAliasRows(repoDir, layout, layer, files));
   if (layers.length > 1) rows.push(layersReadRow(layout, layers));
   const outside = layers.filter((layer) => layer.at.startsWith('..'));
 
+  // The modules (P251): what was not read, what was, and what is a package's.
+  rows.push(...modules.rows);
+  if (modules.modules.length > 0) rows.push(modulesReadRow(layout, modules.modules));
+  if (modules.installed.length > 0) rows.push(modulesInstalledRow(layout, modules.installed));
+  const outsideModules = modules.modules.filter((module) => fromRepo(repoDir, module.dir).startsWith('..') && !outside.some((layer) => isWithinDir(module.dir, layer.dir)));
+
+  // Each other build the configurations write overrides for, against production's (P251).
+  const production = builtWith(application);
+  const differences = otherEnvironments(layers).flatMap((environment) => differenceOf(environment, production, builtWith(nuxtApplicationOf(repoDir, pkg, environment))) ?? []);
+  if (differences.length > 0) rows.push(environmentsRow(layout, differences));
+
+  const extent = [...outside.map((layer) => layer.dir), ...outsideModules.map((module) => module.dir)];
   return {
     by: 'Nuxt',
     adapter: NUXT_ADAPTER,
@@ -791,17 +1039,35 @@ export const nuxtConventions: ConventionsOf = (repoDir, pkg): ProjectConventions
       ...new Set([
         ...layers.flatMap((layer) => (layer.layout.config === undefined ? [] : [layer.layout.configFile])),
         ...outside.flatMap((layer) => held.get(layer) ?? []),
+        // A module's file is the build's own: a change to one changes what every file is given.
+        ...modules.modules.map((module) => module.file),
+        ...outsideModules.flatMap((module) => heldFiles(repoDir, module.dir)),
       ]),
     ],
-    ...(outside.length === 0 ? {} : { extent: outside.map((layer) => layer.dir) }),
+    ...(extent.length === 0 ? {} : { extent }),
     ...(layers.length === 1 ? {} : { precedence: `the order of Nuxt's layers: ${inWords(layers.map((layer) => (layer.at === '' ? 'the application' : layer.at)))}` }),
   };
 };
+
 
 // ---------------------------------------------------------------------------
 // SvelteKit
 
 const SVELTEKIT_ADAPTER = 'sveltekit-routes';
+
+/** Where SvelteKit's routes are when nothing moves them. */
+export const SVELTEKIT_ROUTES_DIR = 'src/routes';
+
+/**
+ * Where a SvelteKit application keeps its routes and pages (P251):
+ * `kit.files.routes` written as a literal, relative to the root, else
+ * `src/routes`. Written as code, the default, and a row from the conventions.
+ */
+export const sveltekitRoutesOf = (repoDir: string): string => {
+  const config = readConfigLiteral(repoDir, SVELTE_CONFIGS);
+  const placed = settingDir(repoDir, repoDir, configValueAt(config?.value, 'kit.files.routes'));
+  return placed === undefined || placed === '' ? SVELTEKIT_ROUTES_DIR : placed;
+};
 
 /** SvelteKit's conventions for one repository (P240), or none where SvelteKit is not declared. */
 export const sveltekitConventions: ConventionsOf = (repoDir, pkg): ProjectConventions | undefined => {
@@ -812,6 +1078,9 @@ export const sveltekitConventions: ConventionsOf = (repoDir, pkg): ProjectConven
   const writtenLib = configValueAt(config?.value, 'kit.files.lib');
   if (writtenLib instanceof NotLiteral) rows.push(settingRow(configFile, SVELTEKIT_ADAPTER, 'SvelteKit', 'kit.files.lib', 'src/lib'));
   const lib = settingDir(repoDir, repoDir, writtenLib) ?? 'src/lib';
+  if (configValueAt(config?.value, 'kit.files.routes') instanceof NotLiteral) {
+    rows.push(settingRow(configFile, SVELTEKIT_ADAPTER, 'SvelteKit', 'kit.files.routes', SVELTEKIT_ROUTES_DIR));
+  }
   const paths: Record<string, string[]> = {};
   // Only where the directory is there, as `svelte-kit sync` writes it.
   if (isDirectory(join(repoDir, lib))) Object.assign(paths, { $lib: [lib], '$lib/*': [`${lib}/*`] });

@@ -129,6 +129,28 @@ only one of them moved.
   under its stand-in, with an `export-not-found` row where they drew a
   `subscription-source-unread` one (`fixtures/multi-repo-exports`,
   `fixtures/serverless-compose`).
+- **What Nuxt and its layers still decide at build time, read (P251).** A
+  Nuxt module of the repository - a file of `modules/`, a path a part's
+  `modules` lists, a package of the workspace by its name - is read as syntax
+  for what it adds when the application builds: `addImportsDir`,
+  `addServerImportsDir`, `addImports` and `addServerImports` give names used
+  with no import, `addServerHandler` serves a route declared at the call (or
+  stands in front of every route), `extendPages` adds a screen,
+  `nuxt.options.alias[...]` an alias, `installModule` another module, each
+  where its argument is a literal or a path built from the module's own file.
+  An addition written as code is the row `framework-module-unread`; which
+  modules were read is the note `framework-module-read`; a module installed
+  from a registry is named in the note `framework-module-installed`, with what
+  a few popular ones add. `dir.pages`, `dir.layouts`, `dir.middleware`,
+  `dir.shared` and `dir.modules` are read in the application and in each
+  layer. Every configuration is read for the production build, `$production`
+  and `$env.production` laid over the rest, and how development and each
+  `$env` name differ is the note `framework-environment-differs`. SvelteKit's
+  routes and pages are read under `kit.files.routes`. The coverage harness's
+  extent counts a layer or module a Nuxt configuration names beside the
+  application, read from the configuration as text; the read gate reads every
+  site a folded row's samples name; a new probe counts a route a module adds
+  (`fixtures/nuxt-modules`, `fixtures/sveltekit-routes-dir`).
 - **A function run before every request carries its base into each one
   (P244).** An axios request interceptor (`api.interceptors.request.use`, on an
   instance or on `axios` itself) that writes `config.baseURL`, answers

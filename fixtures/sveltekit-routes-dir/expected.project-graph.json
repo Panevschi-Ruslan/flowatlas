@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:46:37.617Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:GET:/api/items",
+      "type": "entry",
+      "label": "GET /api/items",
+      "repo": "shop",
+      "file": "src/app/api/items/+server.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/items",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/items/:param",
+      "type": "entry",
+      "label": "GET /items/:param",
+      "repo": "shop",
+      "file": "src/app/items/[id]/+page.server.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items/:param",
+        "rawPath": "/items/:id",
+        "adapter": "sveltekit-routes",
+        "registration": "routes/+page.server",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:shop#src/lib/api.ts:2:51",
+      "type": "http_out",
+      "label": "GET /api/items",
+      "repo": "shop",
+      "file": "src/lib/api.ts",
+      "line": 2,
+      "meta": {
+        "method": "GET",
+        "url": "/api/items",
+        "path": "/api/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 4,
+          "components": 2,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "svelte"
+          ],
+          "entry": [
+            "sveltekit-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#src/app/+page.svelte:app/+page",
+      "type": "ui_component",
+      "label": "app/+page",
+      "repo": "shop",
+      "file": "src/app/+page.svelte",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "shop#src/app/+page.svelte:refresh",
+      "type": "function",
+      "label": "refresh",
+      "repo": "shop",
+      "file": "src/app/+page.svelte",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/app/api/items/+server.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "shop",
+      "file": "src/app/api/items/+server.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "shop#src/app/items/[id]/+page.server.ts:load",
+      "type": "function",
+      "label": "load",
+      "repo": "shop",
+      "file": "src/app/items/[id]/+page.server.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "{params:{id:string}}"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/app/items/[id]/+page.svelte:[id]/+page",
+      "type": "ui_component",
+      "label": "[id]/+page",
+      "repo": "shop",
+      "file": "src/app/items/[id]/+page.svelte",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/items/:param"
+      }
+    },
+    {
+      "id": "shop#src/lib/api.ts:listItems",
+      "type": "function",
+      "label": "listItems",
+      "repo": "shop",
+      "file": "src/lib/api.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop#src/app/+page.svelte:10:9",
+      "type": "ui_action",
+      "label": "onclick=\"refresh\"",
+      "repo": "shop",
+      "file": "src/app/+page.svelte",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "refresh",
+        "component": "shop#src/app/+page.svelte:app/+page",
+        "template": "src/app/+page.svelte",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#src/lib/api.ts:2:51",
+      "type": "ui_api_call",
+      "label": "GET /api/items",
+      "repo": "shop",
+      "file": "src/lib/api.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/items",
+        "path": "/api/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:GET:/api/items",
+      "to": "shop#src/app/api/items/+server.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string;name:string}[]",
+      "file": "src/app/api/items/+server.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/items/:param",
+      "to": "shop#src/app/items/[id]/+page.server.ts:load",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string}",
+      "file": "src/app/items/[id]/+page.server.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "shop#src/app/+page.svelte:app/+page",
+      "to": "shop#src/lib/api.ts:listItems",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "Response",
+      "file": "src/app/+page.svelte",
+      "line": 5
+    },
+    {
+      "from": "shop#src/app/+page.svelte:refresh",
+      "to": "shop#src/lib/api.ts:listItems",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "Response",
+      "file": "src/app/+page.svelte",
+      "line": 5
+    },
+    {
+      "from": "shop#src/lib/api.ts:listItems",
+      "to": "http_out:shop#src/lib/api.ts:2:51",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/lib/api.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#src/lib/api.ts:listItems",
+      "to": "ui_api_call:shop#src/lib/api.ts:2:51",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/lib/api.ts",
+      "line": 2
+    },
+    {
+      "from": "ui_action:shop#src/app/+page.svelte:10:9",
+      "to": "shop#src/app/+page.svelte:refresh",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app/+page.svelte",
+      "line": 10
+    },
+    {
+      "from": "ui_api_call:shop#src/lib/api.ts:2:51",
+      "to": "entry:shop:http:GET:/api/items",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/lib/api.ts",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".svelte-kit/tsconfig.json is not there (`svelte-kit sync` writes it), so $lib -> src/lib resolve as SvelteKit documents them",
+      "hint": "Nothing to do. Run `svelte-kit sync` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".svelte-kit/tsconfig.json",
+      "adapter": "sveltekit-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "SvelteKit"
+        ],
+        "aliases": {
+          "$lib": [
+            "src/lib"
+          ],
+          "$lib/*": [
+            "src/lib/*"
+          ]
+        }
+      },
+      "service": "shop"
+    }
+  ]
+}

@@ -353,6 +353,54 @@ a URL), `dynamic` (`extends` written as code), `installed` (a package from a
 registry under `node_modules`), `not-installed`, `missing`, `outside` the
 repository and its workspace (`fixtures/nuxt-layers`).
 
+**Nuxt modules, `dir` and environments (P251).** A Nuxt module runs when the
+application builds and adds what no file says, so the modules of the
+repository are read for it, as syntax and never run: each file of a part's
+`modules/` (`modules/*.ts`, `modules/*/index.ts`, or the directory
+`dir.modules` names), each entry of a part's `modules` that is a path from that
+part (`'./tools/reports'`, `'~/modules/x'`), and each that is a package of the
+workspace by its name, read at its manifest's source entry or at
+`src/module.ts` as the module builder lays one out. In a module's file, each
+call of Nuxt's kit is read where its argument is a literal or a path built from
+the module's own file (`createResolver(import.meta.url).resolve('./runtime')`,
+a `resolve` taken from it, `resolve(__dirname, ...)`,
+`fileURLToPath(new URL(..., import.meta.url))`, or a name holding one):
+`addImportsDir` and `addServerImportsDir` give the names a directory exports to
+the application or to the server, `addImports` and `addServerImports` one name
+from one file, `addServerHandler({ route, method, handler })` is a way in
+declared at the call (`meta.registration: module/addServerHandler`) and one
+with no route or `middleware: true` stands in front of every route,
+`extendPages` (and the `pages:extend` hook) adds a screen,
+`nuxt.options.alias[...] =` an alias over the configuration's (`||=` only
+where it names none), and `installModule` reads another module. A module's
+names rank with the part that registers it; a call written under a condition
+of its options is read as made, and the note names it. `addComponentsDir` and
+`addRouteMiddleware` are said in the note and not drawn. An addition whose
+argument is code, or a plain relative string, is a row
+(`framework-module-unread`, `meta.why: addition`); so is a `modules` entry
+written as code (`dynamic`), written in the configuration itself (`inline`), a
+path to nothing (`missing`) or `outside` the repository. Which modules were
+read and what each adds is one note (`framework-module-read`). A module
+installed from a registry is a package's code and is named in a note
+(`framework-module-installed`), with what it adds for the few whose additions
+are fixed, documented and their own package's (`@vueuse/nuxt`, `@nuxt/image`,
+`@nuxt/icon`, `@nuxt/fonts`, `@nuxt/eslint`, `@nuxt/devtools`,
+`@nuxtjs/tailwindcss`, `@nuxtjs/color-mode`); `@pinia/nuxt`'s `stores/` is read
+as before. `dir.pages`, `dir.layouts` and `dir.middleware` are read under each
+part's `srcDir`, `dir.shared` and `dir.modules` under its root: the pages are
+where `dir.pages` puts them (and only a file under that directory is a page),
+`#shared` and the shared names are where `dir.shared` puts them. Every
+configuration is read as the production build reads it, `$production` and
+`$env.production` laid over the rest; development and each name `$env` writes
+are read too and compared, and how each differs - a layer, a module, a part's
+directories or settings - is one note (`framework-environment-differs`)
+(`fixtures/nuxt-modules`).
+
+**SvelteKit `kit.files.routes` (P251).** Routes (`+server`, `+page.server`,
+`+layout.server`) and pages (`+page.svelte`) are read under the directory
+`kit.files.routes` names, `src/routes` without one; written as code, it is a
+`framework-setting-dynamic` row and the default (`fixtures/sveltekit-routes-dir`).
+
 **GraphQL (P232).** A field a resolver answers is a way in of kind `graphql`,
 keyed by its type and name: `entry:orders:graphql:Query.orders`, and
 `entry:orders:graphql:Order.customer` for a field of another type, which a
@@ -3097,6 +3145,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |
 | The layers a framework builds an application from (P243) | `framework-layer-read` (info), `framework-layer-overridden` (info), `implicit-import-overridden` (info), `framework-layer-alias` |
+| What a framework still decides when it builds (P251) | `framework-module-read` (info), `framework-module-installed` (info), `framework-environment-differs` (info), `framework-module-unread` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop) |
 | Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |

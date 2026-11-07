@@ -96,6 +96,23 @@ describe('a function a CDK app makes (P57)', () => {
   });
 });
 
+describe('a route a Nuxt module adds (P251)', () => {
+  it('counts a handler handed a route, written on one line or across several', () => {
+    const text = [
+      "addServerHandler({ route: '/api/catalog', method: 'get', handler: resolver.resolve('./runtime/catalog') });",
+      'addServerHandler({',
+      "  handler: resolver.resolve('./runtime/audit'),",
+      '  route: auditRoute,',
+      '});',
+    ].join('\n');
+    assert.deepEqual(sitesIn('modules/catalog/index.ts', text), { routes: 2 });
+  });
+
+  it('does not count one that stands in front of every route', () => {
+    assert.deepEqual(sitesIn('modules/audit.ts', "addServerHandler({ middleware: true, handler: resolve('./stamp') });\n"), {});
+  });
+});
+
 describe('a function a SAM template declares (P246)', () => {
   it('counts each by its Type, a SAM function and a plain one alike, and not in a comment', () => {
     const text = [

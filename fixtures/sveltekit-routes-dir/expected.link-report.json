@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:46:37.617Z",
+  "configHash": "4191b8cde503",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 864,
+      "packages": {
+        "name": "svelte-moved-routes",
+        "runtime": [],
+        "dev": [
+          "@sveltejs/kit",
+          "svelte"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 1
+  },
+  "ui": {
+    "total": 1,
+    "resolved": 1,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 1,
+    "uncalled": [
+      "entry:shop:http:GET:/items/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 12,
+    "edges": 8,
+    "types": 0,
+    "missed": 0,
+    "sites": 0,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

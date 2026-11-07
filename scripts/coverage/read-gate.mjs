@@ -171,6 +171,8 @@ const GATED = {
       // template does not name (P248).
       'deployment-copy-not-read',
       'deployment-plugin-unread',
+      // A route a module adds whose address or handler is written as code (P251).
+      'framework-module-unread',
     ],
     perFile: true,
   },
@@ -338,6 +340,17 @@ export const EXEMPT = [
       'have something to find, and the fixture exists to keep `build` and `doctor` naming ' +
       'the service that contributed nothing. The request family added by P244 is the first ' +
       'to see that request from the counting side; the silence is the fixture, not a gap.',
+  },
+  {
+    where: 'nuxt-modules',
+    path: 'dev-layer/**',
+    family: 'screens',
+    why:
+      'A layer only the development build extends (`$development.extends`, P251). The ' +
+      "graph is the production build's, and the layer is said in the " +
+      '`framework-environment-differs` note at the configuration rather than read: ' +
+      'reading it would draw a page production never shows. The fixture holds the ' +
+      'layer there to keep that note honest, and the silence is the reading.',
   },
   // A measured target's exemptions are not here. They name files of a
   // repository this project does not own, so they live with the target itself,
@@ -578,6 +591,25 @@ const familiesOfEdge = (edge, nodes) => {
 };
 
 /**
+ * The files a folded row's samples name (P251): `meta.causes[].samples`,
+ * which the builder keeps for a row below `action` it folded over several
+ * sites. The builder keeps three per cause, so a fourth site of one reason in
+ * one repository is still read from nowhere but its count.
+ */
+const sampledFiles = (row) => {
+  const causes = Array.isArray(row.meta?.causes) ? row.meta.causes : [];
+  return [
+    ...new Set(
+      causes.flatMap((cause) =>
+        (Array.isArray(cause?.samples) ? cause.samples : [])
+          .map((sample) => sample?.file)
+          .filter((file) => typeof file === 'string'),
+      ),
+    ),
+  ];
+};
+
+/**
  * What one graph says about each file: which families something in it answers.
  *
  * `toPath` turns a path as the graph spells it into a path as the counting rule
@@ -625,7 +657,20 @@ const readingOf = (graph, toPath) => {
   }
   for (const row of graph.unresolved ?? []) {
     if (typeof row.file !== 'string') continue;
-    place('row', row.file, row.service, SPOKEN_FOR_BY.reasons.get(row.reason) ?? []);
+    const families = SPOKEN_FOR_BY.reasons.get(row.reason) ?? [];
+    place('row', row.file, row.service, families);
+    // A row below `action` is folded to one per reason, and the sites it
+    // stands for are its samples (P251): each speaks for its own file, or a
+    // second overridden route in one repository would read as never read.
+    if (declared.has(row.service)) continue;
+    for (const file of sampledFiles(row)) {
+      if (file === row.file) continue;
+      const path = toPath(file, row.service);
+      if (path === undefined) continue;
+      const found = answered.get(path) ?? new Set();
+      for (const family of families) found.add(family);
+      answered.set(path, found);
+    }
   }
   // An edge recorded at a site is the reader saying it read that line, even
   // where the node it drew from lives in another file - in the service that

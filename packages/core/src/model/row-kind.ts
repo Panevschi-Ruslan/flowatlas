@@ -72,6 +72,12 @@ const NOTES: readonly string[] = [
   'implicit-import-overridden',
   'framework-layer-read',
   'framework-layer-overridden',
+  // What a framework still decides when it builds (P251): the modules of the
+  // repository that were read, the ones that are packages, and how another
+  // environment's build differs from the one read
+  'framework-module-read',
+  'framework-module-installed',
+  'framework-environment-differs',
   // The project's own extraction patterns (core/patterns, P121): a rule a
   // written description won over, and one nothing in its services matches
   'pattern-shadowed',
@@ -164,6 +170,9 @@ const GAPS: readonly string[] = [
   // An import a layer writes for its own code that the framework resolves in
   // the application (P243)
   'framework-layer-alias',
+  // A module of the repository, or one of its additions, the reader could not
+  // place (P251)
+  'framework-module-unread',
   // What traffic reached and no reader drew (core/blind-spots.ts, P110): asked
   // of the observed file at read time, at info, never stored in the graph.
   'seen-not-in-code',

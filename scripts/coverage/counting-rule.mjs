@@ -302,6 +302,17 @@ export const PROBES = [
     pattern: /^\s*Type:\s*['"]?AWS::Lambda::Function['"]?\s*$|"Type"\s*:\s*"AWS::Lambda::Function"/gm,
   },
   {
+    // A way in a Nuxt module adds when the application builds (P251): no file
+    // of `server/` gives it, the call does. Counted where the call hands an
+    // object with a `route`, so a handler that stands in front of every route
+    // is not one.
+    name: 'nuxt-module-server-handler',
+    family: 'routes',
+    scope: 'line',
+    what: 'a route a Nuxt module adds (`addServerHandler({ route, handler })`)',
+    pattern: /\baddServerHandler\s*\(\s*\{[^}]*?\broute\s*:/g,
+  },
+  {
     name: 'nitro-route-file',
     family: 'routes',
     scope: 'file',

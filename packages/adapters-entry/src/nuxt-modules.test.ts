@@ -1,0 +1,182 @@
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { afterAll, describe, expect, it } from 'vitest';
+import { nuxtApplicationOf } from './framework-conventions.js';
+import { modulesReadRow } from './nuxt-modules.js';
+
+const roots: string[] = [];
+afterAll(() => {
+  for (const root of roots) rmSync(root, { recursive: true, force: true });
+});
+
+const repo = (files: Record<string, string>): string => {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'flowatlas-modules-')));
+  roots.push(root);
+  for (const [file, text] of Object.entries(files)) {
+    mkdirSync(dirname(join(root, file)), { recursive: true });
+    writeFileSync(join(root, file), text);
+  }
+  return root;
+};
+
+const NUXT_4 = { dependencies: { nuxt: '^4.1.0' } };
+
+const module = (body: string, head = "import { createResolver, defineNuxtModule } from '@nuxt/kit';"): string =>
+  `${head}\nexport default defineNuxtModule({\n  setup(_options, nuxt) {\n${body}\n  },\n});\n`;
+
+describe('which modules of the repository a Nuxt application is built with (P251)', () => {
+  it("reads each file of `modules/` and each folder's `index`, a listed path once, and a workspace package at its source", () => {
+    const root = repo({
+      'package.json': JSON.stringify({ name: 'root', private: true, workspaces: ['app', 'audit'] }),
+      'app/package.json': JSON.stringify({ name: 'app', ...NUXT_4 }),
+      'app/nuxt.config.ts': "export default defineNuxtConfig({ modules: ['./modules/b', 'audit', './tools/c.ts'] });",
+      'app/modules/a.ts': module(''),
+      'app/modules/b/index.ts': module(''),
+      'app/modules/notes.md': '',
+      'app/tools/c.ts': module(''),
+      'audit/package.json': JSON.stringify({ name: 'audit', exports: { '.': { import: './dist/module.mjs' } } }),
+      'audit/src/module.ts': module(''),
+    });
+    const { modules } = nuxtApplicationOf(join(root, 'app'), NUXT_4);
+    expect(modules.modules.map((each) => [each.file, each.name])).toEqual([
+      ['modules/b/index.ts', './modules/b'],
+      ['../audit/src/module.ts', 'audit'],
+      ['tools/c.ts', './tools/c.ts'],
+      ['modules/a.ts', 'modules/a.ts'],
+    ]);
+    expect(modules.rows).toEqual([]);
+  });
+
+  it('reads the modules of `dir.modules`, and a layer\'s listed module from the layer', () => {
+    const root = repo({
+      'nuxt.config.ts': "export default defineNuxtConfig({ dir: { modules: 'kit' }, extends: ['./base'] });",
+      'kit/one.ts': module(''),
+      'modules/ignored.ts': module(''),
+      'base/nuxt.config.ts': "export default defineNuxtConfig({ modules: ['./extra'] });",
+      'base/extra.ts': module(''),
+    });
+    const { modules } = nuxtApplicationOf(root, NUXT_4);
+    expect(modules.modules.map((each) => [each.file, each.rank])).toEqual([
+      ['kit/one.ts', 0],
+      ['base/extra.ts', 1],
+    ]);
+  });
+
+  it('names a package from a registry, a known one with what it adds, and says a module written as code, in place or missing', () => {
+    const root = repo({
+      'nuxt.config.ts':
+        "export default defineNuxtConfig({ modules: ['@vueuse/nuxt', '@nuxtjs/i18n', '@pinia/nuxt', process.env.X, defineNuxtModule({ setup() {} }), './nope'] });",
+    });
+    const { modules } = nuxtApplicationOf(root, NUXT_4);
+    expect(modules.installed.map((each) => [each.name, each.why, each.adds !== undefined])).toEqual([
+      ['@vueuse/nuxt', 'not-installed', true],
+      ['@nuxtjs/i18n', 'not-installed', false],
+    ]);
+    expect(modules.rows.map((row) => [row.reason, row.meta?.why])).toEqual([
+      ['framework-module-unread', 'dynamic'],
+      ['framework-module-unread', 'inline'],
+      ['framework-module-unread', 'missing'],
+    ]);
+  });
+});
+
+describe('what a module adds (P251)', () => {
+  it('reads import directories, names, routes, middleware, pages and aliases from paths built from its file', () => {
+    const root = repo({
+      'modules/shop/index.ts': module(
+        [
+          "    const resolver = createResolver(import.meta.url);",
+          "    const { resolve: from } = createResolver(import.meta.url);",
+          "    const runtime = resolver.resolve('./runtime');",
+          "    addImportsDir([resolver.resolve('./runtime/composables'), `${runtime}/utils/**`]);",
+          "    addServerImportsDir(from('./runtime/server/utils'));",
+          "    addImports({ name: 'default', as: 'useCart', from: from('./runtime/cart') });",
+          "    addImports([{ name: 'ref', from: 'vue' }]);",
+          "    addServerHandler({ route: '/api/cart/:id', method: 'delete', handler: resolver.resolve('./runtime/server/drop') });",
+          "    addServerHandler({ handler: resolver.resolve('./runtime/server/log') });",
+          "    extendPages((pages) => { pages.push({ name: 'cart', path: '/cart', file: resolver.resolve('./runtime/cart.vue') }); });",
+          "    nuxt.hook('pages:extend', (list) => { list.unshift({ path: '/basket', file: resolver.resolve('./runtime/cart.vue') }); });",
+          "    nuxt.options.alias['#cart'] = runtime;",
+          "    nuxt.options.alias.basket ||= resolver.resolve('./runtime');",
+          "    addPlugin(resolver.resolve('./runtime/plugin'));",
+        ].join('\n'),
+      ),
+      'modules/shop/runtime/composables/useTotal.ts': 'export const useTotal = () => 0;',
+      'modules/shop/runtime/server/utils/db.ts': 'export const db = {};',
+      'modules/shop/runtime/cart.ts': 'export default () => ({});',
+      'modules/shop/runtime/server/drop.ts': 'export default defineEventHandler(() => null);',
+      'modules/shop/runtime/server/log.ts': 'export default defineEventHandler(() => undefined);',
+      'modules/shop/runtime/cart.vue': '<template><p /></template>',
+    });
+    const [read] = nuxtApplicationOf(root, NUXT_4).modules.modules;
+    expect(read?.additions).toMatchObject({
+      importDirs: [
+        { dir: 'modules/shop/runtime/composables', nested: false },
+        { dir: 'modules/shop/runtime/utils', nested: true },
+      ],
+      serverImportDirs: [{ dir: 'modules/shop/runtime/server/utils', nested: false }],
+      imports: [{ file: 'modules/shop/runtime/cart.ts', name: 'useCart', export: 'default' }],
+      handlers: [
+        { route: '/api/cart/:id', method: 'DELETE', handler: 'modules/shop/runtime/server/drop.ts', file: 'modules/shop/index.ts', line: 11, middleware: false },
+        { method: 'ALL', handler: 'modules/shop/runtime/server/log.ts', middleware: true },
+      ],
+      pages: [
+        { path: '/cart', file: 'modules/shop/runtime/cart.vue' },
+        { path: '/basket', file: 'modules/shop/runtime/cart.vue' },
+      ],
+      aliases: [
+        { key: '#cart', target: 'modules/shop/runtime', replaces: true },
+        { key: 'basket', target: 'modules/shop/runtime', replaces: false },
+      ],
+      notRead: ['addPlugin'],
+    });
+  });
+
+  it('reads an addition written under a condition as made, and says which', () => {
+    const root = repo({
+      'modules/maybe.ts': module(
+        [
+          '    const resolver = createResolver(import.meta.url);',
+          "    if (_options.server) addServerHandler({ route: '/api/x', handler: resolver.resolve('./x') });",
+          "    _options.names && addImportsDir(resolver.resolve('./names'));",
+          "    addImportsDir(resolver.resolve('./always'));",
+        ].join('\n'),
+      ),
+      'modules/x.ts': 'export default defineEventHandler(() => 1);',
+    });
+    const { modules } = nuxtApplicationOf(root, NUXT_4).modules;
+    const maybe = modules.find((each) => each.file === 'modules/maybe.ts');
+    expect(maybe?.additions.conditional).toEqual(['addServerHandler (line 5)', 'addImportsDir (line 6)']);
+    expect(maybe?.additions.handlers.map((handler) => handler.route)).toEqual(['/api/x']);
+    expect(modulesReadRow(nuxtApplicationOf(root, NUXT_4).layers[0]!.layout, [maybe!]).message).toContain(
+      'addServerHandler (line 5) and addImportsDir (line 6) are written under a condition and read as made',
+    );
+  });
+
+  it('reads `resolve(__dirname, ...)`, `fileURLToPath(new URL(...))` and an installed module, and says a relative string and a variable', () => {
+    const root = repo({
+      'modules/a.ts': module(
+        [
+          "    addImportsDir(resolve(__dirname, 'a-names'));",
+          "    addImportsDir(fileURLToPath(new URL('./a-more', import.meta.url)));",
+          "    addImportsDir('./relative');",
+          "    addServerHandler({ route: someRoute, handler: resolve(__dirname, '../handlers/h') });",
+          "    installModule(resolve(__dirname, 'b'));",
+        ].join('\n'),
+        "import { resolve } from 'node:path';\nimport { fileURLToPath } from 'node:url';",
+      ),
+      'modules/b.ts': module("    addImportsDir(resolve(__dirname, 'b-names'));", "import { resolve } from 'node:path';"),
+      'handlers/h.ts': 'export default defineEventHandler(() => 1);',
+    });
+    const { modules, rows } = nuxtApplicationOf(root, NUXT_4).modules;
+    expect(modules.map((each) => [each.file, each.additions.importDirs.map((dir) => dir.dir)])).toEqual([
+      ['modules/a.ts', ['modules/a-names', 'modules/a-more']],
+      ['modules/b.ts', ['modules/b-names']],
+    ]);
+    expect(rows.map((row) => [row.reason, row.symbol, row.line, row.meta?.why])).toEqual([
+      ['framework-module-unread', 'addImportsDir', 7, 'addition'],
+      ['framework-module-unread', 'addServerHandler', 8, 'addition'],
+    ]);
+  });
+});

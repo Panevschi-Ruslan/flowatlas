@@ -830,7 +830,12 @@ prove, and the path is given so you can run it.
   a directory of `layers/`, or an `extends` entry by path or workspace package,
   nested ones too - is read as part of the application: its pages, routes,
   composables and aliases, the higher layer's where two give one, said as a
-  note (`fixtures/nuxt-layers`). A verb a helper built, aliased or re-exported is
+  note (`fixtures/nuxt-layers`). A Nuxt module of the repository is read for
+  what it adds when the application builds - the names of a directory it adds,
+  the routes it serves, the pages and aliases it adds - and `dir.pages`,
+  `dir.shared`, `$production` and SvelteKit's `kit.files.routes` move what is
+  read where the configuration says (`fixtures/nuxt-modules`,
+  `fixtures/sveltekit-routes-dir`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
   `zsa` is a boundary with its callers (`fixtures/next-actions`).
@@ -1051,8 +1056,10 @@ Known gaps in what it can read:
   `.nuxt/` are not there, and the names Nuxt imports from `composables/` and
   `utils/` as imports; a Nuxt layer fetched when the application builds
   (`github:`, a URL), installed from a registry or named in code is a row and
-  is not read, an alias or a directory a module adds at build time is not
-  known, and a
+  is not read; what a module installed from a registry adds at build time is
+  not known (it is named in a note), nor what a module of the repository adds
+  with an argument written as code (a row); only the production build is read,
+  another environment's differences said in a note; and a
   setting written as code is read as its default and named in a row.
 - A file-system router nobody has described — `@fastify/autoload`, or a
   convention of the repository's own. The reader says it cannot tell such a

@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { toPosixPath } from '@flowatlas/core';
 import { afterAll, describe, expect, it } from 'vitest';
-import { keptByLayer, nuxtConventions, nuxtLayersOf, nuxtLayoutOf, sveltekitConventions } from './framework-conventions.js';
-import { nitroAddressOf, nuxtPagesOf } from './nuxt-routes.js';
+import { keptByLayer, nuxtConventions, nuxtLayersOf, nuxtLayoutOf, sveltekitConventions, sveltekitRoutesOf } from './framework-conventions.js';
+import { nitroAddressOf, nuxtPagesOf, sveltekitPagesOf } from './nuxt-routes.js';
 
 const roots: string[] = [];
 afterAll(() => {
@@ -286,5 +286,135 @@ describe("SvelteKit's conventions (P240)", () => {
     const conventions = sveltekitConventions(root, KIT);
     expect(conventions?.paths).toEqual({ $lib: ['src/lib'], '$lib/*': ['src/lib/*'] });
     expect(conventions?.rows?.map((row) => [row.reason, row.symbol])).toEqual([['framework-setting-dynamic', 'kit.files.lib']]);
+  });
+
+  it('reads the routes and pages under `kit.files.routes` (P251), and the default where it is code', () => {
+    const moved = repo({ 'svelte.config.js': "export default { kit: { files: { routes: 'src/app' } } };" });
+    expect(sveltekitRoutesOf(moved)).toBe('src/app');
+    expect(sveltekitPagesOf(moved).root).toBe('src/app');
+    const coded = repo({ 'svelte.config.js': 'export default { kit: { files: { routes: routesDir() } } };' });
+    expect(sveltekitRoutesOf(coded)).toBe('src/routes');
+    expect(sveltekitConventions(coded, KIT)?.rows?.map((row) => row.symbol)).toEqual(['kit.files.routes']);
+  });
+});
+
+describe("a Nuxt part's directories by kind (P251)", () => {
+  it('reads `dir.pages`, `dir.shared` and `dir.modules` in the application and in a layer, each under its own base', () => {
+    const root = repo({
+      'nuxt.config.ts': "export default defineNuxtConfig({ dir: { pages: 'views', shared: 'common', modules: 'kit' }, extends: ['./base'] });",
+      'app/views/index.vue': '',
+      'base/nuxt.config.ts': "export default defineNuxtConfig({ dir: { pages: 'screens' } });",
+    });
+    const { layers } = nuxtLayersOf(root, NUXT_4);
+    expect(layers.map((layer) => layer.layout.dirs)).toEqual([
+      { pages: 'app/views', layouts: 'app/layouts', middleware: 'app/middleware', shared: 'common', modules: 'kit' },
+      { pages: 'base/screens', layouts: 'base/layouts', middleware: 'base/middleware', shared: 'base/shared', modules: 'base/modules' },
+    ]);
+    const { routes } = nuxtPagesOf(root, NUXT_4, ['app/views/index.vue', 'app/pages/old.vue', 'base/screens/admin.vue', 'base/pages/no.vue']);
+    expect([...routes]).toEqual([
+      ['app/views/index.vue', '/'],
+      ['base/screens/admin.vue', '/admin'],
+    ]);
+    expect(nuxtConventions(root, NUXT_4)?.paths?.['#shared']).toEqual(['common']);
+  });
+
+  it('reads the default and says it where `dir` or one of its keys is code', () => {
+    const root = repo({ 'nuxt.config.ts': 'export default defineNuxtConfig({ dir: { pages: pagesDir() } });' });
+    const layout = nuxtLayoutOf(root, NUXT_3);
+    expect(layout.dirs.pages).toBe('pages');
+    expect(layout.rows.map((row) => row.symbol)).toEqual(['dir.pages']);
+  });
+
+  it('routes only a file under the part\'s own pages directory, not another directory of that name', () => {
+    const root = repo({ 'nuxt.config.ts': '' });
+    const { routes } = nuxtPagesOf(root, NUXT_3, ['pages/a.vue', 'components/pages/B.vue']);
+    expect([...routes]).toEqual([['pages/a.vue', '/a']]);
+  });
+});
+
+describe('a Nuxt configuration read for one build, and the others compared (P251)', () => {
+  const checkout = (files: Record<string, string>): string => join(repo({ '.git/HEAD': '', ...files }), 'shop');
+
+  it('reads `$production` over the rest, and says what development builds that production does not', () => {
+    const shop = checkout({
+      'shop/nuxt.config.ts':
+        "export default defineNuxtConfig({ extends: ['../ui'], $production: { extends: ['../prod'] }, $development: { extends: ['../mock'], dir: { pages: 'dev-pages' } } });",
+      'ui/nuxt.config.ts': '',
+      'prod/nuxt.config.ts': '',
+      'mock/nuxt.config.ts': '',
+    });
+    expect(nuxtLayersOf(shop, NUXT_3).layers.map((layer) => layer.at)).toEqual(['', '../prod', '../ui']);
+    expect(nuxtLayersOf(shop, NUXT_3, 'development').layers.map((layer) => layer.at)).toEqual(['', '../mock', '../ui']);
+    const rows = (nuxtConventions(shop, NUXT_3)?.rows ?? []).filter((row) => row.reason === 'framework-environment-differs');
+    expect(rows.map((row) => row.meta?.['environments'])).toEqual([
+      [
+        {
+          environment: 'development',
+          only: ['../mock as a layer'],
+          without: ['../prod as a layer'],
+          changed: ["the application's pages in dev-pages (pages in production)"],
+        },
+      ],
+    ]);
+  });
+
+  it('compares each name `$env` writes, and says nothing where every build is alike', () => {
+    const shop = checkout({ 'shop/nuxt.config.ts': "export default defineNuxtConfig({ $env: { staging: { modules: ['@nuxtjs/i18n'] }, preview: { devtools: { enabled: true } } } });" });
+    const rows = (nuxtConventions(shop, NUXT_3)?.rows ?? []).filter((row) => row.reason === 'framework-environment-differs');
+    expect(rows.map((row) => [row.symbol, row.meta?.['environments']])).toEqual([['staging', [{ environment: 'staging', only: ['the module @nuxtjs/i18n'], without: [], changed: [] }]]]);
+    const alike = checkout({ 'shop/nuxt.config.ts': 'export default defineNuxtConfig({ $development: { devtools: { enabled: true } } });' });
+    expect((nuxtConventions(alike, NUXT_3)?.rows ?? []).some((row) => row.reason === 'framework-environment-differs')).toBe(false);
+  });
+});
+
+describe('what the modules of the repository give the application (P251)', () => {
+  const checkout = (files: Record<string, string>): string => join(repo({ '.git/HEAD': '', ...files }), 'shop');
+  const MODULE = (body: string): string =>
+    `import { createResolver, defineNuxtModule } from '@nuxt/kit';\nexport default defineNuxtModule({ setup(_o, nuxt) {\n const resolver = createResolver(import.meta.url);\n${body}\n} });\n`;
+
+  it("imports a module's names at the rank of the part that registers it, lays its aliases over the configuration's, and stamps it", () => {
+    const shop = checkout({
+      'shop/nuxt.config.ts': "export default defineNuxtConfig({ extends: ['../ui'], alias: { '#kept': './kept', '#taken': './mine' } });",
+      'shop/modules/cart/index.ts': MODULE(
+        "addImportsDir(resolver.resolve('./names'));\nnuxt.options.alias['#taken'] = resolver.resolve('./taken');\nnuxt.options.alias['#kept'] ||= resolver.resolve('./other');\naddServerHandler({ route: '/api/cart', handler: resolver.resolve('./server/cart') });",
+      ),
+      'shop/modules/cart/names/useCart.ts': 'export const useCart = 1;',
+      'shop/modules/cart/server/cart.ts': 'export default defineEventHandler(() => 1);',
+      'ui/nuxt.config.ts': "export default defineNuxtConfig({ modules: ['./tools/report'] });",
+      'ui/tools/report.ts': MODULE("addImportsDir(resolver.resolve('./report'));"),
+      'ui/tools/report/useReport.ts': 'export const useReport = 1;',
+    });
+    const conventions = nuxtConventions(shop, NUXT_3);
+    const [app, server] = conventions?.implicit ?? [];
+    expect(app?.sources.map((source) => `${source.file}@${source.rank ?? 0}`)).toEqual(['modules/cart/names/useCart.ts@0', '../ui/tools/report/useReport.ts@1']);
+    expect(app?.except).toEqual(expect.arrayContaining(['modules/cart/server']));
+    expect(server?.within).toEqual(['server', '../ui/server', 'modules/cart/server']);
+    expect(conventions?.paths).toMatchObject({ '#taken': ['modules/cart/taken'], '#kept': ['kept'] });
+    expect(conventions?.files).toEqual(expect.arrayContaining(['modules/cart/index.ts', '../ui/tools/report.ts']));
+    expect(conventions?.rows?.map((row) => row.reason)).toEqual(expect.arrayContaining(['framework-module-read']));
+  });
+
+  it("shows a page a module adds at the rank of its part, and serves nothing it cannot place", () => {
+    const shop = checkout({
+      'shop/nuxt.config.ts': '',
+      'shop/modules/extra.ts': MODULE("extendPages((pages) => { pages.push({ path: '/extra', file: resolver.resolve('../extra/page.vue') }); });"),
+      'shop/extra/page.vue': '<template><p /></template>',
+    });
+    const { routes } = nuxtPagesOf(shop, NUXT_3, ['extra/page.vue', 'pages/index.vue']);
+    expect([...routes]).toEqual([
+      ['pages/index.vue', '/'],
+      ['extra/page.vue', '/extra'],
+    ]);
+  });
+
+  it('takes a module of a sibling directory into the extent, and names the packages it cannot read', () => {
+    const shop = checkout({
+      'shop/nuxt.config.ts': "export default defineNuxtConfig({ modules: ['../shared/audit.ts', '@nuxt/image'] });",
+      'shared/audit.ts': MODULE(''),
+    });
+    const conventions = nuxtConventions(shop, NUXT_3);
+    expect(conventions?.extent?.map(toPosixPath)).toEqual([toPosixPath(join(dirname(shop), 'shared'))]);
+    const installed = conventions?.rows?.find((row) => row.reason === 'framework-module-installed');
+    expect(installed?.meta).toMatchObject({ modules: ['@nuxt/image'], unknown: [] });
   });
 });

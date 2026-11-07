@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import {
   hasAnyDependency,
   lineAndColumnAt,
@@ -15,7 +16,8 @@ import {
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { keptByLayer, nuxtConventions, nuxtLayerOf, nuxtLayersOf, withinLayer, type LayerClaim } from './framework-conventions.js';
+import { keptByLayer, nuxtApplicationOf, nuxtConventions, nuxtLayerOf, sveltekitRoutesOf, withinLayer, type LayerClaim } from './framework-conventions.js';
+import { moduleRouteOf, type NuxtModule } from './nuxt-modules.js';
 import { routeAddressOfFile, routePathOfFile, type FsRouter } from './fs-routes.js';
 import { readingOf } from './request-readings.js';
 import { inlineHandlerOf, repoSources } from './shared.js';
@@ -37,6 +39,12 @@ export const NUXT_PAGES: FsRouter = { root: 'pages', segments: ['group', 'param'
 
 /** SvelteKit's screens: a `+page.svelte` is shown at its folder's address, as its `+page.server` is served there. */
 export const SVELTEKIT_PAGES: FsRouter = { root: 'src/routes', routeFiles: ['+page'], segments: ['group', 'mixed', 'param', 'catch-all'] };
+
+/** SvelteKit's screens under the directory `kit.files.routes` names (P251). */
+export const sveltekitPagesOf = (repoDir: string): FsRouter => {
+  const root = sveltekitRoutesOf(repoDir);
+  return root === SVELTEKIT_PAGES.root ? SVELTEKIT_PAGES : { ...SVELTEKIT_PAGES, root };
+};
 export const NITRO_API: FsRouter = { root: 'server/api', prefix: '/api', segments: ['group', 'param', 'catch-all'] };
 export const NITRO_ROUTES: FsRouter = { root: 'server/routes', segments: ['group', 'param', 'catch-all'] };
 
@@ -65,25 +73,36 @@ export const nitroAddressOf = (file: string, serverDir = 'server'): { path: stri
 
 /**
  * The screens of every part of a Nuxt application (P243): a component file
- * under its part's `pages/`, at the address of its file there, by file. A
- * page two parts give is the higher part's; the lower one stays a component
- * that is no screen, and is said as a note.
+ * under its part's pages directory - `pages/`, or what `dir.pages` names
+ * (P251) - at the address of its file there, by file, and each page a module
+ * of the repository adds (`extendPages`), at the rank of the part that
+ * registers it. A page two parts give is the higher part's; the lower one
+ * stays a component that is no screen, and is said as a note.
  */
 export const nuxtPagesOf = (
   repoDir: string,
   pkg: PackageJson,
   files: readonly string[],
 ): { readonly routes: ReadonlyMap<string, string>; readonly rows: readonly Unresolved[] } => {
-  const { layers } = nuxtLayersOf(repoDir, pkg);
+  const { layers, modules } = nuxtApplicationOf(repoDir, pkg);
   const claims: LayerClaim[] = [];
   for (const file of files) {
     const layer = nuxtLayerOf(layers, file);
     if (layer === undefined) continue;
-    const src = withinLayer(layer, layer.layout.srcDir);
-    const router = src === '' ? NUXT_PAGES : { ...NUXT_PAGES, root: `${src}/${NUXT_PAGES.root}` };
+    const pages = withinLayer(layer, layer.layout.dirs.pages);
+    const within = withinLayer(layer, file);
+    // Only a file under the part's own pages directory: another directory of that name is not one Nuxt routes.
+    if (!within.startsWith(`${pages}/`)) continue;
+    const router = { ...NUXT_PAGES, root: pages };
     // The router reads a script's name; a page's ending is the component format's.
-    const path = routePathOfFile(withinLayer(layer, file).replace(/\.vue$/, '.ts'), router);
+    const path = routePathOfFile(within.replace(/\.vue$/, '.ts'), router);
     if (path !== null) claims.push({ key: normalizePath(path), label: path, file, layer, rank: layers.indexOf(layer) });
+  }
+  const known = new Set(files);
+  for (const module of modules.modules) {
+    for (const page of module.additions.pages) {
+      if (known.has(page.file)) claims.push({ key: normalizePath(page.path), label: page.path, file: page.file, layer: module.layer, rank: module.rank });
+    }
   }
   const { kept, rows } = keptByLayer(claims, 'shows');
   return { routes: new Map(kept.map((claim) => [claim.file, claim.label])), rows };
@@ -127,17 +146,29 @@ export const NITRO_REQUEST: RequestReadingDescription = {
   answers: [{ by: 'return' }],
 };
 
-/** Every file under `server/middleware`, in name order, as the wrapping of every route. */
-const middlewareOf = (ctx: ExtractContext): EntryWrapping[] =>
-  [...repoSources(ctx)]
+/** Every file under `server/middleware`, in name order, and each handler a module puts in front of every route (P251). */
+const middlewareOf = (ctx: ExtractContext, modules: readonly NuxtModule[]): EntryWrapping[] => [
+  ...[...repoSources(ctx)]
     .map((sourceFile) => ({ sourceFile, file: normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir) }))
     .filter(({ file }) => /(^|\/)server\/middleware\/[^/]+\.[cm]?[jt]s$/.test(file))
     .sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0))
-    .map(({ sourceFile, file }) => {
+    .map(({ sourceFile, file }): EntryWrapping => {
       const handler = defaultHandlerOf(sourceFile);
       const at = handler === undefined ? 1 : lineAndColumnAt(sourceFile, handler.getStart()).line;
       return { label: file.split('/').pop()?.replace(/\.[cm]?[jt]s$/, '') ?? file, layer: 'middleware', scope: 'global', source: 'server/middleware', file, line: at, kind: 'file' };
-    });
+    }),
+  ...modules.flatMap((module) =>
+    module.additions.handlers
+      .filter((handler) => handler.middleware)
+      .map((handler): EntryWrapping => {
+        const sourceFile = ctx.project.getSourceFile(join(ctx.repoDir, handler.handler));
+        const fn = sourceFile === undefined ? undefined : defaultHandlerOf(sourceFile);
+        const at = sourceFile === undefined || fn === undefined ? 1 : lineAndColumnAt(sourceFile, fn.getStart()).line;
+        const label = handler.handler.split('/').pop()?.replace(/\.[cm]?[jt]s$/, '') ?? handler.handler;
+        return { label, layer: 'middleware', scope: 'global', source: 'module/addServerHandler', file: handler.handler, line: at, kind: 'file' };
+      }),
+  ),
+];
 
 export const nitroRoutesAdapter: EntryAdapter = {
   name: 'nitro-routes',
@@ -150,12 +181,21 @@ export const nitroRoutesAdapter: EntryAdapter = {
 
   extractEntries(ctx: ExtractContext): EntryNode[] {
     const request = readingOf(NITRO_REQUEST);
-    const wrapping = middlewareOf(ctx);
-    const entries: EntryNode[] = [];
     // Every part of a Nuxt application serves the routes of its server
-    // (P243); Nitro on its own is one part, its server in `server/`.
-    const layers = hasAnyDependency(ctx.pkg, ['nuxt']) ? nuxtLayersOf(ctx.repoDir, ctx.pkg).layers : [];
-    const claims: Array<LayerClaim & { sourceFile: SourceFile; address: { path: string; rawPath: string; method: string } }> = [];
+    // (P243), and each module of the repository the routes it adds (P251);
+    // Nitro on its own is one part, its server in `server/`.
+    const application = hasAnyDependency(ctx.pkg, ['nuxt']) ? nuxtApplicationOf(ctx.repoDir, ctx.pkg) : undefined;
+    const layers = application?.layers ?? [];
+    const modules = application?.modules.modules ?? [];
+    const wrapping = middlewareOf(ctx, modules);
+    const entries: EntryNode[] = [];
+    type Claim = LayerClaim & {
+      sourceFile: SourceFile | undefined;
+      address: { path: string; rawPath: string; method: string };
+      /** Where a route a module adds is declared: the call (P251). */
+      declared?: { line: number; handlerFile: string };
+    };
+    const claims: Claim[] = [];
     for (const sourceFile of repoSources(ctx)) {
       const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
       const layer = nuxtLayerOf(layers, file);
@@ -164,19 +204,37 @@ export const nitroRoutesAdapter: EntryAdapter = {
       const label = `${address.method} ${address.path}`;
       claims.push({ key: makeHttpEntryKey(address.method, address.path), label, file, layer, rank: layer === undefined ? 0 : layers.indexOf(layer), sourceFile, address });
     }
+    for (const module of modules) {
+      for (const handler of module.additions.handlers) {
+        const route = moduleRouteOf(handler);
+        if (route === undefined) continue;
+        const address = { ...route, method: handler.method };
+        claims.push({
+          key: makeHttpEntryKey(address.method, address.path),
+          label: `${address.method} ${address.path}`,
+          file: handler.file,
+          layer: module.layer,
+          rank: module.rank,
+          sourceFile: ctx.project.getSourceFile(join(ctx.repoDir, handler.handler)),
+          address,
+          declared: { line: handler.line, handlerFile: handler.handler },
+        });
+      }
+    }
     // A route two parts serve is the higher one's, as Nuxt ranks its layers.
     const { kept, rows } = keptByLayer(claims, 'serves');
     for (const row of rows) ctx.builder.addUnresolved(row);
-    for (const { sourceFile, file, address, label, key } of kept) {
-      const handlerNode = defaultHandlerOf(sourceFile);
+    for (const { sourceFile, file, address, label, key, declared } of kept) {
+      const handlerNode = sourceFile === undefined ? undefined : defaultHandlerOf(sourceFile);
       const handler = inlineHandlerOf(handlerNode, label, ctx);
       if (handler === undefined) {
+        const of = declared === undefined ? file : declared.handlerFile;
         ctx.builder.addUnresolved({
           file,
-          line: 1,
+          line: declared?.line ?? 1,
           reason: 'fs-route-handler-not-read',
           level: 'action',
-          message: `${file} serves ${label}, and its default export is not a handler written in place`,
+          message: `${declared === undefined ? file : `${file} adds a handler that`} serves ${label}, and the default export of ${of} is not a handler written in place`,
           hint: 'Export `defineEventHandler((event) => ...)` as the default, or describe the route.',
           symbol: label,
           adapter: 'nitro-routes',
@@ -189,10 +247,16 @@ export const nitroRoutesAdapter: EntryAdapter = {
         key,
         ...(handler === undefined ? {} : { handler }),
         file,
-        line: handler?.line ?? 1,
+        line: declared?.line ?? handler?.line ?? 1,
         request,
         ...(wrapping.length === 0 ? {} : { wrapping }),
-        meta: { method: address.method, path: address.path, rawPath: address.rawPath, adapter: 'nitro-routes', registration: 'server/file' },
+        meta: {
+          method: address.method,
+          path: address.path,
+          rawPath: address.rawPath,
+          adapter: 'nitro-routes',
+          registration: declared === undefined ? 'server/file' : 'module/addServerHandler',
+        },
       });
     }
     return entries;

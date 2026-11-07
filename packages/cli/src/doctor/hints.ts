@@ -235,6 +235,14 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Two parts of the application give this page or route, and the framework uses the one of the higher-ranked part; the lower one is read as code, and not as a page or route. Nothing to do, unless the lower one was meant to be used.',
   'framework-layer-alias': () =>
     "A layer imports its own code with `~` or `@`, which the framework resolves against the application in every layer, and the application has no such file, so the import is not joined. Import it with a relative path, or through the layer's named alias.",
+  'framework-module-read': () =>
+    "The application is built with these modules of the repository, and what each adds when the application builds - names used with no import, routes, pages, aliases - was read from its code. Nothing to do.",
+  'framework-module-installed': () =>
+    "These modules are packages the application installs, run when it builds; what a package adds is not read as the repository's code. Nothing to do for the ones whose additions are their own package's; for another, name an alias it adds in the tsconfig's paths, or describe a route it serves.",
+  'framework-environment-differs': () =>
+    "The configuration overrides some settings for one environment, and the graph is the production build's, so a layer, module or setting only another environment has is not read. Nothing to do; write what every build shares outside the overrides.",
+  'framework-module-unread': () =>
+    "A module the application is built with, or something it adds, could not be read: the module is written as code or in the configuration itself, names nothing, or hands the framework a path that is not built from its own file. Build the path from the module's file, with `createResolver(import.meta.url).resolve(...)`, or move the module to a file of `modules/`.",
   'implicit-import-overridden': () =>
     'More than one part of the application exports this name, and the framework imports it from the higher-ranked one, which is the one joined. Nothing to do; rename the other to use both.',
   'framework-setting-dynamic': () =>

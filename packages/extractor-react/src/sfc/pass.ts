@@ -1,5 +1,5 @@
 import { hasDependency, makeLeafId, makeSymbolId, startLineOf, type EmbeddedFile, type NamedFunction } from '@flowatlas/core';
-import { SVELTEKIT_PAGES, nuxtPagesOf } from '@flowatlas/adapters-entry';
+import { nuxtPagesOf, sveltekitPagesOf } from '@flowatlas/adapters-entry';
 import type { Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -119,7 +119,8 @@ export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
   const routed = routedComponents(sources, files, {
     repoDir: ctx.repoDir,
     extensions,
-    pages: hasDependency(ctx.pkg, '@sveltejs/kit') ? [SVELTEKIT_PAGES] : [],
+    // SvelteKit's pages under `kit.files.routes` where the configuration moves them (P251).
+    pages: hasDependency(ctx.pkg, '@sveltejs/kit') ? [sveltekitPagesOf(ctx.repoDir)] : [],
     ...(nuxt === undefined ? {} : { placed: nuxt.routes }),
   });
 
