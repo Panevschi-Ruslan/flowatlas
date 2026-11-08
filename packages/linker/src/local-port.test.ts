@@ -155,3 +155,108 @@ describe('a request to a port on this machine joins the service listening there 
     expect(result.project.unresolved.some((row) => row.reason === 'local-port-shared' && row.service === 'jobs')).toBe(true);
   });
 });
+
+/** A container of `orders` publishing `published:container`, as a compose file starts it. */
+const container = (mappings: Array<[number, number]>, environment: Record<string, number> = {}, names = ['orders', 'orders-api']): RepoSettings => ({
+  ...NO_SETTINGS,
+  hosts: mappings.flatMap(([published, inside]) => [
+    ...localHostsOf(published).map((host) => ({ host, file: 'docker-compose.yml', mapped: { published, container: inside, side: 'published' as const } })),
+    ...names.map((name) => ({ host: `${name}:${inside}`, file: 'docker-compose.yml', mapped: { published, container: inside, side: 'container' as const } })),
+  ]),
+  containers: [
+    {
+      name: 'orders',
+      names,
+      file: 'docker-compose.yml',
+      ports: mappings.map(([published, inside], index) => ({ published, container: inside, file: 'docker-compose.yml', line: 6 + index })),
+      environment,
+    },
+  ],
+});
+
+describe('a port the code and the files decide together (P254)', () => {
+  it('joins a request to a published port to the service listening on the container side, saying which side', () => {
+    const result = link('localhost:3001', { orders: [at(3000)] }, config(), { orders: container([[3001, 3000]]) });
+    expect(joins(result)).toEqual([
+      'hits entry:orders:http:GET:/items heuristic src/main.ts:7, published as 3001 by docker-compose.yml',
+      'http_calls entry:orders:http:GET:/items heuristic src/main.ts:7, published as 3001 by docker-compose.yml',
+    ]);
+    expect(result.project.unresolved.some((row) => row.reason === 'published-port-unheard')).toBe(false);
+  });
+
+  it("joins a request on the container's own network to its port, saying it is the container's", () => {
+    const result = link('orders-api:3000', { orders: [at(3000)] }, config(), { orders: container([[3001, 3000]]) });
+    expect(joins(result)).toEqual([
+      'hits entry:orders:http:GET:/items heuristic src/main.ts:7, in the container orders (docker-compose.yml)',
+      'http_calls entry:orders:http:GET:/items heuristic src/main.ts:7, in the container orders (docker-compose.yml)',
+    ]);
+    // By the configured name, the join is as sure as the configuration.
+    expect(joins(link('orders:3000', { orders: [at(3000)] }, config(), { orders: container([[3001, 3000]]) }))[1]).toBe(
+      'http_calls entry:orders:http:GET:/items static src/main.ts:7, in the container orders (docker-compose.yml)',
+    );
+  });
+
+  it("reads the container's environment over the code's fallback inside it", () => {
+    const result = link('localhost:4001', { orders: [at(3000, { setting: 'PORT' })] }, config(), { orders: container([[4001, 4000]], { PORT: 4000 }) });
+    expect(joins(result)[1]).toBe(
+      'http_calls entry:orders:http:GET:/items heuristic src/main.ts:7 (PORT from docker-compose.yml (orders)), published as 4001 by docker-compose.yml',
+    );
+  });
+
+  it('is a note where a mapping meets nothing the code listens on, and still joins by the file', () => {
+    const elsewhere = link('localhost:3002', { orders: [at(3000)] }, config(), { orders: container([[3002, 8080]]) });
+    expect(joins(elsewhere)).toEqual(['hits entry:orders:http:GET:/items heuristic -', 'http_calls entry:orders:http:GET:/items heuristic -']);
+    const row = elsewhere.project.unresolved.find((each) => each.reason === 'published-port-unheard');
+    expect(row).toMatchObject({ service: 'orders', file: 'docker-compose.yml', line: 6, level: 'info', meta: { published: 3002, container: 8080, listens: [3000] } });
+    expect(row?.message).toBe("docker-compose.yml publishes port 8080 of orders (orders) as 3002, but orders's code listens on 3000 (src/main.ts:7)");
+    const silent = link('localhost:3002', {}, config(), { orders: container([[3002, 8080]]) });
+    expect(silent.project.unresolved.find((each) => each.reason === 'published-port-unheard')?.message).toContain("but nothing in orders's code is read listening on a port");
+    const alone = link('localhost:3002', { orders: [{ file: 'src/main.ts', line: 7, setting: 'PORT' }] }, config(), { orders: container([[3002, 8080]]) });
+    expect(alone.project.unresolved.find((each) => each.reason === 'published-port-unheard')?.message).toContain(
+      "but orders's code reads its port from PORT (src/main.ts:7), which the container's environment does not give",
+    );
+  });
+
+  it("fills a port the code reads from a setting alone with the service's own example environment file", () => {
+    const settings = { orders: { ...NO_SETTINGS, ports: { ORDERS_PORT: [{ port: 3006, file: '.env.example' }] } } };
+    const result = link('localhost:3006', { orders: [{ file: 'src/main.ts', line: 7, setting: 'ORDERS_PORT' }] }, config(), settings);
+    expect(joins(result)[1]).toBe('http_calls entry:orders:http:GET:/items heuristic src/main.ts:7 (ORDERS_PORT from .env.example)');
+    // Without the file, a setting alone places nothing.
+    expect(joins(link('localhost:3006', { orders: [{ file: 'src/main.ts', line: 7, setting: 'ORDERS_PORT' }] }))).toEqual([]);
+  });
+
+  it('says where a port handed to the server is written', () => {
+    expect(joins(link('localhost:3001', { orders: [at(3001, { handed: 'src/index.ts:3' })] }))[1]).toBe(
+      'http_calls entry:orders:http:GET:/items static src/main.ts:7 (handed at src/index.ts:3)',
+    );
+  });
+
+  it("lets a front end's dev server give way where its service serves no route, and joins it where it does", () => {
+    const dev = (path: string): RepoGraph[] => [
+      graph('web', [
+        { id: 'repo:web', type: 'repo', label: 'web', repo: 'web', meta: { listen: [{ port: 5173, file: 'vite.config.ts', line: 4, devServer: true }] } },
+        { id: 'entry:web:http:GET:/api/basket', type: 'entry', kind: 'http', label: 'GET /api/basket', repo: 'web', meta: { method: 'GET', path: '/api/basket' } },
+      ]),
+      server('orders'),
+      graph('jobs', [
+        {
+          id: UI,
+          type: 'ui_api_call',
+          kind: 'http',
+          label: `GET ${path}`,
+          repo: 'jobs',
+          file: 'src/api.ts',
+          line: 3,
+          meta: { method: 'GET', url: `http:${SLASHES}localhost:5173${path}`, path, baseUrlEnv: null, host: 'localhost:5173' },
+        },
+      ]),
+    ];
+    const served = linkGraphs(dev('/api/basket'), config(), { builtAt: FIXED });
+    expect(served.project.edges.filter((edge) => edge.type === 'hits').map((edge) => `${edge.to} ${edge.confidence}`)).toEqual(['entry:web:http:GET:/api/basket static']);
+    const forwarded = linkGraphs(dev('/items'), config(), { builtAt: FIXED });
+    // A proxy forwards `/items`; the request is joined by its route alone, as before the dev server's port was read.
+    expect(forwarded.project.edges.filter((edge) => edge.type === 'hits').map((edge) => `${edge.to} ${String(edge.meta?.['via'])}`)).toEqual([
+      'entry:orders:http:GET:/items unique-route',
+    ]);
+  });
+});

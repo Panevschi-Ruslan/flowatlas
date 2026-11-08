@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:37:48.775Z",
+  "builtAt": "2026-11-08T12:46:11.489Z",
   "configHash": "73b8a22633ac",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1511,
+      "durationMs": 0,
       "packages": {
         "name": "listen-port-joins-admin",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 1,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1490,
+      "durationMs": 0,
       "packages": {
         "name": "listen-port-joins-audit",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 1,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1473,
+      "durationMs": 0,
       "packages": {
         "name": "listen-port-joins-catalog",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1700,
+      "durationMs": 0,
       "packages": {
         "name": "listen-port-joins-jobs",
         "runtime": [
@@ -88,7 +88,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1672,
+      "durationMs": 0,
       "packages": {
         "name": "listen-port-joins-ledger",
         "runtime": [
@@ -107,7 +107,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1467,
+      "durationMs": 0,
       "packages": {
         "name": "listen-port-joins-orders",
         "runtime": [
@@ -125,7 +125,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1437,
+      "durationMs": 0,
       "packages": {
         "name": "listen-port-joins-stock",
         "runtime": [
@@ -143,7 +143,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1483,
+      "durationMs": 0,
       "packages": {
         "name": "listen-port-joins-storefront",
         "runtime": [
@@ -161,7 +161,7 @@
       "edges": 21,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1457,
+      "durationMs": 0,
       "packages": {
         "name": "listen-port-joins-web",
         "runtime": [
@@ -219,7 +219,7 @@
       "file": "src/Dashboard.tsx",
       "line": 10,
       "reason": "local-port-shared",
-      "message": "port 3005 on this machine is where audit (its setting files) and ledger (src/main.ts:8) each listen, so it is not one service",
+      "message": "port 3005 on this machine is where audit (src/server.ts:19) and ledger (src/main.ts:8) each listen, so it is not one service",
       "hint": "Name the host under services[].hosts of the service this request means (localhost:3005), or start the servers on different ports.",
       "symbol": "ui_api_call:web#src/Dashboard.tsx:10:29"
     }

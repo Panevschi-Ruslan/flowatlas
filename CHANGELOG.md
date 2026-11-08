@@ -85,6 +85,28 @@ only one of them moved.
   `graphql-requires-auth-not-carried` (a finding, auth). New fixtures
   `rpc-shared-types` and `graphql-requires-auth`.
 
+- **Every way a port is decided, read (P254).** A front end's dev and preview
+  server says where it listens: `server.port` / `preview.port` in
+  `vite.config.*` (SvelteKit, Remix, React Router, Vue, React), `--port` on a
+  `vite`, `vite preview`, `svelte-kit dev`, `remix vite:dev` or
+  `react-router dev` script, Astro's `server.port`, Angular's `angular.json`
+  `serve` port and `ng serve --port` (the Angular repository node now carries
+  `meta.listen`); Vite's 5173 / 4173 only where `strictPort` keeps it there.
+  A dev server's port is marked `devServer`, and a request to it that its
+  service serves no route for is decided as before (its proxy forwards it). A
+  port handed to the function that starts the server (`start(3001)`,
+  `bootstrap({ port })`), a property of a literal settings object
+  (`config.port`), NestJS's `registerAs` / `load` factories and convict's
+  schema defaults are read, and a port read from a setting alone
+  (`app.listen(process.env.AUDIT_PORT)`) is kept with the setting and filled
+  from the service's example environment file. A compose service's `ports`
+  are read with both sides and its environment's ports, a `docker run -p` in
+  a `package.json` script is a container of the service, and a mapping is
+  reconciled with the code: `localhost:3001` and `orders:3000` join the one
+  service, `listensAt` saying `published as 3001 by docker-compose.yml` or
+  `in the container orders`; a mapping whose container side the code does not
+  listen on is the note `published-port-unheard`. Coverage probe
+  `dev-server-port`. New fixture `port-sources-joins`.
 - **The router's check on a field no resolver of its own answers, and an
   entity interface nobody can type (P252).** A field the router's
   `@authenticated`, `@requiresScopes` or `@policy` guards and no resolver of

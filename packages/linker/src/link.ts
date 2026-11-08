@@ -54,7 +54,16 @@ import { answeredOnlyByWildcard, couldReach } from './route-match.js';
 import { cmp, edgeKey } from './order.js';
 import { joinGraphqlFields } from './graphql-link.js';
 import { routeGateways, type RouteAnswer } from './graphql-federation.js';
-import { atLocalPort, listeningAt, portSharedFinding, whereListening, type Listening, type PortIndex } from './local-port.js';
+import {
+  atLocalPort,
+  inNetworkAt,
+  portSharedFinding,
+  portsListening,
+  whereListening,
+  type Listening,
+  type PortAnswer,
+  type PortIndex,
+} from './local-port.js';
 import type { GatewayRouteMeta } from '@flowatlas/graphql';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
@@ -619,17 +628,24 @@ const emptyHttpOut = (): LinkReport['httpOut'] => ({
 
 const emptyUi = (): LinkReport['ui'] => ({ total: 0, resolved: 0, unresolved: 0, byReason: {} });
 
-/** The hosts every service is reached at, and the ports their servers listen on (P77, P250). */
+/**
+ * The hosts every service is reached at, and the ports their servers listen
+ * on (P77, P250), the code's and the files' put together (P254), with a row
+ * for each container mapping that meets nothing the code listens on.
+ */
 const portIndexOf = (
   config: FlowatlasConfig,
   settings: Readonly<Record<string, RepoSettings>>,
   nodes: ReadonlyMap<string, GraphNode>,
-): PortIndex => {
+): PortIndex & { readonly rows: readonly Unresolved[] } => {
   const configured = hostIndexOf(config, {});
+  const listening = portsListening(nodes, settings);
   return {
     configured,
     all: config.settingFiles.read === false ? configured : hostIndexOf(config, settings),
-    listening: listeningAt(nodes),
+    listening: listening.byPort,
+    inNetwork: listening.inNetwork,
+    rows: listening.rows,
   };
 };
 
@@ -637,19 +653,24 @@ const portIndexOf = (
  * The one configured service a host is reached at (P239): by what the
  * configuration says first, and by what the services' own setting files say
  * where it says nothing. An address on this machine is asked of the ports the
- * servers listen on too, and may be two services' (P250).
+ * servers listen on too, and may be two services' (P250); a host on a
+ * container's network says where the service listens in it (P254).
  */
 const hostLookup = (hosts: PortIndex): NonNullable<UiIndex['serviceAtHost']> => {
   const one = (found: ReturnType<typeof servicesAt>): string | undefined =>
     Array.isArray(found) && found.length === 1 ? found[0] : undefined;
+  const placed = (service: string, sure: boolean, host: string): PortAnswer => {
+    const listening = inNetworkAt(host, service, hosts);
+    return { kind: 'service', service, sure, ...(listening === undefined ? {} : { listening }) };
+  };
   return (host) => {
     const address = `http:${'/'.repeat(2)}${host}`;
     const local = atLocalPort(address, hosts);
     if (local !== undefined) return local;
     const named = one(servicesAt(address, hosts.configured));
-    if (named !== undefined) return { kind: 'service', service: named, sure: true };
+    if (named !== undefined) return placed(named, true, host);
     const filed = one(servicesAt(address, hosts.all));
-    return filed === undefined ? undefined : { kind: 'service', service: filed, sure: false };
+    return filed === undefined ? undefined : placed(filed, false, host);
   };
 };
 
@@ -832,6 +853,7 @@ export const linkGraphs = (
   // Where every service is reached, its server's ports included, asked of
   // every request with a host and of a gateway's subgraphs (P250).
   const hosts = portIndexOf(config, settings, nodes);
+  found.push(...hosts.rows);
   const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, true);
   const valuedUiBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, false);
   const index: RouteIndex = {

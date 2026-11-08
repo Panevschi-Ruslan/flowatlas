@@ -1,0 +1,292 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T12:47:43.474Z",
+  "configHash": "7c602655c404",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 2,
+      "edges": 0,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "port-sources-joins-admin",
+        "runtime": [
+          "@angular/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1658,
+      "packages": {
+        "name": "port-sources-joins-audit",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "port-sources-joins-billing",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1633,
+      "packages": {
+        "name": "port-sources-joins-catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 7,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1631,
+      "packages": {
+        "name": "port-sources-joins-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "koa",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1627,
+      "packages": {
+        "name": "port-sources-joins-ledger",
+        "runtime": [
+          "@koa/router",
+          "convict",
+          "koa"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "notify",
+      "repo": "./notify",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1638,
+      "packages": {
+        "name": "port-sources-joins-notify",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1637,
+      "packages": {
+        "name": "port-sources-joins-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "search",
+      "repo": "./search",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1619,
+      "packages": {
+        "name": "port-sources-joins-search",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1649,
+      "packages": {
+        "name": "port-sources-joins-shop",
+        "runtime": [],
+        "dev": [
+          "@sveltejs/kit",
+          "svelte",
+          "vite"
+        ]
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1715,
+      "packages": {
+        "name": "port-sources-joins-stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 35,
+      "edges": 33,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1605,
+      "packages": {
+        "name": "port-sources-joins-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": [
+          "vite"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 11,
+    "resolved": 11,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 10,
+    "called": 10,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "notify",
+      "file": "docker-compose.yml",
+      "line": 15,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "docker-compose.yml publishes port 8080 of notify (notify) as 3008, but notify's code listens on 3000 (src/server.ts:10)",
+      "hint": "Map the published port to the port the server listens on (3008:<that port>), or check that the container's environment gives the server 8080. A request to localhost:3008 is still joined to notify by the file.",
+      "symbol": "notify:3008:8080",
+      "meta": {
+        "published": 3008,
+        "container": 8080,
+        "listens": [
+          3000
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 66,
+    "edges": 52,
+    "types": 3,
+    "missed": 1,
+    "sites": 1,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

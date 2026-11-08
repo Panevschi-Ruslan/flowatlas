@@ -284,6 +284,7 @@ export const PAGE_WORDS = Object.freeze({
     'ambiguous-route-application': 'several applications serve the address',
     'ambiguous-route-target': 'base setting names no one service',
     'local-port-shared': 'two services listen on the port',
+    'published-port-unheard': 'published port nothing listens on',
     'api-base-override-unread': 'own base address not read',
     'api-base-unknown': 'base address setting unknown',
     'api-body-unread': 'API description not read',

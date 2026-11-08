@@ -1,6 +1,7 @@
 import type { ExtractContext } from './context.js';
 import type { PackageJson } from './manifest.js';
 import type { ConventionsOf } from '../conventions.js';
+import type { ListenPort } from '../listen-port.js';
 
 /** What a caller may ask of any frontend extractor, whichever one it is. */
 export interface FrontendExtractOptions {
@@ -24,4 +25,10 @@ export interface FrontendAdapter {
   extract(ctx: ExtractContext, options?: FrontendExtractOptions): void;
   /** What the framework's build would have written for the compiler (P240), when it writes anything. */
   conventions?: ConventionsOf;
+  /**
+   * The ports the front end's own development or preview server listens on,
+   * where the repository writes them (P254): its bundler's configuration, a
+   * script's `--port`. Asked beside the entry adapters' (`listeningOf`).
+   */
+  listens?(ctx: ExtractContext): readonly ListenPort[];
 }

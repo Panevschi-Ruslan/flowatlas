@@ -241,4 +241,11 @@ describe('where a request is written, and what stands in front of it (P244)', ()
     ].join('\n');
     assert.deepEqual(sitesIn('src/main.ts', text), { listens: 6 });
   });
+
+  it("counts a dev server's port in a bundler's configuration, and a port anywhere else in no such file (P254)", () => {
+    const config = 'export default defineConfig({\n  server: { port: 5174, strictPort: true },\n  preview: { port: 4180 },\n});';
+    assert.deepEqual(sitesIn('vite.config.ts', config), { listens: 2 });
+    assert.deepEqual(sitesIn('astro.config.mjs', 'export default defineConfig({ server: { port: 4330 } });'), { listens: 1 });
+    assert.deepEqual(sitesIn('src/settings.ts', 'export const config = { port: 3003 };'), {});
+  });
 });

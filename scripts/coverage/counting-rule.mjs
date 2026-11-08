@@ -379,6 +379,17 @@ export const PROBES = [
     pattern: /\.\s*listen\s*\(\s*[^)\s]|(?<![\w$.])serve\s*\(\s*\{|\b(?:Bun|Deno)\s*\.\s*serve\s*\(/g,
   },
   {
+    // A front end's dev or preview server given a port in its bundler's or
+    // framework's configuration (P254): `server: { port }`, `preview: { port }`,
+    // `devServer: { port }`. Same family, same reason nothing is gated on it.
+    name: 'dev-server-port',
+    family: 'listens',
+    scope: 'line',
+    what: 'a dev server given a port in `vite.config.*`, `astro.config.*` or `nuxt.config.*`',
+    path: /(?:^|\/)(?:vite|astro|nuxt)\.config\.[cm]?[jt]s$/,
+    pattern: /\bport\s*:/g,
+  },
+  {
     name: 'prisma-call-site',
     family: 'data',
     scope: 'line',

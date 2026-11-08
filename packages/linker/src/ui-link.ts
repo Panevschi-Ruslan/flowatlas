@@ -306,6 +306,9 @@ const byHost = (ask: Ask): UiOutcome | undefined => {
   // way below may pick one of them by its route.
   if (found.kind === 'shared') return { kind: 'portShared', port: found.port, said: found.said, services: found.services };
   const outcome = within(ask, found.service, 'host');
+  // A front end's dev server forwards what its own routes do not serve
+  // (P254): which service answers that is the next way's to say.
+  if (outcome.kind === 'noRoute' && found.listening?.devServer === true) return undefined;
   if (outcome.kind !== 'linked') return outcome;
   return {
     ...outcome,

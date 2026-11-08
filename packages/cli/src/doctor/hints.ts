@@ -341,6 +341,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Part of a federated graph cannot be read: a supergraph the registry hands the router at run time, one built by code at start or not committed, a subgraph schema in the registry, or a subgraph no gateway in the project names. Requests are joined as far as what was read; commit the supergraph or its rover configuration, or add the gateway to the project.',
   'local-port-shared': () =>
     'The request names a port on this machine, and two or more services listen on it: their code starts a server there, or their setting files (an example environment file, a published container port) place them there. Which one a local run reaches is whichever started first, so the request is not joined. Name the host (localhost:<port>) under services[].hosts of the service it means, or give the servers different ports.',
+  'published-port-unheard': () =>
+    'A compose file or a `docker run` publishes a container port that the service\'s code is not read listening on: the code starts its server on another port, reads its port from a setting the container\'s environment does not give, or starts it in a way the reader does not follow. A request to the published port is still joined to the service by the file, as a guess. Map the published port to the port the server listens on, or give the container the setting.',
   'graphql-subgraph-not-joined': () =>
     'A gateway names a subgraph whose address reaches no configured service, so the fields that subgraph resolves are not joined and the composition is a guess. Add the address\'s setting to services[].baseUrlEnv, or its host to services[].hosts, of the service that is the subgraph.',
   'graphql-composition-conflict': () =>

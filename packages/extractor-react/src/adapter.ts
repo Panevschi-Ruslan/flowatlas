@@ -1,6 +1,7 @@
 import { hasDependency, type AdapterRegistry, type FrontendAdapter } from '@flowatlas/core';
 import { nuxtApplicationOf, viteConventions } from '@flowatlas/adapters-entry';
 import { extractBrowser, extractReact, type BrowserReading } from './extract-repo.js';
+import { frontEndListens } from './dev-server.js';
 import { declaresReact, declaresSvelte, declaresVue } from './framework.js';
 import { SVELTE_FORMAT, VUE_FORMAT } from './sfc/formats.js';
 
@@ -21,6 +22,8 @@ export const reactFrontendAdapter: FrontendAdapter = {
   extract: (ctx, options) => extractReact(ctx, options),
   // The aliases of `vite.config.*` that no tsconfig names (P240).
   conventions: viteConventions,
+  // Where its dev and preview servers listen (P254).
+  listens: frontEndListens,
 };
 
 /**
@@ -51,6 +54,7 @@ export const vueFrontendAdapter: FrontendAdapter = {
   detect: declaresVue,
   extract: (ctx, options) => extractBrowser(ctx, options ?? {}, VUE_READING),
   conventions: viteConventions,
+  listens: frontEndListens,
 };
 
 export const svelteFrontendAdapter: FrontendAdapter = {
@@ -58,6 +62,7 @@ export const svelteFrontendAdapter: FrontendAdapter = {
   detect: declaresSvelte,
   extract: (ctx, options) => extractBrowser(ctx, options ?? {}, SVELTE_READING),
   conventions: viteConventions,
+  listens: frontEndListens,
 };
 
 /** Puts this extractor where the registry can find it, like every other adapter. */

@@ -5213,6 +5213,33 @@ is dropped either way. The same lookup places a gateway's subgraph (P245), a
 procedure client's link (P242), and a browser's and a server's request alike.
 `fixtures/listen-port-joins` shows each case.
 
+**Every way a port is decided (P254).** The port is read wherever the
+repository decides it, not only on the line that starts the server:
+
+| Where | Read |
+|---|---|
+| A front end's dev and preview server | `server.port` and `preview.port` in `vite.config.*` (SvelteKit, Remix, React Router, Vue, React and any other Vite front end), `--port` on a `vite`, `vite dev`, `vite preview`, `svelte-kit dev`, `remix vite:dev`, `react-router dev` script; Astro's `server.port` and `astro dev --port`; Angular's `serve` target `port` in `angular.json` and `ng serve --port`. Vite's own 5173 / 4173 only where `strictPort` keeps it there (`default`, a guess); no other default |
+| A port handed through code | `start(3001)` where `start = (port) => app.listen(port)`, `bootstrap({ port: 3002 })`, `(options) => app.listen(options.port)`, through up to three functions, each call its own port with `handed` naming it |
+| A settings object | `app.listen(config.port)` where a literal object in any file of the repository writes `port` (a fallback read with its setting); NestJS's `config.get('app.port')` through `registerAs('app', …)` or a `ConfigModule.forRoot({ load })` factory; convict's `config.get('port')` through the schema's `default` and `env` |
+| A setting alone | `app.listen(process.env.AUDIT_PORT)` is kept as `{ setting, file, line }`, and the service's own example environment file fills it (`AUDIT_PORT=3006`), whatever the setting is called |
+| A container | a compose service's `ports` (`"3001:3000"`, `"127.0.0.1:3001:3000/tcp"`, `{ published, target }`), `environment` and `env_file`; `docker run -p 3009:3000 --name n -e PORT=3000` in a `package.json` script of the service |
+
+A container mapping is reconciled with the code: the port the service listens
+on inside the container - the value its environment gives the setting the code
+reads, or else the code's own port - meets the mapping's container side. A
+request to `localhost:3001` then joins with
+`listensAt: src/app.ts:10, published as 3001 by docker-compose.yml`
+(`heuristic`: the mapping holds where the container runs), and a request on the
+container's network to `orders:3000` with
+`listensAt: src/app.ts:10, in the container orders (docker-compose.yml)`; the
+settings' hosts say which side each came from (`mapped.side`). A mapping whose
+container side the code does not listen on is the note `published-port-unheard`
+at the mapping's line, and the request is still joined by the file. A front
+end's dev server forwards what it does not serve (its proxy is not read), so a
+request to its port that its service has no route for is decided by the next
+way, as before. Kubernetes manifests are not read. `fixtures/port-sources-joins`
+shows each case.
+
 A custom broker entry:
 
 ```jsonc

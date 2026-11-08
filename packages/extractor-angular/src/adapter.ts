@@ -1,4 +1,5 @@
 import type { AdapterRegistry, FrontendAdapter } from '@flowatlas/core';
+import { angularListens } from './dev-server.js';
 import { extractAngular } from './extract-repo.js';
 import { declaresAngular } from './framework.js';
 
@@ -13,6 +14,8 @@ export const angularFrontendAdapter: FrontendAdapter = {
   name: 'angular',
   detect: declaresAngular,
   extract: (ctx, options) => extractAngular(ctx, options),
+  // Where its dev server listens (P254).
+  listens: angularListens,
 };
 
 /** Puts this extractor where the registry can find it, like every other adapter. */

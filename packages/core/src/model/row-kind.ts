@@ -88,6 +88,8 @@ const NOTES: readonly string[] = [
   'base-url-from-files',
   'base-url-from-name',
   'environment-from-files',
+  // A container publishes a port its service's code is not read listening on (P254)
+  'published-port-unheard',
   'route-api-guessed',
   'route-mount-assumed-empty',
   'stream-filter-not-matched',

@@ -6,6 +6,8 @@ import {
   countSources,
   createProject,
   GraphBuilder,
+  LISTEN_META,
+  listeningOf,
   parseConfig,
   readResolvedPackageJson,
   recordApplications,
@@ -201,6 +203,8 @@ export const extractAngular = (
   // that any pass collected is known.
   if (options.noTypes !== true) ctx.types.finalize();
 
+  // Where the application's dev server listens (P254).
+  const listen = listeningOf(base);
   base.builder.addNode({
     id: `repo:${base.repo}`,
     type: 'repo',
@@ -209,6 +213,7 @@ export const extractAngular = (
     meta: {
       stats: ctx.stats,
       adapters: { frontend: base.adapters.frontend.map((adapter) => adapter.name) },
+      ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
     },
   });
 };

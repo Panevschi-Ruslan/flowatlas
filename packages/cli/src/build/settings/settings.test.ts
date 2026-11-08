@@ -184,9 +184,61 @@ describe('what a project’s files say its settings are', () => {
       PAYMENTS_BASE: [{ value: 'http://payments-api:4000', file: 'docker-compose.yml', within: 'shop' }],
     });
     expect(read['storefront']?.namedOnly).toEqual({ API_TOKEN: ['.env'], INVENTORY_URL: ['.env'] });
-    expect(read['payments']?.hosts.map((alias) => alias.host)).toEqual(['payments-api', 'localhost:4000', '127.0.0.1:4000', '0.0.0.0:4000']);
+    expect(read['payments']?.hosts.map((alias) => alias.host)).toEqual(['payments-api', 'localhost:4000', '127.0.0.1:4000', '0.0.0.0:4000', 'payments-api:4000']);
     expect(read['payments']?.values).toEqual({ ORDERS_API: [{ value: 'http://orders:3000', file: 'serverless.yml' }] });
     expect(read['orders']?.hosts.map((alias) => alias.host)).toEqual(['localhost:3001', '127.0.0.1:3001', '0.0.0.0:3001']);
+  });
+
+  it('reads both sides of a container’s port mappings, its environment’s ports, and a `docker run` in a script (P254)', () => {
+    const dir = project({
+      'docker-compose.yml': [
+        'services:',
+        '  orders:',
+        '    build: ./orders',
+        '    container_name: orders-api',
+        '    ports:',
+        '      - "127.0.0.1:3001:3000/tcp"',
+        '      - published: 3101',
+        '        target: 3100',
+        '      - "9229"',
+        '    environment:',
+        '      PORT: 3000',
+        '      JWT_SECRET_PORT: 1234',
+        '    env_file: ./orders/docker/.env.example',
+      ].join('\n'),
+      'orders/docker/.env.example': 'PORT=9999\nADMIN_PORT=3100\n',
+      'orders/.env.example': 'ORDERS_PORT=3006\nPORT=3005\nAPI_KEY=1234\n',
+      'stock/package.json': JSON.stringify({ name: 'stock', scripts: { docker: 'docker build -t stock . && docker run --rm -p 3002:8080 --name stock-api -e PORT=8080 stock:latest' } }, null, 2),
+    });
+    const read = readProjectSettings({ services: ['orders', 'stock'].map((name) => ({ name, dir: join(dir, name) })), rootDir: dir });
+    expect(read['orders']?.containers).toEqual([
+      {
+        name: 'orders',
+        names: ['orders', 'orders-api'],
+        file: 'docker-compose.yml',
+        ports: [
+          { published: 3001, container: 3000, file: 'docker-compose.yml', line: 6 },
+          { published: 3101, container: 3100, file: 'docker-compose.yml', line: 7 },
+        ],
+        environment: { PORT: 3000, ADMIN_PORT: 3100 },
+      },
+    ]);
+    expect(read['orders']?.hosts.filter((alias) => alias.mapped !== undefined).map((alias) => `${alias.host} ${alias.mapped?.side}`)).toEqual([
+      'localhost:3001 published',
+      '127.0.0.1:3001 published',
+      '0.0.0.0:3001 published',
+      'orders:3000 container',
+      'orders-api:3000 container',
+      'localhost:3101 published',
+      '127.0.0.1:3101 published',
+      '0.0.0.0:3101 published',
+      'orders:3100 container',
+      'orders-api:3100 container',
+    ]);
+    expect(read['orders']?.ports).toEqual({ ORDERS_PORT: [{ port: 3006, file: '.env.example' }], PORT: [{ port: 3005, file: '.env.example' }] });
+    expect(read['stock']?.containers).toEqual([
+      { name: 'stock-api', names: ['stock-api'], file: 'package.json', ports: [{ published: 3002, container: 8080, file: 'package.json', line: 4 }], environment: { PORT: 8080 } },
+    ]);
   });
 
   it('never keeps a secret, a credential or a value that is not an address', () => {

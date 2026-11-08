@@ -942,7 +942,13 @@ prove, and the path is given so you can run it.
   code (`app.listen(3001)`, Hono's `serve({ port })`, NestJS's bootstrap) or
   its framework's configuration (`devServer.port`, `next dev -p`) says, and a
   hook written on one call (`useFetch(url, { onRequest })`) is that call's
-  (`fixtures/listen-port-joins`). A browser
+  (`fixtures/listen-port-joins`). The port is read wherever it is decided: a
+  Vite, SvelteKit, Astro or Angular dev server's configuration and scripts, a
+  port handed to the function that starts the server (`start(3001)`), a
+  settings object, `registerAs` or convict default, a setting the service's
+  example environment file fills, and a compose or `docker run` mapping,
+  reconciled with the code so `localhost:3001` and `orders:3000` are one
+  service, each edge saying its side (`fixtures/port-sources-joins`). A browser
   holding a stream open is a request like any other (`fixtures/sse-stream`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a
   table of handlers the project keeps itself (`fixtures/nest-telegraf`,

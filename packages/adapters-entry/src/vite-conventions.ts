@@ -27,7 +27,7 @@ import {
  * adapters do, one function asked once whoever states it.
  */
 
-const VITE_CONFIGS = ['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs', 'vite.config.cts', 'vite.config.cjs'];
+export const VITE_CONFIGS = ['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs', 'vite.config.cts', 'vite.config.cjs'];
 
 const ADAPTER = 'vite';
 

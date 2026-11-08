@@ -163,7 +163,7 @@ export {
   type NuxtModules,
 } from './nuxt-modules.js';
 export type { LayerClaim } from './framework-conventions.js';
-export { viteConventions } from './vite-conventions.js';
+export { VITE_CONFIGS, viteConventions } from './vite-conventions.js';
 export {
   fsRoutesAdapter,
   REMIX_ROUTES,
@@ -223,3 +223,6 @@ export {
   repoSources,
   unwrapValue,
 } from './shared.js';
+export { scriptCommands, scriptPorts } from './listen-ports.js';
+export type { ScriptCommand } from './listen-ports.js';
+export { factoryPorts, settingsReading } from './listen-settings.js';

@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>201 fixtures</span>
-    <span>522 snapshot files</span>
+    <span>205 fixtures</span>
+    <span>535 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -575,7 +575,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, declared with the Serverless Framework, the CDK, SAM or CloudFormation <span class="count" data-total="10">10</span></h2>
+    <h2>Serverless, declared with the Serverless Framework, the CDK, SAM or CloudFormation <span class="count" data-total="11">11</span></h2>
     <ul>
       <li class="fixture" data-search="cdk-orders serverless, declared with the serverless framework, the cdk, sam or cloudformation the deployment of `terraform-orders`, written as an aws cdk app in typescript over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
         <div class="head">
@@ -615,6 +615,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">3 services</span>
         </div>
         <p>A small shop of three repositories, each deployed with a different tool, that share their APIs, a queue and a topic through CloudFormation outputs (P249): one exports a value under a name, another imports it by that name.</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="multi-repo-parameters serverless, declared with the serverless framework, the cdk, sam or cloudformation a small shop of four repositories, each deployed with a different tool, that share an api, queues, a table's stream and a topic by writing them to parameters of the account and reading them back by name (p253).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-parameters">multi-repo-parameters</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>A small shop of four repositories, each deployed with a different tool, that share an API, queues, a table's stream and a topic by writing them to parameters of the account and reading them back by name (P253).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="sam-orders serverless, declared with the serverless framework, the cdk, sam or cloudformation the deployment of `terraform-orders`, written as an aws sam template (`orders/template.yaml`) over the same handlers, and read as the same graph (p246; `scripts/deployments-agree.mjs`).">
@@ -1449,7 +1457,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="37">37</span></h2>
+    <h2>Everything else <span class="count" data-total="40">40</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1547,6 +1555,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>GraphQL, both halves (P232): two servers written the two common ways, two browsers and one server calling them, and every join <code>static</code>.</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="graphql-requires-auth everything else the router's check on a field it fetches only for a `@requires` (p256).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/graphql-requires-auth">graphql-requires-auth</a>
+          <span class="kind">5 services</span>
+        </div>
+        <p>The router's check on a field it fetches only for a <code>@requires</code> (P256).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="house-patterns everything else a bookshop of three services whose wrappers are its own and come from packages nobody here installed (p121): `catalog` publishes through `shopbus.emit({ topic, data })` and calls `stock` through `apiclient.call('post', url, body)`, `stock` handles through `shopbus.on('book.added', handler)`, and the react `storefront` requests through `useapi().send({ method, path })`.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/house-patterns">house-patterns</a>
@@ -1635,6 +1651,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>An oRPC service and the clients that call it (P58): the second library of the family <code>fixtures/trpc-router</code> and <code>fixtures/trpc-join</code> are about, read by the same tree walk and joined by the same path.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="port-sources-joins everything else twelve services on one machine, each deciding the port its server listens on somewhere other than a literal `app.listen(3001)` (p254): a front end's dev server configuration, a function the port is handed to, a settings object, a settings library's default, a setting the service's example environment file fills, a container that publishes the code's port as another one.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/port-sources-joins">port-sources-joins</a>
+          <span class="kind">12 services</span>
+        </div>
+        <p>Twelve services on one machine, each deciding the port its server listens on somewhere other than a literal <code>app.listen(3001)</code> (P254): a front end's dev server configuration, a function the port is handed to, a settings object, a settings library's default, a setting the service's example environment file fills, a container that publishes the code's port as another one.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="remix-flat-routes everything else a repository whose routes are remix flat routes, read by the reading every file-system router in this tool shares (p38).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/remix-flat-routes">remix-flat-routes</a>
@@ -1665,6 +1689,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">3 services</span>
         </div>
         <p>A server that is a client of two other servers' procedure trees (P242): no browser anywhere, so every request here is one service asking another.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="rpc-shared-types everything else what an rpc caller is compared with wherever it calls from (p256): a client typed from a router type a workspace package exports, a plain request to a procedure's rest route, fastify's and hono's trpc mounts, a client a configured module of another workspace package builds, and a lazy branch under an alias only the vite configuration declares.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/rpc-shared-types">rpc-shared-types</a>
+          <span class="kind">5 services</span>
+        </div>
+        <p>What an RPC caller is compared with wherever it calls from (P256): a client typed from a router type a workspace package exports, a plain request to a procedure's REST route, Fastify's and Hono's tRPC mounts, a client a configured module of another workspace package builds, and a lazy branch under an alias only the Vite configuration declares.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="schema-smoke everything else a hand-written sample of the graph schema itself, not a repository: no manifest, no configuration, no sources, nothing for the tool to run over.">

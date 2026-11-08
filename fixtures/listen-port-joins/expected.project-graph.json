@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:37:48.775Z",
+  "builtAt": "2026-11-08T12:46:11.489Z",
   "services": [
     {
       "name": "orders",
@@ -563,7 +563,14 @@
           "entry": [
             "koa-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "file": "src/server.ts",
+            "line": 19,
+            "setting": "PORT"
+          }
+        ]
       }
     },
     {
@@ -1695,7 +1702,7 @@
       "file": "src/Dashboard.tsx",
       "line": 10,
       "reason": "local-port-shared",
-      "message": "port 3005 on this machine is where audit (its setting files) and ledger (src/main.ts:8) each listen, so it is not one service",
+      "message": "port 3005 on this machine is where audit (src/server.ts:19) and ledger (src/main.ts:8) each listen, so it is not one service",
       "hint": "Name the host under services[].hosts of the service this request means (localhost:3005), or start the servers on different ports.",
       "symbol": "ui_api_call:web#src/Dashboard.tsx:10:29"
     }

@@ -645,8 +645,11 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     // is a guess and the edge says so.
     const at = typeof host === 'string' ? index.serviceAtHost?.(host) : undefined;
     if (at?.kind === 'shared') return { outcome: { kind: 'portShared', port: at.port, said: at.said, services: at.services }, notes };
-    if (at !== undefined) {
-      const reached = within(at.service, 'host', {});
+    const reached = at === undefined ? undefined : within(at.service, 'host', {});
+    // A front end's dev server forwards what its own routes do not serve
+    // (P254), to wherever its proxy says, which is not read: as before.
+    const forwarded = reached?.outcome.kind === 'noRoute' && at?.listening?.devServer === true;
+    if (at !== undefined && reached !== undefined && !forwarded) {
       if (reached.outcome.kind !== 'linked') return reached;
       return {
         ...reached,

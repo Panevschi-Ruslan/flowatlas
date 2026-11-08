@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "projects": {
+    "admin": {
+      "projectType": "application",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist/admin"
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "port": 4300
+          }
+        }
+      }
+    }
+  }
+}

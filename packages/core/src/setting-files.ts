@@ -38,6 +38,45 @@ export interface HostAlias {
   /** Lower case, with the port where one is part of it. */
   readonly host: string;
   readonly file: string;
+  /**
+   * Where the host is one side of a container's port mapping (P254):
+   * `localhost:3001` is the `published` side of `3001:3000`, `orders:3000`
+   * the `container` side, which the container's network reaches it at.
+   */
+  readonly mapped?: { readonly published: number; readonly container: number; readonly side: 'published' | 'container' };
+}
+
+/** A port a container publishes on the machine running it, and the port inside it that it reaches (P254). */
+export interface PublishedPort {
+  /** On the machine: `3001` of `3001:3000`. */
+  readonly published: number;
+  /** Inside the container: `3000` of `3001:3000`. */
+  readonly container: number;
+  readonly file: string;
+  readonly line: number;
+}
+
+/**
+ * A container a service is run in, as a compose file or a `docker run` in a
+ * script starts it (P254): the names its network reaches it by, the ports it
+ * publishes, and the ports its environment gives a setting.
+ */
+export interface ContainerRun {
+  /** The compose service's key, or the name `--name` gives it, or the image's. */
+  readonly name: string;
+  /** Every name the container's network reaches it by, lower case. */
+  readonly names: readonly string[];
+  readonly file: string;
+  readonly ports: readonly PublishedPort[];
+  /** The port each setting is given in the container's environment: `PORT: 3000`. */
+  readonly environment: Readonly<Record<string, number>>;
+}
+
+/** A port one of a service's own files gives a setting, on the machine a developer runs it on (P254). */
+export interface PortValue {
+  readonly port: number;
+  readonly file: string;
+  readonly environment?: string;
 }
 
 /** Everything a service's own files say about its settings. */
@@ -59,6 +98,14 @@ export interface RepoSettings {
   readonly bindings?: readonly ServiceBinding[];
   /** The names this service is deployed under, as its own deployment files write them (P91). */
   readonly deployedAs?: readonly string[];
+  /** The containers the service is run in (P254). Absent when no file starts one. */
+  readonly containers?: readonly ContainerRun[];
+  /**
+   * The ports the service's own example environment files give a setting, by
+   * setting name (P254): what fills a port its code reads from the setting
+   * alone. A secret-named setting is never kept. Absent when none does.
+   */
+  readonly ports?: Readonly<Record<string, readonly PortValue[]>>;
 }
 
 /** A binding a deployment declares to another deployed service, by the name the code reads it under. */

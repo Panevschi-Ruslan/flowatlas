@@ -93,3 +93,36 @@ describe('where each framework server listens (P250)', () => {
     ).toEqual(['package.json:3 3020', 'package.json:4 3021']);
   });
 });
+
+describe('a port read through the settings a repository builds (P254)', () => {
+  it("reads NestJS's `registerAs` and `load` factories by the key the getter asks", () => {
+    expect(
+      listening([nestjsHttpAdapter], {
+        'src/app.config.ts': "export default registerAs('app', () => ({ port: parseInt(process.env.PORT, 10) || 3004, name: 'billing' }));",
+        'src/http.config.ts': 'export const httpConfig = () => ({ http: { port: 3014 } });',
+        'src/app.module.ts': "import { httpConfig } from './http.config';\n@Module({ imports: [ConfigModule.forRoot({ load: [httpConfig] })] })\nexport class AppModule {}",
+        'src/main.ts':
+          'async function bootstrap() {\n  const app = await NestFactory.create(AppModule);\n  const config = app.get(ConfigService);\n  await app.listen(config.get<number>(\'app.port\'));\n}',
+        'src/admin.ts': "const admin = await NestFactory.create(AdminModule);\nawait admin.listen(admin.get(ConfigService).get('http.port'));",
+      }),
+    ).toEqual(['src/admin.ts:2 3014', 'src/main.ts:4 3004[PORT]']);
+  });
+
+  it("reads a convict schema's default, with the setting it names", () => {
+    expect(
+      listening([koaRoutesAdapter], {
+        'src/config.ts': "import convict from 'convict';\nexport const config = convict({ server: { port: { doc: 'port', format: 'port', default: 3005, env: 'LEDGER_PORT' } } });",
+        'src/server.ts': "import { config } from './config';\napp.listen(config.get('server.port'));",
+      }),
+    ).toEqual(['src/server.ts:2 3005[LEDGER_PORT]']);
+  });
+
+  it("reads a port handed to the function that starts Hono's server", () => {
+    expect(
+      listening([honoRoutesAdapter], {
+        'src/serve.ts': "import { serve } from '@hono/node-server';\nexport const start = (port: number) => serve({ fetch: app.fetch, port });",
+        'src/main.ts': "import { start } from './serve';\nstart(3013);",
+      }),
+    ).toEqual(['src/serve.ts:2 3013']);
+  });
+});

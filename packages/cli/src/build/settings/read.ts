@@ -3,15 +3,19 @@ import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import {
   keptValue,
   localHostsOf,
+  looksSecret,
   portOf,
+  type ContainerRun,
   type HostAlias,
+  type PortValue,
   type RepoSettings,
   type ServiceBinding,
   type SettingValue,
 } from '@flowatlas/core';
-import { readComposeFile, type ComposeService } from './compose.js';
+import { readComposeFile, type ComposeService, type Mapping } from './compose.js';
 import { readWorkerJson, readWorkerToml, readServerlessFile, type DeploymentSettings } from './deployed.js';
-import { namesInEnvFile, readEnvFile } from './dotenv.js';
+import { readDockerRuns } from './docker-run.js';
+import { namesInEnvFile, readEnvFile, type Written } from './dotenv.js';
 import { composeEnvironment, envFileEnvironment, envFileReading, environmentName, isComposeFile } from './files.js';
 
 /**
@@ -39,9 +43,43 @@ interface Gathered {
   bindings: ServiceBinding[];
   /** The names its deployment files deploy it under (P91). */
   deployedAs: string[];
+  /** The containers it is run in (P254). */
+  containers: ContainerRun[];
+  /** The ports its example environment files give a setting (P254). */
+  ports: Map<string, PortValue[]>;
 }
 
-const gathered = (): Gathered => ({ values: new Map(), namedOnly: new Map(), hosts: [], bindings: [], deployedAs: [] });
+const gathered = (): Gathered => ({ values: new Map(), namedOnly: new Map(), hosts: [], bindings: [], deployedAs: [], containers: [], ports: new Map() });
+
+/** A port a setting is given, where the setting's name is no secret's: `PORT=3000`. */
+const portSetting = ({ name, raw }: Written): number | undefined => (looksSecret(name) ? undefined : portOf(raw));
+
+/** The ports an environment gives a setting, by name. */
+const environmentPorts = (written: readonly Written[]): Record<string, number> => {
+  const out: Record<string, number> = {};
+  for (const each of written) {
+    const port = portSetting(each);
+    if (port !== undefined) out[each.name] = port;
+  }
+  return out;
+};
+
+/**
+ * A container of a service, and the hosts its port mappings make (P254):
+ * each published port at this machine's addresses, the `published` side, and
+ * the container's port at each name its network reaches it by, the
+ * `container` side.
+ */
+const addContainer = (into: Gathered, run: ContainerRun): void => {
+  into.containers.push(run);
+  for (const mapping of run.ports) {
+    const mapped = { published: mapping.published, container: mapping.container };
+    for (const host of localHostsOf(mapping.published)) into.hosts.push({ host, file: run.file, mapped: { ...mapped, side: 'published' } });
+    for (const name of run.names) into.hosts.push({ host: `${name}:${mapping.container}`, file: run.file, mapped: { ...mapped, side: 'container' } });
+  }
+};
+
+const portsOf = (mappings: readonly Mapping[], file: string) => mappings.map((mapping) => ({ ...mapping, file }));
 
 const add = (into: Gathered, name: string, value: SettingValue): void => {
   const list = into.values.get(name) ?? [];
@@ -61,8 +99,12 @@ const read = (path: string): string | undefined => {
   }
 };
 
-/** The values of an environment file, or its names, by what the policy allows of it. */
-const readEnv = (into: Gathered, path: string, file: string, ownPorts: boolean): void => {
+/**
+ * The values of an environment file, or its names, by what the policy allows
+ * of it. A file a container is started with gives that container's
+ * environment its ports (`container`), and no port of this machine's.
+ */
+const readEnv = (into: Gathered, path: string, file: string, container?: Record<string, number>): void => {
   const reading = envFileReading(basename(path));
   if (reading === undefined) return;
   const text = read(path);
@@ -72,11 +114,28 @@ const readEnv = (into: Gathered, path: string, file: string, ownPorts: boolean):
     return;
   }
   const environment = envFileEnvironment(basename(path));
-  for (const { name, raw } of readEnvFile(text)) {
-    const port = PORT_SETTINGS.has(name) ? portOf(raw) : undefined;
-    if (port !== undefined && ownPorts) addPort(into, port, file);
+  for (const written of readEnvFile(text)) {
+    const { name, raw } = written;
+    const port = portSetting(written);
+    if (port !== undefined && container !== undefined) container[name] ??= port;
+    if (port !== undefined && container === undefined) {
+      if (PORT_SETTINGS.has(name)) addPort(into, port, file);
+      // Any setting's port, for the code that reads it alone (P254).
+      const list = into.ports.get(name) ?? [];
+      if (!list.some((seen) => seen.port === port && seen.file === file)) list.push({ port, file, ...(environment === undefined ? {} : { environment }) });
+      into.ports.set(name, list);
+    }
     const value = keptValue(name, raw);
     if (value !== undefined) add(into, name, { value, file, ...(environment === undefined ? {} : { environment }) });
+  }
+};
+
+/** The containers the scripts of a repository's `package.json` start with `docker run` (P254). */
+const readRuns = (into: Gathered, path: string, file: string): void => {
+  const text = read(path);
+  if (text === undefined || !text.includes('docker')) return;
+  for (const run of readDockerRuns(text)) {
+    addContainer(into, { name: run.name, names: run.names, file, ports: portsOf(run.mappings, file), environment: environmentPorts(run.environment) });
   }
 };
 
@@ -116,7 +175,8 @@ const deploymentReader = (parse: (text: string) => DeploymentSettings) => (into:
 };
 
 const READERS: readonly Reader[] = [
-  { matches: (name) => envFileReading(name) !== undefined, read: (into, path, file) => readEnv(into, path, file, true) },
+  { matches: (name) => envFileReading(name) !== undefined, read: (into, path, file) => readEnv(into, path, file) },
+  { matches: (name) => name === 'package.json', read: readRuns },
   { matches: (name) => name === 'serverless.yml' || name === 'serverless.yaml', read: deploymentReader(readServerlessFile) },
   { matches: (name) => name === 'wrangler.json' || name === 'wrangler.jsonc', read: deploymentReader(readWorkerJson) },
   { matches: (name) => name === 'wrangler.toml', read: deploymentReader(readWorkerToml) },
@@ -225,6 +285,17 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       if (service === undefined) continue;
       const into = byService.get(service) as Gathered;
       for (const host of [container.name, ...container.aliases]) into.hosts.push({ host: host.toLowerCase(), file: file.label });
+      // A published port with the port inside the container it reaches is a
+      // mapping, both of whose sides are hosts (P254); one written alone is
+      // still this machine's.
+      const environment = environmentPorts(container.environment);
+      addContainer(into, {
+        name: container.name,
+        names: [container.name, ...container.aliases].map((name) => name.toLowerCase()),
+        file: file.label,
+        ports: portsOf(container.mappings, file.label),
+        environment,
+      });
       for (const port of container.published) addPort(into, port, file.label);
       for (const { name, raw } of container.environment) {
         const value = keptValue(name, raw);
@@ -240,7 +311,8 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
         const path = isAbsolute(written) ? written : join(file.dir, written);
         // A file outside the directories this project reads is somebody else's.
         if (![file.dir, input.rootDir].some((dir) => isWithin(dir, path))) continue;
-        readEnv(into, path, relative(file.dir, path).split(sep).join('/') || basename(path), false);
+        // `environment:` is written over the file's values, as compose does.
+        readEnv(into, path, relative(file.dir, path).split(sep).join('/') || basename(path), environment);
       }
     }
   }
@@ -278,13 +350,29 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       return forChosen ? each.environment === chosen : each.environment === undefined;
     });
     const deployedAs = [...into.deployedAs].sort();
-    if (Object.keys(values).length + Object.keys(namedOnly).length + hosts.length + bindings.length + deployedAs.length === 0) continue;
+    // A port an environment's file gives is chosen as a value is.
+    const ports: Record<string, PortValue[]> = {};
+    for (const name of [...into.ports.keys()].sort()) {
+      const all = into.ports.get(name) as PortValue[];
+      const kept =
+        chosen === undefined
+          ? all
+          : all.some((value) => value.environment === chosen)
+            ? all.filter((value) => value.environment === chosen)
+            : all.filter((value) => value.environment === undefined);
+      if (kept.length > 0) ports[name] = kept;
+    }
+    const containers = into.containers;
+    const sizes = [Object.keys(values), Object.keys(namedOnly), hosts, bindings, deployedAs, containers, Object.keys(ports)];
+    if (sizes.every((each) => each.length === 0)) continue;
     out[service] = {
       values,
       namedOnly,
       hosts,
       ...(bindings.length === 0 ? {} : { bindings }),
       ...(deployedAs.length === 0 ? {} : { deployedAs }),
+      ...(containers.length === 0 ? {} : { containers }),
+      ...(Object.keys(ports).length === 0 ? {} : { ports }),
     };
   }
   return out;

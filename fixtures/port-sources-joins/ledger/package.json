@@ -1,0 +1,10 @@
+{
+  "name": "port-sources-joins-ledger",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@koa/router": "^13.1.0",
+    "convict": "^6.2.4",
+    "koa": "^2.15.4"
+  }
+}

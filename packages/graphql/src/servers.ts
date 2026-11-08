@@ -51,9 +51,12 @@ export interface ResolvedField {
  * A port a server listens on, as its code writes it (P245): a number, or the
  * one it falls back to where a setting is not given
  * (`process.env.PORT ?? 4003`), with the setting; or the library's own
- * default where the code writes none. The core's reading (P250).
+ * default where the code writes none. The core's reading (P250), with a
+ * number: a setting alone is the service's to fill (P254), not an endpoint's.
  */
-export type ListenPort = ListenAt;
+export type ListenPort = ListenAt & { readonly port: number };
+
+const numbered = (read: ListenAt | undefined): read is ListenPort => read?.port !== undefined;
 
 /** The name a reference resolver is an entry under, beside the type's fields. */
 export const REFERENCE_FIELD = '__resolveReference';
@@ -516,10 +519,10 @@ export const listenPortsOf = (sources: readonly SourceFile[]): ListenPort[] => {
       const options = followed(node.getArguments()[1]);
       const listen = options !== undefined && Node.isObjectLiteralExpression(options) ? option(options, 'listen') : undefined;
       const read = listen === undefined ? listenAt({ port: STANDALONE_PORT }, node, { default: true }) : listenAt(portIn(listen), node);
-      if (read !== undefined) found.push(read);
+      if (numbered(read)) found.push(read);
     });
   }
-  found.push(...listenCallsIn(sources));
+  found.push(...listenCallsIn(sources).filter(numbered));
   // One port is one way in, however many lines start a server on it.
   return found.filter((each, index) => found.findIndex((other) => other.port === each.port) === index);
 };
