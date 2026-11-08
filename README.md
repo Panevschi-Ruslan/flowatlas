@@ -842,7 +842,14 @@ prove, and the path is given so you can run it.
   route middleware and its layout in the order the router runs them; a module's
   `addServerScanDir` is a server directory, and a condition of its options is
   decided where the configuration writes them (`fixtures/vue-components`,
-  `fixtures/nuxt-components`). A verb a helper built, aliased or re-exported is
+  `fixtures/nuxt-components`). A SvelteKit page goes through its layouts and
+  their loads up the route tree, `@` resets included; a component library a
+  plugin installs is the library's, `defineAsyncComponent` is the child it
+  loads, a plugin's `addRouteMiddleware` is a route middleware in the page's
+  order, Nitro's plugins stand in front of every route, and its tasks are ways
+  in that `runTask` and `scheduledTasks` reach by name
+  (`fixtures/sveltekit-layouts`, `fixtures/vue-plugins`,
+  `fixtures/nuxt-plugins-tasks`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
   `zsa` is a boundary with its callers (`fixtures/next-actions`).
@@ -866,8 +873,10 @@ prove, and the path is given so you can run it.
   mounted; a client built in a DI factory and injected by its token is followed
   to the client; and an Angular application's clients are read by the same
   reader (`fixtures/rpc-contracts`). A plain request to a procedure's REST route
-  is compared with the input the route assembles from its path, query and
-  body, and its answer with the procedure's output; a client typed from an
+  is compared with the input the route assembles from its path, query,
+  headers and body - a query built in code (`URLSearchParams`, `HttpParams`,
+  a wrapper's own) read as one written out - and its answer with the
+  procedure's output; a client typed from an
   `AppRouter` a workspace package exports is compared through it, and joins the
   service that mounts the tree; Fastify's and Hono's tRPC mounts are read; and a
   client a module's `forRoot` / `forRootAsync` builds is followed to its address
@@ -1099,8 +1108,9 @@ Known gaps in what it can read:
   not known (it is named in a note), nor what a module of the repository adds
   with an argument written as code (a row); a tag, a layout or a route
   middleware named by code, or by a name nothing registers, is a row (a
-  component of a package registered for every template is one too); only the
-  production build is read,
+  component of a library the table of common ones does not know is one too,
+  naming the plugin that may register it); only the production build is read
+  (`nuxt.options.dev` is false in a module's condition),
   another environment's differences said in a note; and a
   setting written as code is read as its default and named in a row.
 - A file-system router nobody has described — `@fastify/autoload`, or a

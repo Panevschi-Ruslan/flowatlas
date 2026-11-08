@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:46:37.617Z",
+  "builtAt": "2026-11-08T14:43:38.896Z",
   "services": [
     {
       "name": "shop",
@@ -261,6 +261,23 @@
       "returns": "Response",
       "file": "src/app/+page.svelte",
       "line": 5
+    },
+    {
+      "from": "shop#src/app/items/[id]/+page.svelte:[id]/+page",
+      "to": "shop#src/app/items/[id]/+page.server.ts:load",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{params:{id:string}}"
+      ],
+      "returns": "{id:string}",
+      "file": "src/app/items/[id]/+page.svelte",
+      "line": 1,
+      "meta": {
+        "load": "server",
+        "page": "/items/[id]",
+        "order": 0
+      }
     },
     {
       "from": "shop#src/lib/api.ts:listItems",

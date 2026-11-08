@@ -64,6 +64,43 @@ only one of them moved.
   appConfig>`, `app.get(appConfig.KEY)`) say where a service listens too.
   Coverage probes `dev-proxy` and `cluster-target-port` (family `listens`). New
   fixtures `dev-proxy-joins` and `cluster-port-joins`.
+- **The front end's last unread names and query strings (P258).** A
+  SvelteKit page goes through every layout up its route tree, root first, as
+  ordered `calls` edges: each layout's `+layout.server` and `+layout` `load`
+  (every server load, then every universal one, the page's own after its
+  layouts'), then each `+layout.svelte`, a `@` reset (`+page@(app).svelte`,
+  `+layout@.svelte`) cutting the chain where SvelteKit does; a reset naming no
+  directory above is `layout-unresolved`. A component library a Vue plugin
+  installs is read by a small table (Vuetify `V*`, PrimeVue's own names,
+  Element Plus `El*`, Naive UI `N*`, Quasar `Q*`, Ant Design Vue `A*`): a tag
+  of an installed one, or one `app.component` registers from a package, is
+  the library's, with no edge and no row; a tag nothing registers says which
+  `app.use(...)` of an unknown package may register it.
+  `defineAsyncComponent(() => import('./X.vue'))` and `({ loader })`, held in a
+  name, in `components: {}` or registered for every template, is the child it
+  loads. `addRouteMiddleware('name', fn, { global })` in a plugin - a part's
+  `plugins/`, or one a module's `addPlugin` adds - is a route middleware in
+  the page's order: global ones after the build's, a named one in place of a
+  file's. Nitro's `plugins/` (and a module's `addServerPlugin`) put each
+  `nitroApp.hooks.hook('request', fn)` in front of every route, before its
+  middleware, and `beforeResponse` / `afterResponse` behind it as
+  interceptors; each file of a server's `tasks/` is a way in of the new kind
+  `task`, named by its path (`db:migrate`), whose handler is `defineTask`'s
+  `run`; `runTask('name')` reaches it by name, and each `scheduledTasks`
+  expression is a `cron` way in that reaches the tasks it lists. In a Nuxt
+  module's condition `nuxt.options.dev` and `nuxt.options._prepare` are false,
+  as the production build is the one read, and a call only development makes
+  is a `framework-module-skipped` note saying so. A query built in code is
+  read into `meta.queryKeys` as P256 reads one written as an object:
+  `new URLSearchParams({...})` and its `append` / `set`, Angular's
+  `new HttpParams().set(...)` chains, `params = params.set(...)` and
+  `{ fromObject }`, a query built into the address (`?${params}`,
+  `meta.queryInAddress`), and a server wrapper's own `query` option beside
+  what its caller hands it; a key written as code is `queryUnread`. The
+  headers a request writes in place are `meta.headerKeys`, and a detailed
+  oRPC input's `headers` is compared with them. New fixtures
+  `sveltekit-layouts`, `vue-plugins` and `nuxt-plugins-tasks`; a coverage
+  probe `nitro-task-file`.
 
 - **Child components, layouts and route middleware by name, and the last of
   what a Nuxt module adds (P255).** A tag in a Vue or Svelte template, or in

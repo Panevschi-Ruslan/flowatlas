@@ -113,6 +113,15 @@ describe('a route a Nuxt module adds (P251)', () => {
   });
 });
 
+describe("a task Nitro runs by its name (P258)", () => {
+  it('counts a file of `server/tasks` that defines one, at any depth, and not a helper beside it', () => {
+    assert.deepEqual(sitesIn('server/tasks/db/migrate.ts', 'export default defineTask({ run() { return {}; } });\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('modules/reports/runtime/server/tasks/daily.ts', 'export default defineTask({\n  run: async () => ({}),\n});\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/tasks/shared.ts', 'export const olderThan = 7;\n'), {});
+    assert.deepEqual(sitesIn('server/utils/tasks.ts', 'export default defineTask({ run() { return {}; } });\n'), {});
+  });
+});
+
 describe('a function a SAM template declares (P246)', () => {
   it('counts each by its Type, a SAM function and a plain one alike, and not in a comment', () => {
     const text = [

@@ -32,6 +32,18 @@ export const router = {
       .input(z.object({ params: z.object({ id: z.string() }), body: z.object({ price: z.number() }) }))
       .output(z.object({ status: z.number(), body: Product }))
       .handler(async ({ input }) => ({ status: 200, body: { id: input.params.id, name: 'Green tea' } })),
+    // Asked with a query built in code (P258).
+    search: os
+      .route({ method: 'GET', path: '/search' })
+      .input(z.object({ q: z.string(), limit: z.string() }))
+      .output(z.array(Product))
+      .handler(async () => []),
+    // The query under `query` and the tenant under `headers`.
+    browse: os
+      .route({ method: 'GET', path: '/browse', inputStructure: 'detailed' })
+      .input(z.object({ query: z.object({ category: z.string(), page: z.string() }), headers: z.object({ 'x-tenant': z.string() }) }))
+      .output(z.array(Product))
+      .handler(async () => []),
   },
   // Loaded when first asked for, through the alias the Vite configuration declares.
   reports: lazy(() => import('@lib/reports')),

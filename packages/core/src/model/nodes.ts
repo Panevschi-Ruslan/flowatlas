@@ -63,6 +63,10 @@ export const ENTRY_KINDS = [
   // selection once the request has joined the endpoint; a field of another
   // type (`Order.customer`) only through a selection under one (P232).
   'graphql',
+  // A unit of work registered under a name of its own and run by that name -
+  // from code, on a schedule, by a person - with no address of the network
+  // (P258). Its key is the name it is run by.
+  'task',
 ] as const;
 
 export type EntryKind = (typeof ENTRY_KINDS)[number];

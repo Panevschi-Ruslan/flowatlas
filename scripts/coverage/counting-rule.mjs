@@ -321,6 +321,17 @@ export const PROBES = [
     contains: /export\s+default\b/,
   },
   {
+    // A task Nitro runs by its name is a way in of its own (P258): the name
+    // is its file's path, so the file is the site. Counted where the file
+    // defines one, so a helper kept beside the tasks is not.
+    name: 'nitro-task-file',
+    family: 'routes',
+    scope: 'file',
+    what: 'a file under `server/tasks` that defines a task (`defineTask`)',
+    path: /(^|\/)server\/tasks\/.+\.[cm]?[jt]s$/,
+    contains: /\bdefineTask\s*\(/,
+  },
+  {
     // The request families (P244). A request is written at a call, and the
     // call is what a person sees: the platform's client by its own name, a verb
     // on a client with the address written out beside it, or a client handed

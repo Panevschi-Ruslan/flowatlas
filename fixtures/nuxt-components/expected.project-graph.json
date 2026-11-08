@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:56:18.090Z",
+  "builtAt": "2026-11-08T14:41:27.138Z",
   "services": [
     {
       "name": "shop",
@@ -1879,7 +1879,7 @@
       "line": 6,
       "reason": "route-middleware-unresolved",
       "level": "action",
-      "message": "app/pages/admin.vue names the route middleware audit, and no file of a middleware directory of the application, and no module, gives one of that name",
+      "message": "app/pages/admin.vue names the route middleware audit, and no file of a middleware directory of the application, no module and no plugin gives one of that name",
       "hint": "Correct the name, or add the middleware to `middleware/`.",
       "symbol": "admin middleware audit",
       "meta": {

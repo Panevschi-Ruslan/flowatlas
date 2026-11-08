@@ -50,6 +50,7 @@ export {
   makeFunctionUrlEntryKey,
   makeApiRouteEntryKey,
   makeInvokeEntryKey,
+  makeTaskEntryKey,
   makeStateId,
   makeSymbolId,
   makeUnnamedInvokeKey,
@@ -1103,4 +1104,5 @@ export type {
   ProjectConventions,
 } from './conventions.js';
 export { ConfigPath, NotLiteral, configValueAt, exportedNamesOf, readConfigLiteral } from './config-literal.js';
+export { builtQueryInAddress, builtQueryOf, PLATFORM_HEADERS, PLATFORM_QUERY, writtenHeaderNames, type BuiltQuery, type QueryBuilder } from './built-query.js';
 export type { ConfigLiteral, ExportedNames } from './config-literal.js';

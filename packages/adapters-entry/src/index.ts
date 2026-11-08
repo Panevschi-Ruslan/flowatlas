@@ -151,6 +151,7 @@ export {
   type NuxtComponent,
   type NuxtComponentMode,
   type NuxtNames,
+  type NuxtPlugin,
   type NuxtRouteMiddleware,
 } from './nuxt-names.js';
 export {
@@ -159,6 +160,7 @@ export {
   nuxtModulesOf,
   type InstalledModule,
   type NuxtModule,
+  type ModulePlugin,
   type NuxtModuleAdditions,
   type NuxtModules,
 } from './nuxt-modules.js';

@@ -290,6 +290,14 @@ export interface NuxtRouteMiddleware {
   readonly from: { readonly file: string; readonly line: number };
 }
 
+/** A plugin of the application (P258): a file of a part's `plugins/`, or one a module adds. */
+export interface NuxtPlugin {
+  /** Repo-relative. */
+  readonly file: string;
+  /** Where it was added: the file itself, or a module's `addPlugin` at a line. */
+  readonly from: { readonly file: string; readonly line: number };
+}
+
 /** What a Nuxt application registers by name. */
 export interface NuxtNames {
   /** The components each name stands for: one per mode; more than one of one mode is {@link ambiguous}. */
@@ -304,6 +312,12 @@ export interface NuxtNames {
   readonly middleware: readonly NuxtRouteMiddleware[];
   /** The application's root component (`app.vue` of the first part that has one), repo-relative; none where Nuxt gives its own. */
   readonly root?: string;
+  /**
+   * Every plugin of the application, in the order Nuxt runs them (P258):
+   * those modules add, the last added first, then each part's `plugins/`,
+   * the lowest part first, each in the order of its files.
+   */
+  readonly plugins: readonly NuxtPlugin[];
   /** A layer's file left out for a higher one's, and settings written as code. */
   readonly rows: readonly Unresolved[];
 }
@@ -413,6 +427,19 @@ export const nuxtNamesOf = (repoDir: string, pkg: PackageJson = {}, application:
     }
   }
 
+  // Plugins: what modules add, each `addPlugin` put in front of the ones
+  // before it, then every part's own, the lowest part first (P258).
+  const plugins: NuxtPlugin[] = [];
+  for (const module of modules.modules) {
+    for (const added of module.additions.plugins) plugins.unshift({ file: added.file, from: { file: module.file, line: added.line } });
+  }
+  for (const layer of [...layers].reverse()) {
+    for (const path of filesIn(repoDir, layer.layout.dirs.plugins, false, /\.[cm]?[jt]s$/)) {
+      const file = fromRepo(repoDir, path);
+      if (!plugins.some((known) => known.file === file)) plugins.push({ file, from: { file, line: 1 } });
+    }
+  }
+
   // The root component: `app.vue` of the first part that has one.
   const root = layers
     .flatMap((layer) => ['app.vue', 'App.vue'].map((name) => under(layer.layout.srcDir, name)))
@@ -424,5 +451,5 @@ export const nuxtNamesOf = (repoDir: string, pkg: PackageJson = {}, application:
       }
     });
 
-  return { components, ambiguous, packaged, layouts, middleware, ...(root === undefined ? {} : { root }), rows };
+  return { components, ambiguous, packaged, layouts, middleware, ...(root === undefined ? {} : { root }), plugins, rows };
 };

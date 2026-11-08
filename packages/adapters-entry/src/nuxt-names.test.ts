@@ -92,3 +92,35 @@ describe('what an application registers by name (P255)', () => {
     expect(read.rows.map((row) => [row.reason, row.symbol])).toEqual([['framework-setting-dynamic', 'components']]);
   });
 });
+
+describe("an application's plugins, in the order Nuxt runs them (P258)", () => {
+  it("puts a module's first, the last added first, then each part's own, the lowest part first", () => {
+    const root = repo({
+      'nuxt.config.ts': "export default defineNuxtConfig({ extends: ['./base'] });",
+      'app/plugins/b.ts': '',
+      'app/plugins/a.client.ts': '',
+      'app/plugins/nested/index.ts': '',
+      'app/plugins/nested/helper.ts': '',
+      'base/nuxt.config.ts': 'export default defineNuxtConfig({});',
+      'base/plugins/z.ts': '',
+      'modules/kit.ts': [
+        "import { addPlugin, createResolver, defineNuxtModule } from '@nuxt/kit';",
+        'export default defineNuxtModule({ setup() {',
+        '  const { resolve } = createResolver(import.meta.url);',
+        "  addPlugin(resolve('./runtime/first'));",
+        "  addPlugin(resolve('./runtime/second'));",
+        '} });',
+      ].join('\n'),
+      'modules/runtime/first.ts': '',
+      'modules/runtime/second.ts': '',
+    });
+    expect(nuxtNamesOf(root, NUXT_4).plugins.map((plugin) => plugin.file)).toEqual([
+      'modules/runtime/second.ts',
+      'modules/runtime/first.ts',
+      'base/plugins/z.ts',
+      'app/plugins/a.client.ts',
+      'app/plugins/b.ts',
+      'app/plugins/nested/index.ts',
+    ]);
+  });
+});

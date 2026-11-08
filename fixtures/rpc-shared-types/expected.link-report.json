@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:23:50.675Z",
+  "builtAt": "2026-11-08T15:16:04.078Z",
   "configHash": "9b0abdd105ef",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1101,
+      "durationMs": 770,
       "packages": {
         "name": "@shop/api",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./apps/catalog",
       "type": "express",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 16,
-      "edges": 10,
+      "nodes": 22,
+      "edges": 14,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1152,
+      "durationMs": 789,
       "packages": {
         "name": "@shop/catalog",
         "runtime": [
@@ -54,7 +54,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1122,
+      "durationMs": 768,
       "packages": {
         "name": "@shop/edge",
         "runtime": [
@@ -71,11 +71,11 @@
       "repo": "./apps/web",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 19,
-      "edges": 9,
+      "nodes": 25,
+      "edges": 12,
       "types": 6,
       "unresolved": 0,
-      "durationMs": 1204,
+      "durationMs": 773,
       "packages": {
         "name": "@shop/web",
         "runtime": [
@@ -92,11 +92,11 @@
       "repo": "./apps/worker",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 18,
-      "edges": 12,
+      "nodes": 22,
+      "edges": 15,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1317,
+      "durationMs": 956,
       "packages": {
         "name": "@shop/worker",
         "runtime": [
@@ -112,8 +112,8 @@
     }
   ],
   "httpOut": {
-    "total": 4,
-    "linked": 4,
+    "total": 5,
+    "linked": 5,
     "byMarker": 0,
     "unknownEnv": 0,
     "noRoute": 0,
@@ -122,8 +122,8 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 9,
-    "resolved": 9,
+    "total": 12,
+    "resolved": 12,
     "unresolved": 0,
     "byReason": {}
   },
@@ -134,8 +134,8 @@
     "noProducers": []
   },
   "routes": {
-    "total": 7,
-    "called": 5,
+    "total": 9,
+    "called": 7,
     "uncalled": [
       "entry:catalog:http:POST:/api/reports/daily",
       "entry:worker:http:POST:/fulfil"
@@ -158,8 +158,8 @@
     }
   ],
   "totals": {
-    "nodes": 63,
-    "edges": 48,
+    "nodes": 79,
+    "edges": 62,
     "types": 9,
     "missed": 1,
     "sites": 1,

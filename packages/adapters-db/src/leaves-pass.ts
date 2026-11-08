@@ -1,6 +1,8 @@
 import { relative, sep } from 'node:path';
 import {
   addressOnly,
+  builtQueryInAddress,
+  builtQueryOf,
   isBelowDir,
   applicationOfFile,
   classMembersOf,
@@ -21,6 +23,9 @@ import {
   makeExternalApiId,
   makeLeafId,
   makeTableId,
+  PLATFORM_HEADERS,
+  PLATFORM_QUERY,
+  writtenHeaderNames,
   DECLARED_CONFIDENCE,
   operationOf,
   packageNameOf,
@@ -38,6 +43,7 @@ import {
   precedenceOf,
   precedenceRows,
   withdrawDescribedCalls,
+  type BuiltQuery,
   type GraphEdge,
   type GraphNode,
 } from '@flowatlas/core';
@@ -145,6 +151,32 @@ const HTTP_PACKAGES = ['axios', '@nestjs/axios'];
 /** The options a request's query is written under, by the clients a server calls through (P256). */
 const QUERY_OPTIONS = ['params', 'searchParams', 'query'] as const;
 
+/** What builds a query in code on a server: the platform's own (P258). */
+const QUERY_BUILDERS = [PLATFORM_QUERY];
+
+/** What a request's query is, as the request node records it (P256). */
+interface QueryRead {
+  readonly type?: string;
+  readonly keys?: readonly string[];
+  readonly unread?: true;
+}
+
+/** Two readings of one request's query laid together: the keys of both, unread where either is. */
+const bothQueries = (one: QueryRead, other: QueryRead): QueryRead => {
+  const type = one.type ?? other.type;
+  const typed = type === undefined ? {} : { type };
+  if (one.unread === true || other.unread === true) return { ...typed, unread: true };
+  // A query whose type is known and whose keys are not says nothing a key could be compared by.
+  if ((one.type !== undefined && one.keys === undefined) || (other.type !== undefined && other.keys === undefined)) return typed;
+  if (one.keys === undefined && other.keys === undefined) return typed;
+  return { ...typed, keys: [...new Set([...(one.keys ?? []), ...(other.keys ?? [])])].sort() };
+};
+
+const fromBuilt = (built: BuiltQuery, type?: string): QueryRead => ({
+  ...(type === undefined ? {} : { type }),
+  ...('unread' in built ? { unread: true as const } : { keys: built.keys }),
+});
+
 const HTTP_METHODS: ReadonlyMap<string, string> = new Map([
   ['get', 'GET'],
   ['post', 'POST'],
@@ -220,6 +252,14 @@ interface RecordOptions {
   body?: TsNode | null;
   /** The pattern rule the request was described by, recorded as `meta.describedBy` (P121). */
   describedBy?: string;
+  /**
+   * The request a wrapper makes, and the calls from it out to the site, where
+   * the site is a caller of the wrapper (P258): the query the wrapper writes
+   * itself is the request's too, beside the caller's.
+   */
+  inner?: { readonly call: CallExpression; readonly hops: readonly CallExpression[] };
+  /** The address written where the request is made, for a query built into it (P258). */
+  address?: TsNode;
   /**
    * The client was known only from what the source states it is - an
    * annotation or a construction naming a class nothing installed - so the
@@ -1665,15 +1705,76 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
    * got and ky, and ofetch - its keys where an object is written there and
    * its type either way. `unread` where the options are handed by a name.
    */
-  const queryAmong = (args: readonly TsNode[]): { type?: string; keys?: readonly string[]; unread?: true } => {
+  const queryAmong = (args: readonly TsNode[]): QueryRead => {
     for (const argument of args) {
       if (!Node.isObjectLiteralExpression(argument)) return Node.isIdentifier(argument) || Node.isPropertyAccessExpression(argument) ? { unread: true } : {};
       for (const key of QUERY_OPTIONS) {
         const property = argument.getProperty(key);
         const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
         if (written === undefined) continue;
+        const type = ctx.types.collectType(written.getType(), written);
+        // `query: new URLSearchParams({ status })`, or a name holding one filled in by calls (P258).
+        const built = builtQueryOf(written, QUERY_BUILDERS);
+        if (built !== undefined) return fromBuilt(built, type);
         const keys = writtenKeysOf([written]);
-        return { type: ctx.types.collectType(written.getType(), written), ...(keys === undefined ? {} : { keys }) };
+        return { type, ...(keys === undefined ? {} : { keys }) };
+      }
+    }
+    return {};
+  };
+
+  /** The names of the headers among a request's settings written in place: an object, or `Headers` built by calls (P258). */
+  const headersAmong = (args: readonly TsNode[]): readonly string[] | undefined => {
+    for (const argument of args) {
+      if (!Node.isObjectLiteralExpression(argument)) continue;
+      const property = argument.getProperty('headers');
+      const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+      if (written !== undefined) return writtenHeaderNames(written, [PLATFORM_HEADERS]);
+    }
+    return undefined;
+  };
+
+  /**
+   * The query a wrapper writes into the request it makes for its callers
+   * (P258): the keys it writes itself, and what it spreads or hands on from
+   * a parameter of its own, read at the caller along the calls the address
+   * came out through. `query: { ...query, tenant }` is the caller's keys and
+   * `tenant`; anything else spread in leaves the query unread.
+   */
+  const wrapperQuery = (inner: { readonly call: CallExpression; readonly hops: readonly CallExpression[] }): QueryRead => {
+    const handedOn = (node: TsNode): QueryRead | undefined => {
+      const declaration = Node.isIdentifier(node) ? node.getSymbol()?.getDeclarations()[0] : undefined;
+      if (declaration === undefined || !Node.isParameterDeclaration(declaration)) return undefined;
+      const argument = argumentAlong(declaration, inner.hops);
+      // Not handed: the caller writes no query there.
+      if (argument === undefined) return { keys: [] };
+      if (argument === null) return { unread: true };
+      const built = builtQueryOf(argument, QUERY_BUILDERS);
+      if (built !== undefined) return fromBuilt(built);
+      const keys = writtenKeysOf([argument]);
+      return keys === undefined ? { unread: true } : { keys };
+    };
+    for (const argument of inner.call.getArguments().slice(1)) {
+      if (!Node.isObjectLiteralExpression(argument)) continue;
+      for (const key of QUERY_OPTIONS) {
+        const property = argument.getProperty(key);
+        const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+        if (written === undefined) continue;
+        const through = handedOn(written);
+        if (through !== undefined) return through;
+        const built = builtQueryOf(written, QUERY_BUILDERS);
+        if (built !== undefined) return fromBuilt(built);
+        if (!Node.isObjectLiteralExpression(written)) return { unread: true };
+        let read: QueryRead = { keys: [] };
+        for (const each of written.getProperties()) {
+          if (Node.isSpreadAssignment(each)) {
+            read = bothQueries(read, handedOn(each.getExpression()) ?? fromBuilt({ unread: true }));
+            continue;
+          }
+          const name = each.getSymbol()?.getName();
+          read = bothQueries(read, name === undefined || name === '' ? { unread: true } : { keys: [name] });
+        }
+        return read;
       }
     }
     return {};
@@ -1694,7 +1795,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     owner: Holder,
     options: RecordOptions = {},
   ): void => {
-    const { init, readsSite = true, binding, body: handed, describedBy, stated } = options;
+    const { init, readsSite = true, binding, body: handed, describedBy, stated, inner, address } = options;
     // A request through a binding names a host the platform ignores: the
     // binding is where it goes (P91).
     const info: UrlInfo = binding === undefined ? written : { ...written, host: null, baseUrlEnv: null };
@@ -1761,7 +1862,14 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
 
     // The query a `GET` writes among the options the call is handed (P256),
     // for a route that assembles its input from it.
-    const query = verb === 'GET' && readsSite ? queryAmong(site.getArguments().slice(1)) : {};
+    // A wrapper's own query beside its caller's, and a query built into the address (P258).
+    const atSite: QueryRead = verb === 'GET' && readsSite ? queryAmong(site.getArguments().slice(1)) : {};
+    const wrapped: QueryRead = verb === 'GET' && inner !== undefined && inner.call !== site ? wrapperQuery(inner) : {};
+    const builtIn = verb === 'GET' && address !== undefined ? builtQueryInAddress(address, QUERY_BUILDERS) : undefined;
+    const query = bothQueries(bothQueries(atSite, wrapped), builtIn === undefined ? {} : fromBuilt(builtIn));
+    const queryInAddress = builtIn !== undefined && query.keys !== undefined;
+    // The headers the settings written at the site write, for a procedure whose input takes them (P258).
+    const headers = readsSite ? headersAmong(init === undefined ? site.getArguments().slice(1) : [init]) : undefined;
 
     const place = siteOf(ctx, site, owner.file);
     const id = makeLeafId('http_out', ctx.repo, owner.file, place.line, place.column);
@@ -1803,6 +1911,8 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(query.type === undefined ? {} : { queryType: query.type }),
         ...(query.keys === undefined ? {} : { queryKeys: query.keys }),
         ...(query.unread === true ? { queryUnread: true } : {}),
+        ...(queryInAddress ? { queryInAddress: true } : {}),
+        ...(headers === undefined ? {} : { headerKeys: headers }),
         ...(info.host === null ? {} : { host: info.host }),
         ...(application === undefined ? {} : { application }),
         ...(binding === undefined ? {} : { binding: binding.binding, ...(binding.typed ? {} : { bindingTyped: false }) }),
@@ -1916,6 +2026,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
           readsSite: stated?.settings !== true && !handedHere,
           ...(recognised.binding === undefined ? {} : { binding: recognised.binding }),
           ...bodyAlong(hops),
+          inner: { call, hops },
         });
       }
       // A caller through an interface this method implements, or one whose
@@ -1942,7 +2053,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
           unnamed = true;
           continue;
         }
-        recordHttp(site, here, verb, owner, { readsSite: false, ...through, ...bodyAlong(hops) });
+        recordHttp(site, here, verb, owner, { readsSite: false, ...through, ...bodyAlong(hops), inner: { call, hops } });
       }
       if (unnamed) recordHttp(call, here, null, holder, { init: request?.init, ...through });
       return true;
@@ -1955,6 +2066,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       init: request?.init,
       ...through,
       ...(bodyHere === undefined ? {} : { body: bodyHere }),
+      address: urlArg,
     });
     return true;
   };

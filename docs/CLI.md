@@ -465,6 +465,83 @@ source of that build: a `source` condition or field, the build's source map,
 or the file of `src/` in its place (`dist/kit.mjs` is `src/kit.ts`)
 (`fixtures/nuxt-components`, `fixtures/vue-components`).
 
+**Layouts, plugins, async components and Nitro's tasks (P258).** A SvelteKit
+page (`+page.svelte`, and `+page@x.svelte`, which is the page of its folder)
+goes through every layout up its route tree, the root's outermost: a
+directory with a `+layout.svelte`, `+layout.ts` or `+layout.server.ts` is a
+layout of every page below it. Every `load` runs before anything is shown -
+each `+layout.server` load root first, the page's `+page.server` load after
+them, then each `+layout` load and the page's `+page` load - and then each
+layout's component wraps the page. Each is a `calls` edge from the page with
+`meta.order` (`meta.load: server | universal` and `meta.layout` or
+`meta.page`, the route id; `meta.layout` alone for a component), so a flow
+from the page reaches what its layouts load and request; a server load is
+the handler of the route it answers, so the page's flow reaches the server
+half too. A `@` resets the chain: `+page@(app).svelte` is wrapped by the
+layout of the `(app)` directory and those above it, `+page@.svelte` by the
+root's alone, and a `+layout@x.svelte` resets what wraps it the same way. A
+reset that names no directory above the file is a row (`layout-unresolved`,
+`missing`).
+
+A component library a plugin installs registers its components by name, in
+its package: `app.use(Vuetify)` gives every template `<VBtn>`. A small table
+says which names common libraries register - Vuetify (`V` and a capital),
+PrimeVue (its own component names, which share no prefix), Element Plus
+(`El`), Naive UI (`N`), Quasar (`Q`), Ant Design Vue (`A`) - and a library is
+installed where the repository declares its package or a Nuxt module that
+installs it, whichever way it registers it. A tag of an installed library,
+and a name `app.component('Button', Button)` registers from a package, is the
+library's: no edge and no row. A plugin `app.use(X)`,
+`nuxtApp.vueApp.use(X)` or `Vue.use(X)` installs from a package the table
+does not know may register anything, so a PascalCase tag that names nothing
+stays `component-unresolved`, and the row says which plugin may register it
+(`meta.plugins`). A plugin of the repository's own is read where it
+registers what it registers (`install(app) { app.component(...) }`).
+`defineAsyncComponent(() => import('./X.vue'))` and
+`defineAsyncComponent({ loader: () => import('./X.vue') })` are the
+component they load, held in a name of the script, in `components: { ... }`
+or registered for every template.
+
+A Nuxt plugin - a file of a part's `plugins/` (or `dir.plugins`), or one a
+module adds with `addPlugin` - may add a route middleware when the
+application starts: `addRouteMiddleware('name', fn)` is a named one, and
+`addRouteMiddleware(fn)` or `{ global: true }` one in front of every page,
+after every global one the build adds, in the order Nuxt runs the plugins
+(those modules add, then each part's, the lowest part first, each in the order
+of its files). A page that names one is walked through it, and a plugin's
+named middleware takes the place of a file's of the same name, as it does
+when the application runs. The middleware is the function written in place,
+or the one a name of the plugin holds (`defineNuxtRouteMiddleware(...)`
+unwrapped); a name or a function written as code is a row at the call
+(`route-middleware-unresolved`, `dynamic`).
+
+Nitro's plugins run with every request: a file of a server's `plugins/` - a
+part's, and one of a directory a module adds with `addServerScanDir` - and a
+plugin a module adds with `addServerPlugin`, in the order Nitro runs them
+(the modules' first). Each `nitroApp.hooks.hook('request', fn)` is a step in
+front of every route, ahead of `server/middleware` (a `middleware` node
+labelled with the plugin and the hook, `source: server/plugins`), and each
+`beforeResponse` and `afterResponse` hook one behind it (an `interceptor`). A
+file of a server's `tasks/` is a task: a way in of its own of the kind
+`task`, keyed by the name Nitro gives it - its path below `tasks/`, `/` read
+as `:` (`tasks/db/migrate.ts` is `db:migrate`) - whose handler is the `run`
+`defineTask({ ... })` defines; one that defines none is
+`fs-route-handler-not-read`. `runTask('db:migrate', { payload })` is a
+producer that starts the task by its name (`meta.starts: task`, joined as a
+deployed name is joined, its `payload` compared with what `run` is handed),
+and each expression of `scheduledTasks` (Nuxt's `nitro.scheduledTasks`,
+Nitro's `scheduledTasks`) is a `cron` way in that reaches each task it lists
+(`meta.reaches`); a name no task gives is `reference-not-found`. A task is
+triggered from outside the graph as a cron job is, so `dead` does not call one
+nothing reaches dead.
+
+In a module's condition `nuxt.options.dev` and `nuxt.options._prepare` - read
+on the name `setup`'s second parameter holds - are `false`: the production
+build is the one read (P251). A call only development makes is not read, and
+its `framework-module-skipped` note says so (`meta.why: development`)
+(`fixtures/sveltekit-layouts`, `fixtures/vue-plugins`,
+`fixtures/nuxt-plugins-tasks`).
+
 **SvelteKit `kit.files.routes` (P251).** Routes (`+server`, `+page.server`,
 `+layout.server`) and pages (`+page.svelte`) are read under the directory
 `kit.files.routes` names, `src/routes` without one; written as code, it is a
@@ -7103,9 +7180,11 @@ same way from what it writes:
 - by default (`compact`), the route's path parameters (`{id}` in its route)
   merged with the query for a `GET`, or with the body for any other verb;
 - for a route written `.route({ inputStructure: 'detailed' })`, `{ params,
-  query, body }`, each part the call writes under its own key (its headers are
-  not read). A twin route records `meta.inputStructure` / `meta.outputStructure`
-  where they are `detailed`.
+  query, headers, body }`, each part the call writes under its own key, the
+  headers by the names it writes in place (`meta.headerKeys`, lower-cased:
+  `headers: { 'X-Tenant': t }`, `new Headers(...)`, Angular's `HttpHeaders`,
+  P258). A twin route records `meta.inputStructure` /
+  `meta.outputStructure` where they are `detailed`.
 
 A path parameter and a query key are compared by name alone: the address
 carries text, and whether the schema coerces it is the schema's to say. The
@@ -7113,7 +7192,16 @@ query is read from the address (`?category=tea&sort=price`) and from the
 client's query option written in place - axios's `params`, ky's and got's
 `searchParams`, ofetch's `query` or `params`, Angular `HttpClient`'s `params`
 - which a request records as `meta.queryKeys` and `meta.queryType` (and
-`meta.queryUnread` where its options are handed by a name). The body is
+`meta.queryUnread` where its options are handed by a name). A query built in
+code is read the same way (P258): `new URLSearchParams({ ... })`, `('a=1')`
+or `([['a', '1']])`, and each `append` / `set` on the name holding it in the
+scope it is declared in; Angular's `new HttpParams().set('a', x)` chains,
+`params = params.set(...)` and `new HttpParams({ fromObject })`; one built
+into the address (`` `/products?${params}` ``), whose keys are recorded
+beside the `${…}` the address shows (`meta.queryInAddress`); and on a server,
+the `query` / `params` / `searchParams` a wrapper writes itself, beside what
+its caller hands it (`{ ...params, limit }` is the caller's keys and
+`limit`). A key written as code leaves the query `queryUnread`. The body is
 compared field by field. A `GET` that writes no query and no path parameter
 sends an empty input, and what the procedure requires is missing. What the
 call reads back (`axios.get<Product>`, `fetch<Order>`) is compared with the

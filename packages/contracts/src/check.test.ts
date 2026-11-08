@@ -1109,6 +1109,22 @@ describe("a plain request to a procedure's REST route (P256)", () => {
     });
   });
 
+  it('compares the keys of a query built into the address, and the headers a detailed input takes (P258)', () => {
+    // The address shows the built query as `${…}`; the reader recorded its keys beside.
+    expect(twin({ method: 'GET', url: '${CATALOG_URL}/api/products?${…}', queryKeys: ['category', 'limit'], queryInAddress: true }, list, { returns: `${PRODUCT}[]` }).summary).toMatchObject({ errors: 0, unchecked: 0 });
+    const browse = {
+      method: 'GET',
+      rawPath: '/api/browse',
+      inputStructure: 'detailed',
+      signature: { params: [{ name: 'input', type: "{query:{category:string};headers:{'x-tenant':string}}" }], returns: `${PRODUCT}[]` },
+    };
+    expect(twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['x-tenant'] }, browse, { returns: `${PRODUCT}[]` }).summary).toMatchObject({ errors: 0, infos: 0, unchecked: 0 });
+    expect(findings(twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['x-trace'] }, browse, { returns: `${PRODUCT}[]` }))).toEqual([
+      ['request', 'missing_required', 'headers.x-tenant', 'error'],
+      ['request', 'extra_field', 'headers.x-trace', 'info'],
+    ]);
+  });
+
   it('says so where the procedure declares no input, or one whose type does not resolve', () => {
     expect(rows(twin({ method: 'GET' }, { method: 'GET', rawPath: '/api/health', input: undefined, signature: { params: [], returns: 'string' } }, { returns: 'string' }))).toEqual([
       ['request', 'procedure-input-undeclared'],

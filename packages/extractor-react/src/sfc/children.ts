@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { normalizeFilePath, startLineOf, type EmbeddedFile, type GraphEdge } from '@flowatlas/core';
 import { NUXT_BUILT_IN_COMPONENTS, type NuxtNames } from '@flowatlas/adapters-entry';
@@ -6,6 +7,7 @@ import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { svelteMarkupTags, vueTemplateTags, type MarkupTag } from './events.js';
+import { asyncComponentFile, installedPlugins, libraryOf, type InstalledPlugins } from './registrations.js';
 
 /**
  * The child components a component's markup renders (P255), and in Nuxt the
@@ -77,6 +79,12 @@ const isComponentTag = (name: string, svelte: boolean): boolean =>
  */
 const importedComponents = (ctx: ReactExtractContext, script: SourceFile, byFile: ReadonlyMap<string, IndexedFunction>): Map<string, IndexedFunction> => {
   const found = new Map<string, IndexedFunction>();
+  // `const OrderChart = defineAsyncComponent(() => import('./OrderChart.vue'))` (P258).
+  for (const declaration of script.getVariableDeclarations()) {
+    const value = declaration.getInitializer();
+    const loaded = value === undefined ? undefined : asyncComponentOf(ctx, value, byFile);
+    if (loaded !== undefined) found.set(declaration.getName(), loaded);
+  }
   for (const declaration of script.getImportDeclarations()) {
     const fileOf = componentFileOfImport(ctx, declaration);
     const whole = fileOf === undefined ? undefined : byFile.get(fileOf);
@@ -97,6 +105,12 @@ const importedComponents = (ctx: ReactExtractContext, script: SourceFile, byFile
   return found;
 };
 
+/** The component `defineAsyncComponent(...)` loads, where it is one of this reading (P258). */
+const asyncComponentOf = (ctx: ReactExtractContext, value: TsNode, byFile: ReadonlyMap<string, IndexedFunction>): IndexedFunction | undefined => {
+  const file = asyncComponentFile(value, ctx.repoDir, (candidate) => byFile.has(candidate));
+  return file === undefined ? undefined : byFile.get(file);
+};
+
 /** The file an import names, repo-relative: the one the checker opens, else a component file by its relative path. */
 const componentFileOfImport = (ctx: ReactExtractContext, declaration: ImportDeclaration): string | undefined => {
   const opened = declaration.getModuleSpecifierSourceFile();
@@ -112,7 +126,7 @@ const propertyValue = (object: ObjectLiteralExpression, key: string): TsNode | u
 };
 
 /** `components: { CartBadge, Total: OrderTotal }` of the Options API, by the name each is registered under. */
-const optionComponents = (script: SourceFile, imported: ReadonlyMap<string, IndexedFunction>): Map<string, IndexedFunction> => {
+const optionComponents = (ctx: ReactExtractContext, script: SourceFile, imported: ReadonlyMap<string, IndexedFunction>, byFile: ReadonlyMap<string, IndexedFunction>): Map<string, IndexedFunction> => {
   const found = new Map<string, IndexedFunction>();
   const assignment = script.getExportAssignment((each) => !each.isExportEquals());
   let value: TsNode | undefined = assignment?.getExpression();
@@ -126,7 +140,12 @@ const optionComponents = (script: SourceFile, imported: ReadonlyMap<string, Inde
       if (target !== undefined) found.set(property.getName(), target);
     } else if (Node.isPropertyAssignment(property)) {
       const initializer = property.getInitializer();
-      const target = initializer !== undefined && Node.isIdentifier(initializer) ? imported.get(initializer.getText()) : undefined;
+      const target =
+        initializer === undefined
+          ? undefined
+          : Node.isIdentifier(initializer)
+            ? imported.get(initializer.getText())
+            : asyncComponentOf(ctx, initializer, byFile);
       const key = property.getNameNode();
       const name = Node.isStringLiteral(key) ? key.getLiteralValue() : key.getText();
       if (target !== undefined) found.set(name, target);
@@ -135,14 +154,24 @@ const optionComponents = (script: SourceFile, imported: ReadonlyMap<string, Inde
   return found;
 };
 
+/** The components an application registers for every template, and the names it registers from a package's. */
+interface GlobalComponents {
+  readonly components: ReadonlyMap<string, IndexedFunction>;
+  /** `app.component('Button', Button)` where `Button` is a package's (P258): a library's component, no row. */
+  readonly packaged: ReadonlySet<string>;
+}
+
 /**
  * The components an application registers for every template:
  * `app.component('CartBadge', CartBadge)`, `Vue.component(...)`, a Nuxt
- * plugin's `nuxtApp.vueApp.component(...)`, where the second is an import of
- * a component file.
+ * plugin's `nuxtApp.vueApp.component(...)`, a library plugin's own
+ * `install(app)`, where the second is an import of a component file or
+ * `defineAsyncComponent` of one (P258); one imported from a package is that
+ * package's.
  */
-const globalComponents = (ctx: ReactExtractContext, sources: readonly SourceFile[], byFile: ReadonlyMap<string, IndexedFunction>): Map<string, IndexedFunction> => {
+const globalComponents = (ctx: ReactExtractContext, sources: readonly SourceFile[], byFile: ReadonlyMap<string, IndexedFunction>): GlobalComponents => {
   const found = new Map<string, IndexedFunction>();
+  const packaged = new Set<string>();
   for (const sourceFile of sources) {
     if (!/\.component\s*\(/.test(sourceFile.getFullText())) continue;
     const imported = importedComponents(ctx, sourceFile, byFile);
@@ -151,34 +180,57 @@ const globalComponents = (ctx: ReactExtractContext, sources: readonly SourceFile
       const callee = node.getExpression();
       if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'component') return;
       const [name, value] = node.getArguments();
-      if (name === undefined || value === undefined || !(Node.isStringLiteral(name) || Node.isNoSubstitutionTemplateLiteral(name)) || !Node.isIdentifier(value)) return;
+      if (name === undefined || value === undefined || !(Node.isStringLiteral(name) || Node.isNoSubstitutionTemplateLiteral(name))) return;
+      if (!Node.isIdentifier(value)) {
+        const loaded = asyncComponentOf(ctx, value, byFile);
+        if (loaded !== undefined) found.set(name.getLiteralValue(), loaded);
+        return;
+      }
       const target = imported.get(value.getText());
       if (target !== undefined) found.set(name.getLiteralValue(), target);
+      else if (isFromPackage(sourceFile, value.getText())) packaged.add(name.getLiteralValue());
     });
   }
-  return found;
+  return { components: found, packaged };
 };
 
+/** Whether a name a file holds is imported from a package rather than a file of the repository. */
+const isFromPackage = (sourceFile: SourceFile, name: string): boolean =>
+  sourceFile.getImportDeclarations().some((declaration) => {
+    const specifier = declaration.getModuleSpecifierValue();
+    if (specifier.startsWith('.') || /^[@~#]\//.test(specifier)) return false;
+    return declaration.getDefaultImport()?.getText() === name || declaration.getNamedImports().some((each) => (each.getAliasNode()?.getText() ?? each.getName()) === name);
+  });
+
 /** One tag's answer: the components it renders, or why it renders none of the repository's. */
-type Resolved = { readonly targets: readonly IndexedFunction[]; readonly lazy?: boolean } | { readonly why: 'framework' | 'element' | 'missing' | 'ambiguous'; readonly files?: readonly string[] };
+type Resolved = { readonly targets: readonly IndexedFunction[]; readonly lazy?: boolean } | { readonly why: 'framework' | 'library' | 'element' | 'missing' | 'ambiguous'; readonly files?: readonly string[] };
 
 const EDGE_KEY = (edge: Pick<GraphEdge, 'from' | 'to'>): string => `${edge.from}\u0000${edge.to}`;
 
+/** Where SvelteKit's routes are, repo-relative, where the application is SvelteKit's (P258). */
+export interface SveltekitReading {
+  readonly root: string;
+}
+
 /**
- * Draws the child components of every component of this reading, and in
- * Nuxt each page's route middleware and layout (P255). Returns nothing; the
- * edges and rows are the builder's.
+ * Draws the child components of every component of this reading, in Nuxt
+ * each page's route middleware and layout (P255), and in SvelteKit each
+ * page's layouts and loads (P258). Returns nothing; the edges and rows are
+ * the builder's.
  */
 export const drawChildren = (
   ctx: ReactExtractContext,
   components: readonly MarkupComponent[],
   sources: readonly SourceFile[],
   nuxt: NuxtReading | undefined,
+  sveltekit?: SveltekitReading,
 ): void => {
   const byFile = new Map(components.map(({ component }) => [component.file, component] as const));
-  const global = globalComponents(ctx, sources, byFile);
+  const { components: global, packaged } = globalComponents(ctx, sources, byFile);
+  const plugins: InstalledPlugins = components.some(({ made }) => made.format.extension !== '.svelte') ? installedPlugins(ctx.pkg, sources, ctx.repoDir) : { libraries: [], unknown: [] };
   const drawn = new Set<string>();
   const rendering = nuxt === undefined ? undefined : layoutRenderingOf(nuxt, components);
+  const runtime = nuxt === undefined ? [] : runtimeMiddlewareOf(ctx, nuxt);
   const edge = (from: IndexedFunction, to: IndexedFunction, file: string, line: number, meta: Record<string, unknown>): void => {
     if (from.id === to.id) return;
     const key = EDGE_KEY({ from: from.id, to: to.id });
@@ -192,7 +244,7 @@ export const drawChildren = (
   for (const { component, made, script } of components) {
     const svelte = made.format.extension === '.svelte';
     const imported = importedComponents(ctx, script, byFile);
-    const local = new Map([...imported, ...optionComponents(script, imported)]);
+    const local = new Map([...imported, ...optionComponents(ctx, script, imported, byFile)]);
     const resolveTag = (written: string): Resolved => {
       const spellings = svelte ? [written] : vueSpellings(written);
       const named = spellings.map((name) => local.get(name)).find((found) => found !== undefined) ?? (svelte ? undefined : spellings.map((name) => global.get(name)).find((found) => found !== undefined));
@@ -215,6 +267,8 @@ export const drawChildren = (
         if (NUXT_BUILT_IN_COMPONENTS.has(name) || nuxt.names.packaged.has(name)) return { why: 'framework' };
       }
       if (!svelte && VUE_BUILT_IN_COMPONENTS.has(pascal)) return { why: 'framework' };
+      // A component a library registers by name (P258): the library's, with no row.
+      if (!svelte && (packaged.has(written) || packaged.has(pascal) || libraryOf(pascal, plugins.libraries) !== undefined)) return { why: 'library' };
       return /^[A-Z]/.test(written) ? { why: 'missing' } : { why: 'element' };
     };
 
@@ -238,6 +292,9 @@ export const drawChildren = (
         continue;
       }
       if (resolved.why !== 'missing' && resolved.why !== 'ambiguous') continue;
+      // A plugin the table of libraries does not know may register it: said, so the row is not taken for a typo (P258).
+      const mayRegister = svelte || resolved.why !== 'missing' ? [] : plugins.unknown;
+      const byPlugin = mayRegister.length === 0 ? '' : `; ${mayRegister.map((plugin) => `${plugin.written} in ${plugin.file}`).join(', ')} may register it`;
       ctx.report({
         file: made.file,
         line: tag.line,
@@ -247,16 +304,19 @@ export const drawChildren = (
         message:
           resolved.why === 'ambiguous'
             ? `<${tag.name}> in ${made.file} is a name ${(resolved.files ?? []).join(' and ')} each give, so which one it renders is not said, and neither is joined`
-            : `<${tag.name}> in ${made.file} names no component the file imports or registers, and none the framework registers by name, so what it renders is not joined`,
+            : `<${tag.name}> in ${made.file} names no component the file imports or registers, and none the framework registers by name, so what it renders is not joined${byPlugin}`,
         hint:
           resolved.why === 'ambiguous'
             ? 'Rename one of the two files, so one name is one component.'
-            : 'Import the component in the script, register it, or put it where the framework registers components by name.',
-        meta: { cause: 'component-unresolved', why: resolved.why, tag: tag.name },
+            : mayRegister.length === 0
+              ? 'Import the component in the script, register it, or put it where the framework registers components by name.'
+              : 'Import the component in the script, or register it with `app.component` in the repository; a library the plugin installs is not read.',
+        meta: { cause: 'component-unresolved', why: resolved.why, tag: tag.name, ...(mayRegister.length === 0 ? {} : { plugins: mayRegister.map((plugin) => `${plugin.file}:${plugin.line}`) }) },
       });
     }
 
-    if (nuxt !== undefined && rendering !== undefined && nuxt.pages.has(made.file)) pageFlow(ctx, nuxt, rendering, byFile, component, made, script, edge);
+    if (nuxt !== undefined && rendering !== undefined && nuxt.pages.has(made.file)) pageFlow(ctx, nuxt, rendering, runtime, byFile, component, made, script, edge);
+    if (sveltekit !== undefined && svelte) sveltekitPageFlow(ctx, sveltekit, byFile, component, made, edge);
   }
 };
 
@@ -379,6 +439,7 @@ const pageFlow = (
   ctx: ReactExtractContext,
   nuxt: NuxtReading,
   rendering: LayoutRendering,
+  runtime: readonly RuntimeMiddleware[],
   byFile: ReadonlyMap<string, IndexedFunction>,
   page: IndexedFunction,
   made: EmbeddedFile,
@@ -392,14 +453,21 @@ const pageFlow = (
     const fn = middlewareFunction(ctx, name, file);
     if (fn !== undefined) edge(page, fn, made.file, line, { middleware: name, order: order++ });
   };
+  // What a plugin adds when the application starts (P258): a global one after the ones the build adds, a named one in place of a file's.
+  const added = (middleware: RuntimeMiddleware): void => {
+    edge(page, middleware.fn, made.file, line, { middleware: middleware.name ?? middleware.fn.name, order: order++, plugin: middleware.plugin });
+  };
   for (const middleware of nuxt.names.middleware) if (middleware.global) through(middleware.name, middleware.file);
+  for (const middleware of runtime) if (middleware.global) added(middleware);
   for (const written of meta?.middleware ?? []) {
     if ('code' in written) {
       middlewareRow(ctx, made.file, line, page.name, written.code, 'dynamic');
       continue;
     }
+    const atRuntime = runtime.findLast((each) => !each.global && each.name === written.name);
     const known = nuxt.names.middleware.find((each) => each.name === written.name);
-    if (known === undefined) middlewareRow(ctx, made.file, line, page.name, written.name, 'missing');
+    if (atRuntime !== undefined) added(atRuntime);
+    else if (known === undefined) middlewareRow(ctx, made.file, line, page.name, written.name, 'missing');
     else through(known.name, known.file);
   }
 
@@ -425,10 +493,182 @@ const pageFlow = (
   else if (!(name === 'default' && asked === undefined) && !nuxt.names.layouts.has(name)) layoutRow(ctx, made.file, line, page.name, name, 'missing');
 };
 
+/** A route middleware a plugin adds when the application starts: `addRouteMiddleware('name', fn, { global })` (P258). */
+interface RuntimeMiddleware {
+  /** None for `addRouteMiddleware(fn)`, which is global. */
+  readonly name?: string;
+  readonly global: boolean;
+  readonly fn: IndexedFunction;
+  /** Repo-relative plugin file. */
+  readonly plugin: string;
+}
+
+/** The function a route middleware is: written in place, `defineNuxtRouteMiddleware` of one, or a name of one. */
+const middlewareValue = (ctx: ReactExtractContext, name: string, value: TsNode): IndexedFunction | undefined => {
+  let at: TsNode = value;
+  if (Node.isCallExpression(at) && /(?:^|\.)defineNuxtRouteMiddleware$/.test(at.getExpression().getText())) at = at.getArguments()[0] ?? at;
+  if (Node.isArrowFunction(at) || Node.isFunctionExpression(at)) return ctx.functions.adopt({ name, declaration: at, body: at.getBody(), line: startLineOf(at) });
+  if (!Node.isIdentifier(at)) return undefined;
+  for (const declaration of (at.getSymbol()?.getAliasedSymbol() ?? at.getSymbol())?.getDeclarations() ?? []) {
+    const indexed = ctx.functions.get(declaration as never);
+    if (indexed !== undefined) return indexed;
+    if (Node.isVariableDeclaration(declaration)) {
+      const held = declaration.getInitializer();
+      if (held !== undefined && held !== value) return middlewareValue(ctx, name, held);
+    }
+  }
+  return undefined;
+};
+
+/**
+ * Every route middleware the application's plugins add when it starts (P258),
+ * in the order Nuxt runs the plugins: `addRouteMiddleware('auth', fn)` is a
+ * named one, `{ global: true }` or a function alone one in front of every
+ * page. A name or a function written as code is a row at the call.
+ */
+const runtimeMiddlewareOf = (ctx: ReactExtractContext, nuxt: NuxtReading): RuntimeMiddleware[] => {
+  const found: RuntimeMiddleware[] = [];
+  for (const plugin of nuxt.names.plugins) {
+    const sourceFile = ctx.project.getSourceFile(join(ctx.repoDir, plugin.file));
+    if (sourceFile === undefined || !sourceFile.getFullText().includes('addRouteMiddleware')) continue;
+    sourceFile.forEachDescendant((node) => {
+      if (!Node.isCallExpression(node) || !/(?:^|\.)addRouteMiddleware$/.test(node.getExpression().getText())) return;
+      const [first, second, third] = node.getArguments();
+      if (first === undefined) return;
+      const named = Node.isStringLiteral(first) || Node.isNoSubstitutionTemplateLiteral(first) ? first.getLiteralValue() : undefined;
+      const anonymous = Node.isArrowFunction(first) || Node.isFunctionExpression(first) || (Node.isCallExpression(first) && /defineNuxtRouteMiddleware$/.test(first.getExpression().getText()));
+      const value = anonymous ? first : second;
+      const options = anonymous ? second : third;
+      const global = anonymous || (options !== undefined && Node.isObjectLiteralExpression(options) && propertyValue(options, 'global')?.getText() === 'true');
+      const label = named ?? `${plugin.file.split('/').pop()?.replace(/\.[cm]?[jt]s$/, '') ?? plugin.file} middleware`;
+      const fn = value === undefined || (!anonymous && named === undefined) ? undefined : middlewareValue(ctx, label, value);
+      if (fn === undefined) {
+        middlewareRow(ctx, plugin.file, startLineOf(node), plugin.file, (named === undefined && !anonymous ? first : (value ?? first)).getText().slice(0, 60), 'dynamic', 'plugin');
+        return;
+      }
+      found.push({ ...(named === undefined ? {} : { name: named }), global, fn, plugin: plugin.file });
+    });
+  }
+  return found;
+};
+
+/** A SvelteKit page or layout file's name: `+page`, `+layout`, and what it resets to after `@` (P258). */
+const SVELTEKIT_PAGE = /^\+page(?:@([^.]*))?\.svelte$/;
+const SVELTEKIT_LAYOUT = /^\+layout(?:@([^.]*))?\.svelte$/;
+const SVELTEKIT_LOADS: ReadonlyArray<{ readonly kind: 'server' | 'universal'; readonly file: RegExp }> = [
+  { kind: 'server', file: /^\+layout\.server\.[cm]?[jt]s$/ },
+  { kind: 'universal', file: /^\+layout\.[cm]?[jt]s$/ },
+];
+
+/** One level of a SvelteKit page's layouts: a directory with a layout file of any kind. */
+interface SveltekitLevel {
+  /** Repo-relative directory. */
+  readonly dir: string;
+  /** Its `+layout.svelte`, and what it resets to, where it has one. */
+  readonly component?: { readonly file: string; readonly reset?: string };
+}
+
+/** The directories from the routes' root down to `dir`, the root first. */
+const directoriesDown = (root: string, dir: string): string[] => {
+  const below = dir === root ? [] : dir.slice(root.length + 1).split('/');
+  return [root, ...below.map((_, index) => `${root}/${below.slice(0, index + 1).join('/')}`)];
+};
+
+/** The route id a directory of SvelteKit's routes is: `/`, `/(app)/orders`. */
+const routeIdOf = (root: string, dir: string): string => (dir === root ? '/' : `/${dir.slice(root.length + 1)}`);
+
+/**
+ * A SvelteKit page's way through its layouts (P258): every layout up the
+ * route tree wraps it, the root's outermost, unless a `@` resets the chain -
+ * `+page@(app).svelte` is wrapped by the layout of the `(app)` directory and
+ * those above it only, `+page@.svelte` by the root's, and a layout's own `@`
+ * does the same for the layouts above it. Each layout's loads run before
+ * anything is shown - every server `load` first, then every universal one -
+ * and its component then wraps the page. Each is a `calls` edge from the page
+ * in that order (`meta.order`), so a flow from the page reaches what its
+ * layouts load and what they request. A reset naming no directory above it
+ * is a row.
+ */
+const sveltekitPageFlow = (
+  ctx: ReactExtractContext,
+  sveltekit: SveltekitReading,
+  byFile: ReadonlyMap<string, IndexedFunction>,
+  page: IndexedFunction,
+  made: EmbeddedFile,
+  edge: DrawEdge,
+): void => {
+  const { root } = sveltekit;
+  const fileName = made.file.split('/').pop() ?? '';
+  const pageName = SVELTEKIT_PAGE.exec(fileName);
+  if (pageName === null || !made.file.startsWith(`${root}/`)) return;
+  const pageDir = made.file.slice(0, made.file.lastIndexOf('/'));
+  const levelAt = (dir: string): SveltekitLevel | undefined => {
+    let entries: string[];
+    try {
+      entries = readdirSync(join(ctx.repoDir, dir));
+    } catch {
+      return undefined;
+    }
+    const component = entries.map((entry) => ({ entry, match: SVELTEKIT_LAYOUT.exec(entry) })).find(({ match }) => match !== null);
+    const hasLoad = entries.some((entry) => SVELTEKIT_LOADS.some(({ file }) => file.test(entry)));
+    if (component === undefined && !hasLoad) return undefined;
+    const reset = component?.match?.[1];
+    return { dir, ...(component === undefined ? {} : { component: { file: `${dir}/${component.entry}`, ...(reset === undefined ? {} : { reset }) } }) };
+  };
+
+  // From the page up: the nearest layout at or above where the page (or the layout below) says to start.
+  const chain: SveltekitLevel[] = [];
+  let candidates = directoriesDown(root, pageDir).reverse();
+  let reset = pageName[1];
+  let from = made.file;
+  for (;;) {
+    if (reset !== undefined) {
+      const named = reset === '' ? candidates.length - 1 : candidates.findIndex((dir) => (dir === root ? '' : dir.split('/').pop()) === reset);
+      if (named === -1) {
+        layoutRow(ctx, from, 1, page.name, `@${reset}`, 'missing', 'sveltekit');
+        return;
+      }
+      candidates = candidates.slice(named);
+    }
+    const index = candidates.findIndex((dir) => levelAt(dir) !== undefined);
+    if (index === -1) break;
+    const level = levelAt(candidates[index] as string) as SveltekitLevel;
+    chain.unshift(level);
+    candidates = candidates.slice(index + 1);
+    reset = level.component?.reset;
+    from = level.component?.file ?? level.dir;
+  }
+
+  let order = 0;
+  const step = (target: IndexedFunction | undefined, meta: Record<string, unknown>): void => {
+    if (target !== undefined) edge(page, target, made.file, page.line, { ...meta, order: order++ });
+  };
+  // The `load` a file of the directory exports.
+  const loadOf = (dir: string, ownFile: RegExp): IndexedFunction | undefined => {
+    for (const indexed of ctx.functions.all()) {
+      if (indexed.name === 'load' && indexed.file.startsWith(`${dir}/`) && ownFile.test(indexed.file.slice(dir.length + 1))) return indexed;
+    }
+    return undefined;
+  };
+  const own = [
+    { kind: 'server' as const, file: /^\+page\.server\.[cm]?[jt]s$/ },
+    { kind: 'universal' as const, file: /^\+page\.[cm]?[jt]s$/ },
+  ];
+  for (const { kind, file } of SVELTEKIT_LOADS) {
+    for (const level of chain) step(loadOf(level.dir, file), { load: kind, layout: routeIdOf(root, level.dir) });
+    const pageLoad = own.find((each) => each.kind === kind);
+    if (pageLoad !== undefined) step(loadOf(pageDir, pageLoad.file), { load: kind, page: routeIdOf(root, pageDir) });
+  }
+  for (const level of chain) {
+    if (level.component !== undefined) step(byFile.get(level.component.file), { layout: routeIdOf(root, level.dir) });
+  }
+};
+
 /** Why a layout or a middleware a page names is not joined. */
 type UnmatchedName = 'missing' | 'dynamic' | 'unrendered';
 
-const layoutRow = (ctx: ReactExtractContext, file: string, line: number, page: string, name: string, why: UnmatchedName): void => {
+const layoutRow = (ctx: ReactExtractContext, file: string, line: number, page: string, name: string, why: UnmatchedName, framework: 'nuxt' | 'sveltekit' = 'nuxt'): void => {
+  const kit = framework === 'sveltekit';
   ctx.report({
     file,
     line,
@@ -436,13 +676,17 @@ const layoutRow = (ctx: ReactExtractContext, file: string, line: number, page: s
     level: why === 'missing' ? 'action' : 'info',
     symbol: `${page} layout ${name}`,
     message:
-      why === 'missing'
+      why === 'missing' && kit
+        ? `${file} resets its layouts to ${name}, and no directory above it is named ${name.slice(1)}, so which layouts wrap it is not said`
+        : why === 'missing'
         ? `${file} is shown in the layout ${name}, and no file of a layouts directory of the application is named so`
         : why === 'dynamic'
           ? `the layout ${file} is shown in is written as code (${name}), so which one is not read`
           : `${file} names the layout ${name}, and the root component renders no <NuxtLayout>, so no layout is shown`,
     hint:
-      why === 'missing'
+      why === 'missing' && kit
+        ? 'Name a directory above the file after `@` - `+page@(app).svelte` - or `@` alone for the root layout.'
+        : why === 'missing'
         ? 'Correct the name, or add the layout to `layouts/`.'
         : why === 'dynamic'
           ? 'Write the layout as a literal name in `definePageMeta` or on `<NuxtLayout name>`.'
@@ -451,7 +695,15 @@ const layoutRow = (ctx: ReactExtractContext, file: string, line: number, page: s
   });
 };
 
-const middlewareRow = (ctx: ReactExtractContext, file: string, line: number, page: string, name: string, why: Exclude<UnmatchedName, 'unrendered'>): void => {
+const middlewareRow = (
+  ctx: ReactExtractContext,
+  file: string,
+  line: number,
+  page: string,
+  name: string,
+  why: Exclude<UnmatchedName, 'unrendered'>,
+  by: 'page' | 'plugin' = 'page',
+): void => {
   ctx.report({
     file,
     line,
@@ -460,9 +712,16 @@ const middlewareRow = (ctx: ReactExtractContext, file: string, line: number, pag
     symbol: `${page} middleware ${name}`,
     message:
       why === 'missing'
-        ? `${file} names the route middleware ${name}, and no file of a middleware directory of the application, and no module, gives one of that name`
-        : `a route middleware ${file} names is written as code (${name}), so which one is not read`,
-    hint: why === 'missing' ? 'Correct the name, or add the middleware to `middleware/`.' : 'Write the middleware as a literal name in `definePageMeta`.',
+        ? `${file} names the route middleware ${name}, and no file of a middleware directory of the application, no module and no plugin gives one of that name`
+        : by === 'plugin'
+          ? `${file} adds a route middleware whose name or function is written as code (${name}), so which pages it runs in front of, and what it runs, is not read`
+          : `a route middleware ${file} names is written as code (${name}), so which one is not read`,
+    hint:
+      why === 'missing'
+        ? 'Correct the name, or add the middleware to `middleware/`.'
+        : by === 'plugin'
+          ? "Write `addRouteMiddleware('name', (to) => ..., { global })` with a literal name and the function in place or imported."
+          : 'Write the middleware as a literal name in `definePageMeta`.',
     meta: { cause: 'route-middleware-unresolved', why, middleware: name },
   });
 };

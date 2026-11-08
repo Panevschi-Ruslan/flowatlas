@@ -1,5 +1,7 @@
 import {
   applicationOfFile,
+  builtQueryInAddress,
+  builtQueryOf,
   declaredParameterType,
   enclosingMethod,
   evaluateExpression,
@@ -11,6 +13,9 @@ import {
   narrowUnionByLiteral,
   parametersOf,
   PLATFORM_FETCH,
+  PLATFORM_HEADERS,
+  PLATFORM_QUERY,
+  writtenHeaderNames,
   requestBodyOf,
   requestVerbOf,
   resolveTypeOrigin,
@@ -29,6 +34,7 @@ import {
   type DescribedRequest,
   type CallFrame,
   type ClassMethod,
+  type QueryBuilder,
   type TypeOrigin,
 } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode } from 'ts-morph';
@@ -106,13 +112,32 @@ interface Spelling {
   readonly intercepted?: true;
   /** The query the call writes among its options, where its client has one (P256). */
   readonly query?: (network: CallExpression) => QueryShape;
+  /** The names of the headers the call writes among its options (P258). */
+  readonly headers?: (network: CallExpression) => readonly string[] | undefined;
 }
+
+/**
+ * What builds a query in code here (P258): the framework's `HttpParams`,
+ * whose `set` and `append` hand back a new one, and the platform's own.
+ */
+const QUERY_BUILDERS: readonly QueryBuilder[] = [
+  { class: 'HttpParams', object: 'fromObject', text: 'fromString', adds: ['set', 'append'], immutable: true },
+  PLATFORM_QUERY,
+];
+
+/** What builds headers in code here (P258): the framework's `HttpHeaders`, and the platform's own. */
+const HEADER_BUILDERS: readonly QueryBuilder[] = [
+  { class: 'HttpHeaders', object: '', adds: ['set', 'append'], immutable: true },
+  PLATFORM_HEADERS,
+];
 
 /** A query written among a request's options: its type, its keys where an object is written, or `unread` (P256). */
 interface QueryShape {
   readonly type?: string;
   readonly keys?: readonly string[];
   readonly unread?: true;
+  /** Its keys include those of a query built into the address (P258). */
+  readonly inAddress?: true;
 }
 
 /**
@@ -152,25 +177,52 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
       typedAnswer: true,
       client: { package: ANGULAR_HTTP },
       intercepted: true,
-      ...(shape.optionsIndex === null ? {} : { query: (network: CallExpression) => queryAt(network, shape.optionsIndex as number) }),
+      ...(shape.optionsIndex === null
+        ? {}
+        : {
+            query: (network: CallExpression) => queryAt(network, shape.optionsIndex as number, shape.urlIndex),
+            headers: (network: CallExpression) => headersAt(network, shape.optionsIndex as number),
+          }),
     };
+  };
+
+  /** The names of the headers an options object written at `index` writes: an object, or `HttpHeaders` built by calls (P258). */
+  const headersAt = (network: CallExpression, index: number): readonly string[] | undefined => {
+    const options = network.getArguments()[index];
+    if (options === undefined || !Node.isObjectLiteralExpression(options)) return undefined;
+    const property = options.getProperty('headers');
+    const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+    return written === undefined ? undefined : writtenHeaderNames(written, HEADER_BUILDERS);
   };
 
   /**
    * The framework client's query, its options' `params` (P256): the keys of
    * an object written there, its type either way; `unread` where the options
-   * are handed by a name. `HttpParams` built by calls is a type with no
-   * shape, and says nothing a key could be compared by.
+   * are handed by a name. `HttpParams` built by calls - a chain of `.set`,
+   * `params = params.append(...)`, `{ fromObject }` - and `URLSearchParams`
+   * carry the keys each call writes (P258), and a query built so into the
+   * address its keys too.
    */
-  const queryAt = (network: CallExpression, index: number): QueryShape => {
+  const queryAt = (network: CallExpression, index: number, urlIndex: number): QueryShape => {
+    const address = network.getArguments()[urlIndex];
+    const inAddress = address === undefined ? undefined : builtQueryInAddress(address, QUERY_BUILDERS);
+    const withAddress = (among: QueryShape): QueryShape => {
+      if (inAddress === undefined) return among;
+      if ('unread' in inAddress || among.unread === true) return { ...(among.type === undefined ? {} : { type: among.type }), unread: true };
+      if (among.type !== undefined && among.keys === undefined) return among;
+      return { ...(among.type === undefined ? {} : { type: among.type }), keys: [...new Set([...inAddress.keys, ...(among.keys ?? [])])].sort(), inAddress: true };
+    };
     const options = network.getArguments()[index];
-    if (options === undefined) return {};
-    if (!Node.isObjectLiteralExpression(options)) return { unread: true };
+    if (options === undefined) return withAddress({});
+    if (!Node.isObjectLiteralExpression(options)) return withAddress({ unread: true });
     const property = options.getProperty('params');
     const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
-    if (written === undefined) return {};
+    if (written === undefined) return withAddress({});
+    const type = ctx.types.collectType(written.getType(), written);
+    const built = builtQueryOf(written, QUERY_BUILDERS);
+    if (built !== undefined) return withAddress('unread' in built ? { type, unread: true } : { type, keys: built.keys });
     const keys = writtenKeysOf([written]);
-    return { type: ctx.types.collectType(written.getType(), written), ...(keys === undefined ? {} : { keys }) };
+    return withAddress({ type, ...(keys === undefined ? {} : { keys }) });
   };
 
   /** The platform's client, read through the one description of it. */
@@ -192,6 +244,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     },
     typedAnswer: false,
     client: { package: null, client: PLATFORM_FETCH.name },
+    headers: (network) => headersAt(network, PLATFORM_FETCH.optionsAt),
   };
 
   const typeOfResponse = (call: CallExpression): string | null => {
@@ -338,6 +391,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     const body = spelling.body(network, frames);
     const bodyType = body.type;
     const query = spelling.query?.(network) ?? {};
+    const headers = spelling.headers?.(network);
     const application = applicationOfFile(ctx.meta, file);
 
     ctx.builder.addNode({
@@ -366,6 +420,9 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         ...(query.type === undefined ? {} : { queryType: query.type }),
         ...(query.keys === undefined ? {} : { queryKeys: query.keys }),
         ...(query.unread === true ? { queryUnread: true } : {}),
+        ...(query.inAddress === true ? { queryInAddress: true } : {}),
+        // The headers it writes, for a procedure whose input takes them (P258).
+        ...(headers === undefined ? {} : { headerKeys: headers }),
         ...spelling.client,
         // Which application this request is written in, where the service holds
         // more than one; the other half of what an entry records about its own

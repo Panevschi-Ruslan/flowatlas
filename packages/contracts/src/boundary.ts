@@ -263,12 +263,14 @@ const pathParamsOf = (raw: string): string[] =>
  * Nothing where the address has no query; `unread` where a part of it is not
  * a key written as text - a query string built elsewhere, spliced in.
  */
-const queryOfAddress = (url: unknown): { keys: string[] } | 'unread' | undefined => {
+const queryOfAddress = (url: unknown, builtIn = false): { keys: string[] } | 'unread' | undefined => {
   if (typeof url !== 'string' || !url.includes('?')) return undefined;
   const query = url.slice(url.indexOf('?') + 1).split('#')[0] ?? '';
   const keys: string[] = [];
   for (const part of query.split('&')) {
     if (part === '') continue;
+    // A query built in code and written in here, whose keys the reader recorded beside (P258).
+    if (builtIn && /^\$\{[^}]*\}$/.test(part)) continue;
     const key = /^([A-Za-z_$][\w$\-[\].]*)(?:=|$)/.exec(part)?.[1];
     if (key === undefined) return 'unread';
     keys.push(topKey(key));
@@ -345,7 +347,7 @@ const twinExchanges = (
   const params = pathParamsOf(typeof route['rawPath'] === 'string' ? route['rawPath'] : '');
 
   // The query: keys the address writes, and what the call's options hand under their query option.
-  const addressed = queryOfAddress(asked['url']);
+  const addressed = queryOfAddress(asked['url'], asked['queryInAddress'] === true);
   const optionKeys = stringsIn(asked['queryKeys'])?.map(topKey);
   const optionType = typeof asked['queryType'] === 'string' ? asked['queryType'] : undefined;
   const queryUnread = addressed === 'unread' || asked['queryUnread'] === true || (optionType !== undefined && optionKeys === undefined && !namesAShape(optionType));
@@ -361,11 +363,13 @@ const twinExchanges = (
   const usesQuery = detailedIn || verb === 'GET';
   const usesBody = detailedIn || verb !== 'GET';
 
-  // `detailed`: each part the call writes under its own key. The headers are
-  // not read, and a part nothing writes is not sent.
+  // `detailed`: each part the call writes under its own key, the headers by
+  // the names it writes in place (P258); a part nothing writes is not sent.
+  const headerKeys = stringsIn(asked['headerKeys']);
   const parts: Array<[string, TypeRefAst | undefined]> = [
     ['params', fieldsShape(params)],
     ['query', queryShape],
+    ['headers', headerKeys === undefined || headerKeys.length === 0 ? undefined : fieldsShape(headerKeys)],
     ['body', bodyShape],
   ];
   const sentParts = parts.filter((part): part is [string, TypeRefAst] => part[1] !== undefined);

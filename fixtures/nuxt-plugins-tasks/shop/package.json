@@ -1,0 +1,9 @@
+{
+  "name": "plugins-tasks-shop",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "element-plus": "^2.8.0",
+    "nuxt": "^4.1.0"
+  }
+}

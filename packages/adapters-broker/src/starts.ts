@@ -89,7 +89,7 @@ const surenessOf = (element: AddressedElement, table?: Readonly<Record<string, s
   return 'names' in named ? 2 : element.awaiting === undefined ? 0 : 1;
 };
 
-const NOUNS: Readonly<Record<StartedEntry['entry'], string>> = { workflow: 'workflow', invoke: 'function' };
+const NOUNS: Readonly<Record<StartedEntry['entry'], string>> = { workflow: 'workflow', invoke: 'function', task: 'task' };
 
 const isBuiltin = (specifier: string): boolean =>
   specifier.startsWith('node:') || builtinModules.includes(specifier.split('/')[0] ?? specifier);

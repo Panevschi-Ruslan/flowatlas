@@ -1,5 +1,7 @@
 import {
   applicationOfFile,
+  builtQueryInAddress,
+  builtQueryOf,
   forEachCall,
   makeExternalApiId,
   isPlatformProvided,
@@ -15,6 +17,9 @@ import {
   writtenKeysOf,
   describedRequestsAt,
   PLATFORM_FETCH,
+  PLATFORM_HEADERS,
+  PLATFORM_QUERY,
+  writtenHeaderNames,
   precedenceOf,
   precedenceRows,
   toPosixPath,
@@ -113,6 +118,9 @@ const isClientValue = (origin: TypeOrigin | null, client: RequestClient): boolea
  * the types on both sides of it — because everything downstream of here is
  * framework-independent and was proved so by the other reader.
  */
+/** What builds a query in code in a browser: the platform's own (P258). */
+const QUERY_BUILDERS = [PLATFORM_QUERY];
+
 export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   const apiBaseEnv = ctx.service.apiBaseEnv ?? [];
 
@@ -186,20 +194,40 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    * written there. `unread` where the options are handed by a name, which
    * may hold a query nothing here can see.
    */
-  const queryOf = (call: CallExpression, shape: CallShape): { type?: string; keys?: readonly string[]; unread?: true } => {
-    if (shape.queryKeys === undefined || shape.optionsAt === undefined) return {};
+  const queryOf = (call: CallExpression, shape: CallShape): { type?: string; keys?: readonly string[]; unread?: true; inAddress?: true } => {
+    // A query built in code and written into the address: `` `/orders?${params}` `` (P258).
+    const address = shape.urlKey === undefined ? call.getArguments()[shape.urlAt] : undefined;
+    const inAddress = address === undefined ? undefined : builtQueryInAddress(address, QUERY_BUILDERS);
+    const withAddress = (among: { type?: string; keys?: readonly string[]; unread?: true }): { type?: string; keys?: readonly string[]; unread?: true; inAddress?: true } => {
+      if (inAddress === undefined) return among;
+      if ('unread' in inAddress || among.unread === true) return { ...(among.type === undefined ? {} : { type: among.type }), unread: true };
+      if (among.type !== undefined && among.keys === undefined) return among;
+      return { ...(among.type === undefined ? {} : { type: among.type }), keys: [...new Set([...inAddress.keys, ...(among.keys ?? [])])].sort(), inAddress: true };
+    };
+    if (shape.queryKeys === undefined || shape.optionsAt === undefined) return withAddress({});
     const argument = call.getArguments()[shape.optionsAt];
-    if (argument === undefined) return {};
+    if (argument === undefined) return withAddress({});
     const object = objectAt(call, shape.optionsAt);
-    if (object === undefined) return { unread: true };
+    if (object === undefined) return withAddress({ unread: true });
     for (const key of shape.queryKeys) {
       const property = object.getProperty(key);
       const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : valueOf(object, key);
       if (written === undefined) continue;
+      const type = ctx.types.collectType(written.getType(), written);
+      // `params: new URLSearchParams({ status })`, or a name holding one filled in by calls (P258).
+      const built = builtQueryOf(written, QUERY_BUILDERS);
+      if (built !== undefined) return withAddress('unread' in built ? { type, unread: true } : { type, keys: built.keys });
       const keys = writtenKeysOf([written]);
-      return { type: ctx.types.collectType(written.getType(), written), ...(keys === undefined ? {} : { keys }) };
+      return withAddress({ type, ...(keys === undefined ? {} : { keys }) });
     }
-    return {};
+    return withAddress({});
+  };
+
+  /** The names of the headers a call writes among its options, where it writes them so (P258). */
+  const headersOf = (call: CallExpression, shape: CallShape): readonly string[] | undefined => {
+    const object = shape.optionsAt === undefined ? undefined : objectAt(call, shape.optionsAt);
+    const written = object === undefined ? undefined : valueOf(object, 'headers');
+    return written === undefined ? undefined : writtenHeaderNames(written, [PLATFORM_HEADERS]);
   };
 
   /** The body a described client's call writes where its description says (P121). */
@@ -352,6 +380,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       handedIn !== undefined ? handedIn : found.described !== undefined ? found.described.verb : verbOf(network, shape, request.calls);
     const body = found.described === undefined ? bodyOf(network, client, shape) : describedBodyOf(found.described);
     const query = found.described === undefined ? queryOf(network, shape) : {};
+    const headers = found.described === undefined ? headersOf(network, shape) : undefined;
     const application = applicationOfFile(ctx.meta, site.file);
 
     ctx.builder.addNode({
@@ -374,6 +403,10 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         ...(query.type === undefined ? {} : { queryType: query.type }),
         ...(query.keys === undefined ? {} : { queryKeys: query.keys }),
         ...(query.unread === true ? { queryUnread: true } : {}),
+        // Its keys include those of a query built into the address, which the address shows as `${…}` (P258).
+        ...(query.inAddress === true ? { queryInAddress: true } : {}),
+        // The headers it writes, for a procedure whose input takes them (P258).
+        ...(headers === undefined ? {} : { headerKeys: headers }),
         package: client.package,
         client: client.name,
         // Which application this request is written in, where the service holds

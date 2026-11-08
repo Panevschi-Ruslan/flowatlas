@@ -224,6 +224,29 @@ describe("the query a framework request writes in its options' params (P256)", (
     expect(at('/b')).toMatchObject({ queryUnread: true });
     expect(at('/c')['queryKeys']).toBeUndefined();
   });
+
+  it('records the keys of `HttpParams` built by calls, and the names of the headers written, and says a key written as code (P258)', () => {
+    const graph = extract(
+      `
+  a(q: string): Observable<OrderDto> { return this.http.get<OrderDto>('/a', { params: new HttpParams().set('q', q).append('limit', '10') }); }
+  b(): Observable<OrderDto> {
+    let params = new HttpParams({ fromObject: { category: 'tea' } });
+    params = params.set('page', '2');
+    return this.http.get<OrderDto>('/b', { params, headers: new HttpHeaders({ 'X-Tenant': 'north' }).set('X-Trace', '1') });
+  }
+  c(key: string): Observable<OrderDto> { return this.http.get<OrderDto>('/c', { params: new HttpParams().set(key, '1') }); }
+  d(): Observable<OrderDto> { return this.http.get<OrderDto>(\`/d?\${new URLSearchParams({ sort: 'asc' })}\`); }
+`,
+      {},
+      `declare class HttpParams { constructor(options?: unknown); set(key: string, value: string): HttpParams; append(key: string, value: string): HttpParams; }
+declare class HttpHeaders { constructor(headers?: Record<string, string>); set(name: string, value: string): HttpHeaders; }`,
+    );
+    const at = (path: string) => callsOf(graph).find((node) => String(node.meta?.['path']).startsWith(path))?.meta ?? {};
+    expect(at('/a')).toMatchObject({ queryKeys: ['limit', 'q'] });
+    expect(at('/b')).toMatchObject({ queryKeys: ['category', 'page'], headerKeys: ['x-tenant', 'x-trace'] });
+    expect(at('/c')).toMatchObject({ queryUnread: true });
+    expect(at('/d')).toMatchObject({ queryKeys: ['sort'] });
+  });
 });
 
 describe('a request made with the platform client (R140)', () => {

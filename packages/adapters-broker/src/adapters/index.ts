@@ -279,12 +279,42 @@ const socketio: BrokerSpec = {
   channelKind: 'channel',
 };
 
+/**
+ * Nitro's tasks (P258): `runTask('db:migrate', { payload })` runs the task of
+ * that name - a file of the server's `tasks/` - and nothing else, so it is a
+ * start of the entry the name is the whole address of, as a function invoked
+ * by its deployed name is. Written with no import in Nuxt, imported from
+ * Nitro's runtime outside it; the name is the first argument and what the
+ * task is handed the `payload` of the second.
+ */
+const nitroTasks: BrokerSpec = {
+  name: 'nitro-tasks',
+  detect: (pkg) => hasAnyDependency(pkg, ['nuxt', 'nitropack', 'nitro']),
+  producerPatterns: [
+    {
+      method: 'runTask',
+      calledAs: 'function',
+      channelArg: -1,
+      channel: FIRST_ARGUMENT,
+      payloadArg: 1,
+      payloadPath: ['payload'],
+      kind: 'task',
+      starts: { entry: 'task' },
+    },
+  ],
+  consumerDecorators: [],
+  consumerPatterns: [],
+  // A run names no channel, so this is never read.
+  channelKind: 'channel',
+};
+
 export const brokerAdapters: readonly BrokerSpec[] = [
   kafka,
   rabbitmq,
   bullmq,
   redisPubSub,
   socketio,
+  nitroTasks,
   ...awsBrokerAdapters,
 ];
 

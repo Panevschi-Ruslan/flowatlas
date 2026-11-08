@@ -1,9 +1,15 @@
 import { join } from 'node:path';
 import {
+  configValueAt,
   hasAnyDependency,
   lineAndColumnAt,
   makeEntryId,
+  makeEntryReference,
   makeHttpEntryKey,
+  makeTaskEntryKey,
+  NotLiteral,
+  readConfigLiteral,
+  REACHES_META,
   normalizeFilePath,
   normalizePath,
   type EntryAdapter,
@@ -13,10 +19,21 @@ import {
   type PackageJson,
   type RequestReadingDescription,
   type Unresolved,
+  type WrappingLayer,
 } from '@flowatlas/core';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { keptByLayer, nuxtApplicationOf, nuxtConventions, nuxtLayerOf, sveltekitRoutesOf, withinLayer, type LayerClaim } from './framework-conventions.js';
+import {
+  keptByLayer,
+  nuxtApplicationOf,
+  nuxtConventions,
+  nuxtLayerOf,
+  settingRow,
+  sveltekitRoutesOf,
+  withinLayer,
+  type LayerClaim,
+  type NuxtLayer,
+} from './framework-conventions.js';
 import { moduleRouteOf, type NuxtModule } from './nuxt-modules.js';
 import { routeAddressOfFile, routePathOfFile, type FsRouter } from './fs-routes.js';
 import { readingOf } from './request-readings.js';
@@ -183,6 +200,189 @@ const middlewareOf = (ctx: ExtractContext, modules: readonly NuxtModule[]): Entr
   ),
 ];
 
+/** A directory read as a server is (P258): a part's server, or one a module adds, with the part it ranks with. */
+interface ServerRoot {
+  /** Repo-relative. */
+  readonly dir: string;
+  readonly layer: NuxtLayer | undefined;
+  readonly rank: number;
+  /** How its files are registered, for an entry's `meta.registration`. */
+  readonly registration: string;
+}
+
+/** Every directory a server is read from: each part's, Nitro's own `server/` without Nuxt, and each a module adds (P255). */
+const serverRootsOf = (layers: readonly NuxtLayer[], modules: readonly NuxtModule[]): ServerRoot[] => [
+  ...(layers.length === 0
+    ? [{ dir: 'server', layer: undefined, rank: 0, registration: 'server' }]
+    : layers.map((layer, rank) => ({ dir: layer.layout.serverDir, layer, rank, registration: 'server' }))),
+  ...scanDirsOf(modules).map(({ dir, module }) => ({ dir, layer: module.layer, rank: module.rank, registration: 'module/addServerScanDir' })),
+];
+
+/** The root a file is under, and its path below it. */
+const underRoot = (roots: readonly ServerRoot[], file: string, sub: string): { root: ServerRoot; rest: string } | undefined => {
+  for (const root of roots) {
+    const base = root.dir === '' || root.dir === '.' ? `${sub}/` : `${root.dir}/${sub}/`;
+    if (file.startsWith(base)) return { root, rest: file.slice(base.length) };
+  }
+  return undefined;
+};
+
+const SCRIPT = /\.[cm]?[jt]s$/;
+
+/**
+ * The hooks of Nitro's application a plugin hooks into that run with every
+ * request (P258): `request` in front of every handler, as a middleware is;
+ * `beforeResponse` and `afterResponse` around it, as an interceptor is.
+ */
+const PLUGIN_HOOKS: ReadonlyMap<string, WrappingLayer> = new Map([
+  ['request', 'middleware'],
+  ['beforeResponse', 'interceptor'],
+  ['afterResponse', 'interceptor'],
+]);
+
+/**
+ * What every server plugin hooks into with each request (P258), in the order
+ * Nitro runs the plugins: each a module adds (`addServerPlugin`), then each
+ * file of a server's `plugins/` - the parts', then those of a directory a
+ * module adds - each `nitroApp.hooks.hook('request', fn)` it makes. In front:
+ * the `request` hooks; behind the handler: `beforeResponse` and
+ * `afterResponse`.
+ */
+const pluginHooksOf = (ctx: ExtractContext, roots: readonly ServerRoot[], modules: readonly NuxtModule[]): { before: EntryWrapping[]; after: EntryWrapping[] } => {
+  const files: Array<{ file: string; source: string }> = [
+    ...modules.flatMap((module) => module.additions.serverPlugins.map((plugin) => ({ file: plugin.file, source: 'module/addServerPlugin' }))),
+    ...[...repoSources(ctx)]
+      .map((sourceFile) => {
+        const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
+        const found = underRoot(roots, file, 'plugins');
+        return { file, at: found === undefined || !SCRIPT.test(found.rest) || found.rest.includes('/') ? -1 : roots.indexOf(found.root) };
+      })
+      .filter(({ at }) => at !== -1)
+      // Each directory's in turn, the parts' before those modules add, each in the order of its files.
+      .sort((a, b) => a.at - b.at || (a.file < b.file ? -1 : a.file > b.file ? 1 : 0))
+      .map(({ file }) => ({ file, source: 'server/plugins' })),
+  ];
+  const before: EntryWrapping[] = [];
+  const after: EntryWrapping[] = [];
+  const seen = new Set<string>();
+  for (const { file, source } of files) {
+    if (seen.has(file)) continue;
+    seen.add(file);
+    const sourceFile = ctx.project.getSourceFile(join(ctx.repoDir, file));
+    if (sourceFile === undefined || !sourceFile.getFullText().includes('hook')) continue;
+    const name = file.split('/').pop()?.replace(SCRIPT, '') ?? file;
+    sourceFile.forEachDescendant((node) => {
+      if (!Node.isCallExpression(node) || !/\.hooks\.hook$/.test(node.getExpression().getText())) return;
+      const [hookNode, fn] = node.getArguments();
+      const hook = hookNode !== undefined && (Node.isStringLiteral(hookNode) || Node.isNoSubstitutionTemplateLiteral(hookNode)) ? hookNode.getLiteralValue() : undefined;
+      const layer = hook === undefined ? undefined : PLUGIN_HOOKS.get(hook);
+      if (layer === undefined || fn === undefined) return;
+      const wrapping: EntryWrapping = { label: `${name} ${hook}`, layer, scope: 'global', source, file, line: lineAndColumnAt(sourceFile, fn.getStart()).line, kind: 'hook' };
+      (hook === 'request' ? before : after).push(wrapping);
+    });
+  }
+  return { before, after };
+};
+
+/** The function `defineTask({ run })` runs: the default export's `run`. */
+const taskRunOf = (sourceFile: SourceFile): TsNode | undefined => {
+  const exported = sourceFile.getExportAssignment((each) => !each.isExportEquals())?.getExpression();
+  if (exported === undefined || !Node.isCallExpression(exported) || !/(?:^|\.)defineTask$/.test(exported.getExpression().getText())) return undefined;
+  const [first] = exported.getArguments();
+  if (first === undefined || !Node.isObjectLiteralExpression(first)) return undefined;
+  const run = first.getProperty('run');
+  if (run !== undefined && Node.isMethodDeclaration(run)) return run;
+  return run !== undefined && Node.isPropertyAssignment(run) ? run.getInitializer() : undefined;
+};
+
+/**
+ * Nitro's tasks (P258): each file of a server's `tasks/` is a task named by
+ * its path below it, `/` read as `:` (`tasks/db/migrate.ts` is `db:migrate`),
+ * a way in of its own whose handler is what `defineTask({ run })` runs. A
+ * task two parts give is the higher part's.
+ */
+const taskEntriesOf = (ctx: ExtractContext, roots: readonly ServerRoot[]): EntryNode[] => {
+  type TaskClaim = LayerClaim & { sourceFile: SourceFile; name: string; registration: string };
+  const claims: TaskClaim[] = [];
+  for (const sourceFile of repoSources(ctx)) {
+    const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
+    const found = underRoot(roots, file, 'tasks');
+    if (found === undefined || !SCRIPT.test(found.rest) || /\.d\.[cm]?ts$/.test(found.rest)) continue;
+    const name = found.rest.replace(SCRIPT, '').split('/').join(':');
+    claims.push({ key: name, label: `the task ${name}`, file, layer: found.root.layer, rank: found.root.rank, sourceFile, name, registration: `${found.root.registration}/tasks` });
+  }
+  const { kept, rows } = keptByLayer(claims, 'serves');
+  for (const row of rows) ctx.builder.addUnresolved(row);
+  return kept.map(({ sourceFile, file, name, registration }) => {
+    const label = `task ${name}`;
+    const handler = inlineHandlerOf(taskRunOf(sourceFile), label, ctx);
+    if (handler === undefined) {
+      ctx.builder.addUnresolved({
+        file,
+        line: 1,
+        reason: 'fs-route-handler-not-read',
+        level: 'action',
+        message: `${file} is the task ${name}, and its default export is not \`defineTask({ run })\` written in place`,
+        hint: 'Export `defineTask({ meta, run(event) { ... } })` as the default.',
+        symbol: label,
+        adapter: 'nitro-routes',
+      });
+    }
+    const key = makeTaskEntryKey(name);
+    return {
+      id: makeEntryId(ctx.repo, 'task', key),
+      kind: 'task',
+      label,
+      key,
+      ...(handler === undefined ? {} : { handler }),
+      file,
+      line: handler?.line ?? 1,
+      meta: { task: name, adapter: 'nitro-routes', registration: registration === 'server/tasks' ? 'server/tasks' : 'module/addServerScanDir' },
+    };
+  });
+};
+
+const NUXT_CONFIG_FILES = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs', 'nuxt.config.mts', 'nuxt.config.cjs'];
+const NITRO_CONFIG_FILES = ['nitro.config.ts', 'nitro.config.js', 'nitro.config.mjs', 'nitro.config.mts'];
+
+/**
+ * Nitro's `scheduledTasks` (P258): each cron expression a way in of the
+ * `cron` kind that runs the tasks it lists, joined to each by its name. Read
+ * from `nitro.scheduledTasks` of Nuxt's configuration, or `scheduledTasks`
+ * of Nitro's; written as code, a row.
+ */
+const scheduleEntriesOf = (ctx: ExtractContext, nuxt: boolean): EntryNode[] => {
+  const config = readConfigLiteral(ctx.repoDir, nuxt ? NUXT_CONFIG_FILES : NITRO_CONFIG_FILES);
+  if (config === undefined) return [];
+  const setting = nuxt ? 'nitro.scheduledTasks' : 'scheduledTasks';
+  const written = configValueAt(config.value, setting);
+  const configFile = normalizeFilePath(config.file, ctx.repoDir);
+  if (written === undefined) return [];
+  if (written instanceof NotLiteral || typeof written !== 'object' || written === null || Array.isArray(written)) {
+    ctx.builder.addUnresolved(settingRow(configFile, 'nitro-routes', nuxt ? 'Nuxt' : 'Nitro', setting, 'no schedule'));
+    return [];
+  }
+  const entries: EntryNode[] = [];
+  for (const [cron, listed] of Object.entries(written as Record<string, unknown>)) {
+    const tasks = typeof listed === 'string' ? [listed] : Array.isArray(listed) && listed.every((each) => typeof each === 'string') ? (listed as string[]) : undefined;
+    if (tasks === undefined) {
+      ctx.builder.addUnresolved(settingRow(configFile, 'nitro-routes', nuxt ? 'Nuxt' : 'Nitro', `${setting}['${cron}']`, 'no task for it'));
+      continue;
+    }
+    const key = `scheduledTasks ${cron}`;
+    entries.push({
+      id: makeEntryId(ctx.repo, 'cron', key),
+      kind: 'cron',
+      label: `cron ${cron}`,
+      key,
+      file: configFile,
+      line: 1,
+      meta: { schedule: cron, adapter: 'nitro-routes', registration: 'nitro/scheduledTasks', [REACHES_META]: tasks.map((task) => makeEntryReference('task', makeTaskEntryKey(task))) },
+    });
+  }
+  return entries;
+};
+
 export const nitroRoutesAdapter: EntryAdapter = {
   name: 'nitro-routes',
   detect: (pkg) => hasAnyDependency(pkg, ['nuxt', 'nitropack', 'h3']),
@@ -202,7 +402,10 @@ export const nitroRoutesAdapter: EntryAdapter = {
     const application = hasAnyDependency(ctx.pkg, ['nuxt']) ? nuxtApplicationOf(ctx.repoDir, ctx.pkg) : undefined;
     const layers = application?.layers ?? [];
     const modules = application?.modules.modules ?? [];
-    const wrapping = middlewareOf(ctx, modules);
+    const roots = serverRootsOf(layers, modules);
+    // A plugin's `request` hooks run before any handler of the server, its middleware's included (P258).
+    const hooks = pluginHooksOf(ctx, roots, modules);
+    const wrapping = [...hooks.before, ...middlewareOf(ctx, modules), ...hooks.after];
     const entries: EntryNode[] = [];
     type Claim = LayerClaim & {
       sourceFile: SourceFile | undefined;
@@ -286,6 +489,8 @@ export const nitroRoutesAdapter: EntryAdapter = {
         },
       });
     }
+    // Tasks and what runs them on a schedule (P258).
+    entries.push(...taskEntriesOf(ctx, roots), ...scheduleEntriesOf(ctx, application !== undefined));
     return entries;
   },
 };

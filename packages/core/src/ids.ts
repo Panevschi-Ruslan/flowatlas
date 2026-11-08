@@ -445,6 +445,15 @@ export const isImportedName = (name: string): boolean => name.startsWith(IMPORTE
 export const makeWorkflowEntryKey = (name: string): string => required('name', name);
 
 /**
+ * The `key` half of a `task` entry id: the name the task is registered and
+ * run under (P258), exactly as written - `db:migrate`.
+ *
+ * The name is the whole address, as a deployed name is: code that runs the
+ * task, and a schedule that does, names it and nothing else.
+ */
+export const makeTaskEntryKey = (name: string): string => required('name', name);
+
+/**
  * The `key` of a `workflow` entry whose deployed name was not read, for the
  * reason {@link makeUnnamedInvokeKey} gives: the steps are still worth drawing,
  * and nothing may join to them by a name made of the parts that were read.
@@ -524,12 +533,13 @@ export const REACHED_AS_META = 'reachedAs';
  */
 export const RESULT_OF_META = 'resultOf';
 
-/** The kinds of entry a deployed name is the whole address of. */
-export type DeployedEntryKind = Extract<EntryKind, 'invoke' | 'workflow'>;
+/** The kinds of entry a name is the whole address of: one it is deployed under, or a task's own (P258). */
+export type DeployedEntryKind = Extract<EntryKind, 'invoke' | 'workflow' | 'task'>;
 
 const DEPLOYED_KEYS: Readonly<Record<DeployedEntryKind, (name: string) => string>> = {
   invoke: makeInvokeEntryKey,
   workflow: makeWorkflowEntryKey,
+  task: makeTaskEntryKey,
 };
 
 export const isDeployedEntryKind = (value: unknown): value is DeployedEntryKind =>

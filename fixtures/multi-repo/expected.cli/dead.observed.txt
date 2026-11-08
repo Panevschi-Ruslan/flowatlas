@@ -1,5 +1,5 @@
 nothing here is proof: every row is a heuristic with the reason it fired
-entry kinds never reported (triggered from outside): cron, bot_command, bot_callback, bot_event, scene_step, invoke
+entry kinds never reported (triggered from outside): cron, bot_command, bot_callback, bot_event, scene_step, invoke, task
 traffic over 2h: seen is alive whatever the code says; never seen is strong only beside a busy neighbour
 
 entries:

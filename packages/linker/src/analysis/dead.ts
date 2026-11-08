@@ -25,6 +25,9 @@ export const EXTERNALLY_TRIGGERED = [
   // nothing in the graph reaching it still says nothing about whether anything
   // does.
   'invoke',
+  // A task runs on a schedule, from code that names it, and from a command
+  // or a development endpoint a person uses; only the first two are read (P258).
+  'task',
 ] as const;
 
 /** Findings the DI resolver records when it cannot say what a token means. */

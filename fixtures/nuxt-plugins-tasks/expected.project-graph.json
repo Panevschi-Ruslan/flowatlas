@@ -1,0 +1,1442 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T14:41:40.339Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:cron:scheduledTasks 0 * * * *",
+      "type": "entry",
+      "label": "cron 0 * * * *",
+      "repo": "shop",
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "kind": "cron",
+      "meta": {
+        "schedule": "0 * * * *",
+        "adapter": "nitro-routes",
+        "registration": "nitro/scheduledTasks",
+        "reaches": [
+          "task:orders:expire"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:cron:scheduledTasks 0 3 * * *",
+      "type": "entry",
+      "label": "cron 0 3 * * *",
+      "repo": "shop",
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "kind": "cron",
+      "meta": {
+        "schedule": "0 3 * * *",
+        "adapter": "nitro-routes",
+        "registration": "nitro/scheduledTasks",
+        "reaches": [
+          "task:db:backup",
+          "task:reports:daily"
+        ]
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/reports/access",
+      "type": "entry",
+      "label": "GET /api/reports/access",
+      "repo": "shop",
+      "file": "modules/reports/runtime/server/api/reports/access.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reports/access",
+        "rawPath": "/api/reports/access",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/session",
+      "type": "entry",
+      "label": "GET /api/session",
+      "repo": "shop",
+      "file": "server/api/session.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/session",
+        "rawPath": "/api/session",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/audit",
+      "type": "entry",
+      "label": "POST /api/audit",
+      "repo": "shop",
+      "file": "server/api/audit.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/audit",
+        "rawPath": "/api/audit",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/orders/expire",
+      "type": "entry",
+      "label": "POST /api/orders/expire",
+      "repo": "shop",
+      "file": "server/api/orders/expire.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/orders/expire",
+        "rawPath": "/api/orders/expire",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/visits",
+      "type": "entry",
+      "label": "POST /api/visits",
+      "repo": "shop",
+      "file": "server/api/visits.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/visits",
+        "rawPath": "/api/visits",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:task:orders:expire",
+      "type": "entry",
+      "label": "task orders:expire",
+      "repo": "shop",
+      "file": "server/tasks/orders/expire.ts",
+      "line": 5,
+      "kind": "task",
+      "meta": {
+        "task": "orders:expire",
+        "adapter": "nitro-routes",
+        "registration": "server/tasks"
+      }
+    },
+    {
+      "id": "entry:shop:task:reports:daily",
+      "type": "entry",
+      "label": "task reports:daily",
+      "repo": "shop",
+      "file": "modules/reports/runtime/server/tasks/reports/daily.ts",
+      "line": 3,
+      "kind": "task",
+      "meta": {
+        "task": "reports:daily",
+        "adapter": "nitro-routes",
+        "registration": "module/addServerScanDir"
+      }
+    },
+    {
+      "id": "producer:shop#server/api/orders/expire.post.ts:3:10",
+      "type": "producer",
+      "label": "task orders:expire",
+      "repo": "shop",
+      "file": "server/api/orders/expire.post.ts",
+      "line": 3,
+      "kind": "task",
+      "meta": {
+        "kind": "task",
+        "adapter": "nitro-tasks",
+        "method": "runTask",
+        "starts": "task",
+        "envelope": {
+          "at": [
+            "payload"
+          ],
+          "text": false
+        },
+        "confidence": "heuristic",
+        "reaches": [
+          "task:orders:expire"
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 21,
+          "filesRead": 21,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 0,
+          "components": 4,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#app/app.vue:app",
+      "type": "ui_component",
+      "label": "app",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/layouts/default.vue:default",
+      "type": "ui_component",
+      "label": "default",
+      "repo": "shop",
+      "file": "app/layouts/default.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:pages/index",
+      "type": "ui_component",
+      "label": "pages/index",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "shop#app/pages/orders.vue:orders",
+      "type": "ui_component",
+      "label": "orders",
+      "repo": "shop",
+      "file": "app/pages/orders.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "shop#app/plugins/guards.ts:audit",
+      "type": "function",
+      "label": "audit",
+      "repo": "shop",
+      "file": "app/plugins/guards.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/plugins/guards.ts:guards middleware",
+      "type": "function",
+      "label": "guards middleware",
+      "repo": "shop",
+      "file": "app/plugins/guards.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/plugins/guards.ts:signed-in",
+      "type": "function",
+      "label": "signed-in",
+      "repo": "shop",
+      "file": "app/plugins/guards.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#modules/reports/runtime/nitro/timing.ts:timing beforeResponse",
+      "type": "interceptor",
+      "label": "timing beforeResponse",
+      "repo": "shop",
+      "file": "modules/reports/runtime/nitro/timing.ts",
+      "line": 2,
+      "kind": "hook"
+    },
+    {
+      "id": "shop#modules/reports/runtime/plugin.ts:reports-only",
+      "type": "function",
+      "label": "reports-only",
+      "repo": "shop",
+      "file": "modules/reports/runtime/plugin.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#modules/reports/runtime/server/api/reports/access.get.ts:GET /api/reports/access@1",
+      "type": "function",
+      "label": "GET /api/reports/access@1",
+      "repo": "shop",
+      "file": "modules/reports/runtime/server/api/reports/access.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{allowed:true}"
+        }
+      }
+    },
+    {
+      "id": "shop#modules/reports/runtime/server/plugins/stamp.ts:stamp request",
+      "type": "middleware",
+      "label": "stamp request",
+      "repo": "shop",
+      "file": "modules/reports/runtime/server/plugins/stamp.ts",
+      "line": 2,
+      "kind": "hook"
+    },
+    {
+      "id": "shop#modules/reports/runtime/server/tasks/reports/daily.ts:task reports:daily@3",
+      "type": "function",
+      "label": "task reports:daily@3",
+      "repo": "shop",
+      "file": "modules/reports/runtime/server/tasks/reports/daily.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{result:'sent'}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/audit.post.ts:POST /api/audit@1",
+      "type": "function",
+      "label": "POST /api/audit@1",
+      "repo": "shop",
+      "file": "server/api/audit.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "null"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/orders.get.ts:GET /api/orders@1",
+      "type": "function",
+      "label": "GET /api/orders@1",
+      "repo": "shop",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "never[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/orders/expire.post.ts:POST /api/orders/expire@1",
+      "type": "function",
+      "label": "POST /api/orders/expire@1",
+      "repo": "shop",
+      "file": "server/api/orders/expire.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/session.get.ts:GET /api/session@1",
+      "type": "function",
+      "label": "GET /api/session@1",
+      "repo": "shop",
+      "file": "server/api/session.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{user:'someone'}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/visits.post.ts:POST /api/visits@1",
+      "type": "function",
+      "label": "POST /api/visits@1",
+      "repo": "shop",
+      "file": "server/api/visits.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "null"
+        }
+      }
+    },
+    {
+      "id": "shop#server/plugins/log.ts:log afterResponse",
+      "type": "interceptor",
+      "label": "log afterResponse",
+      "repo": "shop",
+      "file": "server/plugins/log.ts",
+      "line": 7,
+      "kind": "hook"
+    },
+    {
+      "id": "shop#server/plugins/log.ts:log request",
+      "type": "middleware",
+      "label": "log request",
+      "repo": "shop",
+      "file": "server/plugins/log.ts",
+      "line": 3,
+      "kind": "hook"
+    },
+    {
+      "id": "shop#server/tasks/orders/expire.ts:task orders:expire@5",
+      "type": "function",
+      "label": "task orders:expire@5",
+      "repo": "shop",
+      "file": "server/tasks/orders/expire.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ payload }",
+              "type": "object"
+            }
+          ],
+          "returns": "{result:number}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/utils/orders.ts:expireOrders",
+      "type": "function",
+      "label": "expireOrders",
+      "repo": "shop",
+      "file": "server/utils/orders.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "olderThan",
+              "type": "number"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/pages/orders.vue:9:32",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "app/pages/orders.vue",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/plugins/guards.ts:12:11",
+      "type": "ui_api_call",
+      "label": "GET /api/session",
+      "repo": "shop",
+      "file": "app/plugins/guards.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/session",
+        "path": "/api/session",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/plugins/guards.ts:16:11",
+      "type": "ui_api_call",
+      "label": "POST /api/visits",
+      "repo": "shop",
+      "file": "app/plugins/guards.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/visits",
+        "path": "/api/visits",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/plugins/guards.ts:4:9",
+      "type": "ui_api_call",
+      "label": "POST /api/audit",
+      "repo": "shop",
+      "file": "app/plugins/guards.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/audit",
+        "path": "/api/audit",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#modules/reports/runtime/plugin.ts:3:11",
+      "type": "ui_api_call",
+      "label": "GET /api/reports/access",
+      "repo": "shop",
+      "file": "modules/reports/runtime/plugin.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/reports/access",
+        "path": "/api/reports/access",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:cron:scheduledTasks 0 * * * *",
+      "to": "entry:shop:task:orders:expire",
+      "type": "calls",
+      "confidence": "static",
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "task:orders:expire"
+      }
+    },
+    {
+      "from": "entry:shop:cron:scheduledTasks 0 3 * * *",
+      "to": "entry:shop:task:reports:daily",
+      "type": "calls",
+      "confidence": "static",
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "task:reports:daily"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#modules/reports/runtime/nitro/timing.ts:timing beforeResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/nitro/timing.ts",
+      "line": 2,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "module/addServerPlugin"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#modules/reports/runtime/server/plugins/stamp.ts:stamp request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/server/plugins/stamp.ts",
+      "line": 2,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#server/api/orders.get.ts:GET /api/orders@1",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#server/plugins/log.ts:log afterResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 7,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#server/plugins/log.ts:log request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 3,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports/access",
+      "to": "shop#modules/reports/runtime/nitro/timing.ts:timing beforeResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/nitro/timing.ts",
+      "line": 2,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "module/addServerPlugin"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports/access",
+      "to": "shop#modules/reports/runtime/server/api/reports/access.get.ts:GET /api/reports/access@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{allowed:true}",
+      "file": "modules/reports/runtime/server/api/reports/access.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports/access",
+      "to": "shop#modules/reports/runtime/server/plugins/stamp.ts:stamp request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/server/plugins/stamp.ts",
+      "line": 2,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports/access",
+      "to": "shop#server/plugins/log.ts:log afterResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 7,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports/access",
+      "to": "shop#server/plugins/log.ts:log request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 3,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/session",
+      "to": "shop#modules/reports/runtime/nitro/timing.ts:timing beforeResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/nitro/timing.ts",
+      "line": 2,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "module/addServerPlugin"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/session",
+      "to": "shop#modules/reports/runtime/server/plugins/stamp.ts:stamp request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/server/plugins/stamp.ts",
+      "line": 2,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/session",
+      "to": "shop#server/api/session.get.ts:GET /api/session@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{user:'someone'}",
+      "file": "server/api/session.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/session",
+      "to": "shop#server/plugins/log.ts:log afterResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 7,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/session",
+      "to": "shop#server/plugins/log.ts:log request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 3,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/audit",
+      "to": "shop#modules/reports/runtime/nitro/timing.ts:timing beforeResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/nitro/timing.ts",
+      "line": 2,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "module/addServerPlugin"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/audit",
+      "to": "shop#modules/reports/runtime/server/plugins/stamp.ts:stamp request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/server/plugins/stamp.ts",
+      "line": 2,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/audit",
+      "to": "shop#server/api/audit.post.ts:POST /api/audit@1",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/api/audit.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/audit",
+      "to": "shop#server/plugins/log.ts:log afterResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 7,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/audit",
+      "to": "shop#server/plugins/log.ts:log request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 3,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders/expire",
+      "to": "shop#modules/reports/runtime/nitro/timing.ts:timing beforeResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/nitro/timing.ts",
+      "line": 2,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "module/addServerPlugin"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders/expire",
+      "to": "shop#modules/reports/runtime/server/plugins/stamp.ts:stamp request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/server/plugins/stamp.ts",
+      "line": 2,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders/expire",
+      "to": "shop#server/api/orders/expire.post.ts:POST /api/orders/expire@1",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/api/orders/expire.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders/expire",
+      "to": "shop#server/plugins/log.ts:log afterResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 7,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/orders/expire",
+      "to": "shop#server/plugins/log.ts:log request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 3,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/visits",
+      "to": "shop#modules/reports/runtime/nitro/timing.ts:timing beforeResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/nitro/timing.ts",
+      "line": 2,
+      "meta": {
+        "order": 2,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "module/addServerPlugin"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/visits",
+      "to": "shop#modules/reports/runtime/server/plugins/stamp.ts:stamp request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "modules/reports/runtime/server/plugins/stamp.ts",
+      "line": 2,
+      "meta": {
+        "order": 1,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/visits",
+      "to": "shop#server/api/visits.post.ts:POST /api/visits@1",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/api/visits.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/visits",
+      "to": "shop#server/plugins/log.ts:log afterResponse",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 7,
+      "meta": {
+        "order": 3,
+        "scope": "global",
+        "layer": "interceptor",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/visits",
+      "to": "shop#server/plugins/log.ts:log request",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/plugins/log.ts",
+      "line": 3,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/plugins"
+      }
+    },
+    {
+      "from": "entry:shop:task:orders:expire",
+      "to": "shop#server/tasks/orders/expire.ts:task orders:expire@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/tasks/orders/expire.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:shop:task:reports:daily",
+      "to": "shop#modules/reports/runtime/server/tasks/reports/daily.ts:task reports:daily@3",
+      "type": "handles",
+      "confidence": "static",
+      "file": "modules/reports/runtime/server/tasks/reports/daily.ts",
+      "line": 3
+    },
+    {
+      "from": "producer:shop#server/api/orders/expire.post.ts:3:10",
+      "to": "entry:shop:task:orders:expire",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "server/api/orders/expire.post.ts",
+      "line": 3,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "task:orders:expire"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/layouts/default.vue:default",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "layout": "default",
+        "order": 2
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/plugins/guards.ts:audit",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "middleware": "audit",
+        "order": 1,
+        "plugin": "app/plugins/guards.ts"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/plugins/guards.ts:guards middleware",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "middleware": "guards middleware",
+        "order": 0,
+        "plugin": "app/plugins/guards.ts"
+      }
+    },
+    {
+      "from": "shop#app/pages/orders.vue:orders",
+      "to": "shop#app/layouts/default.vue:default",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/orders.vue",
+      "line": 7,
+      "meta": {
+        "layout": "default",
+        "order": 4
+      }
+    },
+    {
+      "from": "shop#app/pages/orders.vue:orders",
+      "to": "shop#app/plugins/guards.ts:audit",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/orders.vue",
+      "line": 7,
+      "meta": {
+        "middleware": "audit",
+        "order": 1,
+        "plugin": "app/plugins/guards.ts"
+      }
+    },
+    {
+      "from": "shop#app/pages/orders.vue:orders",
+      "to": "shop#app/plugins/guards.ts:guards middleware",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/orders.vue",
+      "line": 7,
+      "meta": {
+        "middleware": "guards middleware",
+        "order": 0,
+        "plugin": "app/plugins/guards.ts"
+      }
+    },
+    {
+      "from": "shop#app/pages/orders.vue:orders",
+      "to": "shop#app/plugins/guards.ts:signed-in",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/orders.vue",
+      "line": 7,
+      "meta": {
+        "middleware": "signed-in",
+        "order": 2,
+        "plugin": "app/plugins/guards.ts"
+      }
+    },
+    {
+      "from": "shop#app/pages/orders.vue:orders",
+      "to": "shop#modules/reports/runtime/plugin.ts:reports-only",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/orders.vue",
+      "line": 7,
+      "meta": {
+        "middleware": "reports-only",
+        "order": 3,
+        "plugin": "modules/reports/runtime/plugin.ts"
+      }
+    },
+    {
+      "from": "shop#app/pages/orders.vue:orders",
+      "to": "ui_api_call:shop#app/pages/orders.vue:9:32",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/pages/orders.vue",
+      "line": 9
+    },
+    {
+      "from": "shop#app/plugins/guards.ts:audit",
+      "to": "ui_api_call:shop#app/plugins/guards.ts:4:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/plugins/guards.ts",
+      "line": 4
+    },
+    {
+      "from": "shop#app/plugins/guards.ts:guards middleware",
+      "to": "ui_api_call:shop#app/plugins/guards.ts:16:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/plugins/guards.ts",
+      "line": 16
+    },
+    {
+      "from": "shop#app/plugins/guards.ts:signed-in",
+      "to": "ui_api_call:shop#app/plugins/guards.ts:12:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/plugins/guards.ts",
+      "line": 12
+    },
+    {
+      "from": "shop#modules/reports/runtime/plugin.ts:reports-only",
+      "to": "ui_api_call:shop#modules/reports/runtime/plugin.ts:3:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "modules/reports/runtime/plugin.ts",
+      "line": 3
+    },
+    {
+      "from": "shop#server/api/orders/expire.post.ts:POST /api/orders/expire@1",
+      "to": "producer:shop#server/api/orders/expire.post.ts:3:10",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "server/api/orders/expire.post.ts",
+      "line": 3
+    },
+    {
+      "from": "shop#server/tasks/orders/expire.ts:task orders:expire@5",
+      "to": "shop#server/utils/orders.ts:expireOrders",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "number",
+      "file": "server/tasks/orders/expire.ts",
+      "line": 6
+    },
+    {
+      "from": "ui_api_call:shop#app/pages/orders.vue:9:32",
+      "to": "entry:shop:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/pages/orders.vue",
+      "line": 9,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/plugins/guards.ts:12:11",
+      "to": "entry:shop:http:GET:/api/session",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/plugins/guards.ts",
+      "line": 12,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/plugins/guards.ts:16:11",
+      "to": "entry:shop:http:POST:/api/visits",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/plugins/guards.ts",
+      "line": 16,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/plugins/guards.ts:4:9",
+      "to": "entry:shop:http:POST:/api/audit",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/plugins/guards.ts",
+      "line": 4,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#modules/reports/runtime/plugin.ts:3:11",
+      "to": "entry:shop:http:GET:/api/reports/access",
+      "type": "hits",
+      "confidence": "static",
+      "file": "modules/reports/runtime/plugin.ts",
+      "line": 3,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "app/plugins/guards.ts",
+      "line": 20,
+      "reason": "route-middleware-unresolved",
+      "level": "info",
+      "message": "app/plugins/guards.ts adds a route middleware whose name or function is written as code (useRuntimeConfig().public.guardName), so which pages it runs in front of, and what it runs, is not read",
+      "hint": "Write `addRouteMiddleware('name', (to) => ..., { global })` with a literal name and the function in place or imported.",
+      "symbol": "app/plugins/guards.ts middleware useRuntimeConfig().public.guardName",
+      "meta": {
+        "cause": "route-middleware-unresolved",
+        "why": "dynamic",
+        "middleware": "useRuntimeConfig().public.guardName"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "modules/reports/index.ts",
+      "line": 15,
+      "reason": "framework-module-skipped",
+      "level": "info",
+      "message": "addServerHandler in modules/reports/index.ts is made only by a development build: it is written under `nuxt.options.dev`, and the production build is the one read",
+      "hint": "Nothing to do: what the development server adds is not part of the deployed application.",
+      "symbol": "addServerHandler",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-module-skipped",
+        "module": "modules/reports/index.ts",
+        "call": "addServerHandler",
+        "why": "development"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-module-read",
+      "level": "info",
+      "message": "1 Nuxt module of the repository is read for what it adds when the application builds: modules/reports/index.ts adds the server directory modules/reports/runtime/server/, the plugin modules/reports/runtime/plugin.ts and the server plugin modules/reports/runtime/nitro/timing.ts; addServerHandler (line 15, under `nuxt.options.dev`, in development only) is not made, for the options the configuration hands it",
+      "hint": "Nothing to do. An addition whose argument is code is a row of its own, and one under a condition its options decide is read or left out as they say.",
+      "symbol": "modules/reports/index.ts",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-module-read",
+        "modules": [
+          "modules/reports/index.ts"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "service": "shop",
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "reference-not-found",
+      "message": "cron 0 3 * * * reaches the task db:backup, which no configured service declares",
+      "hint": "Add the repository that deploys it to the configuration, so this step reaches its code.",
+      "symbol": "entry:shop:cron:scheduledTasks 0 3 * * *",
+      "meta": {
+        "reference": "task:db:backup"
+      }
+    },
+    {
+      "file": "server/api/orders/expire.post.ts",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> app, @ -> app, ~~ -> ., @@ -> ., #shared -> shared, #app -> node_modules/nuxt/dist/app resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "app"
+          ],
+          "~/*": [
+            "app/*"
+          ],
+          "@": [
+            "app"
+          ],
+          "@/*": [
+            "app/*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "shared"
+          ],
+          "#shared/*": [
+            "shared/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ]
+        }
+      },
+      "service": "shop"
+    }
+  ]
+}

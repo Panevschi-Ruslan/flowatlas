@@ -132,6 +132,7 @@ describe('what a module adds (P251)', () => {
       'modules/shop/runtime/server/drop.ts': 'export default defineEventHandler(() => null);',
       'modules/shop/runtime/server/log.ts': 'export default defineEventHandler(() => undefined);',
       'modules/shop/runtime/cart.vue': '<template><p /></template>',
+      'modules/shop/runtime/plugin.ts': 'export default defineNuxtPlugin(() => {});',
     });
     const [read] = nuxtApplicationOf(root, NUXT_4).modules.modules;
     expect(read?.additions).toMatchObject({
@@ -153,7 +154,8 @@ describe('what a module adds (P251)', () => {
         { key: '#cart', target: 'modules/shop/runtime', replaces: true },
         { key: 'basket', target: 'modules/shop/runtime', replaces: false },
       ],
-      notRead: ['addPlugin'],
+      plugins: [{ file: 'modules/shop/runtime/plugin.ts', line: 17 }],
+      notRead: [],
     });
   });
 
@@ -264,5 +266,51 @@ describe('what a module adds (P251)', () => {
       ['framework-module-unread', 'addImportsDir', 7, 'addition'],
       ['framework-module-unread', 'addServerHandler', 8, 'addition'],
     ]);
+  });
+});
+
+describe("a module's conditions on the build that is read (P258)", () => {
+  it('decides `nuxt.options.dev` and `nuxt.options._prepare` false, as production builds, and says a branch only development takes', () => {
+    const root = repo({
+      'modules/dev.ts': module(
+        [
+          '    const resolver = createResolver(import.meta.url);',
+          "    if (nuxt.options.dev) addServerHandler({ route: '/api/debug', handler: resolver.resolve('./h') });",
+          "    if (!nuxt.options.dev) addImportsDir(resolver.resolve('./always'));",
+          "    nuxt.options._prepare || addImportsDir(resolver.resolve('./built'));",
+          '    if (!nuxt.options.dev) return;',
+          "    addImportsDir(resolver.resolve('./dev-only'));",
+        ].join('\n'),
+      ),
+      'modules/h.ts': 'export default defineEventHandler(() => 1);',
+    });
+    const { modules, rows } = nuxtApplicationOf(root, NUXT_4).modules;
+    const [read] = modules;
+    expect(read?.additions.handlers).toEqual([]);
+    expect(read?.additions.importDirs.map((dir) => dir.dir)).toEqual(['modules/always', 'modules/built']);
+    expect(read?.additions.conditional).toEqual([]);
+    expect(rows.filter((row) => row.reason === 'framework-module-skipped').map((row) => [row.symbol, row.line, row.meta?.why])).toEqual([
+      ['addServerHandler', 5, 'development'],
+      ['addImportsDir', 9, 'development'],
+    ]);
+  });
+
+  it('reads the plugins a module adds, of the application and of the server', () => {
+    const root = repo({
+      'modules/p.ts': module(
+        [
+          '    const resolver = createResolver(import.meta.url);',
+          "    addPlugin({ src: resolver.resolve('./runtime/client'), mode: 'client' });",
+          "    addServerPlugin(resolver.resolve('./runtime/nitro'));",
+          '    addPlugin(somewhere);',
+        ].join('\n'),
+      ),
+      'modules/runtime/client.ts': 'export default defineNuxtPlugin(() => {});',
+      'modules/runtime/nitro.ts': 'export default defineNitroPlugin(() => {});',
+    });
+    const { modules, rows } = nuxtApplicationOf(root, NUXT_4).modules;
+    expect(modules[0]?.additions.plugins).toEqual([{ file: 'modules/runtime/client.ts', line: 5 }]);
+    expect(modules[0]?.additions.serverPlugins).toEqual([{ file: 'modules/runtime/nitro.ts', line: 6 }]);
+    expect(rows.map((row) => [row.reason, row.symbol])).toEqual([['framework-module-unread', 'addPlugin']]);
   });
 });

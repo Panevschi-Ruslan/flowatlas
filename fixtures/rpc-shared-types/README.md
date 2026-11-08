@@ -27,7 +27,9 @@ under an alias only the Vite configuration declares.
   /api/products` (input `{ category, limit }` from the query), `POST
   /api/products/create` (input from the body), and `PATCH
   /api/products/{id}/price`, written `inputStructure: 'detailed'` and
-  `outputStructure: 'detailed'`. `reports` is `lazy(() =>
+  `outputStructure: 'detailed'`, `GET /api/search` (input `{ q, limit }`),
+  and `GET /api/browse`, detailed, whose input takes `{ query: { category,
+  page }, headers: { 'x-tenant' } }` (P258). `reports` is `lazy(() =>
   import('@lib/reports'))`, and `@lib` is declared in `vite.config.ts` alone.
   It claims `VITE_CATALOG_URL`.
 - `apps/web` (React) calls api through `createTRPCClient<AppRouter>`, and
@@ -41,7 +43,9 @@ under an alias only the Vite configuration declares.
   `LedgerClientModule.forRoot({ url: `${process.env.LEDGER_URL}/rpc` })`, and is
   handed both clients by `@Inject(ORDERS_CLIENT)` and `@Inject(LEDGER_CLIENT)`.
   Its `CatalogClient` asks catalog's `GET /api/products` with axios, the query
-  `{ category }` in `params`. catalog claims `CATALOG_URL` too.
+  `{ category }` in `params`, and its `CatalogSearch` asks `GET /api/search`
+  through a wrapper of its own that writes `limit` beside the `params` its
+  caller hands it (P258). catalog claims `CATALOG_URL` too.
 
 ## What the graph says
 
@@ -83,7 +87,18 @@ under an alias only the Vite configuration declares.
     error) and does not read `name` (`extra_field`, info).
   - `reprice(id, price)`: the detailed route's `{ params: { id }, body: { price
     } }` and the output's `body`; agrees.
+  - `searchTea()` (P258): `new URLSearchParams({ q })` and a `set('limit')`
+    after it, written into the address as `?${query}`: the keys are recorded
+    (`meta.queryKeys`, `meta.queryInAddress`) and agree.
+  - `searchBy(key)`: a key appended as code: `procedure-input-by-name`
+    (query).
+  - `browseTea()`: the detailed route's `{ query: { category }, headers: {
+    x-tenant } }`, the query a `URLSearchParams` in `params` and the header
+    written in place (`meta.headerKeys`): `query.page` is missing
+    (`missing_required`, error).
 - The worker's `CatalogClient.teas()`: the server's request writes `{ category }`
   in `params`, and `limit` is missing (`missing_required`, error).
+- The worker's `CatalogSearch.tea()`: the request is the caller's, its query
+  the caller's `q` and the wrapper's own `limit`; agrees (P258).
 - A path parameter and a query key are compared by name alone: the address
   carries text, and the procedure's schema decides whether it coerces it.

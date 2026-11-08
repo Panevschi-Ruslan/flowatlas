@@ -39,6 +39,25 @@ export function productCard(id: string) {
   return axios.get<ProductCard>(`${CATALOG}/api/products/${id}`);
 }
 
+/** A query built in code, a key set after it is made, written into the address (P258). */
+export function searchTea() {
+  const query = new URLSearchParams({ q: 'tea' });
+  query.set('limit', '10');
+  return fetch(`${CATALOG}/api/search?${query}`);
+}
+
+/** A key the code does not write as a literal: which keys the query carries is not read. */
+export function searchBy(key: string) {
+  const query = new URLSearchParams();
+  query.append(key, 'tea');
+  return fetch(`${CATALOG}/api/search?${query}`);
+}
+
+/** A detailed route: the query built in code under `query`, the tenant under `headers`; `page` is missing. */
+export function browseTea() {
+  return axios.get<Product[]>(`${CATALOG}/api/browse`, { params: new URLSearchParams({ category: 'tea' }), headers: { 'X-Tenant': 'north' } });
+}
+
 /** A detailed route: the id under `params`, the price under `body`, and the answer the output's `body`. */
 export function reprice(id: string, price: number) {
   return axios.patch<Product>(`${CATALOG}/api/products/${id}/price`, { price });

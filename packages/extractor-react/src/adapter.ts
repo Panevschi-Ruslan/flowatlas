@@ -44,7 +44,9 @@ export const VUE_READING: BrowserReading = {
     const { layers, modules } = nuxtApplicationOf(base.repoDir, base.pkg);
     const handlers = modules.modules.flatMap((module) => module.additions.handlers.map((handler) => handler.handler.replace(/\/[^/]*$/, '')));
     const scanned = modules.modules.flatMap((module) => module.additions.serverScanDirs);
-    return [...new Set([...layers.map((layer) => layer.layout.serverDir), ...handlers, ...scanned])];
+    // And a plugin of the server a module adds (P258).
+    const plugins = modules.modules.flatMap((module) => module.additions.serverPlugins.map((plugin) => plugin.file.replace(/\/[^/]*$/, '')));
+    return [...new Set([...layers.map((layer) => layer.layout.serverDir), ...handlers, ...scanned, ...plugins])];
   },
 };
 

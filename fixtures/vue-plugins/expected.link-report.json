@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T14:44:18.174Z",
+  "configHash": "0c86f0068ac4",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "vue",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 11,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1308,
+      "packages": {
+        "name": "vue-plugins-web",
+        "runtime": [
+          "@shop/ui-kit",
+          "primevue",
+          "vue",
+          "vue-router",
+          "vuetify"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 4,
+    "resolved": 0,
+    "unresolved": 4,
+    "byReason": {
+      "target-route-not-found": 4
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/components/AppBadge.vue",
+      "line": 6,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/badges",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/badges */.",
+      "symbol": "ui_api_call:web#src/components/AppBadge.vue:6:15"
+    },
+    {
+      "service": "web",
+      "file": "src/components/ChartLegend.vue",
+      "line": 6,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/orders/legend",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/orders/legend */.",
+      "symbol": "ui_api_call:web#src/components/ChartLegend.vue:6:16"
+    },
+    {
+      "service": "web",
+      "file": "src/components/OrderChart.vue",
+      "line": 15,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/orders/stats",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/orders/stats */.",
+      "symbol": "ui_api_call:web#src/components/OrderChart.vue:15:19"
+    },
+    {
+      "service": "web",
+      "file": "src/components/OrderTable.vue",
+      "line": 6,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/orders",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/orders */.",
+      "symbol": "ui_api_call:web#src/components/OrderTable.vue:6:16"
+    }
+  ],
+  "totals": {
+    "nodes": 11,
+    "edges": 8,
+    "types": 0,
+    "missed": 5,
+    "sites": 5,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 5
+  }
+}

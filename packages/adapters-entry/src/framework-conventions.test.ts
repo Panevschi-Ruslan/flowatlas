@@ -307,8 +307,8 @@ describe("a Nuxt part's directories by kind (P251)", () => {
     });
     const { layers } = nuxtLayersOf(root, NUXT_4);
     expect(layers.map((layer) => layer.layout.dirs)).toEqual([
-      { pages: 'app/views', layouts: 'app/layouts', middleware: 'app/middleware', shared: 'common', modules: 'kit' },
-      { pages: 'base/screens', layouts: 'base/layouts', middleware: 'base/middleware', shared: 'base/shared', modules: 'base/modules' },
+      { pages: 'app/views', layouts: 'app/layouts', middleware: 'app/middleware', plugins: 'app/plugins', shared: 'common', modules: 'kit' },
+      { pages: 'base/screens', layouts: 'base/layouts', middleware: 'base/middleware', plugins: 'base/plugins', shared: 'base/shared', modules: 'base/modules' },
     ]);
     const { routes } = nuxtPagesOf(root, NUXT_4, ['app/views/index.vue', 'app/pages/old.vue', 'base/screens/admin.vue', 'base/pages/no.vue']);
     expect([...routes]).toEqual([

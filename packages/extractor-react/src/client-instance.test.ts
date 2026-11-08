@@ -206,6 +206,30 @@ describe('an axios instance carries the base it was made with (P239)', () => {
     expect(at('/e')['queryUnread']).toBeUndefined();
   });
 
+  it('records a query built in code, under the option or written into the address, and the names of the headers a call writes (P258)', () => {
+    const graph = read({
+      '/src/Panel.tsx': `
+        import axios from 'axios';
+        export const Panel = () => {
+          const load = (key: string) => {
+            const query = new URLSearchParams({ q: 'tea' });
+            query.set('limit', '10');
+            fetch(\`/a?\${query}\`, { headers: { 'X-Tenant': 'north' } });
+            axios.get('/b', { params: new URLSearchParams([['page', '2']]), headers: new Headers({ Accept: 'json' }) });
+            const loose = new URLSearchParams();
+            loose.append(key, 'x');
+            fetch(\`/c?\${loose.toString()}\`);
+          };
+          return <button onClick={load} />;
+        };
+      `,
+    });
+    const at = (path: string) => requests(graph).find((node) => String(node.meta?.['path']).endsWith(path))?.meta ?? {};
+    expect(at('/a')).toMatchObject({ queryKeys: ['limit', 'q'], headerKeys: ['x-tenant'] });
+    expect(at('/b')).toMatchObject({ queryKeys: ['page'], headerKeys: ['accept'] });
+    expect(at('/c')).toMatchObject({ queryUnread: true });
+  });
+
   it('applies the module defaults to calls on the module itself', () => {
     const graph = read({
       '/src/main.ts': `import axios from 'axios';\naxios.defaults.baseURL = '/api';\n`,

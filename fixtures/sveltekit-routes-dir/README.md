@@ -10,7 +10,7 @@ no screens.
 | a route | `src/app/api/items/+server.ts` | entry `GET /api/items` |
 | a page's server module | `src/app/items/[id]/+page.server.ts` | entry `GET /items/:param`, answered by `load` |
 | a page | `src/app/+page.svelte` | a screen at `/`; `onclick={refresh}` reaches `GET /api/items` through `$lib/api` |
-| a page beside its server module | `src/app/items/[id]/+page.svelte` | a screen at `/items/:param` |
+| a page beside its server module | `src/app/items/[id]/+page.svelte` | a screen at `/items/:param`, whose flow goes through its `load` first (P258: `meta.load: server`, `meta.order: 0`) |
 
 Nothing is installed; `@sveltejs/kit` and `svelte` are declared and that is
 enough. The tsconfig is the one SvelteKit scaffolds (P240).

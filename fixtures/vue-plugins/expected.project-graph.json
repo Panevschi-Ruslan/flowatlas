@@ -1,0 +1,351 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T14:44:18.174Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "vue",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 6,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/components/AppBadge.vue:6:15",
+      "type": "ui_api_call",
+      "label": "GET /api/badges",
+      "repo": "web",
+      "file": "src/components/AppBadge.vue",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/badges",
+        "path": "/api/badges",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/components/ChartLegend.vue:6:16",
+      "type": "ui_api_call",
+      "label": "GET /api/orders/legend",
+      "repo": "web",
+      "file": "src/components/ChartLegend.vue",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders/legend",
+        "path": "/api/orders/legend",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/components/OrderChart.vue:15:19",
+      "type": "ui_api_call",
+      "label": "GET /api/orders/stats",
+      "repo": "web",
+      "file": "src/components/OrderChart.vue",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders/stats",
+        "path": "/api/orders/stats",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/components/OrderTable.vue:6:16",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "web",
+      "file": "src/components/OrderTable.vue",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "web#src/App.vue:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "web",
+      "file": "src/App.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/components/AppBadge.vue:AppBadge",
+      "type": "ui_component",
+      "label": "AppBadge",
+      "repo": "web",
+      "file": "src/components/AppBadge.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/components/ChartLegend.vue:ChartLegend",
+      "type": "ui_component",
+      "label": "ChartLegend",
+      "repo": "web",
+      "file": "src/components/ChartLegend.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/components/OrderChart.vue:OrderChart",
+      "type": "ui_component",
+      "label": "OrderChart",
+      "repo": "web",
+      "file": "src/components/OrderChart.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/components/OrderTable.vue:OrderTable",
+      "type": "ui_component",
+      "label": "OrderTable",
+      "repo": "web",
+      "file": "src/components/OrderTable.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/views/OrdersView.vue:OrdersView",
+      "type": "ui_component",
+      "label": "OrdersView",
+      "repo": "web",
+      "file": "src/views/OrdersView.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/orders"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "web#src/components/AppBadge.vue:AppBadge",
+      "to": "ui_api_call:web#src/components/AppBadge.vue:6:15",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/AppBadge.vue",
+      "line": 6
+    },
+    {
+      "from": "web#src/components/ChartLegend.vue:ChartLegend",
+      "to": "ui_api_call:web#src/components/ChartLegend.vue:6:16",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/ChartLegend.vue",
+      "line": 6
+    },
+    {
+      "from": "web#src/components/OrderChart.vue:OrderChart",
+      "to": "ui_api_call:web#src/components/OrderChart.vue:15:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/OrderChart.vue",
+      "line": 15
+    },
+    {
+      "from": "web#src/components/OrderChart.vue:OrderChart",
+      "to": "web#src/components/ChartLegend.vue:ChartLegend",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/components/OrderChart.vue",
+      "line": 3,
+      "meta": {
+        "renders": "ChartLegend"
+      }
+    },
+    {
+      "from": "web#src/components/OrderTable.vue:OrderTable",
+      "to": "ui_api_call:web#src/components/OrderTable.vue:6:16",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/OrderTable.vue",
+      "line": 6
+    },
+    {
+      "from": "web#src/views/OrdersView.vue:OrdersView",
+      "to": "web#src/components/AppBadge.vue:AppBadge",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/views/OrdersView.vue",
+      "line": 6,
+      "meta": {
+        "renders": "AppBadge"
+      }
+    },
+    {
+      "from": "web#src/views/OrdersView.vue:OrdersView",
+      "to": "web#src/components/OrderChart.vue:OrderChart",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/views/OrdersView.vue",
+      "line": 5,
+      "meta": {
+        "renders": "OrderChart"
+      }
+    },
+    {
+      "from": "web#src/views/OrdersView.vue:OrdersView",
+      "to": "web#src/components/OrderTable.vue:OrderTable",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/views/OrdersView.vue",
+      "line": 3,
+      "meta": {
+        "renders": "OrderTable"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/components/AppBadge.vue",
+      "line": 6,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/badges",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/badges */.",
+      "symbol": "ui_api_call:web#src/components/AppBadge.vue:6:15"
+    },
+    {
+      "service": "web",
+      "file": "src/components/ChartLegend.vue",
+      "line": 6,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/orders/legend",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/orders/legend */.",
+      "symbol": "ui_api_call:web#src/components/ChartLegend.vue:6:16"
+    },
+    {
+      "service": "web",
+      "file": "src/components/OrderChart.vue",
+      "line": 15,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/orders/stats",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/orders/stats */.",
+      "symbol": "ui_api_call:web#src/components/OrderChart.vue:15:19"
+    },
+    {
+      "service": "web",
+      "file": "src/components/OrderTable.vue",
+      "line": 6,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/orders",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/orders */.",
+      "symbol": "ui_api_call:web#src/components/OrderTable.vue:6:16"
+    },
+    {
+      "file": "src/views/OrdersView.vue",
+      "line": 9,
+      "reason": "component-unresolved",
+      "level": "info",
+      "message": "<KitPanel> in src/views/OrdersView.vue names no component the file imports or registers, and none the framework registers by name, so what it renders is not joined; app.use(UiKit) in src/main.ts may register it",
+      "hint": "Import the component in the script, or register it with `app.component` in the repository; a library the plugin installs is not read.",
+      "symbol": "OrdersView <KitPanel>",
+      "meta": {
+        "cause": "component-unresolved",
+        "why": "missing",
+        "tag": "KitPanel",
+        "plugins": [
+          "src/main.ts:13"
+        ]
+      },
+      "service": "web"
+    }
+  ]
+}

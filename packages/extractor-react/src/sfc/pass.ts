@@ -117,11 +117,12 @@ export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
   // higher layer's where two give one address (P243).
   const nuxt = hasDependency(ctx.pkg, 'nuxt') ? nuxtPagesOf(ctx.repoDir, ctx.pkg, files) : undefined;
   for (const row of nuxt?.rows ?? []) ctx.report(row);
+  // SvelteKit's pages under `kit.files.routes` where the configuration moves them (P251).
+  const sveltekit = hasDependency(ctx.pkg, '@sveltejs/kit') ? sveltekitPagesOf(ctx.repoDir) : undefined;
   const routed = routedComponents(sources, files, {
     repoDir: ctx.repoDir,
     extensions,
-    // SvelteKit's pages under `kit.files.routes` where the configuration moves them (P251).
-    pages: hasDependency(ctx.pkg, '@sveltejs/kit') ? [sveltekitPagesOf(ctx.repoDir)] : [],
+    pages: sveltekit === undefined ? [] : [sveltekit],
     ...(nuxt === undefined ? {} : { placed: nuxt.routes }),
   });
 
@@ -168,12 +169,19 @@ export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
     for (const event of events) action(ctx, scope, event, made.file, stores);
   }
 
-  // The child components each one renders, and in Nuxt each page's route
-  // middleware and layout (P255): before the calls below, so a middleware's
-  // function is in the index when they are read.
+  // The child components each one renders, in Nuxt each page's route
+  // middleware and layout (P255), and in SvelteKit each page's layouts and
+  // loads (P258): before the calls below, so a middleware's function is in
+  // the index when they are read.
   const names = nuxt === undefined ? undefined : nuxtNamesOf(ctx.repoDir, ctx.pkg);
   for (const row of names?.rows ?? []) ctx.report(row);
-  drawChildren(ctx, markup, sources, names === undefined || nuxt === undefined ? undefined : { names, pages: nuxt.routes });
+  drawChildren(
+    ctx,
+    markup,
+    sources,
+    names === undefined || nuxt === undefined ? undefined : { names, pages: nuxt.routes },
+    sveltekit === undefined ? undefined : { root: sveltekit.root },
+  );
 
   // Calls into a store, from a component, a composable or another store: the
   // checker cannot see through a store whose library is not installed. And a

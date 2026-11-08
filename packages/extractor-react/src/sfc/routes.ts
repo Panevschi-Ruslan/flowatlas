@@ -105,8 +105,9 @@ export const routedComponents = (
   for (const [file, path] of options.placed ?? []) claim(file, path);
   for (const router of options.pages) {
     for (const file of componentFiles) {
-      // The router reads a script's name; a page's ending is the component format's.
-      const path = routePathOfFile(file.replace(/\.(vue|svelte)$/, '.ts'), router);
+      // The router reads a script's name; a page's ending is the component format's,
+      // and SvelteKit's `+page@(group).svelte` is the page of its folder, whatever layout it resets to (P258).
+      const path = routePathOfFile(file.replace(/\/\+page@[^/]*\.svelte$/, '/+page.svelte').replace(/\.(vue|svelte)$/, '.ts'), router);
       if (path !== null) claim(file, path);
     }
   }

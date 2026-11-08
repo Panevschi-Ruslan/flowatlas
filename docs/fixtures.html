@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>207 fixtures</span>
-    <span>541 snapshot files</span>
+    <span>212 fixtures</span>
+    <span>553 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -1473,7 +1473,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="42">42</span></h2>
+    <h2>Everything else <span class="count" data-total="45">45</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1659,6 +1659,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A Nuxt 4 application whose build adds what no file says (P251): modules of the repository that add names, routes, a page and aliases, <code>dir</code> settings that move its pages and its shared code, a layer beside it with a module and pages of its own, and overrides for development and a staging build.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="nuxt-plugins-tasks everything else a nuxt application whose plugins add route middleware and install a library of components, whose server's plugins hook into every request, and whose tasks are run by name and on a schedule (p258).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nuxt-plugins-tasks">nuxt-plugins-tasks</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A Nuxt application whose plugins add route middleware and install a library of components, whose server's plugins hook into every request, and whose tasks are run by name and on a schedule (P258).</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="nuxt4-layout everything else a nuxt 4 application (p240): its code under `app/`, the server and `shared/` beside it, and a `tsconfig.json` that refers to the four tsconfigs `nuxi prepare` writes into `.nuxt/` - none of which a fresh clone has.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nuxt4-layout">nuxt4-layout</a>
@@ -1755,6 +1763,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A SvelteKit application whose buttons are in <code>.svelte</code> components (P233).</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="sveltekit-layouts everything else a sveltekit application whose pages are wrapped by layouts up the route tree, each with a `load` of its own (p258).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sveltekit-layouts">sveltekit-layouts</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A SvelteKit application whose pages are wrapped by layouts up the route tree, each with a <code>load</code> of its own (P258).</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="sveltekit-routes-dir everything else a sveltekit application whose routes are not in `src/routes` (p251): `svelte.config.js` moves them with `kit.files.routes: 'src/app'`.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sveltekit-routes-dir">sveltekit-routes-dir</a>
@@ -1801,6 +1817,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A Vue application whose screens are made of child components (P255): a tag in a template is a <code>calls</code> edge from the component that writes it to the one it names, so a screen's flow reaches what its children request.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="vue-plugins everything else a vue application whose templates use components a plugin registers and components loaded later (p258).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/vue-plugins">vue-plugins</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A Vue application whose templates use components a plugin registers and components loaded later (P258).</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="vue-spa everything else a vue single-page application and the nestjs service it calls, in two repositories (p233).">

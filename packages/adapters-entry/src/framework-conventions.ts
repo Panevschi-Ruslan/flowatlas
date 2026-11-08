@@ -128,6 +128,8 @@ export interface NuxtDirs {
   readonly layouts: string;
   /** Its route middleware, under `srcDir`: `dir.middleware`, else `middleware`. */
   readonly middleware: string;
+  /** Its plugins, under `srcDir`: `dir.plugins`, else `plugins` (P258). */
+  readonly plugins: string;
   /** What both halves share, under its root: `dir.shared`, else `shared`. */
   readonly shared: string;
   /** The modules Nuxt registers by itself: `dir.modules`, else `modules`, under its root from 4 and under `srcDir` before. */
@@ -289,6 +291,7 @@ const layoutAt = (repoDir: string, dir: string, version: 3 | 4, environment: Nux
     pages: kindDir(repoDir, reading, 'pages', srcDir),
     layouts: kindDir(repoDir, reading, 'layouts', srcDir),
     middleware: kindDir(repoDir, reading, 'middleware', srcDir),
+    plugins: kindDir(repoDir, reading, 'plugins', srcDir),
     shared: kindDir(repoDir, reading, 'shared', at),
     modules: kindDir(repoDir, reading, 'modules', version === 4 ? at : srcDir),
   };
