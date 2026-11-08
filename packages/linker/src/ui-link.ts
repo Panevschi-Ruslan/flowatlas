@@ -1,7 +1,8 @@
 import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
 import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
-import { portSharedFinding, type Listening, type PortAnswer } from './local-port.js';
+import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
+import { defaultPortOf, proxiedOutFinding, type Forward } from './proxy-forward.js';
 import { cmp } from './order.js';
 import {
   behindUnread,
@@ -39,7 +40,9 @@ export interface UiIndex {
    * configuration says so (its name, an alias, `services[].hosts`) or only the
    * services' own setting files do (P239).
    */
-  serviceAtHost?(host: string): PortAnswer | undefined;
+  serviceAtHost?(host: string, defaultPort?: number): PortAnswer | undefined;
+  /** How a service's server forwards a path to another server, where its proxy does (P257). */
+  forwardOf?(service: string, path: string): Forward | undefined;
 }
 
 /**
@@ -53,7 +56,7 @@ export interface UiIndex {
  * `marker` is an annotation naming the service, `@flowatlas-calls catalog GET
  * /items`, which outranks all of them (P127).
  */
-export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'same-service' | 'unique-route';
+export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'proxy' | 'same-service' | 'unique-route';
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -70,9 +73,15 @@ interface Details {
     hostFromFiles?: true;
     /** Where the service's server is started on the port an address on this machine names (P250). */
     listening?: Listening;
+    /** The proxy rule the request was forwarded by, and how (P257). */
+    proxied?: Forward;
   };
   /** Two or more services listen on the port an address on this machine names (P250). */
   portShared: { port: number; said: readonly string[]; services: readonly string[] };
+  /** A host on a network names the service at a port it is not reached at there (P257). */
+  portClosed: { host: string; closed: ClosedPort };
+  /** A service's proxy forwards the request to a host no service of the project is reached at (P257). */
+  proxiedOut: { service: string; forward: Forward };
   /** The address or the verb is only known at run time; the extractor said so. */
   dynamic: { reason: string };
   /** No route answers. `targetService` is null when nothing named one to ask. */
@@ -80,6 +89,8 @@ interface Details {
     targetService: string | null;
     method: string;
     path: string;
+    /** The proxy rule that forwarded the request to the service, where one did (P257). */
+    proxied?: Forward;
     verbs: readonly string[];
     /**
      * Routes that would answer if the part of their own address nobody read
@@ -143,6 +154,8 @@ const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null
   },
   serviceUnknown: (detail) => MARKER_FINDINGS.serviceUnknown(detail, detail.aliases, '@flowatlas-calls'),
   portShared: ({ port, said }) => portSharedFinding(port, said),
+  portClosed: ({ host, closed }) => portClosedFinding(host, closed),
+  proxiedOut: ({ service, forward }) => proxiedOutFinding(service, forward),
   ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'target' : 'application'](detail),
 };
 
@@ -300,14 +313,21 @@ const byHost = (ask: Ask): UiOutcome | undefined => {
   const { call, index } = ask;
   const host = call.meta?.['host'];
   if (typeof host !== 'string') return undefined;
-  const found = index.serviceAtHost?.(host);
+  const found = index.serviceAtHost?.(host, defaultPortOf(call.meta?.['url']));
   if (found === undefined) return undefined;
   // Two services listen on the port this machine's address names (P250): no
   // way below may pick one of them by its route.
   if (found.kind === 'shared') return { kind: 'portShared', port: found.port, said: found.said, services: found.services };
+  // A port the network does not reach the service at: it will not connect (P257).
+  if (found.kind === 'closed') return { kind: 'portClosed', host: found.host, closed: found.closed };
+  // A server whose proxy forwards the path hands it on, before its own routes
+  // or after them as its framework does (P257).
+  const forward = index.forwardOf?.(found.service, ask.path);
+  if (forward !== undefined && forward.rule.after === undefined) return forwarded(ask, found.service, forward);
   const outcome = within(ask, found.service, 'host');
+  if (outcome.kind === 'noRoute' && forward !== undefined) return forwarded(ask, found.service, forward);
   // A front end's dev server forwards what its own routes do not serve
-  // (P254): which service answers that is the next way's to say.
+  // (P254), by a proxy not read: which service answers is the next way's to say.
   if (outcome.kind === 'noRoute' && found.listening?.devServer === true) return undefined;
   if (outcome.kind !== 'linked') return outcome;
   return {
@@ -315,6 +335,38 @@ const byHost = (ask: Ask): UiOutcome | undefined => {
     ...(found.sure ? {} : { hostFromFiles: true as const }),
     ...(found.listening === undefined ? {} : { listening: found.listening }),
   };
+};
+
+/**
+ * The request a server's proxy makes for a request it forwards (P257): the
+ * service at the target's host, asked for the rewritten path, the join a
+ * guess that names the rule. A host no service is reached at is a third
+ * party, said as one.
+ */
+const forwarded = (ask: Ask, service: string, forward: Forward): UiOutcome => {
+  const found = ask.index.serviceAtHost?.(forward.host, forward.defaultPort);
+  if (found === undefined) return { kind: 'proxiedOut', service, forward };
+  if (found.kind === 'shared') return { kind: 'portShared', port: found.port, said: found.said, services: found.services };
+  if (found.kind === 'closed') return { kind: 'portClosed', host: found.host, closed: found.closed };
+  const outcome = within({ ...ask, path: forward.path }, found.service, 'proxy');
+  if (outcome.kind === 'noRoute') return { ...outcome, proxied: forward };
+  if (outcome.kind !== 'linked') return outcome;
+  return { ...outcome, proxied: forward, ...(found.listening === undefined ? {} : { listening: found.listening }) };
+};
+
+/**
+ * A request written with no host, which the server its page is served from
+ * forwards by its proxy (P257): a dev server's `/api` handed to the service
+ * behind it. Before the caller's own routes are asked, unless the framework
+ * applies the rule only to what its own routes do not serve.
+ */
+const byProxy = (ask: Ask): UiOutcome | undefined => {
+  const { call, env, index } = ask;
+  if (typeof call.meta?.['host'] === 'string' || env !== undefined) return undefined;
+  const forward = index.forwardOf?.(call.repo, ask.path);
+  if (forward === undefined) return undefined;
+  if (forward.rule.after !== undefined && within(ask, call.repo, 'same-service').kind !== 'noRoute') return undefined;
+  return forwarded(ask, call.repo, forward);
 };
 
 /**
@@ -390,6 +442,7 @@ const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
   byBaseUrlEnv,
   byBaseUrlValue,
   byHost,
+  byProxy,
   bySameService,
   byUniqueRoute,
 ];

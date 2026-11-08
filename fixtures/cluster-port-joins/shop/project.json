@@ -1,0 +1,21 @@
+{
+  "name": "shop",
+  "sourceRoot": "shop",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "@nx/next:server",
+      "options": {
+        "buildTarget": "shop:build",
+        "dev": true,
+        "port": 4300
+      }
+    },
+    "debug": {
+      "executor": "@nx/js:node",
+      "options": {
+        "port": 9229
+      }
+    }
+  }
+}

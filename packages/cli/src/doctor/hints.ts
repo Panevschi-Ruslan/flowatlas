@@ -342,7 +342,13 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'local-port-shared': () =>
     'The request names a port on this machine, and two or more services listen on it: their code starts a server there, or their setting files (an example environment file, a published container port) place them there. Which one a local run reaches is whichever started first, so the request is not joined. Name the host (localhost:<port>) under services[].hosts of the service it means, or give the servers different ports.',
   'published-port-unheard': () =>
-    'A compose file or a `docker run` publishes a container port that the service\'s code is not read listening on: the code starts its server on another port, reads its port from a setting the container\'s environment does not give, or starts it in a way the reader does not follow. A request to the published port is still joined to the service by the file, as a guess. Map the published port to the port the server listens on, or give the container the setting.',
+    'A compose file or a `docker run` publishes a container port, or a cluster\'s service object routes its port to a container port (`targetPort`), that the service\'s code is not read listening on: the code starts its server on another port, reads its port from a setting the container\'s environment does not give, or starts it in a way the reader does not follow. A request to the published port or the routed name is still joined to the service by the file, as a guess. Map or route the port to the one the server listens on, or give the container the setting.',
+  'proxy-rule-unread': () =>
+    'A server forwards a path by a rule the reader does not follow: a prefix written as a pattern, a target address read from a setting or built at run time, or a rewrite that is not a literal replacement of the prefix. Requests under it are joined as if no proxy were there. Write the rule with literals, or annotate the request with the service it reaches.',
+  'proxied-to-third-party': () =>
+    'A request is forwarded by its server\'s proxy to a host no service of the project is reached at, so it leaves the project there: it is drawn to that host as a third party. If the host is one of the project\'s services, name it under services[].hosts of that service.',
+  'network-port-unreachable': () =>
+    'A request on a container\'s or a cluster\'s network names a port the service is not reached at there: the port a compose file or `docker run` publishes on the machine running it (reached on the network at the container\'s own port), or the containers\' own port behind a cluster\'s service name (reached at the port the name routes). The request will not connect, so it is not joined. Use the port the network reaches the service at.',
   'graphql-subgraph-not-joined': () =>
     'A gateway names a subgraph whose address reaches no configured service, so the fields that subgraph resolves are not joined and the composition is a guess. Add the address\'s setting to services[].baseUrlEnv, or its host to services[].hosts, of the service that is the subgraph.',
   'graphql-composition-conflict': () =>
@@ -873,6 +879,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'orphan-update-decorator': ['bot handler outside an update class', 'bot handlers outside an update class'],
   'procedure-call-mismatch': ['procedure called as the wrong kind', 'procedures called as the wrong kind'],
   'procedure-link-unserved': ['procedure sent where nothing answers', 'procedures sent where nothing answers'],
+  'network-port-unreachable': ['request to a port the network does not reach', 'requests to a port the network does not reach'],
   's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],
   'stream-no-writer': ['stream nothing writes to', 'streams nothing writes to'],
   'subscription-matches-nothing': ['rule nothing published matches', 'rules nothing published matches'],

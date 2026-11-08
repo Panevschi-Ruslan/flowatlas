@@ -4,6 +4,7 @@ import type { Confidence } from '../model/edges.js';
 import type { EntryKind } from '../model/nodes.js';
 import type { ExtractContext } from './context.js';
 import type { ListenPort } from '../listen-port.js';
+import type { ProxyReading } from '../proxy-rule.js';
 import type { EntryWrapping } from './wrapping.js';
 import type { PackageJson } from './manifest.js';
 import type { ConventionsOf } from '../conventions.js';
@@ -191,6 +192,12 @@ export interface EntryAdapter {
    * applies; two answering for one line are one port.
    */
   listens?(ctx: ExtractContext): readonly ListenPort[];
+  /**
+   * The paths this adapter's server forwards to another server, where the
+   * framework's configuration writes them (P257): a rewrite to an address, a
+   * route rule that proxies. Optional, asked beside `listens` (`proxiesOf`).
+   */
+  proxies?(ctx: ExtractContext): ProxyReading;
   /**
    * What the framework's build would have written for the compiler before
    * the repository is read (P240): aliases its generated tsconfig names, and

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
-import { scriptCommands, VITE_CONFIGS, type ScriptCommand } from '@flowatlas/adapters-entry';
+import { scriptCommands, targetPorts, VITE_CONFIGS, VITE_SERVER_EXECUTORS, WEBPACK_SERVER_EXECUTORS, type ScriptCommand } from '@flowatlas/adapters-entry';
 import { NotLiteral, configValueAt, isEnvironmentName, readConfigLiteral, toPosixPath, type ExtractContext, type ListenPort } from '@flowatlas/core';
 
 /**
@@ -123,5 +123,14 @@ export const astroListens = (repoDir: string): ListenPort[] => {
   return [...ports.values(), ...scripts.map((each) => ({ port: each.port as number, file: 'package.json', line: each.line, devServer: true as const }))];
 };
 
-/** Where a React, Vue or Svelte front end's own servers listen. */
-export const frontEndListens = (ctx: ExtractContext): ListenPort[] => [...viteListens(ctx.repoDir), ...astroListens(ctx.repoDir)];
+/**
+ * Where a React, Vue or Svelte front end's own servers listen: its bundler's
+ * configuration and scripts, and the dev server targets a workspace tool's
+ * `project.json` runs it by (P257).
+ */
+export const frontEndListens = (ctx: ExtractContext): ListenPort[] => [
+  ...viteListens(ctx.repoDir),
+  ...astroListens(ctx.repoDir),
+  ...targetPorts(ctx.repoDir, VITE_SERVER_EXECUTORS, true),
+  ...targetPorts(ctx.repoDir, WEBPACK_SERVER_EXECUTORS, true),
+];

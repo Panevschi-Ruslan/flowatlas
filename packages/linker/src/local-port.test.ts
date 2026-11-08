@@ -260,3 +260,163 @@ describe('a port the code and the files decide together (P254)', () => {
     ]);
   });
 });
+
+/** A name a cluster's network routes to orders's containers: `orders-svc:80` to `target`. */
+const routed = (target: number, environment: Record<string, number> = {}): RepoSettings => ({
+  ...NO_SETTINGS,
+  hosts: [
+    { host: 'orders-svc', file: 'k8s/orders.yaml' },
+    { host: 'orders-svc:80', file: 'k8s/orders.yaml', mapped: { published: 80, container: target, side: 'routed' } },
+    { host: 'orders-svc.shop.svc.cluster.local', file: 'k8s/orders.yaml' },
+    { host: 'orders-svc.shop.svc.cluster.local:80', file: 'k8s/orders.yaml', mapped: { published: 80, container: target, side: 'routed' } },
+  ],
+  routes: [
+    {
+      name: 'orders-svc',
+      names: ['orders-svc', 'orders-svc.shop.svc.cluster.local'],
+      file: 'k8s/orders.yaml',
+      ports: [{ port: 80, target, file: 'k8s/orders.yaml', line: 30 }],
+      environment,
+    },
+  ],
+});
+
+describe("a name a cluster's network routes to a service's containers (P257)", () => {
+  it('joins a request to the name at the port it routes, the scheme saying the port where the host does not', () => {
+    for (const host of ['orders-svc:80', 'orders-svc', 'orders-svc.shop.svc.cluster.local']) {
+      expect(joins(link(host, { orders: [at(3000)] }, config(), { orders: routed(3000) }))).toEqual([
+        'hits entry:orders:http:GET:/items heuristic src/main.ts:7, behind orders-svc:80 (k8s/orders.yaml)',
+        'http_calls entry:orders:http:GET:/items heuristic src/main.ts:7, behind orders-svc:80 (k8s/orders.yaml)',
+      ]);
+    }
+  });
+
+  it("reads the containers' environment over the code's fallback behind the name", () => {
+    expect(joins(link('orders-svc', { orders: [at(3000, { setting: 'PORT' })] }, config(), { orders: routed(4000, { PORT: 4000 }) }))[1]).toBe(
+      'http_calls entry:orders:http:GET:/items heuristic src/main.ts:7 (PORT from k8s/orders.yaml (orders-svc)), behind orders-svc:80 (k8s/orders.yaml)',
+    );
+  });
+
+  it('is a note where the name routes to a port nothing in the code listens on', () => {
+    const result = link('orders-svc', { orders: [at(3000)] }, config(), { orders: routed(8080) });
+    const row = result.project.unresolved.find((each) => each.reason === 'published-port-unheard');
+    expect(row).toMatchObject({ service: 'orders', file: 'k8s/orders.yaml', line: 30, level: 'info', meta: { routed: 80, container: 8080, listens: [3000] } });
+    expect(row?.message).toBe("k8s/orders.yaml routes orders-svc:80 to port 8080 of orders's containers, but orders's code listens on 3000 (src/main.ts:7)");
+  });
+});
+
+describe('a request on a network to a port the service is not reached at there (P257)', () => {
+  it("is a finding, never a join, where it names a container's published port on the container's network", () => {
+    const result = link('orders-api:3001', { orders: [at(3000)] }, config(), { orders: container([[3001, 3000]]) });
+    expect(joins(result)).toEqual([]);
+    const rows = result.project.unresolved.filter((each) => each.reason === 'network-port-unreachable');
+    expect(rows.map((row) => `${row.service} ${row.file}:${row.line}`)).toEqual(['jobs src/sync.ts:3', 'web src/api.ts:3']);
+    expect(rows[0]?.message).toBe(
+      "orders-api:3001 names orders on its container's network at a port docker-compose.yml publishes only on the machine running it, so the request will not connect; on that network it is reached at orders-api:3000",
+    );
+    expect(result.project.nodes.some((node) => node.type === 'external_api')).toBe(false);
+    expect(result.report.httpOut).toMatchObject({ total: 1, linked: 0, noRoute: 1 });
+    expect(result.report.ui.byReason).toEqual({ 'network-port-unreachable': 1 });
+  });
+
+  it("is a finding where it names the containers' own port behind a cluster's name", () => {
+    const result = link('orders-svc:3000', { orders: [at(3000)] }, config(), { orders: routed(3000) });
+    expect(joins(result)).toEqual([]);
+    expect(result.project.unresolved.find((each) => each.reason === 'network-port-unreachable')?.message).toBe(
+      "orders-svc:3000 names orders on its cluster's network at its containers' own port, which k8s/orders.yaml routes only through orders-svc:80, so the request will not connect",
+    );
+  });
+
+  it('says nothing where the code listens on the published port too, or where nothing says where it listens', () => {
+    expect(joins(link('orders:3001', { orders: [at(3000), at(3001, { line: 9 })] }, config(), { orders: container([[3001, 3000]]) }))).toHaveLength(2);
+    const unread = link('orders-api:3001', {}, config(), { orders: container([[3001, 3000]]) });
+    expect(unread.project.unresolved.some((row) => row.reason === 'network-port-unreachable')).toBe(false);
+  });
+});
+
+/** A front end whose dev server forwards by `rules`, its browser calling `path` with no host, and a script calling its dev server. */
+const proxied = (rules: readonly Record<string, unknown>[], path: string, own: GraphNode[] = []): RepoGraph[] => [
+  graph('web', [
+    {
+      id: 'repo:web',
+      type: 'repo',
+      label: 'web',
+      repo: 'web',
+      meta: { listen: [{ port: 5180, file: 'vite.config.ts', line: 4, devServer: true }], proxy: rules },
+    },
+    { id: UI, type: 'ui_api_call', kind: 'http', label: `GET ${path}`, repo: 'web', file: 'src/api.ts', line: 3, meta: { method: 'GET', path, baseUrlEnv: null } },
+    ...own,
+  ]),
+  server('orders', [at(3001)]),
+  server('billing', [at(3002)]),
+  graph(
+    'jobs',
+    [
+      {
+        id: OUT,
+        type: 'http_out',
+        kind: 'http',
+        label: `GET ${path}`,
+        repo: 'jobs',
+        file: 'src/sync.ts',
+        line: 4,
+        meta: { method: 'GET', url: `http:${SLASHES}localhost:5180${path}`, path, baseUrlEnv: null, host: 'localhost:5180' },
+      },
+      { id: 'external_api:localhost:5180', type: 'external_api', label: 'localhost:5180', repo: 'jobs', meta: { host: 'localhost:5180' } },
+    ],
+    [{ from: OUT, to: 'external_api:localhost:5180', type: 'calls', confidence: 'static' }],
+  ),
+];
+
+const rule = (path: string, target: string, to: string, extra: Record<string, unknown> = {}) => ({ path, target, to, file: 'vite.config.ts', line: 6, ...extra });
+
+/** Each join as `type to confidence via proxiedBy proxiedAs`. */
+const through = (result: ReturnType<typeof linkGraphs>): string[] =>
+  result.project.edges
+    .filter((edge) => edge.type === 'hits' || edge.type === 'http_calls' || (edge.type === 'calls' && edge.to.startsWith('external_api')))
+    .map((edge) => `${edge.type} ${edge.to} ${edge.confidence} ${String(edge.meta?.['via'] ?? '-')} ${String(edge.meta?.['proxiedBy'] ?? '-')} ${String(edge.meta?.['proxiedAs'] ?? '-')}`)
+    .sort();
+
+describe("a request a server's proxy forwards joins where it is forwarded (P257)", () => {
+  it('joins a request with no host, and one to the dev server, at the rewritten path, a guess naming the rule', () => {
+    const result = linkGraphs(proxied([rule('/api', `http:${SLASHES}localhost:3001`, '')], '/api/items'), config(), { builtAt: FIXED });
+    expect(through(result)).toEqual([
+      'hits entry:orders:http:GET:/items heuristic proxy vite.config.ts:6 /items',
+      'http_calls entry:orders:http:GET:/items heuristic proxy vite.config.ts:6 /items',
+    ]);
+    // The dev server is the project's own: no third party is drawn for it.
+    expect(result.project.nodes.some((node) => node.id === 'external_api:localhost:5180')).toBe(false);
+    expect(result.project.edges.find((edge) => edge.type === 'hits')?.meta?.['listensAt']).toBe('src/main.ts:7');
+  });
+
+  it('forwards before the server own routes, unless the rule is applied after them', () => {
+    const own: GraphNode[] = [{ id: 'entry:web:http:GET:/items', type: 'entry', kind: 'http', label: 'GET /items', repo: 'web', meta: { method: 'GET', path: '/items' } }];
+    const first = linkGraphs(proxied([rule('/', `http:${SLASHES}localhost:3002`, '')], '/items', own), config(), { builtAt: FIXED });
+    expect(through(first)).toEqual([
+      'hits entry:billing:http:GET:/items heuristic proxy vite.config.ts:6 -',
+      'http_calls entry:billing:http:GET:/items heuristic proxy vite.config.ts:6 -',
+    ]);
+    const after = linkGraphs(proxied([rule('/', `http:${SLASHES}localhost:3002`, '', { after: 'own-routes' })], '/items', own), config(), { builtAt: FIXED });
+    expect(through(after)).toEqual(['hits entry:web:http:GET:/items static same-service - -', 'http_calls entry:web:http:GET:/items static host - -']);
+  });
+
+  it('is a route not found at the service the proxy names, where it serves nothing there', () => {
+    const result = linkGraphs(proxied([rule('/api', `http:${SLASHES}localhost:3001`, '/v2')], '/api/items'), config(), { builtAt: FIXED });
+    expect(through(result)).toEqual([]);
+    expect(result.project.unresolved.filter((row) => row.reason === 'target-route-not-found').map((row) => row.message)).toEqual([
+      'target service orders has no route GET /v2/items',
+      'target service orders has no route GET /v2/items',
+    ]);
+  });
+
+  it('draws a third party where the proxy forwards to a host no service is reached at, and says so', () => {
+    const result = linkGraphs(proxied([rule('/ext', `https:${SLASHES}api.example.test`, '')], '/ext/items'), config(), { builtAt: FIXED });
+    expect(through(result)).toEqual([
+      'calls external_api:api.example.test heuristic proxy vite.config.ts:6 /items',
+      'calls external_api:api.example.test heuristic proxy vite.config.ts:6 /items',
+    ]);
+    expect(result.project.unresolved.filter((row) => row.reason === 'proxied-to-third-party').map((row) => `${row.service} ${row.level}`)).toEqual(['jobs info', 'web info']);
+    expect(result.report.ui.byReason).toEqual({ 'proxied-to-third-party': 1 });
+    expect(result.report.httpOut).toMatchObject({ external: 1 });
+  });
+});

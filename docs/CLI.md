@@ -5235,9 +5235,79 @@ container's network to `orders:3000` with
 settings' hosts say which side each came from (`mapped.side`). A mapping whose
 container side the code does not listen on is the note `published-port-unheard`
 at the mapping's line, and the request is still joined by the file. A front
-end's dev server forwards what it does not serve (its proxy is not read), so a
+end's dev server whose proxy is not read forwards what it does not serve, so a
 request to its port that its service has no route for is decided by the next
-way, as before. Kubernetes manifests are not read. `fixtures/port-sources-joins`
+way. `fixtures/port-sources-joins` shows each case.
+
+**Where a request is forwarded, and where a container listens (P257).** A
+server's proxy is read where its framework writes it, kept on the repository
+node as `meta.proxy: [{ path, target, to, file, line, after? }]`:
+
+| Server | Read |
+|---|---|
+| Vite (React, Vue, Svelte, SvelteKit and any Vite front end) | `server.proxy` and `preview.proxy`: `'/api': 'http://localhost:3001'`, `{ target, rewrite: (path) => path.replace(/^\/api/, '') }` |
+| Angular | the `proxyConfig` of the `serve` target in `angular.json` or `project.json`, and `ng serve --proxy-config`: `proxy.conf.json` or a module exporting the table, `{ "/api": { "target", "pathRewrite": { "^/api": "" } } }` or `[{ "context": [...], "target" }]` |
+| Nuxt, Nitro | `nitro.devProxy` (`devProxy` in `nitro.config.*`), which mounts the target at its prefix and so takes the prefix off; a route rule's `proxy` in `routeRules` and `nitro.routeRules`, `'/api/**': { proxy: 'http://localhost:3001/**' }` |
+| Next | what `rewrites()` answers, a list or `{ beforeFiles, afterFiles, fallback }`, where the `destination` is an address outside the application; a trailing catch-all (`/:path*`) is the rest of the path |
+| Create React App | `"proxy"` in `package.json`: every request its dev server has no file for, path unchanged |
+| A workspace tool's webpack dev server | the `proxyConfig` of an `@nx/webpack:dev-server` (`@nx/react`, `@nx/web`) target in `project.json` |
+
+A request with no host, from a front end whose server forwards its path, and a
+request to such a server's own port (`localhost:5180/api/orders`), join the
+service at the target's host at the rewritten path (`/orders`): `via: proxy`,
+`heuristic` (a proxy is how a server is run, not what the code says), the edge
+carrying `proxiedBy` (the rule's `file:line`), `proxiedAs` (where the path
+changes) and the target's `listensAt`. A rule is matched before the server's own
+routes, except Next's rewrites after its files and Create React App's proxy,
+which only take what the server does not serve. A path the target serves no
+route for is `target-route-not-found` at that service; a target no service is
+reached at is drawn as a third party (`calls`, `via: proxy`) with the note
+`proxied-to-third-party`. The dev server's own host is not drawn as a third
+party where its proxy forwards. A rule whose prefix is a pattern, whose target
+is not written as an address, or whose rewrite is anything but a literal
+replacement of its prefix is the row `proxy-rule-unread`, and the requests
+under it are decided as if no proxy were there. `fixtures/dev-proxy-joins`
+shows each case.
+
+A cluster's manifests are read from every service's repository and beside the
+configuration: plain YAML files, several documents to a file, declaring a
+`Deployment`, `StatefulSet`, `DaemonSet` or `ReplicaSet` (its pods' labels, its
+containers' named ports and literal `env`) and a `Service` (its name, namespace,
+selector and each `port` → `targetPort`, a named one resolved through the pods
+it selects). A service object is the project's service whose workload it
+selects (a workload known by the service's name, its pods' `app` labels, a
+container's or an image's name, or the only workload a service's own
+repository declares), or the service of its own name where it selects none. A
+Helm template is read where its values are literal: a line that is only a
+directive is dropped, a value that is a template expression is not read (and a
+port or a name written so is skipped), and chart values files are not read. A
+kustomization gives the files it lists its `namespace`, `namePrefix` and
+`nameSuffix`; its patches and overlays are not read. Each name a service object
+routes is a host (`orders`, and with a namespace `orders.shop`,
+`orders.shop.svc`, `orders.shop.svc.cluster.local`), and its ports are hosts
+with `mapped.side: 'routed'`. A request to `http://orders/orders` (the port the
+scheme defaults to where none is written) joins with
+`listensAt: src/server.ts:10, behind orders:80 (k8s/orders.yaml)`, the pods'
+environment outranking the code's fallback as a container's does; a `targetPort`
+the code does not listen on is `published-port-unheard`.
+
+A request on a container's or a cluster's network to a port the service is not
+reached at there - a compose or `docker run` mapping's published side
+(`search:4010` where `4010:3000`), or the containers' own port behind a routed
+name (`orders:3000` where `orders:80` routes to 3000) - will not connect: it is
+the finding `network-port-unreachable` naming the hosts that do reach it, and
+is not joined (counted under `noRoute` for a server's request).
+
+The last ways a port is set: `docker run -p` in a `Makefile`, a `*.mk` or a
+`*.sh` file at the top of the service or in its `scripts/` or `bin/` (a command
+continued with `\` read as one); the `port` of a workspace tool's target in
+`project.json` whose executor starts a server (`@nx/next:server`,
+`@nx/vite:dev-server` and `preview-server`, `@nx/webpack:dev-server`,
+`@nx/angular:dev-server` and Angular's own builders; never `@nx/js:node`, whose
+`port` is the debugger's); and a NestJS settings object handed in by its token,
+`config.port` of `@Inject(appConfig.KEY) config: ConfigType<typeof appConfig>`,
+of `app.get(appConfig.KEY)` or of any value typed `ConfigType<typeof
+appConfig>`, read at the `registerAs` factory's key. `fixtures/cluster-port-joins`
 shows each case.
 
 A custom broker entry:

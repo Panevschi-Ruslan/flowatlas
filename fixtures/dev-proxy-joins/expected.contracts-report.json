@@ -1,0 +1,285 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-08T14:35:47.837Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:7:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:7:9|http_calls|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "jobs#src/server.ts:POST /jobs/sync@6 declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:jobs#src/server.ts:7:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:jobs#src/server.ts:7:9|http_calls|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/invoices.service.ts:11:12",
+        "to": "entry:billing:http:GET:/invoices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/invoices.service.ts:11:12|hits|entry:billing:http:GET:/invoices",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/app/invoices.service.ts:InvoicesService.list declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/invoices.service.ts:11:12",
+        "to": "entry:billing:http:GET:/invoices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/invoices.service.ts:11:12|hits|entry:billing:http:GET:/invoices",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "billing#src/app.ts:GET /invoices@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:legacy#src/Invoices.tsx:3:22",
+        "to": "entry:billing:http:GET:/invoices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:legacy#src/Invoices.tsx:3:22|hits|entry:billing:http:GET:/invoices",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "legacy#src/Invoices.tsx:Invoices declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:legacy#src/Invoices.tsx:3:22",
+        "to": "entry:billing:http:GET:/invoices",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:legacy#src/Invoices.tsx:3:22|hits|entry:billing:http:GET:/invoices",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "billing#src/app.ts:GET /invoices@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:store#app/page.tsx:5:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:store#app/page.tsx:5:28|hits|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "store#app/page.tsx:Page declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:store#app/page.tsx:5:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:store#app/page.tsx:5:28|hits|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:store#app/page.tsx:6:28",
+        "to": "entry:store:http:GET:/shop-api/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:store#app/page.tsx:6:28|hits|entry:store:http:GET:/shop-api/health",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "store#app/page.tsx:Page declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:store#app/page.tsx:6:28",
+        "to": "entry:store:http:GET:/shop-api/health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:store#app/page.tsx:6:28|hits|entry:store:http:GET:/shop-api/health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "store#app/page.tsx:Page declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#pages/index.vue:12:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#pages/index.vue:12:9|hits|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#pages/index.vue:load declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#pages/index.vue:12:9",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#pages/index.vue:12:9|hits|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#pages/index.vue:9:34",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#pages/index.vue:9:34|hits|entry:catalog:http:GET:/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "storefront#pages/index.vue:pages/index declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:storefront#pages/index.vue:9:34",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:storefront#pages/index.vue:9:34|hits|entry:catalog:http:GET:/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/app.ts:GET /products@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:3:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:3:28|hits|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Shop.tsx:Shop declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:3:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:3:28|hits|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:4:37",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:4:37|hits|entry:orders:http:GET:/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Shop.tsx:Shop declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:4:37",
+        "to": "entry:orders:http:GET:/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:4:37|hits|entry:orders:http:GET:/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders/:id@10 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:5:30",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:5:30|hits|entry:catalog:http:GET:/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Shop.tsx:Shop declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:5:30",
+        "to": "entry:catalog:http:GET:/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:5:30|hits|entry:catalog:http:GET:/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "catalog#src/app.ts:GET /products@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:8:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:8:28|hits|entry:orders:http:GET:/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/Shop.tsx:Shop declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Shop.tsx:8:28",
+        "to": "entry:orders:http:GET:/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Shop.tsx:8:28|hits|entry:orders:http:GET:/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 22,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

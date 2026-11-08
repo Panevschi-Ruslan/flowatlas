@@ -56,7 +56,9 @@ import { joinGraphqlFields } from './graphql-link.js';
 import { routeGateways, type RouteAnswer } from './graphql-federation.js';
 import {
   atLocalPort,
+  closedAt,
   inNetworkAt,
+  portClosedFinding,
   portSharedFinding,
   portsListening,
   whereListening,
@@ -64,6 +66,7 @@ import {
   type PortAnswer,
   type PortIndex,
 } from './local-port.js';
+import { forwardOf, proxiedMeta, proxiesAt, proxiedOutFinding } from './proxy-forward.js';
 import type { GatewayRouteMeta } from '@flowatlas/graphql';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
@@ -368,6 +371,8 @@ const procedureAddressLookup = (
     if (found?.kind === 'service') return { kind: 'service', service: found.service, confidence: found.sure ? 'static' : 'heuristic' };
     // Two services listen where the link sends (P250).
     if (found?.kind === 'shared') return { kind: 'unplaced', finding: portSharedFinding(found.port, found.said) };
+    // A port the network does not reach the service at (P257).
+    if (found?.kind === 'closed') return { kind: 'unplaced', finding: portClosedFinding(found.host, found.closed) };
     return server ? { kind: 'external', host } : undefined;
   }
   return undefined;
@@ -432,6 +437,10 @@ const boundedByMount = (confidence: Confidence, mountAssumed: readonly string[] 
     ? confidence
     : 'heuristic';
 
+/** What an edge joined through a server's proxy carries: the rule, and the path it was forwarded as (P257). */
+const proxyMeta = (outcome: { readonly proxied?: Parameters<typeof proxiedMeta>[0] }, call: GraphNode): Record<string, unknown> =>
+  proxiedMeta(outcome.proxied, String(call.meta?.['path'] ?? ''));
+
 /** What an edge joined by the port a server listens on carries: where the code starts it there (P250). */
 const listensMeta = (listening: Listening | undefined): Record<string, unknown> =>
   listening === undefined ? {} : { listensAt: whereListening(listening) };
@@ -462,6 +471,9 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
   // A host written in the call that the configuration places (P244); one only
   // setting files place is bounded below, in the edge.
   host: () => 'static',
+  // Where a server's proxy forwards the request: how the server is run, not
+  // what the code says (P257).
+  proxy: () => 'heuristic',
 };
 
 /** The edge a resolved call becomes. */
@@ -483,6 +495,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
       via: outcome.via,
       targetService: outcome.entry.repo,
       ...listensMeta(outcome.listening),
+      ...proxyMeta(outcome, call),
       ...(outcome.via === 'functionUrl' ? { variable: call.meta?.['baseUrlEnv'] } : {}),
       ...(baseUrl === undefined ? {} : takenMeta(baseUrl)),
       ...mountMeta(outcome.mountAssumed),
@@ -512,6 +525,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
   const guessed =
     call.meta?.['guessed'] === true ||
     outcome.via === 'unique-route' ||
+    outcome.via === 'proxy' ||
     outcome.hostFromFiles === true ||
     (outcome.via === 'base-url-value' && outcome.baseUrl?.deployed !== true);
   return {
@@ -530,6 +544,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
       via: outcome.via,
       targetService: outcome.targetService,
       ...listensMeta(outcome.listening),
+      ...proxyMeta(outcome, call),
       ...mountMeta(outcome.mountAssumed),
       ...(outcome.runnersUp.length === 0
         ? {}
@@ -645,6 +660,7 @@ const portIndexOf = (
     all: config.settingFiles.read === false ? configured : hostIndexOf(config, settings),
     listening: listening.byPort,
     inNetwork: listening.inNetwork,
+    closed: listening.closed,
     rows: listening.rows,
   };
 };
@@ -659,18 +675,24 @@ const portIndexOf = (
 const hostLookup = (hosts: PortIndex): NonNullable<UiIndex['serviceAtHost']> => {
   const one = (found: ReturnType<typeof servicesAt>): string | undefined =>
     Array.isArray(found) && found.length === 1 ? found[0] : undefined;
-  const placed = (service: string, sure: boolean, host: string): PortAnswer => {
-    const listening = inNetworkAt(host, service, hosts);
+  const placed = (service: string, sure: boolean, host: string, defaultPort?: number): PortAnswer => {
+    // A port the network does not reach the service at is no join (P257).
+    const closed = closedAt(host, service, hosts, defaultPort);
+    if (closed !== undefined) return { kind: 'closed', host, closed };
+    const listening = inNetworkAt(host, service, hosts, defaultPort);
     return { kind: 'service', service, sure, ...(listening === undefined ? {} : { listening }) };
   };
-  return (host) => {
+  return (host, defaultPort) => {
     const address = `http:${'/'.repeat(2)}${host}`;
     const local = atLocalPort(address, hosts);
     if (local !== undefined) return local;
     const named = one(servicesAt(address, hosts.configured));
-    if (named !== undefined) return placed(named, true, host);
+    if (named !== undefined) return placed(named, true, host, defaultPort);
     const filed = one(servicesAt(address, hosts.all));
-    return filed === undefined ? undefined : placed(filed, false, host);
+    if (filed !== undefined) return placed(filed, false, host, defaultPort);
+    // A name only a network's port mapping writes, at a port it does not reach (P257).
+    const closed = closedAt(host, undefined, hosts, defaultPort);
+    return closed === undefined ? undefined : { kind: 'closed', host, closed };
   };
 };
 
@@ -854,6 +876,8 @@ export const linkGraphs = (
   // every request with a host and of a gateway's subgraphs (P250).
   const hosts = portIndexOf(config, settings, nodes);
   found.push(...hosts.rows);
+  // What each service's server forwards to another server (P257).
+  const forwarding = forwardOf(proxiesAt(nodes));
   const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, true);
   const valuedUiBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, false);
   const index: RouteIndex = {
@@ -862,11 +886,13 @@ export const linkGraphs = (
     ...(valuedBaseUrlOf === undefined ? {} : { baseUrlOf: valuedBaseUrlOf }),
     bindingOf: bindingLookup(config, settings),
     serviceAtHost: hostLookup(hosts),
+    forwardOf: forwarding,
   };
   const uiIndex: UiIndex = {
     ...buildUiIndex(config, routesByService, servicesByEnv),
     ...(valuedUiBaseUrlOf === undefined ? {} : { baseUrlOf: valuedUiBaseUrlOf }),
     serviceAtHost: hostLookup(hosts),
+    forwardOf: forwarding,
   };
   const procedureIndex: ProcedureIndex = {
     ...buildProcedureIndex(nodes, config, servicesByEnv),
@@ -882,6 +908,28 @@ export const linkGraphs = (
       ...finding,
       symbol: call.id,
     });
+  };
+
+  /**
+   * A request a server's proxy forwards to a host no service is reached at
+   * (P257): drawn to that host as a third party, as sure as the rule, and not
+   * to the server it forwards through, which is the project's own.
+   */
+  const proxiedOut = (call: GraphNode, forward: Parameters<typeof proxiedOutFinding>[1]): void => {
+    const host = call.meta?.['host'];
+    if (typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
+    const apiId = makeExternalApiId(forward.host);
+    if (!nodes.has(apiId)) nodes.set(apiId, { id: apiId, type: 'external_api', label: forward.host, repo: call.repo, meta: { host: forward.host } });
+    const edge: GraphEdge = {
+      from: call.id,
+      to: apiId,
+      type: 'calls',
+      confidence: 'heuristic',
+      ...(call.file === undefined ? {} : { file: call.file }),
+      ...(call.line === undefined ? {} : { line: call.line }),
+      meta: { via: 'proxy', ...proxiedMeta(forward, String(call.meta?.['path'] ?? '')) },
+    };
+    edges.set(edgeKey(edge), edge);
   };
 
   /** One row per value taken, standing for every request it was taken for (P77). */
@@ -914,7 +962,8 @@ export const linkGraphs = (
     // The host was a configured service's, so it is no third party: the edge
     // the reader drew to it, not knowing whose it was, goes (P239).
     const host = call.meta?.['host'];
-    if (outcome.via === 'host' && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
+    // Forwarded by a server's proxy, the request did reach that server, which is the project's own (P257).
+    if ((outcome.via === 'host' || outcome.via === 'proxy') && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
     if (outcome.baseUrl !== undefined) {
       edge.meta = { ...edge.meta, ...takenMeta(outcome.baseUrl) };
       call.meta = { ...call.meta, ...takenMeta(outcome.baseUrl) };
@@ -1010,7 +1059,7 @@ export const linkGraphs = (
       // The host was a configured service's, so it is no third party: the edge
       // the reader drew to it goes, as a browser request's does (P244).
       const host = call.meta?.['host'];
-      if (outcome.via === 'host' && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
+      if ((outcome.via === 'host' || outcome.via === 'proxy') && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
       for (const also of alsoLinked ?? []) {
         const more = callEdge(call, {
           kind: 'linked',
@@ -1028,10 +1077,17 @@ export const linkGraphs = (
       // A binding nothing is found behind is counted with the settings no
       // service claims: both are a name the configuration does not place. Two
       // services on one port are two answers, as two routes are (P250).
-      httpOut[outcome.kind === 'unknownBinding' ? 'unknownEnv' : outcome.kind === 'portShared' ? 'ambiguous' : outcome.kind] += 1;
-      // The port is the project's own services', so no third party (P250).
+      // A port the network does not reach the service at is a request nothing answers (P257).
+      httpOut[outcome.kind === 'unknownBinding' ? 'unknownEnv' : outcome.kind === 'portShared' ? 'ambiguous' : outcome.kind === 'portClosed' ? 'noRoute' : outcome.kind] += 1;
+      // The port is the project's own services', so no third party (P250, P257).
       const host = call.meta?.['host'];
-      if (outcome.kind === 'portShared' && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
+      const ours = outcome.kind === 'portShared' || outcome.kind === 'portClosed' || (outcome.kind === 'noRoute' && outcome.proxied !== undefined);
+      if (ours && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
+      // Forwarded by a server's proxy to a third party: drawn to it, from a server that is the project's own (P257).
+      if (outcome.kind === 'external' && outcome.proxied !== undefined) {
+        proxiedOut(call, outcome.proxied.forward);
+        record(call, proxiedOutFinding(outcome.proxied.service, outcome.proxied.forward));
+      }
     }
     const partial = nearMissOf(call, outcome);
     if (partial !== undefined) partials.push(partial);
@@ -1152,9 +1208,12 @@ export const linkGraphs = (
     }
 
     ui.unresolved += 1;
-    // Two of the project's own services listen on the port: no third party either (P250).
+    // Two of the project's own services listen on the port, or the network
+    // does not reach the service at it: no third party either (P250, P257).
     const sharedHost = call.meta?.['host'];
-    if (outcome.kind === 'portShared' && typeof sharedHost === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(sharedHost));
+    const ours = outcome.kind === 'portShared' || outcome.kind === 'portClosed' || (outcome.kind === 'noRoute' && outcome.proxied !== undefined);
+    if (ours && typeof sharedHost === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(sharedHost));
+    if (outcome.kind === 'proxiedOut') proxiedOut(call, outcome.forward);
     const reason = uiReasonOf(outcome);
     if (reason !== undefined) ui.byReason[reason] = (ui.byReason[reason] ?? 0) + 1;
     if (outcome.kind === 'dynamic') {

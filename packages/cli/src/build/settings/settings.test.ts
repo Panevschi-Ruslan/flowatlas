@@ -241,6 +241,130 @@ describe('what a project’s files say its settings are', () => {
     ]);
   });
 
+  it('reads a `docker run` in a Makefile and in a shell script of the service (P257)', () => {
+    const dir = project({
+      'search/Makefile': ['IMAGE = search', '', 'run:', '\t@docker run --rm \\', '\t\t-p 4010:3000 \\', '\t\t--name search search:latest', '', 'dev:', '\tdocker run -p $(PORT):3000 search'].join('\n'),
+      'audit/scripts/run.sh': ['#!/bin/sh', '# docker run -p 1:2 ignored', 'docker run -d -p 4011:3000 -e PORT=3000 --name audit-api audit'].join('\n'),
+    });
+    const read = readProjectSettings({ services: ['search', 'audit'].map((name) => ({ name, dir: join(dir, name) })), rootDir: dir });
+    expect(read['search']?.containers).toEqual([
+      { name: 'search', names: ['search'], file: 'Makefile', ports: [{ published: 4010, container: 3000, file: 'Makefile', line: 4 }], environment: {} },
+      { name: 'search', names: [], file: 'Makefile', ports: [], environment: {} },
+    ]);
+    expect(read['audit']?.containers).toEqual([
+      { name: 'audit-api', names: ['audit-api'], file: 'scripts/run.sh', ports: [{ published: 4011, container: 3000, file: 'scripts/run.sh', line: 3 }], environment: { PORT: 3000 } },
+    ]);
+  });
+
+  it('reads the names a cluster routes to a service’s containers, from its manifests and the project’s (P257)', () => {
+    const dir = project({
+      'orders/k8s/orders.yaml': [
+        'apiVersion: apps/v1',
+        'kind: Deployment',
+        'metadata:',
+        '  name: orders',
+        'spec:',
+        '  template:',
+        '    metadata:',
+        '      labels:',
+        '        app: orders',
+        '    spec:',
+        '      containers:',
+        '        - name: api',
+        '          image: registry.example.test/shop/orders:1.4',
+        '          ports:',
+        '            - name: http',
+        '              containerPort: 3000',
+        '          env:',
+        '            - name: PORT',
+        '              value: "3000"',
+        '---',
+        'apiVersion: v1',
+        'kind: Service',
+        'metadata:',
+        '  name: orders-svc',
+        '  namespace: shop',
+        'spec:',
+        '  selector:',
+        '    app: orders',
+        '  ports:',
+        '    - port: 80',
+        '      targetPort: http',
+        '    - port: 9000',
+        '      targetPort: metrics',
+      ].join('\n'),
+      'deploy/stock.yaml': [
+        'apiVersion: v1',
+        'kind: Service',
+        'metadata:',
+        '  name: stock',
+        'spec:',
+        '  selector:',
+        '    app.kubernetes.io/name: stock',
+        '  ports:',
+        '    - port: 8080',
+        '      targetPort: 4000',
+        '---',
+        'apiVersion: apps/v1',
+        'kind: StatefulSet',
+        'metadata:',
+        '  name: stock-store',
+        'spec:',
+        '  template:',
+        '    metadata:',
+        '      labels:',
+        '        app.kubernetes.io/name: stock',
+        '    spec:',
+        '      containers:',
+        '        - name: stock',
+        '          image: stock',
+        '          env:',
+        '            - name: PORT',
+        '              value: "4000"',
+      ].join('\n'),
+      'charts/notify/templates/service.yaml': [
+        'apiVersion: v1',
+        'kind: Service',
+        'metadata:',
+        '  name: notify',
+        '  labels:',
+        '    {{- include "notify.labels" . | nindent 4 }}',
+        'spec:',
+        '  ports:',
+        '    - port: {{ .Values.service.port }}',
+        '      targetPort: 3000',
+        '    - port: 81',
+        '      targetPort: 3000',
+      ].join('\n'),
+      'kustomize/kustomization.yaml': 'namespace: billing\nnamePrefix: prod-\nresources:\n  - billing.yaml\n',
+      'kustomize/billing.yaml': 'apiVersion: v1\nkind: Service\nmetadata:\n  name: billing\nspec:\n  ports:\n    - port: 80\n      targetPort: 3004\n',
+    });
+    const names = ['orders', 'stock', 'notify', 'billing'];
+    const read = readProjectSettings({ services: names.map((name) => ({ name, dir: join(dir, name) })), rootDir: dir });
+    expect(read['orders']?.routes).toEqual([
+      {
+        name: 'orders-svc',
+        names: ['orders-svc', 'orders-svc.shop', 'orders-svc.shop.svc', 'orders-svc.shop.svc.cluster.local'],
+        file: 'k8s/orders.yaml',
+        ports: [{ port: 80, target: 3000, file: 'k8s/orders.yaml', line: 30 }],
+        environment: { PORT: 3000 },
+      },
+    ]);
+    expect(read['orders']?.hosts.filter((alias) => alias.mapped?.side === 'routed').map((alias) => alias.host)).toEqual([
+      'orders-svc:80',
+      'orders-svc.shop:80',
+      'orders-svc.shop.svc:80',
+      'orders-svc.shop.svc.cluster.local:80',
+    ]);
+    expect(read['stock']?.routes).toEqual([
+      { name: 'stock', names: ['stock'], file: 'deploy/stock.yaml', ports: [{ port: 8080, target: 4000, file: 'deploy/stock.yaml', line: 9 }], environment: { PORT: 4000 } },
+    ]);
+    // The templated port is not read; the literal one is, by the service's own name.
+    expect(read['notify']?.routes?.map((routed) => routed.ports.map((port) => `${port.port}:${port.target}`))).toEqual([['81:3000']]);
+    // A kustomization gives its namespace and prefix; the service object selects nothing and is named for no service.
+    expect(read['billing']?.routes).toBeUndefined();
+  });
+
   it('never keeps a secret, a credential or a value that is not an address', () => {
     const dir = project(FILES);
     const text = JSON.stringify(readProjectSettings({ services: services(dir), rootDir: dir }));

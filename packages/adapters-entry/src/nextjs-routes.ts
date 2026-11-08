@@ -41,6 +41,7 @@ import {
   unwrapValue,
 } from './shared.js';
 import { listensByCall, nextListens } from './listen-ports.js';
+import { nextProxies } from './proxy-config.js';
 
 /** The dependency that gives the framework away. */
 const PACKAGE = 'next';
@@ -190,6 +191,8 @@ export const nextjsRoutesAdapter: EntryAdapter = {
   detect: (pkg) => hasDependency(pkg, PACKAGE),
   // A script's `next dev -p 3020`, and a custom server's own `listen` (P250).
   listens: (ctx) => [...nextListens(ctx), ...listensByCall(ctx)],
+  // Its rewrites to an address outside the application (P257).
+  proxies: nextProxies,
   applications: (ctx) => applicationsOf(ctx),
 
   extractEntries(ctx: ExtractContext): EntryNode[] {

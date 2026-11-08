@@ -948,8 +948,17 @@ prove, and the path is given so you can run it.
   settings object, `registerAs` or convict default, a setting the service's
   example environment file fills, and a compose or `docker run` mapping,
   reconciled with the code so `localhost:3001` and `orders:3000` are one
-  service, each edge saying its side (`fixtures/port-sources-joins`). A browser
-  holding a stream open is a request like any other (`fixtures/sse-stream`).
+  service, each edge saying its side (`fixtures/port-sources-joins`). A
+  request a server's proxy forwards joins where it is forwarded: Vite's
+  `server.proxy`, an Angular dev server's proxy configuration, Nuxt's
+  `devProxy` and route rules, Next's `rewrites()` and Create React App's
+  `"proxy"` (`fixtures/dev-proxy-joins`). A cluster's `Service` routing
+  `orders:80` to its pods' port, `docker run` in a Makefile or script, a
+  workspace tool's serve target and a NestJS `ConfigType` settings object say
+  where a service listens too, and a request on a network to a port only the
+  machine or the pods have is a finding (`fixtures/cluster-port-joins`). A
+  browser holding a stream open is a request like any other
+  (`fixtures/sse-stream`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a
   table of handlers the project keeps itself (`fixtures/nest-telegraf`,
   `fixtures/bot-registry`).

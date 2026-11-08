@@ -9,7 +9,8 @@ import {
 } from './route-match.js';
 import { chooseByApiName } from './api-choice.js';
 import { whereFound, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
-import { portSharedFinding, type Listening, type PortAnswer } from './local-port.js';
+import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
+import { defaultPortOf, type Forward } from './proxy-forward.js';
 
 /** A reason, a sentence and what to do about it — everything but where it happened. */
 export interface Finding {
@@ -74,7 +75,9 @@ export interface RouteIndex {
    * lookup a browser request's host is asked of (P239), asked of a request
    * between services too (P244).
    */
-  serviceAtHost?(host: string): PortAnswer | undefined;
+  serviceAtHost?(host: string, defaultPort?: number): PortAnswer | undefined;
+  /** How a service's server forwards a path to another server, where its proxy does (P257). */
+  forwardOf?(service: string, path: string): Forward | undefined;
 }
 
 /** Where a binding goes, as the deployment files and the configuration say. */
@@ -88,7 +91,7 @@ export type BindingAnswer =
 /** What each way a call can end carries with it. */
 interface Details {
   linked: {
-    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host';
+    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host' | 'proxy';
     entry: GraphNode;
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
@@ -97,11 +100,19 @@ interface Details {
     hostFromFiles?: true;
     /** Where the service's server is started on the port an address on this machine names (P250). */
     listening?: Listening;
+    /** The proxy rule the request was forwarded by, and how (P257). */
+    proxied?: Forward;
   };
   /** Two or more services listen on the port an address on this machine names (P250). */
   portShared: { port: number; said: readonly string[]; services: readonly string[] };
-  /** The host, when it was found from the value the setting is given rather than written in the call (P77). */
-  external: { host?: string };
+  /** A host on a network names the service at a port it is not reached at there (P257). */
+  portClosed: { host: string; closed: ClosedPort };
+  /**
+   * The host, when it was found from the value the setting is given rather
+   * than written in the call (P77), or is where a server's proxy forwards the
+   * request (P257).
+   */
+  external: { host?: string; proxied?: { service: string; forward: Forward } };
   /** The service is known when the address said so; the route never was. */
   dynamic: { targetService?: string };
   unknownEnv: {
@@ -122,6 +133,8 @@ interface Details {
     targetService: string;
     method: string;
     path: string;
+    /** The proxy rule that forwarded the request to the service, where one did (P257). */
+    proxied?: Forward;
     verbs: readonly string[];
     /**
      * Routes that would answer if the part of their own address nobody read
@@ -166,6 +179,7 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
   external: null,
   dynamic: null,
   portShared: ({ port, said }) => portSharedFinding(port, said),
+  portClosed: ({ host, closed }) => portClosedFinding(host, closed),
   unknownEnv: ({ env, claiming, values }) =>
     claiming.length === 0 && values !== undefined
       ? unsettledFinding(env, values)
@@ -613,6 +627,22 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     };
   }
 
+  /**
+   * The request a server's proxy makes for one it forwards (P257): the
+   * service at the target's host, asked for the rewritten path, or a third
+   * party where no service is reached there.
+   */
+  const throughProxy = (service: string, forward: Forward): Resolution => {
+    const found = index.serviceAtHost?.(forward.host, forward.defaultPort);
+    if (found === undefined) return { outcome: { kind: 'external', host: forward.host, proxied: { service, forward } }, notes };
+    if (found.kind === 'shared') return { outcome: { kind: 'portShared', port: found.port, said: found.said, services: found.services }, notes };
+    if (found.kind === 'closed') return { outcome: { kind: 'portClosed', host: found.host, closed: found.closed }, notes };
+    const reached = within(found.service, 'proxy', {}, forward.path);
+    if (reached.outcome.kind === 'noRoute') return { ...reached, outcome: { ...reached.outcome, proxied: forward } };
+    if (reached.outcome.kind !== 'linked') return reached;
+    return { ...reached, outcome: { ...reached.outcome, proxied: forward, ...(found.listening === undefined ? {} : { listening: found.listening }) } };
+  };
+
   // A request through a worker's binding goes where the deployment binds the
   // name, at its own path (P91).
   const binding = call.meta?.['binding'];
@@ -643,11 +673,18 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     // not a third party (P244): the same lookup a browser request's host is
     // asked of (P239). Named only by the services' own setting files, the join
     // is a guess and the edge says so.
-    const at = typeof host === 'string' ? index.serviceAtHost?.(host) : undefined;
+    const at = typeof host === 'string' ? index.serviceAtHost?.(host, defaultPortOf(call.meta?.['url'])) : undefined;
     if (at?.kind === 'shared') return { outcome: { kind: 'portShared', port: at.port, said: at.said, services: at.services }, notes };
+    // A port the network does not reach the service at: it will not connect (P257).
+    if (at?.kind === 'closed') return { outcome: { kind: 'portClosed', host: at.host, closed: at.closed }, notes };
+    // A server whose proxy forwards the path hands it on, before its own
+    // routes or after them as its framework does (P257).
+    const forward = at === undefined || typeof path !== 'string' ? undefined : index.forwardOf?.(at.service, path);
+    if (at !== undefined && forward !== undefined && forward.rule.after === undefined) return throughProxy(at.service, forward);
     const reached = at === undefined ? undefined : within(at.service, 'host', {});
+    if (at !== undefined && forward !== undefined && reached?.outcome.kind === 'noRoute') return throughProxy(at.service, forward);
     // A front end's dev server forwards what its own routes do not serve
-    // (P254), to wherever its proxy says, which is not read: as before.
+    // (P254), by a proxy not read: as before.
     const forwarded = reached?.outcome.kind === 'noRoute' && at?.listening?.devServer === true;
     if (at !== undefined && reached !== undefined && !forwarded) {
       if (reached.outcome.kind !== 'linked') return reached;

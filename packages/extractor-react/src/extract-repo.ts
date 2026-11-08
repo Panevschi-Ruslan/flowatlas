@@ -4,6 +4,8 @@ import {
   AdapterRegistry,
   LISTEN_META,
   listeningOf,
+  PROXY_META,
+  proxiesOf,
   countSources,
   GraphBuilder,
   parseConfig,
@@ -242,6 +244,9 @@ export const extractBrowser = (base: ExtractContext, options: FrontendExtractOpt
   // second.
   // Where the service's own server listens, where it has one (P250).
   const listen = listeningOf(base);
+  // What its servers forward to another server, and the rules not read (P257).
+  const proxy = proxiesOf(base);
+  for (const row of proxy.rows) base.builder.addUnresolved(row);
   base.builder.addNode({
     id: `repo:${base.repo}`,
     type: 'repo',
@@ -254,6 +259,7 @@ export const extractBrowser = (base: ExtractContext, options: FrontendExtractOpt
         entry: base.adapters.entry.map((adapter) => adapter.name),
       },
       ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
+      ...(proxy.rules.length === 0 ? {} : { [PROXY_META]: proxy.rules }),
     },
   });
 };

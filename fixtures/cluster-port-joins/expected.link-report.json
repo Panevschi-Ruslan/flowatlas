@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T14:35:48.337Z",
+  "configHash": "57445902addd",
+  "services": [
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "cluster-port-joins-audit",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "cluster-port-joins-billing",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 23,
+      "edges": 21,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "cluster-port-joins-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 2,
+      "types": 1,
+      "unresolved": 2,
+      "durationMs": 0,
+      "packages": {
+        "name": "cluster-port-joins-ledger",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/config",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "notify",
+      "repo": "./notify",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "cluster-port-joins-notify",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "cluster-port-joins-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "search",
+      "repo": "./search",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "cluster-port-joins-search",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "cluster-port-joins-shop",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "cluster-port-joins-stock",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 10,
+    "linked": 8,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 2,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 9,
+    "called": 8,
+    "uncalled": [
+      "entry:jobs:http:POST:/jobs/run"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "jobs",
+      "file": "src/server.ts",
+      "line": 10,
+      "reason": "network-port-unreachable",
+      "message": "orders:3000 names orders on its cluster's network at its containers' own port, which k8s/orders.yaml routes only through orders:80, so the request will not connect",
+      "hint": "Use the port the name routes (orders:80), or route this port too.",
+      "symbol": "http_out:jobs#src/server.ts:10:9"
+    },
+    {
+      "service": "jobs",
+      "file": "src/server.ts",
+      "line": 12,
+      "reason": "network-port-unreachable",
+      "message": "search:4010 names search on its container's network at a port Makefile publishes only on the machine running it, so the request will not connect; on that network it is reached at search:3000",
+      "hint": "Inside the network, use the port the container listens on (search:3000); the published port is for the machine (localhost).",
+      "symbol": "http_out:jobs#src/server.ts:12:9"
+    },
+    {
+      "service": "notify",
+      "file": "charts/notify/templates/service.yaml",
+      "line": 12,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "charts/notify/templates/service.yaml routes notify:80 to port 8080 of notify's containers, but notify's code listens on 3000 (src/server.ts:10)",
+      "hint": "Route the name to the port the server listens on (targetPort), or check that the containers' environment gives the server 8080. A request to notify:80 is still joined to notify by the file.",
+      "symbol": "notify:80:8080",
+      "meta": {
+        "routed": 80,
+        "container": 8080,
+        "listens": [
+          3000
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 47,
+    "edges": 29,
+    "types": 3,
+    "missed": 3,
+    "sites": 3,
+    "notes": 1,
+    "findings": 2,
+    "unresolved": 3
+  }
+}

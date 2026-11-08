@@ -2,6 +2,7 @@ import type { ExtractContext } from './context.js';
 import type { PackageJson } from './manifest.js';
 import type { ConventionsOf } from '../conventions.js';
 import type { ListenPort } from '../listen-port.js';
+import type { ProxyReading } from '../proxy-rule.js';
 
 /** What a caller may ask of any frontend extractor, whichever one it is. */
 export interface FrontendExtractOptions {
@@ -31,4 +32,10 @@ export interface FrontendAdapter {
    * script's `--port`. Asked beside the entry adapters' (`listeningOf`).
    */
   listens?(ctx: ExtractContext): readonly ListenPort[];
+  /**
+   * The paths the front end's dev server forwards to another server (P257):
+   * its bundler's proxy, a proxy configuration file the dev server is started
+   * with. Asked beside the entry adapters' (`proxiesOf`).
+   */
+  proxies?(ctx: ExtractContext): ProxyReading;
 }

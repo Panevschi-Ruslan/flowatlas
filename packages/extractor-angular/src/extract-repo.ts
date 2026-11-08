@@ -8,6 +8,8 @@ import {
   GraphBuilder,
   LISTEN_META,
   listeningOf,
+  PROXY_META,
+  proxiesOf,
   parseConfig,
   readResolvedPackageJson,
   recordApplications,
@@ -205,6 +207,9 @@ export const extractAngular = (
 
   // Where the application's dev server listens (P254).
   const listen = listeningOf(base);
+  // What its dev server forwards to another server, and the rules not read (P257).
+  const proxy = proxiesOf(base);
+  for (const row of proxy.rows) base.builder.addUnresolved(row);
   base.builder.addNode({
     id: `repo:${base.repo}`,
     type: 'repo',
@@ -214,6 +219,7 @@ export const extractAngular = (
       stats: ctx.stats,
       adapters: { frontend: base.adapters.frontend.map((adapter) => adapter.name) },
       ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
+      ...(proxy.rules.length === 0 ? {} : { [PROXY_META]: proxy.rules }),
     },
   });
 };

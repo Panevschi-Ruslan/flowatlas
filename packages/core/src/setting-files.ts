@@ -41,9 +41,12 @@ export interface HostAlias {
   /**
    * Where the host is one side of a container's port mapping (P254):
    * `localhost:3001` is the `published` side of `3001:3000`, `orders:3000`
-   * the `container` side, which the container's network reaches it at.
+   * the `container` side, which the container's network reaches it at. A
+   * name a cluster's network routes to the containers behind it (P257) is the
+   * `routed` side: `orders:80` reaches port 3000 of the containers, and
+   * `published` is then the port of the name, not of this machine.
    */
-  readonly mapped?: { readonly published: number; readonly container: number; readonly side: 'published' | 'container' };
+  readonly mapped?: { readonly published: number; readonly container: number; readonly side: 'published' | 'container' | 'routed' };
 }
 
 /** A port a container publishes on the machine running it, and the port inside it that it reaches (P254). */
@@ -69,6 +72,33 @@ export interface ContainerRun {
   readonly file: string;
   readonly ports: readonly PublishedPort[];
   /** The port each setting is given in the container's environment: `PORT: 3000`. */
+  readonly environment: Readonly<Record<string, number>>;
+}
+
+/** A port a name on a cluster's network routes to a port of the containers behind it (P257): `80` to `3000`. */
+export interface RoutedPort {
+  /** The port the name is reached at: `80` of `orders:80`. */
+  readonly port: number;
+  /** The containers' port it reaches, a named one resolved to its number where the workload names it. */
+  readonly target: number;
+  readonly file: string;
+  readonly line: number;
+}
+
+/**
+ * A name a cluster's network reaches a service's containers by (P257): a
+ * service object of a manifest that selects the service's workload, with
+ * every spelling of the name its network resolves (`orders`,
+ * `orders.shop`, `orders.shop.svc.cluster.local`), the ports it routes, and
+ * the ports the workload's container environment gives a setting.
+ */
+export interface RoutedName {
+  readonly name: string;
+  /** Every spelling of the name, lower case. */
+  readonly names: readonly string[];
+  readonly file: string;
+  readonly ports: readonly RoutedPort[];
+  /** The port each setting is given in the environment of the containers behind it: `PORT: 3000`. */
   readonly environment: Readonly<Record<string, number>>;
 }
 
@@ -100,6 +130,8 @@ export interface RepoSettings {
   readonly deployedAs?: readonly string[];
   /** The containers the service is run in (P254). Absent when no file starts one. */
   readonly containers?: readonly ContainerRun[];
+  /** The names a cluster's network routes to the service's containers (P257). Absent when no manifest does. */
+  readonly routes?: readonly RoutedName[];
   /**
    * The ports the service's own example environment files give a setting, by
    * setting name (P254): what fills a port its code reads from the setting

@@ -390,6 +390,27 @@ export const PROBES = [
     pattern: /\bport\s*:/g,
   },
   {
+    // A server told to forward paths to another (P257): Vite's `proxy`,
+    // Nitro's `devProxy` and a route rule's `proxy`, Next's `rewrites`. One
+    // site per table or rule as the configuration writes it.
+    name: 'dev-proxy',
+    family: 'listens',
+    scope: 'line',
+    what: 'a proxy or a rewrite in `vite.config.*`, `nuxt.config.*`, `nitro.config.*` or `next.config.*`',
+    path: /(?:^|\/)(?:vite|nuxt|nitro|next)\.config\.[cm]?[jt]s$/,
+    pattern: /\b(?:proxy|devProxy)\s*:|\brewrites\s*(?:\(|:)/g,
+  },
+  {
+    // A port a cluster's service object routes to its pods (P257): what a
+    // request to its name joins by. Counted where the target is written.
+    name: 'cluster-target-port',
+    family: 'listens',
+    scope: 'line',
+    what: 'a port a cluster manifest routes to its containers (`targetPort:`)',
+    path: /\.ya?ml$/,
+    pattern: /^\s*(?:-\s+)?targetPort\s*:/gm,
+  },
+  {
     name: 'prisma-call-site',
     family: 'data',
     scope: 'line',

@@ -1,5 +1,5 @@
 import { isTestFile, normalizeFilePath, portWritten, type ExtractContext, type PortReading, type WrittenPort } from '@flowatlas/core';
-import { Node, SyntaxKind, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
+import { Node, SyntaxKind, type CallExpression, type Node as TsNode, type PropertyAccessExpression, type SourceFile } from 'ts-morph';
 import { repoSources } from './shared.js';
 
 /**
@@ -141,9 +141,96 @@ const convictAt = (call: CallExpression, key: string): WrittenPort | undefined =
   return { ...(setting === undefined ? {} : { setting }), ...(fallback.port === undefined ? {} : { port: fallback.port }) };
 };
 
-/** What the repository's settings libraries answer for a port read through a getter. */
+/** The namespace `registerAs('app', …)` registers a settings object under, for the name it is held by. */
+const namespaceOf = (factory: TsNode | undefined): string | undefined => {
+  const made = valueOf(factory);
+  if (made === undefined || !Node.isCallExpression(made) || calleeName(made) !== 'registerAs') return undefined;
+  const namespace = made.getArguments()[0];
+  return namespace === undefined ? undefined : keyOf(namespace);
+};
+
+/** `X` of `X.KEY`, the token a namespaced settings object is handed in by. */
+const tokenOwner = (token: TsNode | undefined): TsNode | undefined =>
+  token !== undefined && Node.isPropertyAccessExpression(token) && token.getName() === 'KEY' ? token.getExpression() : undefined;
+
+/** `X` of the type `ConfigType<typeof X>`, the name the factory is held by. */
+const typedOwner = (declaration: TsNode): TsNode | undefined => {
+  const type = Node.isParameterDeclaration(declaration) || Node.isPropertyDeclaration(declaration) || Node.isVariableDeclaration(declaration) ? declaration.getTypeNode() : undefined;
+  if (type === undefined || !Node.isTypeReference(type) || type.getTypeName().getText() !== 'ConfigType') return undefined;
+  const query = type.getTypeArguments()[0];
+  return query !== undefined && Node.isTypeQuery(query) ? query.getExprName() : undefined;
+};
+
+/** The settings factory a call that hands one out by its token builds: `app.get(appConfig.KEY)`, `app.get<ConfigType<typeof appConfig>>(appConfig.KEY)`. */
+const fromGetter = (node: TsNode | undefined): string | undefined => {
+  const call = node !== undefined && Node.isAwaitExpression(node) ? node.getExpression() : node;
+  if (call === undefined || !Node.isCallExpression(call) || calleeName(call) !== 'get') return undefined;
+  const owner = tokenOwner(call.getArguments()[0]);
+  return owner === undefined ? undefined : namespaceOf(owner);
+};
+
+/**
+ * The namespace of the settings object a declaration holds: one typed
+ * `ConfigType<typeof X>`, one injected by `@Inject(X.KEY)`, one taken from
+ * a getter by `X.KEY` - each where `X` is a `registerAs` factory.
+ */
+const declaredNamespace = (declaration: TsNode): string | undefined => {
+  const typed = typedOwner(declaration);
+  const owned = typed === undefined ? undefined : namespaceOf(typed);
+  if (owned !== undefined) return owned;
+  if (Node.isParameterDeclaration(declaration) || Node.isPropertyDeclaration(declaration)) {
+    for (const decorator of declaration.getDecorators()) {
+      if (decorator.getName() !== 'Inject') continue;
+      const owner = tokenOwner(decorator.getArguments()[0]);
+      const owned = owner === undefined ? undefined : namespaceOf(owner);
+      if (owned !== undefined) return owned;
+    }
+  }
+  if (Node.isVariableDeclaration(declaration)) return fromGetter(declaration.getInitializer());
+  return undefined;
+};
+
+/** The declaration a settings object is held by: `config`, `this.config`. */
+const holderOf = (object: TsNode): TsNode | undefined => {
+  if (Node.isIdentifier(object)) return object.getSymbol()?.getDeclarations()[0];
+  if (Node.isPropertyAccessExpression(object) && object.getExpression().getKind() === SyntaxKind.ThisKeyword) {
+    const owner = object.getFirstAncestor((node) => Node.isClassDeclaration(node) || Node.isClassExpression(node));
+    if (owner === undefined || !(Node.isClassDeclaration(owner) || Node.isClassExpression(owner))) return undefined;
+    const name = object.getName();
+    const property = owner.getProperty(name);
+    if (property !== undefined) return property;
+    return owner.getConstructors()[0]?.getParameters().find((parameter) => parameter.getName() === name && parameter.isParameterProperty());
+  }
+  return undefined;
+};
+
+/**
+ * What a property of a NestJS settings object handed in by its token reads
+ * as a port (P257): `config.port` of `@Inject(appConfig.KEY) config:
+ * ConfigType<typeof appConfig>`, of `app.get(appConfig.KEY)`, nested keys
+ * included (`config.http.port`), read at the factory's dotted key. Asked only
+ * where the checker cannot say what the object is.
+ */
+const namespacedProperty = (access: PropertyAccessExpression, factories: ReadonlyMap<string, WrittenPort>): WrittenPort | undefined => {
+  const keys: string[] = [access.getName()];
+  let object: TsNode = access.getExpression();
+  for (let depth = 0; depth < MAX_DEPTH; depth += 1) {
+    const holder = holderOf(object);
+    const namespace = holder === undefined ? fromGetter(object) : declaredNamespace(holder);
+    if (namespace !== undefined) return factories.get([namespace, ...keys].join('.'));
+    if (!Node.isPropertyAccessExpression(object) || object.getExpression().getKind() === SyntaxKind.ThisKeyword) return undefined;
+    keys.unshift(object.getName());
+    object = object.getExpression();
+  }
+  return undefined;
+};
+
+/** What the repository's settings libraries answer for a port read through a getter, or through a settings object handed in by its token. */
 export const settingsReading = (ctx: ExtractContext): PortReading => {
   const sources = [...repoSources(ctx)].filter((file) => !isTestFile(normalizeFilePath(file.getFilePath(), ctx.repoDir)));
   const factories = factoryPorts(sources);
-  return { settingOf: (call, key) => convictAt(call, key) ?? factories.get(key) };
+  return {
+    settingOf: (call, key) => convictAt(call, key) ?? factories.get(key),
+    propertyOf: (access) => (factories.size === 0 ? undefined : namespacedProperty(access, factories)),
+  };
 };

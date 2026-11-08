@@ -126,3 +126,66 @@ describe('a port read through the settings a repository builds (P254)', () => {
     ).toEqual(['src/serve.ts:2 3013']);
   });
 });
+
+describe('the last ways a port is set (P257)', () => {
+  const config = "import { registerAs } from '@nestjs/config';\nexport default registerAs('app', () => ({ port: Number(process.env.PORT) || 3012, http: { port: 3022 } }));";
+
+  it("reads NestJS's `ConfigType` settings object taken from the application by its token", () => {
+    expect(
+      listening([nestjsHttpAdapter], {
+        'src/app.config.ts': config,
+        'src/main.ts': [
+          "import appConfig from './app.config';",
+          'async function bootstrap() {',
+          '  const app = await NestFactory.create(AppModule);',
+          '  const config = app.get<ConfigType<typeof appConfig>>(appConfig.KEY);',
+          '  await app.listen(config.port);',
+          '}',
+        ].join('\n'),
+        'src/admin.ts': "import appConfig from './app.config';\nconst admin = await NestFactory.create(AdminModule);\nawait admin.listen(admin.get(appConfig.KEY).http.port);",
+      }),
+    ).toEqual(['src/admin.ts:3 3022', 'src/main.ts:5 3012[PORT]']);
+  });
+
+  it('reads one injected by its token, or typed `ConfigType<typeof appConfig>`', () => {
+    expect(
+      listening([nestjsHttpAdapter], {
+        'src/app.config.ts': config,
+        'src/server.ts': [
+          "import appConfig from './app.config';",
+          'export class Server {',
+          '  constructor(@Inject(appConfig.KEY) private readonly config: ConfigType<typeof appConfig>) {}',
+          '  start(app: App) {',
+          '    return app.listen(this.config.port);',
+          '  }',
+          '}',
+        ].join('\n'),
+        'src/typed.ts': "import appConfig from './app.config';\nexport const start = (app: App, settings: ConfigType<typeof appConfig>) => app.listen(settings.http.port);",
+      }),
+    ).toEqual(['src/server.ts:5 3012[PORT]', 'src/typed.ts:2 3022']);
+  });
+
+  it('reads nothing of a settings object no factory builds', () => {
+    expect(
+      listening([nestjsHttpAdapter], {
+        'src/app.config.ts': "export default registerAs('app', () => ({ port: 3012 }));",
+        'src/main.ts': 'const config = app.get(OtherConfig.KEY);\napp.listen(config.port);',
+      }),
+    ).toEqual([]);
+  });
+
+  it("reads a workspace tool's Next server target, and not a target that only takes a debugger's port", () => {
+    const project = JSON.stringify(
+      {
+        name: 'shop',
+        targets: {
+          serve: { executor: '@nx/next:server', options: { buildTarget: 'shop:build', port: 4300 }, configurations: { production: { port: 4301 } } },
+          debug: { executor: '@nx/js:node', options: { port: 9229 } },
+        },
+      },
+      null,
+      2,
+    );
+    expect(listening([nextjsRoutesAdapter], {}, { 'project.json': project })).toEqual(['project.json:8 4300', 'project.json:12 4301']);
+  });
+});

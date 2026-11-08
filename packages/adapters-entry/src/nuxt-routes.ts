@@ -22,6 +22,7 @@ import { routeAddressOfFile, routePathOfFile, type FsRouter } from './fs-routes.
 import { readingOf } from './request-readings.js';
 import { inlineHandlerOf, repoSources } from './shared.js';
 import { listensByCall, nitroListens } from './listen-ports.js';
+import { nitroProxies } from './proxy-config.js';
 
 /**
  * Nuxt's addresses, as rows of the file-system routers (P233).
@@ -188,6 +189,8 @@ export const nitroRoutesAdapter: EntryAdapter = {
   // The dev server's port where the configuration or a script writes it, and
   // an h3 application's own `listen` (P250).
   listens: (ctx) => [...nitroListens(ctx), ...listensByCall(ctx)],
+  // `devProxy` and the route rules that proxy (P257).
+  proxies: nitroProxies,
   // Nuxt's aliases and the names its files use unimported (P240).
   conventions: nuxtConventions,
 

@@ -90,6 +90,8 @@ const NOTES: readonly string[] = [
   'environment-from-files',
   // A container publishes a port its service's code is not read listening on (P254)
   'published-port-unheard',
+  // A request a server's proxy forwards to a host no service of the project is reached at (P257)
+  'proxied-to-third-party',
   'route-api-guessed',
   'route-mount-assumed-empty',
   'stream-filter-not-matched',
@@ -157,6 +159,8 @@ const FINDINGS: readonly string[] = [
   'procedure-call-mismatch',
   // A client's link sent where no mount of its protocol answers (P58)
   'procedure-link-unserved',
+  // A request on a container's or a cluster's network to a port only the machine or the containers have (P257)
+  'network-port-unreachable',
   'workflow-definition-invalid',
   // Ends that nothing on the other side meets
   's3-write-matches-nothing',
@@ -371,6 +375,8 @@ const GAPS: readonly string[] = [
   'ambiguous-route-target',
   // Two services listen on the port an address on this machine names (P250)
   'local-port-shared',
+  // A server's proxy rule written in a way the reader does not follow (P257)
+  'proxy-rule-unread',
   'route-wildcard-only',
   'marker-service-unknown',
   'marker-route-not-found',
@@ -495,6 +501,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
       'orphan-update-decorator',
       'procedure-call-mismatch',
       'procedure-link-unserved',
+      'network-port-unreachable',
       'workflow-definition-invalid',
       's3-write-matches-nothing',
       'stream-no-writer',

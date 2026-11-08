@@ -3,6 +3,8 @@ import {
   AdapterRegistry,
   LISTEN_META,
   listeningOf,
+  PROXY_META,
+  proxiesOf,
   builtInShapesFor,
   countSources,
   conventionsFor,
@@ -366,6 +368,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // Where the service's server listens, as the adapters that start it say
   // (P250): what a request to this machine's port is joined by.
   const listen = listeningOf(base);
+  // What its server forwards to another server, and the rules not read (P257).
+  const proxy = proxiesOf(base);
+  for (const row of proxy.rows) builder.addUnresolved(row);
   const node = builder.addNode({
     id: repoId,
     type: 'repo',
@@ -379,6 +384,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
         entry: adapters.entry.map((adapter) => adapter.name),
       },
       ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
+      ...(proxy.rules.length === 0 ? {} : { [PROXY_META]: proxy.rules }),
     },
   });
   node.meta = {

@@ -9,12 +9,15 @@ import {
   type HostAlias,
   type PortValue,
   type RepoSettings,
+  type RoutedName,
+  type RoutedPort,
   type ServiceBinding,
   type SettingValue,
 } from '@flowatlas/core';
 import { readComposeFile, type ComposeService, type Mapping } from './compose.js';
 import { readWorkerJson, readWorkerToml, readServerlessFile, type DeploymentSettings } from './deployed.js';
-import { readDockerRuns } from './docker-run.js';
+import { readManifestsUnder, type ManifestContainer, type ManifestService, type ManifestWorkload, type Manifests } from './cluster.js';
+import { readDockerRuns, readDockerRunsInScript } from './docker-run.js';
 import { namesInEnvFile, readEnvFile, type Written } from './dotenv.js';
 import { composeEnvironment, envFileEnvironment, envFileReading, environmentName, isComposeFile } from './files.js';
 
@@ -47,9 +50,11 @@ interface Gathered {
   containers: ContainerRun[];
   /** The ports its example environment files give a setting (P254). */
   ports: Map<string, PortValue[]>;
+  /** The names a cluster's network routes to its containers (P257). */
+  routes: RoutedName[];
 }
 
-const gathered = (): Gathered => ({ values: new Map(), namedOnly: new Map(), hosts: [], bindings: [], deployedAs: [], containers: [], ports: new Map() });
+const gathered = (): Gathered => ({ values: new Map(), namedOnly: new Map(), hosts: [], bindings: [], deployedAs: [], containers: [], ports: new Map(), routes: [] });
 
 /** A port a setting is given, where the setting's name is no secret's: `PORT=3000`. */
 const portSetting = ({ name, raw }: Written): number | undefined => (looksSecret(name) ? undefined : portOf(raw));
@@ -80,6 +85,21 @@ const addContainer = (into: Gathered, run: ContainerRun): void => {
 };
 
 const portsOf = (mappings: readonly Mapping[], file: string) => mappings.map((mapping) => ({ ...mapping, file }));
+
+/**
+ * A name a cluster's network routes to the service's containers, and the
+ * hosts it makes (P257): each spelling of the name alone, as a container's
+ * name is a host, and at each port it routes, the `routed` side.
+ */
+const addRouted = (into: Gathered, routed: RoutedName): void => {
+  into.routes.push(routed);
+  for (const name of routed.names) into.hosts.push({ host: name, file: routed.file });
+  for (const port of routed.ports) {
+    for (const name of routed.names) {
+      into.hosts.push({ host: `${name}:${port.port}`, file: routed.file, mapped: { published: port.port, container: port.target, side: 'routed' } });
+    }
+  }
+};
 
 const add = (into: Gathered, name: string, value: SettingValue): void => {
   const list = into.values.get(name) ?? [];
@@ -130,11 +150,11 @@ const readEnv = (into: Gathered, path: string, file: string, container?: Record<
   }
 };
 
-/** The containers the scripts of a repository's `package.json` start with `docker run` (P254). */
+/** The containers the scripts of a repository's `package.json` start with `docker run` (P254), or a shell script or a Makefile does (P257). */
 const readRuns = (into: Gathered, path: string, file: string): void => {
   const text = read(path);
   if (text === undefined || !text.includes('docker')) return;
-  for (const run of readDockerRuns(text)) {
+  for (const run of file.endsWith('package.json') ? readDockerRuns(text) : readDockerRunsInScript(text)) {
     addContainer(into, { name: run.name, names: run.names, file, ports: portsOf(run.mappings, file), environment: environmentPorts(run.environment) });
   }
 };
@@ -174,9 +194,16 @@ const deploymentReader = (parse: (text: string) => DeploymentSettings) => (into:
   if (text !== undefined) fromDeployment(into, parse(text), file);
 };
 
+/** A Makefile or a shell script, which may start the service's container (P257). */
+const SCRIPT_FILES = /^(?:[Mm]akefile|GNUmakefile|.+\.mk|.+\.sh)$/;
+
+/** Where a repository keeps scripts besides its top: each is read as a script at its top is. */
+const SCRIPT_DIRS = ['scripts', 'bin'];
+
 const READERS: readonly Reader[] = [
   { matches: (name) => envFileReading(name) !== undefined, read: (into, path, file) => readEnv(into, path, file) },
   { matches: (name) => name === 'package.json', read: readRuns },
+  { matches: (name) => SCRIPT_FILES.test(name), read: readRuns },
   { matches: (name) => name === 'serverless.yml' || name === 'serverless.yaml', read: deploymentReader(readServerlessFile) },
   { matches: (name) => name === 'wrangler.json' || name === 'wrangler.jsonc', read: deploymentReader(readWorkerJson) },
   { matches: (name) => name === 'wrangler.toml', read: deploymentReader(readWorkerToml) },
@@ -218,6 +245,77 @@ const realOf = (path: string): string => {
   }
 };
 
+/** The names a workload may be known by as one of the project's services: its own, its pods' `app` labels, its containers' and images' names. */
+const workloadNames = (workload: ManifestWorkload): string[] => [
+  workload.name,
+  ...['app.kubernetes.io/name', 'app'].flatMap((key) => (workload.labels[key] === undefined ? [] : [workload.labels[key] as string])),
+  ...workload.containers.flatMap((container) => [container.name, container.image].filter((name): name is string => name !== undefined)),
+];
+
+/** The one service a workload runs, by the names it is known by, or nothing where none or two answer. */
+const serviceOfWorkload = (workload: ManifestWorkload, names: ReadonlyMap<string, string>): string | undefined => {
+  const found = new Set(workloadNames(workload).flatMap((name) => (names.has(name.toLowerCase()) ? [names.get(name.toLowerCase()) as string] : [])));
+  return found.size === 1 ? [...found][0] : undefined;
+};
+
+/**
+ * Whether a service object selects a workload's pods: every label it selects
+ * by, in the same namespace where both write one (a manifest that writes none
+ * is applied to whichever namespace it is applied to).
+ */
+const selects = (service: ManifestService, workload: ManifestWorkload): boolean =>
+  Object.keys(service.selector).length > 0 &&
+  (service.namespace === undefined || workload.namespace === undefined || service.namespace === workload.namespace) &&
+  Object.entries(service.selector).every(([key, value]) => workload.labels[key] === value);
+
+/** The container a port of a service object reaches: the one declaring it, by number or name, or the only one. */
+const containerAt = (workloads: readonly ManifestWorkload[], target: number | string): ManifestContainer | undefined => {
+  const containers = workloads.flatMap((workload) => workload.containers);
+  return containers.find((container) => container.ports.some((port) => port.port === target || port.name === target)) ?? (containers.length === 1 ? containers[0] : undefined);
+};
+
+/** Every spelling of a service object's name its cluster's network resolves. */
+const spellingsOf = (service: ManifestService): string[] => {
+  const name = service.name.toLowerCase();
+  if (service.namespace === undefined) return [name];
+  const namespace = service.namespace.toLowerCase();
+  return [name, `${name}.${namespace}`, `${name}.${namespace}.svc`, `${name}.${namespace}.svc.cluster.local`];
+};
+
+/**
+ * Each service object of the manifests, as the name it routes to one of the
+ * project's services (P257): the service whose workload it selects - a
+ * workload known by the service's name, or the only workload a service's own
+ * repository declares - or the service of its own name where it selects
+ * none. A named target port is the number the selected pods give that name;
+ * one they do not name is not read. The environment is that of the container
+ * the first port reaches.
+ */
+const routedNames = (manifests: ReadonlyArray<{ read: Manifests; owner?: string }>, names: ReadonlyMap<string, string>): Array<[string, RoutedName]> => {
+  const workloads = manifests.flatMap(({ read, owner }) =>
+    read.workloads.map((workload) => ({ workload, runs: serviceOfWorkload(workload, names) ?? (owner !== undefined && read.workloads.length === 1 ? owner : undefined) })),
+  );
+  const out: Array<[string, RoutedName]> = [];
+  for (const { read } of manifests) {
+    for (const service of read.services) {
+      const selected = workloads.filter(({ workload }) => selects(service, workload));
+      const runs = [...new Set(selected.flatMap((each) => (each.runs === undefined ? [] : [each.runs])))];
+      const target = runs.length === 1 ? runs[0] : runs.length === 0 && selected.length === 0 ? names.get(service.name.toLowerCase()) : undefined;
+      if (target === undefined) continue;
+      const pods = selected.map((each) => each.workload);
+      const ports: RoutedPort[] = service.ports.flatMap((each) => {
+        const written = each.target ?? each.port;
+        const number = typeof written === 'number' ? written : containerAt(pods, written)?.ports.find((port) => port.name === written)?.port;
+        return number === undefined ? [] : [{ port: each.port, target: number, file: service.file, line: each.line }];
+      });
+      if (ports.length === 0) continue;
+      const container = containerAt(pods, (ports[0] as RoutedPort).target);
+      out.push([target, { name: service.name.toLowerCase(), names: spellingsOf(service), file: service.file, ports, environment: environmentPorts(container?.environment ?? []) }]);
+    }
+  }
+  return out;
+};
+
 export interface SettingsInput {
   /** Every service with a repository to look in, by name, with its directory. */
   readonly services: ReadonlyArray<{ readonly name: string; readonly dir: string }>;
@@ -251,6 +349,7 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
   const byDir = new Map<string, string>();
   const names = new Map<string, string>();
   const composeFiles: ComposeFile[] = [];
+  const manifests: Array<{ read: Manifests; owner?: string }> = [];
   const composeAt = (dir: string, label: (name: string) => string, owner?: string): void => {
     for (const name of filesAt(dir).filter(isComposeFile)) {
       const text = read(join(dir, name));
@@ -275,9 +374,17 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       const reader = READERS.find((each) => each.matches(name));
       reader?.read(into, join(service.dir, name), name);
     }
+    for (const dir of SCRIPT_DIRS) {
+      for (const name of filesAt(join(service.dir, dir)).filter((each) => SCRIPT_FILES.test(each))) readRuns(into, join(service.dir, dir, name), `${dir}/${name}`);
+    }
+    manifests.push({ read: readManifestsUnder(service.dir), owner: service.name });
     composeAt(service.dir, (name) => name, service.name);
   }
-  if (!byDir.has(realOf(input.rootDir))) composeAt(input.rootDir, (name) => name);
+  if (!byDir.has(realOf(input.rootDir))) {
+    composeAt(input.rootDir, (name) => name);
+    manifests.push({ read: readManifestsUnder(input.rootDir, new Set(input.services.map((service) => resolve(service.dir)))) });
+  }
+  for (const [service, routed] of routedNames(manifests, names)) addRouted(byService.get(service) as Gathered, routed);
 
   for (const file of composeFiles) {
     for (const container of file.services) {
@@ -363,7 +470,8 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       if (kept.length > 0) ports[name] = kept;
     }
     const containers = into.containers;
-    const sizes = [Object.keys(values), Object.keys(namedOnly), hosts, bindings, deployedAs, containers, Object.keys(ports)];
+    const routes = into.routes;
+    const sizes = [Object.keys(values), Object.keys(namedOnly), hosts, bindings, deployedAs, containers, Object.keys(ports), routes];
     if (sizes.every((each) => each.length === 0)) continue;
     out[service] = {
       values,
@@ -372,6 +480,7 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       ...(bindings.length === 0 ? {} : { bindings }),
       ...(deployedAs.length === 0 ? {} : { deployedAs }),
       ...(containers.length === 0 ? {} : { containers }),
+      ...(routes.length === 0 ? {} : { routes }),
       ...(Object.keys(ports).length === 0 ? {} : { ports }),
     };
   }

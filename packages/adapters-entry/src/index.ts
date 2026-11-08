@@ -226,3 +226,13 @@ export {
 export { scriptCommands, scriptPorts } from './listen-ports.js';
 export type { ScriptCommand } from './listen-ports.js';
 export { factoryPorts, settingsReading } from './listen-settings.js';
+export { keyLine, nextProxies, nitroProxies, proxyConfigFile, proxyTableRules, rewriteOfFunction } from './proxy-config.js';
+export {
+  NEXT_SERVER_EXECUTORS,
+  targetPorts,
+  targetProxyConfigs,
+  VITE_SERVER_EXECUTORS,
+  WEBPACK_SERVER_EXECUTORS,
+  workspaceTargets,
+} from './workspace-targets.js';
+export type { WorkspaceTarget } from './workspace-targets.js';

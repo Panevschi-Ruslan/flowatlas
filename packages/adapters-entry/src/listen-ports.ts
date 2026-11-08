@@ -16,6 +16,7 @@ import {
 } from '@flowatlas/core';
 import { Node, SyntaxKind, type SourceFile } from 'ts-morph';
 import { settingsReading } from './listen-settings.js';
+import { NEXT_SERVER_EXECUTORS, targetPorts } from './workspace-targets.js';
 import { repoSources } from './shared.js';
 
 /**
@@ -176,8 +177,11 @@ export const scriptCommands = (repoDir: string, commands: RegExp): ScriptCommand
 export const scriptPorts = (repoDir: string, commands: RegExp): ListenPort[] =>
   scriptCommands(repoDir, commands).flatMap((each) => (each.port === undefined ? [] : [{ port: each.port, file: 'package.json', line: each.line }]));
 
-/** Next's own server, started by a script. */
-export const nextListens = (ctx: ExtractContext): ListenPort[] => scriptPorts(ctx.repoDir, /\bnext\s+(dev|start)\b/);
+/** Next's own server, started by a script or by a workspace tool's target (P257). */
+export const nextListens = (ctx: ExtractContext): ListenPort[] => [
+  ...scriptPorts(ctx.repoDir, /\bnext\s+(dev|start)\b/),
+  ...targetPorts(ctx.repoDir, NEXT_SERVER_EXECUTORS, false),
+];
 
 const NUXT_CONFIGS = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs', 'nuxt.config.mts', 'nuxt.config.cjs'];
 

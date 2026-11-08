@@ -1,4 +1,4 @@
-import type { CallExpression, Node as TsNode, SourceFile } from 'ts-morph';
+import type { CallExpression, Node as TsNode, PropertyAccessExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ExtractContext } from './adapters/context.js';
 import { normalizeFilePath } from './ids.js';
@@ -88,6 +88,12 @@ export interface WrittenPort {
  */
 export interface PortReading {
   readonly settingOf?: (call: CallExpression, key: string) => WrittenPort | undefined;
+  /**
+   * The value a property of a settings object answers where the checker
+   * cannot say what the object is (P257): `config.port` of an object a
+   * settings library hands in by a token, typed by a type of that library.
+   */
+  readonly propertyOf?: (access: PropertyAccessExpression) => WrittenPort | undefined;
 }
 
 /** Whether a port is written as a number the server listens on wherever it runs. */
@@ -210,6 +216,10 @@ export const portWritten = (written: TsNode | undefined, reading?: PortReading, 
   if (number !== undefined) return { port: number };
   const setting = settingRead(node, reading);
   if (setting !== undefined) return setting;
+  if (Node.isPropertyAccessExpression(node)) {
+    const answered = reading?.propertyOf?.(node);
+    if (answered !== undefined) return answered;
+  }
   if (Node.isBinaryExpression(node) && ['??', '||'].includes(node.getOperatorToken().getText())) {
     const left = portWritten(node.getLeft(), reading, depth + 1);
     const right = portWritten(node.getRight(), reading, depth + 1);

@@ -32,6 +32,38 @@ only one of them moved.
   over a parameter (`` `${options.base}/trpc` ``, `base + '/rpc'`) is read
   piece by piece to the setting or URL each piece is handed. New fixtures
   `multi-repo-shared-values` and `nest-configured-clients`.
+- **Where a request is forwarded and where a container listens (P257).** A
+  server's proxy is read and kept on its repository node (`meta.proxy`):
+  Vite's `server.proxy` / `preview.proxy` (a `rewrite` read where it replaces
+  the prefix with a literal), the proxy configuration an Angular dev server or
+  a workspace tool's webpack dev server is started with (`proxyConfig`,
+  `ng serve --proxy-config`, `pathRewrite`), Nitro's and Nuxt's `devProxy` and
+  route rules' `proxy`, Next's `rewrites()` to an address outside the
+  application (after its own files unless `beforeFiles`), and Create React
+  App's `"proxy"`. A browser request with no host, or any request to such a
+  server's own port, joins the service at the target's host at the rewritten
+  path (`via: proxy`, `heuristic`, `proxiedBy`, `proxiedAs`), and the dev
+  server's host is no longer drawn as a third party; a target no service is
+  reached at is drawn as a third party with the note `proxied-to-third-party`,
+  and a rule not written in literals is the row `proxy-rule-unread`. A
+  cluster's manifests are read (plain YAML, several documents to a file, Helm
+  templates where literal, a kustomization's namespace and name prefix): a
+  `Service` routing `port` to a `targetPort` (named ports resolved through the
+  pods it selects) is a host of the service it selects (`orders`,
+  `orders.shop.svc.cluster.local`), joined with
+  `listensAt: …, behind orders:80 (k8s/orders.yaml)`, the pods' environment
+  outranking the code's fallback; a `targetPort` nothing listens on is
+  `published-port-unheard`. A request with no port reaches the port its scheme
+  defaults to. A request on a container's or a cluster's network to a port the
+  service is not reached at there (a published port, or the pods' own port
+  behind a `Service`) is the finding `network-port-unreachable` and is not
+  joined. `docker run -p` in a `Makefile` or a shell script, the `port` of a
+  workspace tool's serve target in `project.json` (Next, Vite, webpack,
+  Angular; never `@nx/js:node`'s debugger port), and a NestJS settings object
+  handed in by its token (`@Inject(appConfig.KEY) config: ConfigType<typeof
+  appConfig>`, `app.get(appConfig.KEY)`) say where a service listens too.
+  Coverage probes `dev-proxy` and `cluster-target-port` (family `listens`). New
+  fixtures `dev-proxy-joins` and `cluster-port-joins`.
 
 - **Child components, layouts and route middleware by name, and the last of
   what a Nuxt module adds (P255).** A tag in a Vue or Svelte template, or in

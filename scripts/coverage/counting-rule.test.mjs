@@ -248,4 +248,16 @@ describe('where a request is written, and what stands in front of it (P244)', ()
     assert.deepEqual(sitesIn('astro.config.mjs', 'export default defineConfig({ server: { port: 4330 } });'), { listens: 1 });
     assert.deepEqual(sitesIn('src/settings.ts', 'export const config = { port: 3003 };'), {});
   });
+
+  it("counts a server's proxy and rewrites, and a port a cluster manifest routes (P257)", () => {
+    const vite = "export default defineConfig({\n  server: {\n    port: 5180,\n    proxy: { '/api': 'http://localhost:3001' },\n  },\n});";
+    assert.deepEqual(sitesIn('vite.config.ts', vite), { listens: 2 });
+    const next = "module.exports = {\n  async rewrites() {\n    return [{ source: '/api/:path*', destination: 'http://localhost:3001/:path*' }];\n  },\n};";
+    assert.deepEqual(sitesIn('next.config.js', next), { listens: 1 });
+    const nuxt = "export default defineNuxtConfig({\n  routeRules: { '/api/**': { proxy: 'http://localhost:3001/**' } },\n  nitro: { devProxy: { '/x': 'http://localhost:3002' } },\n});";
+    assert.deepEqual(sitesIn('nuxt.config.ts', nuxt), { listens: 2 });
+    const manifest = 'kind: Service\nspec:\n  ports:\n    - port: 80\n      targetPort: 3000\n    - targetPort: http\n      port: 81\n';
+    assert.deepEqual(sitesIn('k8s/orders.yaml', manifest), { listens: 2 });
+    assert.deepEqual(sitesIn('src/api.ts', "const proxy: Proxy = { target: 'x' };"), {});
+  });
 });
