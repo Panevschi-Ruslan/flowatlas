@@ -6748,6 +6748,70 @@ own, and its functions carry `meta.composedAs`. A service whose folder is
 outside the repository, missing, or holds no service file is a
 `compose-service-unread` row (`fixtures/serverless-compose`).
 
+#### Parameters of the account, an app's own stacks, and imports whose kind the use does not say
+
+**A parameter of the account** one deployment writes and another reads by name
+is joined as an output is (P253), whatever each is written with, under the key
+Terraform's shared roots already use:
+
+| Written as | Read back as | Key |
+|---|---|---|
+| `AWS::SSM::Parameter` with a `Name` (a Serverless service's `resources`, a SAM or plain template), `new ssm.StringParameter(this, id, { parameterName, stringValue })`, Terraform's `resource "aws_ssm_parameter"` | `{{resolve:ssm:<name>}}` (a version after it or not), a template parameter typed `AWS::SSM::Parameter::Value<String>`, `${ssm:<name>}` (`${ssm(<region>):...}`, `~true`), `StringParameter.valueForStringParameter(this, '<name>')`, `valueFromLookup`, `fromStringParameterName(...).stringValue`, Terraform's `data "aws_ssm_parameter"` `.value` | `parameter:<name>` |
+
+A parameter whose value is a point of an API is published as one, so a route
+hung from `{{resolve:ssm:/shop/api/root}}` joins a Terraform `aws_ssm_parameter`
+holding `root_resource_id`, and the other way round. A Serverless service that
+names `provider.apiGateway.restApiRootResourceId` hangs its routes from that
+point rather than from `restApiId`. A parameter two templates of one repository
+write and read is the value itself, as an in-repository export is. A secure
+parameter and a secret (`{{resolve:ssm-secure:...}}`, `secretsmanager`) are not
+read. A parameter nobody configured writes is an `export-not-found` row naming
+it.
+
+**An app's own stacks.** A construct one stack of a CDK app hands another is
+the same construct; an output the app exports (`new CfnOutput(..., { exportName })`,
+`stack.exportValue(value, { name })`) or a parameter it writes, read back by
+another of its stacks (`Fn.importValue`, `valueForStringParameter`), is the
+value itself, with no import left for the linker. `exportValue` is published
+under its export name for other repositories.
+
+**Parameter files.** A template's parameters are given values from a parameter
+file - a list of `ParameterKey` / `ParameterValue`, a list of `Key=Value`, or a
+pipeline's template configuration `{ "Parameters": {...} }` - where
+`services[].infra.vars` names one (every template takes it), where its
+`samconfig` names one (`parameter_overrides = "file://params.json"`), or where
+one sits beside it under a name that says so: `<template>.parameters.json`,
+`-parameters.json`, `.params.json`, `-params.json`, `.config.json`,
+`-config.json`, `-configuration.json`, and, for a template alone in its
+folder, `parameters.json`, `params.json`, `template-config.json`,
+`template-configuration.json`. Two beside one template are a
+`parameter-file-ambiguous` row, and neither is read. The options win over
+every file, the configuration's files over the `samconfig`'s overrides, those
+over a file beside the template.
+
+**Imports whose kind the use does not say.** A mapping's `EventSourceArn`, a
+function's `DestinationConfig` (and a mapping's failure destination, a
+dead-letter target with no `Type`), the same in Terraform and the CDK, read a
+value another deployment publishes without saying whether it is a queue, a
+stream, a table's changes, a topic, a bus or a function. A mapping with no
+starting position reads a queue; any other such use is read once per kind it
+may be, each under its own address, and the linker keeps the reading the
+publisher's value is - under the address it was written at - and drops the
+others with what only they drew. Nothing is drawn for an import nothing
+publishes. An ARN or an address built around an import
+(`!Sub https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${QueueName}`,
+`arn:aws:sqs:...:${ssm:/shop/queue-name}`) names the thing of the kind the
+text says, by the import's stand-in; the publisher's value - the thing, or its
+name as text - finishes it.
+
+**A value published under a generated name.** A queue or a topic with no name
+of its own is named by where it is declared; where another repository imports
+it, the name is given the publishing repository's
+(`sns/${…}@catalog@stacks.catalog.Resources.Topic`) in both graphs, so the
+importer meets the producer's channel and no other repository's that happens
+to declare something unnamed at the same address
+(`fixtures/multi-repo-parameters`).
+
 ### Procedures
 
 A tRPC server's ways in are not routes: each procedure is a key in a tree of

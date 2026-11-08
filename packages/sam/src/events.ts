@@ -222,15 +222,14 @@ const streamReader =
     if (!isRecord(failure)) return;
     const address = `${site.address}.DestinationConfig.OnFailure`;
     const path = [...site.path, 'Properties', 'DestinationConfig', 'OnFailure'];
-    const to = reading.targetOf(reading.deployedOf(failure['Destination']), path, address, `where ${site.address} hands the batches it gives up on`);
-    reading.file.parts.deliveries.push({
-      ...reading.file.siteOf(path),
-      address,
-      by: 'destination',
-      from: { kind: 'outcome', when: 'failure', of: { delivery: site.address } },
-      ...(to === undefined ? {} : { to }),
-      meta: { when: 'failure', ...reading.conditionOf(site.logicalId) },
-    });
+    // A mapping hands what it gives up on to a queue or a topic, which an import's use does not tell apart (P253).
+    reading.file.deliverTo(
+      { ...reading.file.siteOf(path), address, by: 'destination', from: { kind: 'outcome', when: 'failure', of: { delivery: site.address } }, meta: { when: 'failure', ...reading.conditionOf(site.logicalId) } },
+      reading.deployedOf(failure['Destination']),
+      path,
+      `where ${site.address} hands the batches it gives up on`,
+      ['queue', 'topic'],
+    );
   };
 
 const readS3: EventReader = (properties, site, reading) => {

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { extname, isAbsolute, join, normalize } from 'node:path';
-import { stackOutputKey, type PathStep } from '@flowatlas/core';
+import { importedName, parameterKey, stackOutputKey, type PathStep } from '@flowatlas/core';
 import { readServiceFile, UnreadMember } from './document.js';
 
 /**
@@ -14,7 +14,9 @@ import { readServiceFile, UnreadMember } from './document.js';
  * `.env` file where the service loads one, from another file - or left
  * {@link Unread} with a sentence saying which variable and why. A value read
  * from the deployed account (`ssm`, `cf`, `s3`) is never read: the files do
- * not hold it.
+ * not hold it. An output of another stack (`cf`) and a parameter another
+ * deployment writes (`ssm`) are {@link Imported}: their value is the
+ * publisher's to say, which the linker asks where the publisher is read.
  *
  * A string that holds an unread variable among written text keeps the text it
  * could read, with a {@link HOLE} where the variable was: an ARN whose account
@@ -34,6 +36,13 @@ export class Unread {
     readonly variable?: string,
     /** The string as far as it was read, with a {@link HOLE} where it was not. */
     readonly partial?: string,
+    /**
+     * The one value another deployment publishes written inside the string, by
+     * its key, and the string with that value's stand-in (`importedName`) in
+     * its place (P253): an ARN whose name is an import names the imported
+     * thing, by the stand-in the linker finishes.
+     */
+    readonly embeds?: { readonly key: string; readonly text: string },
   ) {}
 }
 
@@ -48,7 +57,7 @@ export class Unread {
  */
 export class Imported extends Unread {
   constructor(
-    /** `export:<name>` or `stack:<stack>#<output>`. */
+    /** `export:<name>`, `stack:<stack>#<output>` or `parameter:<name>`. */
     readonly key: string,
     text: string,
     variable?: string,
@@ -56,6 +65,22 @@ export class Imported extends Unread {
     super(text, variable);
   }
 }
+
+/** Where a value another deployment publishes is written inside a string being built, until it is known what the string is. */
+export const EMBEDDED = '\u0004';
+
+/**
+ * A string built with one value another deployment publishes inside it, at
+ * {@link EMBEDDED}: the import itself where it is the whole string, else an
+ * `Unread` that says so and carries the string with the import's stand-in in
+ * its place (P253). With no import in it, the string, or why it is not read.
+ */
+export const embedding = (built: string, imported: Imported | undefined, because: Unread | undefined): Unread | string => {
+  if (imported === undefined || !built.includes(EMBEDDED)) return because === undefined ? built : new Unread(because.text, because.variable, built);
+  if (built === EMBEDDED) return imported;
+  const unread = because ?? imported;
+  return new Unread(unread.text, unread.variable, built.split(EMBEDDED).join(HOLE), { key: imported.key, text: built.split(EMBEDDED).join(importedName(imported.key)) });
+};
 
 /** Where the stage a service is deployed to was found. */
 export type StageFrom = 'option' | 'file' | 'default';
@@ -221,6 +246,9 @@ export class Variables {
     const kept: string[] = [];
     let text = written;
     let unread: Unread | undefined;
+    // The one import written into the string, kept apart until the string is built (P253).
+    let imported: Imported | undefined;
+    let imports = 0;
     for (let guard = 0; guard < 64; guard += 1) {
       const match = /\$\{([^${}]*)\}/.exec(text);
       if (match === null) break;
@@ -235,7 +263,11 @@ export class Variables {
       const value = this.#variable(inside);
       if (whole && kept.length === 0) return value;
       let piece: string;
-      if (value instanceof Unread) {
+      if (value instanceof Imported) {
+        imports += 1;
+        imported = value;
+        piece = EMBEDDED;
+      } else if (value instanceof Unread) {
         unread ??= value;
         piece = value.partial ?? HOLE;
       } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
@@ -247,7 +279,11 @@ export class Variables {
       text = `${text.slice(0, match.index)}${piece}${text.slice(match.index + match[0].length)}`;
     }
     const restored = text.replace(/\u0002(\d+)\u0003/g, (_whole, index: string) => kept[Number(index)] as string);
-    return unread === undefined ? restored : new Unread(unread.text, unread.variable, restored);
+    if (imports > 1) {
+      const first = unread ?? (imported as Imported);
+      return new Unread(`it holds ${imports} values other deployments publish`, first.variable, restored.split(EMBEDDED).join(HOLE));
+    }
+    return embedding(restored, imported, unread);
   }
 
   /** One `${...}`: its alternatives in order, the first that has a value. */
@@ -296,6 +332,8 @@ export class Variables {
       }
       case 'cf':
         return outputOf(address, written);
+      case 'ssm':
+        return parameterOf(address, written);
       case 'aws':
         if (address === 'region') return this.at(['provider', 'region']) ?? this.#context.options['region'] ?? DEFAULT_REGION;
         return new Unread(`aws:${address} is the deployed account's, which the files do not say`, written);
@@ -311,6 +349,8 @@ export class Variables {
     }
     // `${cf(eu-west-1):orders-prod.QueueUrl}`: the same output, read in another region.
     if (name === 'cf' && address !== undefined) return outputOf(address, written);
+    // `${ssm(eu-west-1):/orders/url}`, `${ssm(raw):/orders/url}`: the same parameter.
+    if (name === 'ssm' && address !== undefined) return parameterOf(address, written);
     if (name !== 'file') return new Unread(`${name}() is not a variable source this reads`, written);
     const relative = argument.replace(/^(['"])(.*)\1$/, '$2');
     const path = isAbsolute(relative) ? relative : normalize(join(this.#context.dir, relative));
@@ -356,6 +396,17 @@ const outputOf = (address: string, written: string): Unread => {
   const output = dot < 0 ? '' : address.slice(dot + 1);
   if (stack === '' || output === '' || /[${}\u0001]/.test(address)) return new Unread(`\${${written}} names no stack and output the files settle`, written);
   return new Imported(stackOutputKey(stack, output), `the value is the output ${output} of the stack ${stack}, which another deployment publishes`, written);
+};
+
+/**
+ * `${ssm:/orders/queue-url}`: a parameter of the account, which another
+ * deployment writes (P253). A `~true` after the name asks for it decrypted,
+ * and a `~split` for a list; neither changes which parameter it is.
+ */
+const parameterOf = (address: string, written: string): Unread => {
+  const name = address.replace(/~(?:true|false|split)$/, '').trim();
+  if (name === '' || /[${}\u0001]/.test(name)) return new Unread(`\${${written}} names no parameter the files settle`, written);
+  return new Imported(parameterKey(name), `the value is the parameter ${name}, which another deployment writes`, written);
 };
 
 /** The text a resolved value is, when it is text with nothing unread in it. */

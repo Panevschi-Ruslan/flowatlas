@@ -41,7 +41,7 @@ const AREAS = [
   ['Channels and messages', /^(nest-(kafka|rabbitmq|bullmq|redis|broker)|socket-|folded-|object-channels|fn-broker|sse-|aws-sdk-)/],
   ['Data layers', /^(nest-(typeorm|prisma|drizzle|mongoose|sequelize|kysely|knex|pg|mikro|leaves|unknown-orm|workspace-wrapper)|prisma-|pg-|db-|fn-data)/],
   ['Serverless, wired in Terraform', /^(lambda-|multi-repo-lambda|eventbridge-terraform|sqs-sns-terraform|multi-repo-events|terraform-orders)/],
-  ['Serverless, declared with the Serverless Framework, the CDK, SAM or CloudFormation', /^(serverless-|cdk-|sam-|cloudformation-|multi-repo-exports)/],
+  ['Serverless, declared with the Serverless Framework, the CDK, SAM or CloudFormation', /^(serverless-|cdk-|sam-|cloudformation-|multi-repo-exports|multi-repo-parameters)/],
   ['State machines', /^(stepfunctions-|multi-repo-stepfunctions|start-workflow-)/],
   ['Several repositories', /^(multi-repo|same-service|ground-truth)/],
   ['Workspaces and monorepos', /^workspace-/],

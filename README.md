@@ -990,6 +990,12 @@ prove, and the path is given so you can run it.
   producer's queue (`fixtures/multi-repo-exports`). A `serverless-compose.yml`
   is read as one deployment of the services it lists, its params and
   `${service.Output}` references included (`fixtures/serverless-compose`).
+  A parameter of the account one deployment writes and another reads by name
+  is joined the same way, Terraform's included; a CDK app's stacks read what
+  each other export as the value itself; a template's parameter file is read;
+  and a mapping or a destination whose import does not say what it reads is
+  read as each thing it may be until the publisher says which
+  (`fixtures/multi-repo-parameters`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —

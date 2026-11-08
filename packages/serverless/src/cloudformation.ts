@@ -1,6 +1,6 @@
 import { deployedArn, deployedNameIn } from '@flowatlas/aws';
-import { exportKey, generatedName, type DeployedKind, type PathStep } from '@flowatlas/core';
-import { HOLE, Imported, isRecord, textOf, Unread } from './variables.js';
+import { exportKey, generatedName, importedName, parameterKey, type DeployedKind, type PathStep } from '@flowatlas/core';
+import { EMBEDDED, embedding, HOLE, Imported, isRecord, textOf, Unread } from './variables.js';
 
 /**
  * CloudFormation's vocabulary: resources by type, and the intrinsic functions
@@ -31,6 +31,11 @@ export interface Deployed {
   readonly changes?: boolean;
   /** The name is a stand-in for one the platform generates. */
   readonly generated?: boolean;
+  /**
+   * The name is the stand-in of a value another deployment publishes, by its
+   * key: an ARN or a URL written around an import of the name (P253).
+   */
+  readonly imported?: string;
 }
 
 /** What a resource type declares, and the property that names it. */
@@ -91,11 +96,13 @@ export interface TemplateOptions {
   /** Where a resource is written when it is not under its own logical id: one a loop makes. */
   readonly paths?: ReadonlyMap<string, readonly PathStep[]>;
   /**
-   * What another template exports under a name, where the caller has read the
-   * templates beside this one (P248): `Fn::ImportValue` of it is that value.
-   * `Unread` where the name is exported twice; `undefined` where nothing read exports it.
+   * What another template exports under a key, where the caller has read the
+   * templates beside this one (P248): `Fn::ImportValue` of a name is the value
+   * exported under `export:<name>`, and `{{resolve:ssm:<name>}}` the one a
+   * template writes to the parameter `parameter:<name>` (P253). `Unread`
+   * where the key is published twice; `undefined` where nothing read publishes it.
    */
-  readonly imported?: (name: string) => Exported | Unread | undefined;
+  readonly imported?: (key: string) => Exported | Unread | undefined;
 }
 
 /** What a template exports under a name (`Outputs.<Name>.Export.Name`): the deployed thing its value names, and the value as text. */
@@ -129,6 +136,25 @@ export const intrinsicOf = (value: unknown): [name: string, argument: unknown] |
 const deployedInText = (text: string): Deployed | undefined => {
   const found = deployedNameIn(text);
   return found === undefined || found.name.includes(HOLE) ? undefined : found;
+};
+
+/**
+ * A value of a parameter of the account written into text (P253):
+ * `{{resolve:ssm:/orders/queue-url}}`, with or without a version. A secure
+ * parameter and a secret are values no deployment publishes for another to
+ * join on, and are not read.
+ */
+const DYNAMIC_REFERENCE = /\{\{resolve:(ssm|ssm-secure|secretsmanager):([^}]*)\}\}/g;
+
+/**
+ * What an ARN or a URL built around a value another deployment publishes
+ * names: the imported thing, where the import is the name part of it, by the
+ * import's stand-in; else why it is not read.
+ */
+const embeddedDeployed = (unread: Unread): Deployed | Unread => {
+  if (unread.embeds === undefined) return unread;
+  const found = deployedNameIn(unread.embeds.text);
+  return found !== undefined && found.name === importedName(unread.embeds.key) ? { ...found, imported: unread.embeds.key } : unread;
 };
 
 export class Template {
@@ -219,16 +245,29 @@ export class Template {
         if (found.deployed !== undefined) return found.deployed;
         return typeof found.text === 'string' ? deployedInText(found.text) : found.text;
       }
-      if (fn === 'Fn::Sub' || fn === 'Fn::Join') {
-        const text = this.text(value);
-        if (typeof text === 'string') return deployedInText(text);
-        return text.partial === undefined ? text : (deployedInText(text.partial) ?? text);
-      }
+      if (fn === 'Fn::Sub' || fn === 'Fn::Join') return this.#deployedInBuilt(this.text(value));
       return new Unread(`${fn} is decided when the stack is deployed`);
     }
-    if (value instanceof Unread) return value.partial === undefined ? value : (deployedInText(value.partial) ?? value);
+    if (value instanceof Unread) return this.#deployedInBuilt(value);
     const text = textOf(value);
+    if (text?.includes('{{resolve:') === true) {
+      // A parameter another template of the repository writes names what its value names (P253).
+      const whole = /^\{\{resolve:ssm:([^}]*?)(?::\d+)?\}\}$/.exec(text);
+      const local = whole === null ? undefined : this.#options.imported?.(parameterKey(whole[1] as string));
+      if (local !== undefined && !(local instanceof Unread) && local.deployed !== undefined) return local.deployed;
+      if (local instanceof Unread) return local;
+      return this.#deployedInBuilt(this.text(value));
+    }
     return text === undefined ? undefined : deployedInText(text);
+  }
+
+  /** What a text built of parts names: an ARN or a URL written out, or one around an import (P253). */
+  #deployedInBuilt(text: string | Unread): Deployed | Unread | undefined {
+    if (typeof text === 'string') return deployedInText(text);
+    if (text instanceof Imported) return text;
+    const embedded = embeddedDeployed(text);
+    if (!(embedded instanceof Unread)) return embedded;
+    return text.partial === undefined ? text : (deployedInText(text.partial) ?? text);
   }
 
   /**
@@ -240,7 +279,7 @@ export class Template {
   #imported(argument: unknown): Exported | Unread {
     const name = this.text(argument);
     if (name instanceof Unread) return new Unread(`the name of the export it imports is not read: ${name.text}`, name.variable);
-    return this.#options.imported?.(name) ?? this.imported(argument);
+    return this.#options.imported?.(exportKey(name)) ?? this.imported(argument);
   }
 
   /**
@@ -297,12 +336,41 @@ export class Template {
    */
   #unread: Unread | undefined;
 
+  /** The values other deployments publish written into a text being built, at {@link EMBEDDED} (P253). */
+  #embedded: Imported[] = [];
+
   /** A part of a text being built, a {@link HOLE} where it is not read. */
   #part(value: unknown, depth: number): string {
     const text = this.text(value, depth);
     if (typeof text === 'string') return text;
+    if (text instanceof Imported) {
+      this.#embedded.push(text);
+      return EMBEDDED;
+    }
     this.#unread ??= text;
     return text.partial ?? HOLE;
+  }
+
+  /** A text with each value of a parameter of the account it resolves (`{{resolve:ssm:...}}`) put at {@link EMBEDDED}. */
+  #dynamic(text: string): string {
+    if (!text.includes('{{resolve:')) return text;
+    return text.replace(DYNAMIC_REFERENCE, (_whole, service: string, reference: string) => {
+      const name = reference.replace(/:\d+$/, '');
+      if (service !== 'ssm' || name === '') {
+        this.#unread ??= new Unread(`a ${service === 'secretsmanager' ? 'secret' : 'secure parameter'} it resolves is not a value the files hold`);
+        return HOLE;
+      }
+      // A parameter another template of the repository writes is its value, here (P253).
+      const local = this.#options.imported?.(parameterKey(name));
+      if (local !== undefined) {
+        const text = local instanceof Unread ? local : local.text;
+        if (typeof text === 'string') return text;
+        this.#unread ??= text;
+        return text.partial ?? HOLE;
+      }
+      this.#embedded.push(new Imported(parameterKey(name), `the value is the parameter ${name}, which another deployment writes`, `{{resolve:ssm:${reference}}}`));
+      return EMBEDDED;
+    });
   }
 
   /** A value as text: what the template settles, with a {@link HOLE} for the rest. */
@@ -310,18 +378,30 @@ export class Template {
     if (depth > 0) return this.#build(value, depth);
     // A name read while a text is built is a text of its own, with its own cause.
     const outer = this.#unread;
+    const embedded = this.#embedded;
     this.#unread = undefined;
+    this.#embedded = [];
     try {
-      return this.#build(value, 0);
+      return this.#built(this.#build(value, 0));
     } finally {
       this.#unread = outer;
+      this.#embedded = embedded;
     }
+  }
+
+  /** A text built at the top: the import itself where it is the whole text, else the text with it in place (P253). */
+  #built(built: string | Unread): string | Unread {
+    if (typeof built !== 'string' || !built.includes(EMBEDDED)) return built;
+    const [imported] = this.#embedded;
+    if (this.#embedded.length > 1) return new Unread(`it holds ${this.#embedded.length} values other deployments publish`, imported?.variable, built.split(EMBEDDED).join(HOLE));
+    const because = built.includes(HOLE) ? (this.#unread ?? new Unread('part of the value is known only once the stack is deployed')) : undefined;
+    return embedding(built, imported, because);
   }
 
   #build(value: unknown, depth: number): string | Unread {
     if (depth > 16) return new Unread('the value is nested too deeply to read');
     const plain = textOf(value);
-    if (plain !== undefined) return plain;
+    if (plain !== undefined) return this.#dynamic(plain);
     if (value instanceof Unread) return value;
     const intrinsic = intrinsicOf(value);
     if (intrinsic === undefined) return new Unread('the value is not text');
@@ -350,7 +430,9 @@ export class Template {
     } else {
       return new Unread(`${fn} is decided when the stack is deployed`);
     }
-    if (!built.includes(HOLE)) return built;
+    built = this.#dynamic(built);
+    // A text with an import in it is finished at the top, where every part of it is in (P253).
+    if (!built.includes(HOLE) || built.includes(EMBEDDED)) return built;
     const because = this.#unread;
     return because === undefined
       ? new Unread('part of the value is known only once the stack is deployed', undefined, built)

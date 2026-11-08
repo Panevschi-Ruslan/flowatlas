@@ -10,11 +10,11 @@ export { readServiceFile, readServiceYaml, ServiceFileUnreadable } from './docum
 export { COMPOSE_FILES, readCompose } from './compose.js';
 export { Template, RESOURCE_KINDS, intrinsicOf, type Declares, type Deployed, type Exported, type Known, type Pseudo, type Resource, type TemplateOptions } from './cloudformation.js';
 export { Variables, Unread, Imported, HOLE, DEFAULT_STAGE, DEFAULT_REGION, isRecord, textOf } from './variables.js';
-export { readOutputs, type ApiReference, type ImplicitOutput, type OutputApi, type OutputsOptions } from './outputs.js';
+export { readOutputs, readParameters, type ApiReference, type ImplicitOutput, type OutputApi, type OutputsOptions } from './outputs.js';
 export { EVENT_READERS } from './events.js';
 export { functionLogicalId, normalizedName } from './service.js';
 export { asTarget, emptyParts, FileReading, writtenAs, type DeploymentParts, type Site } from './reading.js';
-export { pushFunctionUrl, readResources, RESOURCE_READERS, userPoolName, type ResourceReader } from './resources.js';
+export { DESTINATION_KINDS, mappedKinds, mappedSource, pushFunctionUrl, readResources, RESOURCE_READERS, userPoolName, type ResourceReader } from './resources.js';
 export { answerFor, readStateMachineResource, workflowNameOf, workflowOf } from './state-machines.js';
 
 /** The names a service file goes by, in the order the framework looks for them. */

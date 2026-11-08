@@ -15,7 +15,7 @@ import type {
   PublishedRoot,
   Unresolved,
 } from '@flowatlas/core';
-import { generatedName, importedName, UNREAD_SPAN } from '@flowatlas/core';
+import { alternativeAddress, generatedName, importedName, UNREAD_SPAN } from '@flowatlas/core';
 import type { Deployed, Template } from './cloudformation.js';
 import { Imported, isRecord, textOf, Unread } from './variables.js';
 
@@ -119,6 +119,8 @@ export class FileReading {
       return undefined;
     }
     this.generatedRow(found, path);
+    // An ARN built around a name another deployment publishes (P253).
+    if (found.imported !== undefined && found.kind !== 'url') this.importAt(found.imported, path, what, [found.kind], 'name');
     const target = asTarget(found);
     if (target === undefined) {
       this.row(path, symbol, {
@@ -131,12 +133,34 @@ export class FileReading {
     return target;
   }
 
-  /** That this deployment reads a value another publishes, here (P249). */
-  importAt(key: string, path: readonly PathStep[], what: string, kinds?: readonly (DeployedKind | 'url' | 'api')[]): void {
+  /**
+   * That this deployment reads a value another publishes, here (P249): as
+   * what it names, or, `as: 'name'`, as the name of something of `kinds`
+   * written into an address of it (P253).
+   */
+  importAt(key: string, path: readonly PathStep[], what: string, kinds?: readonly (DeployedKind | 'url' | 'api')[], as?: 'name'): void {
     const site = this.siteOf(path);
     // A value of the provider's is every function's, and one place it is read.
     if (this.parts.imports.some((found) => found.key === key && found.file === site.file && found.line === site.line)) return;
-    this.parts.imports.push({ key, ...site, what, ...(kinds === undefined ? {} : { kinds }) });
+    this.parts.imports.push({ key, ...site, what, ...(kinds === undefined ? {} : { kinds }), ...(as === undefined ? {} : { as }) });
+  }
+
+  /**
+   * Something another deployment publishes, used where the use says only
+   * that it is one of `kinds` (P253): one reading of the declaration per kind,
+   * each under its own address, of which the linker keeps the one the
+   * publisher's value is. One kind is no choice, and is the declaration's own
+   * address.
+   */
+  alternativesOf(found: Imported, kinds: readonly DeployedKind[], path: readonly PathStep[], what: string, address: string): { readonly kind: DeployedKind; readonly name: string; readonly address: string }[] {
+    const name = importedName(found.key);
+    if (kinds.length === 1) {
+      this.importAt(found.key, path, what, kinds);
+      return kinds.map((kind) => ({ kind, name, address }));
+    }
+    const alternatives = kinds.map((kind) => ({ kind, address: alternativeAddress(address, kind) }));
+    this.parts.imports.push({ key: found.key, ...this.siteOf(path), what, kinds, alternatives });
+    return alternatives.map((alternative) => ({ ...alternative, name }));
   }
 
   /**
@@ -147,6 +171,32 @@ export class FileReading {
   importedAs(found: Imported, kind: DeployedKind, path: readonly PathStep[], what: string, kinds: readonly DeployedKind[] = [kind]): Deployed {
     this.importAt(found.key, path, what, kinds);
     return { kind, name: importedName(found.key) };
+  }
+
+  /**
+   * A delivery onto what a value names (P23). Where the value is one another
+   * deployment publishes and the use says only that it is one of `kinds` - a
+   * destination - it is one delivery per kind, of which the linker keeps the
+   * one the publisher's value is (P253). `shape` finishes a target as the
+   * delivery hands to it: a destination's bus is given the result's event.
+   */
+  deliverTo(
+    delivery: Omit<DeployedDelivery, 'to'>,
+    found: Deployed | Unread | undefined,
+    path: readonly PathStep[],
+    what: string,
+    kinds: readonly DeployedKind[],
+    shape: (to: DeliveryTarget | undefined) => DeliveryTarget | undefined = (to) => to,
+  ): void {
+    if (found instanceof Imported && kinds.length > 0) {
+      for (const alternative of this.alternativesOf(found, kinds, path, what, delivery.address)) {
+        const to = shape(asTarget({ kind: alternative.kind, name: alternative.name }));
+        this.parts.deliveries.push({ ...delivery, address: alternative.address, ...(to === undefined ? {} : { to }) });
+      }
+      return;
+    }
+    const to = shape(this.targetOf(found, path, delivery.address, what));
+    this.parts.deliveries.push({ ...delivery, ...(to === undefined ? {} : { to }) });
   }
 
   /** A value a function is deployed with, read every way it can be. */
@@ -161,6 +211,8 @@ export class FileReading {
       return { written, imported: imported.key, unread: { text: imported.text, ...(imported.variable === undefined ? {} : { variable: imported.variable }) } };
     }
     if (found !== undefined && !(found instanceof Unread)) {
+      // An ARN or a URL built around a name another deployment publishes (P253).
+      if (found.imported !== undefined && found.kind !== 'url' && path !== undefined) this.importAt(found.imported, path, what ?? 'a value a function is deployed with', [found.kind], 'name');
       return { written, ...(text === undefined ? {} : { text }), names: { kind: found.kind, name: found.name } };
     }
     if (text !== undefined) return { written, text };

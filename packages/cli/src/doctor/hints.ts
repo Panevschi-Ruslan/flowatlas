@@ -595,6 +595,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Two configured services publish a value under the same name, so a deployment reading it cannot be joined to either. A name is exported once where both are deployed; one of the two is stale, or they are two environments the configuration should tell apart.',
   'export-mismatched': () =>
     'A deployment reads a value another publishes, and that value is not read on the publishing side or is another kind of thing than the reader takes - a topic where a queue is read - so the two are not joined. Fix the output, or what reads it.',
+  'parameter-file-ambiguous': () =>
+    'A template has two parameter files beside it, each named as its own - the values of two deployments - and nothing says which one is deployed, so neither is read and its parameters take their defaults. Name the one to read under services[].infra.vars, or in its samconfig as parameter_overrides = "file://<file>".',
   'compose-service-unread': () =>
     'A composition of deployments lists a service that is not read: its folder is outside the repository, is not there, or holds no service file. Point it at a folder of the repository with a service file; one in another repository is read where that repository is.',
   'invoke-target-not-found': () =>

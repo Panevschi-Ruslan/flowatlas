@@ -41,6 +41,14 @@ export interface ResolverContext {
 
 const LIST_TYPES = /^(CommaDelimitedList|List<)/;
 
+/**
+ * A parameter whose value CloudFormation reads from a parameter of the
+ * account, by the name the template is given (P253): what it stands for is
+ * that parameter, written as the dynamic reference it is the same as, so
+ * everything that reads one reads the other.
+ */
+const ACCOUNT_PARAMETER = /^AWS::SSM::Parameter::Value<(.+)>$/;
+
 export class Resolver {
   readonly parameters = new Map<string, Parameter>();
   readonly #conditions = new Map<string, Decided>();
@@ -50,7 +58,9 @@ export class Resolver {
     const declared = isRecord(context.document['Parameters']) ? context.document['Parameters'] : {};
     for (const [name, written] of Object.entries(declared)) {
       const declaration = isRecord(written) ? written : {};
-      const list = LIST_TYPES.test(textOf(declaration['Type']) ?? '');
+      const type = textOf(declaration['Type']) ?? '';
+      const account = ACCOUNT_PARAMETER.exec(type)?.[1];
+      const list = LIST_TYPES.test(account ?? type);
       const given = context.given[name];
       const fallback = declaration['Default'];
       const text = given?.value ?? (Array.isArray(fallback) ? fallback.map(String).join(',') : textOf(fallback));
@@ -60,9 +70,13 @@ export class Resolver {
           ? new Unread(`the parameter ${name} has no value: it has no Default, and neither ${context.configFile} nor services[].infra.options sets it`, name)
           : text instanceof Unread
             ? text
-            : list
-              ? text.split(',').map((item) => item.trim())
-              : text;
+            : account !== undefined
+              ? list
+                ? new Unread(`the parameter ${name} is the list the parameter ${text} of the account holds, which is not read`, name)
+                : `{{resolve:ssm:${text}}}`
+              : list
+                ? text.split(',').map((item) => item.trim())
+                : text;
       this.parameters.set(name, { value, ...(from === undefined ? {} : { from }) });
     }
   }
@@ -112,6 +126,8 @@ export class Resolver {
     const resolved = this.resolve(value);
     if (Array.isArray(resolved)) return resolved.join(',');
     const text = textOf(resolved);
+    // A parameter of the account holds what it holds once deployed (P253).
+    if (text?.includes('{{resolve:') === true) return new Unread('a value it compares is read from a parameter of the account');
     if (text !== undefined) return text;
     return resolved instanceof Unread ? resolved : new Unread('a value it compares is known only once the stack is deployed');
   }

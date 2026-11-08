@@ -77,6 +77,12 @@ export interface ImportedValue {
   readonly what: string;
   /** The kinds it may be, where it is used; absent where it may be anything. */
   readonly kinds?: readonly string[];
+  /** One reading of the declaration per kind it may be, by address, of which the linker keeps one (P253). */
+  readonly alternatives?: readonly { readonly kind: string; readonly address: string }[];
+  /** `name` where the value is the name of what it names, written into an address of it (P253). */
+  readonly as?: 'name';
+  /** The repository whose value it was joined to, once it is. */
+  readonly from?: string;
 }
 
 /**

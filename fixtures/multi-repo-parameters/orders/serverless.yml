@@ -1,0 +1,53 @@
+service: shop-orders
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-west-1
+  stage: prod
+  # The platform's REST API, read from the parameter it writes.
+  apiGateway:
+    restApiId: ${ssm:/shop/api/id}
+    restApiRootResourceId: ${ssm:/shop/api/root-id}
+
+functions:
+  place:
+    handler: src/place-order.handler
+    events:
+      - http: POST orders
+    environment:
+      PLACED_QUEUE_URL: ${ssm:/shop/orders/placed-url}
+
+resources:
+  Resources:
+    OrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: shop-orders
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+    AuditQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: shop-orders-audit
+    # What the other services read of this one, by name.
+    StreamParameter:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: /shop/orders/stream-arn
+        Type: String
+        Value: !GetAtt OrdersTable.StreamArn
+    AuditQueueNameParameter:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: /shop/audit/queue-name
+        Type: String
+        Value: !GetAtt AuditQueue.QueueName

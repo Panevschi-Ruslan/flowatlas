@@ -2,7 +2,7 @@ import { dirname, posix, relative, resolve as resolvePath } from 'node:path';
 import { evaluateExpression, startLineOf, toPosixPath, type Unresolved } from '@flowatlas/core';
 import { Node, SyntaxKind, type ClassDeclaration, type ClassExpression, type SourceFile, type Node as TsNode } from 'ts-morph';
 import { cdkModuleOf, CONSTRUCT_BASES, isPathModule } from './modules.js';
-import { staticCall, staticValue } from './statics.js';
+import { importedParameter, staticCall, staticValue } from './statics.js';
 import { chainMethod, isChainable } from './chains.js';
 import { constructMethod, constructProperty } from './construct-methods.js';
 import {
@@ -11,6 +11,7 @@ import {
   CdkRef,
   ClassValue,
   Construct,
+  EXPORT_VALUE,
   FunctionValue,
   NodeHandle,
   ObjectValue,
@@ -464,6 +465,8 @@ export class Interpreter {
     if (typeof owner === 'string') return name === 'length' ? owner.length : new Unread(`${name} of text is not read`, 'not-read');
     if (owner instanceof Construct) {
       if (name === 'node') return new NodeHandle(owner);
+      // A parameter of the account looked up by its name: its value is the parameter (P253).
+      if (PARAMETERS.has(owner.type) && owner.imported?.name !== undefined && (name === 'stringValue' || name === 'stringListValue')) return importedParameter(owner.imported.name);
       if (owner.fields.has(name)) return owner.fields.get(name);
       const child = constructProperty(owner, name, this.site(at));
       if (child !== undefined) {
@@ -541,6 +544,7 @@ export class Interpreter {
       if (receiver.type.startsWith('app:')) {
         const method = this.#methodOf(receiver, name);
         if (method !== undefined) return this.callFunction(method, args, receiver, frame, node);
+        if (name === 'exportValue') return this.#exportValue(receiver, args, site, frame);
         const field = receiver.fields.get(name);
         if (field instanceof FunctionValue) return this.callFunction(field, args, receiver, frame, node);
         return new Unread(`${name} of ${receiver.path} is not read`, 'not-read');
@@ -647,6 +651,24 @@ export class Interpreter {
     }
   }
 
+  /**
+   * `stack.exportValue(value, { name })`: the stack exports the value under
+   * the name, as the CDK does itself for a value one of its stacks hands
+   * another (P253). What it gives back is the import of it, which in this app
+   * is the value itself; the export is a construct of its own, which the
+   * reading of the deployment publishes.
+   */
+  #exportValue(stack: Construct, args: readonly Value[], site: Site, frame: Frame): Value {
+    const [value, options] = args;
+    const name = options instanceof ObjectValue ? options.get('name') : undefined;
+    const props = new ObjectValue([
+      ['value', value],
+      ['exportName', name],
+    ]);
+    this.constructs.push(new Construct(EXPORT_VALUE, `${stack.path}/${typeof name === 'string' ? `Export${name}` : `Export@${site.line}`}`, site, props, [stack, 'Export', props], frame.conditional, frame.repeated));
+    return value;
+  }
+
   // ----------------------------------------------------------- construction
 
   #new(node: TsNode & { getExpression(): TsNode; getArguments(): TsNode[] }, scope: Scope, frame: Frame): Value {
@@ -718,6 +740,9 @@ export class Interpreter {
   }
 }
 
+/** The parameters of the account a value is read from by name. */
+const PARAMETERS = new Set(['aws-ssm.StringParameter', 'aws-ssm.StringListParameter']);
+
 /** Whether a `new` is a construct's: handed a scope and an id, as every construct is. */
 const isConstructCall = (args: readonly Value[]): boolean =>
   (args[0] instanceof Construct || args[0] instanceof Unread) && (typeof args[1] === 'string' || args[1] instanceof Unread);
@@ -786,7 +811,13 @@ const importedConstruct = (ref: CdkRef, method: string, args: readonly Value[], 
   if (!/^from[A-Z]/.test(method) || !isConstructCall(args)) return undefined;
   const written = args[2];
   const attributes = written instanceof ObjectValue ? written : undefined;
-  const text = textOf(written as Value) ?? textOf(attributes?.get('functionArn')) ?? textOf(attributes?.get('queueArn')) ?? textOf(attributes?.get('topicArn')) ?? textOf(attributes?.get('tableName'));
+  const text =
+    textOf(written as Value) ??
+    textOf(attributes?.get('functionArn')) ??
+    textOf(attributes?.get('queueArn')) ??
+    textOf(attributes?.get('topicArn')) ??
+    textOf(attributes?.get('tableName')) ??
+    textOf(attributes?.get('parameterName'));
   const isArn = /Arn$/.test(method) || (text?.startsWith('arn:') ?? false);
   const imported =
     text === undefined

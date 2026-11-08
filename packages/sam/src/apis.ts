@@ -88,8 +88,8 @@ export const apiLookup =
     const intrinsic = intrinsicOf(reference);
     const id = intrinsic?.[0] === 'Ref' && typeof intrinsic[1] === 'string' ? intrinsic[1] : undefined;
     const resource = id === undefined ? undefined : reading.template.resources.get(id);
-    if (intrinsic?.[0] === 'Fn::ImportValue') {
-      // The transform takes an event's API only from the same template (P249).
+    if (intrinsic?.[0] === 'Fn::ImportValue' || reading.template.deployedOf(reference) instanceof Imported) {
+      // The transform takes an event's API only from the same template (P249), a parameter of the account's too (P253).
       reading.file.row(site.path, site.address, {
         reason: 'route-path-unread',
         message: `${site.address} is a route of an API another stack creates, which the transform does not take on an event: it requires an API the same template declares`,
@@ -243,7 +243,7 @@ const readV2Route = (reading: TemplateReading, route: Resource): void => {
   const { properties } = route;
   const api = v2ApiOf(reading, properties['ApiId']);
   // A route of an HTTP API another stack creates hangs from that API (P249).
-  const shared = intrinsicOf(properties['ApiId'])?.[0] === 'Fn::ImportValue' ? reading.template.deployedOf(properties['ApiId']) : undefined;
+  const shared = api === undefined ? reading.template.deployedOf(properties['ApiId']) : undefined;
   const routeKey = textOf(properties['RouteKey']);
   const integration = integrationOf(reading, properties['Target']);
   const fn = integration === undefined ? undefined : functionOfUri(reading, integration.properties['IntegrationUri']);
@@ -320,8 +320,12 @@ type RestPath = { readonly path: string } | { readonly root: string; readonly be
 
 /** The point of a REST API a value is: the root, a resource of the template, or one another stack exports. */
 export const restPathOf = (reading: TemplateReading, value: unknown, depth = 0): RestPath | undefined => {
+  if (depth > 16) return undefined;
+  // A point of an API another deployment writes to a parameter of the account (P253).
+  const shared = value instanceof Imported ? value : typeof value === 'string' ? reading.template.deployedOf(value) : undefined;
+  if (shared instanceof Imported) return { root: shared.key, below: '' };
   const intrinsic = intrinsicOf(value);
-  if (depth > 16 || intrinsic === undefined) return undefined;
+  if (intrinsic === undefined) return undefined;
   if (intrinsic[0] === 'Fn::ImportValue') {
     const imported = reading.template.imported(intrinsic[1]);
     return imported instanceof Imported ? { root: imported.key, below: '' } : undefined;

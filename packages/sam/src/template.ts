@@ -1,9 +1,10 @@
 import { join, posix } from 'node:path';
-import { generatedName, type PathStep, type PositionedDocument, type Unresolved } from '@flowatlas/core';
+import { exportKey, generatedName, parameterKey, type PathStep, type PositionedDocument, type Unresolved } from '@flowatlas/core';
 import {
   FileReading,
   isRecord,
   readOutputs,
+  readParameters,
   readResources,
   readServiceFile,
   RESOURCE_KINDS,
@@ -19,6 +20,7 @@ import {
 } from '@flowatlas/serverless';
 import { apiLookup, apiReference, readApis } from './apis.js';
 import { deployConfigOf, TEMPLATE_FILES, type DeployConfig } from './config.js';
+import { parameterFilesBeside, readParameterFile } from './parameter-files.js';
 import { functionEventReaders, readEvents } from './events.js';
 import { FUNCTION_TYPES, readDestinations, readFunction, readFunctionUrlConfig, withGlobals, type FunctionSite } from './functions.js';
 import { expandLoops, Resolver, type ParameterFrom } from './intrinsics.js';
@@ -77,7 +79,7 @@ const MOST_NESTED = 4;
  */
 export type Dialect = 'sam' | 'cloudformation';
 
-/** Every export a reading met, by its name: where each was declared, and what it is. */
+/** Every export a reading met, by its key: where each was declared, and what it is. */
 export type ExportSink = Map<string, Array<{ readonly file: string; readonly exported: Exported }>>;
 
 export interface TemplateReadOptions {
@@ -88,10 +90,14 @@ export interface TemplateReadOptions {
   readonly options: Readonly<Record<string, string>>;
   /** Absolute paths of every file read beside it, filled as they are. */
   readonly loaded: Set<string>;
-  /** What the other templates of the repository export, by name, for `Fn::ImportValue` (P248). */
-  readonly imports?: (name: string) => Exported | Unread | undefined;
+  /** What the other templates of the repository export, by key, for `Fn::ImportValue` (P248) and a parameter of the account (P253). */
+  readonly imports?: (key: string) => Exported | Unread | undefined;
   /** Where the exports of this template, and of those it nests, are put as they are read. */
   readonly exports?: ExportSink;
+  /** The files the configuration reads a deployment with (`services[].infra.vars`), repo-relative: a parameter file among them gives every template its values (P253). */
+  readonly vars?: readonly string[];
+  /** Every template of the repository, so a parameter file beside one is told from one beside several. */
+  readonly templates?: readonly string[];
   /** What a parent template hands it, when it is nested. */
   readonly parent?: {
     readonly scope: string;
@@ -120,6 +126,51 @@ const configFor = (repoDir: string, file: string, options: Readonly<Record<strin
     }
     if (dir === '.' || dir === '') return deployConfigOf(repoDir, own, options, false);
   }
+};
+
+/**
+ * The parameter files a template is deployed with (P253): the ones its
+ * `samconfig` names, else the one beside it whose name says it is its own -
+ * two such are a row, and neither is read - and, after those, every parameter
+ * file the configuration names. Each file read is stamped with the template.
+ */
+const deployValues = (parts: DeploymentParts, options: TemplateReadOptions, config: DeployConfig): { named: Record<string, string>[]; vars: Record<string, string>[] } => {
+  const { repoDir, file } = options;
+  const read = (path: string, named: boolean): Record<string, string> | undefined => {
+    options.loaded.add(join(repoDir, path));
+    const found = readParameterFile(repoDir, path);
+    if ('values' in found) return { ...found.values };
+    if (named) {
+      parts.rows.push({
+        file: config.file ?? file,
+        line: 1,
+        symbol: `${file}#Parameters`,
+        reason: 'infra-file-unparsed',
+        message: `the parameter file ${path} is not read: ${found.unreadable}`,
+        hint: 'The template is read with the values the rest of its configuration gives. Point the override at a JSON file of ParameterKey and ParameterValue.',
+      });
+    }
+    return undefined;
+  };
+  const vars = (options.vars ?? []).filter((path) => path.endsWith('.json') && 'values' in readParameterFile(repoDir, path));
+  const fromVars = vars.map((path) => read(path, false)).filter((values): values is Record<string, string> => values !== undefined);
+  const named = config.parameterFiles ?? [];
+  if (named.length > 0) return { named: named.map((path) => read(path, true)).filter((values): values is Record<string, string> => values !== undefined), vars: fromVars };
+  if (vars.length > 0) return { named: [], vars: fromVars };
+  const beside = parameterFilesBeside(repoDir, file, options.templates ?? [file]);
+  if (beside.length > 1) {
+    parts.rows.push({
+      file,
+      line: 1,
+      symbol: `${file}#Parameters`,
+      reason: 'parameter-file-ambiguous',
+      message: `${file} has ${beside.length} parameter files beside it (${beside.join(', ')}), each the values of a deployment of its own, and nothing says which is deployed; none is read`,
+      hint: 'Name the one to read under services[].infra.vars, or in its samconfig as parameter_overrides = "file://<file>".',
+    });
+    for (const path of beside) options.loaded.add(join(repoDir, path));
+    return { named: [], vars: [] };
+  }
+  return { named: beside.map((path) => read(path, true)).filter((values): values is Record<string, string> => values !== undefined), vars: [] };
 };
 
 /** What a template gives the one it is nested in: its outputs, by name. */
@@ -170,7 +221,12 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
 
   const given: Record<string, { value: string | Unread; from: ParameterFrom }> = {};
   for (const [name, value] of Object.entries(options.parent?.parameters ?? {})) given[name] = { value, from: 'parent' };
-  for (const [name, value] of Object.entries(config.parameters)) given[name] = { value, from: config.from[name] ?? 'file' };
+  // A parameter file, under the samconfig's overrides, the configuration's files and the options (P253).
+  const files = options.parent === undefined ? deployValues(parts, options, config) : { named: [], vars: [] };
+  for (const values of files.named) for (const [name, value] of Object.entries(values)) given[name] = { value, from: 'file' };
+  for (const [name, value] of Object.entries(config.parameters)) if (config.from[name] !== 'option') given[name] = { value, from: 'file' };
+  for (const values of files.vars) for (const [name, value] of Object.entries(values)) given[name] = { value, from: 'file' };
+  for (const [name, value] of Object.entries(config.parameters)) if (config.from[name] === 'option') given[name] = { value, from: 'option' };
   const region = config.region ?? options.parent?.region;
   const stackName = options.parent === undefined ? config.stackName : undefined;
   const resolver = new Resolver({
@@ -345,6 +401,8 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   if (options.parent === undefined) {
     readOutputs(fileReading, writtenOutputs, { at: ['Outputs'], scope, ...(stackName === undefined ? {} : { stackName }), apiOf: apiReference(reading) });
   }
+  // The parameters of the account it writes, by their names, nested or not: a parameter is the account's, not the stack's (P253).
+  readParameters(fileReading, { apiOf: apiReference(reading) });
   return { outputs: outputsOf(reading, writtenOutputs) };
 };
 
@@ -355,18 +413,24 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
  * reading's, and the importer's is another.
  */
 const exportsOf = (reading: TemplateReading, written: unknown, sink: ExportSink): void => {
-  if (!isRecord(written)) return;
-  for (const output of Object.values(written)) {
-    if (!isRecord(output) || !isRecord(output['Export'])) continue;
-    const name = reading.template.text(output['Export']['Name']);
-    if (typeof name !== 'string') continue;
-    const found = reading.deployedOf(output['Value']);
+  const put = (key: string, value: unknown): void => {
+    const found = reading.deployedOf(value);
     const deployed: Deployed | undefined =
-      found === undefined || found instanceof Unread
+      found === undefined || found instanceof Unread || found.imported !== undefined
         ? undefined
         : { kind: found.kind, name: found.name, ...(found.changes === true ? { changes: true } : {}), ...(found.generated === true ? { generated: true } : {}) };
-    const exported: Exported = { ...(deployed === undefined ? {} : { deployed }), text: reading.template.text(output['Value']) };
-    sink.set(name, [...(sink.get(name) ?? []), { file: reading.file.file, exported }]);
+    const exported: Exported = { ...(deployed === undefined ? {} : { deployed }), text: reading.template.text(value) };
+    sink.set(key, [...(sink.get(key) ?? []), { file: reading.file.file, exported }]);
+  };
+  for (const output of isRecord(written) ? Object.values(written) : []) {
+    if (!isRecord(output) || !isRecord(output['Export'])) continue;
+    const name = reading.template.text(output['Export']['Name']);
+    if (typeof name === 'string') put(exportKey(name), output['Value']);
+  }
+  // A parameter of the account another template of the repository resolves (P253).
+  for (const parameter of reading.template.ofType('AWS::SSM::Parameter')) {
+    const name = parameter.properties['Name'] === undefined ? undefined : reading.template.text(parameter.properties['Name']);
+    if (typeof name === 'string') put(parameterKey(name), parameter.properties['Value']);
   }
 };
 

@@ -325,6 +325,7 @@ export const PAGE_WORDS = Object.freeze({
     'deployment-unread': 'no deployment description read',
     'nested-deployment-unread': 'nested deployment published elsewhere',
     'compose-service-unread': 'composed service not read',
+    'parameter-file-ambiguous': 'two parameter files, neither chosen',
     'export-not-found': 'imported value nobody exports',
     'export-ambiguous': 'imported value exported twice',
     'export-mismatched': 'imported value not the kind it is read as',

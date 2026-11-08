@@ -1,7 +1,7 @@
 import type { DeployedSetting } from '@flowatlas/core';
 import { asText, describe, type Instance, type Value } from '../eval/values.js';
 import { blockOrArgument, entryOf } from './arguments.js';
-import { deployedInText, deployedOf, isBecause } from './deployed.js';
+import { deployedInText, deployedOf, importAt, isBecause } from './deployed.js';
 import type { ResourceReading } from './reading.js';
 
 /**
@@ -28,10 +28,15 @@ const writtenAs = (value: Value): string => {
 };
 
 /** One value, read every way it can be. */
-const settingOf = (value: Value, reading: Pick<ResourceReading, 'functionIndex'>): DeployedSetting => {
+const settingOf = (value: Value, reading: Pick<ResourceReading, 'functionIndex' | 'imports'>, fn: Instance, variable: string): DeployedSetting => {
   const written = writtenAs(value);
   const text = asText(value);
   const found = deployedOf(value, reading) ?? (text === undefined ? undefined : deployedInText(text));
+  // A parameter another deployment writes, whatever it names: the publisher's to say (P253).
+  if (found !== undefined && isBecause(found) && found.imported !== undefined) {
+    importAt(reading, fn, found.imported, `the value of ${variable} ${fn.address} is deployed with`);
+    return { written, imported: found.imported, unread: { text: found.text } };
+  }
   if (found !== undefined && !isBecause(found)) {
     return { written, ...(text === undefined ? {} : { text }), names: { kind: found.kind, name: found.name } };
   }
@@ -55,7 +60,7 @@ const settingOf = (value: Value, reading: Pick<ResourceReading, 'functionIndex'>
  */
 export const environmentOf = (
   fn: Instance,
-  reading: Pick<ResourceReading, 'functionIndex'>,
+  reading: Pick<ResourceReading, 'functionIndex' | 'imports'>,
 ): Readonly<Record<string, DeployedSetting>> | undefined => {
   const block = blockOrArgument(fn, 'environment');
   if (block === undefined || block.kind === 'null') return {};
@@ -63,6 +68,6 @@ export const environmentOf = (
   if (variables === undefined || variables.kind === 'null') return {};
   if (variables.kind !== 'object') return undefined;
   const out: Record<string, DeployedSetting> = {};
-  for (const name of [...variables.entries.keys()].sort()) out[name] = settingOf(variables.entries.get(name) as Value, reading);
+  for (const name of [...variables.entries.keys()].sort()) out[name] = settingOf(variables.entries.get(name) as Value, reading, fn, name);
   return out;
 };

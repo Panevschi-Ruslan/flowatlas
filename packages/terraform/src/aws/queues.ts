@@ -1,7 +1,8 @@
-import type { DeclaredStream, DeliverySource } from '@flowatlas/core';
+import type { DeclaredStream, DeliverySource, DeployedKind } from '@flowatlas/core';
+import { importedName } from '@flowatlas/core';
 import { asText, type Because, type Instance, type Value } from '../eval/values.js';
 import { argument, blockOrArgument, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
-import { deployedAt, deployedInText, deployedOf, deployedOfValue, isBecause, targetOf, type Deployed } from './deployed.js';
+import { alternativesAt, deployedAt, deployedInText, deployedOf, deployedOfValue, importAt, isBecause, targetOf, type Deployed } from './deployed.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
 
 /**
@@ -59,8 +60,35 @@ export const filtersIn = (criteria: Value | undefined): string[] => {
   });
 };
 
+/**
+ * A mapping that reads a parameter another deployment writes (P253): a
+ * queue where it takes no starting position, else a stream or a table's
+ * changes, read as both under an address each, of which the linker keeps one.
+ */
+const readImportedMapping = (mapping: Instance, key: string, reading: ResourceReading): void => {
+  const starts = argument(mapping, 'starting_position');
+  const kinds: readonly DeployedKind[] = starts === undefined || starts.kind === 'null' ? ['queue'] : ['stream', 'table'];
+  const to = targetOf(functionAt(mapping, 'function_name', reading), mapping, `the function ${mapping.address} hands its batches to`, reading);
+  const enabled = argument(mapping, 'enabled');
+  for (const alternative of alternativesAt(reading, mapping, key, kinds, `what ${mapping.address} reads`)) {
+    const from: DeliverySource = alternative.kind === 'queue' ? { kind: 'queue', name: alternative.name } : { kind: 'changes', of: alternative.kind === 'stream' ? 'stream' : 'table', name: alternative.name };
+    reading.deliveries.push({
+      ...siteOf(mapping),
+      address: alternative.address,
+      by: 'mapping',
+      from,
+      ...(to === undefined ? {} : { to }),
+      meta: enabled?.kind === 'bool' && !enabled.value ? { disabled: true } : {},
+    });
+  }
+};
+
 const readMapping = (mapping: Instance, reading: ResourceReading): void => {
   const found = deployedAt(mapping, 'event_source_arn', reading);
+  if (found !== undefined && isBecause(found) && found.imported !== undefined) {
+    readImportedMapping(mapping, found.imported, reading);
+    return;
+  }
   if (found === undefined) {
     reading.rows.push(
       unreadRow(mapping, 'subscription-source-unread', `what ${mapping.address} reads`, { reason: 'unplaced', text: 'it reads a source other than a queue or a stream' }, 'info'),
@@ -92,7 +120,11 @@ const readMapping = (mapping: Instance, reading: ResourceReading): void => {
 const FOLLOWED_PROTOCOLS = new Set(['lambda', 'sqs']);
 
 const readSubscription = (subscription: Instance, reading: ResourceReading): void => {
-  const topic = deployedAt(subscription, 'topic_arn', reading);
+  const written = deployedAt(subscription, 'topic_arn', reading);
+  // A topic another deployment writes to a parameter of the account (P253).
+  const imported = written !== undefined && isBecause(written) ? written.imported : undefined;
+  if (imported !== undefined) importAt(reading, subscription, imported, `the topic ${subscription.address} subscribes to`, ['topic']);
+  const topic = imported === undefined ? written : { kind: 'topic' as const, name: importedName(imported) };
   if (topic === undefined || isBecause(topic) || topic.kind !== 'topic') {
     const because = topic === undefined ? whyNot(undefined, 'topic_arn') : isBecause(topic) ? topic : { reason: 'unplaced', text: `topic_arn names a ${topic.kind}` };
     reading.rows.push(unreadRow(subscription, 'subscription-source-unread', `the topic ${subscription.address} subscribes to`, because));

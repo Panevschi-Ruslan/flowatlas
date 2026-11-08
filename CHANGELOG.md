@@ -35,6 +35,28 @@ only one of them moved.
   keeps every other file its sites are in (`meta.causes[].files`), which the
   read gate reads. New fixtures `nuxt-components` and `vue-components`.
 
+- **Values shared through parameters of the account, an app's own stacks,
+  parameter files, and imports whose kind the use does not say (P253).** A
+  parameter one deployment writes (`AWS::SSM::Parameter`, CDK
+  `StringParameter`, Terraform `aws_ssm_parameter`) is joined by its name to
+  every place another reads it (`{{resolve:ssm:...}}`, a template parameter
+  typed `AWS::SSM::Parameter::Value`, `${ssm:...}`,
+  `StringParameter.valueForStringParameter` / `valueFromLookup` /
+  `fromStringParameterName(...).stringValue`, Terraform's
+  `data "aws_ssm_parameter"`), under the `parameter:` key Terraform's shared
+  roots use; one nobody configured writes is an `export-not-found` row naming
+  it. A CDK app's `Fn.importValue` of its own export, `Stack.exportValue` and a
+  parameter it writes and reads are the value itself. A template's parameter
+  file is read where `services[].infra.vars` or its `samconfig`
+  (`parameter_overrides = "file://..."`) names it, or one sits beside it under
+  its name; two beside it are a new `parameter-file-ambiguous` row. A mapping
+  or a destination whose import does not say what it is is read once per kind
+  it may be, and the linker keeps the reading the publisher's value is; an
+  address built around an imported name names the imported thing. A value
+  published under a generated name is joined to the producer's own channel,
+  named by its repository. A Serverless service hangs its routes on a shared
+  REST API from `restApiRootResourceId` where it names one. New fixture
+  `multi-repo-parameters`.
 - **The router's check on a field no resolver of its own answers, and an
   entity interface nobody can type (P252).** A field the router's
   `@authenticated`, `@requiresScopes` or `@policy` guards and no resolver of

@@ -1186,6 +1186,11 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.post-orders.tree.txt', 'POST /orders'],
   ]),
   terraformShape('serverless-compose', [['flow.post-jobs.tree.txt', 'POST /jobs']]),
+  // Values shared through parameters of the account, read by any of the five readers (P253).
+  terraformShape('multi-repo-parameters', [
+    ['flow.post-orders.tree.txt', 'POST /orders'],
+    ['flow.restock.tree.txt', 'invoke:catalog-prod-restock'],
+  ]),
   terraformShape('lambda-terraform-bucket-module', [
     ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
     ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],

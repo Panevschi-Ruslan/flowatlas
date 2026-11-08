@@ -1,12 +1,12 @@
 import { join, posix } from 'node:path';
 import { destinationOf } from '@flowatlas/aws';
-import { type DeployedFunction, type DeployedHandler, type DeployedSetting, type PathStep, type PositionedDocument } from '@flowatlas/core';
+import { type DeployedFunction, type DeployedHandler, type DeployedKind, type DeployedSetting, type PathStep, type PositionedDocument } from '@flowatlas/core';
 import { intrinsicOf, Template, type Deployed } from './cloudformation.js';
 import { readServiceFile, ServiceFileUnreadable } from './document.js';
 import { readEvent, readFunctionUrl, type Apis, type EventReading, type EventSite, type SharedApi } from './events.js';
-import { readOutputs, type ImplicitOutput } from './outputs.js';
+import { readOutputs, readParameters, type ApiReference, type ImplicitOutput } from './outputs.js';
 import { FileReading, type DeploymentParts } from './reading.js';
-import { readResources } from './resources.js';
+import { DESTINATION_KINDS, readResources } from './resources.js';
 import { readPluginStateMachines, readStateMachineResource } from './state-machines.js';
 import { Imported, isRecord, textOf, Unread, Variables, type StageFrom } from './variables.js';
 
@@ -150,7 +150,9 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
   );
   const reading = new FileReading(parts, file, document, template, functionIndex);
   // An API another deployment creates, which this service's routes hang from (P249).
-  const sharedRest = sharedApiOf(template, isRecord(provider['apiGateway']) ? provider['apiGateway']['restApiId'] : undefined);
+  // Routes hang from the root resource the service is given, where it is given one, else from the API's own (P253).
+  const gateway = isRecord(provider['apiGateway']) ? provider['apiGateway'] : {};
+  const sharedRest = gateway['restApiId'] === undefined ? undefined : sharedApiOf(template, gateway['restApiRootResourceId'] ?? gateway['restApiId']);
   const sharedHttp = sharedApiOf(template, isRecord(provider['httpApi']) ? provider['httpApi']['id'] : undefined);
   const apis: Apis = {
     ...(service === undefined || stageText === undefined
@@ -238,16 +240,19 @@ const readServiceOutputs = (
       : []),
   ];
   const resources = isRecord(resolved['resources']) ? resolved['resources'] : {};
+  const apiOf: ApiReference = (logicalId, attribute) => {
+    if (logicalId === 'ApiGatewayRestApi' && rest !== undefined) return attribute === undefined || attribute === 'RootResourceId' ? { ...rest, path: '/' } : rest;
+    if (logicalId === 'HttpApi' && http !== undefined) return attribute === undefined ? { ...http, path: '/' } : http;
+    return undefined;
+  };
   readOutputs(reading, resources['Outputs'], {
     at: ['resources', 'Outputs'],
     ...(service.stackName === undefined ? {} : { stackName: service.stackName }),
     implicit,
-    apiOf: (logicalId, attribute) => {
-      if (logicalId === 'ApiGatewayRestApi' && rest !== undefined) return attribute === undefined || attribute === 'RootResourceId' ? { ...rest, path: '/' } : rest;
-      if (logicalId === 'HttpApi' && http !== undefined) return attribute === undefined ? { ...http, path: '/' } : http;
-      return undefined;
-    },
+    apiOf,
   });
+  // The parameters of the account the service writes, by their names (P253).
+  readParameters(reading, { apiOf });
 };
 
 interface FunctionDeclaration {
@@ -355,6 +360,9 @@ const handlerOf = (reading: FileReading, declaration: FunctionDeclaration): Depl
   };
 };
 
+/** What the framework's `type` of a destination says it is. */
+const DESTINATION_TYPES: Readonly<Record<string, DeployedKind>> = { sqs: 'queue', sns: 'topic', eventBus: 'bus', function: 'function' };
+
 /** `destinations: { onSuccess, onFailure }`: where a run's result is handed on (P54). */
 const readDestinations = (reading: FileReading, value: unknown, index: number, path: PathStep[], address: string): void => {
   if (!isRecord(value)) return;
@@ -367,15 +375,16 @@ const readDestinations = (reading: FileReading, value: unknown, index: number, p
     const target = isRecord(written) && intrinsicOf(written) === undefined ? written['arn'] : written;
     const text = textOf(target);
     const found: Deployed | Unread | undefined = text !== undefined && !text.startsWith('arn:') ? reading.functionNamed(text) : reading.template.deployedOf(target);
-    const what = `the ${when} destination of ${address}`;
-    const to = destinationOf(reading.targetOf(found, [...path, key], `${address}.destinations.${key}`, what), when);
-    reading.parts.deliveries.push({
-      ...reading.siteOf([...path, key]),
-      address: `${address}.destinations.${key}`,
-      by: 'destination',
-      from: { kind: 'outcome', when, of: { function: index } },
-      ...(to === undefined ? {} : { to }),
-      meta: { when },
-    });
+    // The object form says what the destination is, where an import's use would not (P253).
+    const type = isRecord(written) ? textOf(written['type']) : undefined;
+    const typed = type === undefined ? undefined : DESTINATION_TYPES[type];
+    reading.deliverTo(
+      { ...reading.siteOf([...path, key]), address: `${address}.destinations.${key}`, by: 'destination', from: { kind: 'outcome', when, of: { function: index } }, meta: { when } },
+      found,
+      [...path, key],
+      `the ${when} destination of ${address}`,
+      typed === undefined ? DESTINATION_KINDS : [typed],
+      (to) => destinationOf(to, when),
+    );
   }
 };

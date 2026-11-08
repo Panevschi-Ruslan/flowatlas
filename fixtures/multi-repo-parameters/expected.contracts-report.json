@@ -1,0 +1,114 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-08T12:51:36.165Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "producer:catalog#src/restock.ts:11:9",
+        "to": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.restocked",
+        "type": "emits"
+      },
+      "edgeKey": "producer:catalog#src/restock.ts:11:9|emits|consumer:platform#infra/main.tf:aws_sns_topic_subscription.restocked",
+      "direction": "payload",
+      "status": "identical",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{sku:string}",
+        "symbol": "catalog#src/restock.ts:handler"
+      },
+      "receiver": {
+        "service": "platform",
+        "typeId": "{sku:string}",
+        "symbol": "platform#src/notify.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:reports#src/build.ts:10:39",
+        "to": "consumer:reports#lib/stacks.ts:reports-worker/Build/SqsEventSource:reports-storage/Jobs",
+        "type": "emits"
+      },
+      "edgeKey": "producer:reports#src/build.ts:10:39|emits|consumer:reports#lib/stacks.ts:reports-worker/Build/SqsEventSource:reports-storage/Jobs",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "reports",
+        "typeId": "{report:string}",
+        "symbol": "reports#src/build.ts:handler"
+      },
+      "receiver": {
+        "service": "reports",
+        "typeId": "{report:string;next?:string}",
+        "symbol": "reports#src/build.ts:handler"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "channel:dynamodb/shop-orders",
+        "to": "consumer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.IndexMapping",
+        "type": "consumes"
+      },
+      "edgeKey": "channel:dynamodb/shop-orders|consumes|consumer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.IndexMapping",
+      "direction": "payload",
+      "reason": "channel-without-producer",
+      "message": "channel:dynamodb/shop-orders is handled and nothing publishes to it",
+      "hint": "See flowatlas dead --kind channels. Annotate the publisher with @Emits if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:catalog#src/restock.ts:12:9",
+        "to": "channel:sqs/shop-orders-audit",
+        "type": "emits"
+      },
+      "edgeKey": "channel:sqs/shop-orders-audit|emits|producer:catalog#src/restock.ts:12:9",
+      "direction": "payload",
+      "reason": "channel-without-consumer",
+      "message": "channel:sqs/shop-orders-audit is published to and nothing handles it",
+      "hint": "See flowatlas dead --kind channels. Annotate the handler with @Consumes if it is there but unreadable."
+    },
+    {
+      "edge": {
+        "from": "producer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.RestockFailures.DestinationConfig.OnFailure",
+        "to": "consumer:reports#lib/stacks.ts:reports-worker/Tally/SqsEventSource:reports-worker/Placed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.RestockFailures.DestinationConfig.OnFailure|emits|consumer:reports#lib/stacks.ts:reports-worker/Tally/SqsEventSource:reports-worker/Placed",
+      "direction": "payload",
+      "reason": "sender-forwards",
+      "message": "producer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.RestockFailures.DestinationConfig.OnFailure hands on what it is given, and nothing declares its shape",
+      "hint": "Nothing to change at this end. A message forwarded from a channel is compared from the publisher that wrote it when the forwarding wrapping is known; a request a route sends straight to a channel has no declared shape."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/place-order.ts:9:9",
+        "to": "consumer:reports#lib/stacks.ts:reports-worker/Tally/SqsEventSource:reports-worker/Placed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/place-order.ts:9:9|emits|consumer:reports#lib/stacks.ts:reports-worker/Tally/SqsEventSource:reports-worker/Placed",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "reports#src/tally.ts:handler does not parse the text at Records[].body of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 1,
+    "unchecked": 4,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

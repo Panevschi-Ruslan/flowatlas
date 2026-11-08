@@ -52,14 +52,15 @@ const templateReader = (name: string, sam: boolean): DeploymentReader => {
     const all = allTemplates(repoDir);
     const copies = templateCopies(repoDir, sam);
     const given = options.service?.infra?.options ?? {};
-    const key = `${repoDir}\0${JSON.stringify(given)}`;
+    const vars = options.service?.infra?.vars ?? [];
+    const key = `${repoDir}\0${JSON.stringify(given)}\0${JSON.stringify(vars)}`;
     const stamp = `${files.join('|')}\0${copies.map((copy) => copy.file).join('|')}\0${stampOf(all.map((file) => join(repoDir, file)))}`;
     const kept = readings.get(key);
     if (kept !== undefined && kept.stamp === stamp && stampOf(kept.loaded) === kept.loadedStamp) return kept;
     const parts = emptyParts();
     const loaded = new Set<string>();
-    const imports = repositoryExports(repoDir, all, given);
-    for (const file of files) readTemplate(parts, { repoDir, file, options: given, loaded, imports });
+    const imports = repositoryExports(repoDir, all, given, vars);
+    for (const file of files) readTemplate(parts, { repoDir, file, options: given, loaded, imports, vars, templates: all });
     for (const copy of copies) {
       parts.rows.push({
         file: copy.file,

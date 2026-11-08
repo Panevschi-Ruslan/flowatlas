@@ -60,6 +60,11 @@ export interface Because {
   readonly module?: string;
   /** Variable files and what each says, when they disagree. */
   readonly files?: Readonly<Record<string, string>>;
+  /**
+   * The key of a value another deployment publishes, when the value is that:
+   * a parameter of the account (`parameter:<name>`) a data source reads (P253).
+   */
+  readonly imported?: string;
 }
 
 /** An expression and the scope it is evaluated in: where a value is written. */

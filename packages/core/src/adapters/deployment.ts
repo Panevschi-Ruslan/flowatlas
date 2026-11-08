@@ -336,6 +336,18 @@ export interface DeployedImport {
   readonly what: string;
   /** The kinds of thing it may name where it is used; absent where it may be anything. */
   readonly kinds?: readonly (DeployedKind | 'url' | 'api')[];
+  /**
+   * Where the use does not say which of `kinds` it is: the declaration read
+   * once per kind, each under its own address (`alternativeAddress`), of which
+   * the linker keeps the one the publisher's value is (P253).
+   */
+  readonly alternatives?: readonly { readonly kind: DeployedKind; readonly address: string }[];
+  /**
+   * `name`: the value is the name of what it names, written into an address
+   * of that kind - an ARN built around it - so a value published as that
+   * name, as text, is what it names too (P253).
+   */
+  readonly as?: 'name';
 }
 
 /** Where something inside a document is written, 1-based, as an editor counts. */

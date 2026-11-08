@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:36:38.267Z",
+  "builtAt": "2026-11-08T12:55:27.209Z",
   "services": [
     {
       "name": "jobs",
@@ -114,7 +114,7 @@
         "rawPath": "jobs",
         "deployedBy": "serverless",
         "function": "jobs-api-dev-submit",
-        "root": "stack:jobs-shared-dev#RestApiId",
+        "root": "stack:jobs-shared-dev#RestApiRootResourceId",
         "below": "/jobs",
         "declaredAs": "functions.submit.events[0]",
         "adapter": "aws-lambda",

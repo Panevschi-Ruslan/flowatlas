@@ -337,6 +337,8 @@ const GAPS: readonly string[] = [
   'nested-deployment-unread',
   // A service a composition of deployments lists that is not read (P249)
   'compose-service-unread',
+  // Two files beside one deployment description each hold the values it is deployed with (P253)
+  'parameter-file-ambiguous',
   // Workflows written down as state machine definitions
   'workflow-definition-unreadable',
   'workflow-target-dynamic',

@@ -376,6 +376,44 @@ export const isGeneratedName = (name: string): boolean => name.startsWith(`${UNR
 export const exportKey = (name: string): string => `export:${required('name', name)}`;
 export const stackOutputKey = (stack: string, output: string): string => `stack:${required('stack', stack)}#${required('output', output)}`;
 
+/**
+ * The key of a value one deployment writes to a parameter of the account for
+ * others to read (P21, P253): by the parameter's name, which every tool that
+ * writes or reads one spells the same way.
+ */
+export const parameterKey = (name: string): string => `parameter:${required('name', name)}`;
+
+/** Where the mark of one reading of a declaration starts. */
+const ALTERNATIVE_AT = `${UNREAD_SPAN}@as.`;
+
+/**
+ * The address of one reading of a declaration that uses something another
+ * deployment publishes where the use does not say what kind of thing it is
+ * (P253): a mapping that reads a stream or a table's changes, a destination
+ * that may be a queue, a topic, a bus or a function.
+ *
+ * The reader draws the declaration once per kind it may be, each under its
+ * own address, and the linker keeps the one the publisher's value is and
+ * gives it back the address it was written at: so nothing is guessed, and
+ * nothing waits on the kind to be drawn the way that kind is.
+ */
+export const alternativeAddress = (address: string, kind: string): string => `${required('address', address)}${ALTERNATIVE_AT}${required('kind', kind)}`;
+
+/** The address an {@link alternativeAddress} was made from, and the kind it reads it as; `undefined` for any other address. */
+export const alternativeOf = (address: string): { readonly address: string; readonly kind: string } | undefined => {
+  const at = address.lastIndexOf(ALTERNATIVE_AT);
+  return at <= 0 ? undefined : { address: address.slice(0, at), kind: address.slice(at + ALTERNATIVE_AT.length) };
+};
+
+/**
+ * A {@link generatedName} as other repositories join it (P253): the name of
+ * the repository that generates it put in front, so two repositories that
+ * declare something unnamed at the same address keep two names, and what
+ * imports one meets that one.
+ */
+export const ownedGeneratedName = (repo: string, name: string): string =>
+  isGeneratedName(name) ? `${UNREAD_SPAN}@${required('repo', repo)}@${name.slice(UNREAD_SPAN.length + 1)}` : name;
+
 /** Where an imported name's stand-in starts. */
 const IMPORTED_AT = `${UNREAD_SPAN}@import.`;
 

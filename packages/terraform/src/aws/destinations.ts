@@ -2,7 +2,7 @@ import { destinationOf } from '@flowatlas/aws';
 import type { DeliverySource } from '@flowatlas/core';
 import type { Instance, Value } from '../eval/values.js';
 import { blockOrArgument, entryOf, siteOf, unreadRow } from './arguments.js';
-import { deployedOfValue, isBecause, targetOf } from './deployed.js';
+import { alternativesAt, asTarget, deployedOfValue, isBecause, targetOf } from './deployed.js';
 import { functionAt } from './queues.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
 
@@ -38,7 +38,17 @@ const destinationsIn = (owner: Instance, at: string): (readonly [string, When, V
 const push = (owner: Instance, of: Extract<DeliverySource, { kind: 'outcome' }>['of'], reading: ResourceReading, at: string): void => {
   for (const [block, when, value] of destinationsIn(owner, at)) {
     const what = `the ${when} destination of ${owner.address}`;
-    const to = destinationOf(targetOf(deployedOfValue(value, what, reading), owner, what, reading), when);
+    const found = deployedOfValue(value, what, reading);
+    // A destination another deployment writes to a parameter of the account, which the use does not say the kind of (P253).
+    if (isBecause(found) && found.imported !== undefined) {
+      const kinds = at === 'destination_arn' ? (['queue', 'topic'] as const) : (['queue', 'topic', 'bus', 'function'] as const);
+      for (const alternative of alternativesAt(reading, owner, found.imported, kinds, what, `${owner.address}.${block}`)) {
+        const to = destinationOf(asTarget(alternative), when);
+        reading.deliveries.push({ ...siteOf(owner), address: alternative.address, by: 'destination', from: { kind: 'outcome', when, of }, ...(to === undefined ? {} : { to }), meta: { when } });
+      }
+      continue;
+    }
+    const to = destinationOf(targetOf(found, owner, what, reading), when);
     reading.deliveries.push({
       ...siteOf(owner),
       address: `${owner.address}.${block}`,

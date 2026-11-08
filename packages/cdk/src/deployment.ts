@@ -11,9 +11,11 @@ import {
   S3_EVENT_SOURCE,
 } from '@flowatlas/aws';
 import {
+  alternativeAddress,
   exportKey,
   generatedName,
   importedName,
+  parameterKey,
   makeFunctionUrlEntryKey,
   makeHttpEntryKey,
   normalizePath,
@@ -37,7 +39,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { definitionOf } from './state-machine.js';
-import { Attribute, Built, Construct, Imported, ObjectValue, textOf, Unread, type Added, type Site, type Value } from './values.js';
+import { Attribute, Built, Construct, EXPORT_VALUE, Imported, ObjectValue, textOf, Unread, type Added, type Site, type Value } from './values.js';
 
 /**
  * The constructs an app made, written out as P21's `Deployment` (P57, D1).
@@ -133,6 +135,8 @@ export interface DeploymentParts {
 export class AppDeployment {
   readonly #functionIndex = new Map<Construct, number>();
   readonly #rowed = new Set<string>();
+  /** What the app publishes itself, by key, before anything reads an import of it (P253). */
+  #published: ReadonlyMap<string, Value[]> | undefined;
 
   constructor(
     readonly parts: DeploymentParts,
@@ -167,7 +171,9 @@ export class AppDeployment {
    * attribute of one, an ARN or URL written out. A construct with no name of its
    * own is named by its path, and says so once.
    */
-  deployedOf(value: Value): Deployed | Unread | undefined {
+  deployedOf(input: Value): Deployed | Unread | undefined {
+    // A value the app publishes and imports back is the value itself (P253).
+    const value = this.#local(input);
     if (value instanceof Attribute) {
       if (value.construct.type === 'aws-lambda.FunctionUrl' && value.name === 'url') {
         const fn = value.construct.fields.get('function') ?? prop(value.construct, 'function');
@@ -183,6 +189,11 @@ export class AppDeployment {
       const index = this.#functionIndex.get(value);
       if (value.imported !== undefined) {
         // Looked up by a value another stack exports: the thing it names, by the key's stand-in (P249).
+        const local = this.#local(value.imported.unread);
+        if (local !== value.imported.unread) {
+          const found = this.deployedOf(local);
+          return found === undefined || found instanceof Unread ? found : { ...found, kind: declares.kind };
+        }
         if (value.imported.unread instanceof Imported) {
           this.#importAt(value.imported.unread.key, value.site, value.path, [declares.kind]);
           return { kind: declares.kind, name: importedName(value.imported.unread.key) };
@@ -214,18 +225,55 @@ export class AppDeployment {
     return value instanceof Unread ? value : undefined;
   }
 
+  /**
+   * Every value the app publishes, by key: an output's (`CfnOutput`,
+   * `Stack.exportValue`) by its export name, a parameter's of the account
+   * (`StringParameter`) by its name. Read once, before any import is.
+   */
+  #publishedValues(): ReadonlyMap<string, Value[]> {
+    if (this.#published !== undefined) return this.#published;
+    const out = new Map<string, Value[]>();
+    const put = (key: string, value: Value): void => {
+      out.set(key, [...(out.get(key) ?? []), value]);
+    };
+    for (const output of this.#ofType('core.CfnOutput', EXPORT_VALUE)) {
+      const name = textOf(prop(output, 'exportName'));
+      if (name !== undefined) put(exportKey(name), prop(output, 'value'));
+    }
+    for (const parameter of this.#ofType('aws-ssm.StringParameter')) {
+      const name = parameter.imported === undefined ? textOf(prop(parameter, 'parameterName')) : undefined;
+      if (name !== undefined) put(parameterKey(name), prop(parameter, 'stringValue'));
+    }
+    this.#published = out;
+    return out;
+  }
+
+  /**
+   * A value the app imports where it publishes it too - one stack's output
+   * read by another stack of the app, a parameter one writes and another
+   * reads - is the value it publishes, read as statically as a construct
+   * handed from one stack to another (P253). Published twice is not one value,
+   * and stays the import.
+   */
+  #local(value: Value): Value {
+    if (!(value instanceof Imported)) return value;
+    const published = this.#publishedValues().get(value.key) ?? [];
+    return published.length === 1 && !(published[0] instanceof Imported) ? published[0] : value;
+  }
+
   /** That the app reads a value another stack exports, here: once per place (P249). */
-  #importAt(key: string, site: Site, what: string, kinds?: readonly DeployedKind[]): void {
+  #importAt(key: string, site: Site, what: string, kinds?: readonly DeployedKind[], alternatives?: readonly { kind: DeployedKind; address: string }[]): void {
     if (this.parts.imports.some((found) => found.key === key && found.file === site.file && found.line === site.line)) return;
-    this.parts.imports.push({ key, ...site, what, ...(kinds === undefined ? {} : { kinds }) });
+    this.parts.imports.push({ key, ...site, what, ...(kinds === undefined ? {} : { kinds }), ...(alternatives === undefined ? {} : { alternatives }) });
   }
 
   /** A value a function is deployed with, read every way it can be. */
-  #setting(value: Value, site: Site, what: string): DeployedSetting {
-    // An output of another stack, whatever it names (P249).
+  #setting(input: Value, site: Site, what: string): DeployedSetting {
+    const value = this.#local(input);
+    // An output of another stack, or a parameter another deployment writes, whatever it names (P249, P253).
     if (value instanceof Imported) {
       this.#importAt(value.key, site, what);
-      return { written: `Fn.importValue(${JSON.stringify(value.exportName)})`, imported: value.key, unread: { text: value.text } };
+      return { written: value.written, imported: value.key, unread: { text: value.text } };
     }
     const written =
       value instanceof Attribute ? `${value.construct.path}.${value.name}` : value instanceof Construct ? value.path : typeof value === 'string' ? JSON.stringify(value) : value instanceof Unread ? 'a value not known from the files' : String(value);
@@ -317,7 +365,8 @@ export class AppDeployment {
     for (const table of this.#ofType('aws-dynamodb.Table', 'aws-dynamodb.TableV2', 'aws-kinesis.Stream')) this.#stream(table);
     for (const machine of this.#ofType('aws-stepfunctions.StateMachine')) this.#workflow(machine);
     for (const construct of this.constructs) this.#unreadHolder(construct);
-    for (const output of this.#ofType('core.CfnOutput')) this.#output(output);
+    for (const output of this.#ofType('core.CfnOutput', EXPORT_VALUE)) this.#output(output);
+    for (const parameter of this.#ofType('aws-ssm.StringParameter')) this.#parameter(parameter);
   }
 
   // -------------------------------------------------------------- outputs
@@ -362,10 +411,30 @@ export class AppDeployment {
     const exportName = textOf(prop(output, 'exportName'));
     const segments = output.path.split('/');
     const stack = this.constructs.find((construct) => construct.path === segments[0]);
-    const stackName = segments.length === 2 && stack !== undefined ? (textOf(prop(stack, 'stackName')) ?? stack.id) : undefined;
+    // `Stack.exportValue` is read by its export name alone: the CDK names its output itself.
+    const stackName = segments.length === 2 && stack !== undefined && output.type !== EXPORT_VALUE ? (textOf(prop(stack, 'stackName')) ?? stack.id) : undefined;
     const keys = [...(exportName === undefined ? [] : [exportKey(exportName)]), ...(stackName === undefined ? [] : [stackOutputKey(stackName, output.id)])];
     if (keys.length === 0) return;
-    const value = prop(output, 'value');
+    this.#publish(keys, output, prop(output, 'value'));
+  }
+
+  /**
+   * `new StringParameter(scope, id, { parameterName, stringValue })`: a value
+   * the app writes to a parameter of the account for other deployments to read,
+   * by the parameter's name (P253). One with no name of its own is named by the
+   * platform, which nothing else can spell.
+   */
+  #parameter(parameter: Construct): void {
+    if (parameter.imported !== undefined) return;
+    const name = textOf(prop(parameter, 'parameterName'));
+    if (name === undefined) return;
+    this.#publish([parameterKey(name)], parameter, prop(parameter, 'stringValue'));
+  }
+
+  /** A value published under its keys: an API or a point of one, what it names, its text, or why it is not read. */
+  #publish(keys: readonly string[], at: Construct, input: Value): void {
+    const value = this.#local(input);
+    const output = at;
     const base = { keys, address: output.path, ...output.site };
     const api = this.#outputApi(value);
     if (api !== undefined) {
@@ -383,7 +452,8 @@ export class AppDeployment {
       this.parts.exports.push({ ...base, text });
       return;
     }
-    this.parts.exports.push({ ...base, unread: found instanceof Unread ? found.text : value instanceof Unread ? value.text : 'it is a value known only once deployed' });
+    const why = value instanceof Imported ? `it is itself a value another deployment publishes (${value.key})` : found instanceof Unread ? found.text : value instanceof Unread ? value.text : 'it is a value known only once deployed';
+    this.parts.exports.push({ ...base, unread: why });
   }
 
   // ------------------------------------------------------------ functions
@@ -757,12 +827,35 @@ export class AppDeployment {
   }
 
   #mapping(mapping: Construct): void {
-    const found = this.#source(prop(mapping, 'eventSourceArn'), mapping.site, mapping.path, `what ${mapping.path} reads`);
+    const written = this.#local(prop(mapping, 'eventSourceArn'));
+    if (written instanceof Imported) {
+      this.#mappingOfImport(mapping, written);
+      return;
+    }
+    const found = this.#source(written, mapping.site, mapping.path, `what ${mapping.path} reads`);
     if (found === undefined) return;
     const from: DeliverySource | undefined =
       found.kind === 'queue' ? { kind: 'queue', name: found.name } : found.kind === 'stream' || (found.kind === 'table' && found.changes === true) ? { kind: 'changes', of: found.kind === 'stream' ? 'stream' : 'table', name: found.name } : undefined;
     if (from === undefined) return;
     this.#deliver({ ...mapping.site, address: mapping.path, by: 'mapping', from, toValue: prop(mapping, 'target'), meta: { ...this.#filters(mapping.props), ...this.#conditional(mapping.conditional) } });
+  }
+
+  /**
+   * A mapping that reads a value another deployment publishes (P253): a
+   * queue where it takes no starting position, else a stream or a table's
+   * changes - read as both, under an address each, of which the linker keeps
+   * the one the publisher's value is.
+   */
+  #mappingOfImport(mapping: Construct, imported: Imported): void {
+    const kinds: readonly DeployedKind[] = prop(mapping, 'startingPosition') === undefined ? ['queue'] : ['stream', 'table'];
+    const what = `what ${mapping.path} reads`;
+    const alternatives = kinds.length === 1 ? undefined : kinds.map((kind) => ({ kind, address: alternativeAddress(mapping.path, kind) }));
+    this.#importAt(imported.key, mapping.site, what, kinds, alternatives);
+    const name = importedName(imported.key);
+    for (const { kind, address } of alternatives ?? [{ kind: 'queue' as DeployedKind, address: mapping.path }]) {
+      const from: DeliverySource = kind === 'queue' ? { kind: 'queue', name } : { kind: 'changes', of: kind === 'stream' ? 'stream' : 'table', name };
+      this.#deliver({ ...mapping.site, address, by: 'mapping', from, toValue: prop(mapping, 'target'), meta: { ...this.#filters(mapping.props), ...this.#conditional(mapping.conditional) } });
+    }
   }
 
   #subscriptions(topic: Construct): void {

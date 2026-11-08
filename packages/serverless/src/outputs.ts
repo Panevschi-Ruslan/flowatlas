@@ -1,4 +1,4 @@
-import { exportKey, stackOutputKey, type PathStep } from '@flowatlas/core';
+import { exportKey, parameterKey, stackOutputKey, type PathStep } from '@flowatlas/core';
 import { intrinsicOf } from './cloudformation.js';
 import type { FileReading } from './reading.js';
 import { Imported, isRecord, textOf, Unread } from './variables.js';
@@ -15,6 +15,12 @@ import { Imported, isRecord, textOf, Unread } from './variables.js';
  * place another repository imports it. An output that is an API's id, its
  * root or one of its resources also publishes that point, for the routes other
  * deployments hang from it (P21's roots).
+ *
+ * A parameter of the account a stack writes (`AWS::SSM::Parameter`) is
+ * published the same way, under its name (P253): another deployment reads it
+ * back by that name, whatever tool it is written with - Terraform's
+ * `aws_ssm_parameter` included - so its key is the one Terraform's parameters
+ * are published and read under.
  *
  * Nothing here is particular to the reader that calls it but which logical ids
  * are APIs, which the caller says: the framework's `ApiGatewayRestApi`, a SAM
@@ -117,27 +123,7 @@ export const readOutputs = (reading: FileReading, written: unknown, options: Out
       ...(options.stackName === undefined ? [] : [stackOutputKey(options.stackName, name)]),
     ];
     if (keys.length === 0) continue;
-    const address = `${scope}${[...options.at, name].join('.')}`;
-    const site = reading.siteOf(path);
-    const value = output['Value'];
-    const api = apiOfValue(value, options.apiOf);
-    if (api !== undefined) {
-      publishApi(reading, { keys, address, site, api });
-      continue;
-    }
-    const found = reading.template.deployedOf(value);
-    if (found !== undefined && !(found instanceof Unread)) {
-      reading.generatedRow(found, path);
-      reading.parts.exports.push({ keys, address, ...site, names: { kind: found.kind, name: found.name } });
-      continue;
-    }
-    const text = found === undefined ? reading.template.text(value) : found;
-    if (typeof text === 'string') {
-      reading.parts.exports.push({ keys, address, ...site, text });
-      continue;
-    }
-    const why = text instanceof Imported ? `it is itself a value another stack publishes (${text.key})` : text.text;
-    reading.parts.exports.push({ keys, address, ...site, unread: why });
+    publishValue(reading, { keys, address: `${scope}${[...options.at, name].join('.')}`, path, value: output['Value'], apiOf: options.apiOf });
   }
   for (const implicit of options.implicit ?? []) {
     if (Object.hasOwn(outputs, implicit.name)) continue;
@@ -147,6 +133,51 @@ export const readOutputs = (reading: FileReading, written: unknown, options: Out
     ];
     if (keys.length === 0) continue;
     publishApi(reading, { keys, address: `${scope}Outputs.${implicit.name}`, site: reading.siteOf(implicit.path), api: implicit.api });
+  }
+};
+
+/**
+ * One value published under its keys: an API or a point of one, the deployed
+ * thing it names, its text, or why it is not read.
+ */
+const publishValue = (
+  reading: FileReading,
+  published: { readonly keys: readonly string[]; readonly address: string; readonly path: readonly PathStep[]; readonly value: unknown; readonly apiOf: ApiReference },
+): void => {
+  const { keys, address, path, value } = published;
+  const site = reading.siteOf(path);
+  const api = apiOfValue(value, published.apiOf);
+  if (api !== undefined) {
+    publishApi(reading, { keys, address, site, api });
+    return;
+  }
+  const found = reading.template.deployedOf(value);
+  if (found !== undefined && !(found instanceof Unread) && found.imported === undefined) {
+    reading.generatedRow(found, path);
+    reading.parts.exports.push({ keys, address, ...site, names: { kind: found.kind, name: found.name } });
+    return;
+  }
+  const text = found === undefined ? reading.template.text(value) : found;
+  if (typeof text === 'string') {
+    reading.parts.exports.push({ keys, address, ...site, text });
+    return;
+  }
+  const key = text instanceof Imported ? text.key : !(text instanceof Unread) ? text.imported : undefined;
+  const why = key !== undefined ? `it is itself a value another deployment publishes (${key})` : text instanceof Unread ? text.text : 'it is not read';
+  reading.parts.exports.push({ keys, address, ...site, unread: why });
+};
+
+/**
+ * Every parameter of the account a template writes (`AWS::SSM::Parameter`),
+ * published under its name (P253). A parameter with no `Name` is named by
+ * the platform, which no other deployment can spell, and is not published.
+ */
+export const readParameters = (reading: FileReading, options: { readonly apiOf: ApiReference }): void => {
+  for (const resource of reading.template.ofType('AWS::SSM::Parameter')) {
+    const written = resource.properties['Name'];
+    const name = written === undefined ? undefined : reading.template.text(written);
+    if (typeof name !== 'string') continue;
+    publishValue(reading, { keys: [parameterKey(name)], address: resource.address, path: [...resource.path, 'Properties', 'Value'], value: resource.properties['Value'], apiOf: options.apiOf });
   }
 };
 

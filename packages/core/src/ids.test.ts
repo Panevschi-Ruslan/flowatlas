@@ -247,3 +247,15 @@ describe('a path inside a directory, spelled either way (P199)', () => {
     expect(isExternalFile('C:\\work\\shop\\src\\main.ts')).toBe(false);
   });
 });
+
+describe('the keys and addresses values shared between deployments are read by (P253)', () => {
+  it('spells a parameter of the account, one reading of a declaration, and a generated name of another repository', async () => {
+    const { alternativeAddress, alternativeOf, generatedName, ownedGeneratedName, parameterKey } = await import('./ids.js');
+    expect(parameterKey('/shop/orders/queue')).toBe('parameter:/shop/orders/queue');
+    const address = alternativeAddress('Resources.Mapping', 'table');
+    expect(alternativeOf(address)).toEqual({ address: 'Resources.Mapping', kind: 'table' });
+    expect(alternativeOf('Resources.Mapping')).toBeUndefined();
+    expect(ownedGeneratedName('catalog', generatedName('Resources.Topic'))).toBe('${…}@catalog@Resources.Topic');
+    expect(ownedGeneratedName('catalog', 'shop-topic')).toBe('shop-topic');
+  });
+});

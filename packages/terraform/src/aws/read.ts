@@ -2,9 +2,12 @@ import { posix } from 'node:path';
 import {
   makeHttpEntryKey,
   normalizePath,
+  parameterKey,
   UNREAD_SPAN,
   type DeclaredStream,
   type DeployedDelivery,
+  type DeployedExport,
+  type DeployedImport,
   type DeployedFunction,
   type DeployedHandler,
   type DeployedRoute,
@@ -21,7 +24,7 @@ import { readStateMachineInstance } from './state-machines.js';
 import { addressesOf, joinSegments, MAPPING_READERS } from './addresses.js';
 import { argument, siteOf, textOf, whyNot } from './arguments.js';
 import { environmentOf } from './environment.js';
-import { generatedNameRow } from './deployed.js';
+import { deployedOf, generatedNameRow, isBecause } from './deployed.js';
 import { DESTINATION_READERS } from './destinations.js';
 import { EVENT_READERS } from './events.js';
 import { INVOKER_READERS } from './invokers.js';
@@ -53,6 +56,9 @@ const repoPath = (instance: Instance, path: string): string => {
 
 const nameOfApi = (instance: Instance): string | undefined => textOf(argument(instance, 'name'));
 
+/** The blocks an API is reached at by an address of its own. */
+const STAGES = new Set(['aws_api_gateway_stage', 'aws_api_gateway_deployment', 'aws_apigatewayv2_stage']);
+
 /** What answers a route, as opposed to why nothing could be read as answering it. */
 const isRouteTarget = (target: RouteTarget | Because): target is RouteTarget =>
   'function' in target || 'name' in target || 'sends' in target;
@@ -64,6 +70,8 @@ export class DeploymentReading implements ResourceReading {
   readonly workflows: DeployedWorkflow[] = [];
   readonly deliveries: DeployedDelivery[] = [];
   readonly streams: DeclaredStream[] = [];
+  readonly exports: DeployedExport[] = [];
+  readonly imports: DeployedImport[] = [];
   readonly rows: Unresolved[] = [];
   readonly #functionIndex = new Map<Instance, number>();
   readonly #instances: Instance[];
@@ -128,6 +136,8 @@ export class DeploymentReading implements ResourceReading {
       workflows: this.workflows,
       deliveries: this.deliveries,
       streams: this.streams,
+      ...(this.exports.length === 0 ? {} : { exports: this.exports }),
+      ...(this.imports.length === 0 ? {} : { imports: this.imports }),
       rows: [...this.configuration.rows, ...this.rows],
     };
   }
@@ -320,7 +330,7 @@ export class DeploymentReading implements ResourceReading {
       const nameValue = argument(target, 'name');
       const name = textOf(nameValue);
       if (name === undefined) return { kind: 'unknown', because: whyNot(nameValue, `name of ${target.address}`) };
-      return { kind: 'root', key: `parameter:${name}`, below: '/' };
+      return { kind: 'root', key: parameterKey(name), below: '/' };
     }
     if (target.mode === 'data' && target.type === 'terraform_remote_state' && value.attribute[0] === 'outputs') {
       const output = value.attribute[1];
@@ -532,14 +542,18 @@ export class DeploymentReading implements ResourceReading {
   /**
    * Points of an API this deployment publishes for others to hang routes from:
    * a parameter whose value is a resource's id, or an output of a root module
-   * whose state another deployment reads.
+   * whose state another deployment reads. Any other value a parameter holds is
+   * published under the same key, for what another deployment reads from it -
+   * a queue, a topic, an API's address - whatever it is written with (P253).
    */
   #publishedRoots(): void {
     for (const instance of this.#ofType('managed', 'aws_ssm_parameter')) {
       const name = textOf(argument(instance, 'name'));
       const value = argument(instance, 'value') ?? argument(instance, 'insecure_value');
       if (name === undefined || value === undefined) continue;
-      this.#root(`parameter:${name}`, this.#resourcePath(value), siteOf(instance));
+      const path = this.#resourcePath(value);
+      if (path.kind === 'path') this.#root(parameterKey(name), path, siteOf(instance));
+      else this.#parameter(instance, name, value);
     }
     for (const root of this.configuration.roots) {
       const state = this.configuration.stateOf(root);
@@ -549,6 +563,34 @@ export class DeploymentReading implements ResourceReading {
         this.#root(`state:${state}#${output}`, this.#resourcePath(root.output(output)), { file: at?.file ?? root.dir, line: at?.line ?? 1 });
       }
     }
+  }
+
+  /** A parameter of the account this deployment writes, as the value other deployments read by its name (P253). */
+  #parameter(instance: Instance, name: string, value: Value): void {
+    const base = { keys: [parameterKey(name)], address: instance.address, ...siteOf(instance) };
+    const found = deployedOf(value, this);
+    if (found !== undefined && isBecause(found) && found.imported !== undefined) {
+      this.exports.push({ ...base, unread: `it is itself a value another deployment publishes (${found.imported})` });
+      return;
+    }
+    if (found !== undefined && !isBecause(found)) {
+      this.exports.push({ ...base, names: { kind: found.kind, name: found.name } });
+      return;
+    }
+    // An API, or the stage it is reached at: its address, which a client of it is based on (P249).
+    const stage = value.kind === 'ref' && STAGES.has(value.target.type) ? (argument(value.target, 'rest_api_id') ?? argument(value.target, 'api_id')) : undefined;
+    const api = this.#apiOf(stage ?? value);
+    const apiName = api === undefined ? undefined : nameOfApi(api);
+    if (apiName !== undefined) {
+      this.exports.push({ ...base, names: { kind: 'api', name: apiName } });
+      return;
+    }
+    const text = textOf(value);
+    if (text !== undefined) {
+      this.exports.push({ ...base, text });
+      return;
+    }
+    this.exports.push({ ...base, unread: whyNot(value, `the value of ${instance.address}`).text });
   }
 
   /** A published point at each address of its API: a base path a domain puts in front of the API is in front of the point too. */

@@ -43,19 +43,27 @@ export class Unread {
 
 /**
  * A value another stack exports, by the key it is read under (P249):
- * `Fn.importValue('<name>')`. Unread here, because no file of this repository
- * holds it; what it names is the exporting stack's to say, which the linker
- * asks where that stack is read.
+ * `Fn.importValue('<name>')`; or a parameter of the account another
+ * deployment writes (P253): `StringParameter.valueForStringParameter(this,
+ * '<name>')`. Unread here, because no file of this repository holds it; what
+ * it names is the publisher's to say, which the linker asks where the
+ * publisher is read - unless the app publishes it itself, when it is what the
+ * app publishes.
  */
 export class Imported extends Unread {
   constructor(
-    /** `export:<name>`. */
+    /** `export:<name>` or `parameter:<name>`. */
     readonly key: string,
-    readonly exportName: string,
+    text: string,
+    /** How it is written, for a person: `Fn.importValue("orders-queue")`. */
+    readonly written: string,
   ) {
-    super(`the value is imported from another stack, which exports it as ${exportName}`, 'imported');
+    super(text, 'imported');
   }
 }
+
+/** What `Stack.exportValue` declares: an output exported under a name, and nothing else (P253). */
+export const EXPORT_VALUE = 'core.ExportValue';
 
 /** An object literal, its members in the order written. */
 export class ObjectValue {

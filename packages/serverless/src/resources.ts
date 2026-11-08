@@ -1,8 +1,8 @@
 import { cognitoTriggerKey, DEFAULT_EVENT_BUS, deployedNameIn, destinationOf, eventPatternOf, READ_PRINCIPALS } from '@flowatlas/aws';
-import { generatedName, makeFunctionUrlEntryKey, type DeliverySource, type PathStep } from '@flowatlas/core';
+import { generatedName, makeFunctionUrlEntryKey, type DeployedKind, type DeliverySource, type PathStep } from '@flowatlas/core';
 import { intrinsicOf, type Deployed, type Resource } from './cloudformation.js';
 import type { FileReading } from './reading.js';
-import { isRecord, textOf, Unread } from './variables.js';
+import { Imported, isRecord, textOf, Unread } from './variables.js';
 
 /**
  * What the resources of a template declare besides themselves (P57): a
@@ -158,9 +158,41 @@ const readRule: ResourceReader = (resource, reading) => {
   });
 };
 
+/**
+ * What a mapping reads where it reads a value another deployment publishes
+ * (P253): a queue, where it takes no starting position, which only a stream
+ * and a table's changes take - and which of those two only the publisher
+ * says, so it is read as both and the linker keeps one.
+ */
+export const mappedKinds = (startingPosition: unknown): readonly DeployedKind[] => (startingPosition === undefined ? ['queue'] : ['stream', 'table']);
+
+/** A source a mapping reads from, by the kind of thing it is. */
+export const mappedSource = (kind: DeployedKind, name: string): DeliverySource | undefined =>
+  kind === 'queue' ? { kind: 'queue', name } : kind === 'stream' || kind === 'table' ? { kind: 'changes', of: kind, name } : undefined;
+
+/** Where a destination may hand a run on to, where the use does not say (P253). */
+export const DESTINATION_KINDS: readonly DeployedKind[] = ['queue', 'topic', 'bus', 'function'];
+
 /** A mapping from a queue or a stream to a function, written as a resource of its own. */
 const readMapping: ResourceReader = (resource, reading) => {
   const source = reading.template.deployedOf(resource.properties['EventSourceArn']);
+  if (source instanceof Imported) {
+    const what = `what ${resource.address} reads`;
+    const to = reading.targetOf(functionIn(reading, resource.properties['FunctionName']), pathOf(resource), resource.address, `the function ${resource.address} hands its batches to`);
+    for (const alternative of reading.alternativesOf(source, mappedKinds(resource.properties['StartingPosition']), pathOf(resource), what, resource.address)) {
+      const from = mappedSource(alternative.kind, alternative.name);
+      if (from === undefined) continue;
+      reading.parts.deliveries.push({
+        ...reading.siteOf(pathOf(resource)),
+        address: alternative.address,
+        by: 'mapping',
+        from,
+        ...(to === undefined ? {} : { to }),
+        ...(resource.properties['Enabled'] === false ? { meta: { disabled: true } } : {}),
+      });
+    }
+    return;
+  }
   if (source === undefined || source instanceof Unread) {
     resourceRow(reading, resource, 'subscription-source-unread', `what ${resource.address} reads is not read${source instanceof Unread ? `: ${source.text}` : ''}`, 'Write EventSourceArn as an Fn::GetAtt of a queue or a stream the file declares, or its ARN.');
     return;
@@ -269,15 +301,20 @@ const readInvokeConfig: ResourceReader = (resource, reading) => {
     const written = config[key];
     if (!isRecord(written)) continue;
     const address = `${resource.address}.DestinationConfig.${key}`;
-    const to = destinationOf(reading.targetOf(reading.template.deployedOf(written['Destination']), pathOf(resource), address, `the ${when} destination of ${resource.address}`), when);
-    reading.parts.deliveries.push({
-      ...reading.siteOf(pathOf(resource)),
-      address,
-      by: 'destination',
-      from: { kind: 'outcome', when, of: fn.function === undefined ? { name: fn.name } : { function: fn.function } },
-      ...(to === undefined ? {} : { to }),
-      meta: { when },
-    });
+    reading.deliverTo(
+      {
+        ...reading.siteOf(pathOf(resource)),
+        address,
+        by: 'destination',
+        from: { kind: 'outcome', when, of: fn.function === undefined ? { name: fn.name } : { function: fn.function } },
+        meta: { when },
+      },
+      reading.template.deployedOf(written['Destination']),
+      pathOf(resource),
+      `the ${when} destination of ${resource.address}`,
+      DESTINATION_KINDS,
+      (to) => destinationOf(to, when),
+    );
   }
 };
 

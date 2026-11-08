@@ -11,7 +11,7 @@ unresolved: 3 to act on · missed: 6 · notes: 1 · findings: 0
       members/services/notices/serverless.yml:68  import:export:shared-audit-queue-arn
   function-name-unread: 1 row
     Give ${ssm:/club/audit-function-name} a value the files settle.
-      members/services/notices/serverless.yml:64  the name of functions.audit is not read: ssm: values are read from the deployed account or a service, which the files do not hold
+      members/services/notices/serverless.yml:64  the name of functions.audit is not read: the value is the parameter /club/audit-function-name, which another deployment writes
   deployed-name-generated (note): 1 row over 2 places
     Give it a name of its own where other repositories reach it.
       members/services/notices/serverless.yml:34  resources.Resources.NoticesQueue

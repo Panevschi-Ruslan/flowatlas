@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:36:42.449Z",
+  "builtAt": "2026-11-08T12:55:31.703Z",
   "services": [
     {
       "name": "members",
@@ -362,7 +362,7 @@
         "runtime": "nodejs20.x",
         "declaredAs": "functions.audit",
         "stageFrom": "option",
-        "nameUnread": "ssm: values are read from the deployed account or a service, which the files do not hold",
+        "nameUnread": "the value is the parameter /club/audit-function-name, which another deployment writes",
         "handler": "src/notices/audit.handler",
         "sourceDirectory": "services/notices",
         "handlerVia": "function",
@@ -1534,7 +1534,7 @@
       "file": "services/notices/serverless.yml",
       "line": 64,
       "reason": "function-name-unread",
-      "message": "the name of functions.audit is not read: ssm: values are read from the deployed account or a service, which the files do not hold",
+      "message": "the name of functions.audit is not read: the value is the parameter /club/audit-function-name, which another deployment writes",
       "hint": "Give ${ssm:/club/audit-function-name} a value the files settle.",
       "symbol": "entry:members:invoke:${…}@functions.audit",
       "adapter": "aws-lambda",

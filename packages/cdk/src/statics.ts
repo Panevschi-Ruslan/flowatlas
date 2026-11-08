@@ -1,4 +1,4 @@
-import { exportKey } from '@flowatlas/core';
+import { exportKey, parameterKey } from '@flowatlas/core';
 import { Built, CdkRef, Imported, ObjectValue, textOf, Unread, type Site, type Value } from './values.js';
 
 /**
@@ -100,6 +100,18 @@ const cronOf = (value: Value, withYear: boolean): Value => {
 
 type StaticCall = (args: readonly Value[], site: Site) => Value;
 
+/** An output another stack exports, read back by its name (P249). */
+export const importedExport = (name: string): Imported =>
+  new Imported(exportKey(name), `the value is imported from another stack, which exports it as ${name}`, `Fn.importValue(${JSON.stringify(name)})`);
+
+/** A parameter of the account another deployment writes, read by its name (P253). */
+export const importedParameter = (name: string): Imported =>
+  new Imported(parameterKey(name), `the value is the parameter ${name}, which another deployment writes`, `the parameter ${JSON.stringify(name)}`);
+
+/** `StringParameter.valueForStringParameter(this, name)` and its kind: the value of a parameter of the account, by its name. */
+const parameterValue: StaticCall = (args) =>
+  typeof args[1] === 'string' ? importedParameter(args[1]) : new Unread('the value is read from a parameter of the account whose name is not read', 'parameter');
+
 const expression: StaticCall = (args) => (typeof args[0] === 'string' ? args[0] : new Unread('the schedule expression is not text', 'not-text'));
 
 /**
@@ -115,11 +127,12 @@ const STATIC_CALLS: ReadonlyMap<string, StaticCall> = new Map<string, StaticCall
   ['aws-scheduler.ScheduleExpression.expression', expression],
   ['aws-applicationautoscaling.Schedule.expression', expression],
   // An output another stack exports, read back by its name (P249).
-  ['core.Fn.importValue', (args) => (typeof args[0] === 'string' ? new Imported(exportKey(args[0]), args[0]) : new Unread('the value is imported from another stack under a name that is not read', 'imported'))],
+  ['core.Fn.importValue', (args) => (typeof args[0] === 'string' ? importedExport(args[0]) : new Unread('the value is imported from another stack under a name that is not read', 'imported'))],
   ['core.Stack.of', () => new Unread('the stack is read through what it creates, not as a value', 'stack')],
-  ['aws-ssm.StringParameter.valueForStringParameter', () => new Unread('the value is read from a parameter in the account', 'parameter')],
-  ['aws-ssm.StringParameter.valueFromLookup', () => new Unread('the value is looked up in the account', 'parameter')],
-  ['aws-ssm.StringParameter.fromStringParameterName', () => new Unread('the value is read from a parameter in the account', 'parameter')],
+  // A parameter of the account, read when deployed or looked up when the app is: the same parameter either way (P253).
+  ['aws-ssm.StringParameter.valueForStringParameter', parameterValue],
+  ['aws-ssm.StringParameter.valueForTypedStringParameterV2', parameterValue],
+  ['aws-ssm.StringParameter.valueFromLookup', parameterValue],
 ]);
 
 /** A static call: what it stands for, or what built it. */

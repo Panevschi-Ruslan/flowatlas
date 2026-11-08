@@ -1,0 +1,1600 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T12:51:35.102Z",
+  "services": [
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/index-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/index-order.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#DynamoDBStreamEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "catalog#src/restock.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/restock.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#ScheduledEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "channel:dynamodb/shop-orders",
+      "type": "channel",
+      "label": "dynamodb/shop-orders",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 24,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb"
+        ],
+        "declaredBy": "resources.Resources.OrdersTable",
+        "producers": 0,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "channel:sns/${…}@catalog@stacks.catalog.Resources.RestockTopic",
+      "type": "channel",
+      "label": "sns/${…}@catalog@stacks.catalog.Resources.RestockTopic",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 75,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/reports-jobs",
+      "type": "channel",
+      "label": "sqs/reports-jobs",
+      "repo": "reports",
+      "file": "lib/stacks.ts",
+      "line": 48,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-orders-audit",
+      "type": "channel",
+      "label": "sqs/shop-orders-audit",
+      "repo": "catalog",
+      "file": "src/restock.ts",
+      "line": 12,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/shop-orders-placed",
+      "type": "channel",
+      "label": "sqs/shop-orders-placed",
+      "repo": "catalog",
+      "file": "stacks/catalog.yaml",
+      "line": 73,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:catalog#AUDIT_QUEUE_URL",
+      "type": "config_key",
+      "label": "AUDIT_QUEUE_URL",
+      "repo": "catalog",
+      "file": "src/restock.ts",
+      "line": 12,
+      "meta": {
+        "key": "AUDIT_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:catalog#RESTOCK_TOPIC_ARN",
+      "type": "config_key",
+      "label": "RESTOCK_TOPIC_ARN",
+      "repo": "catalog",
+      "file": "src/restock.ts",
+      "line": 11,
+      "meta": {
+        "key": "RESTOCK_TOPIC_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders#PLACED_QUEUE_URL",
+      "type": "config_key",
+      "label": "PLACED_QUEUE_URL",
+      "repo": "orders",
+      "file": "src/place-order.ts",
+      "line": 9,
+      "meta": {
+        "key": "PLACED_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:reports#JOBS_QUEUE_URL",
+      "type": "config_key",
+      "label": "JOBS_QUEUE_URL",
+      "repo": "reports",
+      "file": "src/build.ts",
+      "line": 10,
+      "meta": {
+        "key": "JOBS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.IndexMapping",
+      "type": "consumer",
+      "label": "mapping stacks/catalog.Resources.IndexMapping",
+      "repo": "catalog",
+      "file": "stacks/catalog.yaml",
+      "line": 48,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "stacks/catalog.Resources.IndexMapping",
+        "deployedBy": "cloudformation"
+      }
+    },
+    {
+      "id": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.restocked",
+      "type": "consumer",
+      "label": "subscription aws_sns_topic_subscription.restocked",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 75,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "aws_sns_topic_subscription.restocked",
+        "deployedBy": "terraform",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:reports#lib/stacks.ts:reports-worker/Build/SqsEventSource:reports-storage/Jobs",
+      "type": "consumer",
+      "label": "mapping reports-worker/Build/SqsEventSource:reports-storage/Jobs",
+      "repo": "reports",
+      "file": "lib/stacks.ts",
+      "line": 48,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "reports-worker/Build/SqsEventSource:reports-storage/Jobs",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:reports#lib/stacks.ts:reports-worker/OrderChanges",
+      "type": "consumer",
+      "label": "mapping reports-worker/OrderChanges",
+      "repo": "reports",
+      "file": "lib/stacks.ts",
+      "line": 56,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "reports-worker/OrderChanges",
+        "deployedBy": "cdk"
+      }
+    },
+    {
+      "id": "consumer:reports#lib/stacks.ts:reports-worker/Tally/SqsEventSource:reports-worker/Placed",
+      "type": "consumer",
+      "label": "mapping reports-worker/Tally/SqsEventSource:reports-worker/Placed",
+      "repo": "reports",
+      "file": "lib/stacks.ts",
+      "line": 53,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "reports-worker/Tally/SqsEventSource:reports-worker/Placed",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:event:dynamodb/shop-orders",
+      "type": "entry",
+      "label": "event dynamodb/shop-orders",
+      "repo": "catalog",
+      "file": "stacks/catalog.yaml",
+      "line": 48,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/shop-orders",
+        "by": "mapping",
+        "declaredAs": "stacks/catalog.Resources.IndexMapping",
+        "deployedBy": "cloudformation",
+        "changesOf": "table",
+        "name": "shop-orders",
+        "function": "catalog-prod-index",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:catalog-prod-index",
+      "type": "entry",
+      "label": "catalog-prod-index",
+      "repo": "catalog",
+      "file": "stacks/catalog.yaml",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalog-prod-index",
+        "deployedBy": "cloudformation",
+        "name": "catalog-prod-index",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/catalog.Resources.IndexFunction",
+        "logicalId": "IndexFunction",
+        "handler": "index-order.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#DynamoDBStreamEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:catalog-prod-restock",
+      "type": "entry",
+      "label": "catalog-prod-restock",
+      "repo": "catalog",
+      "file": "stacks/catalog.yaml",
+      "line": 55,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalog-prod-restock",
+        "deployedBy": "cloudformation",
+        "name": "catalog-prod-restock",
+        "runtime": "nodejs20.x",
+        "declaredAs": "stacks/catalog.Resources.RestockFunction",
+        "logicalId": "RestockFunction",
+        "handler": "restock.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "!Sub ...",
+            "value": "shop-orders-audit",
+            "kind": "queue"
+          },
+          "FEATURE_FLAGS": {
+            "written": "\"{{resolve:ssm:/shop/flags}}\"",
+            "imported": "parameter:/shop/flags",
+            "unread": "the value is the parameter /shop/flags, which another deployment writes",
+            "variable": "{{resolve:ssm:/shop/flags}}"
+          },
+          "RESTOCK_TOPIC_ARN": {
+            "written": "!Ref RestockTopic",
+            "value": "${…}@catalog@stacks.catalog.Resources.RestockTopic",
+            "kind": "topic"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#ScheduledEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "orders",
+        "deployedBy": "serverless",
+        "function": "shop-orders-prod-place",
+        "root": "parameter:/shop/api/root-id",
+        "below": "/orders",
+        "declaredAs": "functions.place.events[0]",
+        "adapter": "aws-lambda",
+        "rootedIn": "platform",
+        "rootPath": "/",
+        "api": "shop"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-orders-prod-place",
+      "type": "entry",
+      "label": "shop-orders-prod-place",
+      "repo": "orders",
+      "file": "serverless.yml",
+      "line": 15,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-orders-prod-place",
+        "deployedBy": "serverless",
+        "name": "shop-orders-prod-place",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.place",
+        "stageFrom": "file",
+        "handler": "src/place-order.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "PLACED_QUEUE_URL": {
+            "written": "${ssm:/shop/orders/placed-url}",
+            "imported": "parameter:/shop/orders/placed-url",
+            "value": "shop-orders-placed",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:platform:invoke:shop-platform-notify",
+      "type": "entry",
+      "label": "shop-platform-notify",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 67,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-platform-notify",
+        "deployedBy": "terraform",
+        "name": "shop-platform-notify",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.notify",
+        "handler": "notify.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SNSEvent",
+          "Records[].Sns.Message": "{sku:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reports:event:dynamodb/shop-orders",
+      "type": "entry",
+      "label": "event dynamodb/shop-orders",
+      "repo": "reports",
+      "file": "lib/stacks.ts",
+      "line": 56,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/shop-orders",
+        "by": "mapping",
+        "declaredAs": "reports-worker/OrderChanges",
+        "deployedBy": "cdk",
+        "changesOf": "table",
+        "name": "shop-orders",
+        "function": "reports-tally",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reports:invoke:reports-build",
+      "type": "entry",
+      "label": "reports-build",
+      "repo": "reports",
+      "file": "lib/stacks.ts",
+      "line": 44,
+      "kind": "invoke",
+      "meta": {
+        "key": "reports-build",
+        "deployedBy": "cdk",
+        "name": "reports-build",
+        "runtime": "nodejs20.x",
+        "declaredAs": "reports-worker/Build",
+        "constructPath": "reports-worker/Build",
+        "handler": "src/build.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "BUS_NAME": {
+            "written": "reports-storage/Bus.eventBusName",
+            "value": "reports",
+            "kind": "bus"
+          },
+          "JOBS_QUEUE_URL": {
+            "written": "reports-worker/JobsAgain.queueUrl",
+            "value": "reports-jobs",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "{report:string;next?:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reports:invoke:reports-tally",
+      "type": "entry",
+      "label": "reports-tally",
+      "repo": "reports",
+      "file": "lib/stacks.ts",
+      "line": 52,
+      "kind": "invoke",
+      "meta": {
+        "key": "reports-tally",
+        "deployedBy": "cdk",
+        "name": "reports-tally",
+        "runtime": "nodejs20.x",
+        "declaredAs": "reports-worker/Tally",
+        "constructPath": "reports-worker/Tally",
+        "handler": "src/tally.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{Records:unknown[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "orders#src/place-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/place-order.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "platform#src/notify.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "platform",
+      "file": "src/notify.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SNSEvent"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "back in stock: {sku}",
+            "at": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "producer:catalog#src/restock.ts:11:9",
+      "type": "producer",
+      "label": "message sns/${…}@catalog@stacks.catalog.Resources.RestockTopic",
+      "repo": "catalog",
+      "file": "src/restock.ts",
+      "line": 11,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "RESTOCK_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{sku:string}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:catalog#src/restock.ts:12:9",
+      "type": "producer",
+      "label": "message sqs/shop-orders-audit",
+      "repo": "catalog",
+      "file": "src/restock.ts",
+      "line": 12,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "AUDIT_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{sku:string;restocked:boolean}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.RestockFailures.DestinationConfig.OnFailure",
+      "type": "producer",
+      "label": "message sqs/shop-orders-placed",
+      "repo": "catalog",
+      "file": "stacks/catalog.yaml",
+      "line": 73,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "stacks/catalog.Resources.RestockFailures.DestinationConfig.OnFailure",
+        "deployedBy": "cloudformation",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "producer:orders#src/place-order.ts:9:9",
+      "type": "producer",
+      "label": "message sqs/shop-orders-placed",
+      "repo": "orders",
+      "file": "src/place-order.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "PLACED_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{placedAt:number;sku:string;quantity:number}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:reports#src/build.ts:10:39",
+      "type": "producer",
+      "label": "message sqs/reports-jobs",
+      "repo": "reports",
+      "file": "src/build.ts",
+      "line": 10,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "JOBS_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{report:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sns": 1,
+            "@aws-sdk/client-sqs": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "parameter:/shop/catalog/restock-topic-arn"
+            ],
+            "address": "stacks/catalog.Resources.RestockTopicParameter",
+            "file": "stacks/catalog.yaml",
+            "line": 35,
+            "kind": "topic",
+            "value": "${…}@catalog@stacks.catalog.Resources.RestockTopic",
+            "deployedBy": "cloudformation"
+          }
+        ],
+        "imports": [
+          {
+            "key": "parameter:/shop/audit/queue-name",
+            "file": "stacks/catalog.yaml",
+            "line": 67,
+            "what": "the value of AUDIT_QUEUE_URL stacks/catalog.Resources.RestockFunction is deployed with",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "from": "orders"
+          },
+          {
+            "key": "parameter:/shop/flags",
+            "file": "stacks/catalog.yaml",
+            "line": 69,
+            "what": "the value of FEATURE_FLAGS stacks/catalog.Resources.RestockFunction is deployed with"
+          },
+          {
+            "key": "parameter:/shop/orders/stream-arn",
+            "file": "stacks/catalog.yaml",
+            "line": 48,
+            "what": "what stacks/catalog.Resources.IndexMapping reads",
+            "kinds": [
+              "stream",
+              "table"
+            ],
+            "from": "orders"
+          },
+          {
+            "key": "parameter:/shop/orders/placed-arn",
+            "file": "stacks/catalog.yaml",
+            "line": 73,
+            "what": "the failure destination of stacks/catalog.Resources.RestockFailures",
+            "kinds": [
+              "queue",
+              "topic",
+              "bus",
+              "function"
+            ],
+            "from": "platform"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "parameter:/shop/orders/stream-arn"
+            ],
+            "address": "resources.Resources.StreamParameter",
+            "file": "serverless.yml",
+            "line": 47,
+            "kind": "table",
+            "value": "shop-orders",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "parameter:/shop/audit/queue-name"
+            ],
+            "address": "resources.Resources.AuditQueueNameParameter",
+            "file": "serverless.yml",
+            "line": 53,
+            "kind": "queue",
+            "value": "shop-orders-audit",
+            "deployedBy": "serverless"
+          }
+        ],
+        "imports": [
+          {
+            "key": "parameter:/shop/orders/placed-url",
+            "file": "serverless.yml",
+            "line": 20,
+            "what": "the value of PLACED_QUEUE_URL functions.place is deployed with",
+            "from": "platform"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:platform",
+      "type": "repo",
+      "label": "platform",
+      "repo": "platform",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "apiRoots": [
+          {
+            "key": "parameter:/shop/api/root-id",
+            "path": "/",
+            "api": "shop",
+            "file": "infra/main.tf",
+            "line": 18,
+            "deployedBy": "terraform"
+          }
+        ],
+        "exports": [
+          {
+            "keys": [
+              "parameter:/shop/api/id"
+            ],
+            "address": "aws_ssm_parameter.api_id",
+            "file": "infra/main.tf",
+            "line": 12,
+            "kind": "api",
+            "value": "shop",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "parameter:/shop/orders/placed-url"
+            ],
+            "address": "aws_ssm_parameter.placed_url",
+            "file": "infra/main.tf",
+            "line": 30,
+            "kind": "queue",
+            "value": "shop-orders-placed",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "parameter:/shop/orders/placed-arn"
+            ],
+            "address": "aws_ssm_parameter.placed_arn",
+            "file": "infra/main.tf",
+            "line": 36,
+            "kind": "queue",
+            "value": "shop-orders-placed",
+            "deployedBy": "terraform"
+          }
+        ],
+        "imports": [
+          {
+            "key": "parameter:/shop/catalog/restock-topic-arn",
+            "file": "infra/main.tf",
+            "line": 75,
+            "what": "the topic aws_sns_topic_subscription.restocked subscribes to",
+            "kinds": [
+              "topic"
+            ],
+            "from": "catalog"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:reports",
+      "type": "repo",
+      "label": "reports",
+      "repo": "reports",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:reports-jobs-arn"
+            ],
+            "address": "reports-storage/Exportreports-jobs-arn",
+            "file": "lib/stacks.ts",
+            "line": 21,
+            "kind": "queue",
+            "value": "reports-jobs",
+            "deployedBy": "cdk"
+          },
+          {
+            "keys": [
+              "parameter:/shop/reports/bus-name"
+            ],
+            "address": "reports-storage/BusName",
+            "file": "lib/stacks.ts",
+            "line": 22,
+            "kind": "bus",
+            "value": "reports",
+            "deployedBy": "cdk"
+          }
+        ],
+        "imports": [
+          {
+            "key": "parameter:/shop/orders/placed-arn",
+            "file": "lib/stacks.ts",
+            "line": 51,
+            "what": "reports-worker/Placed",
+            "kinds": [
+              "queue"
+            ],
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/orders/stream-arn",
+            "file": "lib/stacks.ts",
+            "line": 56,
+            "what": "what reports-worker/OrderChanges reads",
+            "kinds": [
+              "stream",
+              "table"
+            ],
+            "from": "orders"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports#src/build.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "reports",
+      "file": "src/build.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "reports#src/tally.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "reports",
+      "file": "src/tally.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:unknown[]}"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "tallied {length}",
+            "at": 3
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalog#src/restock.ts:handler",
+      "to": "config_key:catalog#AUDIT_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/restock.ts",
+      "line": 12,
+      "meta": {
+        "setBy": [
+          {
+            "function": "catalog-prod-restock",
+            "written": "!Sub ...",
+            "value": "shop-orders-audit"
+          }
+        ]
+      }
+    },
+    {
+      "from": "catalog#src/restock.ts:handler",
+      "to": "config_key:catalog#RESTOCK_TOPIC_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/restock.ts",
+      "line": 11,
+      "meta": {
+        "setBy": [
+          {
+            "function": "catalog-prod-restock",
+            "written": "!Ref RestockTopic",
+            "value": "${…}@catalog@stacks.catalog.Resources.RestockTopic"
+          }
+        ]
+      }
+    },
+    {
+      "from": "catalog#src/restock.ts:handler",
+      "to": "producer:catalog#src/restock.ts:11:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/restock.ts",
+      "line": 11
+    },
+    {
+      "from": "catalog#src/restock.ts:handler",
+      "to": "producer:catalog#src/restock.ts:12:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/restock.ts",
+      "line": 12
+    },
+    {
+      "from": "channel:dynamodb/shop-orders",
+      "to": "consumer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.IndexMapping",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "stacks/catalog.yaml",
+      "line": 48,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:dynamodb/shop-orders",
+      "to": "consumer:reports#lib/stacks.ts:reports-worker/OrderChanges",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/stacks.ts",
+      "line": 56,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sns/${…}@catalog@stacks.catalog.Resources.RestockTopic",
+      "to": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.restocked",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 75,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/reports-jobs",
+      "to": "consumer:reports#lib/stacks.ts:reports-worker/Build/SqsEventSource:reports-storage/Jobs",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/stacks.ts",
+      "line": 48,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-orders-placed",
+      "to": "consumer:reports#lib/stacks.ts:reports-worker/Tally/SqsEventSource:reports-worker/Placed",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/stacks.ts",
+      "line": 53,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.IndexMapping",
+      "to": "entry:catalog:event:dynamodb/shop-orders",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "stacks/catalog.yaml",
+      "line": 48,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.restocked",
+      "to": "entry:platform:invoke:shop-platform-notify",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 75,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:reports#lib/stacks.ts:reports-worker/Build/SqsEventSource:reports-storage/Jobs",
+      "to": "entry:reports:invoke:reports-build",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/stacks.ts",
+      "line": 48,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:reports#lib/stacks.ts:reports-worker/OrderChanges",
+      "to": "entry:reports:event:dynamodb/shop-orders",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "lib/stacks.ts",
+      "line": 56,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:reports#lib/stacks.ts:reports-worker/Tally/SqsEventSource:reports-worker/Placed",
+      "to": "entry:reports:invoke:reports-tally",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/stacks.ts",
+      "line": 53,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:catalog:event:dynamodb/shop-orders",
+      "to": "catalog#src/index-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index-order.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:catalog:invoke:catalog-prod-index",
+      "to": "catalog#src/index-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index-order.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:catalog:invoke:catalog-prod-restock",
+      "to": "catalog#src/restock.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/restock.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:catalog:invoke:catalog-prod-restock",
+      "to": "producer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.RestockFailures.DestinationConfig.OnFailure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "stacks/catalog.yaml",
+      "line": 73,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders",
+      "to": "orders#src/place-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{placedAt:number;sku:string;quantity:number}",
+      "file": "src/place-order.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "body": "{sku:string;quantity:number}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:orders:invoke:shop-orders-prod-place",
+      "to": "orders#src/place-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/place-order.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:platform:invoke:shop-platform-notify",
+      "to": "platform#src/notify.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/notify.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:reports:event:dynamodb/shop-orders",
+      "to": "reports#src/tally.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/tally.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:reports:invoke:reports-build",
+      "to": "reports#src/build.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/build.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:reports:invoke:reports-tally",
+      "to": "reports#src/tally.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/tally.ts",
+      "line": 2
+    },
+    {
+      "from": "orders#src/place-order.ts:handler",
+      "to": "config_key:orders#PLACED_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/place-order.ts",
+      "line": 9,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-orders-prod-place",
+            "written": "${ssm:/shop/orders/placed-url}",
+            "value": "shop-orders-placed"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/place-order.ts:handler",
+      "to": "producer:orders#src/place-order.ts:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/place-order.ts",
+      "line": 9
+    },
+    {
+      "from": "producer:catalog#src/restock.ts:11:9",
+      "to": "channel:sns/${…}@catalog@stacks.catalog.Resources.RestockTopic",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/restock.ts",
+      "line": 11,
+      "params": [
+        "{sku:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "RESTOCK_TOPIC_ARN"
+        ],
+        "functions": [
+          "catalog-prod-restock"
+        ]
+      }
+    },
+    {
+      "from": "producer:catalog#src/restock.ts:12:9",
+      "to": "channel:sqs/shop-orders-audit",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/restock.ts",
+      "line": 12,
+      "params": [
+        "{sku:string;restocked:boolean}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "AUDIT_QUEUE_URL"
+        ],
+        "functions": [
+          "catalog-prod-restock"
+        ]
+      }
+    },
+    {
+      "from": "producer:catalog#stacks/catalog.yaml:stacks/catalog.Resources.RestockFailures.DestinationConfig.OnFailure",
+      "to": "channel:sqs/shop-orders-placed",
+      "type": "emits",
+      "confidence": "static",
+      "file": "stacks/catalog.yaml",
+      "line": 73,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:orders#src/place-order.ts:9:9",
+      "to": "channel:sqs/shop-orders-placed",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/place-order.ts",
+      "line": 9,
+      "params": [
+        "{placedAt:number;sku:string;quantity:number}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "PLACED_QUEUE_URL"
+        ],
+        "functions": [
+          "shop-orders-prod-place"
+        ]
+      }
+    },
+    {
+      "from": "producer:reports#src/build.ts:10:39",
+      "to": "channel:sqs/reports-jobs",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/build.ts",
+      "line": 10,
+      "params": [
+        "{report:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "JOBS_QUEUE_URL"
+        ],
+        "functions": [
+          "reports-build"
+        ]
+      }
+    },
+    {
+      "from": "reports#src/build.ts:handler",
+      "to": "config_key:reports#JOBS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/build.ts",
+      "line": 10,
+      "meta": {
+        "setBy": [
+          {
+            "function": "reports-build",
+            "written": "reports-worker/JobsAgain.queueUrl",
+            "value": "reports-jobs"
+          }
+        ]
+      }
+    },
+    {
+      "from": "reports#src/build.ts:handler",
+      "to": "producer:reports#src/build.ts:10:39",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/build.ts",
+      "line": 10,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 8
+        }
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#DynamoDBStreamEvent": {
+      "name": "DynamoDBStreamEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "426b6e41a64d2ec9",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SNSEvent": {
+      "name": "SNSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "17e8e52b989c5abe",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#ScheduledEvent": {
+      "name": "ScheduledEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "7e19b21586cc2fef",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "stacks/catalog.yaml",
+      "line": 27,
+      "reason": "deployed-name-generated",
+      "level": "info",
+      "message": "stacks.catalog.Resources.RestockTopic is a topic with no name of its own, so it is named by where it is declared; what this file points at it by joins to it, and nothing outside this deployment can",
+      "hint": "Give it a name of its own where other repositories reach it.",
+      "symbol": "stacks.catalog.Resources.RestockTopic",
+      "adapter": "aws-lambda",
+      "service": "catalog"
+    },
+    {
+      "service": "catalog",
+      "file": "stacks/catalog.yaml",
+      "line": 69,
+      "reason": "export-not-found",
+      "message": "the value of FEATURE_FLAGS stacks/catalog.Resources.RestockFunction is deployed with is the parameter /shop/flags, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment writes that parameter to the configuration, or check the name on both sides.",
+      "symbol": "import:parameter:/shop/flags",
+      "meta": {
+        "key": "parameter:/shop/flags"
+      }
+    },
+    {
+      "service": "orders",
+      "file": "serverless.yml",
+      "line": 24,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "dynamodb/shop-orders is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:dynamodb/shop-orders"
+    },
+    {
+      "file": "src/build.ts",
+      "line": 8,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 publish once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "reports#src/build.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 8
+        },
+        "reaches": [
+          {
+            "id": "producer:reports#src/build.ts:10:39",
+            "type": "producer",
+            "words": "publish"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 1,
+        "entries": [
+          "entry:reports:invoke:reports-build"
+        ]
+      },
+      "service": "reports"
+    }
+  ]
+}

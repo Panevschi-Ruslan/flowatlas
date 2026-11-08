@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { destinationOf } from '@flowatlas/aws';
-import type { DeployedFunction, DeployedHandler, DeployedSetting, PathStep } from '@flowatlas/core';
-import { isRecord, pushFunctionUrl, textOf, Unread, type Resource } from '@flowatlas/serverless';
+import type { DeployedFunction, DeployedHandler, DeployedKind, DeployedSetting, PathStep } from '@flowatlas/core';
+import { DESTINATION_KINDS, isRecord, pushFunctionUrl, textOf, Unread, type Resource } from '@flowatlas/serverless';
 import type { DeclaredFunction, TemplateReading } from './reading.js';
 
 /**
@@ -194,16 +194,16 @@ export const readFunctionUrlConfig = (reading: TemplateReading, site: FunctionSi
 export const readDestinations = (reading: TemplateReading, site: FunctionSite): void => {
   const { fn, properties } = site;
   const { resource } = fn;
-  const push = (when: 'success' | 'failure', target: unknown, path: PathStep[], address: string): void => {
-    const to = destinationOf(reading.targetOf(reading.deployedOf(target), path, address, `the ${when} destination of ${resource.address}`), when);
-    reading.file.parts.deliveries.push({
-      ...reading.file.siteOf(path),
-      address,
-      by: 'destination',
-      from: { kind: 'outcome', when, of: { function: fn.index } },
-      ...(to === undefined ? {} : { to }),
-      meta: { when, ...reading.conditionOf(resource.logicalId) },
-    });
+  // Where the use does not say what an imported destination is, it is read as each it may be (P253).
+  const push = (when: 'success' | 'failure', target: unknown, path: PathStep[], address: string, kinds: readonly DeployedKind[] = DESTINATION_KINDS): void => {
+    reading.file.deliverTo(
+      { ...reading.file.siteOf(path), address, by: 'destination', from: { kind: 'outcome', when, of: { function: fn.index } }, meta: { when, ...reading.conditionOf(resource.logicalId) } },
+      reading.deployedOf(target),
+      path,
+      `the ${when} destination of ${resource.address}`,
+      kinds,
+      (to) => destinationOf(to, when),
+    );
   };
   const invoke = isRecord(properties['EventInvokeConfig']) ? properties['EventInvokeConfig']['DestinationConfig'] : undefined;
   if (isRecord(invoke)) {
@@ -219,6 +219,8 @@ export const readDestinations = (reading: TemplateReading, site: FunctionSite): 
   const deadLetter = resource.type === 'AWS::Serverless::Function' ? properties['DeadLetterQueue'] : properties['DeadLetterConfig'];
   if (isRecord(deadLetter)) {
     const key = resource.type === 'AWS::Serverless::Function' ? 'DeadLetterQueue' : 'DeadLetterConfig';
-    push('failure', deadLetter['TargetArn'], [...resource.path, 'Properties', key], `${resource.address}.${key}`);
+    // The transform's dead-letter queue says what it is; the plain one is a queue or a topic.
+    const type = textOf(deadLetter['Type']);
+    push('failure', deadLetter['TargetArn'], [...resource.path, 'Properties', key], `${resource.address}.${key}`, type === 'SQS' ? ['queue'] : type === 'SNS' ? ['topic'] : ['queue', 'topic']);
   }
 };

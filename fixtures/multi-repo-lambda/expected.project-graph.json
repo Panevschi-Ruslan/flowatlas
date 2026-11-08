@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-08T09:12:52.088Z",
+  "builtAt": "2026-11-08T12:51:32.273Z",
   "services": [
     {
       "name": "platform",
@@ -560,6 +560,19 @@
             "api": "lending-library",
             "file": "outputs.tf",
             "line": 5,
+            "deployedBy": "terraform"
+          }
+        ],
+        "exports": [
+          {
+            "keys": [
+              "parameter:/lending-library/api/id"
+            ],
+            "address": "aws_ssm_parameter.api_id",
+            "file": "api.tf",
+            "line": 15,
+            "kind": "api",
+            "value": "lending-library",
             "deployedBy": "terraform"
           }
         ]

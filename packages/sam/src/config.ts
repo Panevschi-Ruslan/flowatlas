@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readServiceYaml } from '@flowatlas/serverless';
+import { namedParameterFiles } from './parameter-files.js';
 import { readToml, TomlUnreadable } from './toml.js';
 
 /**
@@ -37,6 +38,8 @@ export interface DeployConfig {
   readonly parameters: Readonly<Record<string, string>>;
   /** Where each value came from: `samconfig.toml` or the options. */
   readonly from: Readonly<Record<string, 'file' | 'option'>>;
+  /** Parameter files the file's `parameter_overrides` names (`file://params.json`), repo-relative (P253). */
+  readonly parameterFiles?: readonly string[];
   /** Why the file is not read, when it is there and is not. */
   readonly unreadable?: { readonly message: string; readonly line: number };
 }
@@ -105,7 +108,9 @@ export const deployConfigOf = (repoDir: string, dir: string, options: Readonly<R
   const stackName = options['stack_name'] ?? text('stack_name');
   const region = options['region'] ?? text('region');
   const template = text('template_file') ?? text('template');
+  const parameterFiles = file === undefined ? [] : namedParameterFiles(settings['parameter_overrides'], dir);
   return {
+    ...(parameterFiles.length === 0 ? {} : { parameterFiles }),
     ...(file === undefined ? {} : { file }),
     ...(stackName === undefined ? {} : { stackName }),
     ...(region === undefined ? {} : { region }),

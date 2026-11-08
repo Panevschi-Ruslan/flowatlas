@@ -1,5 +1,5 @@
 import { DEFAULT_EVENT_BUS, deployedNameIn } from '@flowatlas/aws';
-import { generatedName, type DeployedKind, type DeliveryTarget, type Unresolved } from '@flowatlas/core';
+import { alternativeAddress, generatedName, importedName, parameterKey, type DeployedImport, type DeployedKind, type DeliveryTarget, type Unresolved } from '@flowatlas/core';
 import { describe, type Because, type Instance, type Value } from '../eval/values.js';
 import { argument, HOLE, referencesOf, siteOf, textOf, textWithHoles, unreadRow, whyNot } from './arguments.js';
 import type { ResourceReading } from './reading.js';
@@ -124,6 +124,13 @@ export const deployedOf = (value: Value, reading: Pick<ResourceReading, 'functio
   const target = value.kind === 'ref' ? value.target : value.kind === 'instance' ? value.instance : via?.target;
   if (target === undefined) return undefined;
   const attribute = value.kind === 'ref' ? String(value.attribute[0]) : value.kind === 'instance' ? undefined : via?.attribute;
+  // The value of a parameter of the account, which another deployment writes: its key (P253).
+  if (target.mode === 'data' && target.type === 'aws_ssm_parameter' && (attribute === 'value' || attribute === 'insecure_value')) {
+    const nameValue = argument(target, 'name');
+    const name = textOf(nameValue);
+    if (name === undefined) return whyNot(nameValue, `the name of ${target.address}`);
+    return { reason: 'imported', text: `the value is the parameter ${name}, which another deployment writes`, imported: parameterKey(name) };
+  }
   // A function URL's address is the function's own way in, named by the
   // function it stands in front of (P54).
   if (FUNCTION_URLS.has(target.type)) {
@@ -266,3 +273,34 @@ export const targetOf = (
 };
 
 export { isBecause };
+
+/** That the deployment reads a value another publishes, at a block: once per block and key (P253). */
+export const importAt = (reading: { readonly imports: DeployedImport[] }, instance: Instance, key: string, what: string, kinds?: readonly DeployedKind[], alternatives?: DeployedImport['alternatives']): void => {
+  const site = siteOf(instance);
+  if (reading.imports.some((found) => found.key === key && found.file === site.file && found.line === site.line)) return;
+  reading.imports.push({ key, ...site, what, ...(kinds === undefined ? {} : { kinds }), ...(alternatives === undefined ? {} : { alternatives }) });
+};
+
+/**
+ * Something another deployment publishes, used where the use says only that
+ * it is one of `kinds` (P253): one reading per kind, each under its own
+ * address, of which the linker keeps the one the publisher's value is; one
+ * kind is no choice, under the block's own address.
+ */
+export const alternativesAt = (
+  reading: { readonly imports: DeployedImport[] },
+  instance: Instance,
+  key: string,
+  kinds: readonly DeployedKind[],
+  what: string,
+  address = instance.address,
+): { readonly kind: DeployedKind; readonly name: string; readonly address: string }[] => {
+  const name = importedName(key);
+  if (kinds.length === 1) {
+    importAt(reading, instance, key, what, kinds);
+    return kinds.map((kind) => ({ kind, name, address }));
+  }
+  const alternatives = kinds.map((kind) => ({ kind, address: alternativeAddress(address, kind) }));
+  importAt(reading, instance, key, what, kinds, alternatives);
+  return alternatives.map((alternative) => ({ ...alternative, name }));
+};
