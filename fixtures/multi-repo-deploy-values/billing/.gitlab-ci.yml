@@ -1,0 +1,9 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  image: alpine:3.20
+  script:
+    - cd infra
+    - rain deploy billing.yaml shop-billing --node-style original -y --params Stage=prod --params Prefix=shop

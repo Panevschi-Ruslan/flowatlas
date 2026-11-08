@@ -32,7 +32,19 @@ export type Value =
   | { readonly kind: 'ref'; readonly target: Instance; readonly attribute: readonly (string | number)[] }
   | { readonly kind: 'instance'; readonly instance: Instance }
   | { readonly kind: 'module'; readonly module: ModuleInstance }
-  | { readonly kind: 'unknown'; readonly because: Because; readonly partial?: Value };
+  | {
+      readonly kind: 'unknown';
+      readonly because: Because;
+      readonly partial?: Value;
+      /**
+       * The pieces of the string template it was rendered from, where every
+       * piece is text or a value not known (P261): the text as written, and
+       * each value as it evaluated. A reader that knows which of those values
+       * another deployment publishes reads the string around them; nothing
+       * else is read from it.
+       */
+      readonly template?: readonly (string | Value)[];
+    };
 
 /** Where a value was read from: one argument of one resource. */
 export interface Via {

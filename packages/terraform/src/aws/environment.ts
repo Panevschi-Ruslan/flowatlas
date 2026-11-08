@@ -1,7 +1,7 @@
 import type { DeployedSetting } from '@flowatlas/core';
 import { asText, describe, type Instance, type Value } from '../eval/values.js';
 import { blockOrArgument, entryOf } from './arguments.js';
-import { deployedInText, deployedOf, importAt, isBecause } from './deployed.js';
+import { deployedInText, deployedOf, importAt, importsOfName, isBecause } from './deployed.js';
 import type { ResourceReading } from './reading.js';
 
 /**
@@ -38,6 +38,8 @@ const settingOf = (value: Value, reading: Pick<ResourceReading, 'functionIndex' 
     return { written, imported: found.imported, unread: { text: found.text } };
   }
   if (found !== undefined && !isBecause(found)) {
+    // A name written with values other deployments publish (P261).
+    importsOfName(reading, fn, found, `the value of ${variable} ${fn.address} is deployed with`);
     return { written, ...(text === undefined ? {} : { text }), names: { kind: found.kind, name: found.name } };
   }
   if (text !== undefined) return { written, text };

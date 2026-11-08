@@ -1,8 +1,8 @@
 import { destinationOf } from '@flowatlas/aws';
-import { alternativeAddress, alternativeOf, type DeliverySource } from '@flowatlas/core';
+import { alternativeAddress, alternativeOf, importedName, type DeliverySource, type DeployedKind } from '@flowatlas/core';
 import type { Instance, Value } from '../eval/values.js';
 import { blockOrArgument, entryOf, siteOf, unreadRow } from './arguments.js';
-import { alternativesAt, asTarget, deployedOfValue, isBecause, targetOf } from './deployed.js';
+import { alternativesAt, asTarget, deployedOfValue, importAt, isBecause, targetOf } from './deployed.js';
 import { functionAt } from './queues.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
 
@@ -26,6 +26,9 @@ const OUTCOMES: ReadonlyMap<string, When> = new Map([
 ]);
 
 
+/** What a mapping hands the batches it gives up on to (P253). */
+const MAPPING_DESTINATION_KINDS: readonly DeployedKind[] = ['queue', 'topic'];
+
 /** Each outcome a `destination_config` hands on, and the value naming where. */
 const destinationsIn = (owner: Instance, at: string): (readonly [string, When, Value])[] => {
   const config = blockOrArgument(owner, 'destination_config');
@@ -41,7 +44,7 @@ const push = (owner: Instance, of: Extract<DeliverySource, { kind: 'outcome' }>[
     const found = deployedOfValue(value, what, reading);
     // A destination another deployment writes to a parameter of the account, which the use does not say the kind of (P253).
     if (isBecause(found) && found.imported !== undefined) {
-      const kinds = at === 'destination_arn' ? (['queue', 'topic'] as const) : (['queue', 'topic', 'bus', 'function'] as const);
+      const kinds = at === 'destination_arn' ? MAPPING_DESTINATION_KINDS : (['queue', 'topic', 'bus', 'function'] as const);
       for (const alternative of alternativesAt(reading, owner, found.imported, kinds, what, `${owner.address}.${block}`)) {
         const to = destinationOf(asTarget(alternative), when);
         reading.deliveries.push({ ...siteOf(owner), address: alternative.address, by: 'destination', from: { kind: 'outcome', when, of }, ...(to === undefined ? {} : { to }), meta: { when } });
@@ -87,29 +90,38 @@ const readInvokeConfig: ResourceReader[1] = (config, reading) => {
  * reading's own way in, under an address of the reading's kind, which the
  * import's site is told of, so the linker keeps a destination with the
  * reading it belongs to and drops it with the others (P259). A destination
- * that is itself such a value would be a choice inside a choice, and is a row.
+ * that is itself such a value is a choice inside each reading's choice
+ * (P261): drawn once per kind it may be under each reading's address, its
+ * own import's site listing them, so the linker keeps the one of the kind
+ * its publisher's value is, of the reading the mapping's publisher's is, and
+ * renames it back through both.
  */
 const pushOfReadings = (mapping: Instance, readings: readonly { readonly address: string; readonly kind: string }[], reading: ResourceReading): void => {
   for (const [block, when, value] of destinationsIn(mapping, 'destination_arn')) {
     const what = `the ${when} destination of ${mapping.address}`;
     const found = deployedOfValue(value, what, reading);
-    if (isBecause(found) && found.imported !== undefined) {
-      reading.rows.push(
-        unreadRow(mapping, 'subscription-target-unread', what, {
-          reason: 'imported',
-          text: `it is a value another deployment publishes (${found.imported}), and so is what the mapping reads; the two are not read as a choice of kinds together`,
-        }),
-      );
-      continue;
-    }
-    const to = destinationOf(targetOf(found, mapping, what, reading), when);
+    const imported = isBecause(found) ? found.imported : undefined;
+    const to = imported === undefined ? destinationOf(targetOf(found, mapping, what, reading), when) : undefined;
+    /** The destination's readings, under each reading of the mapping. */
+    const inner: { kind: DeployedKind; address: string }[] = [];
     for (const one of readings) {
       const address = alternativeAddress(`${mapping.address}.${block}`, one.kind);
-      reading.deliveries.push({ ...siteOf(mapping), address, by: 'destination', from: { kind: 'outcome', when, of: { delivery: one.address } }, ...(to === undefined ? {} : { to }), meta: { when } });
+      const from = { kind: 'outcome', when, of: { delivery: one.address } } as const;
+      if (imported === undefined) {
+        reading.deliveries.push({ ...siteOf(mapping), address, by: 'destination', from, ...(to === undefined ? {} : { to }), meta: { when } });
+      } else {
+        for (const kind of MAPPING_DESTINATION_KINDS) {
+          const alternative = { kind, address: alternativeAddress(address, kind) };
+          inner.push(alternative);
+          const target = destinationOf(asTarget({ kind, name: importedName(imported) }), when);
+          reading.deliveries.push({ ...siteOf(mapping), address: alternative.address, by: 'destination', from, ...(target === undefined ? {} : { to: target }), meta: { when } });
+        }
+      }
       const index = reading.imports.findIndex((site) => site.alternatives?.some((alternative) => alternative.address === one.address) === true);
       const site = reading.imports[index];
       if (site?.alternatives !== undefined) reading.imports[index] = { ...site, alternatives: [...site.alternatives, { kind: one.kind as (typeof site.alternatives)[number]['kind'], address }] };
     }
+    if (imported !== undefined) importAt(reading, mapping, imported, what, MAPPING_DESTINATION_KINDS, inner);
   }
 };
 

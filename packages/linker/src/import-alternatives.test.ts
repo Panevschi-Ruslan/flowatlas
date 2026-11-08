@@ -137,3 +137,67 @@ describe('a value read as the name of what it names (P253)', () => {
     expect((graphs[1] as RepoGraph).nodes[1]?.meta?.['environment']).toEqual({ AUDIT: { written: '!Sub ...', value: 'shop-audit', kind: 'queue' } });
   });
 });
+
+describe('a choice inside each reading of a choice (P261)', () => {
+  const CLICKS = 'parameter:shop/clicks';
+  const FAILURES = 'parameter:shop/failures';
+  const MAPPING_AT = 'aws_lambda_event_source_mapping.clicks';
+  const failure = (kind: string): string => alternativeAddress(`${MAPPING_AT}.on_failure`, kind);
+  const destination = (mapped: string, kind: string): GraphNode => ({
+    id: `delivery:ledger#main.tf:${alternativeAddress(failure(mapped), kind)}`,
+    type: 'consumer',
+    label: 'destination',
+    repo: 'ledger',
+    meta: { declaredAs: alternativeAddress(failure(mapped), kind) },
+  });
+  const ledger = (): RepoGraph =>
+    graph('ledger', [
+      repoNode('ledger', {
+        imports: [
+          {
+            key: CLICKS,
+            file: 'main.tf',
+            line: 9,
+            what: 'what the mapping reads',
+            kinds: ['stream', 'table'],
+            alternatives: ['stream', 'table'].flatMap((kind) => [
+              { kind, address: alternativeAddress(MAPPING_AT, kind) },
+              { kind, address: failure(kind) },
+            ]),
+          },
+          {
+            key: FAILURES,
+            file: 'main.tf',
+            line: 9,
+            what: 'the failure destination of the mapping',
+            kinds: ['queue', 'topic'],
+            alternatives: ['stream', 'table'].flatMap((mapped) => ['queue', 'topic'].map((kind) => ({ kind, address: alternativeAddress(failure(mapped), kind) }))),
+          },
+        ],
+      }),
+      ...['stream', 'table'].flatMap((mapped) => ['queue', 'topic'].map((kind) => destination(mapped, kind))),
+    ]);
+  const platform = graph('platform', [
+    repoNode('platform', {
+      exports: [
+        { keys: [CLICKS], address: 'aws_ssm_parameter.clicks', file: 'main.tf', line: 1, kind: 'stream', value: 'shop-clicks' },
+        { keys: [FAILURES], address: 'aws_ssm_parameter.failures', file: 'main.tf', line: 5, kind: 'queue', value: 'shop-failures' },
+      ],
+    }),
+  ]);
+
+  it("keeps the destination of the kind its publisher says, of the reading the mapping's publisher says, under the address it was written at", () => {
+    const { graphs, rows } = joinImports([platform, ledger()]);
+    expect(rows).toEqual([]);
+    expect((graphs[1] as RepoGraph).nodes.filter((node) => node.type !== 'repo').map((node) => [node.id, node.meta?.['declaredAs']])).toEqual([
+      [`delivery:ledger#main.tf:${MAPPING_AT}.on_failure`, `${MAPPING_AT}.on_failure`],
+    ]);
+  });
+
+  it('drops every destination where the destination is not published', () => {
+    const only = graph('platform', [repoNode('platform', { exports: [{ keys: [CLICKS], address: 'aws_ssm_parameter.clicks', file: 'main.tf', line: 1, kind: 'stream', value: 'shop-clicks' }] })]);
+    const { graphs, rows } = joinImports([only, ledger()]);
+    expect(rows.map((row) => [row.reason, row.meta?.['key']])).toEqual([['export-not-found', FAILURES]]);
+    expect((graphs[1] as RepoGraph).nodes.filter((node) => node.type !== 'repo')).toEqual([]);
+  });
+});

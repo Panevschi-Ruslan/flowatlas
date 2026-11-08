@@ -1,5 +1,5 @@
 import { exportKey, parameterKey } from '@flowatlas/core';
-import { Built, CdkRef, Imported, ObjectValue, textOf, Unread, type Site, type Value } from './values.js';
+import { Built, CdkRef, embedding, Imported, ObjectValue, textOf, Unread, type Site, type Value } from './values.js';
 
 /**
  * What the CDK's own static members and helpers stand for, where a reading of
@@ -115,6 +115,36 @@ const parameterValue: StaticCall = (args) =>
 const expression: StaticCall = (args) => (typeof args[0] === 'string' ? args[0] : new Unread('the schedule expression is not text', 'not-text'));
 
 /**
+ * `Fn.sub(text, { Name: value })` with a value another deployment publishes
+ * among its variables (P261): the text with each `${Name}` written in, a
+ * pseudo parameter or a resource's attribute a part known only once
+ * deployed, `${!Literal}` the literal. Without such a value it is what built
+ * it, as before.
+ */
+const sub: StaticCall = (args, site) => {
+  const [template, variables] = args;
+  if (typeof template !== 'string' || !(variables instanceof ObjectValue)) return new Built('core.Fn.sub', args, site);
+  const parts: Value[] = [];
+  let at = 0;
+  for (const match of template.matchAll(/\$\{(!?)([^}]*)\}/g)) {
+    parts.push(template.slice(at, match.index));
+    at = match.index + match[0].length;
+    if (match[1] === '!') parts.push(`\${${match[2] ?? ''}}`);
+    else parts.push(variables.entries.has(match[2] ?? '') ? variables.get(match[2] ?? '') : new Unread(`\${${match[2] ?? ''}} is filled in when the stack is deployed`, 'token'));
+  }
+  parts.push(template.slice(at));
+  return embedding(parts, site, `Fn.sub(${JSON.stringify(template)})`) ?? new Built('core.Fn.sub', args, site);
+};
+
+/** `Fn.join(separator, [parts])` with a value another deployment publishes among its parts (P261); else what built it. */
+const join: StaticCall = (args, site) => {
+  const [separator, list] = args;
+  if (typeof separator !== 'string' || !Array.isArray(list)) return new Built('core.Fn.join', args, site);
+  const parts = list.flatMap((part, index): Value[] => (index === 0 ? [part] : [separator, part]));
+  return embedding(parts, site, `Fn.join(${JSON.stringify(separator)}, ...)`) ?? new Built('core.Fn.join', args, site);
+};
+
+/**
  * Static calls whose result the reading needs as a value, by what is called.
  * Every other static call is kept as a {@link Built} of what it was handed.
  */
@@ -128,6 +158,9 @@ const STATIC_CALLS: ReadonlyMap<string, StaticCall> = new Map<string, StaticCall
   ['aws-applicationautoscaling.Schedule.expression', expression],
   // An output another stack exports, read back by its name (P249).
   ['core.Fn.importValue', (args) => (typeof args[0] === 'string' ? importedExport(args[0]) : new Unread('the value is imported from another stack under a name that is not read', 'imported'))],
+  // A text built of parts, values other deployments publish among them (P261).
+  ['core.Fn.sub', sub],
+  ['core.Fn.join', join],
   ['core.Stack.of', () => new Unread('the stack is read through what it creates, not as a value', 'stack')],
   // A parameter of the account, read when deployed or looked up when the app is: the same parameter either way (P253).
   ['aws-ssm.StringParameter.valueForStringParameter', parameterValue],

@@ -788,9 +788,17 @@ requires, for that reason. So:
   the client's selection, with its check;
 - a field using `@requires` whose own requirements do not include every
   requirement of the fields its field set names (nested selections and inline
-  fragments included, requirements compared as written) is
-  `graphql-requires-auth-not-carried` (a finding, auth) at the gateway, naming
-  each requirement it does not carry, once per field and subgraph.
+  fragments included) is `graphql-requires-auth-not-carried` (a finding, auth)
+  at the gateway, naming each requirement it does not carry, once per field and
+  subgraph. A requirement is carried where what the requiring field asks
+  implies it (P261), as the router reads the lists - the outer one any of, the
+  inner one all of: every set of names one alternative of each of the
+  requiring field's requirements makes up includes one of the required
+  field's alternatives. `[["read:weight", "read:estimate"]]` carries
+  `[["read:weight"], ["staff"]]`; `[["read:fragile"]]` does not. Scopes asked
+  of every request imply `@authenticated`; a policy does not, since whatever
+  evaluates it may let an anonymous request through
+  (`fixtures/graphql-requires-scopes`).
 
 **A file-system router is four values.** Where the address is the path of a file
 rather than an argument of a call, what differs between one router and another
@@ -7141,9 +7149,10 @@ of the stack configuration that names it (`config/<group>/<stack>.yaml`,
 `template_path` or `template: { path }`): its `parameters`, its `stack_name` or
 else the project's `project_code` and the stack's path joined by `-`
 (`shop-prod-platform`), and the `region` the nearest group `config.yaml`
-gives. A resolver (`!stack_output`, `!environment_variable`, any `!tag`) and a
-Jinja expression are values not known from the files - never the parameter's
-default. Several stacks naming one template are several environments: the
+gives. A resolver (`!file_contents`, any `!tag` not read below) and a Jinja
+expression this does not render are values not known from the files - never
+the parameter's default (`!stack_output`, `!environment_variable` and Jinja
+over literal values are read since P261, below). Several stacks naming one template are several environments: the
 one `services[].infra.vars` names by its file, or the group
 `services[].infra.options.config_env` names, is read; otherwise a
 `parameter-file-ambiguous` row names them and none is.
@@ -7169,8 +7178,8 @@ mapping or a destination (P253). A subscription's endpoint, a bucket
 notification's target and a dead-letter queue are of the kind their protocol
 or their property says, and are read as that one. A Terraform mapping read as
 alternatives draws its failure destination once per reading, kept and dropped
-with it; a destination that is itself an import is a `subscription-target-unread`
-row.
+with it; a destination that is itself an import is read once per kind under
+each reading (P261, below).
 
 **Names built of several imports.** An address with two imports or more written
 into it (`!Sub` with `!ImportValue` variables, `!Join`, a Serverless string with
@@ -7179,6 +7188,69 @@ account - does not change which thing it is, and a name built of imports and
 text (`${Prefix}-orders-audit`) is written by the linker, part by part, where
 every part is joined; where one is not, the name is kept whole and the part is
 an `export-not-found` row (`fixtures/multi-repo-shared-values`).
+
+#### Two values in one string in the CDK and Terraform, a choice inside a choice, and what sceptre and rain are run with
+
+**The CDK and Terraform read a string part by part too (P261).** In a CDK app,
+a template literal, a `+`, `Fn.sub(text, { Name: value })` and
+`Fn.join(separator, [...])` with `Fn.importValue(...)` or
+`StringParameter.valueForStringParameter(...)` among their parts are read as a
+CloudFormation `!Sub` is: `this.region`, `this.account` and a pseudo parameter
+are parts known only once deployed, and a name built of the imports and text
+(`` `arn:aws:sqs:${this.region}:${this.account}:${prefix}-${stage}-audit` ``)
+is written by the linker where every part is joined. In Terraform, an
+interpolation is read the same way over `data "aws_ssm_parameter"` values and
+outputs of another configuration's state
+(`data.terraform_remote_state.<name>.outputs.<output>`), which are values
+another deployment publishes under `state:<backend identity>#<output>`; a
+root module whose backend is written publishes each of its outputs under that
+key - a point of an API as before, anything else as what it names or its text
+- so a state output a deployment reads is joined to the configuration that
+writes it.
+
+**A failure destination of an import, under a mapping read as alternatives.**
+Where a mapping reads an import (a stream or a table's changes) and hands what
+it gives up on to an import too (a queue or a topic), the destination is drawn
+once per kind under each of the mapping's readings, its own import listing
+them: the linker keeps the destination of the kind its publisher says, of the
+reading the mapping's publisher says, and renames it back through both choices
+to the address it is written at. No row.
+
+**sceptre: inheritance, Jinja, stack outputs.** A stack inherits the
+`parameters` and `sceptre_user_data` of every group `config.yaml` above it,
+merged key by key, the nearer winning. Every configuration file is rendered
+first: `{{ var.x }}` with what the commands that launch the stack give it -
+`sceptre --var x=y --var-file f.yaml launch <path>` written in a
+`package.json` script, a Makefile recipe, a shell script, a GitHub Actions
+step or a GitLab CI job, where the path is the stack, its group or a group
+above it - and the var files `services[].infra.vars` names; `{{
+environment_variable.X }}` and `!environment_variable X` with the environment
+those commands run in (an `export`, an assignment before the command, a
+pipeline's `env:` or `variables:`); `| default(<literal>)` where nothing gives
+the value. Any other Jinja - a filter, a call, a statement, a value nothing
+gives - stays a value not known. `!stack_output <stack>.yaml::<Output>` is the
+output of that stack of the project, by the name it is launched under, and
+`!stack_output_external <stack name>::<Output>` of a stack by its name: each
+is joined to the deployment that publishes `stack:<name>#<Output>`, in this
+repository or another. A template ending in `.j2` under a project's
+`templates/` is rendered with the stack's `sceptre_user_data` where every
+expression in it is `{{ sceptre_user_data.x }}` of a plain value; otherwise
+none of it is read, and an `infra-file-unparsed` row says which expression is
+not rendered. Several commands launching one stack with values of their own
+are a `parameter-file-ambiguous` row, and naming one's var file under
+`services[].infra.vars` chooses it.
+
+**rain: every option, every place a command is written.** `rain deploy` is
+read in the same places as sceptre's commands - a shell script's `cd` and a
+pipeline's `working-directory` followed, a line ending in `\` joined to the
+next - with every option of `rain deploy`: `--params` written more than once,
+the switches (`-y`, `--keep`, `--detach`, ...), and the options with a value
+(`--node-style`, `--role-arn`, `--s3-bucket`, ...) whose value is not taken
+for the stack. An option this does not know written before a word leaves the
+stack's name unread rather than taking the word for it. A pipeline expression
+(`${{ inputs.stage }}`) is a value not known, as a shell variable is. The same
+command in a pipeline and a script is one deployment
+(`fixtures/multi-repo-deploy-values`).
 
 ### Procedures
 
@@ -7404,7 +7476,25 @@ link's address names:
   provider's factory is what is provided for the token in its place of
   `inject`, a factory handed in (`useFactory: options.useFactory`) being the
   one written at the call. Two calls, or two providers, are nothing followed.
-  The NestJS injection reader still says `di-token-unknown` for such a token.
+  The NestJS injection reader finds such a token by the same index (P259); an
+  alias it finds (`{ provide: LEDGER_CLIENT, useExisting: LEDGER }`) is
+  followed to the class or the provider the aliased token is, and an alias of
+  a token nothing provides is `di-token-unknown` naming both (P261).
+- **A settings object's token** (P261). `@Inject(appConfig.KEY)`, `appConfig`
+  a `registerAs('app', ...)` of `@nestjs/config`, and
+  `@Inject(getConfigToken('app'))` are provided by a provider where the
+  `registerAs` is written, where the application loads it
+  (`ConfigModule.forRoot({ load: [appConfig] })`, `ConfigModule.forFeature(appConfig)`);
+  one nothing loads is `di-token-unknown`. Read from the import's package name,
+  so a repository whose packages are not installed reads the same.
+- **A module import chosen in the repository** (P261). An entry of `imports:`
+  chosen by a condition literals decide (`IN_MEMORY ? MemoryModule : database()`
+  with `const IN_MEMORY = false`), a `const` holding one, the answer of a
+  function of the repository (`database()` returning `DatabaseModule.forRoot(...)`),
+  and the modules spread in from such a list (`...(STAGE === 'prod' ? [MetricsModule] : [])`)
+  are followed to the module each is; a condition read when the application
+  runs (`process.env.MAIL`) stays `module-import-dynamic`
+  (`fixtures/nest-followed-tokens`).
 - **The address.** Read by the server's own address reading, the one every
   request between services gets: `process.env.ORDERS_URL`, a configuration
   service's `get('ORDERS_URL')`, a constant. A setting goes to the service that

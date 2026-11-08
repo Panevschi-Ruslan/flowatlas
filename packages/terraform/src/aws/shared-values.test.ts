@@ -62,7 +62,8 @@ resource "aws_lambda_event_source_mapping" "clicks" {
     ]);
   });
 
-  it('says a destination that is a value another deployment publishes too, and draws none', () => {
+  it('draws a destination that is a value another deployment publishes too once per kind, under each reading, and lists the kinds on its own import (P261)', () => {
+    const mapping = 'aws_lambda_event_source_mapping.clicks';
     const deployment = readHcl(`${FUNCTION}${data('clicks', '/shop/clicks')}${data('dlq', '/shop/dlq')}
 resource "aws_lambda_event_source_mapping" "clicks" {
   event_source_arn  = data.aws_ssm_parameter.clicks.value
@@ -75,8 +76,20 @@ resource "aws_lambda_event_source_mapping" "clicks" {
   }
 }
 `);
-    expect(deployment.deliveries.filter((delivery) => delivery.by === 'destination')).toEqual([]);
-    expect(deployment.rows.find((row) => row.reason === 'subscription-target-unread')?.message).toMatch(/\/shop\/dlq/);
+    const failures = deployment.deliveries.filter((delivery) => delivery.by === 'destination');
+    const readings = ['stream', 'table'].flatMap((mapped) => ['queue', 'topic'].map((kind) => [mapped, kind] as const));
+    expect(failures.map((delivery) => [delivery.address, delivery.from, delivery.to])).toEqual(
+      readings.map(([mapped, kind]) => [
+        alternativeAddress(alternativeAddress(`${mapping}.on_failure`, mapped), kind),
+        { kind: 'outcome', when: 'failure', of: { delivery: alternativeAddress(mapping, mapped) } },
+        { kind, name: importedName('parameter:/shop/dlq') },
+      ]),
+    );
+    expect(deployment.imports?.map((site) => [site.key, site.kinds, site.alternatives?.map((alternative) => alternative.address)])).toEqual([
+      ['parameter:/shop/clicks', ['stream', 'table'], [...['stream', 'table'].map((kind) => alternativeAddress(mapping, kind)), ...['stream', 'table'].map((kind) => alternativeAddress(`${mapping}.on_failure`, kind))]],
+      ['parameter:/shop/dlq', ['queue', 'topic'], readings.map(([mapped, kind]) => alternativeAddress(alternativeAddress(`${mapping}.on_failure`, mapped), kind))],
+    ]);
+    expect(deployment.rows.map((row) => row.reason)).not.toContain('subscription-target-unread');
   });
 });
 
@@ -110,5 +123,91 @@ resource "aws_sns_topic_subscription" "fulfil" {
       ['parameter:/shop/fulfil', ['function'], undefined],
     ]);
     expect(deployment.rows.map((row) => row.reason)).not.toContain('subscription-target-unread');
+  });
+});
+
+const STATE = 'state:s3:bucket=shop-state,key=platform.tfstate';
+const REMOTE = `
+data "terraform_remote_state" "platform" {
+  backend = "s3"
+  config = {
+    bucket = "shop-state"
+    key    = "platform.tfstate"
+  }
+}
+`;
+
+describe('values other deployments publish written into one string (P261)', () => {
+  it('reads each part of a name built of two, and of one and text, and leaves an import outside the name aside', () => {
+    const deployment = readHcl(`${data('prefix', '/shop/prefix')}${data('account', '/shop/account')}${REMOTE}
+variable "region" {
+  type = string
+}
+resource "aws_lambda_function" "tally" {
+  function_name = "shop-tally"
+  runtime       = "nodejs20.x"
+  handler       = "tally.handler"
+  filename      = "tally.zip"
+  environment {
+    variables = {
+      JOBS_URL = "https://sqs.eu-west-1.amazonaws.com/\${data.aws_ssm_parameter.account.value}/\${data.aws_ssm_parameter.prefix.value}-\${data.terraform_remote_state.platform.outputs.stage}-jobs"
+      EVENTS   = data.terraform_remote_state.platform.outputs.events_url
+    }
+  }
+}
+resource "aws_cloudwatch_event_rule" "settled" {
+  name          = "shop-settled"
+  event_pattern = jsonencode({ source = ["ledger"] })
+}
+resource "aws_cloudwatch_event_target" "audit" {
+  rule = aws_cloudwatch_event_rule.settled.name
+  arn  = "arn:aws:sqs:\${var.region}:\${data.aws_ssm_parameter.account.value}:\${data.aws_ssm_parameter.prefix.value}-audit"
+}
+resource "aws_cloudwatch_event_target" "alerts" {
+  rule = aws_cloudwatch_event_rule.settled.name
+  arn  = "arn:aws:sns:eu-west-1:111122223333:\${data.terraform_remote_state.platform.outputs.alerts}"
+}
+`);
+    const prefix = importedName('parameter:/shop/prefix');
+    const stage = importedName(`${STATE}#stage`);
+    const jobs = `${prefix}-${stage}-jobs`;
+    const environment = deployment.functions[0]?.environment ?? {};
+    expect(environment['JOBS_URL']?.names).toEqual({ kind: 'queue', name: jobs });
+    expect(environment['EVENTS']).toMatchObject({ imported: `${STATE}#events_url` });
+    expect(deployment.deliveries.map((delivery) => [delivery.address, delivery.to])).toEqual([
+      ['aws_cloudwatch_event_target.audit', { kind: 'queue', name: `${prefix}-audit` }],
+      ['aws_cloudwatch_event_target.alerts', { kind: 'topic', name: importedName(`${STATE}#alerts`) }],
+    ]);
+    expect(deployment.imports?.map((site) => [site.key, site.kinds, site.as, site.within])).toEqual([
+      [`${STATE}#events_url`, undefined, undefined, undefined],
+      ['parameter:/shop/prefix', ['queue'], 'name', jobs],
+      [`${STATE}#stage`, ['queue'], 'name', jobs],
+      ['parameter:/shop/prefix', ['queue'], 'name', `${prefix}-audit`],
+      [`${STATE}#alerts`, ['topic'], 'name', undefined],
+    ]);
+  });
+
+  it('publishes an output of a configuration whose state another reads, as what it names', () => {
+    const deployment = readHcl(`
+terraform {
+  backend "s3" {
+    bucket = "shop-state"
+    key    = "platform.tfstate"
+  }
+}
+resource "aws_sqs_queue" "jobs" {
+  name = "shop-prod-jobs"
+}
+output "jobs_arn" {
+  value = aws_sqs_queue.jobs.arn
+}
+output "stage" {
+  value = "prod"
+}
+`);
+    expect(deployment.exports?.map((value) => [value.keys, value.address, value.names, value.text])).toEqual([
+      [[`${STATE}#jobs_arn`], 'output.jobs_arn', { kind: 'queue', name: 'shop-prod-jobs' }, undefined],
+      [[`${STATE}#stage`], 'output.stage', undefined, 'prod'],
+    ]);
   });
 });

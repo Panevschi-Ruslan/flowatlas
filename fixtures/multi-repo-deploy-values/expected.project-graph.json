@@ -1,0 +1,1658 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T17:04:41.678Z",
+  "services": [
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "audit#src/index-audit.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "audit",
+      "file": "src/index-audit.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "billing#src/invoice.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "billing",
+      "file": "src/invoice.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "channel:eventbridge/default/ledger/EntrySettled",
+      "type": "channel",
+      "label": "eventbridge/default/ledger/EntrySettled",
+      "repo": "ledger",
+      "file": "infra/main.tf",
+      "line": 89,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:kinesis/shop-prod-clicks",
+      "type": "channel",
+      "label": "kinesis/shop-prod-clicks",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 44,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-kinesis"
+        ],
+        "declaredBy": "aws_kinesis_stream.clicks",
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/shop-prod-alerts",
+      "type": "channel",
+      "label": "sns/shop-prod-alerts",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 66,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sns/shop-prod-order-events",
+      "type": "channel",
+      "label": "sns/shop-prod-order-events",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 9,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "channel:sqs/shop-prod-audit",
+      "type": "channel",
+      "label": "sqs/shop-prod-audit",
+      "repo": "audit",
+      "file": "lib/audit-stack.ts",
+      "line": 34,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 0,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-prod-invoices",
+      "type": "channel",
+      "label": "sqs/shop-prod-invoices",
+      "repo": "billing",
+      "file": "infra/billing.yaml",
+      "line": 37,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-prod-jobs",
+      "type": "channel",
+      "label": "sqs/shop-prod-jobs",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 61,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-prod-tally-failures",
+      "type": "channel",
+      "label": "sqs/shop-prod-tally-failures",
+      "repo": "ledger",
+      "file": "infra/main.tf",
+      "line": 68,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 0
+      }
+    },
+    {
+      "id": "config_key:audit#ALERTS_TOPIC_ARN",
+      "type": "config_key",
+      "label": "ALERTS_TOPIC_ARN",
+      "repo": "audit",
+      "file": "src/index-audit.ts",
+      "line": 14,
+      "meta": {
+        "key": "ALERTS_TOPIC_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:audit#JOBS_QUEUE_URL",
+      "type": "config_key",
+      "label": "JOBS_QUEUE_URL",
+      "repo": "audit",
+      "file": "src/index-audit.ts",
+      "line": 13,
+      "meta": {
+        "key": "JOBS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:ledger#ALERTS_TOPIC_ARN",
+      "type": "config_key",
+      "label": "ALERTS_TOPIC_ARN",
+      "repo": "ledger",
+      "file": "src/tally.ts",
+      "line": 7,
+      "meta": {
+        "key": "ALERTS_TOPIC_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders#EVENTS_TOPIC_ARN",
+      "type": "config_key",
+      "label": "EVENTS_TOPIC_ARN",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 9,
+      "meta": {
+        "key": "EVENTS_TOPIC_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders#INVOICES_QUEUE_URL",
+      "type": "config_key",
+      "label": "INVOICES_QUEUE_URL",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 10,
+      "meta": {
+        "key": "INVOICES_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:audit#lib/audit-stack.ts:shop-audit/Index/SqsEventSource:shop-audit/Audit",
+      "type": "consumer",
+      "label": "mapping shop-audit/Index/SqsEventSource:shop-audit/Audit",
+      "repo": "audit",
+      "file": "lib/audit-stack.ts",
+      "line": 34,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "shop-audit/Index/SqsEventSource:shop-audit/Audit",
+        "deployedBy": "cdk",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:billing#infra/billing.yaml:infra/billing.Resources.InvoicesMapping",
+      "type": "consumer",
+      "label": "mapping infra/billing.Resources.InvoicesMapping",
+      "repo": "billing",
+      "file": "infra/billing.yaml",
+      "line": 37,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "infra/billing.Resources.InvoicesMapping",
+        "deployedBy": "cloudformation",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs",
+      "type": "consumer",
+      "label": "rule shop-ledger-settled",
+      "repo": "ledger",
+      "file": "infra/main.tf",
+      "line": 89,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.settled_jobs",
+        "deployedBy": "terraform",
+        "name": "shop-ledger-settled",
+        "rule": "aws_cloudwatch_event_rule.settled",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false,
+          "beside": [
+            "version",
+            "id",
+            "detail-type",
+            "source",
+            "account",
+            "time",
+            "region",
+            "resources"
+          ]
+        }
+      }
+    },
+    {
+      "id": "consumer:ledger#infra/main.tf:aws_lambda_event_source_mapping.clicks",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.clicks",
+      "repo": "ledger",
+      "file": "infra/main.tf",
+      "line": 68,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.clicks",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.jobs",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 61,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.jobs",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts",
+      "type": "consumer",
+      "label": "subscription aws_sns_topic_subscription.alerts",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 66,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "aws_sns_topic_subscription.alerts",
+        "deployedBy": "terraform",
+        "protocol": "email"
+      }
+    },
+    {
+      "id": "entry:audit:invoke:shop-audit-index",
+      "type": "entry",
+      "label": "shop-audit-index",
+      "repo": "audit",
+      "file": "lib/audit-stack.ts",
+      "line": 25,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-audit-index",
+        "deployedBy": "cdk",
+        "name": "shop-audit-index",
+        "runtime": "nodejs20.x",
+        "declaredAs": "shop-audit/Index",
+        "constructPath": "shop-audit/Index",
+        "handler": "src/index-audit.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "ALERTS_TOPIC_ARN": {
+            "written": "Fn.join(\":\", ...)",
+            "value": "shop-prod-alerts",
+            "kind": "topic"
+          },
+          "JOBS_QUEUE_URL": {
+            "written": "Fn.sub(\"https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${Prefix}-${Stage}-jobs\")",
+            "value": "shop-prod-jobs",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "{failed?:false|true}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:billing:invoke:shop-prod-invoice",
+      "type": "entry",
+      "label": "shop-prod-invoice",
+      "repo": "billing",
+      "file": "infra/billing.yaml",
+      "line": 28,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-prod-invoice",
+        "deployedBy": "cloudformation",
+        "name": "shop-prod-invoice",
+        "runtime": "nodejs20.x",
+        "declaredAs": "infra/billing.Resources.Invoice",
+        "logicalId": "Invoice",
+        "handler": "invoice.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:event:kinesis/shop-prod-clicks",
+      "type": "entry",
+      "label": "event kinesis/shop-prod-clicks",
+      "repo": "ledger",
+      "file": "infra/main.tf",
+      "line": 68,
+      "kind": "event",
+      "meta": {
+        "key": "kinesis/shop-prod-clicks",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.clicks",
+        "deployedBy": "terraform",
+        "changesOf": "stream",
+        "name": "shop-prod-clicks",
+        "function": "shop-ledger-tally",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:invoke:shop-ledger-tally",
+      "type": "entry",
+      "label": "shop-ledger-tally",
+      "repo": "ledger",
+      "file": "infra/main.tf",
+      "line": 52,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-ledger-tally",
+        "deployedBy": "terraform",
+        "name": "shop-ledger-tally",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.tally",
+        "handler": "tally.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "ALERTS_TOPIC_ARN": {
+            "written": "a value not known from the files",
+            "value": "shop-prod-alerts",
+            "kind": "topic"
+          }
+        },
+        "reads": {
+          "": "{Records:unknown[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-prod-ship",
+      "type": "entry",
+      "label": "shop-prod-ship",
+      "repo": "orders",
+      "file": "templates/orders.yaml.j2",
+      "line": 25,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-prod-ship",
+        "deployedBy": "cloudformation",
+        "name": "shop-prod-ship",
+        "runtime": "nodejs20.x",
+        "declaredAs": "templates/orders.yaml.Resources.Ship",
+        "logicalId": "Ship",
+        "handler": "ship.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "EVENTS_TOPIC_ARN": {
+            "written": "!Sub ...",
+            "value": "shop-prod-order-events",
+            "kind": "topic"
+          },
+          "INVOICES_QUEUE_URL": {
+            "written": "!Sub ...",
+            "value": "shop-prod-invoices",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "{orderId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:platform:invoke:shop-prod-jobs",
+      "type": "entry",
+      "label": "shop-prod-jobs",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 53,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-prod-jobs",
+        "deployedBy": "terraform",
+        "name": "shop-prod-jobs",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.jobs",
+        "handler": "jobs.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "ledger#src/tally.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "ledger",
+      "file": "src/tally.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:unknown[]}"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "orders#src/ship.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "platform#src/jobs.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "platform",
+      "file": "src/jobs.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:audit#src/index-audit.ts:13:9",
+      "type": "producer",
+      "label": "message sqs/shop-prod-jobs",
+      "repo": "audit",
+      "file": "src/index-audit.ts",
+      "line": 13,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "JOBS_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:audit#src/index-audit.ts:14:38",
+      "type": "producer",
+      "label": "message sns/shop-prod-alerts",
+      "repo": "audit",
+      "file": "src/index-audit.ts",
+      "line": 14,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "ALERTS_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs",
+      "type": "producer",
+      "label": "message sqs/shop-prod-jobs",
+      "repo": "ledger",
+      "file": "infra/main.tf",
+      "line": 89,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "rule",
+        "declaredAs": "aws_cloudwatch_event_target.settled_jobs",
+        "deployedBy": "terraform"
+      }
+    },
+    {
+      "id": "producer:ledger#infra/main.tf:aws_lambda_event_source_mapping.clicks.on_failure",
+      "type": "producer",
+      "label": "message sqs/shop-prod-tally-failures",
+      "repo": "ledger",
+      "file": "infra/main.tf",
+      "line": 68,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "aws_lambda_event_source_mapping.clicks.on_failure",
+        "deployedBy": "terraform",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "producer:ledger#src/tally.ts:7:41",
+      "type": "producer",
+      "label": "message sns/shop-prod-alerts",
+      "repo": "ledger",
+      "file": "src/tally.ts",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "ALERTS_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{clicks:number}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:orders#src/ship.ts:10:9",
+      "type": "producer",
+      "label": "message sqs/shop-prod-invoices",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 10,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "INVOICES_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{orderId:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:orders#src/ship.ts:9:9",
+      "type": "producer",
+      "label": "message sns/shop-prod-order-events",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "EVENTS_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{shipped:string}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:audit",
+      "type": "repo",
+      "label": "audit",
+      "repo": "audit",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 1,
+            "@aws-sdk/client-sns": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "imports": [
+          {
+            "key": "parameter:/shop/prefix",
+            "file": "lib/audit-stack.ts",
+            "line": 31,
+            "what": "the topic name Fn.join(\":\", ...)",
+            "kinds": [
+              "topic"
+            ],
+            "as": "name",
+            "within": "shop-prod-alerts",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/stage",
+            "file": "lib/audit-stack.ts",
+            "line": 31,
+            "what": "the topic name Fn.join(\":\", ...)",
+            "kinds": [
+              "topic"
+            ],
+            "as": "name",
+            "within": "shop-prod-alerts",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/prefix",
+            "file": "lib/audit-stack.ts",
+            "line": 30,
+            "what": "the queue name Fn.sub(\"https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${Prefix}-${Stage}-jobs\")",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "within": "shop-prod-jobs",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/stage",
+            "file": "lib/audit-stack.ts",
+            "line": 30,
+            "what": "the queue name Fn.sub(\"https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${Prefix}-${Stage}-jobs\")",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "within": "shop-prod-jobs",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/prefix",
+            "file": "lib/audit-stack.ts",
+            "line": 23,
+            "what": "the queue name `arn:aws:sqs:${this.region}:${this.account}:${prefix}-${s...",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "within": "shop-prod-audit",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/stage",
+            "file": "lib/audit-stack.ts",
+            "line": 23,
+            "what": "the queue name `arn:aws:sqs:${this.region}:${this.account}:${prefix}-${s...",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "within": "shop-prod-audit",
+            "from": "platform"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:billing",
+      "type": "repo",
+      "label": "billing",
+      "repo": "billing",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "stack:shop-billing#InvoicesQueueName"
+            ],
+            "address": "infra/billing.Outputs.InvoicesQueueName",
+            "file": "infra/billing.yaml",
+            "line": 44,
+            "kind": "queue",
+            "value": "shop-prod-invoices",
+            "deployedBy": "cloudformation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sns": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "imports": [
+          {
+            "key": "state:s3:bucket=shop-terraform-state,key=platform/terraform.tfstate#prefix",
+            "file": "infra/main.tf",
+            "line": 52,
+            "what": "the value of ALERTS_TOPIC_ARN aws_lambda_function.tally is deployed with",
+            "kinds": [
+              "topic"
+            ],
+            "as": "name",
+            "within": "shop-prod-alerts",
+            "from": "platform"
+          },
+          {
+            "key": "state:s3:bucket=shop-terraform-state,key=platform/terraform.tfstate#stage",
+            "file": "infra/main.tf",
+            "line": 52,
+            "what": "the value of ALERTS_TOPIC_ARN aws_lambda_function.tally is deployed with",
+            "kinds": [
+              "topic"
+            ],
+            "as": "name",
+            "within": "shop-prod-alerts",
+            "from": "platform"
+          },
+          {
+            "key": "state:s3:bucket=shop-terraform-state,key=platform/terraform.tfstate#prefix",
+            "file": "infra/main.tf",
+            "line": 89,
+            "what": "arn of aws_cloudwatch_event_target.settled_jobs",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "within": "shop-prod-jobs",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/clicks/stream-arn",
+            "file": "infra/main.tf",
+            "line": 68,
+            "what": "what aws_lambda_event_source_mapping.clicks reads",
+            "kinds": [
+              "stream",
+              "table"
+            ],
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/tally/failures-arn",
+            "file": "infra/main.tf",
+            "line": 68,
+            "what": "the failure destination of aws_lambda_event_source_mapping.clicks",
+            "kinds": [
+              "queue",
+              "topic"
+            ],
+            "from": "platform"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sns": 1,
+            "@aws-sdk/client-sqs": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "stack:shop-prod-events#TopicName"
+            ],
+            "address": "templates/events.Outputs.TopicName",
+            "file": "templates/events.yaml",
+            "line": 17,
+            "kind": "topic",
+            "value": "shop-prod-order-events",
+            "deployedBy": "cloudformation"
+          }
+        ],
+        "imports": [
+          {
+            "key": "stack:shop-prod-events#TopicName",
+            "file": "templates/orders.yaml.j2",
+            "line": 35,
+            "what": "the value of EVENTS_TOPIC_ARN templates/orders.yaml.Resources.Ship is deployed with",
+            "kinds": [
+              "topic"
+            ],
+            "as": "name",
+            "from": "orders"
+          },
+          {
+            "key": "stack:shop-billing#InvoicesQueueName",
+            "file": "templates/orders.yaml.j2",
+            "line": 36,
+            "what": "the value of INVOICES_QUEUE_URL templates/orders.yaml.Resources.Ship is deployed with",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "from": "billing"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:platform",
+      "type": "repo",
+      "label": "platform",
+      "repo": "platform",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "parameter:/shop/prefix"
+            ],
+            "address": "aws_ssm_parameter.prefix",
+            "file": "infra/main.tf",
+            "line": 73,
+            "text": "shop",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "parameter:/shop/stage"
+            ],
+            "address": "aws_ssm_parameter.stage",
+            "file": "infra/main.tf",
+            "line": 79,
+            "text": "prod",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "parameter:/shop/account"
+            ],
+            "address": "aws_ssm_parameter.account",
+            "file": "infra/main.tf",
+            "line": 85,
+            "text": "111122223333",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "parameter:/shop/clicks/stream-arn"
+            ],
+            "address": "aws_ssm_parameter.clicks",
+            "file": "infra/main.tf",
+            "line": 91,
+            "kind": "stream",
+            "value": "shop-prod-clicks",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "parameter:/shop/tally/failures-arn"
+            ],
+            "address": "aws_ssm_parameter.tally_failures",
+            "file": "infra/main.tf",
+            "line": 97,
+            "kind": "queue",
+            "value": "shop-prod-tally-failures",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "state:s3:bucket=shop-terraform-state,key=platform/terraform.tfstate#prefix"
+            ],
+            "address": "output.prefix",
+            "file": "infra/main.tf",
+            "line": 104,
+            "text": "shop",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "state:s3:bucket=shop-terraform-state,key=platform/terraform.tfstate#stage"
+            ],
+            "address": "output.stage",
+            "file": "infra/main.tf",
+            "line": 108,
+            "text": "prod",
+            "deployedBy": "terraform"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "audit#src/index-audit.ts:handler",
+      "to": "config_key:audit#ALERTS_TOPIC_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/index-audit.ts",
+      "line": 14,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-audit-index",
+            "written": "Fn.join(\":\", ...)",
+            "value": "shop-prod-alerts"
+          }
+        ]
+      }
+    },
+    {
+      "from": "audit#src/index-audit.ts:handler",
+      "to": "config_key:audit#JOBS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/index-audit.ts",
+      "line": 13,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-audit-index",
+            "written": "Fn.sub(\"https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${Prefix}-${Stage}-jobs\")",
+            "value": "shop-prod-jobs"
+          }
+        ]
+      }
+    },
+    {
+      "from": "audit#src/index-audit.ts:handler",
+      "to": "producer:audit#src/index-audit.ts:13:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index-audit.ts",
+      "line": 13
+    },
+    {
+      "from": "audit#src/index-audit.ts:handler",
+      "to": "producer:audit#src/index-audit.ts:14:38",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/index-audit.ts",
+      "line": 14
+    },
+    {
+      "from": "channel:eventbridge/default/ledger/EntrySettled",
+      "to": "consumer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 89,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:kinesis/shop-prod-clicks",
+      "to": "consumer:ledger#infra/main.tf:aws_lambda_event_source_mapping.clicks",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 68,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sns/shop-prod-alerts",
+      "to": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 66,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-prod-audit",
+      "to": "consumer:audit#lib/audit-stack.ts:shop-audit/Index/SqsEventSource:shop-audit/Audit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 34,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-prod-invoices",
+      "to": "consumer:billing#infra/billing.yaml:infra/billing.Resources.InvoicesMapping",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/billing.yaml",
+      "line": 37,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-prod-jobs",
+      "to": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 61,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:audit#lib/audit-stack.ts:shop-audit/Index/SqsEventSource:shop-audit/Audit",
+      "to": "entry:audit:invoke:shop-audit-index",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 34,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:billing#infra/billing.yaml:infra/billing.Resources.InvoicesMapping",
+      "to": "entry:billing:invoke:shop-prod-invoice",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/billing.yaml",
+      "line": 37,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs",
+      "to": "producer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 89,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:ledger#infra/main.tf:aws_lambda_event_source_mapping.clicks",
+      "to": "entry:ledger:event:kinesis/shop-prod-clicks",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 68,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "to": "entry:platform:invoke:shop-prod-jobs",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 61,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:audit:invoke:shop-audit-index",
+      "to": "audit#src/index-audit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index-audit.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:billing:invoke:shop-prod-invoice",
+      "to": "billing#src/invoice.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/invoice.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:ledger:event:kinesis/shop-prod-clicks",
+      "to": "ledger#src/tally.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/tally.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:ledger:event:kinesis/shop-prod-clicks",
+      "to": "producer:ledger#infra/main.tf:aws_lambda_event_source_mapping.clicks.on_failure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 68,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:ledger:invoke:shop-ledger-tally",
+      "to": "ledger#src/tally.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/tally.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:orders:invoke:shop-prod-ship",
+      "to": "orders#src/ship.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:platform:invoke:shop-prod-jobs",
+      "to": "platform#src/jobs.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs.ts",
+      "line": 4
+    },
+    {
+      "from": "ledger#src/tally.ts:handler",
+      "to": "config_key:ledger#ALERTS_TOPIC_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/tally.ts",
+      "line": 7,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-ledger-tally",
+            "written": "a value not known from the files",
+            "value": "shop-prod-alerts"
+          }
+        ]
+      }
+    },
+    {
+      "from": "ledger#src/tally.ts:handler",
+      "to": "producer:ledger#src/tally.ts:7:41",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/tally.ts",
+      "line": 7
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "config_key:orders#EVENTS_TOPIC_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 9,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-prod-ship",
+            "written": "!Sub ...",
+            "value": "shop-prod-order-events"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "config_key:orders#INVOICES_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 10,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-prod-ship",
+            "written": "!Sub ...",
+            "value": "shop-prod-invoices"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "producer:orders#src/ship.ts:10:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 10
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "producer:orders#src/ship.ts:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 9
+    },
+    {
+      "from": "producer:audit#src/index-audit.ts:13:9",
+      "to": "channel:sqs/shop-prod-jobs",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/index-audit.ts",
+      "line": 13,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "JOBS_QUEUE_URL"
+        ],
+        "functions": [
+          "shop-audit-index"
+        ]
+      }
+    },
+    {
+      "from": "producer:audit#src/index-audit.ts:14:38",
+      "to": "channel:sns/shop-prod-alerts",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/index-audit.ts",
+      "line": 14,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ALERTS_TOPIC_ARN"
+        ],
+        "functions": [
+          "shop-audit-index"
+        ]
+      }
+    },
+    {
+      "from": "producer:ledger#infra/main.tf:aws_cloudwatch_event_target.settled_jobs",
+      "to": "channel:sqs/shop-prod-jobs",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 89,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:ledger#infra/main.tf:aws_lambda_event_source_mapping.clicks.on_failure",
+      "to": "channel:sqs/shop-prod-tally-failures",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 68,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:ledger#src/tally.ts:7:41",
+      "to": "channel:sns/shop-prod-alerts",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/tally.ts",
+      "line": 7,
+      "params": [
+        "{clicks:number}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ALERTS_TOPIC_ARN"
+        ],
+        "functions": [
+          "shop-ledger-tally"
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#src/ship.ts:10:9",
+      "to": "channel:sqs/shop-prod-invoices",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 10,
+      "params": [
+        "{orderId:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "INVOICES_QUEUE_URL"
+        ],
+        "functions": [
+          "shop-prod-ship"
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#src/ship.ts:9:9",
+      "to": "channel:sns/shop-prod-order-events",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 9,
+      "params": [
+        "{shipped:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "EVENTS_TOPIC_ARN"
+        ],
+        "functions": [
+          "shop-prod-ship"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "platform",
+      "file": "infra/main.tf",
+      "line": 44,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/shop-prod-clicks is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/shop-prod-clicks"
+    },
+    {
+      "file": "infra/main.tf",
+      "line": 66,
+      "reason": "subscription-target-unread",
+      "level": "info",
+      "message": "what aws_sns_topic_subscription.alerts delivers to is not read: it delivers by email, which nothing here follows",
+      "hint": "It is read, and it is not a function, a workflow, a queue, a topic, a bus or a stream, so nothing is drawn past it. Nothing to fix unless it is one of those written in a form not recognised.",
+      "symbol": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts",
+      "adapter": "aws-lambda",
+      "meta": {
+        "because": "unplaced"
+      },
+      "service": "platform"
+    }
+  ]
+}

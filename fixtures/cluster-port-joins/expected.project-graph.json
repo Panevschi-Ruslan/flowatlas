@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:03:50.815Z",
+  "builtAt": "2026-11-08T18:00:28.986Z",
   "services": [
     {
       "name": "orders",
@@ -517,6 +517,18 @@
           ],
           "returns": "void"
         }
+      }
+    },
+    {
+      "id": "ledger#src/app.config.ts:appConfig.KEY",
+      "type": "provider",
+      "label": "appConfig.KEY",
+      "repo": "ledger",
+      "file": "src/app.config.ts",
+      "line": 4,
+      "kind": "factory",
+      "meta": {
+        "token": "appConfig.KEY"
       }
     },
     {
@@ -1277,6 +1289,18 @@
       "confidence": "static",
       "file": "src/app.config.ts",
       "line": 5
+    },
+    {
+      "from": "ledger#src/server.ts:Server",
+      "to": "ledger#src/app.config.ts:appConfig.KEY",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "token": "appConfig.KEY",
+        "provider": "useFactory"
+      }
     }
   ],
   "types": {
@@ -1344,14 +1368,6 @@
       "reason": "module-import-dynamic",
       "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
       "symbol": "AppModule imports ConfigModule",
-      "service": "ledger"
-    },
-    {
-      "file": "src/server.ts",
-      "line": 9,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides appConfig.KEY. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "Server.constructor[0]",
       "service": "ledger"
     },
     {

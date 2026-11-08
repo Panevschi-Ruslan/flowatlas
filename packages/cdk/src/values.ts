@@ -1,3 +1,4 @@
+import { importedName } from '@flowatlas/core';
 import type { Node as TsNode, ClassDeclaration, ClassExpression } from 'ts-morph';
 
 /**
@@ -61,6 +62,55 @@ export class Imported extends Unread {
     super(text, 'imported');
   }
 }
+
+/** What stands in a text for a part of it known only once the stack is deployed. */
+export const HOLE = '\u0001';
+
+/**
+ * A text built with values other stacks export, or parameters other
+ * deployments write, written into it (P261): `` `${Fn.importValue('prefix')}-audit` ``,
+ * `Fn.sub` and `Fn.join` with imports among their parts. Unread as text;
+ * `built` is the text with each import's stand-in (`importedName`) in place
+ * and a {@link HOLE} where a part is known only once deployed, so an ARN or a
+ * name built of imports and text is read the way the linker finishes it.
+ */
+export class Embedded extends Unread {
+  constructor(
+    readonly built: string,
+    /** The keys of the values written in, each once. */
+    readonly keys: readonly string[],
+    /** Where it is built. */
+    readonly site: Site,
+    /** How it is written, shortened, for a person. */
+    readonly written: string,
+  ) {
+    super(`${written} holds values other deployments publish`, 'imported');
+  }
+}
+
+/**
+ * Parts of a text, in order, as one text with the values other deployments
+ * publish written in (P261): an {@link Embedded} where at least one part is
+ * such a value, every other part not text a {@link HOLE}; `undefined` where
+ * none is, so the text is read as it always was.
+ */
+export const embedding = (parts: readonly Value[], site: Site, written: string): Embedded | undefined => {
+  if (!parts.some((part) => part instanceof Imported || part instanceof Embedded)) return undefined;
+  let built = '';
+  const keys: string[] = [];
+  for (const part of parts) {
+    if (part instanceof Imported) {
+      built += importedName(part.key);
+      keys.push(part.key);
+    } else if (part instanceof Embedded) {
+      built += part.built;
+      keys.push(...part.keys);
+    } else {
+      built += typeof part === 'string' || typeof part === 'number' || typeof part === 'boolean' ? String(part) : HOLE;
+    }
+  }
+  return new Embedded(built, [...new Set(keys)], site, written);
+};
 
 /** What `Stack.exportValue` declares: an output exported under a name, and nothing else (P253). */
 export const EXPORT_VALUE = 'core.ExportValue';

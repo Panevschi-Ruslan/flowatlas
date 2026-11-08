@@ -3,6 +3,7 @@ import { join, posix, relative } from 'node:path';
 import { toPosixPath } from '@flowatlas/core';
 import { isRecord, readServiceFile, serverlessReader, serviceFiles, textOf } from '@flowatlas/serverless';
 import { CONFIG_FILES, deployConfigOf, TEMPLATE_FILES } from './config.js';
+import { JINJA_TEMPLATE } from './deployers.js';
 import { localPath } from './reading.js';
 import { nestedFilesOf, SAM_TRANSFORM } from './template.js';
 
@@ -30,8 +31,14 @@ const MOST_DEPTH = 4;
 /** A file larger than this is generated, not written: it is not opened to see whether it is a template. */
 const MOST_BYTES = 1024 * 1024;
 
-/** What a template's file name ends in. */
-const TEMPLATE_EXTENSIONS = /\.(?:ya?ml|json|template)$/;
+/** What a template's file name ends in: a Jinja template sceptre renders (`.j2`) too (P261). */
+const TEMPLATE_EXTENSIONS = /\.(?:ya?ml|json|template|j2)$/;
+
+/** Whether a file is in a sceptre project's `templates/`: a directory of that name beside a `config/`. */
+const inSceptreProject = (repoDir: string, file: string): boolean => {
+  const parts = file.split('/');
+  return parts.some((part, at) => part === 'templates' && existsSync(join(repoDir, ...parts.slice(0, at), 'config')));
+};
 
 /** Files of those endings that are something else by their name. */
 const NOT_TEMPLATE_NAMES = /^(?:package(?:-lock)?\.json|tsconfig.*\.json|samconfig\.ya?ml|pnpm-lock\.yaml|pnpm-workspace\.yaml)$/;
@@ -67,6 +74,8 @@ const templateAt = (repoDir: string, file: string): Found | undefined => {
   const path = join(repoDir, file);
   const text = textAt(path);
   if (text === undefined || !(text.includes('AWSTemplateFormatVersion') || (text.includes('Resources') && text.includes('AWS::')))) return undefined;
+  // A Jinja template is one only in a sceptre project, which renders it; what it declares is read once it is rendered.
+  if (JINJA_TEMPLATE.test(file)) return inSceptreProject(repoDir, file) ? { file, document: {}, sam: text.includes(SAM_TRANSFORM) } : undefined;
   let value: unknown;
   try {
     value = readServiceFile(path).value;

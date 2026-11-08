@@ -77,6 +77,10 @@ export const describeKey = (key: string): string => {
     const [stack, output] = key.slice('stack:'.length).split('#');
     return `the output ${output ?? '?'} of the stack ${stack ?? '?'}`;
   }
+  if (key.startsWith('state:')) {
+    const at = key.lastIndexOf('#');
+    return `the output ${key.slice(at + 1)} of the state ${key.slice('state:'.length, at)}`;
+  }
   return key;
 };
 
@@ -311,6 +315,12 @@ export const joinImports = (graphs: readonly RepoGraph[]): { graphs: RepoGraph[]
     for (const [name, to] of own ?? []) plan.renames.set(name, to);
     for (const [from, to] of plan.renames) if (own?.has(to) === true) plan.renames.set(from, own.get(to) as string);
     for (const [key, answer] of plan.settled) if (answer.value !== undefined && own?.has(answer.value) === true) plan.settled.set(key, { ...answer, value: own.get(answer.value) as string });
+    // A reading kept inside a reading kept - a mapping's failure destination of an import, of each reading of the mapping (P261) - goes back through both.
+    for (const [from, to] of plan.renames) {
+      let at = to;
+      for (let hop = 0; hop < 4 && alternativeOf(at) !== undefined && plan.renames.has(at) && plan.renames.get(at) !== at; hop += 1) at = plan.renames.get(at) as string;
+      if (at !== to) plan.renames.set(from, at);
+    }
     const pruned = prune(graph, plan);
     const { renames, settled, from } = plan;
     if (renames.size === 0 && settled.size === 0 && pruned === graph) return graph;

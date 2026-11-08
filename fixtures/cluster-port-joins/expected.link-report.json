@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:35:48.337Z",
+  "builtAt": "2026-11-08T17:03:29.644Z",
   "configHash": "57445902addd",
   "services": [
     {
@@ -64,10 +64,10 @@
       "repo": "./ledger",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 9,
-      "edges": 2,
+      "nodes": 10,
+      "edges": 3,
       "types": 1,
-      "unresolved": 2,
+      "unresolved": 1,
       "durationMs": 0,
       "packages": {
         "name": "cluster-port-joins-ledger",
@@ -243,13 +243,13 @@
     }
   ],
   "totals": {
-    "nodes": 47,
-    "edges": 29,
+    "nodes": 48,
+    "edges": 30,
     "types": 3,
-    "missed": 3,
-    "sites": 3,
+    "missed": 2,
+    "sites": 2,
     "notes": 1,
     "findings": 2,
-    "unresolved": 3
+    "unresolved": 2
   }
 }

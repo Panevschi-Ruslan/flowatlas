@@ -61,17 +61,31 @@ const templated = (value: Value, at: Expression): string | Value => {
 
 const renderParts = (parts: readonly TemplatePart[], scope: Scope): string | Value => {
   let out = '';
+  /** Every piece, text or a value not known, while no piece is anything else (P261). */
+  const pieces: (string | Value)[] = [];
+  /** The first value not known: what the template is, as it always was. */
+  let first: Value | undefined;
   for (const part of parts) {
     if (part.kind === 'text') {
       out += part.text;
+      pieces.push(part.text);
       continue;
     }
     if (part.kind === 'interpolation') {
-      const piece = templated(evaluate(part.expression, scope), part.expression);
-      if (typeof piece !== 'string') return piece;
+      const value = evaluate(part.expression, scope);
+      const piece = templated(value, part.expression);
+      if (typeof piece !== 'string') {
+        if (isError(piece)) return first ?? piece;
+        first ??= piece;
+        pieces.push(value);
+        continue;
+      }
       out += piece;
+      pieces.push(piece);
       continue;
     }
+    // A directive is read only where everything before it is known.
+    if (first !== undefined) return first;
     if (part.kind === 'if') {
       const condition = evaluate(part.condition, scope);
       if (condition.kind === 'unknown') return condition;
@@ -79,6 +93,7 @@ const renderParts = (parts: readonly TemplatePart[], scope: Scope): string | Val
       const piece = renderParts(condition.value ? part.then : part.otherwise, scope);
       if (typeof piece !== 'string') return piece;
       out += piece;
+      pieces.push(piece);
       continue;
     }
     const collection = evaluate(part.collection, scope);
@@ -90,9 +105,10 @@ const renderParts = (parts: readonly TemplatePart[], scope: Scope): string | Val
       const piece = renderParts(part.body, withNames(scope, names));
       if (typeof piece !== 'string') return piece;
       out += piece;
+      pieces.push(piece);
     }
   }
-  return out;
+  return first === undefined ? out : { ...(first as Extract<Value, { kind: 'unknown' }>), template: pieces };
 };
 
 /** The key and the value of every element, in Terraform's order. */

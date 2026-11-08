@@ -30,6 +30,7 @@ export {
   contextFieldOf,
   federationNamesOf,
   fieldFederationOf,
+  impliesAuth,
   mergeAuth,
   mergeSchemas,
   namedTypeIn,

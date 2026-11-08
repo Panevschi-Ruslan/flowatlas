@@ -1205,6 +1205,14 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.ship.tree.txt', 'invoke:orders-prod-ship'],
     ['flow.close-month.tree.txt', 'invoke:shop-reports-prod-close'],
   ]),
+  // Two values of other deployments in one string in the CDK and Terraform, a
+  // failure destination of an import inside a mapping's choice, sceptre's
+  // inherited parameters, Jinja and stack outputs, rain in a pipeline (P261).
+  terraformShape('multi-repo-deploy-values', [
+    ['flow.audit-index.tree.txt', 'invoke:shop-audit-index'],
+    ['flow.ship.tree.txt', 'invoke:shop-prod-ship'],
+    ['flow.clicks.tree.txt', 'event:kinesis/shop-prod-clicks'],
+  ]),
   terraformShape('lambda-terraform-bucket-module', [
     ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
     ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],

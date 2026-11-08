@@ -21,6 +21,7 @@ const stack = (body: string): Deployment => {
       "import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';",
       "import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';",
       "import * as sqs from 'aws-cdk-lib/aws-sqs';",
+      "import * as ssm from 'aws-cdk-lib/aws-ssm';",
       "import { Construct } from 'constructs';",
       'export class AppStack extends Stack {',
       '  constructor(scope: Construct, id: string) {',
@@ -97,5 +98,38 @@ describe('an app that publishes and reads values of other stacks (P249)', () => 
     // Below a construct of its own, the CDK hashes the output's logical id.
     expect(exports['shop-orders/Group/Deep']).toMatchObject({ keys: ['export:deep-text'], text: 'text' });
     expect(deployment.roots.map((root) => [root.key, root.path, root.api])).toEqual([['stack:shop-orders#ApiId', '/', 'shop']]);
+  });
+});
+
+describe('values of other deployments written into one string (P261)', () => {
+  it('reads each part of a name built in a template, Fn.sub, Fn.join or a +, and leaves the account aside', () => {
+    const deployment = stack(
+      [
+        "    const prefix = Fn.importValue('shop-prefix');",
+        "    const stage = ssm.StringParameter.valueForStringParameter(this, '/shop/stage');",
+        "    const audit = sqs.Queue.fromQueueArn(this, 'Audit', `arn:aws:sqs:${this.region}:${Fn.importValue('shop-account')}:${prefix}-${stage}-audit`);",
+        "    fn('audit').addEventSource(new SqsEventSource(audit));",
+        '    fn(\'notify\', {',
+        "      JOBS_URL: Fn.sub('https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${Prefix}-jobs', { Prefix: prefix }),",
+        "      ALERTS_ARN: Fn.join(':', ['arn:aws:sns:eu-west-1:111122223333', Fn.importValue('shop-alerts')]),",
+        "      REPORTS_URL: 'https://sqs.eu-west-1.amazonaws.com/111122223333/' + prefix + '-' + stage + '-reports',",
+        '    });',
+      ].join('\n'),
+    );
+    const built = `${importedName('export:shop-prefix')}-${importedName('parameter:/shop/stage')}-audit`;
+    expect(deployment.deliveries.map((delivery) => delivery.from)).toContainEqual({ kind: 'queue', name: built });
+    const environment = deployment.functions.find((one) => one.name === 'notify')?.environment ?? {};
+    expect(environment['JOBS_URL']?.names).toEqual({ kind: 'queue', name: `${importedName('export:shop-prefix')}-jobs` });
+    expect(environment['ALERTS_ARN']?.names).toEqual({ kind: 'topic', name: importedName('export:shop-alerts') });
+    expect(environment['REPORTS_URL']?.names).toEqual({ kind: 'queue', name: `${importedName('export:shop-prefix')}-${importedName('parameter:/shop/stage')}-reports` });
+    // The account is aside: `shop-account` is imported nowhere.
+    expect(deployment.imports?.map((site) => `${site.key} ${site.as} ${site.within === undefined ? '-' : site.within.replace(/\$\{…\}@import\./g, '~')}`).sort()).toEqual([
+      'export:shop-alerts name -',
+      'export:shop-prefix name ~export.shop-prefix-jobs',
+      'export:shop-prefix name ~export.shop-prefix-~parameter..shop.stage-audit',
+      'export:shop-prefix name ~export.shop-prefix-~parameter..shop.stage-reports',
+      'parameter:/shop/stage name ~export.shop-prefix-~parameter..shop.stage-audit',
+      'parameter:/shop/stage name ~export.shop-prefix-~parameter..shop.stage-reports',
+    ]);
   });
 });

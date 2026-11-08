@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:51:32.273Z",
+  "builtAt": "2026-11-08T17:04:46.403Z",
   "services": [
     {
       "name": "platform",
@@ -571,6 +571,17 @@
             "address": "aws_ssm_parameter.api_id",
             "file": "api.tf",
             "line": 15,
+            "kind": "api",
+            "value": "lending-library",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "state:s3:bucket=lending-library-terraform-state,key=platform/terraform.tfstate#rest_api_id"
+            ],
+            "address": "output.rest_api_id",
+            "file": "outputs.tf",
+            "line": 1,
             "kind": "api",
             "value": "lending-library",
             "deployedBy": "terraform"

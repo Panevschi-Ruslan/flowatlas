@@ -156,3 +156,43 @@ describe("the router's check on a field it fetches for a @requires (P256)", () =
     expect(rows[0]?.message).toContain('the router checks the client\'s operation, not the fields it fetches for a @requires');
   });
 });
+
+/** The same graph with the weight, the estimate and the fragile flag each asking what is given. */
+const scoped = (weight: string, estimate: string, fragile: string) =>
+  linkGraphs(
+    [
+      readGraphqlDocument(
+        SUPERGRAPH.replace('for: SECURITY)\n{', 'for: SECURITY)\n  @link(url: "https://specs.apollo.dev/requiresScopes/v0.1", for: SECURITY)\n  @link(url: "https://specs.apollo.dev/policy/v0.1", for: SECURITY)\n{')
+          .replace('@join__field(graph: SHIPPING, external: true) @authenticated', `@join__field(graph: SHIPPING, external: true) ${weight}`)
+          .replace('estimate: Int! @join__field(graph: SHIPPING, requires: "weight")', `estimate: Int! @join__field(graph: SHIPPING, requires: "weight") ${estimate}`)
+          .replace('fragile: Boolean! @join__field(graph: SHIPPING, requires: "weight") @authenticated', `fragile: Boolean! @join__field(graph: SHIPPING, requires: "weight") ${fragile}`),
+        { service: 'router', documentPath: 'router/supergraph.graphql' },
+      ).graph,
+      subgraph('catalog', CATALOG, 4001, ['Query.product', 'Product.__resolveReference']),
+      subgraph('inventory', INVENTORY, 4002, ['Product.__resolveReference', 'Product.weight']),
+      subgraph('shipping', SHIPPING, 4003, ['Product.__resolveReference', 'Product.estimate', 'Product.fragile']),
+      asking(operation('Estimate', 'product(id: "p-1") { estimate }')),
+    ],
+    config(SERVICES),
+    { builtAt: FIXED },
+  )
+    .project.unresolved.filter((row) => row.reason === 'graphql-requires-auth-not-carried')
+    .map((row) => [row.meta?.['field'], row.meta?.['missing']]);
+
+describe('a scope requirement is carried where the requiring field implies it (P261)', () => {
+  it('is carried by a requirement every request it lets through the required one lets through too', () => {
+    // Both of two scopes carry the one; scopes asked together carry one of two alternatives; a policy carries no token.
+    expect(
+      scoped('@requiresScopes(scopes: [["read:weight"]])', '@requiresScopes(scopes: [["read:weight", "staff"]])', '@requiresScopes(scopes: [["staff"]]) @requiresScopes(scopes: [["read:weight"], ["admin"]])'),
+    ).toEqual([['Product.fragile', ['@requiresScopes(read:weight)']]]);
+    expect(scoped('@requiresScopes(scopes: [["read:weight"], ["admin"]])', '@requiresScopes(scopes: [["admin"]])', '@requiresScopes(scopes: [["staff", "read:weight"], ["admin", "staff"]])')).toEqual([]);
+    expect(scoped('@authenticated', '@requiresScopes(scopes: [["read:weight"]])', '@policy(policies: [["is_staff"]])')).toEqual([['Product.fragile', ['@authenticated']]]);
+  });
+
+  it('is not carried by fewer scopes, or by an alternative the required field does not allow', () => {
+    expect(scoped('@requiresScopes(scopes: [["read:weight", "staff"]])', '@requiresScopes(scopes: [["read:weight"]])', '@requiresScopes(scopes: [["read:weight", "staff"], ["admin"]])')).toEqual([
+      ['Product.estimate', ['@requiresScopes(read:weight & staff)']],
+      ['Product.fragile', ['@requiresScopes(read:weight & staff)']],
+    ]);
+  });
+});

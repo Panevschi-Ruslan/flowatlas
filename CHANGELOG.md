@@ -60,6 +60,33 @@ only one of them moved.
   (`via: ownOrigin`). Coverage probes `ingress-route`, `chart-value`,
   `kustomize-patch` and `port-forward`. New fixtures `cluster-route-joins` and
   `proxy-chain-joins`.
+- **The last deployment values and injection tokens no reader followed
+  (P261).** A CDK template literal, `+`, `Fn.sub` or `Fn.join` with
+  `Fn.importValue` or `valueForStringParameter` among its parts, and a
+  Terraform interpolation over parameters of the account and outputs of
+  another configuration's state, are read part by part as CloudFormation's
+  `!Sub` is; a Terraform output of a root whose backend is written is published
+  under `state:<backend>#<output>`, and `terraform_remote_state` outputs are
+  values another deployment publishes. A mapping's failure destination that is
+  itself an import is drawn as a choice inside each of the mapping's readings,
+  and the linker keeps the one under the reading kept, where it was a row. A
+  sceptre stack inherits its groups' `parameters` and `sceptre_user_data`; its
+  files are rendered with `{{ var.x }}` and `{{ environment_variable.X }}` from
+  the commands that launch it (`--var`, `--var-file`, their environment) and
+  the var files `services[].infra.vars` names; `!stack_output` and
+  `!stack_output_external` are joined as exports, `!environment_variable` read
+  from the launch's environment; a `.j2` template is rendered with plain
+  `sceptre_user_data`. sceptre and rain commands are read in shell scripts,
+  GitHub Actions workflows and GitLab CI files too, a shell's `cd` followed;
+  every `rain deploy` option is known, so an option's value is never taken for
+  the stack. NestJS: an alias (`useExisting`) the provider index finds is
+  followed to what it names; `@Inject(appConfig.KEY)` and
+  `@Inject(getConfigToken('app'))` are provided by the `registerAs` that
+  `ConfigModule.forRoot({ load })` or `forFeature` loads; a module import chosen
+  by a literal condition, a `const` or a function of the repository is
+  followed. `@requiresScopes` and `@policy` requirements are compared by which
+  implies which, not as written. New fixtures `multi-repo-deploy-values`,
+  `nest-followed-tokens` and `graphql-requires-scopes`.
 - **The last values deployments share not joined, and tokens and addresses a
   configured module builds (P259).** A parameter file written as YAML is read
   as the JSON one is. A template a sceptre stack configuration names

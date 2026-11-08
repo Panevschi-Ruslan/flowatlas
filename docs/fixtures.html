@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>215 fixtures</span>
-    <span>561 snapshot files</span>
+    <span>218 fixtures</span>
+    <span>568 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -729,7 +729,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Several repositories <span class="count" data-total="16">16</span></h2>
+    <h2>Several repositories <span class="count" data-total="17">17</span></h2>
     <ul>
       <li class="fixture" data-search="ground-truth several repositories two repositories holding the shapes the other fixtures never write down, and one thing none of them has: **a recording is not its authority**.">
         <div class="head">
@@ -802,6 +802,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>Two services, and only one of them has any source here.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="multi-repo-deploy-values several repositories five repositories of a shop that name each other's queues and topics with values the others publish, written into one string two at a time, and deployed by the tools that give a plain template its values from a pipeline (p261).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-deploy-values">multi-repo-deploy-values</a>
+          <span class="kind">5 services</span>
+        </div>
+        <p>Five repositories of a shop that name each other's queues and topics with values the others publish, written into one string two at a time, and deployed by the tools that give a plain template its values from a pipeline (P261).</p>
+        <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="multi-repo-deployed several repositories a bookshop of three services - `gateway`, `orders`, `billing` - for `flowatlas check --env` (p117): whether a version can be deployed against what an environment runs, rather than against `main`.">
         <div class="head">
@@ -891,7 +899,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>NestJS <span class="count" data-total="36">36</span></h2>
+    <h2>NestJS <span class="count" data-total="37">37</span></h2>
     <ul>
       <li class="fixture" data-search="nest-addressing nestjs where a nestjs service's addresses are decided, and what it costs to read the wrong file (r89).">
         <div class="head">
@@ -995,6 +1003,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>What each route can fail with (P68), written on the entry as <code>meta.fails</code>: <code>[{ status, exception, at, file, line, source }]</code>, sorted by status.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="nest-followed-tokens nestjs tokens and module imports a nestjs application settles in its own files, and that the injection reader follows (p261): an alias a configuring method provides, a settings object's token, and modules chosen by a literal condition or built by a function of the repository.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-followed-tokens">nest-followed-tokens</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>Tokens and module imports a NestJS application settles in its own files, and that the injection reader follows (P261): an alias a configuring method provides, a settings object's token, and modules chosen by a literal condition or built by a function of the repository.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="nest-forwarded-verb nestjs a request whose address is completed by its caller keeps the verb and host its own code states (r161).">
@@ -1473,7 +1489,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="48">48</span></h2>
+    <h2>Everything else <span class="count" data-total="49">49</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1602,6 +1618,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>The router's check on a field it fetches only for a <code>@requires</code> (P256).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="graphql-requires-scopes everything else whether a field using `@requires` carries the scopes the fields it requires ask, read by which scopes imply which (p261), as `graphql-requires-auth` reads `@authenticated` (p256).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/graphql-requires-scopes">graphql-requires-scopes</a>
+          <span class="kind">5 services</span>
+        </div>
+        <p>Whether a field using <code>@requires</code> carries the scopes the fields it requires ask, read by which scopes imply which (P261), as <code>graphql-requires-auth</code> reads <code>@authenticated</code> (P256).</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="house-patterns everything else a bookshop of three services whose wrappers are its own and come from packages nobody here installed (p121): `catalog` publishes through `shopbus.emit({ topic, data })` and calls `stock` through `apiclient.call('post', url, body)`, `stock` handles through `shopbus.on('book.added', handler)`, and the react `storefront` requests through `useapi().send({ method, path })`.">
         <div class="head">

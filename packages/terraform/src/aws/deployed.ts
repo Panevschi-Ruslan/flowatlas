@@ -1,5 +1,6 @@
 import { DEFAULT_EVENT_BUS, deployedNameIn } from '@flowatlas/aws';
 import { alternativeAddress, generatedName, importedName, parameterKey, type DeployedDelivery, type DeployedImport, type DeployedKind, type DeliveryTarget, type Unresolved } from '@flowatlas/core';
+import { stateAddress } from '../configuration/load.js';
 import { describe, type Because, type Instance, type Value } from '../eval/values.js';
 import { argument, HOLE, referencesOf, siteOf, textOf, textWithHoles, unreadRow, whyNot } from './arguments.js';
 import type { ResourceReading } from './reading.js';
@@ -26,6 +27,12 @@ export interface Deployed {
   readonly changes?: boolean;
   /** The name is a stand-in for one the provider generates (P246). */
   readonly generated?: boolean;
+  /**
+   * The name is written with values other deployments publish (P261), by
+   * their keys, each one's stand-in in place: the whole name, one key and
+   * no `within`; a name built of several, or of one and text, `within` it.
+   */
+  readonly embeds?: { readonly keys: readonly string[]; readonly within?: string };
 }
 
 /**
@@ -113,6 +120,68 @@ export const deployedInText = (text: string): Deployed | undefined => {
 
 const isBecause = (found: Deployed | Because): found is Because => 'reason' in found;
 
+/** The key an output of a state is read under: by the backend's identity and the output's name (P21, P261). */
+export const stateOutputKey = (state: string, output: string): string => `state:${state}#${output}`;
+
+/**
+ * A string template as text, with each value another deployment publishes
+ * written as its stand-in (`importedName`) and every other part not known a
+ * {@link HOLE} (P261); `undefined` where it holds no such value.
+ */
+const embeddedText = (value: Extract<Value, { kind: 'unknown' }>, reading: Pick<ResourceReading, 'functionIndex'>, depth: number): { text: string; keys: string[] } | undefined => {
+  if (value.template === undefined || depth > 8) return undefined;
+  let text = '';
+  const keys: string[] = [];
+  for (const piece of value.template) {
+    if (typeof piece === 'string') {
+      text += piece;
+      continue;
+    }
+    const inner = piece.kind === 'unknown' ? embeddedText(piece, reading, depth + 1) : undefined;
+    const found = inner === undefined && piece.kind !== 'unknown' ? deployedOf(piece, reading, depth + 1) : undefined;
+    if (inner !== undefined) {
+      text += inner.text;
+      keys.push(...inner.keys);
+    } else if (found !== undefined && isBecause(found) && found.imported !== undefined) {
+      text += importedName(found.imported);
+      keys.push(found.imported);
+    } else {
+      text += HOLE;
+    }
+  }
+  return keys.length === 0 ? undefined : { text, keys: [...new Set(keys)] };
+};
+
+/**
+ * What a string written around values other deployments publish names
+ * (P261): an ARN or a URL whose name is one of them, by its stand-in; one
+ * whose name is built of several, or of one and text, by that name with each
+ * stand-in in place, which the linker writes once every part is joined. An
+ * import outside the name - the account - does not change which thing it is.
+ */
+const builtOf = (value: Extract<Value, { kind: 'unknown' }>, reading: Pick<ResourceReading, 'functionIndex'>, depth: number): Deployed | Because | undefined => {
+  const embedded = embeddedText(value, reading, depth);
+  if (embedded === undefined) return undefined;
+  const found = deployedNameIn(embedded.text);
+  if (found === undefined || found.name.includes(HOLE)) return value.because;
+  const keys = embedded.keys.filter((key) => found.name.includes(importedName(key)));
+  const [only] = keys;
+  const base: Deployed = { kind: found.kind, name: found.name, ...(found.changes === true ? { changes: true } : {}) };
+  if (only === undefined) return base;
+  return { ...base, embeds: keys.length === 1 && found.name === importedName(only) ? { keys } : { keys, within: found.name } };
+};
+
+/** That a name read at a block is written with values other deployments publish: each one's import, as the name or a part of it (P261). */
+export const importsOfName = (reading: { readonly imports: DeployedImport[] }, instance: Instance, found: Deployed | Because | undefined, what: string): void => {
+  if (found === undefined || isBecause(found) || found.embeds === undefined || found.kind === 'url') return;
+  const site = siteOf(instance);
+  const { keys, within } = found.embeds;
+  for (const key of keys) {
+    if (reading.imports.some((one) => one.key === key && one.file === site.file && one.line === site.line && one.within === within)) continue;
+    reading.imports.push({ key, ...site, what, kinds: [found.kind], as: 'name', ...(within === undefined ? {} : { within }) });
+  }
+};
+
 /**
  * What a value refers to, when it is an identifying attribute of a block that
  * declares something deployed; a `Because` when it is one and its name is not
@@ -120,6 +189,8 @@ const isBecause = (found: Deployed | Because): found is Because => 'reason' in f
  */
 export const deployedOf = (value: Value, reading: Pick<ResourceReading, 'functionIndex'>, depth = 0): Deployed | Because | undefined => {
   if (depth > 8) return undefined;
+  // A string written around values other deployments publish (P261).
+  if (value.kind === 'unknown' && value.template !== undefined) return builtOf(value, reading, depth);
   const via = 'via' in value ? value.via : undefined;
   const target = value.kind === 'ref' ? value.target : value.kind === 'instance' ? value.instance : via?.target;
   if (target === undefined) return undefined;
@@ -130,6 +201,14 @@ export const deployedOf = (value: Value, reading: Pick<ResourceReading, 'functio
     const name = textOf(nameValue);
     if (name === undefined) return whyNot(nameValue, `the name of ${target.address}`);
     return { reason: 'imported', text: `the value is the parameter ${name}, which another deployment writes`, imported: parameterKey(name) };
+  }
+  // An output of another configuration's state, which that configuration publishes (P261).
+  if (target.mode === 'data' && target.type === 'terraform_remote_state' && value.kind === 'ref' && attribute === 'outputs') {
+    const output = value.attribute[1];
+    const settings = argument(target, 'config');
+    const address = settings?.kind === 'object' ? stateAddress(textOf(argument(target, 'backend')) ?? 'local', settings.entries) : undefined;
+    if (output === undefined || address === undefined) return { reason: 'state-unread', text: `the state ${target.address} reads is not one the files settle` };
+    return { reason: 'imported', text: `the value is the output ${String(output)} of the state ${address}, which another configuration publishes`, imported: stateOutputKey(address, String(output)) };
   }
   // A function URL's address is the function's own way in, named by the
   // function it stands in front of (P54).
@@ -171,14 +250,16 @@ export const deployedOf = (value: Value, reading: Pick<ResourceReading, 'functio
 export const deployedAt = (
   instance: Instance,
   name: string,
-  reading: Pick<ResourceReading, 'functionIndex'>,
+  reading: Pick<ResourceReading, 'functionIndex' | 'imports'>,
 ): Deployed | Because | undefined => {
   const value = argument(instance, name);
   if (value === undefined) return undefined;
-  return deployedOfValue(value, `${name} of ${instance.address}`, reading, () => [
+  const found = deployedOfValue(value, `${name} of ${instance.address}`, reading, () => [
     ...referencesOf(instance, name),
     textWithHoles(instance, name),
   ]);
+  importsOfName(reading, instance, found, `${name} of ${instance.address}`);
+  return found;
 };
 
 /**
@@ -263,6 +344,7 @@ export const targetOf = (
     reading.rows.push(unreadRow(owner, 'subscription-target-unread', what, found, found.reason === 'unplaced' ? 'info' : undefined));
     return undefined;
   }
+  importsOfName(reading, owner, found, what);
   const target = asTarget(found);
   if (target === undefined) {
     reading.rows.push(

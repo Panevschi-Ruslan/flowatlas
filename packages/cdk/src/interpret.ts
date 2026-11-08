@@ -10,6 +10,7 @@ import {
   Built,
   CdkRef,
   ClassValue,
+  embedding,
   Construct,
   EXPORT_VALUE,
   FunctionValue,
@@ -320,16 +321,22 @@ export class Interpreter {
   }
 
   #template(node: TsNode & { getHead(): TsNode & { getLiteralText(): string }; getTemplateSpans(): TsNode[] }, scope: Scope, frame: Frame): Value {
-    let text = node.getHead().getLiteralText();
+    const parts: Value[] = [node.getHead().getLiteralText()];
     for (const span of node.getTemplateSpans()) {
       if (!Node.isTemplateSpan(span)) continue;
-      const part = this.value(span.getExpression(), scope, frame);
+      parts.push(this.value(span.getExpression(), scope, frame), span.getLiteral().getLiteralText());
+    }
+    // A text with values other stacks publish written in is read around them (P261).
+    const embedded = embedding(parts, this.site(node), shorten(node.getText()));
+    if (embedded !== undefined) return embedded;
+    let text = '';
+    for (const part of parts) {
       if (typeof part !== 'string' && typeof part !== 'number' && typeof part !== 'boolean') {
         return part instanceof Unread
           ? new Unread(`${shorten(node.getText())} holds ${part.text}`, part.reason)
           : new Unread(`${shorten(node.getText())} holds a value known only once deployed`, 'token');
       }
-      text += String(part) + span.getLiteral().getLiteralText();
+      text += String(part);
     }
     return text;
   }
@@ -382,6 +389,10 @@ export class Interpreter {
       return settled ? this.value(node.getRight(), scope, frame) : left;
     }
     const right = this.value(node.getRight(), scope, frame);
+    if (operator === SyntaxKind.PlusToken) {
+      const embedded = embedding([left, right], this.site(node), shorten(node.getText()));
+      if (embedded !== undefined) return embedded;
+    }
     const plain = (value: Value): value is string | number | boolean | null | undefined =>
       value === null || value === undefined || typeof value !== 'object';
     if (!plain(left) || !plain(right)) return new Unread(`${shorten(node.getText())} holds a value the files do not settle`, 'operator');

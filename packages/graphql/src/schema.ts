@@ -52,6 +52,34 @@ export const mergeAuth = (...lists: ReadonlyArray<readonly AuthRequirement[] | u
   return [...found.values()];
 };
 
+/** How many sets the requirements held together are written out as before implication is decided by spelling alone. */
+const MOST_HELD_SETS = 256;
+
+/**
+ * Whether a request every one of `held` lets through is let through by
+ * `asked` too (P261): the router's own reading of the lists, the outer one
+ * any of, the inner one all of. The requirements held together are met by
+ * the sets of names one alternative of each makes up; `asked` holds where
+ * each such set includes one of its alternatives. A scope is only ever on a
+ * token, so scopes asked of every request (no alternative empty) imply
+ * `@authenticated`; a policy is decided by whatever evaluates it, which may
+ * let an anonymous request through, so it does not. Where the sets are too
+ * many to write out, only the same requirement written again implies it.
+ */
+export const impliesAuth = (held: readonly AuthRequirement[], asked: AuthRequirement): boolean => {
+  if (held.some((one) => authLabel(one) === authLabel(asked))) return true;
+  if (asked.kind === 'authenticated') return held.some((one) => one.kind === 'authenticated' || (one.kind === 'scopes' && one.any.every((all) => all.length > 0)));
+  let sets: ReadonlySet<string>[] = [new Set()];
+  for (const one of held) {
+    if (one.kind !== asked.kind) continue;
+    const next: ReadonlySet<string>[] = [];
+    for (const set of sets) for (const all of one.any) next.push(new Set([...set, ...all]));
+    if (next.length > MOST_HELD_SETS) return false;
+    sets = next;
+  }
+  return sets.every((set) => asked.any.some((all) => all.every((name) => set.has(name))));
+};
+
 /** `[["a", "b"], ["c"]]`; a single list or a name is coerced the way GraphQL coerces input, each item an alternative. */
 const alternativesOf = (value: Value | undefined): string[][] => {
   if (value === undefined) return [];

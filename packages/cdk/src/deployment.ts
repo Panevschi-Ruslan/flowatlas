@@ -39,7 +39,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { definitionOf } from './state-machine.js';
-import { Attribute, Built, Construct, EXPORT_VALUE, Imported, ObjectValue, textOf, Unread, type Added, type Site, type Value } from './values.js';
+import { Attribute, Built, Construct, Embedded, EXPORT_VALUE, HOLE, Imported, ObjectValue, textOf, Unread, type Added, type Site, type Value } from './values.js';
 
 /**
  * The constructs an app made, written out as P21's `Deployment` (P57, D1).
@@ -84,8 +84,6 @@ interface SharedApi {
 }
 
 const REST_APIS = new Set(['aws-apigateway.RestApi', 'aws-apigateway.LambdaRestApi', 'aws-apigateway.SpecRestApi']);
-
-const HOLE = '\u0001';
 
 const prop = (construct: Construct, name: string): Value => construct.props?.get(name);
 
@@ -198,6 +196,8 @@ export class AppDeployment {
           this.#importAt(value.imported.unread.key, value.site, value.path, [declares.kind]);
           return { kind: declares.kind, name: importedName(value.imported.unread.key) };
         }
+        // Looked up by an ARN or a name written around values other deployments publish (P261).
+        if (value.imported.unread instanceof Embedded) return this.#embedded(value.imported.unread, declares.kind);
         if (value.imported.unread !== undefined) return value.imported.unread;
         if (value.imported.name !== undefined) return { kind: declares.kind, name: value.imported.name };
         const named = value.imported.arn === undefined ? undefined : deployedNameIn(value.imported.arn);
@@ -214,6 +214,10 @@ export class AppDeployment {
         return { kind: declares.kind, name: generatedName(value.path), generated: true, ...(index === undefined ? {} : { function: index }) };
       }
       const name = textOf(written);
+      if (written instanceof Embedded) {
+        const found = this.#embedded(written, declares.kind);
+        return found instanceof Unread ? found : { ...found, kind: declares.kind, ...(index === undefined ? {} : { function: index }) };
+      }
       if (name === undefined) return written instanceof Unread ? written : new Unread(`the ${declares.name} of ${value.path} is a value known only once deployed`, 'token');
       return { kind: declares.kind, name, ...(index === undefined ? {} : { function: index }) };
     }
@@ -222,7 +226,28 @@ export class AppDeployment {
       const found = deployedNameIn(text);
       return found === undefined ? undefined : { kind: found.kind, name: found.name, ...(found.changes === true ? { changes: true } : {}) };
     }
+    if (value instanceof Embedded) return this.#embedded(value);
     return value instanceof Unread ? value : undefined;
+  }
+
+  /**
+   * What a text built with values other deployments publish names (P261): an
+   * ARN or a URL - or, where `kind` says what is named, the name itself -
+   * whose name is one of them, by its stand-in, or built of several, or of
+   * one and text, with each one's stand-in in place, which the linker writes
+   * once every part is joined. Each is imported where the text is built, as
+   * the name or a part of it; one outside the name (the account) changes
+   * nothing of which thing it is.
+   */
+  #embedded(value: Embedded, kind?: DeployedKind): Deployed | Unread {
+    const named = deployedNameIn(value.built);
+    const found = named ?? (kind !== undefined && !/[:/]/.test(value.built) ? { kind, name: value.built } : undefined);
+    if (found === undefined || found.name.includes(HOLE)) return value;
+    const keys = value.keys.filter((key) => found.name.includes(importedName(key)));
+    const [only] = keys;
+    const within = only !== undefined && keys.length === 1 && found.name === importedName(only) ? undefined : found.name;
+    for (const key of keys) this.#importAt(key, value.site, `the ${found.kind} name ${value.written}`, [found.kind], undefined, within === undefined ? {} : { within });
+    return { kind: found.kind, name: found.name, ...(named?.changes === true ? { changes: true } : {}) };
   }
 
   /**
@@ -262,9 +287,18 @@ export class AppDeployment {
   }
 
   /** That the app reads a value another stack exports, here: once per place (P249). */
-  #importAt(key: string, site: Site, what: string, kinds?: readonly DeployedKind[], alternatives?: readonly { kind: DeployedKind; address: string }[]): void {
-    if (this.parts.imports.some((found) => found.key === key && found.file === site.file && found.line === site.line)) return;
-    this.parts.imports.push({ key, ...site, what, ...(kinds === undefined ? {} : { kinds }), ...(alternatives === undefined ? {} : { alternatives }) });
+  #importAt(key: string, site: Site, what: string, kinds?: readonly DeployedKind[], alternatives?: readonly { kind: DeployedKind; address: string }[], named?: { readonly within?: string }): void {
+    if (this.parts.imports.some((found) => found.key === key && found.file === site.file && found.line === site.line && found.within === named?.within)) return;
+    this.parts.imports.push({
+      key,
+      ...site,
+      what,
+      ...(kinds === undefined ? {} : { kinds }),
+      ...(alternatives === undefined ? {} : { alternatives }),
+      // Written into a name, the import is the name or a part of it (P261).
+      ...(named === undefined ? {} : { as: 'name' as const }),
+      ...(named?.within === undefined ? {} : { within: named.within }),
+    });
   }
 
   /** A value a function is deployed with, read every way it can be. */
@@ -276,7 +310,17 @@ export class AppDeployment {
       return { written: value.written, imported: value.key, unread: { text: value.text } };
     }
     const written =
-      value instanceof Attribute ? `${value.construct.path}.${value.name}` : value instanceof Construct ? value.path : typeof value === 'string' ? JSON.stringify(value) : value instanceof Unread ? 'a value not known from the files' : String(value);
+      value instanceof Attribute
+        ? `${value.construct.path}.${value.name}`
+        : value instanceof Construct
+          ? value.path
+          : typeof value === 'string'
+            ? JSON.stringify(value)
+            : value instanceof Embedded
+              ? value.written
+              : value instanceof Unread
+                ? 'a value not known from the files'
+                : String(value);
     const text = textOf(value);
     const found = this.deployedOf(value);
     if (found !== undefined && !(found instanceof Unread)) return { written, ...(text === undefined ? {} : { text }), names: { kind: found.kind, name: found.name } };

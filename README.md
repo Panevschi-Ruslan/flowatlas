@@ -775,7 +775,10 @@ prove, and the path is given so you can run it.
   at start-up: the global prefix and URI versioning, read wherever the
   repository sets them rather than only in the entry file
   (`fixtures/nest-addressing`); a decorator imported from a subpath of the
-  package, or under an alias (`fixtures/nest-subpath-imports`).
+  package, or under an alias (`fixtures/nest-subpath-imports`); a token an
+  alias, a configuring method or a settings library provides, and a module a
+  literal condition or a function of the repository chooses
+  (`fixtures/nest-followed-tokens`).
 - **Routes registered by a call.** Express, Fastify, Koa and Hono, with the
   routers each route is mounted through and the middleware in front of it
   (`fixtures/express-service`, `fixtures/fastify-service`,
@@ -816,7 +819,9 @@ prove, and the path is given so you can run it.
   (`fixtures/graphql-federation-interfaces`) - on the resolver that answers a
   field with no resolver of its own, for that field only - and an entity
   interface whose owner can say no type of it is a finding
-  (`fixtures/graphql-federation-gaps`).
+  (`fixtures/graphql-federation-gaps`); a field using `@requires` that does not
+  ask at least what the fields it requires ask is a finding, scopes compared by
+  which implies which (`fixtures/graphql-requires-scopes`).
 - **Components in files of their own format.** A `.vue` or `.svelte` file's
   scripts are read by the checker as TypeScript, every position named by the
   component file at its own line, and the event bindings of its markup are the
@@ -1047,7 +1052,11 @@ prove, and the path is given so you can run it.
   command gives, a parameter file in YAML is read, a rule's target or a
   subscription's endpoint of an import is read as what the publisher says it
   is, and a name built of several imports is written once every part is joined
-  (`fixtures/multi-repo-shared-values`).
+  (`fixtures/multi-repo-shared-values`). The CDK and Terraform read such names
+  too, Terraform over another configuration's state outputs as well; a
+  sceptre stack is read with its groups' parameters, its Jinja rendered from
+  the pipeline that launches it and its stack outputs joined; rain is read
+  from pipelines and scripts (`fixtures/multi-repo-deploy-values`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —

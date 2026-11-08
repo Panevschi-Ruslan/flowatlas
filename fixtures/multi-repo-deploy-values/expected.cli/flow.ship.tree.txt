@@ -1,0 +1,12 @@
+@  shop-prod-ship                                                      orders/templates/orders.yaml.j2:25
+  -> handler                                                           orders/src/ship.ts:8
+    $  EVENTS_TOPIC_ARN                                                orders/src/ship.ts:9
+    ~  message sns/shop-prod-order-events                              orders/src/ship.ts:9
+      ~  sns/shop-prod-order-events                                    src/ship.ts:9
+    $  INVOICES_QUEUE_URL                                              orders/src/ship.ts:10
+    ~  message sqs/shop-prod-invoices                                  orders/src/ship.ts:10
+      ~  sqs/shop-prod-invoices                                        infra/billing.yaml:37
+        => billing ~  mapping infra/billing.Resources.InvoicesMapping  billing/infra/billing.yaml:37
+          @  shop-prod-invoice                                         billing/infra/billing.yaml:28
+            -> handler                                                 billing/src/invoice.ts:4
+unresolved on this path: 0

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { exportKey, generatedName, parameterKey, type PathStep, type PositionedDocument, type Unresolved } from '@flowatlas/core';
 import {
@@ -8,6 +9,7 @@ import {
   readParameters,
   readResources,
   readServiceFile,
+  readServiceYaml,
   RESOURCE_KINDS,
   ServiceFileUnreadable,
   Template,
@@ -21,7 +23,7 @@ import {
 } from '@flowatlas/serverless';
 import { apiLookup, apiReference, readApis } from './apis.js';
 import { deployConfigOf, TEMPLATE_FILES, type DeployConfig } from './config.js';
-import { deployerOf } from './deployers.js';
+import { deployerOf, JINJA_TEMPLATE, renderedTemplate } from './deployers.js';
 import { PARAMETER_FILE, parameterFilesBeside, readParameterFile } from './parameter-files.js';
 import { functionEventReaders, readEvents } from './events.js';
 import { FUNCTION_TYPES, readDestinations, readFunction, readFunctionUrlConfig, withGlobals, type FunctionSite } from './functions.js';
@@ -177,7 +179,7 @@ const deployValues = (parts: DeploymentParts, options: TemplateReadOptions, conf
       symbol: `${file}#Parameters`,
       reason: 'parameter-file-ambiguous',
       message: `${file} is deployed ${deployer.several.length} ways - ${labels.join(', ')} - each with values of its own, and nothing says which is read; none is`,
-      hint: 'Name the stack configuration or the parameter file to read under services[].infra.vars, or a sceptre group as services[].infra.options.config_env.',
+      hint: 'Name the stack configuration, the var file it is launched with or the parameter file to read under services[].infra.vars, or a sceptre group as services[].infra.options.config_env.',
     });
     for (const one of deployer.several) for (const path of one.read) options.loaded.add(join(repoDir, path));
     return { named: [], vars: fromVars };
@@ -210,6 +212,23 @@ const deployValues = (parts: DeploymentParts, options: TemplateReadOptions, conf
   return { named: beside.map((path) => read(path, true)).filter((values): values is Record<string, string> => values !== undefined), vars: [] };
 };
 
+/**
+ * A Jinja template's text, rendered with what the sceptre stack that deploys
+ * it hands it (P261): the one stack the configuration chooses, else nothing.
+ */
+const jinjaTemplate = (options: TemplateReadOptions): string | Unread => {
+  const { repoDir, file } = options;
+  options.loaded.add(join(repoDir, file));
+  let text: string;
+  try {
+    text = readFileSync(join(repoDir, file), 'utf8');
+  } catch {
+    return new Unread('it could not be read');
+  }
+  const deployer = deployerOf(repoDir, file, options.vars ?? [], options.options);
+  return renderedTemplate(text, deployer !== undefined && 'one' in deployer ? (deployer.one.userData ?? {}) : {});
+};
+
 /** What a template gives the one it is nested in: its outputs, by name. */
 export interface TemplateResult {
   readonly outputs: ReadonlyMap<string, Deployed | Unread>;
@@ -228,7 +247,18 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   const { repoDir, file } = options;
   let document: PositionedDocument;
   try {
-    document = readServiceFile(join(repoDir, file));
+    const rendered = JINJA_TEMPLATE.test(file) ? jinjaTemplate(options) : undefined;
+    if (rendered instanceof Unread) {
+      parts.rows.push({
+        file,
+        line: 1,
+        reason: 'infra-file-unparsed',
+        message: `${file} is not read: ${rendered.text}`,
+        hint: 'Nothing in this template is read. Give what it renders a plain value in its stack configuration (sceptre_user_data), or write the template without Jinja.',
+      });
+      return EMPTY;
+    }
+    document = rendered === undefined ? readServiceFile(join(repoDir, file)) : readServiceYaml(rendered);
   } catch (cause) {
     parts.rows.push({
       file,

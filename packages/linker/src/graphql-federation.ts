@@ -16,6 +16,7 @@ import {
   composeSubgraphs,
   fieldSetSelections,
   GRAPHQL_META,
+  impliesAuth,
   mergeAuth,
   namedTypeIn,
   REFERENCE_FIELD,
@@ -466,19 +467,25 @@ const fieldsOfSet = (composition: Composition, type: string, selections: readonl
  * requiring field lets through is answered with what the required ones
  * guard. Composition (Federation 2.9 and later) refuses such a supergraph
  * for that reason. Said once per requiring field, naming each requirement
- * it does not carry.
+ * it does not carry. A requirement is carried where what the requiring field
+ * asks implies it, outer list any of and inner list all of (P261):
+ * `[["read:orders", "staff"]]` carries `[["read:orders"]]` and
+ * `[["admin"], ["staff"]]`, and `[["read:orders"]]` does not carry
+ * `[["read:orders", "staff"]]`.
  */
 const requiresUncarried = (composition: Composition, site: Pick<Unresolved, 'service' | 'file' | 'line' | 'symbol'>, said: Set<string>): Unresolved[] => {
   const rows: Unresolved[] = [];
   for (const [typeName, type] of Object.entries(composition.types).sort(([a], [b]) => cmp(a, b))) {
     for (const [field, composed] of Object.entries(type.fields).sort(([a], [b]) => cmp(a, b))) {
-      const carried = new Set(authOfField(composition, typeName, field).map(authLabel));
+      const carried = authOfField(composition, typeName, field);
       for (const owner of composed.owners) {
         if (owner.requires === undefined) continue;
         const missing = new Map<string, string[]>();
         for (const required of fieldsOfSet(composition, owner.as ?? typeName, fieldSetSelections(owner.requires))) {
-          for (const label of authOfField(composition, required.type, required.field).map(authLabel)) {
-            if (carried.has(label)) continue;
+          for (const requirement of authOfField(composition, required.type, required.field)) {
+            // Carried where what the requiring field asks lets through no request the required field would not (P261).
+            if (impliesAuth(carried, requirement)) continue;
+            const label = authLabel(requirement);
             missing.set(label, [...(missing.get(label) ?? []), `${required.type}.${required.field}`]);
           }
         }

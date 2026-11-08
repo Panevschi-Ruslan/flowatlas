@@ -24,7 +24,7 @@ import { readStateMachineInstance } from './state-machines.js';
 import { addressesOf, joinSegments, MAPPING_READERS } from './addresses.js';
 import { argument, siteOf, textOf, whyNot } from './arguments.js';
 import { environmentOf } from './environment.js';
-import { deployedOf, generatedNameRow, isBecause } from './deployed.js';
+import { deployedOf, generatedNameRow, isBecause, stateOutputKey } from './deployed.js';
 import { DESTINATION_READERS } from './destinations.js';
 import { EVENT_READERS } from './events.js';
 import { INVOKER_READERS } from './invokers.js';
@@ -560,14 +560,23 @@ export class DeploymentReading implements ResourceReading {
       if (state === undefined) continue;
       for (const output of root.outputNames()) {
         const at = root.outputAt(output);
-        this.#root(`state:${state}#${output}`, this.#resourcePath(root.output(output)), { file: at?.file ?? root.dir, line: at?.line ?? 1 });
+        const site = { file: at?.file ?? root.dir, line: at?.line ?? 1 };
+        const value = root.output(output);
+        const path = this.#resourcePath(value);
+        // A point of an API is a root; any other output is the value another configuration reads from the state (P261).
+        if (path.kind === 'path') this.#root(stateOutputKey(state, output), path, site);
+        else this.#published({ keys: [stateOutputKey(state, output)], address: `output.${output}`, ...site }, value);
       }
     }
   }
 
   /** A parameter of the account this deployment writes, as the value other deployments read by its name (P253). */
   #parameter(instance: Instance, name: string, value: Value): void {
-    const base = { keys: [parameterKey(name)], address: instance.address, ...siteOf(instance) };
+    this.#published({ keys: [parameterKey(name)], address: instance.address, ...siteOf(instance) }, value);
+  }
+
+  /** A value this deployment publishes under its keys, as what it names, its text, or why it is not read (P253, P261). */
+  #published(base: { readonly keys: string[]; readonly address: string; readonly file: string; readonly line: number }, value: Value): void {
     const found = deployedOf(value, this);
     if (found !== undefined && isBecause(found) && found.imported !== undefined) {
       this.exports.push({ ...base, unread: `it is itself a value another deployment publishes (${found.imported})` });
@@ -590,7 +599,7 @@ export class DeploymentReading implements ResourceReading {
       this.exports.push({ ...base, text });
       return;
     }
-    this.exports.push({ ...base, unread: whyNot(value, `the value of ${instance.address}`).text });
+    this.exports.push({ ...base, unread: whyNot(value, `the value of ${base.address}`).text });
   }
 
   /** A published point at each address of its API: a base path a domain puts in front of the API is in front of the point too. */
