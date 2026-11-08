@@ -240,6 +240,7 @@ const judge = (lookup: GraphLookup, exchange: Exchange, options: CheckOptions): 
       depth: options.depth ?? DEFAULT_DEPTH,
       ...(options.disableRules === undefined ? {} : { disableRules: options.disableRules }),
       ...(whitelist ? { whitelist } : {}),
+      ...(exchange.sendsNothing === true ? { emptyIsWritten: true } : {}),
     }),
   });
 

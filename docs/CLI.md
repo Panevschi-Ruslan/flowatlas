@@ -650,6 +650,25 @@ is planned the same way (`fixtures/graphql-federation-interfaces`).
   required fields first, by their owners (`requiredBy`); a provided field
   where its parent is.
 
+**The router's check on a field it fetches for `@requires` (P256)**
+(`fixtures/graphql-requires-auth`). The router applies its authorization
+directives to the client's operation: a field the request may not read is
+taken out before the operation is planned. A field the planner adds to
+satisfy a `@requires` is not in that operation, and is fetched without being
+checked; composition (Federation 2.9 and later) refuses a supergraph where a
+field using `@requires` does not carry the requirements of the fields it
+requires, for that reason. So:
+
+- a step that fetches a field only for a `@requires` (its plan edge says
+  `graphql.requiredBy`) has none of the router's checks in front of it in
+  `flow`, and carries no `answers`; an entry the client selects too is drawn by
+  the client's selection, with its check;
+- a field using `@requires` whose own requirements do not include every
+  requirement of the fields its field set names (nested selections and inline
+  fragments included, requirements compared as written) is
+  `graphql-requires-auth-not-carried` (a finding, auth) at the gateway, naming
+  each requirement it does not carry, once per field and subgraph.
+
 **A file-system router is four values.** Where the address is the path of a file
 rather than an argument of a call, what differs between one router and another
 is the root directory, which file names declare a route, the prefix in front,
@@ -2808,6 +2827,12 @@ the graph breaks. Six sections over one built graph; it reads no repository's so
 thing. It looks at a repository only to say whether its dependencies are
 installed, and what a service with no way in looks like.
 
+A `desync` row is a call aimed somewhere that did not land: its verb and path,
+and the service or setting it was aimed at. A request for a procedure has no
+verb or path of its own, so its row names the procedure and its link's protocol
+instead (`rpc orders.store`, P256), with the setting its link is rooted at, and
+carries `procedure` and `protocol` in `doctor.json`.
+
 | Flag | Default | Does |
 |---|---|---|
 | `--section <name>` | all six | `unresolved`, `markers`, `desync`, `contracts`, `rules`, `baseline`; repeatable |
@@ -4662,9 +4687,10 @@ resolve here because its library is not installed (`procedure-input-unread`),
 an input handed later - `useMutation()`, `mutationOptions()` - or not written
 (`procedure-input-not-at-call`), an answer handed to a hook or a query's options
 (`procedure-output-inferred`), and a client typed `any` (`no-type-on-sender`,
-`no-type-on-receiver`, with a hint for a client of a tree). A REST caller of a
-procedure's own route keeps `procedure-input-by-name`: that route's input is
-assembled from its path, query and body. A handler that takes
+`no-type-on-receiver`, with a hint for a client of a tree). A plain request to a
+procedure's REST route is compared with the input the route assembles from it
+(P256, below); a query it writes in a way nothing reads is
+`procedure-input-by-name` with detail `query`. A handler that takes
 a `string` and parses it on the next line is another, `body-already-serialised`,
 because that is where the shape was lost rather than an end that disagrees about
 it.
@@ -6859,8 +6885,11 @@ of the same family.
   front of every procedure under it, before the procedure's own guards; the
   prefix applies to the REST route of each one that writes a path.
   `lazy(() => import('./reports'))` is followed into that module's default
-  export - by the checker, or, where it cannot resolve the `import()` (an
-  alias with no `paths`, P252), by the one file of the service its path names
+  export - by the checker, through `compilerOptions.paths` and the aliases a
+  Vite configuration or Nuxt declares (P256: the procedure adapters state Vite's
+  `resolve.alias` as the browser adapters do, so a server Vite builds resolves
+  `import('@lib/reports')` too), or, where it cannot resolve the `import()` (an
+  alias declared nowhere, P252), by the one file of the service its path names
   (relative to the importing file, or what follows `@/`, `~/`, `~~/` or `#`,
   with the endings a bundler tries and `index`). A lazy branch neither finds
   is `procedure-branch-unread`, saying it is a lazy branch, and a module whose
@@ -6915,12 +6944,34 @@ a `missing_required` error and an `extra_field` note, as a request body would
 be. An answer handed to a hook or a query's options is typed where it is read,
 so nothing at the call states it (`procedure-output-inferred`).
 
-A REST caller of a procedure's route keeps both directions unchecked, and the
-answer's row says where the caller's type for it comes from (P252): a plain
-request that types the answer itself (`fetch<Order>`, a cast of the parsed
-body) is `procedure-output-inferred` naming its own type, which nothing ties to
-the tree; one that types nothing is `no-type-on-receiver`, as any request that
-states no type for its answer is.
+**A plain request to a procedure's REST route** is compared both ways too
+(P256, `fixtures/rpc-shared-types`). The OpenAPI handler hands the procedure
+one input assembled from the request, so the caller's half is assembled the
+same way from what it writes:
+
+- by default (`compact`), the route's path parameters (`{id}` in its route)
+  merged with the query for a `GET`, or with the body for any other verb;
+- for a route written `.route({ inputStructure: 'detailed' })`, `{ params,
+  query, body }`, each part the call writes under its own key (its headers are
+  not read). A twin route records `meta.inputStructure` / `meta.outputStructure`
+  where they are `detailed`.
+
+A path parameter and a query key are compared by name alone: the address
+carries text, and whether the schema coerces it is the schema's to say. The
+query is read from the address (`?category=tea&sort=price`) and from the
+client's query option written in place - axios's `params`, ky's and got's
+`searchParams`, ofetch's `query` or `params`, Angular `HttpClient`'s `params`
+- which a request records as `meta.queryKeys` and `meta.queryType` (and
+`meta.queryUnread` where its options are handed by a name). The body is
+compared field by field. A `GET` that writes no query and no path parameter
+sends an empty input, and what the procedure requires is missing. What the
+call reads back (`axios.get<Product>`, `fetch<Order>`) is compared with the
+procedure's output, or the output's `body` for `outputStructure: 'detailed'`;
+a call that types no answer is `no-type-on-receiver`. A query written in a
+way nothing reads (a query string built elsewhere, options handed by a name)
+is `procedure-input-by-name` with detail `query`; a body with no type is
+`no-type-on-sender`. A procedure's own client that reaches the route keeps
+its rows.
 
 **Where a tRPC tree is served** (P247) is read from its mount, so a tRPC link's
 path is checked against it as an oRPC one is (`procedure-link-unserved`):
@@ -6929,8 +6980,21 @@ call it is handed to, in place or by its name), `fetchRequestHandler({ endpoint
 })`, `createHTTPServer({ router, basePath })` and `createHTTPHandler` (`/`
 without one), and a Next.js handler by the file it is in, its last parameter
 taken off (`pages/api/trpc/[trpc].ts` and `app/api/trpc/[trpc]/route.ts` are
-`/api/trpc`). Every tRPC procedure records it in `meta.mounted` with protocol
-`trpc`; an address that cannot be read is `procedure-prefix-unread` (info).
+`/api/trpc`), Fastify's plugin by the `register` call it is handed to,
+`server.register(fastifyTRPCPlugin, { prefix, trpcOptions: { router } })` (`/`
+without a prefix), and Hono's middleware `trpcServer({ router, endpoint })`
+(`/trpc` without one; P256). Every tRPC procedure records it in
+`meta.mounted` with protocol `trpc`; an address that cannot be read is
+`procedure-prefix-unread` (info). A description's mount may say the same of
+any framework: `plugin: { method, at }` for a plugin handed to a call rather
+than called, and a dotted `treeKey`.
+
+**A tree a workspace package holds** (P256) is read as the ways in of the
+service that mounts it, and of no service that only imports it for its type:
+a browser application whose client is `createTRPCClient<AppRouter>`, with
+`AppRouter` exported by the package the server mounts, holds the package in
+its extent and reads no procedures from it. Its calls join the server's
+procedures by their links, and are compared through the shared type.
 
 **A server's client** of another service's tree is read the same way, by the
 same reader (`fixtures/rpc-server-to-server`). A NestJS, Express, Hono or plain
@@ -6953,6 +7017,17 @@ link's address names:
   One provider of the token is followed; none or several is nothing, and the
   injection reader's rows say why. The `call-through-token` row at a call read
   this way goes.
+- **A configured module** (P256). A provider a module's own method builds -
+  `OrdersClientModule.forRoot({ url })`, `forRootAsync({ useFactory, inject })`,
+  written in this service or in a workspace package it declares - counts where
+  the method is called; the one beside it nothing calls provides nothing. Its
+  link's options and URL are followed through a parameter one call away: a
+  parameter of a method or function is the argument of the repository's one
+  call of it (`options.url`, or `{ url }` destructured), and a parameter of a
+  provider's factory is what is provided for the token in its place of
+  `inject`, a factory handed in (`useFactory: options.useFactory`) being the
+  one written at the call. Two calls, or two providers, are nothing followed.
+  The NestJS injection reader still says `di-token-unknown` for such a token.
 - **The address.** Read by the server's own address reading, the one every
   request between services gets: `process.env.ORDERS_URL`, a configuration
   service's `get('ORDERS_URL')`, a constant. A setting goes to the service that

@@ -142,6 +142,9 @@ const CACHE_OPS: ReadonlyMap<string, 'get' | 'set' | 'del' | 'other'> = new Map(
 
 const HTTP_PACKAGES = ['axios', '@nestjs/axios'];
 
+/** The options a request's query is written under, by the clients a server calls through (P256). */
+const QUERY_OPTIONS = ['params', 'searchParams', 'query'] as const;
+
 const HTTP_METHODS: ReadonlyMap<string, string> = new Map([
   ['get', 'GET'],
   ['post', 'POST'],
@@ -1657,6 +1660,26 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   };
 
   /**
+   * The query among a request's options (P256): the first of `params`,
+   * `searchParams` and `query` an object written in place holds - axios,
+   * got and ky, and ofetch - its keys where an object is written there and
+   * its type either way. `unread` where the options are handed by a name.
+   */
+  const queryAmong = (args: readonly TsNode[]): { type?: string; keys?: readonly string[]; unread?: true } => {
+    for (const argument of args) {
+      if (!Node.isObjectLiteralExpression(argument)) return Node.isIdentifier(argument) || Node.isPropertyAccessExpression(argument) ? { unread: true } : {};
+      for (const key of QUERY_OPTIONS) {
+        const property = argument.getProperty(key);
+        const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+        if (written === undefined) continue;
+        const keys = writtenKeysOf([written]);
+        return { type: ctx.types.collectType(written.getType(), written), ...(keys === undefined ? {} : { keys }) };
+      }
+    }
+    return {};
+  };
+
+  /**
    * Records one outgoing request.
    *
    * `site` is the call the request is attributed to, which is not always the
@@ -1736,6 +1759,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
           ? null
           : ctx.types.collectType(bodyArgument.getType(), bodyArgument);
 
+    // The query a `GET` writes among the options the call is handed (P256),
+    // for a route that assembles its input from it.
+    const query = verb === 'GET' && readsSite ? queryAmong(site.getArguments().slice(1)) : {};
+
     const place = siteOf(ctx, site, owner.file);
     const id = makeLeafId('http_out', ctx.repo, owner.file, place.line, place.column);
     // Where the base comes from beyond its key (P77): the variable of the
@@ -1773,6 +1800,9 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         bodyType,
         ...(bodyType === null ? {} : { bodyFrom }),
         ...(bodyKeys === undefined ? {} : { bodyKeys }),
+        ...(query.type === undefined ? {} : { queryType: query.type }),
+        ...(query.keys === undefined ? {} : { queryKeys: query.keys }),
+        ...(query.unread === true ? { queryUnread: true } : {}),
         ...(info.host === null ? {} : { host: info.host }),
         ...(application === undefined ? {} : { application }),
         ...(binding === undefined ? {} : { binding: binding.binding, ...(binding.typed ? {} : { bindingTyped: false }) }),

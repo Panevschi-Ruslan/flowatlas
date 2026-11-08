@@ -21,6 +21,10 @@ import {
  * solution tsconfig refers to `tsconfig.app.json`, whose aliases the core
  * reads itself. Where no tsconfig names an alias at all, the bundler's is
  * still how the repository resolves, so it is read from here.
+ *
+ * Kept with the entry adapters (P256) because a server Vite builds resolves
+ * through the same aliases: the procedure adapters state them as the browser
+ * adapters do, one function asked once whoever states it.
  */
 
 const VITE_CONFIGS = ['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs', 'vite.config.cts', 'vite.config.cjs'];

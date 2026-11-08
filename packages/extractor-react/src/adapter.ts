@@ -1,9 +1,8 @@
 import { hasDependency, type AdapterRegistry, type FrontendAdapter } from '@flowatlas/core';
-import { nuxtApplicationOf } from '@flowatlas/adapters-entry';
+import { nuxtApplicationOf, viteConventions } from '@flowatlas/adapters-entry';
 import { extractBrowser, extractReact, type BrowserReading } from './extract-repo.js';
 import { declaresReact, declaresSvelte, declaresVue } from './framework.js';
 import { SVELTE_FORMAT, VUE_FORMAT } from './sfc/formats.js';
-import { viteConventions } from './vite.js';
 
 /**
  * The frontend this extractor reads.

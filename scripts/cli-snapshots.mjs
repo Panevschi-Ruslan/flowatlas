@@ -502,6 +502,14 @@ const GAPS_CASES = [
   ['flow.top-books.tree.txt', (io) => runFlow('shop#src/TopBooks.tsx:TopBooks', { ...gapsPlain, format: 'tree' }, io)],
 ];
 
+// The router's check is not drawn in front of a field it fetches for a @requires (P256).
+const requiresFixture = join(root, 'fixtures', 'graphql-requires-auth');
+const requiresPlain = { config: join(requiresFixture, 'flowatlas.config.json'), color: false, ascii: true };
+const REQUIRES_CASES = [
+  ['flow.shipping.tree.txt', (io) => runFlow('shop#src/Shipping.tsx:Shipping', { ...requiresPlain, format: 'tree' }, io)],
+  ['flow.weight.tree.txt', (io) => runFlow('shop#src/Weight.tsx:Weight', { ...requiresPlain, format: 'tree' }, io)],
+];
+
 const lambdaFixture = join(root, 'fixtures', 'multi-repo-lambda');
 const lambdaConfig = join(lambdaFixture, 'flowatlas.config.json');
 
@@ -1235,6 +1243,7 @@ const SUITES = [
   { dir: join(composedFixture, 'expected.cli'), owned: true, cases: COMPOSED_CASES },
   { dir: join(interfacesFixture, 'expected.cli'), owned: true, cases: INTERFACES_CASES },
   { dir: join(gapsFixture, 'expected.cli'), owned: true, cases: GAPS_CASES },
+  { dir: join(requiresFixture, 'expected.cli'), owned: true, cases: REQUIRES_CASES },
   { dir: join(workflowsFixture, 'expected.cli'), owned: true, cases: WORKFLOW_CASES },
   { dir: join(deployedWorkflowsFixture, 'expected.cli'), owned: true, cases: DEPLOYED_WORKFLOW_CASES },
   { dir: join(multiRepoWorkflowsFixture, 'expected.cli'), owned: true, cases: MULTI_REPO_WORKFLOW_CASES },

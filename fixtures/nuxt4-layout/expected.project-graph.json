@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T18:11:12.335Z",
+  "builtAt": "2026-11-08T12:55:53.447Z",
   "services": [
     {
       "name": "shop",
@@ -387,6 +387,10 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "queryType": "{q:string}",
+        "queryKeys": [
+          "q"
+        ],
         "package": null,
         "client": "ofetch",
         "via": "literal",

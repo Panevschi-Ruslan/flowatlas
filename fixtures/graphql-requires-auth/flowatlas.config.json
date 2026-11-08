@@ -1,0 +1,38 @@
+{
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express"
+    },
+    {
+      "name": "shipping",
+      "repo": "./shipping",
+      "type": "express"
+    },
+    {
+      "name": "router",
+      "document": {
+        "kind": "graphql",
+        "path": "router/supergraph.graphql"
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_ROUTER_URL"
+      ],
+      "apiTarget": {
+        "VITE_ROUTER_URL": "router"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

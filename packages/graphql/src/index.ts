@@ -39,7 +39,7 @@ export {
   typeFederationOf,
 } from './schema.js';
 export type { AuthRequirement, ComposedDirective, FieldFederation, SchemaField, SchemaSummary, SchemaType, TypeFederation } from './schema.js';
-export { apiSchemaOf, composeSubgraphs, contextName, fieldSetNames, isSupergraph, supergraphComposition, unreachableOwners } from './federation.js';
+export { apiSchemaOf, composeSubgraphs, contextName, fieldSetNames, fieldSetSelections, isSupergraph, supergraphComposition, unreachableOwners } from './federation.js';
 export type { ComposedField, ComposedType, Composition, CompositionConflict, ContextArgument, FieldOwner, SubgraphSchema, SupergraphGraph } from './federation.js';
 export { planSelection } from './plan.js';
 export type { PlanOptions, PlanStep } from './plan.js';

@@ -178,6 +178,34 @@ describe('an axios instance carries the base it was made with (P239)', () => {
     expect(rows(graph, 'api-client-base-unread')[0]?.hint).toContain('2 different values');
   });
 
+  it("records the query a call writes under its client's query option, its keys where written in place (P256)", () => {
+    const graph = read({
+      '/src/Panel.tsx': `
+        import axios from 'axios';
+        import ky from 'ky';
+        import { ofetch } from 'ofetch';
+        declare const config: { params: { page: number } };
+        export const Panel = () => {
+          const load = () => {
+            axios.get('/a', { params: { category: 'tea', limit: 10 } });
+            ky.get('b', { searchParams: { page: 2 } });
+            ofetch('/c', { query: { q: 'x' } });
+            axios.get('/d', config);
+            axios.get('/e');
+          };
+          return <button onClick={load} />;
+        };
+      `,
+    });
+    const at = (path: string) => requests(graph).find((node) => String(node.meta?.['path']).endsWith(path))?.meta ?? {};
+    expect(at('/a')).toMatchObject({ queryKeys: ['category', 'limit'] });
+    expect(at('/b')).toMatchObject({ queryKeys: ['page'] });
+    expect(at('/c')).toMatchObject({ queryKeys: ['q'] });
+    expect(at('/d')).toMatchObject({ queryUnread: true });
+    expect(at('/e')['queryKeys']).toBeUndefined();
+    expect(at('/e')['queryUnread']).toBeUndefined();
+  });
+
   it('applies the module defaults to calls on the module itself', () => {
     const graph = read({
       '/src/main.ts': `import axios from 'axios';\naxios.defaults.baseURL = '/api';\n`,

@@ -390,6 +390,8 @@ to look for.
 | [`orpc-contract`](../fixtures/orpc-contract) | a contract-first oRPC service, its routes and failures read off the contract |
 | [`rpc-server-to-server`](../fixtures/rpc-server-to-server) | a NestJS worker's oRPC and tRPC clients joined to the procedures of two other services by their links' settings and hosts |
 | [`rpc-contracts`](../fixtures/rpc-contracts) | each procedure call's input and answer compared with the procedure's, a tRPC link checked against its mount, a client injected by a token, and an Angular client |
+| [`rpc-shared-types`](../fixtures/rpc-shared-types) | a plain request to a procedure's REST route compared field by field, a client typed from a workspace package's `AppRouter`, Fastify's and Hono's tRPC mounts, a client a module's `forRoot` / `forRootAsync` builds, and a lazy branch under a Vite alias |
+| [`graphql-requires-auth`](../fixtures/graphql-requires-auth) | the router's check not drawn on a field it fetches for a `@requires`, and a requiring field that does not carry its required fields' check |
 | [`next-caller-application`](../fixtures/next-caller-application) | one service holding three Next.js applications, and a request reaching its own application's route |
 | [`nest-two-applications`](../fixtures/nest-two-applications) | an API and a worker in one repository, each serving `GET /health` |
 | [`socket-namespaces`](../fixtures/socket-namespaces) | socket.io read from both ends, with the namespace opened by `io.of(…)` |

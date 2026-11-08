@@ -54,6 +54,8 @@ export interface ProcedureMount {
   readonly handedTo?: { readonly method: string; readonly pathAt: number };
   /** The address is the file's own route, its last parameter taken off (P247). */
   readonly fileRoute: boolean;
+  /** A plugin handed uncalled as argument `at` of a `method` call, whose arguments are its own (P256). */
+  readonly plugin?: { readonly method: string; readonly at: number };
   /** What its protocol is called in `meta.mounted` (P58). */
   readonly protocol?: string;
 }
@@ -110,6 +112,7 @@ const mountOf = (mount: EntryProcedureConfig['mounts'][number]): ProcedureMount 
   ...(mount.prefixDefault === undefined ? {} : { prefixDefault: mount.prefixDefault }),
   ...(mount.handedTo === undefined ? {} : { handedTo: { ...mount.handedTo } }),
   fileRoute: mount.fileRoute,
+  ...(mount.plugin === undefined ? {} : { plugin: { ...mount.plugin } }),
   ...(mount.protocol === undefined ? {} : { protocol: mount.protocol }),
 });
 
@@ -225,6 +228,21 @@ export const TRPC: ProcedureDialect = described({
     { call: 'createHTTPHandler', treeKey: 'router', protocol: 'trpc', prefixKey: 'basePath', prefixDefault: '/' },
     { call: 'createHTTPServer', treeKey: 'router', protocol: 'trpc', prefixKey: 'basePath', prefixDefault: '/' },
     { call: 'createNextRouteHandler', treeKey: 'router', protocol: 'trpc', fileRoute: true },
+    // Fastify's adapter is a plugin the repository hands to `register` with
+    // its options, never calls (P256): the tree is under `trpcOptions`, the
+    // address is the plugin's `prefix`, the root without one.
+    {
+      call: 'fastifyTRPCPlugin',
+      plugin: { method: 'register', at: 0 },
+      treeArg: 1,
+      treeKey: 'trpcOptions.router',
+      protocol: 'trpc',
+      prefixKey: 'prefix',
+      prefixDefault: '/',
+    },
+    // Hono's middleware (`@hono/trpc-server`), answering under its `endpoint`,
+    // `/trpc` where it names none (P256).
+    { call: 'trpcServer', treeKey: 'router', protocol: 'trpc', prefixKey: 'endpoint', prefixDefault: '/trpc' },
   ],
 });
 

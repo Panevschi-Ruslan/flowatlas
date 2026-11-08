@@ -460,6 +460,7 @@ export const PAGE_WORDS = Object.freeze({
     'graphql-auth-not-checked': 'gateway does not check the directive',
     'graphql-context-not-reached': 'context not set above the field',
     'graphql-entity-type-unsaid': 'entity interface type not said',
+    'graphql-requires-auth-not-carried': '@requires field not checked as required',
     'route-config-unread': 'route configuration not read',
     'route-file-not-served': 'route file not served',
     'route-guard-skipped': 'guard switched off',

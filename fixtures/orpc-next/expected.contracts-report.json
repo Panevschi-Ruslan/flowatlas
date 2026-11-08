@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-07T18:29:00.806Z",
+  "generatedAt": "2026-11-08T12:55:59.304Z",
   "edges": [
     {
       "edge": {
@@ -80,6 +80,34 @@
       },
       "findings": [],
       "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:25:43",
+        "to": "entry:api:http:GET:/api/v1/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:25:43|hits|entry:api:http:GET:/api/v1/orders/:param",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{id:unknown}",
+        "symbol": "web#src/Orders.tsx:fetchOrder",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{id:string}",
+        "symbol": "api#src/server/orders.ts:orders.get@15"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:id"
+      ]
     },
     {
       "edge": {
@@ -180,18 +208,6 @@
         "type": "hits"
       },
       "edgeKey": "ui_api_call:web#src/Orders.tsx:25:43|hits|entry:api:http:GET:/api/v1/orders/:param",
-      "direction": "request",
-      "reason": "procedure-input-by-name",
-      "message": "entry:api:http:GET:/api/v1/orders/:param takes OrderId, which the graph holds by name rather than as a shape, so what the caller sends is not compared with it",
-      "hint": "Nothing to change in your code: the procedure reader records the input by the name it was written under. Comparing it needs the schema read as a shape, which a validation library's inference only yields where its package is installed."
-    },
-    {
-      "edge": {
-        "from": "ui_api_call:web#src/Orders.tsx:25:43",
-        "to": "entry:api:http:GET:/api/v1/orders/:param",
-        "type": "hits"
-      },
-      "edgeKey": "ui_api_call:web#src/Orders.tsx:25:43|hits|entry:api:http:GET:/api/v1/orders/:param",
       "direction": "response",
       "reason": "no-type-on-receiver",
       "message": "web#src/Orders.tsx:fetchOrder declares no type for what it expects",
@@ -271,11 +287,11 @@
     }
   ],
   "summary": {
-    "edges": 5,
+    "edges": 6,
     "shared": 0,
     "identical": 1,
-    "hash_differs": 4,
-    "unchecked": 11,
+    "hash_differs": 5,
+    "unchecked": 10,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

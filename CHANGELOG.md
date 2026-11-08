@@ -57,6 +57,34 @@ only one of them moved.
   named by its repository. A Serverless service hangs its routes on a shared
   REST API from `restApiRootResourceId` where it names one. New fixture
   `multi-repo-parameters`.
+- **What an RPC or GraphQL caller is compared with, everywhere it calls from
+  (P256).** A plain request to an oRPC procedure's REST route is compared both
+  ways: its path parameters, the query of a `GET` (from the address and from
+  the client's query option - axios `params`, ky/got `searchParams`, ofetch
+  `query`, Angular `params`, recorded as `meta.queryKeys` / `meta.queryType`)
+  or its body, assembled as the OpenAPI handler assembles the input
+  (`compact`, or `{ params, query, body }` for `inputStructure: 'detailed'`),
+  against the procedure's input, a key in the address by name alone; and its
+  own answer type against the procedure's output (its `body` for
+  `outputStructure: 'detailed'`). A query nothing reads is
+  `procedure-input-by-name` (query). A tree a workspace package holds is read
+  as the ways in of the service that mounts it, not of every service that
+  imports its `AppRouter` type, so a client typed from it joins the server and
+  is compared through it. Fastify's `fastifyTRPCPlugin` (by the `register`
+  call it is handed to, its `prefix`) and Hono's `trpcServer` (`endpoint`) are
+  described mounts; a description's mount can say `plugin: { method, at }` and
+  a dotted `treeKey`. A client built in a provider of a module's `forRoot` /
+  `forRootAsync`, here or in another workspace package, is followed to its
+  address through the method's one call and the factory's `inject`, and a
+  configuring method nothing calls provides nothing. `doctor`'s desync table
+  names an rpc request's procedure and protocol (`procedure`, `protocol` in
+  `doctor.json`). The procedure adapters state Vite's `resolve.alias`, so a
+  lazy branch under `@lib/...` in a server Vite builds is read. The router's
+  checks are not drawn on a step it fetches only for a `@requires`, and a
+  field using `@requires` that does not carry its required fields' checks is
+  `graphql-requires-auth-not-carried` (a finding, auth). New fixtures
+  `rpc-shared-types` and `graphql-requires-auth`.
+
 - **The router's check on a field no resolver of its own answers, and an
   entity interface nobody can type (P252).** A field the router's
   `@authenticated`, `@requiresScopes` or `@policy` guards and no resolver of

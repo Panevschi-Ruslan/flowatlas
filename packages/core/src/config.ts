@@ -834,7 +834,10 @@ export const entryProcedureMountSchema = z.strictObject({
   call: z.string().min(1),
   /** Which argument carries the tree, when it is the argument itself. */
   treeArg: z.number().int().min(0).default(0),
-  /** The key of an options argument that carries the tree, when it is one. */
+  /**
+   * The key of an options argument that carries the tree, when it is one; a
+   * dotted path for a key of an object under it (P256): `trpcOptions.router`.
+   */
   treeKey: z.string().min(1).optional(),
   /**
    * The mount is a class built with `new` rather than a function called: a
@@ -886,6 +889,19 @@ export const entryProcedureMountSchema = z.strictObject({
    * `pages/api/trpc/[trpc].ts` answers under `/api/trpc`.
    */
   fileRoute: z.boolean().default(false),
+  /**
+   * The mount is a plugin the repository never calls: it is handed, as the
+   * argument `at`, to a `method` call whose other arguments are the mount's
+   * own (P256) - `register` and `0` in `server.register(plugin, { prefix,
+   * options: { router } })`. `call` is then the plugin's name, and `treeArg`,
+   * `treeKey` and `prefixKey` are read on the `method` call.
+   */
+  plugin: z
+    .strictObject({
+      method: z.string().min(1),
+      at: z.number().int().min(0).default(0),
+    })
+    .optional(),
   /** What the mount's protocol is called in `meta.mounted`, so a caller's link can be checked against it. */
   protocol: z.string().min(1).optional(),
 });

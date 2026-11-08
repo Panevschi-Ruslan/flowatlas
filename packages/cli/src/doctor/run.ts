@@ -566,13 +566,19 @@ const desyncOf = (
     if (!DESYNC_REASONS.has(row.reason)) continue;
     const context = contextOf(row);
     const node = context.node;
+    // A request for a procedure has no verb and no path of its own: it names
+    // a procedure, and its link keeps the address it is sent to (P242, P256).
+    const link = node?.kind === 'rpc' ? node.meta?.['link'] : undefined;
+    const linked = link !== null && typeof link === 'object' ? (link as Record<string, unknown>) : undefined;
+    const procedure = node?.kind === 'rpc' ? text(node.meta?.['procedure']) : null;
     found.push({
       call: row.symbol ?? '',
       service: row.service ?? node?.repo ?? '',
       method: text(node?.meta?.['method']),
       path: text(node?.meta?.['path']),
-      baseUrlEnv: text(node?.meta?.['baseUrlEnv']),
+      baseUrlEnv: text(node?.meta?.['baseUrlEnv']) ?? text(linked?.['baseUrlEnv']),
       targetService: text(node?.meta?.['targetService']),
+      ...(procedure === null ? {} : { procedure, protocol: text(linked?.['protocol']) ?? 'rpc' }),
       reason: row.reason,
       file: row.file,
       line: row.line,

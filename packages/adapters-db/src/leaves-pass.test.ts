@@ -389,6 +389,14 @@ describe('a body handed through a verb wrapper', () => {
   });
 });
 
+describe('the query a request writes in its options (P256)', () => {
+  it("records the keys of a GET's params written in place", async () => {
+    const graph = await graphOf('rpc-shared-types/apps/worker');
+    const teas = graph.nodes.find((node) => node.type === 'http_out' && node.meta?.path === '/api/products');
+    expect(teas?.meta).toMatchObject({ method: 'GET', queryKeys: ['category'], queryType: '{category:string}' });
+  });
+});
+
 describe('tables named where they are set (P88)', () => {
   const recipes = (): Promise<RepoGraph> => graphOf('tables-set-elsewhere/recipes-api');
   const ratings = (): Promise<RepoGraph> => graphOf('tables-set-elsewhere/ratings-api');

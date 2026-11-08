@@ -46,17 +46,17 @@ import { definePass } from './types.js';
  * A `Map`, because it is asked about every method called on the client and an
  * object literal answers `toString` with the language's own function (R130).
  */
-const VERBS: ReadonlyMap<string, { method: string; urlIndex: number; bodyIndex: number | null }> = new Map([
-  ['get', { method: 'GET', urlIndex: 0, bodyIndex: null }],
-  ['post', { method: 'POST', urlIndex: 0, bodyIndex: 1 }],
-  ['put', { method: 'PUT', urlIndex: 0, bodyIndex: 1 }],
-  ['patch', { method: 'PATCH', urlIndex: 0, bodyIndex: 1 }],
-  ['delete', { method: 'DELETE', urlIndex: 0, bodyIndex: null }],
-  ['head', { method: 'HEAD', urlIndex: 0, bodyIndex: null }],
-  ['options', { method: 'OPTIONS', urlIndex: 0, bodyIndex: null }],
-  ['jsonp', { method: 'GET', urlIndex: 0, bodyIndex: null }],
+const VERBS: ReadonlyMap<string, { method: string; urlIndex: number; bodyIndex: number | null; optionsIndex: number | null }> = new Map([
+  ['get', { method: 'GET', urlIndex: 0, bodyIndex: null, optionsIndex: 1 }],
+  ['post', { method: 'POST', urlIndex: 0, bodyIndex: 1, optionsIndex: 2 }],
+  ['put', { method: 'PUT', urlIndex: 0, bodyIndex: 1, optionsIndex: 2 }],
+  ['patch', { method: 'PATCH', urlIndex: 0, bodyIndex: 1, optionsIndex: 2 }],
+  ['delete', { method: 'DELETE', urlIndex: 0, bodyIndex: null, optionsIndex: 1 }],
+  ['head', { method: 'HEAD', urlIndex: 0, bodyIndex: null, optionsIndex: 1 }],
+  ['options', { method: 'OPTIONS', urlIndex: 0, bodyIndex: null, optionsIndex: 1 }],
+  ['jsonp', { method: 'GET', urlIndex: 0, bodyIndex: null, optionsIndex: null }],
   // The verb of a generic request is its first argument, not its name.
-  ['request', { method: '', urlIndex: 1, bodyIndex: null }],
+  ['request', { method: '', urlIndex: 1, bodyIndex: null, optionsIndex: 2 }],
 ]);
 
 /**
@@ -104,6 +104,15 @@ interface Spelling {
   readonly url?: (network: CallExpression) => TsNode | undefined;
   /** Whether the repository's interceptors rewrite what this client sends (P239): the framework's client only. */
   readonly intercepted?: true;
+  /** The query the call writes among its options, where its client has one (P256). */
+  readonly query?: (network: CallExpression) => QueryShape;
+}
+
+/** A query written among a request's options: its type, its keys where an object is written, or `unread` (P256). */
+interface QueryShape {
+  readonly type?: string;
+  readonly keys?: readonly string[];
+  readonly unread?: true;
 }
 
 /**
@@ -143,7 +152,25 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
       typedAnswer: true,
       client: { package: ANGULAR_HTTP },
       intercepted: true,
+      ...(shape.optionsIndex === null ? {} : { query: (network: CallExpression) => queryAt(network, shape.optionsIndex as number) }),
     };
+  };
+
+  /**
+   * The framework client's query, its options' `params` (P256): the keys of
+   * an object written there, its type either way; `unread` where the options
+   * are handed by a name. `HttpParams` built by calls is a type with no
+   * shape, and says nothing a key could be compared by.
+   */
+  const queryAt = (network: CallExpression, index: number): QueryShape => {
+    const options = network.getArguments()[index];
+    if (options === undefined) return {};
+    if (!Node.isObjectLiteralExpression(options)) return { unread: true };
+    const property = options.getProperty('params');
+    const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+    if (written === undefined) return {};
+    const keys = writtenKeysOf([written]);
+    return { type: ctx.types.collectType(written.getType(), written), ...(keys === undefined ? {} : { keys }) };
   };
 
   /** The platform's client, read through the one description of it. */
@@ -310,6 +337,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     const responseType = spelling.typedAnswer && Node.isCallExpression(call) ? typeOfResponse(call) : null;
     const body = spelling.body(network, frames);
     const bodyType = body.type;
+    const query = spelling.query?.(network) ?? {};
     const application = applicationOfFile(ctx.meta, file);
 
     ctx.builder.addNode({
@@ -334,6 +362,10 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         // source says. A declared type says what is permitted; this says what
         // is sent, and the checker compares only these (R34).
         ...(body.keys === undefined ? {} : { bodyKeys: body.keys }),
+        // The query it writes, for a route that assembles its input from it (P256).
+        ...(query.type === undefined ? {} : { queryType: query.type }),
+        ...(query.keys === undefined ? {} : { queryKeys: query.keys }),
+        ...(query.unread === true ? { queryUnread: true } : {}),
         ...spelling.client,
         // Which application this request is written in, where the service holds
         // more than one; the other half of what an entry records about its own

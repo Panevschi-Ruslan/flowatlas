@@ -11,12 +11,15 @@
 import {
   CLAIMED_META,
   envelopePath,
+  formatTypeRef,
+  parseTypeRef,
   REQUEST_READ_META,
   STATUS_UNKNOWN_META,
   STARTS_META,
   type Envelope,
   type GraphEdge,
   type GraphNode,
+  type TypeRefAst,
 } from '@flowatlas/core';
 import { envelopeOf, readThrough, wrapped, type Blocked } from './envelope.js';
 import { edgeKeyOf } from './key.js';
@@ -61,6 +64,12 @@ export interface Exchange {
    * one a client of a tree states in its own way, and the hint says that way.
    */
   procedure?: boolean;
+  /**
+   * The sender writes nothing at all - a `GET` of a procedure's route with
+   * no path parameter and no query (P256) - so its `{}` is an empty object
+   * on the wire, and what the receiver requires is missing.
+   */
+  sendsNothing?: boolean;
 }
 
 /** References that name no shape, so there is nothing to compare against. */
@@ -238,6 +247,179 @@ const procedureExchanges = (
   return [request, response];
 };
 
+/** The strings a meta list holds, or nothing where it is not one. */
+const stringsIn = (value: unknown): string[] | undefined =>
+  Array.isArray(value) && value.every((each) => typeof each === 'string') ? (value as string[]) : undefined;
+
+/** A key an address can carry, as the input's top-level field it fills: `filter[status]` fills `filter`. */
+const topKey = (key: string): string => key.replace(/[[.].*$/, '');
+
+/** The parameters a route's path names, as the procedure writes them: `{id}`, `{+path}`, `:id`. */
+const pathParamsOf = (raw: string): string[] =>
+  [...raw.matchAll(/\{\+?([A-Za-z_$][\w$]*)\}|:([A-Za-z_$][\w$]*)/g)].map((match) => (match[1] ?? match[2]) as string);
+
+/**
+ * The keys a query written in the address names (P256): `?status=open&limit=10`.
+ * Nothing where the address has no query; `unread` where a part of it is not
+ * a key written as text - a query string built elsewhere, spliced in.
+ */
+const queryOfAddress = (url: unknown): { keys: string[] } | 'unread' | undefined => {
+  if (typeof url !== 'string' || !url.includes('?')) return undefined;
+  const query = url.slice(url.indexOf('?') + 1).split('#')[0] ?? '';
+  const keys: string[] = [];
+  for (const part of query.split('&')) {
+    if (part === '') continue;
+    const key = /^([A-Za-z_$][\w$\-[\].]*)(?:=|$)/.exec(part)?.[1];
+    if (key === undefined) return 'unread';
+    keys.push(topKey(key));
+  }
+  return { keys };
+};
+
+/** Presence only: a field the address carries as text, whatever the procedure coerces it to (D2). */
+const present = (name: string): { name: string; optional: false; type: TypeRefAst } => ({ name, optional: false, type: { kind: 'primitive', name: 'unknown' } });
+
+/** A shape written as fields, or nothing where it has none. */
+const fieldsShape = (names: readonly string[]): TypeRefAst | undefined =>
+  names.length === 0 ? undefined : { kind: 'object', fields: [...new Set(names)].map(present) };
+
+/** Several parts of one input, as the one type they are together. */
+const together = (parts: ReadonlyArray<TypeRefAst | undefined>): TypeRefAst | undefined => {
+  const written = parts.filter((part): part is TypeRefAst => part !== undefined);
+  if (written.length <= 1) return written[0];
+  return { kind: 'intersection', members: written };
+};
+
+/** A reference as a shape, or nothing where it is not one that parses. */
+const astOf = (ref: string | undefined): TypeRefAst | undefined => {
+  if (!namesAShape(ref)) return undefined;
+  try {
+    return parseTypeRef(ref);
+  } catch {
+    return undefined;
+  }
+};
+
+/** The type of one field of a type, written in place or in the registry: a `detailed` output's `body` (P256). */
+const fieldOfRef = (lookup: GraphLookup, ref: string | undefined, name: string): string | undefined => {
+  const ast = astOf(ref);
+  if (ast?.kind === 'object') {
+    const found = ast.fields.find((field) => field.name === name);
+    return found === undefined ? undefined : formatTypeRef(found.type);
+  }
+  if (ast?.kind === 'id') return lookup.type(ast.id)?.fields?.find((field) => field.name === name)?.type;
+  return undefined;
+};
+
+/**
+ * A plain request to a procedure's REST route, both ways (P256).
+ *
+ * The OpenAPI handler hands the procedure one input assembled from the
+ * request: with the default structure, the route's path parameters merged
+ * with the query for a `GET` and with the body for any other verb; with the
+ * `detailed` one, `{ params, query, headers, body }`. So the caller's half is
+ * assembled the same way from what it writes, and compared with the
+ * procedure's input by the rules any request body is: a path parameter and a
+ * query key by name alone (the address carries text, and whether the schema
+ * coerces it is the schema's to say, D2), the body field by field. What the
+ * call reads back is compared with the procedure's output, or the output's
+ * `body` for a `detailed` one. Where a part cannot be read - a query built
+ * elsewhere, a body with no type - the row says so rather than calling the
+ * procedure's required keys missing.
+ */
+const twinExchanges = (
+  lookup: GraphLookup,
+  edge: GraphEdge,
+  both: (direction: Direction, sender: ContractParty, receiver: ContractParty) => Exchange,
+  caller: { service: string; symbol: string },
+  handler: { service: string; symbol: string },
+): Exchange[] => {
+  const entry = lookup.node(edge.to);
+  const route = entry?.meta ?? {};
+  const asked = lookup.node(edge.from)?.meta ?? {};
+  const declared = signatureOf(entry);
+  const schema = route['input'];
+  const detailedIn = route['inputStructure'] === 'detailed';
+  const detailedOut = route['outputStructure'] === 'detailed';
+  const verb = typeof route['method'] === 'string' ? route['method'].toUpperCase() : 'POST';
+  const params = pathParamsOf(typeof route['rawPath'] === 'string' ? route['rawPath'] : '');
+
+  // The query: keys the address writes, and what the call's options hand under their query option.
+  const addressed = queryOfAddress(asked['url']);
+  const optionKeys = stringsIn(asked['queryKeys'])?.map(topKey);
+  const optionType = typeof asked['queryType'] === 'string' ? asked['queryType'] : undefined;
+  const queryUnread = addressed === 'unread' || asked['queryUnread'] === true || (optionType !== undefined && optionKeys === undefined && !namesAShape(optionType));
+  const queryKeys = [...(addressed === undefined || addressed === 'unread' ? [] : addressed.keys), ...(optionKeys ?? [])];
+  const queryShape = together([fieldsShape(queryKeys), optionKeys === undefined ? astOf(optionType) : undefined]);
+  const queryKnown = optionType === undefined || optionKeys !== undefined;
+
+  // The body, where the verb carries one.
+  const bodyRef = edge.params?.[0];
+  const bodyWritten = typeof asked['bodyType'] === 'string' || namesAShape(bodyRef);
+  const bodyKeys = stringsIn(asked['bodyKeys']);
+  const bodyShape = astOf(bodyRef);
+  const usesQuery = detailedIn || verb === 'GET';
+  const usesBody = detailedIn || verb !== 'GET';
+
+  // `detailed`: each part the call writes under its own key. The headers are
+  // not read, and a part nothing writes is not sent.
+  const parts: Array<[string, TypeRefAst | undefined]> = [
+    ['params', fieldsShape(params)],
+    ['query', queryShape],
+    ['body', bodyShape],
+  ];
+  const sentParts = parts.filter((part): part is [string, TypeRefAst] => part[1] !== undefined);
+  const sent = detailedIn
+    ? sentParts.length === 0
+      ? undefined
+      : ({ kind: 'object', fields: sentParts.map(([name, type]) => ({ name, optional: false, type })) } as TypeRefAst)
+    : together([fieldsShape(params), usesQuery ? queryShape : undefined, usesBody ? bodyShape : undefined]);
+
+  // The keys the call writes, where every part it writes says them.
+  const writes = detailedIn
+    ? sentParts.map(([name]) => name)
+    : [
+        ...params,
+        ...(usesQuery && queryKnown ? queryKeys : []),
+        ...(usesBody && bodyWritten ? (bodyKeys ?? []) : []),
+      ];
+  const everyPartKnown = detailedIn || ((!usesQuery || queryKnown) && (!usesBody || !bodyWritten || bodyKeys !== undefined));
+  const literalBody = asked['bodyFrom'] === undefined || asked['bodyFrom'] === 'literal';
+
+  const sender: ContractParty = {
+    ...party(lookup, caller.service, sent === undefined ? '{}' : formatTypeRef(sent), caller.symbol),
+    ...(everyPartKnown ? { writes: [...new Set(writes)], writesEvery: literalBody } : {}),
+  };
+  const receiver = party(lookup, handler.service, declared.input, handler.symbol);
+  const inputBlocked: Blocked | undefined =
+    typeof schema !== 'string' && declared.input === undefined
+      ? { reason: 'procedure-input-undeclared', subject: edge.to }
+      : !namesAShape(declared.input)
+        ? { reason: 'procedure-input-unread', subject: edge.to, ...(typeof schema === 'string' ? { detail: schema } : {}) }
+        : usesQuery && queryUnread
+          ? { reason: 'procedure-input-by-name', subject: caller.symbol, detail: 'query' }
+          : usesBody && bodyWritten && bodyShape === undefined
+            ? { reason: 'no-type-on-sender', subject: caller.symbol }
+            : undefined;
+  const request: Exchange = {
+    ...both('request', sender, receiver),
+    ...(sent === undefined ? { sendsNothing: true } : {}),
+    ...(inputBlocked === undefined ? {} : { blocked: inputBlocked }),
+  };
+
+  // The answer: the procedure's output, or its body, against what the call reads back.
+  const output = detailedOut ? fieldOfRef(lookup, declared.returns, 'body') : declared.returns;
+  const answering = party(lookup, handler.service, output, handler.symbol);
+  const reading = party(lookup, caller.service, edge.returns, caller.symbol);
+  const answerBlocked: Blocked | undefined = !namesAShape(edge.returns)
+    ? { reason: 'no-type-on-receiver', subject: caller.symbol }
+    : !namesAShape(output)
+      ? { reason: 'no-type-on-sender', subject: handler.symbol }
+      : undefined;
+  const response: Exchange = { ...both('response', answering, reading), ...(answerBlocked === undefined ? {} : { blocked: answerBlocked }) };
+  return [request, response];
+};
+
 /**
  * Both halves of a request, whichever way the request was made.
  *
@@ -276,18 +458,16 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
   // carries the procedure's input by name, assembled from the path, the query
   // and the body, which a request's body alone is not compared with.
   if (typeof lookup.node(edge.to)?.meta?.['procedure'] === 'string') {
+    // A plain request is compared with the input the route assembles from
+    // what it writes, and its own answer type with the procedure's (P256).
+    const client = typeof lookup.node(edge.from)?.meta?.['procedure'] === 'string';
+    if (!client) return twinExchanges(lookup, edge, both, { service: callerService, symbol: caller }, { service: handlerService, symbol: handler });
     const input = lookup.node(edge.to)?.meta?.['input'];
     const callerParty = party(lookup, callerService, undefined, caller);
     const handlerParty = party(lookup, handlerService, undefined, handler);
-    // Where the answer's type comes from depends on who asks (P252): a
-    // procedure's client is typed from the server's tree, a plain request by
-    // whatever it writes itself - a type nothing ties to the tree, or none.
-    const client = typeof lookup.node(edge.from)?.meta?.['procedure'] === 'string';
-    const expects = client ? undefined : edge.returns;
-    const answered: Blocked =
-      client || namesAShape(expects)
-        ? { reason: 'procedure-output-inferred' as const, subject: edge.to, ...(expects === undefined ? {} : { detail: expects.replace(/^type:[^#]*#/, '') }) }
-        : { reason: 'no-type-on-receiver' as const, subject: caller };
+    // A procedure's client reaching the route is typed from the server's tree
+    // (P252), and its input is the client's, not the route's.
+    const answered: Blocked = { reason: 'procedure-output-inferred' as const, subject: edge.to };
     return [
       {
         ...both('request', callerParty, handlerParty),

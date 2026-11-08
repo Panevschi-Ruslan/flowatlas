@@ -86,6 +86,12 @@ export const joinGraphqlFields = (nodes: ReadonlyMap<string, GraphNode>, edges: 
   return rows;
 };
 
+/** Whether a plan edge is a fetch the router makes for a `@requires`, not the client's selection (P256). */
+const isRequiredFetch = (edge: GraphEdge): boolean => {
+  const graphql = edge.meta?.[GRAPHQL_META];
+  return graphql !== null && typeof graphql === 'object' && typeof (graphql as Record<string, unknown>)['requiredBy'] === 'string';
+};
+
 /**
  * A request to a gateway, planned across its subgraphs (P241): an edge of the
  * request's own type from the request to each subgraph entry a step reaches -
@@ -114,8 +120,11 @@ const joinPlanned = (
   const draw = (to: string, confidence: Confidence, line: number, file: string, graphql: Record<string, unknown>): void => {
     // `through`: the service the request comes through, whose own checks are in front of the step (P245).
     const joined: GraphEdge = { from: call.id, to, type: edge.type, confidence, ...(call.file === undefined ? {} : { file }), line, meta: { [GRAPHQL_META]: graphql, through: gateway } };
-    // The first selection that reaches an entry is the one the edge names.
-    if (!edges.has(edgeKey(joined))) edges.set(edgeKey(joined), joined);
+    // The first selection that reaches an entry is the one the edge names;
+    // the client's own selection over a fetch the router makes for a
+    // `@requires`, which is planned first and is not checked (P256).
+    const held = edges.get(edgeKey(joined));
+    if (held === undefined || (isRequiredFetch(held) && graphql['requiredBy'] === undefined)) edges.set(edgeKey(joined), joined);
   };
   const rootTypes = new Set(Object.values(plan.composition.roots));
   const steps = planSelection(plan.composition, operation.operation, operation.fields, plan.saysType === undefined ? {} : { saysType: plan.saysType });
@@ -208,7 +217,14 @@ const joinPlanned = (
           ...(step.selected.alias === undefined ? {} : { alias: step.selected.alias }),
           ...(step.hop === undefined ? {} : { hop: { entity: step.hop.entity, from: step.hop.from, ...untyped } }),
         });
-      } else if (plan.checks === true && !rootTypes.has(step.type) && step.field !== '__typename' && authOfField(plan.composition, step.type, step.field).length > 0) {
+      } else if (
+        plan.checks === true &&
+        // The router checks the client's selection; a field it fetches for a `@requires` is not checked (P256).
+        step.requiredBy === undefined &&
+        !rootTypes.has(step.type) &&
+        step.field !== '__typename' &&
+        authOfField(plan.composition, step.type, step.field).length > 0
+      ) {
         // A guarded field no resolver of its own answers: the check is in front of the entry that does, for it (P252).
         const answerer = answererOf(step, route.service, subgraph);
         if (answerer !== undefined) answers.set(answerer, (answers.get(answerer) ?? new Set()).add(`${resolvedAs ?? step.type}.${step.field}`));

@@ -212,6 +212,20 @@ describe('requests the browser makes', () => {
  * reported uncalled in silence (R140). The description of `fetch` is the one
  * the React reader uses, from the core, so the two read it the same way.
  */
+describe("the query a framework request writes in its options' params (P256)", () => {
+  it('records its keys written in place, and says where the options are handed by a name', () => {
+    const graph = extract(`
+  a(): Observable<OrderDto> { return this.http.get<OrderDto>('/a', { params: { category: 'tea', limit: 10 } }); }
+  b(options: { params: Record<string, string> }): Observable<OrderDto> { return this.http.get<OrderDto>('/b', options); }
+  c(): Observable<OrderDto> { return this.http.get<OrderDto>('/c'); }
+`);
+    const at = (path: string) => callsOf(graph).find((node) => node.meta?.['path'] === path)?.meta ?? {};
+    expect(at('/a')).toMatchObject({ queryKeys: ['category', 'limit'] });
+    expect(at('/b')).toMatchObject({ queryUnread: true });
+    expect(at('/c')['queryKeys']).toBeUndefined();
+  });
+});
+
 describe('a request made with the platform client (R140)', () => {
   it('reads the verb and the address from a call with options written in place', () => {
     const graph = extract(`

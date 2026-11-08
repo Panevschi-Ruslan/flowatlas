@@ -142,6 +142,8 @@ const FINDINGS: readonly string[] = [
   'graphql-supergraph-drift',
   // The router's authorization directives composed by a gateway that does not check them (P245)
   'graphql-auth-not-checked',
+  // A field using @requires that does not carry what the fields it requires ask (P256)
+  'graphql-requires-auth-not-carried',
   // An entity call for an interface its owner can say no concrete type of (P252)
   'graphql-entity-type-unsaid',
   'route-file-not-served',
@@ -474,7 +476,7 @@ export const RISK_NAMES = ['auth', 'performance', 'wiring'] as const;
 export type Risk = (typeof RISK_NAMES)[number];
 
 const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
-  ['auth', ['route-unguarded', 'route-shadowed', 'marker-reason-missing', 'graphql-auth-not-checked']],
+  ['auth', ['route-unguarded', 'route-shadowed', 'marker-reason-missing', 'graphql-auth-not-checked', 'graphql-requires-auth-not-carried']],
   ['performance', ['query-in-loop']],
   [
     'wiring',

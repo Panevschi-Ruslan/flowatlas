@@ -31,6 +31,12 @@ export interface CompareOptions {
    * not decorate. Read from the route's wrapping, never assumed.
    */
   whitelist?: boolean;
+  /**
+   * Whether a sender's `{}` at the top is an object written with no keys -
+   * a request that sends nothing at all (P256) - rather than a type that says
+   * nothing about its shape. What the receiver requires is then missing.
+   */
+  emptyIsWritten?: boolean;
 }
 
 export interface CompareResult {
@@ -45,6 +51,8 @@ interface Walk {
   disable: readonly string[];
   /** The receiver strips what its validated class does not decorate. */
   whitelist: boolean;
+  /** The sender's `{}` at the top was written with no keys (P256). */
+  emptyIsWritten: boolean;
   diffs: FieldDiff[];
   rules: Set<string>;
   /** Pairs of types already being compared further up this path. */
@@ -595,7 +603,8 @@ const compareRefs = (
 
   // Neither declaration says what is in there, so there is nothing to compare
   // and nothing that could be wrong.
-  if (makesNoClaim(senderAst) || makesNoClaim(receiverAst)) {
+  const writtenEmpty = walk.emptyIsWritten && path === '' && senderAst.kind === 'object' && senderAst.fields.length === 0;
+  if ((makesNoClaim(senderAst) && !writtenEmpty) || makesNoClaim(receiverAst)) {
     walk.rules.add(at('any-unknown-skip', path));
     return;
   }
@@ -1015,6 +1024,7 @@ export const diffTypes = (
     resolve,
     disable: options.disableRules ?? [],
     whitelist: options.whitelist === true,
+    emptyIsWritten: options.emptyIsWritten === true,
     diffs: [],
     rules: new Set(),
     open: new Set(),
@@ -1041,6 +1051,7 @@ export const diffRefs = (
     resolve,
     disable: options.disableRules ?? [],
     whitelist: options.whitelist === true,
+    emptyIsWritten: options.emptyIsWritten === true,
     diffs: [],
     rules: new Set(),
     open: new Set(),

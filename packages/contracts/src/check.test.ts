@@ -1010,85 +1010,112 @@ describe('a procedure asked for by its path (P247)', () => {
   });
 });
 
-describe('a route that answers for a procedure (P58)', () => {
+describe("a plain request to a procedure's REST route (P256)", () => {
   /**
-   * An OpenAPI handler serves a procedure at a REST route of its own, and its
-   * handler is handed the same envelope whoever asks: a REST caller's body put
-   * against it would be a missing field on every route of the kind.
+   * The OpenAPI handler assembles the procedure's input from the request: the
+   * path's parameters with the query of a GET, or with the body otherwise, or
+   * each part under its own key for a `detailed` route. The caller's half is
+   * assembled the same way from what it writes; a path parameter and a query
+   * key are compared by name alone, the body field by field, and the answer
+   * the call reads back with the procedure's output.
    */
-  const report = checkContracts(
-    graphOf({
-      nodes: [
-        node('web#Orders', 'ui_component', 'web'),
-        node('ui_api_call:web#src/Orders.tsx:9:5', 'ui_api_call', 'web', {
-          kind: 'http',
-          meta: { method: 'GET', path: '/api/orders' },
-        }),
-        node('entry:api:http:GET:/api/orders', 'entry', 'api', {
-          kind: 'http',
-          meta: { method: 'GET', path: '/api/orders', procedure: 'orders.list', input: 'OrderQuery' },
-        }),
-        node('api#listOrders', 'function', 'api'),
-      ],
-      edges: [
-        edge('web#Orders', 'calls', 'ui_api_call:web#src/Orders.tsx:9:5'),
-        edge('ui_api_call:web#src/Orders.tsx:9:5', 'hits', 'entry:api:http:GET:/api/orders', {
-          params: ['type:caller#Body'],
-          returns: 'type:api#Answer',
-        }),
-        edge('entry:api:http:GET:/api/orders', 'handles', 'api#listOrders', {
-          params: ['type:api#Body'],
-          returns: 'type:api#Answer',
-        }),
-      ],
-      types: registry,
-    }),
-    { generatedAt: FIXED },
-  );
-
-  it('is unchecked for the reason a procedure is', () => {
-    expect(report.findings).toEqual([]);
-    expect(report.unchecked.map((row) => [row.direction, row.reason])).toEqual([
-      ['request', 'procedure-input-by-name'],
-      ['response', 'procedure-output-inferred'],
-    ]);
-  });
-
-  /**
-   * A plain request is typed by what it writes, not by the server's tree
-   * (P252): the row names the caller's own type, which nothing ties to the
-   * procedure's output, rather than saying the two ends are one declaration.
-   */
-  it('says a plain caller types the answer itself, with a type nothing ties to the tree (P252)', () => {
-    const response = report.unchecked.find((row) => row.direction === 'response');
-    expect(response?.message).toContain('a plain request that types it as Answer itself');
-    expect(response?.message).not.toContain("inferred from the server's own tree");
-    expect(response?.hint).toContain('Nothing keeps Answer in step with the procedure');
-  });
-
-  it('says a plain caller that types no answer states no type for it, as any request would (P252)', () => {
-    const untyped = checkContracts(
+  const twin = (
+    call: Record<string, unknown>,
+    route: Record<string, unknown>,
+    sent: { params?: string[]; returns?: string } = {},
+  ): ContractReport =>
+    checkContracts(
       graphOf({
         nodes: [
-          node('web#Orders', 'ui_component', 'web'),
-          node('ui_api_call:web#src/Orders.tsx:9:5', 'ui_api_call', 'web', { kind: 'http', meta: { method: 'GET', path: '/api/orders' } }),
-          node('entry:api:http:GET:/api/orders', 'entry', 'api', { kind: 'http', meta: { method: 'GET', path: '/api/orders', procedure: 'orders.list', input: 'OrderQuery' } }),
-          node('api#listOrders', 'function', 'api'),
+          node('web#Shelf', 'ui_component', 'web'),
+          node('ui_api_call:web#src/Shelf.tsx:9:5', 'ui_api_call', 'web', { kind: 'http', meta: { bodyType: null, ...call } }),
+          node('entry:catalog:http:twin', 'entry', 'catalog', { kind: 'http', meta: { procedure: 'products.get', input: 'ProductInput', ...route } }),
+          node('catalog#handler', 'function', 'catalog'),
         ],
         edges: [
-          edge('web#Orders', 'calls', 'ui_api_call:web#src/Orders.tsx:9:5'),
-          edge('ui_api_call:web#src/Orders.tsx:9:5', 'hits', 'entry:api:http:GET:/api/orders', { params: ['type:caller#Body'] }),
-          edge('entry:api:http:GET:/api/orders', 'handles', 'api#listOrders', { params: ['type:api#Body'], returns: 'type:api#Answer' }),
+          edge('web#Shelf', 'calls', 'ui_api_call:web#src/Shelf.tsx:9:5'),
+          edge('ui_api_call:web#src/Shelf.tsx:9:5', 'hits', 'entry:catalog:http:twin', sent),
+          // The handler is handed the envelope, never the caller's body; typed here to show it is not used.
+          edge('entry:catalog:http:twin', 'handles', 'catalog#handler', { params: ['{context:unknown;input:unknown}'], returns: 'void' }),
         ],
-        types: registry,
+        types: {},
       }),
       { generatedAt: FIXED },
     );
-    expect(untyped.unchecked.map((row) => [row.direction, row.reason])).toEqual([
-      ['request', 'procedure-input-by-name'],
-      ['response', 'no-type-on-receiver'],
+  const PRODUCT = '{id:string;name:string}';
+  const byId = { method: 'GET', rawPath: '/api/products/{id}', signature: { params: [{ name: 'input', type: '{id:string}' }], returns: PRODUCT } };
+  const list = { method: 'GET', rawPath: '/api/products', signature: { params: [{ name: 'input', type: '{category:string;limit?:number}' }], returns: `${PRODUCT}[]` } };
+  const create = { method: 'POST', rawPath: '/api/products/create', signature: { params: [{ name: 'input', type: '{name:string;price:number;sku:string}' }], returns: '{id:string}' } };
+  const findings = (report: ContractReport) => report.findings.map((finding) => [finding.direction, finding.kind, finding.field, finding.severity]);
+  const rows = (report: ContractReport) => report.unchecked.map((row) => [row.direction, row.reason]);
+
+  it('compares a GET by its path parameter, and its answer, both ways', () => {
+    const report = twin({ method: 'GET', url: '${CATALOG_URL}/api/products/:param' }, byId, { returns: PRODUCT });
+    // The address carries the id as text, compared by its name alone, so the request is no claim of the same type.
+    expect(report.summary).toMatchObject({ edges: 2, identical: 1, hash_differs: 1, unchecked: 0, errors: 0, infos: 0 });
+  });
+
+  it('compares the query a GET writes in its options or its address, key by key', () => {
+    expect(twin({ method: 'GET', queryKeys: ['category', 'limit'], queryType: '{category:string;limit:number}' }, list, { returns: `${PRODUCT}[]` }).summary).toMatchObject({ errors: 0, infos: 0, unchecked: 0 });
+    expect(findings(twin({ method: 'GET', queryKeys: ['limit'], queryType: '{limit:number}' }, list, { returns: `${PRODUCT}[]` }))).toEqual([
+      ['request', 'missing_required', 'category', 'error'],
     ]);
-    expect(untyped.unchecked.find((row) => row.direction === 'response')?.message).toBe('web#Orders declares no type for what it expects');
+    expect(findings(twin({ method: 'GET', url: '${CATALOG_URL}/api/products?category=tea&sort=price' }, list, { returns: `${PRODUCT}[]` }))).toEqual([
+      ['request', 'extra_field', 'sort', 'info'],
+    ]);
+    // A GET that writes no query does not send what the procedure requires.
+    expect(findings(twin({ method: 'GET', url: '${CATALOG_URL}/api/products' }, list, { returns: `${PRODUCT}[]` }))).toEqual([
+      ['request', 'missing_required', 'category', 'error'],
+    ]);
+  });
+
+  it('says a query written in a way nothing reads, rather than calling the required keys missing', () => {
+    const spliced = twin({ method: 'GET', url: '${CATALOG_URL}/api/products?${…}' }, list, { returns: `${PRODUCT}[]` });
+    expect(rows(spliced)).toEqual([['request', 'procedure-input-by-name']]);
+    expect(spliced.unchecked[0]?.message).toContain('writes its query in a way that is not read');
+    expect(rows(twin({ method: 'GET', queryUnread: true }, list, { returns: `${PRODUCT}[]` }))).toEqual([['request', 'procedure-input-by-name']]);
+  });
+
+  it("compares a POST's body with the input, and says a body with no type", () => {
+    expect(findings(twin({ method: 'POST', bodyType: '{name:string;price:number}', bodyKeys: ['name', 'price'], bodyFrom: 'literal' }, create, { params: ['{name:string;price:number}'], returns: '{id:string}' }))).toEqual([
+      ['request', 'missing_required', 'sku', 'error'],
+    ]);
+    expect(rows(twin({ method: 'POST', bodyType: 'any' }, create, { params: ['any'], returns: '{id:string}' }))).toEqual([['request', 'no-type-on-sender']]);
+  });
+
+  it("compares the caller's own answer type with the procedure's output, and says where it types none", () => {
+    expect(findings(twin({ method: 'GET', url: '${CATALOG_URL}/api/products/:param' }, byId, { returns: '{id:string;title:string}' }))).toEqual([
+      ['response', 'extra_field', 'name', 'info'],
+      ['response', 'missing_required', 'title', 'error'],
+    ]);
+    const untyped = twin({ method: 'GET', url: '${CATALOG_URL}/api/products/:param' }, byId);
+    expect(rows(untyped)).toEqual([['response', 'no-type-on-receiver']]);
+    expect(untyped.unchecked[0]?.message).toBe('web#Shelf declares no type for what it expects');
+  });
+
+  it('assembles a detailed input part by part, and compares the body of a detailed output', () => {
+    const detailed = {
+      method: 'PATCH',
+      rawPath: '/api/products/{id}',
+      inputStructure: 'detailed',
+      outputStructure: 'detailed',
+      signature: { params: [{ name: 'input', type: '{params:{id:string};body:{price:number}}' }], returns: '{status:number;body:{id:string}}' },
+    };
+    expect(twin({ method: 'PATCH', bodyType: '{price:number}', bodyKeys: ['price'], bodyFrom: 'literal' }, detailed, { params: ['{price:number}'], returns: '{id:string}' }).summary).toMatchObject({
+      edges: 2,
+      unchecked: 0,
+      errors: 0,
+      infos: 0,
+    });
+  });
+
+  it('says so where the procedure declares no input, or one whose type does not resolve', () => {
+    expect(rows(twin({ method: 'GET' }, { method: 'GET', rawPath: '/api/health', input: undefined, signature: { params: [], returns: 'string' } }, { returns: 'string' }))).toEqual([
+      ['request', 'procedure-input-undeclared'],
+    ]);
+    expect(rows(twin({ method: 'GET' }, { ...list, signature: { params: [{ name: 'input', type: 'any' }], returns: PRODUCT } }, { returns: PRODUCT }))).toEqual([
+      ['request', 'procedure-input-unread'],
+    ]);
   });
 });
 

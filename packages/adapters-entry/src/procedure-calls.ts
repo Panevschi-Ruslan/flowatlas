@@ -16,7 +16,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import type { ArrayLiteralExpression, CallExpression, Node as TsNode, SourceFile, Type } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import {
   PROCEDURE_CLIENTS,
   type ProcedureClient,
@@ -149,8 +149,19 @@ const importedFrom = (identifier: TsNode, packages: readonly string[]): boolean 
 /** The containers whose `@Inject(TOKEN)` hands a parameter what is provided for a token (P247). */
 const INJECTING = ['@nestjs/common', '@angular/core'] as const;
 
-/** The value a repository provides for an injection token, or nothing (P247). */
-export type ProvidedValue = (token: TsNode) => TsNode | undefined;
+/**
+ * The value a repository provides for an injection token, or nothing (P247),
+ * and what it hands a parameter, one call away (P256).
+ */
+export interface ProvidedValue {
+  (token: TsNode): TsNode | undefined;
+  /**
+   * The expression a parameter is handed: the argument of the one call the
+   * repository makes of its function, or, for a provider's factory, the
+   * value provided for the token in its place of the provider's `inject`.
+   */
+  readonly handed?: (parameter: TsNode) => TsNode | undefined;
+}
 
 /** The token a field initialised `inject(BILLING)` is handed by (P247). */
 const injectedToken = (value: TsNode | undefined): TsNode | undefined => {
@@ -223,7 +234,64 @@ const propertyValue = (property: TsNode): TsNode | undefined =>
 /** What a name or a class member holds, or the expression itself. */
 const valueOf = (expression: TsNode, provided?: ProvidedValue): TsNode => {
   const at = unwrap(expression);
-  return (Node.isIdentifier(at) ? initializerOf(at) : memberValueOf(at, provided)) ?? at;
+  return (Node.isIdentifier(at) ? initializerOf(at) : memberValueOf(at, provided)) ?? boundOf(at, provided) ?? at;
+};
+
+/** The object a value is, written in place or held by a name. */
+const objectIn = (value: TsNode | undefined): TsNode | undefined => {
+  const at = value === undefined ? undefined : unwrap(value);
+  if (at === undefined) return undefined;
+  if (Node.isObjectLiteralExpression(at)) return at;
+  const held = Node.isIdentifier(at) ? initializerOf(at) : undefined;
+  return held !== undefined && Node.isObjectLiteralExpression(held) ? held : undefined;
+};
+
+/** What a member of an object written in place is given: a value, or a method written on it. */
+const memberIn = (object: TsNode | undefined, name: string): TsNode | undefined => {
+  if (object === undefined || !Node.isObjectLiteralExpression(object)) return undefined;
+  const property = object.getProperty(name);
+  if (property === undefined) return undefined;
+  if (Node.isMethodDeclaration(property)) return property;
+  const value = propertyValue(property);
+  return value === undefined ? undefined : unwrap(value);
+};
+
+/**
+ * What a parameter, or a member of one, stands for one call away (P256): the
+ * `options.url` a configuring method's provider builds its link from is the
+ * `url` of the object the repository's one call of the method hands it -
+ * `BillingClientModule.forRoot({ url: process.env.BILLING_URL })` - and the
+ * `opts.url` of a provider's factory is the `url` of what the repository
+ * provides for the token it injects in that place. A destructured parameter
+ * is the same member of what it is handed. Nothing where the reading was not
+ * handed a way to bind, or nothing is handed.
+ */
+const boundOf = (expression: TsNode, provided?: ProvidedValue, depth = 0): TsNode | undefined => {
+  const handed = provided?.handed;
+  if (handed === undefined || depth >= MAX_ALIASES) return undefined;
+  const at = unwrap(expression);
+  if (Node.isIdentifier(at)) {
+    // `{ url }` names the property; the value it is given is the name's.
+    const holder = at.getParent();
+    const symbol = holder !== undefined && Node.isShorthandPropertyAssignment(holder) ? holder.getValueSymbol() : at.getSymbol();
+    const declaration = symbol?.getDeclarations()[0];
+    if (declaration !== undefined && Node.isParameterDeclaration(declaration) && !declaration.isParameterProperty()) {
+      const value = handed(declaration);
+      return value === undefined ? undefined : unwrap(value);
+    }
+    if (declaration !== undefined && Node.isBindingElement(declaration)) {
+      const parameter = declaration.getParent()?.getParent();
+      if (parameter === undefined || !Node.isParameterDeclaration(parameter)) return undefined;
+      const name = declaration.getPropertyNameNode()?.getText() ?? declaration.getName();
+      const object = handed(parameter);
+      return memberIn(objectIn(object === undefined ? undefined : (boundOf(object, provided, depth + 1) ?? object)), name);
+    }
+    return undefined;
+  }
+  if (!Node.isPropertyAccessExpression(at)) return undefined;
+  const owner = unwrap(at.getExpression());
+  const object = boundOf(owner, provided, depth + 1) ?? (Node.isIdentifier(owner) ? initializerOf(owner) : undefined);
+  return memberIn(objectIn(object === undefined ? undefined : (boundOf(object, provided, depth + 1) ?? object)), at.getName());
 };
 
 /**
@@ -250,16 +318,21 @@ const factoryOf = (
     return name !== undefined && factories.includes(name) ? at : undefined;
   }
   if (depth >= MAX_ALIASES) return undefined;
-  const assigned = Node.isIdentifier(at) ? initializerOf(at) : memberValueOf(at, provided);
+  const assigned = (Node.isIdentifier(at) ? initializerOf(at) : memberValueOf(at, provided)) ?? boundOf(at, provided);
   return assigned === undefined ? undefined : factoryOf(assigned, factories, provided, depth + 1);
 };
 
-/** The one expression a function returns: an arrow's body, or its only `return`. */
-const returnedBy = (fn: TsNode | undefined): TsNode | undefined => {
+/**
+ * The one expression a function returns: an arrow's body, or its only
+ * `return`. A function a parameter is handed, one call away, is the one
+ * written there (P256): `useFactory: options.useFactory`.
+ */
+const returnedBy = (fn: TsNode | undefined, provided?: ProvidedValue): TsNode | undefined => {
   if (fn === undefined) return undefined;
-  const at = Node.isIdentifier(fn)
+  const named = Node.isIdentifier(fn)
     ? (initializerOf(fn) ?? (fn.getSymbol()?.getAliasedSymbol() ?? fn.getSymbol())?.getDeclarations().find((declaration) => Node.isFunctionDeclaration(declaration)))
     : unwrap(fn);
+  const at = named === undefined ? boundOf(fn, provided) : Node.isPropertyAccessExpression(named) ? (boundOf(named, provided) ?? named) : named;
   if (at === undefined) return undefined;
   if (Node.isArrowFunction(at)) {
     const body = at.getBody();
@@ -302,6 +375,19 @@ const sameToken = (a: TsNode, b: TsNode): boolean => {
   return one !== undefined ? one === symbolOf(right) : left.getText() === right.getText();
 };
 
+/** A function the repository declares, by the declaration its calls resolve to and the name they are written with. */
+const declaredFunction = (fn: TsNode): { readonly declaration: TsNode; readonly name: string } | undefined => {
+  if (Node.isFunctionDeclaration(fn) || Node.isMethodDeclaration(fn)) {
+    const name = fn.getName();
+    return name === undefined ? undefined : { declaration: fn, name };
+  }
+  const holder = fn.getParent();
+  if ((Node.isArrowFunction(fn) || Node.isFunctionExpression(fn)) && holder !== undefined && Node.isVariableDeclaration(holder)) {
+    return { declaration: holder, name: holder.getName() };
+  }
+  return undefined;
+};
+
 /**
  * What the repository provides for each injection token (P247), as both
  * containers write it: `{ provide: TOKEN, useFactory }` - the expression the
@@ -310,12 +396,52 @@ const sameToken = (a: TsNode, b: TsNode): boolean => {
  * about. One provider of a token is its value; none or several is nothing:
  * which one a container hands is its business at run time, and the injection
  * reader already says a token is ambiguous or unknown.
+ *
+ * A provider a configuring method builds (P256) - `forRoot` returning `{
+ * module, providers: [...] }`, written in this service or in a package of
+ * the workspace it declares - is one where the method is called: a
+ * `forRootAsync` beside it that nothing calls provides nothing. Its factory
+ * reads what the method was handed through `handed`, which is also how a
+ * factory's own parameters are read: the value provided for the token in its
+ * place of `inject`.
  */
 const providedValues = (sources: () => readonly SourceFile[]): ProvidedValue => {
-  let providers: Array<{ readonly token: TsNode; readonly value: TsNode }> | undefined;
-  const all = (): ReadonlyArray<{ readonly token: TsNode; readonly value: TsNode }> => {
+  interface Provider {
+    readonly token: TsNode;
+    /** The factory, or the value, as the provider writes it. */
+    readonly factory?: TsNode;
+    readonly given?: TsNode;
+  }
+  let providers: Provider[] | undefined;
+  /** Every call in the sources, by the name it is written with, read once. */
+  let calls: Map<string, CallExpression[]> | undefined;
+  const callsOf = (fn: { readonly declaration: TsNode; readonly name: string }): CallExpression[] => {
+    if (calls === undefined) {
+      const index = new Map<string, CallExpression[]>();
+      for (const source of sources()) {
+        for (const call of source.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+          const name = calleeName(call);
+          if (name !== undefined) index.set(name, [...(index.get(name) ?? []), call]);
+        }
+      }
+      calls = index;
+    }
+    return (calls.get(fn.name) ?? []).filter((call) => {
+      const callee = unwrap(call.getExpression());
+      const named = Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : callee;
+      const symbol = named.getSymbol();
+      return ((symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []).includes(fn.declaration);
+    });
+  };
+  /** Whether a provider is one the repository makes: written outside any named function, or in one it calls. */
+  const made = (provider: TsNode): boolean => {
+    const within = provider.getFirstAncestor((node) => Node.isFunctionDeclaration(node) || Node.isMethodDeclaration(node) || Node.isArrowFunction(node) || Node.isFunctionExpression(node));
+    const fn = within === undefined ? undefined : declaredFunction(within);
+    return fn === undefined || callsOf(fn).length > 0;
+  };
+  const all = (): readonly Provider[] => {
     if (providers !== undefined) return providers;
-    const found: Array<{ readonly token: TsNode; readonly value: TsNode }> = [];
+    const found: Provider[] = [];
     for (const source of sources()) {
       source.forEachDescendant((node) => {
         if (!Node.isObjectLiteralExpression(node)) return;
@@ -324,22 +450,59 @@ const providedValues = (sources: () => readonly SourceFile[]): ProvidedValue => 
         if (token === undefined) return;
         const factory = node.getProperty('useFactory');
         const given = node.getProperty('useValue');
-        const value =
-          factory !== undefined
-            ? returnedBy(Node.isMethodDeclaration(factory) ? factory : propertyValue(factory))
-            : given === undefined
-              ? undefined
-              : propertyValue(given);
-        if (value !== undefined) found.push({ token, value: madeBy(unwrap(value)) });
+        if ((factory === undefined && given === undefined) || !made(node)) return;
+        found.push({
+          token,
+          ...(factory === undefined ? {} : { factory: Node.isMethodDeclaration(factory) ? factory : propertyValue(factory) }),
+          ...(given === undefined ? {} : { given: propertyValue(given) }),
+        });
       });
     }
     providers = found;
     return found;
   };
-  return (token) => {
-    const values = [...new Set(all().filter((provider) => sameToken(provider.token, token)).map((provider) => provider.value))];
-    return values.length === 1 ? values[0] : undefined;
-  };
+  /** Tokens being worked out, so a provider whose factory injects its own token is nothing rather than a loop. */
+  const asking = new Set<TsNode>();
+  const provided: ProvidedValue = Object.assign(
+    (token: TsNode): TsNode | undefined => {
+      const mine = all().filter((provider) => sameToken(provider.token, token));
+      if (mine.length !== 1) return undefined;
+      const [one] = mine as [Provider];
+      if (asking.has(one.token)) return undefined;
+      asking.add(one.token);
+      try {
+        const value = one.factory !== undefined ? returnedBy(one.factory, provided) : one.given;
+        return value === undefined ? undefined : madeBy(unwrap(value));
+      } finally {
+        asking.delete(one.token);
+      }
+    },
+    {
+      handed: (parameter: TsNode): TsNode | undefined => {
+        if (!Node.isParameterDeclaration(parameter)) return undefined;
+        const fn = parameter.getParent();
+        if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn) && !Node.isFunctionDeclaration(fn) && !Node.isMethodDeclaration(fn)) return undefined;
+        const index = fn.getParameters().indexOf(parameter);
+        // A provider's factory is handed what is provided for the tokens it injects, in order.
+        const holder = Node.isMethodDeclaration(fn) ? fn : fn.getParent();
+        const isFactory =
+          holder !== undefined && (Node.isPropertyAssignment(holder) || Node.isMethodDeclaration(holder)) && holder.getName() === 'useFactory';
+        const object = isFactory ? holder.getParent() : undefined;
+        if (object !== undefined && Node.isObjectLiteralExpression(object) && object.getProperty('provide') !== undefined) {
+          const inject = memberIn(object, 'inject');
+          const list = inject === undefined ? undefined : unwrap(valueOf(inject));
+          const token = list !== undefined && Node.isArrayLiteralExpression(list) ? list.getElements()[index] : undefined;
+          return token === undefined || Node.isSpreadElement(token) ? undefined : provided(token);
+        }
+        // Any other function is handed the argument of the one call the repository makes of it.
+        const declared = declaredFunction(fn);
+        const found = declared === undefined ? [] : callsOf(declared);
+        const [only] = found;
+        return found.length === 1 && only !== undefined ? only.getArguments()[index] : undefined;
+      },
+    },
+  );
+  return provided;
 };
 
 /** The names between a proxy and the method that ends the chain. */
@@ -450,7 +613,15 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading, prov
     const property = written.getProperty(urlKey);
     if (property === undefined) return { kind: 'dynamic', protocol: link.protocol, why: `its options name no ${urlKey}` };
     const value = Node.isPropertyAssignment(property) ? property.getInitializer() : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : undefined;
-    const url = value === undefined ? undefined : unwrap(value);
+    // A parameter of the configuring method or factory the link is built in
+    // is what the repository hands it, one call away (P256).
+    const stated = value === undefined ? undefined : unwrap(value);
+    let url = stated;
+    for (let step = 0; url !== undefined && step < MAX_ALIASES; step += 1) {
+      const handed = boundOf(url, provided);
+      if (handed === undefined) break;
+      url = handed;
+    }
     if (url === undefined || Node.isArrowFunction(url) || Node.isFunctionExpression(url) || Node.isMethodDeclaration(property)) {
       return { kind: 'dynamic', protocol: link.protocol, why: `its ${urlKey} is worked out when each request is sent` };
     }

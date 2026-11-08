@@ -266,6 +266,12 @@ const inCallOrder = (a: GraphEdge, b: GraphEdge): number =>
 /** The service a request came through to reach a node, where the edge says (`meta.through`, P245). */
 const throughOf = (edge: GraphEdge): string | null => (typeof edge.meta?.['through'] === 'string' ? edge.meta['through'] : null);
 
+/** Whether an edge is a fetch the service it came through makes for itself: a router's for a `@requires` (P256). */
+const fetchedForItself = (edge: GraphEdge): boolean => {
+  const graphql = edge.meta?.['graphql'];
+  return graphql !== null && typeof graphql === 'object' && typeof (graphql as Record<string, unknown>)['requiredBy'] === 'string';
+};
+
 /** The strings a meta list holds: a `guarded_by` edge's `for`, an arriving edge's `answers` (P252). */
 const namesIn = (edge: GraphEdge | undefined, key: string): string[] | undefined => {
   const value = edge?.meta?.[key];
@@ -284,6 +290,11 @@ const namesIn = (edge: GraphEdge | undefined, key: string): string[] | undefined
  * P252: fields with no handler of their own the node answers) is in front of
  * a step only where the request asks it for one of them (`meta.answers` on
  * the edge that arrived), and says which.
+ *
+ * A fetch the service in between makes for itself - a router's for a
+ * `@requires`, which is not the client's selection - has none of that
+ * service's checks in front of it (P256): the router checks the operation
+ * it was sent, not the fields it adds to plan it.
  */
 const guardsOf = (db: GraphDb, id: string, detail: DetailLevel, arrived?: GraphEdge): GuardRef[] => {
   // Where each check was put, as the reader of the framework wrote it on the
@@ -298,7 +309,7 @@ const guardsOf = (db: GraphDb, id: string, detail: DetailLevel, arrived?: GraphE
   };
   return db
     .edgesFrom(id, [GUARD_EDGE])
-    .filter((edge) => arrived === undefined || throughOf(edge) === null || throughOf(edge) === throughOf(arrived))
+    .filter((edge) => arrived === undefined || throughOf(edge) === null || (throughOf(edge) === throughOf(arrived) && !fetchedForItself(arrived)))
     .filter((edge) => forOf(edge)?.length !== 0)
     .sort((a, b) => orderOf(a) - orderOf(b))
     .map((edge, index) => {

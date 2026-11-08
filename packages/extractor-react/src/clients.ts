@@ -65,6 +65,13 @@ export interface CallShape {
    */
   readonly bodyKeys?: readonly string[];
   /**
+   * The options the query is written under, the first one written winning
+   * (P256): axios's `params`, ky's `searchParams`, ofetch's `query`. Read so a
+   * request to a route that assembles its input from the query - a procedure's
+   * REST route - can be compared key by key.
+   */
+  readonly queryKeys?: readonly string[];
+  /**
    * The option the address is written under, when the call is handed one
    * options object holding it rather than an address (P244):
    * `api({ url: '/orders', method: 'post', data })`, `axios.request({ url })`.
@@ -198,7 +205,12 @@ export const VERB_CALLS: Readonly<Record<string, CallShape>> = {
  * either. The verb is `method` (axios sends `GET` where none is written), the
  * body `data`, and a `baseURL` written beside the address is the call's own.
  */
-const AXIOS_CONFIG_CALL: CallShape = { method: null, urlAt: 0, urlKey: 'url', optionsAt: 0, bodyKeys: ['data'] };
+const AXIOS_CONFIG_CALL: CallShape = { method: null, urlAt: 0, urlKey: 'url', optionsAt: 0, bodyKeys: ['data'], queryKeys: ['params'] };
+
+/** The verbs axios names as methods, each with its query under `params` in the options (P256). */
+const AXIOS_VERBS: Readonly<Record<string, CallShape>> = Object.fromEntries(
+  Object.entries(VERB_CALLS).map(([verb, shape]) => [verb, { ...shape, queryKeys: ['params'] }]),
+);
 
 export const AXIOS: RequestClient = {
   name: 'axios',
@@ -206,7 +218,7 @@ export const AXIOS: RequestClient = {
   packages: ['axios'],
   receiver: {
     types: ['AxiosInstance', 'AxiosStatic'].map((typeName) => ({ package: 'axios', typeName })),
-    verbs: { ...VERB_CALLS, request: AXIOS_CONFIG_CALL },
+    verbs: { ...AXIOS_VERBS, request: AXIOS_CONFIG_CALL },
   },
 };
 
@@ -220,7 +232,7 @@ export const OFETCH: RequestClient = {
   name: 'ofetch',
   package: null,
   packages: ['ofetch', 'nuxt'],
-  callee: { names: ['$fetch', 'ofetch', 'useFetch', 'useLazyFetch'], method: null, urlAt: 0, optionsAt: 1, bodyAt: 1 },
+  callee: { names: ['$fetch', 'ofetch', 'useFetch', 'useLazyFetch'], method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, queryKeys: ['query', 'params'] },
 };
 
 /**
@@ -231,7 +243,7 @@ export const OFETCH: RequestClient = {
 const KY_VERBS: Readonly<Record<string, CallShape>> = Object.fromEntries(
   ['get', 'post', 'put', 'patch', 'delete', 'head'].map((verb) => [
     verb,
-    { method: verb.toUpperCase(), urlAt: 0, optionsAt: 1, ...(['get', 'delete', 'head'].includes(verb) ? {} : { bodyKeys: ['json', 'body'] }) },
+    { method: verb.toUpperCase(), urlAt: 0, optionsAt: 1, queryKeys: ['searchParams'], ...(['get', 'delete', 'head'].includes(verb) ? {} : { bodyKeys: ['json', 'body'] }) },
   ]),
 );
 
@@ -245,7 +257,7 @@ export const KY: RequestClient = {
   name: 'ky',
   package: 'ky',
   packages: ['ky'],
-  callee: { names: ['ky'], method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['json', 'body'] },
+  callee: { names: ['ky'], method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['json', 'body'], queryKeys: ['searchParams'] },
   receiver: {
     types: ['KyInstance'].map((typeName) => ({ package: 'ky', typeName })),
     verbs: KY_VERBS,
@@ -346,9 +358,9 @@ export const CLIENT_FACTORIES: readonly ClientFactory[] = [
     modules: ['axios'],
     methods: ['create'],
     baseKey: 'baseURL',
-    called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['data'] },
+    called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, bodyKeys: ['data'], queryKeys: ['params'] },
     configCalled: AXIOS_CONFIG_CALL,
-    verbs: { ...VERB_CALLS, request: AXIOS_CONFIG_CALL },
+    verbs: { ...AXIOS_VERBS, request: AXIOS_CONFIG_CALL },
     defaults: 'defaults',
     rewrites: { registeredAt: ['interceptors', 'request', 'use'], handed: 'options', addressKey: 'url', inherited: 'none' },
   },
@@ -358,8 +370,8 @@ export const CLIENT_FACTORIES: readonly ClientFactory[] = [
     globals: ['$fetch'],
     methods: ['create'],
     baseKey: 'baseURL',
-    called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1 },
-    verbs: { raw: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1 } },
+    called: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, queryKeys: ['query', 'params'] },
+    verbs: { raw: { method: null, urlAt: 0, optionsAt: 1, bodyAt: 1, queryKeys: ['query', 'params'] } },
     rewrites: { optionAt: ['onRequest'], handed: 'context', addressKey: 'request', inherited: 'replaced' },
   },
   {

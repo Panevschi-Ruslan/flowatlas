@@ -170,6 +170,28 @@ describe('walking outward from an entry', () => {
     db.close();
   });
 
+  it("shows no check of the router on a step it fetches for a @requires, and the entry's own checks still (P256)", () => {
+    const db = buildTestDb({
+      nodes: [
+        node('ui_api_call:web#src/Estimate.tsx:5:1', { type: 'ui_api_call', repo: 'web', label: 'query Estimate' }),
+        entry('entry:inventory:graphql:Product.weight', { kind: 'graphql', repo: 'inventory', label: 'Product.weight' }),
+        node('router#router/supergraph.graphql:@authenticated', { type: 'guard', repo: 'router', label: '@authenticated', file: 'router/supergraph.graphql', line: 20 }),
+        node('inventory#src/auth.ts:StaffGuard', { type: 'guard', repo: 'inventory', label: 'StaffGuard' }),
+      ],
+      edges: [
+        edge('ui_api_call:web#src/Estimate.tsx:5:1', 'entry:inventory:graphql:Product.weight', {
+          type: 'hits',
+          meta: { through: 'router', graphql: { operation: 'Estimate', gateway: 'router', subgraph: 'inventory', requiredBy: 'Product.estimate' } },
+        }),
+        edge('entry:inventory:graphql:Product.weight', 'router#router/supergraph.graphql:@authenticated', { type: 'guarded_by', meta: { order: 0, through: 'router' } }),
+        edge('entry:inventory:graphql:Product.weight', 'inventory#src/auth.ts:StaffGuard', { type: 'guarded_by', meta: { order: 1 } }),
+      ],
+    });
+    const [fetched] = buildFlowTree(db, 'ui_api_call:web#src/Estimate.tsx:5:1', {}).root.children;
+    expect(fetched?.guards?.map((guard) => guard.label)).toEqual(['StaffGuard']);
+    db.close();
+  });
+
   it('walks a bot callback exactly as it walks a route', () => {
     const asRoute = buildTestDb(straightLine('http', 'GET /orders'));
     const asCallback = buildTestDb(straightLine('bot_callback', 'order_confirm'));

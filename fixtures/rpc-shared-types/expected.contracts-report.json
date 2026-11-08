@@ -1,0 +1,1048 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-08T12:58:08.573Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:worker#src/catalog.client.ts:12:12",
+        "to": "entry:catalog:http:GET:/api/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/catalog.client.ts:12:12|http_calls|entry:catalog:http:GET:/api/products",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "worker",
+        "typeId": "{category:unknown}",
+        "symbol": "worker#src/catalog.client.ts:CatalogClient.teas",
+        "writes": [
+          "category"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{category:string;limit:number}",
+        "symbol": "catalog#src/router.ts:products.list@24"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "http_out:worker#src/catalog.client.ts:12:12",
+            "to": "entry:catalog:http:GET:/api/products",
+            "type": "http_calls"
+          },
+          "edgeKey": "http_out:worker#src/catalog.client.ts:12:12|http_calls|entry:catalog:http:GET:/api/products",
+          "direction": "request",
+          "sender": {
+            "service": "worker",
+            "typeId": "{category:unknown}",
+            "symbol": "worker#src/catalog.client.ts:CatalogClient.teas",
+            "writes": [
+              "category"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "catalog",
+            "typeId": "{category:string;limit:number}",
+            "symbol": "catalog#src/router.ts:products.list@24"
+          },
+          "typeId": "{category:string;limit:number}",
+          "field": "limit",
+          "expected": "number",
+          "actual": null,
+          "rule": null,
+          "message": "receiver catalog requires `limit: number`; sender worker does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "any-unknown-skip:category"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/catalog.client.ts:12:12",
+        "to": "entry:catalog:http:GET:/api/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/catalog.client.ts:12:12|http_calls|entry:catalog:http:GET:/api/products",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "catalog#src/router.ts:products.list@24"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "worker#src/catalog.client.ts:CatalogClient.teas"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/fulfil.service.ts:17:26",
+        "to": "entry:api:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/fulfil.service.ts:17:26|hits|entry:api:rpc:orders.place",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "worker",
+        "typeId": "{sku:string;quantity:number}",
+        "symbol": "worker#src/fulfil.service.ts:FulfilService.fulfil",
+        "writes": [
+          "quantity",
+          "sku"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{sku:string;quantity:number}",
+        "symbol": "api#../../packages/router/src/index.ts:orders.place@15"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/fulfil.service.ts:17:26",
+        "to": "entry:api:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/fulfil.service.ts:17:26|hits|entry:api:rpc:orders.place",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "{id:string}",
+        "symbol": "api#../../packages/router/src/index.ts:orders.place@15"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "{id:string}",
+        "symbol": "worker#src/fulfil.service.ts:FulfilService.fulfil"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/fulfil.service.ts:18:11",
+        "to": "entry:edge:rpc:entries.record",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/fulfil.service.ts:18:11|hits|entry:edge:rpc:entries.record",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "worker",
+        "typeId": "{orderId:string;amount:number}",
+        "symbol": "worker#src/fulfil.service.ts:FulfilService.fulfil",
+        "writes": [
+          "amount",
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "edge",
+        "typeId": "{orderId:string;amount:number}",
+        "symbol": "edge#src/router.ts:entries.record@9"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/fulfil.service.ts:19:12",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/fulfil.service.ts:19:12|hits|entry:api:rpc:orders.get",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "worker",
+        "typeId": "{id:string}",
+        "symbol": "worker#src/fulfil.service.ts:FulfilService.fulfil",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{id:string}",
+        "symbol": "api#../../packages/router/src/index.ts:orders.get@16"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/fulfil.service.ts:19:12",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/fulfil.service.ts:19:12|hits|entry:api:rpc:orders.get",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "{id:string;sku:'sku-1';quantity:1}",
+        "symbol": "api#../../packages/router/src/index.ts:orders.get@16"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "{id:string;sku:'sku-1';quantity:1}",
+        "symbol": "worker#src/fulfil.service.ts:FulfilService.fulfil"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:19:10",
+        "to": "entry:catalog:http:GET:/api/products/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:19:10|hits|entry:catalog:http:GET:/api/products/:param",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{id:unknown}",
+        "symbol": "web#src/catalog.ts:getProduct",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{id:string}",
+        "symbol": "catalog#src/router.ts:products.get@19"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:id"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:19:10",
+        "to": "entry:catalog:http:GET:/api/products/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:19:10|hits|entry:catalog:http:GET:/api/products/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}",
+        "symbol": "catalog#src/router.ts:products.get@19"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#Product",
+        "symbol": "web#src/catalog.ts:getProduct"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:24:10",
+        "to": "entry:catalog:http:GET:/api/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:24:10|hits|entry:catalog:http:GET:/api/products",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{category:unknown;limit:unknown}",
+        "symbol": "web#src/catalog.ts:listTea",
+        "writes": [
+          "category",
+          "limit"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{category:string;limit:number}",
+        "symbol": "catalog#src/router.ts:products.list@24"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:category",
+        "any-unknown-skip:limit"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:24:10",
+        "to": "entry:catalog:http:GET:/api/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:24:10|hits|entry:catalog:http:GET:/api/products",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "catalog#src/router.ts:products.list@24"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#Product[]",
+        "symbol": "web#src/catalog.ts:listTea"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:29:10",
+        "to": "entry:catalog:http:GET:/api/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:29:10|hits|entry:catalog:http:GET:/api/products",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{category:unknown;sort:unknown}",
+        "symbol": "web#src/catalog.ts:sortedBy",
+        "writes": [
+          "category",
+          "sort"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{category:string;limit:number}",
+        "symbol": "catalog#src/router.ts:products.list@24"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "ui_api_call:web#src/catalog.ts:29:10",
+            "to": "entry:catalog:http:GET:/api/products",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/catalog.ts:29:10|hits|entry:catalog:http:GET:/api/products",
+          "direction": "request",
+          "sender": {
+            "service": "web",
+            "typeId": "{category:unknown;sort:unknown}",
+            "symbol": "web#src/catalog.ts:sortedBy",
+            "writes": [
+              "category",
+              "sort"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "catalog",
+            "typeId": "{category:string;limit:number}",
+            "symbol": "catalog#src/router.ts:products.list@24"
+          },
+          "typeId": "{category:string;limit:number}",
+          "field": "limit",
+          "expected": "number",
+          "actual": null,
+          "rule": null,
+          "message": "receiver catalog requires `limit: number`; sender web does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:web#src/catalog.ts:29:10",
+            "to": "entry:catalog:http:GET:/api/products",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/catalog.ts:29:10|hits|entry:catalog:http:GET:/api/products",
+          "direction": "request",
+          "sender": {
+            "service": "web",
+            "typeId": "{category:unknown;sort:unknown}",
+            "symbol": "web#src/catalog.ts:sortedBy",
+            "writes": [
+              "category",
+              "sort"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "catalog",
+            "typeId": "{category:string;limit:number}",
+            "symbol": "catalog#src/router.ts:products.list@24"
+          },
+          "typeId": "{category:string;limit:number}",
+          "field": "sort",
+          "expected": null,
+          "actual": "unknown",
+          "rule": null,
+          "message": "sender web sends `sort: unknown`; receiver catalog declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "any-unknown-skip:category",
+        "any-unknown-skip:sort"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:29:10",
+        "to": "entry:catalog:http:GET:/api/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:29:10|hits|entry:catalog:http:GET:/api/products",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "catalog#src/router.ts:products.list@24"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#Product[]",
+        "symbol": "web#src/catalog.ts:sortedBy"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:34:10",
+        "to": "entry:catalog:http:POST:/api/products/create",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:34:10|hits|entry:catalog:http:POST:/api/products/create",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{name:string;price:number}",
+        "symbol": "web#src/catalog.ts:createProduct",
+        "writes": [
+          "name",
+          "price"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{name:string;price:number;sku:string}",
+        "symbol": "catalog#src/router.ts:products.create@29"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "ui_api_call:web#src/catalog.ts:34:10",
+            "to": "entry:catalog:http:POST:/api/products/create",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/catalog.ts:34:10|hits|entry:catalog:http:POST:/api/products/create",
+          "direction": "request",
+          "sender": {
+            "service": "web",
+            "typeId": "{name:string;price:number}",
+            "symbol": "web#src/catalog.ts:createProduct",
+            "writes": [
+              "name",
+              "price"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "catalog",
+            "typeId": "{name:string;price:number;sku:string}",
+            "symbol": "catalog#src/router.ts:products.create@29"
+          },
+          "typeId": "{name:string;price:number;sku:string}",
+          "field": "sku",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver catalog requires `sku: string`; sender web does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:34:10",
+        "to": "entry:catalog:http:POST:/api/products/create",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:34:10|hits|entry:catalog:http:POST:/api/products/create",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string}",
+        "symbol": "catalog#src/router.ts:products.create@29"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{id:string}",
+        "symbol": "web#src/catalog.ts:createProduct"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:39:10",
+        "to": "entry:catalog:http:GET:/api/products/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:39:10|hits|entry:catalog:http:GET:/api/products/:param",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{id:unknown}",
+        "symbol": "web#src/catalog.ts:productCard",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{id:string}",
+        "symbol": "catalog#src/router.ts:products.get@19"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:id"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:39:10",
+        "to": "entry:catalog:http:GET:/api/products/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:39:10|hits|entry:catalog:http:GET:/api/products/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}",
+        "symbol": "catalog#src/router.ts:products.get@19"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#ProductCard",
+        "symbol": "web#src/catalog.ts:productCard"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:web#src/catalog.ts:39:10",
+            "to": "entry:catalog:http:GET:/api/products/:param",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/catalog.ts:39:10|hits|entry:catalog:http:GET:/api/products/:param",
+          "direction": "response",
+          "sender": {
+            "service": "catalog",
+            "typeId": "{id:string;name:string}",
+            "symbol": "catalog#src/router.ts:products.get@19"
+          },
+          "receiver": {
+            "service": "web",
+            "typeId": "type:web#ProductCard",
+            "symbol": "web#src/catalog.ts:productCard"
+          },
+          "typeId": "type:web#ProductCard",
+          "field": "name",
+          "expected": null,
+          "actual": "string",
+          "rule": null,
+          "message": "sender catalog sends `name: string`; receiver web declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "ui_api_call:web#src/catalog.ts:39:10",
+            "to": "entry:catalog:http:GET:/api/products/:param",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/catalog.ts:39:10|hits|entry:catalog:http:GET:/api/products/:param",
+          "direction": "response",
+          "sender": {
+            "service": "catalog",
+            "typeId": "{id:string;name:string}",
+            "symbol": "catalog#src/router.ts:products.get@19"
+          },
+          "receiver": {
+            "service": "web",
+            "typeId": "type:web#ProductCard",
+            "symbol": "web#src/catalog.ts:productCard"
+          },
+          "typeId": "type:web#ProductCard",
+          "field": "title",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver web requires `title: string`; sender catalog does not send it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:44:10",
+        "to": "entry:catalog:http:PATCH:/api/products/:param/price",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:44:10|hits|entry:catalog:http:PATCH:/api/products/:param/price",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{params:{id:unknown};body:{price:number}}",
+        "symbol": "web#src/catalog.ts:reprice",
+        "writes": [
+          "params",
+          "body"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{params:{id:string};body:{price:number}}",
+        "symbol": "catalog#src/router.ts:products.reprice@34"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:params.id"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:44:10",
+        "to": "entry:catalog:http:PATCH:/api/products/:param/price",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:44:10|hits|entry:catalog:http:PATCH:/api/products/:param/price",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}",
+        "symbol": "catalog#src/router.ts:products.reprice@34"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#Product",
+        "symbol": "web#src/catalog.ts:reprice"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/legacy.ts:8:10",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/legacy.ts:8:10|hits|entry:api:rpc:orders.get",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "web",
+        "typeId": "{id:string}",
+        "symbol": "web#src/legacy.ts:findLegacyOrder",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{id:string}",
+        "symbol": "api#../../packages/router/src/index.ts:orders.get@16"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/legacy.ts:8:10",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/legacy.ts:8:10|hits|entry:api:rpc:orders.get",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "{id:string;sku:'sku-1';quantity:1}",
+        "symbol": "api#../../packages/router/src/index.ts:orders.get@16"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{id:string;sku:'sku-1';quantity:1}",
+        "symbol": "web#src/legacy.ts:findLegacyOrder"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/orders.ts:5:10",
+        "to": "entry:api:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders.ts:5:10|hits|entry:api:rpc:orders.place",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "web",
+        "typeId": "{sku:string;quantity:number}",
+        "symbol": "web#src/orders.ts:placeOrder",
+        "writes": [
+          "quantity",
+          "sku"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{sku:string;quantity:number}",
+        "symbol": "api#../../packages/router/src/index.ts:orders.place@15"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/orders.ts:5:10",
+        "to": "entry:api:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders.ts:5:10|hits|entry:api:rpc:orders.place",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "{id:string}",
+        "symbol": "api#../../packages/router/src/index.ts:orders.place@15"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{id:string}",
+        "symbol": "web#src/orders.ts:placeOrder"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/orders.ts:9:10",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders.ts:9:10|hits|entry:api:rpc:orders.get",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "web",
+        "typeId": "{id:string}",
+        "symbol": "web#src/orders.ts:findOrder",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{id:string}",
+        "symbol": "api#../../packages/router/src/index.ts:orders.get@16"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/orders.ts:9:10",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders.ts:9:10|hits|entry:api:rpc:orders.get",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "api",
+        "typeId": "{id:string;sku:'sku-1';quantity:1}",
+        "symbol": "api#../../packages/router/src/index.ts:orders.get@16"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{id:string;sku:'sku-1';quantity:1}",
+        "symbol": "web#src/orders.ts:findOrder"
+      },
+      "findings": [],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "http_out:worker#src/catalog.client.ts:12:12",
+        "to": "entry:catalog:http:GET:/api/products",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/catalog.client.ts:12:12|http_calls|entry:catalog:http:GET:/api/products",
+      "direction": "request",
+      "sender": {
+        "service": "worker",
+        "typeId": "{category:unknown}",
+        "symbol": "worker#src/catalog.client.ts:CatalogClient.teas",
+        "writes": [
+          "category"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{category:string;limit:number}",
+        "symbol": "catalog#src/router.ts:products.list@24"
+      },
+      "typeId": "{category:string;limit:number}",
+      "field": "limit",
+      "expected": "number",
+      "actual": null,
+      "rule": null,
+      "message": "receiver catalog requires `limit: number`; sender worker does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:29:10",
+        "to": "entry:catalog:http:GET:/api/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:29:10|hits|entry:catalog:http:GET:/api/products",
+      "direction": "request",
+      "sender": {
+        "service": "web",
+        "typeId": "{category:unknown;sort:unknown}",
+        "symbol": "web#src/catalog.ts:sortedBy",
+        "writes": [
+          "category",
+          "sort"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{category:string;limit:number}",
+        "symbol": "catalog#src/router.ts:products.list@24"
+      },
+      "typeId": "{category:string;limit:number}",
+      "field": "limit",
+      "expected": "number",
+      "actual": null,
+      "rule": null,
+      "message": "receiver catalog requires `limit: number`; sender web does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:29:10",
+        "to": "entry:catalog:http:GET:/api/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:29:10|hits|entry:catalog:http:GET:/api/products",
+      "direction": "request",
+      "sender": {
+        "service": "web",
+        "typeId": "{category:unknown;sort:unknown}",
+        "symbol": "web#src/catalog.ts:sortedBy",
+        "writes": [
+          "category",
+          "sort"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{category:string;limit:number}",
+        "symbol": "catalog#src/router.ts:products.list@24"
+      },
+      "typeId": "{category:string;limit:number}",
+      "field": "sort",
+      "expected": null,
+      "actual": "unknown",
+      "rule": null,
+      "message": "sender web sends `sort: unknown`; receiver catalog declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:34:10",
+        "to": "entry:catalog:http:POST:/api/products/create",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:34:10|hits|entry:catalog:http:POST:/api/products/create",
+      "direction": "request",
+      "sender": {
+        "service": "web",
+        "typeId": "{name:string;price:number}",
+        "symbol": "web#src/catalog.ts:createProduct",
+        "writes": [
+          "name",
+          "price"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{name:string;price:number;sku:string}",
+        "symbol": "catalog#src/router.ts:products.create@29"
+      },
+      "typeId": "{name:string;price:number;sku:string}",
+      "field": "sku",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver catalog requires `sku: string`; sender web does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:39:10",
+        "to": "entry:catalog:http:GET:/api/products/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:39:10|hits|entry:catalog:http:GET:/api/products/:param",
+      "direction": "response",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}",
+        "symbol": "catalog#src/router.ts:products.get@19"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#ProductCard",
+        "symbol": "web#src/catalog.ts:productCard"
+      },
+      "typeId": "type:web#ProductCard",
+      "field": "name",
+      "expected": null,
+      "actual": "string",
+      "rule": null,
+      "message": "sender catalog sends `name: string`; receiver web declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:39:10",
+        "to": "entry:catalog:http:GET:/api/products/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:39:10|hits|entry:catalog:http:GET:/api/products/:param",
+      "direction": "response",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}",
+        "symbol": "catalog#src/router.ts:products.get@19"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#ProductCard",
+        "symbol": "web#src/catalog.ts:productCard"
+      },
+      "typeId": "type:web#ProductCard",
+      "field": "title",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver web requires `title: string`; sender catalog does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:worker#src/fulfil.service.ts:18:11",
+        "to": "entry:edge:rpc:entries.record",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:worker#src/fulfil.service.ts:18:11|hits|entry:edge:rpc:entries.record",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "worker#src/fulfil.service.ts:FulfilService.fulfil reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    }
+  ],
+  "summary": {
+    "edges": 25,
+    "shared": 0,
+    "identical": 13,
+    "hash_differs": 12,
+    "unchecked": 1,
+    "errors": 4,
+    "warnings": 0,
+    "infos": 2,
+    "ignored": 0
+  }
+}

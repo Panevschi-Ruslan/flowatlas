@@ -422,3 +422,84 @@ describe('a client injected by a token (P247)', () => {
     expect(requestFor(graph, 'invoices.byOrder')?.meta?.['link']).toEqual({ protocol: 'trpc', path: '/trpc' });
   });
 });
+
+describe('a client a configured module builds, one call away (P256)', () => {
+  /** A module of a workspace package, configured by the service that imports it. */
+  const PACKAGE = `
+    import { Module, type DynamicModule } from '@nestjs/common';
+    import { createTRPCClient, httpBatchLink } from '@trpc/client';
+    export const BILLING = 'BILLING';
+    const OPTIONS = 'BILLING_OPTIONS';
+    export interface BillingOptions { url: string }
+    @Module({})
+    export class BillingClientModule {
+      static forRoot(options: BillingOptions): DynamicModule {
+        return {
+          module: BillingClientModule,
+          providers: [{ provide: BILLING, useFactory: () => createTRPCClient<any>({ links: [httpBatchLink({ url: options.url })] }) }],
+          exports: [BILLING],
+        };
+      }
+      static forRootAsync(options: { useFactory: (...args: any[]) => BillingOptions; inject?: any[] }): DynamicModule {
+        return {
+          module: BillingClientModule,
+          providers: [
+            { provide: OPTIONS, useFactory: options.useFactory, inject: options.inject ?? [] },
+            { provide: BILLING, useFactory: ({ url }: BillingOptions) => createTRPCClient<any>({ links: [httpBatchLink({ url })] }), inject: [OPTIONS] },
+          ],
+          exports: [BILLING],
+        };
+      }
+    }
+  `;
+  const SERVICE = `
+    import { Inject, Injectable } from '@nestjs/common';
+    import { BILLING } from '../packages/billing-client/src/module';
+    @Injectable()
+    export class BillingService {
+      constructor(@Inject(BILLING) private readonly billing: any) {}
+      invoice(orderId: string) {
+        return this.billing.invoices.create.mutate({ orderId });
+      }
+    }
+  `;
+  const linkOf = (app: string) =>
+    requestFor(
+      read(
+        {
+          '/packages/billing-client/src/module.ts': PACKAGE,
+          '/src/billing.service.ts': SERVICE,
+          '/src/app.module.ts': `
+            import { Module } from '@nestjs/common';
+            import { BillingClientModule } from '../packages/billing-client/src/module';
+            declare const config: { get(key: string): string };
+            ${app}
+          `,
+        },
+        TRPC,
+      ),
+      'invoices.create',
+    )?.meta?.['link'];
+
+  it("reads forRoot's link from the options its one call hands it, and leaves out the forRootAsync nobody calls", () => {
+    expect(linkOf('@Module({ imports: [BillingClientModule.forRoot({ url: `${process.env.BILLING_URL}/trpc` })] }) export class AppModule {}')).toEqual({
+      protocol: 'trpc',
+      path: '/trpc',
+      baseUrlEnv: 'BILLING_URL',
+    });
+  });
+
+  it("reads forRootAsync's link from what its factory returns, through the token the client's factory injects", () => {
+    expect(
+      linkOf('@Module({ imports: [BillingClientModule.forRootAsync({ useFactory: () => ({ url: `${process.env.BILLING_URL}/trpc` }) })] }) export class AppModule {}'),
+    ).toEqual({ protocol: 'trpc', path: '/trpc', baseUrlEnv: 'BILLING_URL' });
+  });
+
+  it('follows nothing where the method is called twice, with two addresses', () => {
+    const twice = linkOf(`
+      @Module({ imports: [BillingClientModule.forRoot({ url: 'http://one.internal/trpc' })] }) export class AppModule {}
+      @Module({ imports: [BillingClientModule.forRoot({ url: 'http://two.internal/trpc' })] }) export class OtherModule {}
+    `);
+    expect(twice).not.toEqual(expect.objectContaining({ path: '/trpc' }));
+  });
+});

@@ -163,6 +163,7 @@ export {
   type NuxtModules,
 } from './nuxt-modules.js';
 export type { LayerClaim } from './framework-conventions.js';
+export { viteConventions } from './vite-conventions.js';
 export {
   fsRoutesAdapter,
   REMIX_ROUTES,

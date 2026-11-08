@@ -159,7 +159,16 @@ export const uncheckedNote = (
     // library is installed; in a clone nobody installed it is `any`, and a
     // comparison against `any` agrees with everything. So nothing is compared
     // and the sentence says why, rather than a verdict that compared nothing.
+    // A plain request to a procedure's REST route whose query is written in
+    // a way nothing reads (P256): the procedure's input is assembled from it,
+    // so what the call hands cannot be told.
     case 'procedure-input-by-name':
+      if (detail === 'query') {
+        return {
+          message: `${subject} reaches a procedure's REST route, whose input is assembled from the query of a GET, and writes its query in a way that is not read - a query string built elsewhere, or options handed by a name - so what it hands the procedure is not compared`,
+          hint: 'Write the query keys in the address, or in an object written in place under the client\'s query option (params, searchParams, query), so each key can be checked against the procedure\'s input.',
+        };
+      }
       return {
         message:
           detail === undefined
@@ -204,23 +213,16 @@ export const uncheckedNote = (
     // declaration with itself always agrees, which is the one verdict worse
     // than none. Through a hook or a query's options (P247) nothing at the call
     // states the answer at all: the binding types it where it is read. A plain
-    // request to the procedure's route (P252, `detail` the type it writes) is
-    // typed by nothing but itself: the server's answer is inferred from its
-    // handler, and nothing ties the caller's type to it.
+    // request to the procedure's route is compared with the output (P256).
     case 'procedure-output-inferred':
       return detail === 'hook'
         ? {
             message: `what ${subject} answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it`,
             hint: 'Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared.',
           }
-        : detail === undefined
-        ? {
+        : {
             message: `what ${subject} answers reaches its caller as a type inferred from the server's own tree, so the two ends are one declaration`,
             hint: 'Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls.',
-          }
-        : {
-            message: `what ${subject} answers is the procedure's output, inferred from its handler on the server, and its caller is a plain request that types it as ${detail} itself, which nothing ties to the server's tree; the graph holds the output by name, so the two are not compared`,
-            hint: `Nothing keeps ${detail} in step with the procedure: call it through a client typed from the server's router, or type the request with the output's own type, exported from the server.`,
           };
     case 'channel-without-producer':
       return {

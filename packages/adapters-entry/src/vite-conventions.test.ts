@@ -2,7 +2,8 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { viteConventions } from './vite.js';
+import { orpcProceduresAdapter, trpcProceduresAdapter } from './procedure-routers.js';
+import { viteConventions } from './vite-conventions.js';
 
 const roots: string[] = [];
 afterAll(() => {
@@ -56,6 +57,13 @@ describe("a Vite configuration's aliases (P240)", () => {
     const conventions = viteConventions(root, {});
     expect(conventions?.paths).toEqual({ '@': ['src'], '@/*': ['src/*'] });
     expect(conventions?.rows?.map((row) => [row.reason, row.symbol])).toEqual([['framework-setting-dynamic', 'resolve.alias[1]']]);
+  });
+
+  it('is stated by the procedure adapters too, so a server Vite builds resolves through them (P256)', () => {
+    expect(orpcProceduresAdapter.conventions).toBe(viteConventions);
+    expect(trpcProceduresAdapter.conventions).toBe(viteConventions);
+    const root = repo({ 'src/lib/reports.ts': '', 'vite.config.ts': "export default { resolve: { alias: { '@lib': './src/lib' } } };" });
+    expect(orpcProceduresAdapter.conventions?.(root, {})?.paths).toEqual({ '@lib': ['src/lib'], '@lib/*': ['src/lib/*'] });
   });
 
   it('states nothing for a configuration with no alias, or no configuration', () => {

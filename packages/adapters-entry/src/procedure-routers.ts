@@ -18,6 +18,7 @@ import {
 } from '@flowatlas/core';
 import type {
   ArrowFunction,
+  CallExpression,
   FunctionDeclaration,
   FunctionExpression,
   MethodDeclaration,
@@ -31,6 +32,7 @@ import { routeAddressOfFile } from './fs-routes.js';
 import { APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 import type { ProcedureDialect, ProcedureMount } from './procedure-dialects.js';
 import { ORPC, TRPC } from './procedure-dialects.js';
+import { viteConventions } from './vite-conventions.js';
 import {
   enclosingClass,
   fileOfNode,
@@ -304,6 +306,15 @@ export interface DeclaredError {
 export interface ProcedureRoute {
   method?: string;
   path?: string;
+  /**
+   * How the route's handler hands the procedure its input and answers with
+   * its output, where the route says it differs from the default (P256):
+   * `detailed` is `{ params, query, headers, body }` in and `{ status,
+   * headers, body }` out, where `compact` merges the path's parameters with
+   * the query or the body, and answers with the output itself.
+   */
+  inputStructure?: string;
+  outputStructure?: string;
 }
 
 /** A string a reader can name, from a literal or a template with no holes. */
@@ -355,7 +366,15 @@ const routeWritten = (links: readonly Link[], dialect: ProcedureDialect, into: P
     if (literal === undefined) continue;
     const method = literalText(propertyValue(literal, 'method'));
     const path = literalText(propertyValue(literal, 'path'));
-    route = { ...route, ...(method === undefined ? {} : { method: method.toUpperCase() }), ...(path === undefined ? {} : { path }) };
+    const inputStructure = literalText(propertyValue(literal, 'inputStructure'));
+    const outputStructure = literalText(propertyValue(literal, 'outputStructure'));
+    route = {
+      ...route,
+      ...(method === undefined ? {} : { method: method.toUpperCase() }),
+      ...(path === undefined ? {} : { path }),
+      ...(inputStructure === undefined ? {} : { inputStructure }),
+      ...(outputStructure === undefined ? {} : { outputStructure }),
+    };
   }
   return route;
 };
@@ -983,7 +1002,7 @@ interface UnreadMember {
 }
 
 const LAZY_HINT =
-  'Write the import() as a relative path to the file in this service, or declare its alias under compilerOptions.paths, so the branch it loads can be read.';
+  "Write the import() as a relative path to the file in this service, or declare its alias under compilerOptions.paths or in the bundler's configuration (Vite's resolve.alias, Nuxt's alias), so the branch it loads can be read.";
 
 const MOUNT_HINT =
   'Import the tree from a file inside this service, or add the package it comes from to sharedPackages, so the ways in it serves can be read.';
@@ -1184,6 +1203,43 @@ const addressOfMount = (
   return { unread: ways.join(', and ') };
 };
 
+/** Whether a service-relative path is a file of a workspace package beside the service, not its own (P256). */
+const outsideService = (file: string): boolean => file === '..' || file.startsWith('../');
+
+/**
+ * Whether a call hands a mount's plugin to be registered (P256):
+ * `server.register(fastifyTRPCPlugin, …)`, the plugin by its name or as a
+ * member of what it was imported as. The call is then the mount's, its
+ * arguments the plugin's options.
+ */
+const pluginHanded = (call: CallExpression, mount: ProcedureMount, name: string): boolean => {
+  if (mount.plugin === undefined || mount.plugin.method !== name) return false;
+  const handed = call.getArguments()[mount.plugin.at];
+  const value = handed === undefined ? undefined : unwrapValue(handed);
+  if (value === undefined) return false;
+  const named = Node.isIdentifier(value) ? value.getText() : Node.isPropertyAccessExpression(value) ? value.getName() : undefined;
+  return named === mount.call;
+};
+
+/**
+ * The property a dotted key names in an options object (P256):
+ * `trpcOptions.router` in `{ prefix, trpcOptions: { router } }`, each step
+ * written in place or by a name bound to an object written in place.
+ */
+const propertyAlong = (options: TsNode, key: string): TsNode | undefined => {
+  let at: TsNode | undefined = options;
+  let property: TsNode | undefined;
+  for (const step of key.split('.')) {
+    const value: TsNode | undefined = at === undefined ? undefined : unwrapValue(at);
+    const object: TsNode | undefined = value === undefined ? undefined : Node.isObjectLiteralExpression(value) ? value : declaredValue(value);
+    if (object === undefined || !Node.isObjectLiteralExpression(object)) return undefined;
+    property = object.getProperty(step);
+    if (property === undefined) return undefined;
+    at = Node.isPropertyAssignment(property) ? property.getInitializer() : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : undefined;
+  }
+  return property;
+};
+
 const mountsIn = function* (
   sourceFile: SourceFile,
   dialect: ProcedureDialect,
@@ -1203,7 +1259,9 @@ const mountsIn = function* (
           : undefined
       : calleeName(call);
     if (name === undefined) continue;
-    const mount = dialect.mounts.find((each) => each.call === name && each.constructed === Node.isNewExpression(call));
+    const mount =
+      dialect.mounts.find((each) => each.plugin === undefined && each.call === name && each.constructed === Node.isNewExpression(call)) ??
+      (Node.isCallExpression(call) ? dialect.mounts.find((each) => pluginHanded(call, each, name)) : undefined);
     if (mount === undefined) continue;
     const args = call.getArguments();
     const at = args[mount.treeAt];
@@ -1211,10 +1269,7 @@ const mountsIn = function* (
     // The options spelling first, because a wrapper that takes the tree alone is
     // recognised by the object not being there rather than by a second row.
     const written = unwrapValue(at);
-    const keyed =
-      mount.treeKey !== undefined && Node.isObjectLiteralExpression(written)
-        ? written.getProperty(mount.treeKey)
-        : undefined;
+    const keyed = mount.treeKey === undefined ? undefined : propertyAlong(written, mount.treeKey);
     const value = keyed === undefined ? written : (memberOf(keyed, ctx)?.value ?? written);
     const resolved = unwrapValue(value);
     const tree = forest.at(resolved) ?? forest.at(declaredValue(resolved) ?? resolved);
@@ -1224,7 +1279,7 @@ const mountsIn = function* (
       site,
       ...(tree === undefined ? {} : { tree }),
       named: label(value),
-      registration: Node.isNewExpression(call) ? `new ${name}(…)` : `${name}(…)`,
+      registration: Node.isNewExpression(call) ? `new ${name}(…)` : mount.plugin === undefined ? `${name}(…)` : `${name}(${mount.call}, …)`,
       ...(mount.protocol === undefined ? {} : { protocol: mount.protocol }),
       routes: mount.routes,
       ...(answered === undefined ? {} : 'prefixes' in answered ? { prefixes: answered.prefixes } : { prefixUnread: answered.unread }),
@@ -1466,6 +1521,10 @@ export const procedureRoutersAdapter = (
   // What does stand in front of them is on the chain, and is read.
   outsideApplication: true,
   detect: (pkg) => hasAnyDependency(pkg, dialect.packages),
+  // The aliases a Vite configuration declares (P240), which a server built by
+  // Vite resolves its modules through as a browser application does: a lazy
+  // branch's `import('@lib/reports')` among them (P256).
+  conventions: viteConventions,
   extractEntries: (ctx: ExtractContext): EntryNode[] => {
     const sources = [...repoSources(ctx)];
     const forest = new Forest(dialect);
@@ -1607,6 +1666,9 @@ export const procedureRoutersAdapter = (
               procedure: address,
               ...(procedure.input === undefined ? {} : { input: procedure.input }),
               ...(procedure.inputSite === undefined ? {} : { inputAt: `${procedure.inputSite.file}:${procedure.inputSite.line}` }),
+              // How the route assembles the input and the answer, where it is not the default (P256).
+              ...(procedure.route?.inputStructure === undefined || procedure.route.inputStructure === 'compact' ? {} : { inputStructure: procedure.route.inputStructure }),
+              ...(procedure.route?.outputStructure === undefined || procedure.route.outputStructure === 'compact' ? {} : { outputStructure: procedure.route.outputStructure }),
               ...(errors.length === 0 ? {} : { errors }),
               middlewareRead: true,
               handlerVia: procedure.handlerVia,
@@ -1687,10 +1749,17 @@ export const procedureRoutersAdapter = (
     };
     for (const root of forest.roots()) look(root);
     const standIns = new Map<string, string[]>();
+    let importedTrees = 0;
     const roots = forest.roots().filter((root) => {
       const named = [...lazilyUnread].filter((written) => standsFor(root, written));
       for (const written of named) standIns.set(written, [...(standIns.get(written) ?? []), root.site.file].sort());
-      return named.length === 0;
+      // A tree a package of the workspace holds, which this service imports
+      // for its type and serves nowhere (P256): a client typed
+      // `createTRPCClient<AppRouter>` from the package the server mounts. Its
+      // procedures are the server's ways in, not this service's.
+      const imported = outsideService(root.site.file) && (mountsOf.get(root) ?? []).length === 0;
+      if (imported) importedTrees += 1;
+      return named.length === 0 && !imported;
     });
     for (const root of roots) {
       walk(root, '', new Set([root]), { guards: [], errors: [], routePrefix: '', mounts: [] });
@@ -1699,7 +1768,9 @@ export const procedureRoutersAdapter = (
     reportUnreadPrefixes(ctx, mounts, dialect);
     reportUnmounted(ctx, mounts, dialect);
     if (unread.length > 0) reportUnreadMembers(ctx, unread, dialect);
-    if (entries.length === 0) {
+    // A service whose only trees are a package's it imports for their type read
+    // what is there; silence would say there was no tree.
+    if (entries.length === 0 && importedTrees === 0) {
       reportSilence(ctx, dialect, forest.candidates, members, options.reportSilence === true);
     }
     return entries;

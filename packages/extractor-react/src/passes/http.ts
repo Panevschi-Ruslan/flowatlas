@@ -180,6 +180,28 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     };
   };
 
+  /**
+   * The query a call writes among its options (P256): the type of what it
+   * hands under its shape's query option, and the keys where an object is
+   * written there. `unread` where the options are handed by a name, which
+   * may hold a query nothing here can see.
+   */
+  const queryOf = (call: CallExpression, shape: CallShape): { type?: string; keys?: readonly string[]; unread?: true } => {
+    if (shape.queryKeys === undefined || shape.optionsAt === undefined) return {};
+    const argument = call.getArguments()[shape.optionsAt];
+    if (argument === undefined) return {};
+    const object = objectAt(call, shape.optionsAt);
+    if (object === undefined) return { unread: true };
+    for (const key of shape.queryKeys) {
+      const property = object.getProperty(key);
+      const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : valueOf(object, key);
+      if (written === undefined) continue;
+      const keys = writtenKeysOf([written]);
+      return { type: ctx.types.collectType(written.getType(), written), ...(keys === undefined ? {} : { keys }) };
+    }
+    return {};
+  };
+
   /** The body a described client's call writes where its description says (P121). */
   const describedBodyOf = (described: DescribedRequest): { type: string | null; keys?: readonly string[] } => {
     const written = described.body;
@@ -329,6 +351,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const verb =
       handedIn !== undefined ? handedIn : found.described !== undefined ? found.described.verb : verbOf(network, shape, request.calls);
     const body = found.described === undefined ? bodyOf(network, client, shape) : describedBodyOf(found.described);
+    const query = found.described === undefined ? queryOf(network, shape) : {};
     const application = applicationOfFile(ctx.meta, site.file);
 
     ctx.builder.addNode({
@@ -348,6 +371,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         bodyType: body.type,
         ...(body.type === null ? {} : { bodyFrom: 'literal' }),
         ...(body.keys === undefined ? {} : { bodyKeys: body.keys }),
+        ...(query.type === undefined ? {} : { queryType: query.type }),
+        ...(query.keys === undefined ? {} : { queryKeys: query.keys }),
+        ...(query.unread === true ? { queryUnread: true } : {}),
         package: client.package,
         client: client.name,
         // Which application this request is written in, where the service holds

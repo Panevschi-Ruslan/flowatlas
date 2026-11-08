@@ -97,6 +97,10 @@ export interface DesyncRow {
   path: string | null;
   baseUrlEnv: string | null;
   targetService: string | null;
+  /** The procedure a request of kind `rpc` asks for, which stands where a verb and a path would (P256). */
+  procedure?: string;
+  /** The protocol its link sends it over: `trpc`, `rpc`, `openapi` (P256). */
+  protocol?: string;
   reason: string;
   file: string;
   line: number;
@@ -304,6 +308,8 @@ export const desyncRowSchema = z.object({
   path: z.string().nullable(),
   baseUrlEnv: z.string().nullable(),
   targetService: z.string().nullable(),
+  procedure: z.string().optional(),
+  protocol: z.string().optional(),
   reason: z.string(),
   file: z.string(),
   line: z.number().int().nonnegative(),

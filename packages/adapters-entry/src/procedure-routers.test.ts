@@ -413,6 +413,76 @@ describe('where a tRPC tree is served (P247)', () => {
     ).toEqual([{ protocol: 'trpc', prefix: '/api/trpc', file: 'app/api/trpc/[trpc]/route.ts' }]);
   });
 
+  it("reads Fastify's plugin from the register call it is handed to, its prefix or the root (P256)", () => {
+    const fastify = (options: string): unknown =>
+      mountedOf({
+        '/server/main.ts': `
+          import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
+          import { appRouter } from './root';
+          declare const server: { register(plugin: unknown, options?: unknown): void };
+          ${options}
+        `,
+      });
+    expect(fastify(`server.register(fastifyTRPCPlugin, { prefix: '/trpc', trpcOptions: { router: appRouter } });`)).toEqual([
+      { protocol: 'trpc', prefix: '/trpc', file: 'server/main.ts' },
+    ]);
+    expect(fastify(`const options = { trpcOptions: { router: appRouter } };\n server.register(fastifyTRPCPlugin, options);`)).toEqual([
+      { protocol: 'trpc', prefix: '/', file: 'server/main.ts' },
+    ]);
+    // Another plugin handed to the same call is not a mount.
+    expect(fastify(`declare const cors: unknown;\n server.register(cors, { trpcOptions: { router: appRouter } });`)).toBeUndefined();
+  });
+
+  it("reads Hono's middleware by its endpoint, or /trpc, and the fetch adapter inside a Hono handler (P256)", () => {
+    const hono = (written: string): unknown =>
+      mountedOf({
+        '/server/main.ts': `
+          import { trpcServer } from '@hono/trpc-server';
+          import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+          import { appRouter } from './root';
+          declare const app: { use(path: string, handler: unknown): void; all(path: string, handler: (c: any) => unknown): void };
+          ${written}
+        `,
+      });
+    expect(hono(`app.use('/rpc/*', trpcServer({ router: appRouter, endpoint: '/rpc' }));`)).toEqual([
+      { protocol: 'trpc', prefix: '/rpc', file: 'server/main.ts' },
+    ]);
+    expect(hono(`app.use('/trpc/*', trpcServer({ router: appRouter }));`)).toEqual([{ protocol: 'trpc', prefix: '/trpc', file: 'server/main.ts' }]);
+    expect(
+      hono(`app.all('/legacy/*', (c) => fetchRequestHandler({ endpoint: '/legacy', req: c.req.raw, router: appRouter }));`),
+    ).toEqual([{ protocol: 'trpc', prefix: '/legacy', file: 'server/main.ts' }]);
+  });
+
+  it('reads no ways in from a tree a workspace package holds that this service serves nowhere, and the server that mounts it reads them (P256)', () => {
+    const tree = {
+      '/packages/router/src/index.ts': `
+        import { procedure, router } from '../../../server/trpc';
+        export const appRouter = router({ ping: procedure.query(() => 'pong') });
+        export type AppRouter = typeof appRouter;
+      `,
+    };
+    const client = { ...contextFor(tree, { '@trpc/server': '^11.0.0' }, []), repoDir: '/apps/web' };
+    expect(trpcProceduresAdapter.extractEntries(client)).toEqual([]);
+    // Nothing is said to be missing either: the tree was read, and is the server's.
+    expect(client.builder.build().unresolved).toEqual([]);
+    const server = {
+      ...contextFor(
+        {
+          ...tree,
+          '/apps/api/src/main.ts': `
+            import { createHTTPServer } from '@trpc/server/adapters/standalone';
+            import { appRouter } from '../../../packages/router/src/index';
+            createHTTPServer({ router: appRouter, basePath: '/trpc' });
+          `,
+        },
+        { '@trpc/server': '^11.0.0' },
+        [],
+      ),
+      repoDir: '/apps/api',
+    };
+    expect(trpcProceduresAdapter.extractEntries(server).map((entry) => entry.key)).toEqual(['ping']);
+  });
+
   it('says so where the address cannot be read, and draws the mount with none', () => {
     const found = read({
       '/server/root.ts': ROOT,

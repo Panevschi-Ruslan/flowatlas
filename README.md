@@ -865,7 +865,13 @@ prove, and the path is given so you can run it.
   a request body; a tRPC link's path is checked against where the tree is
   mounted; a client built in a DI factory and injected by its token is followed
   to the client; and an Angular application's clients are read by the same
-  reader (`fixtures/rpc-contracts`).
+  reader (`fixtures/rpc-contracts`). A plain request to a procedure's REST route
+  is compared with the input the route assembles from its path, query and
+  body, and its answer with the procedure's output; a client typed from an
+  `AppRouter` a workspace package exports is compared through it, and joins the
+  service that mounts the tree; Fastify's and Hono's tRPC mounts are read; and a
+  client a module's `forRoot` / `forRootAsync` builds is followed to its address
+  (`fixtures/rpc-shared-types`).
 - **Applications.** Two applications in one service — a NestJS API and a worker,
   or a second Next.js application under `examples/` — serving the same path are
   two entries, and a request written inside one reaches its own

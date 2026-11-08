@@ -14,6 +14,7 @@ import {
   apiSchemaOf,
   authLabel,
   composeSubgraphs,
+  fieldSetSelections,
   GRAPHQL_META,
   mergeAuth,
   namedTypeIn,
@@ -25,6 +26,7 @@ import {
   type GatewayMeta,
   type GatewayRouteMeta,
   type SchemaSummary,
+  type Selection,
 } from '@flowatlas/graphql';
 import { DECLARED_BY } from './document/declared.js';
 import { cmp, edgeKey } from './order.js';
@@ -444,6 +446,59 @@ const untypedInterfaces = (
   return rows;
 };
 
+/** Each field a field set names, from the type it is read off, nested selections and fragments included. */
+const fieldsOfSet = (composition: Composition, type: string, selections: readonly Selection[], depth = 0): Array<{ type: string; field: string }> => {
+  if (depth > 8) return [];
+  return selections.flatMap((selection) => {
+    if (selection.kind === 'inline') return fieldsOfSet(composition, selection.on ?? type, selection.selections, depth + 1);
+    if (selection.kind !== 'field') return [];
+    const composed = composition.types[type]?.fields[selection.name];
+    const below = composed === undefined ? [] : fieldsOfSet(composition, namedTypeIn(composed.type), selection.selections, depth + 1);
+    return [{ type, field: selection.name }, ...below];
+  });
+};
+
+/**
+ * A field using `@requires` that does not carry what the fields it requires
+ * ask of a request (P256). The router checks its authorization directives on
+ * the client's operation; the fields it adds to the plan for a `@requires`
+ * are not in that operation and are fetched unchecked, so a client the
+ * requiring field lets through is answered with what the required ones
+ * guard. Composition (Federation 2.9 and later) refuses such a supergraph
+ * for that reason. Said once per requiring field, naming each requirement
+ * it does not carry.
+ */
+const requiresUncarried = (composition: Composition, site: Pick<Unresolved, 'service' | 'file' | 'line' | 'symbol'>, said: Set<string>): Unresolved[] => {
+  const rows: Unresolved[] = [];
+  for (const [typeName, type] of Object.entries(composition.types).sort(([a], [b]) => cmp(a, b))) {
+    for (const [field, composed] of Object.entries(type.fields).sort(([a], [b]) => cmp(a, b))) {
+      const carried = new Set(authOfField(composition, typeName, field).map(authLabel));
+      for (const owner of composed.owners) {
+        if (owner.requires === undefined) continue;
+        const missing = new Map<string, string[]>();
+        for (const required of fieldsOfSet(composition, owner.as ?? typeName, fieldSetSelections(owner.requires))) {
+          for (const label of authOfField(composition, required.type, required.field).map(authLabel)) {
+            if (carried.has(label)) continue;
+            missing.set(label, [...(missing.get(label) ?? []), `${required.type}.${required.field}`]);
+          }
+        }
+        if (missing.size === 0 || said.has(`@requires\n${owner.subgraph}\n${typeName}.${field}`)) continue;
+        said.add(`@requires\n${owner.subgraph}\n${typeName}.${field}`);
+        const asked = [...missing].map(([label, fields]) => `${label} on ${listed([...new Set(fields)])}`);
+        rows.push({
+          ...site,
+          reason: 'graphql-requires-auth-not-carried',
+          level: 'action',
+          message: `${owner.subgraph} resolves ${typeName}.${field} with @requires(fields: "${owner.requires}"), and ${typeName}.${field} does not carry ${listed(asked)}; the router checks the client's operation, not the fields it fetches for a @requires, so a request allowed ${typeName}.${field} is answered from fields it may not read, and composition (Federation 2.9 and later) refuses the supergraph for it`,
+          hint: `Put ${listed([...missing.keys()])} on ${typeName}.${field} in ${owner.subgraph} too, so the requiring field asks at least what the fields it requires ask.`,
+          meta: { field: `${typeName}.${field}`, subgraph: owner.subgraph, requires: owner.requires, missing: [...missing.keys()] },
+        });
+      }
+    }
+  }
+  return rows;
+};
+
 export const routeGateways = (
   nodes: Map<string, GraphNode>,
   edges: Map<string, GraphEdge>,
@@ -538,6 +593,7 @@ export const routeGateways = (
       }
     }
     conflicts.push(...unreachableOwners(composition));
+    rows.push(...requiresUncarried(composition, site, said));
     const saysType = typeSaying(nodes, composition, routes);
     rows.push(...untypedInterfaces(composition, routes, saysType, said));
     for (const conflict of conflicts) {
