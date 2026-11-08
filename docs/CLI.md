@@ -943,7 +943,10 @@ configuration costs one listing. A file inside a repository is its watch's;
 the output directory, `node_modules`, `dist`, `build` and dot directories are
 never watched, unless a `shapes` or `patterns` entry names one. The line the watch prints when it starts says what it watches,
 for example `watching 2 repositories, the directories beside the configuration
-and 1 shapes entry`. The configuration file is watched too: an edit to it
+and 1 shapes entry`; it is printed once the platform is listening, so a change
+made after it is heard (on macOS a watch starts listening a moment after it
+starts, and the watch waits for a write into a directory of its own under the
+system's temporary directory to be reported first). The configuration file is watched too: an edit to it
 rebuilds from the edited one, with every repository opened again for it, a
 service it adds watched and one it drops let go. One that does not load says
 why, and the watch goes on until it does.

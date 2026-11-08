@@ -723,6 +723,19 @@ only one of them moved.
   `graphql-federation-not-read` row each: it is said only when no gateway in
   the project names it.
 
+### Fixed
+
+- **`build --watch` hears a change made the moment it says it is watching
+  (R178).** On macOS a directory watch is not listening when it starts: every
+  watch a process holds is one stream of events, and starting one restarts the
+  stream a moment later, so a change made in between reached no watch at all.
+  A busy machine made the moment long enough to lose a directory that appeared
+  right after `watching ...` was printed, and nothing rebuilt until the next
+  save. The watch now waits until the platform reports a write into a
+  directory of its own, started after every other watch, before it says it is
+  watching, and does the same before a rebuild that started watching a new
+  place counts as finished. Elsewhere the first write is heard at once.
+
 ## [0.6.0][] - 2026-10-25
 
 `@flowatlas/cli` only; `@flowatlas/markers` is unchanged at 0.2.0.
