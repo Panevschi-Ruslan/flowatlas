@@ -122,6 +122,21 @@ describe("a task Nitro runs by its name (P258)", () => {
   });
 });
 
+describe("a SvelteKit page's server load and its layouts (P262)", () => {
+  it('counts a server load of a page or a layout, and not a universal load or one that exports only actions', () => {
+    const load = 'export const load = async () => ({ user: null });\n';
+    assert.deepEqual(sitesIn('src/routes/+layout.server.ts', load), { routes: 1 });
+    assert.deepEqual(sitesIn('src/routes/orders/[id]/+page.server.ts', 'export async function load({ params }) {\n  return { id: params.id };\n}\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('src/routes/(app)/+layout.ts', load), {});
+    assert.deepEqual(sitesIn('src/routes/cart/+page.server.ts', 'export const actions = { default: async () => ({}) };\n'), {});
+  });
+
+  it("counts a layout's component, with or without a reset, as the screen it is", () => {
+    assert.deepEqual(sitesIn('src/routes/+layout.svelte', '<slot />\n'), { screens: 1 });
+    assert.deepEqual(sitesIn('src/routes/(app)/print/+layout@.svelte', '<slot />\n'), { screens: 1 });
+  });
+});
+
 describe('a function a SAM template declares (P246)', () => {
   it('counts each by its Type, a SAM function and a plain one alike, and not in a comment', () => {
     const text = [

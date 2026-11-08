@@ -542,6 +542,52 @@ its `framework-module-skipped` note says so (`meta.why: development`)
 (`fixtures/sveltekit-layouts`, `fixtures/vue-plugins`,
 `fixtures/nuxt-plugins-tasks`).
 
+**Route middleware outside a plugin, the libraries' own prefixes, and Nitro's
+tasks flag (P262).** Nuxt runs its plugins, makes its first navigation, and
+then sets up the root component, so an `addRouteMiddleware` at the top of
+`app.vue`'s setup (`<script setup>` or `setup()`), or at the top of a function
+of the repository that setup calls there (a composable, and the ones it calls
+in turn), adds a middleware once, for every navigation after the first: read
+as a plugin's is, after every plugin's, its edge saying where it was added
+(`meta.setup`, the root component; `meta.addedIn`, the file of the call;
+`meta.firstNavigation: false`). Anywhere else - a page's or a child's setup,
+a handler, a callback, a composable nothing at startup calls - it is added
+only when that code runs, so which navigations it stands in front of is not
+in the files: a row at the call (`route-middleware-unresolved`,
+`meta.why: scoped`, info), and a page that names a middleware only such a call
+adds says the same rather than `missing`. A module's own `addRouteMiddleware`
+is its kit's, read with the module (P255).
+
+The table of libraries holds Nuxt UI (`U`, `@nuxt/ui` and `@nuxt/ui-pro`)
+beside the six of P258, and reads a prefix the application sets: PrimeVue's
+`primevue.components.prefix` (its Nuxt module) or the `prefix` /
+`components.prefix` its resolver is handed in the bundler's configuration
+(`PrimeVueResolver({ prefix: 'P' })`), and Nuxt UI's `ui.prefix` or the
+`prefix` of the plugin imported from `@nuxt/ui/vite`. Under a prefix, the
+library's names are the prefixed ones (`<PrimeButton>`), and its own name
+alone (`<Button>`) names nothing. A prefix written as code names nothing
+either, and a tag that names nothing says which setting may register it. A
+library is installed where the manifest declares it or where any part's
+`modules` names its Nuxt module (a layer's included), and a library's module
+is a known module of the `framework-module-installed` note.
+
+Before Nitro 3, a task is built only where `experimental.tasks` is on -
+`nitro.experimental.tasks` of any part's Nuxt configuration, the
+application's first, or Nitro's own `experimental.tasks`. Where it is not,
+every `task` and `scheduledTasks` way in is still drawn, its code there to
+read, and carries `meta.enabled: false`, and one note says the build registers
+none of them (`framework-feature-off`): `runTask` finds no task by its name,
+and the schedules run nothing. Written as code, the flag is a
+`framework-setting-dynamic` row and the tasks are read as built. Nitro 3 (the
+`nitro` package, which the server reader now detects) needs no flag
+(`fixtures/nuxt-startup-names`).
+
+A SvelteKit configuration takes no port of its own (`sveltekit()`, Remix's
+`vitePlugin()`): the dev server's port is `vite.config.*`'s `server.port`,
+which P254 reads in every form the file is written (`defineConfig({...})`,
+a function returning one). Astro's `--host` and `server.host` choose an
+interface, not a port, and join nothing.
+
 **SvelteKit `kit.files.routes` (P251).** Routes (`+server`, `+page.server`,
 `+layout.server`) and pages (`+page.svelte`) are read under the directory
 `kit.files.routes` names, `src/routes` without one; written as code, it is a
@@ -7189,6 +7235,24 @@ same way from what it writes:
   P258). A twin route records `meta.inputStructure` /
   `meta.outputStructure` where they are `detailed`.
 
+A `detailed` input's headers are compared from the procedure's end too
+(P262). Only the names the procedure declares are sent to the comparison - a
+request carries headers its middleware, proxy and platform read and no input
+names - each lower-cased, as a server hands every header on; a name the
+procedure's schema spells with a capital (`'X-Region'`) is never handed to it
+as spelled, and the finding says so. A request's headers include those its
+client instance is made with (`axios.create({ headers })`, `ky.create`,
+`extend`, `ofetch.create`) and those an Angular interceptor sets with
+`req.clone({ setHeaders: { ... } })`. Where they are written and cannot be
+read (a name, a spread, a field), or where something the reader cannot see
+may add to them - a hook or an interceptor of the instance, the call's own
+hook, a default assigned to the client's `defaults.headers`, an Angular
+interceptor that sets its headers another way - the request records
+`meta.headersUnread`, and the headers are not compared (`any-unknown-skip:
+headers` in the edge's `rulesApplied`) rather than called missing. A call that
+writes none and runs through nothing that adds any sends none: what the
+procedure requires there is missing.
+
 A path parameter and a query key are compared by name alone: the address
 carries text, and whether the schema coerces it is the schema's to say. The
 query is read from the address (`?category=tea&sort=price`) and from the
@@ -7204,7 +7268,13 @@ into the address (`` `/products?${params}` ``), whose keys are recorded
 beside the `${…}` the address shows (`meta.queryInAddress`); and on a server,
 the `query` / `params` / `searchParams` a wrapper writes itself, beside what
 its caller hands it (`{ ...params, limit }` is the caller's keys and
-`limit`). A key written as code leaves the query `queryUnread`. The body is
+`limit`). A key written as code leaves the query `queryUnread`; one held in
+a name whose type is one string - `const PAGE = 'page'`, a member of an `as
+const` object or of an enum, `{ [PAGE]: 1 }` - is that key (P262). An address
+built with `+` after its `?` (`'/products?' + params.toString()`, `` `${base}/search?`
++ params ``) is the address before the `?`, with the query `${…}` and its keys
+recorded where the query is built, in the browser, Angular and the server
+readers alike (P262). The body is
 compared field by field. A `GET` that writes no query and no path parameter
 sends an empty input, and what the procedure requires is missing. What the
 call reads back (`axios.get<Product>`, `fetch<Order>`) is compared with the

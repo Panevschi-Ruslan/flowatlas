@@ -849,7 +849,11 @@ prove, and the path is given so you can run it.
   order, Nitro's plugins stand in front of every route, and its tasks are ways
   in that `runTask` and `scheduledTasks` reach by name
   (`fixtures/sveltekit-layouts`, `fixtures/vue-plugins`,
-  `fixtures/nuxt-plugins-tasks`). A verb a helper built, aliased or re-exported is
+  `fixtures/nuxt-plugins-tasks`). A middleware `app.vue`'s setup adds is in
+  every page's order and one a component adds is said; Nuxt UI and a prefix
+  the application sets for PrimeVue or Nuxt UI are the libraries' names; and
+  tasks a build without Nitro's tasks flag never registers are marked so
+  (`fixtures/nuxt-startup-names`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
   `zsa` is a boundary with its callers (`fixtures/next-actions`).
@@ -875,7 +879,9 @@ prove, and the path is given so you can run it.
   reader (`fixtures/rpc-contracts`). A plain request to a procedure's REST route
   is compared with the input the route assembles from its path, query,
   headers and body - a query built in code (`URLSearchParams`, `HttpParams`,
-  a wrapper's own) read as one written out - and its answer with the
+  a wrapper's own, keys held in constants, an address joined with `+`) read as
+  one written out, and the headers a detailed input declares compared from its
+  end - and its answer with the
   procedure's output; a client typed from an
   `AppRouter` a workspace package exports is compared through it, and joins the
   service that mounts the tree; Fastify's and Hono's tRPC mounts are read; and a

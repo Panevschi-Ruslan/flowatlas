@@ -78,6 +78,35 @@ describe('route middleware a Nuxt plugin adds when the application starts (P258)
   });
 });
 
+describe('route middleware added outside a plugin, and the libraries a Nuxt module installs (P262)', () => {
+  let graph: RepoGraph;
+  beforeAll(async () => {
+    graph = await read(join(FIXTURES, 'nuxt-startup-names', 'shop'), 'nuxt');
+  }, 60000);
+
+  it("runs what the root component's setup adds, and a composable it calls, in front of every page after the plugins' and the build's", () => {
+    expect(drawn(graph, 'middleware')).toEqual([
+      'app/pages/carts.vue:carts -> app/composables/useVisitGuard.ts:useVisitGuard middleware @0',
+      'app/pages/index.vue:pages/index -> app/app.vue:tenant @1',
+      'app/pages/index.vue:pages/index -> app/composables/useVisitGuard.ts:useVisitGuard middleware @0',
+    ]);
+    const added = graph.edges.find((edge) => edge.meta?.['middleware'] === 'tenant');
+    expect(added?.meta).toMatchObject({ setup: 'app/app.vue', addedIn: 'app/app.vue', firstNavigation: false });
+  });
+
+  it('says one a component or a handler adds, at the call and at the page that names it', () => {
+    expect(rowsOf(graph, 'route-middleware-unresolved').map((row) => row.symbol).sort()).toEqual([
+      'app/components/PromoBanner.vue middleware promo-seen',
+      'app/composables/useLateGuard.ts middleware late',
+      'pages/index middleware late',
+    ]);
+  });
+
+  it("leaves Nuxt UI's tags and PrimeVue's under the prefix a layer sets to them, and says PrimeVue's own name without it", () => {
+    expect(rowsOf(graph, 'component-unresolved').map((row) => row.symbol)).toEqual(['carts <Button>']);
+  });
+});
+
 describe("a SvelteKit page's layouts and loads (P258)", () => {
   let graph: RepoGraph;
   beforeAll(async () => {

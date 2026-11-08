@@ -1119,10 +1119,37 @@ describe("a plain request to a procedure's REST route (P256)", () => {
       signature: { params: [{ name: 'input', type: "{query:{category:string};headers:{'x-tenant':string}}" }], returns: `${PRODUCT}[]` },
     };
     expect(twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['x-tenant'] }, browse, { returns: `${PRODUCT}[]` }).summary).toMatchObject({ errors: 0, infos: 0, unchecked: 0 });
+    // A header the procedure does not declare is its middleware's, and not compared (P262).
     expect(findings(twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['x-trace'] }, browse, { returns: `${PRODUCT}[]` }))).toEqual([
       ['request', 'missing_required', 'headers.x-tenant', 'error'],
-      ['request', 'extra_field', 'headers.x-trace', 'info'],
     ]);
+  });
+
+  it("compares a detailed input's headers from the procedure's end: none sent, some not known, a name never handed on (P262)", () => {
+    const browse = (headers: string) => ({
+      method: 'GET',
+      rawPath: '/api/browse',
+      inputStructure: 'detailed',
+      signature: { params: [{ name: 'input', type: `{query:{category:string};headers:${headers}}` }], returns: `${PRODUCT}[]` },
+    });
+    const tenant = browse("{'x-tenant':string}");
+    // A call that writes no headers, and runs through nothing that adds any, sends none.
+    expect(findings(twin({ method: 'GET', queryKeys: ['category'] }, tenant, { returns: `${PRODUCT}[]` }))).toEqual([
+      ['request', 'missing_required', 'headers.x-tenant', 'error'],
+    ]);
+    // Headers written in a way not read, or added by a hook: not compared, and said.
+    const unread = twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['accept'], headersUnread: true }, tenant, { returns: `${PRODUCT}[]` });
+    expect(findings(unread)).toEqual([]);
+    expect(unread.edges.find((each) => each.direction === 'request')?.rulesApplied).toContain('any-unknown-skip:headers');
+    // A name declared with a capital is never handed to the procedure as spelled, and the finding says why.
+    const capital = twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['x-tenant'] }, browse('{X-Tenant:string}'), { returns: `${PRODUCT}[]` });
+    expect(findings(capital)).toEqual([
+      ['request', 'missing_required', 'headers.X-Tenant', 'error'],
+      ['request', 'extra_field', 'headers.x-tenant', 'info'],
+    ]);
+    expect(capital.findings.find((each) => each.kind === 'missing_required')?.message).toContain('every header lower-cased, so `headers.X-Tenant` it declares is never handed to it as spelled');
+    // A procedure that declares no headers is sent none to compare.
+    expect(twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['authorization'] }, { ...tenant, signature: { params: [{ name: 'input', type: '{query:{category:string}}' }], returns: `${PRODUCT}[]` } }, { returns: `${PRODUCT}[]` }).summary).toMatchObject({ errors: 0, infos: 0 });
   });
 
   it('says so where the procedure declares no input, or one whose type does not resolve', () => {

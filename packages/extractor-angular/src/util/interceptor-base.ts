@@ -1,4 +1,4 @@
-import { asksAbsolute, conditionsAround, prefixOfRewrite } from '@flowatlas/core';
+import { asksAbsolute, conditionsAround, PLATFORM_HEADERS, prefixOfRewrite, writtenHeaderNames } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { analyzeBaseUrl, type ApiUrl } from './url.js';
@@ -124,4 +124,52 @@ export const interceptorBaseOf = (files: readonly SourceFile[], sharedPackages: 
   if (unread.length > 0 || bases.length !== 1) return { unread };
   const base = rewrites.find((rewrite) => rewrite.base !== undefined)?.base;
   return base === undefined ? { unread } : { base, unread };
+};
+
+/**
+ * The headers the repository's interceptors put on every request of the
+ * framework's client (P262): the names `req.clone({ setHeaders: { ... } })`
+ * writes in place, unconditionally. `unread` where an interceptor sets its
+ * headers any other way - `headers:` built from the request's, names written
+ * as code, under a condition - since a request may then carry, or lack, ones
+ * nothing here reads.
+ */
+export interface InterceptorHeaders {
+  readonly keys: readonly string[];
+  readonly unread: boolean;
+}
+
+export const interceptorHeadersOf = (files: readonly SourceFile[]): InterceptorHeaders => {
+  const texts = files.map((file) => file.getFullText());
+  const keys = new Set<string>();
+  let unread = false;
+  files.forEach((file, index) => {
+    const text = texts[index] ?? '';
+    if (!text.includes('.clone(') || !/\b(?:setHeaders|headers)\b/.test(text)) return;
+    for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const callee = call.getExpression();
+      if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'clone') continue;
+      const interceptor = interceptorOf(call);
+      if (interceptor === undefined || !registered(interceptor.name, texts)) continue;
+      const owner = unwrap(callee.getExpression());
+      if (!Node.isIdentifier(owner) || owner.getSymbol()?.getDeclarations()[0] !== interceptor.request) continue;
+      const [options] = call.getArguments();
+      if (options === undefined || !Node.isObjectLiteralExpression(options)) {
+        unread = true;
+        continue;
+      }
+      if (options.getProperty('headers') !== undefined) unread = true;
+      const property = options.getProperty('setHeaders');
+      if (property === undefined) continue;
+      const written = Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+      const names = written === undefined ? undefined : writtenHeaderNames(written, [PLATFORM_HEADERS]);
+      // A header set only for some requests may be missing from the one compared.
+      if (names === undefined || conditionsAround(call, interceptor.fn).length > 0) {
+        unread = true;
+        continue;
+      }
+      for (const name of names) keys.add(name);
+    }
+  });
+  return { keys: [...keys].sort(), unread };
 };

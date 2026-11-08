@@ -44,6 +44,12 @@ export const router = {
       .input(z.object({ query: z.object({ category: z.string(), page: z.string() }), headers: z.object({ 'x-tenant': z.string() }) }))
       .output(z.array(Product))
       .handler(async () => []),
+    // A header spelled with a capital, which the server never hands on as spelled (P262).
+    stock: os
+      .route({ method: 'GET', path: '/stock', inputStructure: 'detailed' })
+      .input(z.object({ query: z.object({ sku: z.string() }), headers: z.object({ 'X-Region': z.string() }) }))
+      .output(z.object({ sku: z.string(), count: z.number() }))
+      .handler(async ({ input }) => ({ sku: input.query.sku, count: 0 })),
   },
   // Loaded when first asked for, through the alias the Vite configuration declares.
   reports: lazy(() => import('@lib/reports')),

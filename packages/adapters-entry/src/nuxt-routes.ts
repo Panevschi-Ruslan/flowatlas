@@ -32,6 +32,7 @@ import {
   sveltekitRoutesOf,
   withinLayer,
   type LayerClaim,
+  type NuxtApplication,
   type NuxtLayer,
 } from './framework-conventions.js';
 import { moduleRouteOf, type NuxtModule } from './nuxt-modules.js';
@@ -383,9 +384,75 @@ const scheduleEntriesOf = (ctx: ExtractContext, nuxt: boolean): EntryNode[] => {
   return entries;
 };
 
+/** Where the build is told whether it registers its tasks (P262), and what it says. */
+type TasksSwitch = { readonly on: true } | { readonly on: false; readonly file: string; readonly setting: string } | { readonly code: true; readonly file: string; readonly setting: string };
+
+/** The major version a dependency is declared at, where its range names one. */
+const declaredMajor = (pkg: PackageJson, name: string): number | undefined => {
+  const range = [pkg.dependencies, pkg.devDependencies].map((section) => section?.[name]).find((each): each is string => typeof each === 'string');
+  const found = range === undefined ? null : /(\d+)/.exec(range);
+  return found === null ? undefined : Number(found[1]);
+};
+
+/**
+ * Whether the build registers the tasks of its server (P262). Before Nitro 3
+ * a task is built only where `experimental.tasks` is on - `nitro` of Nuxt's
+ * configuration, any part's, the application's first, or Nitro's own - and
+ * `runTask` and `scheduledTasks` find nothing without it. Nitro 3 (the
+ * `nitro` package) needs no flag.
+ */
+const tasksSwitchOf = (ctx: ExtractContext, application: NuxtApplication | undefined): TasksSwitch => {
+  if (declaredMajor(ctx.pkg, 'nitro') !== undefined || (declaredMajor(ctx.pkg, 'nitropack') ?? 0) >= 3) return { on: true };
+  const setting = application === undefined ? 'experimental.tasks' : 'nitro.experimental.tasks';
+  const configs =
+    application === undefined
+      ? [readConfigLiteral(ctx.repoDir, NITRO_CONFIG_FILES)].flatMap((config) => (config === undefined ? [] : [config]))
+      : application.layers.flatMap(({ layout }) => (layout.config === undefined ? [] : [layout.config]));
+  for (const config of configs) {
+    const value = configValueAt(config.value, setting);
+    if (value === undefined) continue;
+    const file = normalizeFilePath(config.file, ctx.repoDir);
+    if (value === true) return { on: true };
+    if (value instanceof NotLiteral) return { code: true, file, setting };
+    return { on: false, file, setting };
+  }
+  const [first] = configs;
+  return { on: false, file: first === undefined ? 'package.json' : normalizeFilePath(first.file, ctx.repoDir), setting };
+};
+
+/**
+ * Tasks and schedules as the build makes them (P262): where the flag is off,
+ * each is still drawn - its code is there to read - and marked
+ * `enabled: false`, and one note says the build registers none; where the
+ * flag is written as code, a row says it was read as on.
+ */
+const switchedTasks = (ctx: ExtractContext, application: NuxtApplication | undefined, entries: readonly EntryNode[]): EntryNode[] => {
+  if (entries.length === 0) return [...entries];
+  const tasksSwitch = tasksSwitchOf(ctx, application);
+  if ('code' in tasksSwitch) {
+    ctx.builder.addUnresolved(settingRow(tasksSwitch.file, 'nitro-routes', application === undefined ? 'Nitro' : 'Nuxt', tasksSwitch.setting, 'the tasks are drawn as if it is on'));
+    return [...entries];
+  }
+  if (tasksSwitch.on) return [...entries];
+  const tasks = entries.filter((entry) => entry.kind === 'task').map((entry) => String(entry.meta?.['task'] ?? entry.key));
+  const listed = tasks.length === 0 ? 'its schedules' : `${tasks.length === 1 ? 'the task' : `${tasks.length} tasks,`} ${tasks.join(', ')}`;
+  ctx.builder.addUnresolved({
+    file: tasksSwitch.file,
+    line: 1,
+    reason: 'framework-feature-off',
+    level: 'info',
+    symbol: tasksSwitch.setting,
+    message: `The server gives ${listed}, and ${tasksSwitch.setting} is not on in ${tasksSwitch.file}, so the build registers none of them: \`runTask\` finds no task by its name, and \`scheduledTasks\` runs nothing`,
+    hint: `Set ${tasksSwitch.setting}: true in ${tasksSwitch.file} to have the tasks built, or remove them.`,
+    adapter: 'nitro-routes',
+    meta: { cause: 'framework-feature-off', setting: tasksSwitch.setting, tasks },
+  });
+  return entries.map((entry) => ({ ...entry, meta: { ...entry.meta, enabled: false } }));
+};
+
 export const nitroRoutesAdapter: EntryAdapter = {
   name: 'nitro-routes',
-  detect: (pkg) => hasAnyDependency(pkg, ['nuxt', 'nitropack', 'h3']),
+  detect: (pkg) => hasAnyDependency(pkg, ['nuxt', 'nitropack', 'nitro', 'h3']),
   // The dev server's port where the configuration or a script writes it, and
   // an h3 application's own `listen` (P250).
   listens: (ctx) => [...nitroListens(ctx), ...listensByCall(ctx)],
@@ -489,8 +556,8 @@ export const nitroRoutesAdapter: EntryAdapter = {
         },
       });
     }
-    // Tasks and what runs them on a schedule (P258).
-    entries.push(...taskEntriesOf(ctx, roots), ...scheduleEntriesOf(ctx, application !== undefined));
+    // Tasks and what runs them on a schedule (P258), as the build's flag makes them (P262).
+    entries.push(...switchedTasks(ctx, application, [...taskEntriesOf(ctx, roots), ...scheduleEntriesOf(ctx, application !== undefined)]));
     return entries;
   },
 };

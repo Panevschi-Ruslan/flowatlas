@@ -219,6 +219,10 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
   });
 
   if (resolved === null) {
+    // `'/orders?' + params.toString()`, `` `${base}/orders?status=` + s `` (P262):
+    // what is added after a `?` is the query, and the address the text before it.
+    const queried = queryAdded(node, options);
+    if (queried !== undefined) return queried;
     // Not a string this reader can put together, but perhaps a name that
     // stands for one: `fetch(ordersUrl(id))` is an address like any other,
     // written one call further away.
@@ -266,6 +270,22 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     via,
     guessed,
   };
+};
+
+/**
+ * An address with a query added to it by `+` after its `?` (P262), read as
+ * the address its left side is with the query the right side adds unread
+ * (`${…}`); the query's keys are the request's to say, where it is built in
+ * code. Nothing where the left side holds no `?`, which leaves the right side
+ * part of the path.
+ */
+const queryAdded = (node: TsNode, options: ReadAddressOptions): ApiUrl | undefined => {
+  let value = node;
+  while (Node.isParenthesizedExpression(value) || Node.isAsExpression(value) || Node.isNonNullExpression(value)) value = value.getExpression();
+  if (!Node.isBinaryExpression(value) || value.getOperatorToken().getText() !== '+') return undefined;
+  const left = analyzeApiUrl(value.getLeft(), options);
+  if (left.url === null || left.path === null || !left.url.includes('?')) return undefined;
+  return { ...left, url: `${left.url}${UNREAD_SPAN}` };
 };
 
 /**

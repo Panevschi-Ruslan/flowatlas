@@ -57,6 +57,27 @@ const unwrapped = (node: TsNode): TsNode => {
 const literalText = (node: TsNode | undefined): string | undefined =>
   node !== undefined && (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) ? node.getLiteralValue() : undefined;
 
+/**
+ * A key as it is written: a literal, or a name whose type is one string and
+ * nothing else (P262) - `const PAGE = 'page'`, `Keys.page` of an object
+ * written `as const`, a member of an enum of strings. The type is the
+ * checker's answer to what the name can hold, so a `let` or a parameter typed
+ * `string` stays unread.
+ */
+const keyText = (node: TsNode | undefined): string | undefined => {
+  if (node === undefined) return undefined;
+  const value = unwrapped(node);
+  const literal = literalText(value);
+  if (literal !== undefined) return literal;
+  if (!Node.isIdentifier(value) && !Node.isPropertyAccessExpression(value) && !Node.isElementAccessExpression(value)) return undefined;
+  try {
+    const type = value.getType();
+    return type.isStringLiteral() ? String(type.getLiteralValue()) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 /** The keys of the text of a query: `a=1&b=2` is `a` and `b`. */
 const keysOfText = (text: string): string[] =>
   text
@@ -80,14 +101,14 @@ const keysOfInit = (builder: QueryBuilder, argument: TsNode | undefined): BuiltQ
   const object = builder.object === undefined ? undefined : builder.object === '' ? value : objectProperty(value, builder.object);
   const text = builder.text === undefined ? undefined : builder.text === '' ? value : objectProperty(value, builder.text);
   if (text !== undefined) {
-    const written = literalText(unwrapped(text));
+    const written = keyText(text);
     if (written !== undefined) return { keys: keysOfText(written) };
   }
   if (builder.pairs === true && Node.isArrayLiteralExpression(value)) {
     const keys: string[] = [];
     for (const element of value.getElements()) {
       const pair = unwrapped(element);
-      const key = Node.isArrayLiteralExpression(pair) ? literalText(pair.getElements()[0]) : undefined;
+      const key = Node.isArrayLiteralExpression(pair) ? keyText(pair.getElements()[0]) : undefined;
       if (key === undefined) return UNREAD;
       keys.push(key);
     }
@@ -144,7 +165,7 @@ const read = (node: TsNode, builders: readonly QueryBuilder[], seen: Set<TsSymbo
     if (base === undefined) return undefined;
     const builder = builderOf(callee.getExpression(), builders);
     if (builder === undefined || !builder.adds.includes(callee.getName())) return undefined;
-    const key = literalText(unwrapped(value.getArguments()[0] ?? callee));
+    const key = keyText(value.getArguments()[0]);
     return join([base, key === undefined ? UNREAD : { keys: [key] }]);
   }
   if (!Node.isIdentifier(value)) return undefined;
@@ -178,7 +199,7 @@ const read = (node: TsNode, builders: readonly QueryBuilder[], seen: Set<TsSymbo
     if (!Node.isPropertyAccessExpression(callee) || !builder.adds.includes(callee.getName())) return;
     const target = unwrapped(callee.getExpression());
     if (!Node.isIdentifier(target) || symbolOf(target) !== symbol) return;
-    const key = literalText(unwrapped(each.getArguments()[0] ?? callee));
+    const key = keyText(each.getArguments()[0]);
     parts.push(key === undefined ? UNREAD : { keys: [key] });
   });
   return join(parts);
@@ -219,6 +240,17 @@ export const writtenHeaderNames = (written: TsNode, builders: readonly QueryBuil
 };
 
 /**
+ * The text an expression ends with, where it is written: a literal or a
+ * constant of one, a template's last part, the last operand of a `+` chain.
+ */
+const trailingText = (node: TsNode): string | undefined => {
+  const value = unwrapped(node);
+  if (Node.isTemplateExpression(value)) return value.getTemplateSpans().at(-1)?.getLiteral().getLiteralText();
+  if (Node.isBinaryExpression(value) && value.getOperatorToken().getText() === '+') return trailingText(value.getRight());
+  return keyText(value);
+};
+
+/**
  * The query an address carries in its text, where it is built in code:
  * `` `/orders?${params}` `` or `'/orders?' + params.toString()` (P258). Only
  * the part after `?` (or after an `&` past it) is read; `undefined` where
@@ -237,8 +269,7 @@ export const builtQueryInAddress = (address: TsNode, builders: readonly QueryBui
       before += `\u0000${span.getLiteral().getLiteralText()}`;
     }
   } else if (Node.isBinaryExpression(value) && value.getOperatorToken().getText() === '+') {
-    const left = unwrapped(value.getLeft());
-    const text = literalText(left) ?? (Node.isTemplateExpression(left) ? left.getTemplateSpans().at(-1)?.getLiteral().getLiteralText() : undefined);
+    const text = trailingText(value.getLeft());
     if (text !== undefined && /[?&]$/.test(text)) {
       const built = builtQueryOf(value.getRight(), builders);
       if (built !== undefined) found.push(built);

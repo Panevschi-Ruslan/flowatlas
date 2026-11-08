@@ -2,12 +2,12 @@ import { readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { normalizeFilePath, startLineOf, type EmbeddedFile, type GraphEdge } from '@flowatlas/core';
 import { NUXT_BUILT_IN_COMPONENTS, type NuxtNames } from '@flowatlas/adapters-entry';
-import type { ImportDeclaration, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
+import type { CallExpression, ImportDeclaration, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { svelteMarkupTags, vueTemplateTags, type MarkupTag } from './events.js';
-import { asyncComponentFile, installedPlugins, libraryOf, type InstalledPlugins } from './registrations.js';
+import { asyncComponentFile, installedPlugins, librarySettingsOf, libraryOf, type InstalledPlugins } from './registrations.js';
 
 /**
  * The child components a component's markup renders (P255), and in Nuxt the
@@ -227,10 +227,15 @@ export const drawChildren = (
 ): void => {
   const byFile = new Map(components.map(({ component }) => [component.file, component] as const));
   const { components: global, packaged } = globalComponents(ctx, sources, byFile);
-  const plugins: InstalledPlugins = components.some(({ made }) => made.format.extension !== '.svelte') ? installedPlugins(ctx.pkg, sources, ctx.repoDir) : { libraries: [], unknown: [] };
+  const plugins: InstalledPlugins = components.some(({ made }) => made.format.extension !== '.svelte')
+    ? installedPlugins(ctx.pkg, sources, ctx.repoDir, librarySettingsOf(ctx.repoDir, ctx.pkg, nuxt !== undefined))
+    : { libraries: [], unknown: [] };
   const drawn = new Set<string>();
   const rendering = nuxt === undefined ? undefined : layoutRenderingOf(nuxt, components);
-  const runtime = nuxt === undefined ? [] : runtimeMiddlewareOf(ctx, nuxt);
+  // What plugins add when the application starts (P258), then what the root component's setup adds (P262).
+  const startup = nuxt === undefined ? undefined : startupMiddlewareOf(ctx, nuxt, components, sources);
+  const runtime = nuxt === undefined ? [] : [...runtimeMiddlewareOf(ctx, nuxt), ...(startup?.added ?? [])];
+  const scoped = startup?.scoped ?? new Set<string>();
   const edge = (from: IndexedFunction, to: IndexedFunction, file: string, line: number, meta: Record<string, unknown>): void => {
     if (from.id === to.id) return;
     const key = EDGE_KEY({ from: from.id, to: to.id });
@@ -315,7 +320,7 @@ export const drawChildren = (
       });
     }
 
-    if (nuxt !== undefined && rendering !== undefined && nuxt.pages.has(made.file)) pageFlow(ctx, nuxt, rendering, runtime, byFile, component, made, script, edge);
+    if (nuxt !== undefined && rendering !== undefined && nuxt.pages.has(made.file)) pageFlow(ctx, nuxt, rendering, runtime, scoped, byFile, component, made, script, edge);
     if (sveltekit !== undefined && svelte) sveltekitPageFlow(ctx, sveltekit, byFile, component, made, edge);
   }
 };
@@ -440,6 +445,7 @@ const pageFlow = (
   nuxt: NuxtReading,
   rendering: LayoutRendering,
   runtime: readonly RuntimeMiddleware[],
+  scoped: ReadonlySet<string>,
   byFile: ReadonlyMap<string, IndexedFunction>,
   page: IndexedFunction,
   made: EmbeddedFile,
@@ -453,9 +459,11 @@ const pageFlow = (
     const fn = middlewareFunction(ctx, name, file);
     if (fn !== undefined) edge(page, fn, made.file, line, { middleware: name, order: order++ });
   };
-  // What a plugin adds when the application starts (P258): a global one after the ones the build adds, a named one in place of a file's.
+  // What a plugin adds when the application starts (P258), or the root
+  // component's setup (P262): a global one after the ones the build adds, a
+  // named one in place of a file's.
   const added = (middleware: RuntimeMiddleware): void => {
-    edge(page, middleware.fn, made.file, line, { middleware: middleware.name ?? middleware.fn.name, order: order++, plugin: middleware.plugin });
+    edge(page, middleware.fn, made.file, line, { middleware: middleware.name ?? middleware.fn.name, order: order++, ...middleware.from });
   };
   for (const middleware of nuxt.names.middleware) if (middleware.global) through(middleware.name, middleware.file);
   for (const middleware of runtime) if (middleware.global) added(middleware);
@@ -467,7 +475,8 @@ const pageFlow = (
     const atRuntime = runtime.findLast((each) => !each.global && each.name === written.name);
     const known = nuxt.names.middleware.find((each) => each.name === written.name);
     if (atRuntime !== undefined) added(atRuntime);
-    else if (known === undefined) middlewareRow(ctx, made.file, line, page.name, written.name, 'missing');
+    // One only a component's setup adds is there once that component has been shown (P262).
+    else if (known === undefined) middlewareRow(ctx, made.file, line, page.name, written.name, scoped.has(written.name) ? 'scoped' : 'missing');
     else through(known.name, known.file);
   }
 
@@ -493,14 +502,24 @@ const pageFlow = (
   else if (!(name === 'default' && asked === undefined) && !nuxt.names.layouts.has(name)) layoutRow(ctx, made.file, line, page.name, name, 'missing');
 };
 
-/** A route middleware a plugin adds when the application starts: `addRouteMiddleware('name', fn, { global })` (P258). */
+/**
+ * A route middleware added when the application starts:
+ * `addRouteMiddleware('name', fn, { global })` in a plugin (P258), or at the
+ * top of the root component's setup (P262).
+ */
 interface RuntimeMiddleware {
   /** None for `addRouteMiddleware(fn)`, which is global. */
   readonly name?: string;
   readonly global: boolean;
   readonly fn: IndexedFunction;
-  /** Repo-relative plugin file. */
-  readonly plugin: string;
+  /**
+   * Where it is added, as the page's edge says it: `{ plugin }` the
+   * repo-relative plugin file; `{ setup, addedIn, firstNavigation: false }`
+   * the root component and the file of the call - a middleware the root
+   * component adds runs from the navigation after the first, which the
+   * router makes before the root component is set up.
+   */
+  readonly from: Readonly<Record<string, unknown>>;
 }
 
 /** The function a route middleware is: written in place, `defineNuxtRouteMiddleware` of one, or a name of one. */
@@ -532,24 +551,129 @@ const runtimeMiddlewareOf = (ctx: ReactExtractContext, nuxt: NuxtReading): Runti
     const sourceFile = ctx.project.getSourceFile(join(ctx.repoDir, plugin.file));
     if (sourceFile === undefined || !sourceFile.getFullText().includes('addRouteMiddleware')) continue;
     sourceFile.forEachDescendant((node) => {
-      if (!Node.isCallExpression(node) || !/(?:^|\.)addRouteMiddleware$/.test(node.getExpression().getText())) return;
-      const [first, second, third] = node.getArguments();
-      if (first === undefined) return;
-      const named = Node.isStringLiteral(first) || Node.isNoSubstitutionTemplateLiteral(first) ? first.getLiteralValue() : undefined;
-      const anonymous = Node.isArrowFunction(first) || Node.isFunctionExpression(first) || (Node.isCallExpression(first) && /defineNuxtRouteMiddleware$/.test(first.getExpression().getText()));
-      const value = anonymous ? first : second;
-      const options = anonymous ? second : third;
-      const global = anonymous || (options !== undefined && Node.isObjectLiteralExpression(options) && propertyValue(options, 'global')?.getText() === 'true');
-      const label = named ?? `${plugin.file.split('/').pop()?.replace(/\.[cm]?[jt]s$/, '') ?? plugin.file} middleware`;
-      const fn = value === undefined || (!anonymous && named === undefined) ? undefined : middlewareValue(ctx, label, value);
-      if (fn === undefined) {
-        middlewareRow(ctx, plugin.file, startLineOf(node), plugin.file, (named === undefined && !anonymous ? first : (value ?? first)).getText().slice(0, 60), 'dynamic', 'plugin');
-        return;
-      }
-      found.push({ ...(named === undefined ? {} : { name: named }), global, fn, plugin: plugin.file });
+      if (!isAddRouteMiddleware(node)) return;
+      const read = additionOf(ctx, node as CallExpression, plugin.file);
+      if (read !== undefined) found.push({ ...read, from: { plugin: plugin.file } });
     });
   }
   return found;
+};
+
+const isAddRouteMiddleware = (node: TsNode): boolean =>
+  Node.isCallExpression(node) && /(?:^|\.)addRouteMiddleware$/.test(node.getExpression().getText());
+
+/**
+ * One `addRouteMiddleware(...)`: its name (none for a function alone), whether
+ * it runs in front of every page, and the function it runs. A name or a
+ * function written as code is a row at the call, and nothing is answered.
+ */
+const additionOf = (ctx: ReactExtractContext, node: CallExpression, file: string): Omit<RuntimeMiddleware, 'from'> | undefined => {
+  const [first, second, third] = node.getArguments();
+  if (first === undefined) return undefined;
+  const named = Node.isStringLiteral(first) || Node.isNoSubstitutionTemplateLiteral(first) ? first.getLiteralValue() : undefined;
+  const anonymous = Node.isArrowFunction(first) || Node.isFunctionExpression(first) || (Node.isCallExpression(first) && /defineNuxtRouteMiddleware$/.test(first.getExpression().getText()));
+  const value = anonymous ? first : second;
+  const options = anonymous ? second : third;
+  const global = anonymous || (options !== undefined && Node.isObjectLiteralExpression(options) && propertyValue(options, 'global')?.getText() === 'true');
+  const label = named ?? `${file.split('/').pop()?.replace(/\.(?:[cm]?[jt]s|vue)$/, '') ?? file} middleware`;
+  const fn = value === undefined || (!anonymous && named === undefined) ? undefined : middlewareValue(ctx, label, value);
+  if (fn === undefined) {
+    middlewareRow(ctx, file, startLineOf(node), file, (named === undefined && !anonymous ? first : (value ?? first)).getText().slice(0, 60), 'dynamic', 'plugin');
+    return undefined;
+  }
+  return { ...(named === undefined ? {} : { name: named }), global, fn };
+};
+
+/** How many functions deep a call from the root component's setup is followed to an `addRouteMiddleware`. */
+const STARTUP_DEPTH = 4;
+
+/**
+ * The route middleware added outside a plugin (P262). Nuxt runs its plugins,
+ * makes its first navigation, and then sets up the root component; an
+ * `addRouteMiddleware` at the top of that setup - `app.vue`'s `<script
+ * setup>` or its `setup()` - or at the top of a function of the repository
+ * the setup calls there (a composable, and the ones it calls in turn) runs
+ * once, and what it adds stays for every navigation after. Anywhere else - a
+ * page's or a child's setup, a handler, a callback, a composable nothing at
+ * startup calls - it runs when that code runs, so which navigations it stands
+ * in front of is not something the files say: a row at the call, and the
+ * names it adds kept for the page that names one.
+ */
+const startupMiddlewareOf = (
+  ctx: ReactExtractContext,
+  nuxt: NuxtReading,
+  components: readonly MarkupComponent[],
+  sources: readonly SourceFile[],
+): { added: RuntimeMiddleware[]; scoped: Set<string> } => {
+  const added: RuntimeMiddleware[] = [];
+  const scoped = new Set<string>();
+  const plugins = new Set(nuxt.names.plugins.map((plugin) => plugin.file));
+  // A module's `addRouteMiddleware` is the build's, from its kit (P255), and read with the module.
+  const calls = sources.filter((sourceFile) => {
+    const text = sourceFile.getFullText();
+    return text.includes('addRouteMiddleware') && !/\bdefineNuxtModule\b|['"](?:@nuxt|nuxt)\/kit['"]/.test(text) && !plugins.has(ctx.fileOf(sourceFile));
+  });
+  if (calls.length === 0) return { added, scoped };
+
+  // The calls the root component's setup makes, each with the file it is written in.
+  const atStartup = new Map<TsNode, string>();
+  const root = components.find(({ made }) => made.file === nuxt.names.root);
+  const walked = new Set<TsNode>();
+  const walk = (body: TsNode, depth: number): void => {
+    if (walked.has(body) || depth > STARTUP_DEPTH) return;
+    walked.add(body);
+    body.forEachDescendant((node, traversal) => {
+      // A function written here runs when something calls it, not now.
+      if (node !== body && Node.isFunctionLikeDeclaration(node)) {
+        traversal.skip();
+        return;
+      }
+      if (!Node.isCallExpression(node)) return;
+      if (isAddRouteMiddleware(node)) {
+        atStartup.set(node, ctx.fileOf(node));
+        return;
+      }
+      const callee = node.getExpression();
+      if (!Node.isIdentifier(callee)) return;
+      const symbol = callee.getSymbol();
+      for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
+        if (declaration.getSourceFile().getFilePath().includes('/node_modules/')) continue;
+        const fn = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
+        if (fn !== undefined && (Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isFunctionDeclaration(fn))) {
+          const fnBody = fn.getBody();
+          if (fnBody !== undefined) walk(fnBody, depth + 1);
+        }
+      }
+    });
+  };
+  if (root !== undefined) {
+    walk(root.script, 0);
+    // The Options API's `setup()`.
+    const assignment = root.script.getExportAssignment((each) => !each.isExportEquals());
+    let options: TsNode | undefined = assignment?.getExpression();
+    if (options !== undefined && Node.isCallExpression(options)) options = options.getArguments()[0];
+    const setup = options !== undefined && Node.isObjectLiteralExpression(options) ? options.getProperty('setup') : undefined;
+    const body = setup !== undefined && Node.isMethodDeclaration(setup) ? setup.getBody() : undefined;
+    if (body !== undefined) walk(body, 0);
+  }
+
+  for (const sourceFile of calls) {
+    sourceFile.forEachDescendant((node) => {
+      if (!isAddRouteMiddleware(node)) return;
+      const file = ctx.fileOf(node);
+      const addedIn = atStartup.get(node);
+      if (addedIn !== undefined && nuxt.names.root !== undefined) {
+        const read = additionOf(ctx, node as CallExpression, file);
+        if (read !== undefined) added.push({ ...read, from: { setup: nuxt.names.root, addedIn, firstNavigation: false } });
+        return;
+      }
+      const [first] = (node as CallExpression).getArguments();
+      const named = first !== undefined && (Node.isStringLiteral(first) || Node.isNoSubstitutionTemplateLiteral(first)) ? first.getLiteralValue() : undefined;
+      if (named !== undefined) scoped.add(named);
+      middlewareRow(ctx, file, startLineOf(node), file, named ?? (first?.getText().slice(0, 60) ?? ''), 'scoped', 'call');
+    });
+  }
+  return { added, scoped };
 };
 
 /** A SvelteKit page or layout file's name: `+page`, `+layout`, and what it resets to after `@` (P258). */
@@ -664,8 +788,8 @@ const sveltekitPageFlow = (
   }
 };
 
-/** Why a layout or a middleware a page names is not joined. */
-type UnmatchedName = 'missing' | 'dynamic' | 'unrendered';
+/** Why a layout or a middleware a page names is not joined; `scoped`: added only where some component's code runs (P262). */
+type UnmatchedName = 'missing' | 'dynamic' | 'unrendered' | 'scoped';
 
 const layoutRow = (ctx: ReactExtractContext, file: string, line: number, page: string, name: string, why: UnmatchedName, framework: 'nuxt' | 'sveltekit' = 'nuxt'): void => {
   const kit = framework === 'sveltekit';
@@ -702,7 +826,7 @@ const middlewareRow = (
   page: string,
   name: string,
   why: Exclude<UnmatchedName, 'unrendered'>,
-  by: 'page' | 'plugin' = 'page',
+  by: 'page' | 'plugin' | 'call' = 'page',
 ): void => {
   ctx.report({
     file,
@@ -713,15 +837,21 @@ const middlewareRow = (
     message:
       why === 'missing'
         ? `${file} names the route middleware ${name}, and no file of a middleware directory of the application, no module and no plugin gives one of that name`
-        : by === 'plugin'
-          ? `${file} adds a route middleware whose name or function is written as code (${name}), so which pages it runs in front of, and what it runs, is not read`
-          : `a route middleware ${file} names is written as code (${name}), so which one is not read`,
+        : why === 'scoped' && by === 'call'
+          ? `${file} adds the route middleware ${name} outside a plugin and not at the top of the root component's setup, so it is added only when this code runs, and which navigations it runs in front of is not read`
+          : why === 'scoped'
+            ? `${file} names the route middleware ${name}, which only a component's code adds when it runs, so whether it is there when this page is shown is not read`
+            : by === 'plugin'
+              ? `${file} adds a route middleware whose name or function is written as code (${name}), so which pages it runs in front of, and what it runs, is not read`
+              : `a route middleware ${file} names is written as code (${name}), so which one is not read`,
     hint:
       why === 'missing'
         ? 'Correct the name, or add the middleware to `middleware/`.'
-        : by === 'plugin'
-          ? "Write `addRouteMiddleware('name', (to) => ..., { global })` with a literal name and the function in place or imported."
-          : 'Write the middleware as a literal name in `definePageMeta`.',
+        : why === 'scoped'
+          ? 'Add it in a plugin, or at the top of `app.vue`\'s setup, or put it in `middleware/`.'
+          : by === 'plugin'
+            ? "Write `addRouteMiddleware('name', (to) => ..., { global })` with a literal name and the function in place or imported."
+            : 'Write the middleware as a literal name in `definePageMeta`.',
     meta: { cause: 'route-middleware-unresolved', why, middleware: name },
   });
 };

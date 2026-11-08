@@ -417,6 +417,7 @@ export const PAGE_WORDS = Object.freeze({
     'framework-environment-differs': 'another environment builds otherwise',
     'framework-module-unread': 'framework module not read',
     'framework-module-skipped': 'module call turned off by its options',
+    'framework-feature-off': 'feature its build flag turns off',
     'implicit-import-overridden': 'name imported from the higher layer',
     'framework-setting-dynamic': 'framework setting not a literal',
     'package-source-ambiguous': 'two sources for one package',

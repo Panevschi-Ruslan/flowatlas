@@ -58,6 +58,36 @@ export function browseTea() {
   return axios.get<Product[]>(`${CATALOG}/api/browse`, { params: new URLSearchParams({ category: 'tea' }), headers: { 'X-Tenant': 'north' } });
 }
 
+/** The tenant written on the instance every request through it is made with (P262). */
+const tenantCatalog = axios.create({ baseURL: CATALOG, headers: { 'X-Tenant': 'north' } });
+
+/** The tenant comes from the instance; every key of the query is written: agrees (P262). */
+export function browseNorth(page: string) {
+  return tenantCatalog.get<Product[]>('/api/browse', { params: { category: 'tea', page } });
+}
+
+/** No header written, and nothing that adds one: `headers.x-tenant` is missing (P262). */
+export function browseBare(page: string) {
+  return axios.get<Product[]>(`${CATALOG}/api/browse`, { params: { category: 'tea', page } });
+}
+
+/** Headers handed by a name: not compared, and said so (P262). */
+export function browseWith(headers: Record<string, string>, page: string) {
+  return axios.get<Product[]>(`${CATALOG}/api/browse`, { params: { category: 'tea', page }, headers });
+}
+
+const SKU = 'sku';
+
+/**
+ * The address built with `+`, its query a key held in a constant, and a
+ * header the procedure spells `X-Region`, which reaches it lower-cased (P262).
+ */
+export function stockOf(sku: string) {
+  const query = new URLSearchParams();
+  query.set(SKU, sku);
+  return axios.get<{ sku: string; count: number }>(CATALOG + '/api/stock?' + query.toString(), { headers: { 'X-Region': 'eu' } });
+}
+
 /** A detailed route: the id under `params`, the price under `body`, and the answer the output's `body`. */
 export function reprice(id: string, price: number) {
   return axios.patch<Product>(`${CATALOG}/api/products/${id}/price`, { price });

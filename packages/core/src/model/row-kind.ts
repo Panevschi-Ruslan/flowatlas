@@ -60,6 +60,8 @@ export interface KindedRow {
 const NOTES: readonly string[] = [
   // A call of a framework module that the options it is handed rule out (P255)
   'framework-module-skipped',
+  // A feature the files use that the build's own flag turns off: Nitro's tasks (P262)
+  'framework-feature-off',
   // Stand-ins for a package that is not installed (core/stand-ins.ts, P78)
   'package-from-repo',
   'package-version-differs',

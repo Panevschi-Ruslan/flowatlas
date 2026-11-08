@@ -332,6 +332,20 @@ export const PROBES = [
     contains: /\bdefineTask\s*\(/,
   },
   {
+    // A SvelteKit server load answers the page's address before the page is
+    // shown, and the tool draws it as a way in at its file (P42, P258): a
+    // page's `+page.server` and a layout's `+layout.server` alike (P262).
+    // Counted where the file exports a `load`, so one holding only `actions`
+    // is not; a universal `+page.ts` / `+layout.ts` load runs in the browser
+    // too and is no way in.
+    name: 'sveltekit-server-load',
+    family: 'routes',
+    scope: 'file',
+    what: 'a SvelteKit `+page.server` or `+layout.server` file that exports a `load`',
+    path: /(?:^|\/)\+(?:page|layout)\.server\.[cm]?[jt]s$/,
+    contains: /^\s*export\s+(?:const|(?:async\s+)?function)\s+load\b/m,
+  },
+  {
     // The request families (P244). A request is written at a call, and the
     // call is what a person sees: the platform's client by its own name, a verb
     // on a client with the address written out beside it, or a client handed

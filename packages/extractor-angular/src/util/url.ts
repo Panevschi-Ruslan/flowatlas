@@ -12,6 +12,7 @@ import {
   type SettingBehind,
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
+import { Node } from 'ts-morph';
 
 /**
  * Identifiers that stand for the settings a build swaps out.
@@ -131,6 +132,10 @@ export const analyzeApiUrl = (node: TsNode, sharedPackages: readonly string[]): 
     resolveSpan: readSpan,
   });
   if (resolved === null) {
+    // `'/orders?' + params.toString()` (P262): what is added after a `?` is
+    // the query, and the address the text before it.
+    const queried = queryAdded(node, sharedPackages);
+    if (queried !== undefined) return queried;
     // Not a string this reader can put together, but perhaps a helper that
     // assembles one: `this.http.delete(this.buildAdminUrl(id))` is an address
     // like any other, written one call further away.
@@ -182,6 +187,20 @@ export const analyzeApiUrl = (node: TsNode, sharedPackages: readonly string[]): 
     via,
     guessed,
   };
+};
+
+/**
+ * An address with a query added to it by `+` after its `?` (P262): the
+ * address its left side is, with the query the right side adds unread
+ * (`${…}`). Nothing where the left side holds no `?`.
+ */
+const queryAdded = (node: TsNode, sharedPackages: readonly string[]): ApiUrl | undefined => {
+  let value = node;
+  while (Node.isParenthesizedExpression(value) || Node.isAsExpression(value) || Node.isNonNullExpression(value)) value = value.getExpression();
+  if (!Node.isBinaryExpression(value) || value.getOperatorToken().getText() !== '+') return undefined;
+  const left = analyzeApiUrl(value.getLeft(), sharedPackages);
+  if (left.url === null || left.path === null || !left.url.includes('?')) return undefined;
+  return { ...left, url: `${left.url}${UNREAD_SPAN}` };
 };
 
 /**

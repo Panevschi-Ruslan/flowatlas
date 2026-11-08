@@ -402,6 +402,15 @@ describe('the query a request writes in its options (P256)', () => {
     expect(search?.meta).toMatchObject({ method: 'GET', queryKeys: ['limit', 'q'] });
     expect(graph.edges.some((edge) => edge.type === 'calls' && edge.to === search?.id && edge.from.endsWith(':CatalogSearch.tea'))).toBe(true);
   });
+
+  it('reads an address built with `+` after its `?`, keys held in constants, and says headers handed by a name (P262)', async () => {
+    const graph = await graphOf('rpc-shared-types/apps/worker');
+    const requests = graph.nodes.filter((node) => node.type === 'http_out');
+    expect(requests.find((node) => node.meta?.['url'] === '${CATALOG_URL}/api/search?${…}')?.meta).toMatchObject({ path: '/api/search', queryKeys: ['limit', 'q'], queryInAddress: true });
+    const browse = requests.find((node) => node.meta?.['path'] === '/api/browse');
+    expect(browse?.meta).toMatchObject({ queryKeys: ['category', 'page'], headersUnread: true });
+    expect(browse?.meta).not.toHaveProperty('headerKeys');
+  });
 });
 
 describe('tables named where they are set (P88)', () => {

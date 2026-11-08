@@ -243,6 +243,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     "The configuration overrides some settings for one environment, and the graph is the production build's, so a layer, module or setting only another environment has is not read. Nothing to do; write what every build shares outside the overrides.",
   'framework-module-skipped': () =>
     "A module of the repository writes this call under a condition, and the options the configuration hands the module rule it out, so what it would add is not built and not drawn. Nothing to do; change the option to have it added.",
+  'framework-feature-off': () =>
+    "The repository writes code for a feature its framework builds only behind a flag - Nitro's tasks, before Nitro 3 - and the configuration leaves the flag off, so the build registers none of it. The code is drawn and marked `enabled: false`. Turn the flag on to have it built, or remove the code.",
   'framework-module-unread': () =>
     "A module the application is built with, or something it adds, could not be read: the module is written as code or in the configuration itself, names nothing, or hands the framework a path that is not built from its own file. Build the path from the module's file, with `createResolver(import.meta.url).resolve(...)`, or move the module to a file of `modules/`.",
   'implicit-import-overridden': () =>

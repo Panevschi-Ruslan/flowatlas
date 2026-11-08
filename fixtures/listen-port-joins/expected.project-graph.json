@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:46:11.489Z",
+  "builtAt": "2026-11-08T16:50:03.413Z",
   "services": [
     {
       "name": "orders",
@@ -983,6 +983,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "headersUnread": true,
         "package": null,
         "client": "ofetch",
         "baseFrom": "call-hook",
@@ -1070,6 +1071,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "headersUnread": true,
         "package": "ky",
         "client": "ky",
         "baseFrom": "interceptor",
@@ -1093,6 +1095,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "headersUnread": true,
         "package": "ky",
         "client": "ky",
         "baseFrom": "interceptor",

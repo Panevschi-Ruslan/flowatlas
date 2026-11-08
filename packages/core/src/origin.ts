@@ -615,6 +615,15 @@ export const writtenKeysOf = (written: readonly TsNode[]): string[] | undefined 
           for (const key of spread) keys.add(key);
           continue;
         }
+        // `{ [PAGE]: 1 }`: the key is the one string its expression's type is,
+        // or not known - never the checker's stand-in name for it (P262).
+        const computed = Node.isPropertyAssignment(property) || Node.isMethodDeclaration(property) ? property.getNameNode() : undefined;
+        if (computed !== undefined && Node.isComputedPropertyName(computed)) {
+          const type = computed.getExpression().getType();
+          if (!type.isStringLiteral()) return undefined;
+          keys.add(String(type.getLiteralValue()));
+          continue;
+        }
         const name = property.getSymbol()?.getName();
         if (name === undefined || name === '') return undefined;
         keys.add(name);

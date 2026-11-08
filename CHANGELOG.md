@@ -8,6 +8,33 @@ only one of them moved.
 
 ### Added
 
+- **The front end's and the RPC readers' last open names (P262).** An
+  `addRouteMiddleware` at the top of `app.vue`'s setup, or of a composable
+  that setup calls, is a route middleware in every page's order after the
+  plugins' (`meta.setup`, `meta.addedIn`, `meta.firstNavigation: false`); one
+  a component, a handler or a callback adds is a `route-middleware-unresolved`
+  row (`why: scoped`) at the call and at a page that names it. Nuxt UI (`U`)
+  joins the table of component libraries, a prefix the application sets is
+  read (PrimeVue's `primevue.components.prefix` or its resolver's `prefix`,
+  Nuxt UI's `ui.prefix` or its Vite plugin's), and a library a layer's
+  `modules` installs is installed; the libraries' Nuxt modules are known
+  modules. A query key held in a constant (`params.set(PAGE, v)`, an `as
+  const` member, an enum, `{ [PAGE]: v }`) is that key, and `{ [key]: v }`
+  with a key of no single value is no longer read as a key named
+  `__computed`; an address built with `+` after its `?` is read in the
+  browser, Angular and the server readers. Where Nitro's
+  `experimental.tasks` is off (before Nitro 3), every task and schedule is
+  `meta.enabled: false` and a `framework-feature-off` note says the build
+  registers none; Nitro 3's `nitro` package is detected. A detailed oRPC
+  input's headers are compared from the procedure's end: only its declared
+  names, lower-cased, with a name it spells with a capital said; a client
+  instance's own headers and an Angular interceptor's `setHeaders` are the
+  request's; headers written in a way not read, or that a hook or an
+  interceptor may add to, are `meta.headersUnread` and not compared; a
+  header the procedure does not declare is no longer an `extra_field`. A
+  coverage probe `sveltekit-server-load`. New fixture `nuxt-startup-names`;
+  `rpc-shared-types` extended.
+
 - **The last values deployments share not joined, and tokens and addresses a
   configured module builds (P259).** A parameter file written as YAML is read
   as the JSON one is. A template a sceptre stack configuration names

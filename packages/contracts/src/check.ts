@@ -241,6 +241,7 @@ const judge = (lookup: GraphLookup, exchange: Exchange, options: CheckOptions): 
       ...(options.disableRules === undefined ? {} : { disableRules: options.disableRules }),
       ...(whitelist ? { whitelist } : {}),
       ...(exchange.sendsNothing === true ? { emptyIsWritten: true } : {}),
+      ...(exchange.writtenEmptyAt === undefined ? {} : { emptyWrittenAt: exchange.writtenEmptyAt }),
     }),
   });
 

@@ -37,6 +37,12 @@ export interface CompareOptions {
    * nothing about its shape. What the receiver requires is then missing.
    */
   emptyIsWritten?: boolean;
+  /**
+   * Fields where a sender's `{}` is an object written with no keys, as
+   * {@link emptyIsWritten} is at the top: a `detailed` input's `headers` a
+   * call sends none of the procedure's (P262).
+   */
+  emptyWrittenAt?: readonly string[];
 }
 
 export interface CompareResult {
@@ -53,6 +59,8 @@ interface Walk {
   whitelist: boolean;
   /** The sender's `{}` at the top was written with no keys (P256). */
   emptyIsWritten: boolean;
+  /** Fields where the sender's `{}` was written with no keys (P262). */
+  emptyWrittenAt: readonly string[];
   diffs: FieldDiff[];
   rules: Set<string>;
   /** Pairs of types already being compared further up this path. */
@@ -603,7 +611,8 @@ const compareRefs = (
 
   // Neither declaration says what is in there, so there is nothing to compare
   // and nothing that could be wrong.
-  const writtenEmpty = walk.emptyIsWritten && path === '' && senderAst.kind === 'object' && senderAst.fields.length === 0;
+  const writtenEmpty =
+    (path === '' ? walk.emptyIsWritten : walk.emptyWrittenAt.includes(path)) && senderAst.kind === 'object' && senderAst.fields.length === 0;
   if ((makesNoClaim(senderAst) && !writtenEmpty) || makesNoClaim(receiverAst)) {
     walk.rules.add(at('any-unknown-skip', path));
     return;
@@ -1025,6 +1034,7 @@ export const diffTypes = (
     disable: options.disableRules ?? [],
     whitelist: options.whitelist === true,
     emptyIsWritten: options.emptyIsWritten === true,
+    emptyWrittenAt: options.emptyWrittenAt ?? [],
     diffs: [],
     rules: new Set(),
     open: new Set(),
@@ -1052,6 +1062,7 @@ export const diffRefs = (
     disable: options.disableRules ?? [],
     whitelist: options.whitelist === true,
     emptyIsWritten: options.emptyIsWritten === true,
+    emptyWrittenAt: options.emptyWrittenAt ?? [],
     diffs: [],
     rules: new Set(),
     open: new Set(),

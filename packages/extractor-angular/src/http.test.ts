@@ -247,6 +247,33 @@ declare class HttpHeaders { constructor(headers?: Record<string, string>); set(n
     expect(at('/c')).toMatchObject({ queryUnread: true });
     expect(at('/d')).toMatchObject({ queryKeys: ['sort'] });
   });
+
+  it("reads a key held in a constant, an address built with `+`, headers held in a field, and the headers an interceptor sets (P262)", () => {
+    const graph = extract(
+      `
+  private readonly tenant = new HttpHeaders({ 'X-Tenant': 'north' });
+  e(): Observable<OrderDto> {
+    const params = new HttpParams().set(PAGE, '2');
+    return this.http.get<OrderDto>('/e?' + params.toString());
+  }
+  f(): Observable<OrderDto> { return this.http.get<OrderDto>('/f', { headers: this.tenant }); }
+  g(): Observable<OrderDto> { return this.http.get<OrderDto>('/g', { headers: { Accept: 'json' } }); }
+  h(): Observable<OrderDto> { return this.http.get<OrderDto>('/h'); }
+`,
+      {},
+      `const PAGE = 'page';
+declare class HttpParams { constructor(options?: unknown); set(key: string, value: string): HttpParams; toString(): string; }
+declare class HttpHeaders { constructor(headers?: Record<string, string>); set(name: string, value: string): HttpHeaders; }
+export const tenantInterceptor: HttpInterceptorFn = (req, next) => next(req.clone({ setHeaders: { 'X-Request-Id': '1' } }));
+export const providers = [withInterceptors([tenantInterceptor])];`,
+    );
+    const at = (path: string) => callsOf(graph).find((node) => String(node.meta?.['path']).startsWith(path))?.meta ?? {};
+    expect(at('/e')).toMatchObject({ url: '/e?${…}', queryKeys: ['page'], queryInAddress: true });
+    expect(at('/f')).toMatchObject({ headerKeys: ['x-request-id'], headersUnread: true });
+    expect(at('/g')).toMatchObject({ headerKeys: ['accept', 'x-request-id'] });
+    expect(at('/g')).not.toHaveProperty('headersUnread');
+    expect(at('/h')).toMatchObject({ headerKeys: ['x-request-id'] });
+  });
 });
 
 describe('a request made with the platform client (R140)', () => {

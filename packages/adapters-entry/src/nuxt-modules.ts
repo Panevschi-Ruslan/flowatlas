@@ -118,6 +118,16 @@ export const NUXT_KNOWN_MODULES: ReadonlyMap<string, string> = new Map([
   ['@nuxt/devtools', 'tools for development, and no code'],
   ['@nuxtjs/tailwindcss', 'styles, and no code'],
   ['@nuxtjs/color-mode', 'the `useColorMode` composable of its own package'],
+  // A library of components installed by its module (P262): its tags are its
+  // package's, as the browser reader's table of libraries says.
+  ['@nuxt/ui', 'the components of its own library by name (`U` and the prefix it is set), and its composables'],
+  ['@nuxt/ui-pro', 'the components of its own library by name (`U` and the prefix it is set), and its composables'],
+  ['@primevue/nuxt-module', "the components of PrimeVue by name, under the prefix it is set, and its composables"],
+  ['vuetify-nuxt-module', 'the components of Vuetify by name (`V`), and its composables'],
+  ['@element-plus/nuxt', 'the components of Element Plus by name (`El`)'],
+  ['@bg-dev/nuxt-naiveui', 'the components of Naive UI by name (`N`)'],
+  ['nuxt-quasar-ui', 'the components of Quasar by name (`Q`)'],
+  ['@ant-design-vue/nuxt', 'the components of Ant Design Vue by name (`A`)'],
 ]);
 
 /**

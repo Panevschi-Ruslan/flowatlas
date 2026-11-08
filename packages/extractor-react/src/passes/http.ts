@@ -223,11 +223,27 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     return withAddress({});
   };
 
-  /** The names of the headers a call writes among its options, where it writes them so (P258). */
-  const headersOf = (call: CallExpression, shape: CallShape): readonly string[] | undefined => {
+  /**
+   * The names of the headers a call writes among its options (P258), with
+   * the ones the instance it is made through writes for every request
+   * (P262). `unread` where they are written and cannot be read, or where a
+   * function that runs before the request - an instance's hook or
+   * interceptor, the call's own hook - may add ones nothing here reads.
+   */
+  const headersOf = (call: CallExpression, shape: CallShape, runs: ClientInstance | undefined): { keys?: readonly string[]; unread?: true } => {
     const object = shape.optionsAt === undefined ? undefined : objectAt(call, shape.optionsAt);
-    const written = object === undefined ? undefined : valueOf(object, 'headers');
-    return written === undefined ? undefined : writtenHeaderNames(written, [PLATFORM_HEADERS]);
+    const property = object?.getProperty('headers');
+    const written =
+      property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+    // Headers may be in what is spread into the options, where none is written beside it.
+    const spread = property === undefined && object?.getProperties().some((each) => Node.isSpreadAssignment(each)) === true;
+    const own: readonly string[] | 'unread' | undefined =
+      property !== undefined && written === undefined ? 'unread' : written === undefined ? (spread ? 'unread' : undefined) : (writtenHeaderNames(written, [PLATFORM_HEADERS]) ?? 'unread');
+    const instance = runs?.headers;
+    const keys = [...(Array.isArray(own) ? own : []), ...(Array.isArray(instance) ? instance : [])];
+    const unread = own === 'unread' || instance === 'unread' || runs?.hooked === true;
+    if (own === undefined && instance === undefined) return unread ? { unread: true } : {};
+    return { ...(keys.length === 0 && unread ? {} : { keys: [...new Set(keys)].sort() }), ...(unread ? { unread: true as const } : {}) };
   };
 
   /** The body a described client's call writes where its description says (P121). */
@@ -380,7 +396,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       handedIn !== undefined ? handedIn : found.described !== undefined ? found.described.verb : verbOf(network, shape, request.calls);
     const body = found.described === undefined ? bodyOf(network, client, shape) : describedBodyOf(found.described);
     const query = found.described === undefined ? queryOf(network, shape) : {};
-    const headers = found.described === undefined ? headersOf(network, shape) : undefined;
+    const headers = found.described === undefined ? headersOf(network, shape, runs) : {};
     const application = applicationOfFile(ctx.meta, site.file);
 
     ctx.builder.addNode({
@@ -405,8 +421,10 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         ...(query.unread === true ? { queryUnread: true } : {}),
         // Its keys include those of a query built into the address, which the address shows as `${…}` (P258).
         ...(query.inAddress === true ? { queryInAddress: true } : {}),
-        // The headers it writes, for a procedure whose input takes them (P258).
-        ...(headers === undefined ? {} : { headerKeys: headers }),
+        // The headers it writes, for a procedure whose input takes them (P258),
+        // and whether more may be added that are not read (P262).
+        ...(headers.keys === undefined ? {} : { headerKeys: headers.keys }),
+        ...(headers.unread === true ? { headersUnread: true } : {}),
         package: client.package,
         client: client.name,
         // Which application this request is written in, where the service holds

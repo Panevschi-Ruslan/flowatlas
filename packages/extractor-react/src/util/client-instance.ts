@@ -1,4 +1,4 @@
-import { declarationOf, isPlatformProvided } from '@flowatlas/core';
+import { declarationOf, isPlatformProvided, PLATFORM_HEADERS, writtenHeaderNames } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { CLIENT_FACTORIES, type ClientFactory } from '../clients.js';
@@ -40,6 +40,18 @@ export interface ClientInstance {
   readonly rewriteUnread?: { readonly at: TsNode; readonly why: string };
   /** Every reading of such functions, before they are put together. */
   readonly readings?: readonly RewriteReading[];
+  /**
+   * The headers every request through it carries from the options it is made
+   * with (P262), lower-cased; `unread` where they are written and cannot be
+   * read.
+   */
+  readonly headers?: readonly string[] | 'unread';
+  /**
+   * Whether a function runs before each of its requests - a hook among its
+   * options, an interceptor registered on it - which may add headers nothing
+   * here reads (P262).
+   */
+  readonly hooked?: true;
 }
 
 export interface InstanceOptions {
@@ -299,6 +311,8 @@ export const clientInstances = (options: InstanceOptions) => {
    * after it is made (P239, P244).
    */
   let assignments: Map<TsNode | ClientFactory, TsNode[]> | undefined;
+  /** Whether the repository assigns to a client's default headers anywhere (`axios.defaults.headers.common[...] = ...`, P262). */
+  let headerDefaults = false;
   let registrations: Map<TsNode | ClientFactory, Array<{ factory: ClientFactory; fn: TsNode }>> | undefined;
   const scan = (): void => {
     if (assignments !== undefined) return;
@@ -309,6 +323,7 @@ export const clientInstances = (options: InstanceOptions) => {
     const chains = CLIENT_FACTORIES.flatMap((factory) => (factory.rewrites?.registeredAt === undefined ? [] : [{ factory, chain: factory.rewrites.registeredAt }]));
     for (const file of options.files()) {
       const text = file.getFullText();
+      if (/\.defaults\.headers\b/.test(text)) headerDefaults = true;
       if (chains.some(({ chain }) => chain.every((name) => text.includes(name)))) {
         for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
           for (const { factory, chain } of chains) {
@@ -399,6 +414,27 @@ export const clientInstances = (options: InstanceOptions) => {
       : { written: true, base };
   };
 
+  /** The headers the options an instance is made with write (P262): their names, or `unread`. */
+  const headersIn = (call: CallExpression, bindings: Bindings | undefined): ClientInstance['headers'] => {
+    const [config] = call.getArguments();
+    if (config === undefined) return undefined;
+    const object = objectOf(config, bindings, 0);
+    if (object === undefined) return 'unread';
+    const found = keyIn(object, 'headers', bindings, 0);
+    if (found.kind === 'absent') return undefined;
+    if (found.kind === 'unread') return 'unread';
+    const names = writtenHeaderNames(settled(found.node, bindings).node, [PLATFORM_HEADERS]);
+    return names === undefined ? 'unread' : names;
+  };
+
+  /** An instance's headers and its parent's together, as `extend` merges them. */
+  const mergedHeaders = (own: ClientInstance['headers'], parent: ClientInstance['headers']): ClientInstance['headers'] => {
+    if (own === 'unread' || parent === 'unread') return 'unread';
+    if (own === undefined) return parent;
+    if (parent === undefined) return own;
+    return [...new Set([...parent, ...own])].sort();
+  };
+
   /**
    * What is done to an instance after it is made: `defaults` assignments to
    * its base (P239), and the functions registered to run before each of its
@@ -408,7 +444,16 @@ export const clientInstances = (options: InstanceOptions) => {
     if (holder === undefined) return instance;
     const registered = registeredOn(holder, instance.factory);
     const readings = registered.length === 0 ? instance.readings : [...(instance.readings ?? []), ...registered];
-    const kept = readings === undefined ? {} : { readings };
+    // An interceptor registered on it runs before its requests whatever it does to the address (P262).
+    const hooked =
+      instance.hooked === true ||
+      (registrations?.get(holder) ?? []).some((each) => each.factory === instance.factory) ||
+      (headerDefaults && instance.factory.defaults !== undefined);
+    const kept = {
+      ...(readings === undefined ? {} : { readings }),
+      ...(instance.headers === undefined ? {} : { headers: instance.headers }),
+      ...(hooked ? { hooked: true as const } : {}),
+    };
     const based = instance.factory.defaults === undefined ? [] : defaultsOf(holder);
     if (based.length === 0) return { ...instance, ...kept };
     const read = based.map((value) => ({ value, base: readBase(value, undefined) }));
@@ -526,12 +571,16 @@ export const clientInstances = (options: InstanceOptions) => {
       const factory = fromModule ?? parent?.factory;
       if (factory === undefined || !factory.methods.includes(callee.getName())) return undefined;
       const own = baseIn(factory, target, bindings);
-      const readings = inherit(factory, hooksIn(factory, target, bindings), parent);
+      const hooks = hooksIn(factory, target, bindings);
+      const readings = inherit(factory, hooks, parent);
+      const headers = mergedHeaders(headersIn(target, bindings), parent?.headers);
       const made: ClientInstance = {
         ...(own.written
           ? { factory, ...(own.base === undefined ? {} : { base: own.base }), ...(own.unread === undefined ? {} : { unread: own.unread }) }
           : { factory, ...(parent?.base === undefined ? {} : { base: parent.base }), ...(parent?.unread === undefined ? {} : { unread: parent.unread }) }),
         ...(readings.length === 0 ? {} : { readings }),
+        ...(headers === undefined ? {} : { headers }),
+        ...(hooks.written || parent?.hooked === true ? { hooked: true as const } : {}),
       };
       return withDefaults(made, holderAt(target));
     }
@@ -561,7 +610,7 @@ export const clientInstances = (options: InstanceOptions) => {
     if (!own.written) return undefined;
     const readings = inherit(factory, own, instance);
     const { rewrite: _rewrite, rewriteUnread: _unread, readings: _readings, ...made } = instance ?? { factory };
-    return finished({ ...made, ...(readings.length === 0 ? {} : { readings }) });
+    return finished({ ...made, ...(readings.length === 0 ? {} : { readings }), hooked: true });
   };
 
   return {

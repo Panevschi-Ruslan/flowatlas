@@ -42,7 +42,7 @@ import { Node, SyntaxKind } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { ANGULAR_HTTP } from '../index-classes.js';
 import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSite } from '../util/forward.js';
-import { interceptorBaseOf, type InterceptorBase } from '../util/interceptor-base.js';
+import { interceptorBaseOf, interceptorHeadersOf, type InterceptorBase, type InterceptorHeaders } from '../util/interceptor-base.js';
 import type { ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
@@ -112,8 +112,8 @@ interface Spelling {
   readonly intercepted?: true;
   /** The query the call writes among its options, where its client has one (P256). */
   readonly query?: (network: CallExpression) => QueryShape;
-  /** The names of the headers the call writes among its options (P258). */
-  readonly headers?: (network: CallExpression) => readonly string[] | undefined;
+  /** The names of the headers the call writes among its options (P258), or `unread` where they are written and cannot be read (P262). */
+  readonly headers?: (network: CallExpression) => readonly string[] | 'unread' | undefined;
 }
 
 /**
@@ -186,13 +186,18 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     };
   };
 
-  /** The names of the headers an options object written at `index` writes: an object, or `HttpHeaders` built by calls (P258). */
-  const headersAt = (network: CallExpression, index: number): readonly string[] | undefined => {
+  /**
+   * The names of the headers an options object written at `index` writes: an
+   * object, or `HttpHeaders` built by calls (P258); `unread` where they are
+   * written and cannot be read - held in a field, built from code (P262).
+   */
+  const headersAt = (network: CallExpression, index: number): readonly string[] | 'unread' | undefined => {
     const options = network.getArguments()[index];
     if (options === undefined || !Node.isObjectLiteralExpression(options)) return undefined;
     const property = options.getProperty('headers');
-    const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
-    return written === undefined ? undefined : writtenHeaderNames(written, HEADER_BUILDERS);
+    if (property === undefined) return options.getProperties().some((each) => Node.isSpreadAssignment(each)) ? 'unread' : undefined;
+    const written = Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+    return (written === undefined ? undefined : writtenHeaderNames(written, HEADER_BUILDERS)) ?? 'unread';
   };
 
   /**
@@ -361,6 +366,29 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     return intercepting;
   };
 
+  /** The headers the repository's interceptors put on every request of the framework's client (P262), read once. */
+  let interceptorHeaders: InterceptorHeaders | undefined;
+  const headersIntercepted = (): InterceptorHeaders => {
+    if (interceptorHeaders !== undefined) return interceptorHeaders;
+    const repoDir = toPosixPath(ctx.repoDir).replace(/[/]+$/, '');
+    const files = ctx.project.getSourceFiles().filter((file) => {
+      const path = toPosixPath(file.getFilePath());
+      return path.startsWith(`${repoDir}/`) && !path.includes('/node_modules/');
+    });
+    interceptorHeaders = interceptorHeadersOf(files);
+    return interceptorHeaders;
+  };
+
+  /** What a request's headers are: its own and its interceptors', and whether more may be added that are not read (P262). */
+  const headersOf = (network: CallExpression, spelling: Spelling): { keys?: readonly string[]; unread?: true } => {
+    const own = spelling.headers?.(network);
+    const added = spelling.intercepted === true ? headersIntercepted() : { keys: [], unread: false };
+    const keys = [...(Array.isArray(own) ? own : []), ...added.keys];
+    const unread = own === 'unread' || (added.unread && (own !== undefined || keys.length > 0));
+    if (own === undefined && added.keys.length === 0) return added.unread ? { unread: true } : {};
+    return { ...(keys.length === 0 && unread ? {} : { keys: [...new Set(keys)].sort() }), ...(unread ? { unread: true as const } : {}) };
+  };
+
   const record = (
     network: CallExpression,
     spelling: Spelling,
@@ -391,7 +419,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     const body = spelling.body(network, frames);
     const bodyType = body.type;
     const query = spelling.query?.(network) ?? {};
-    const headers = spelling.headers?.(network);
+    const headers = headersOf(network, spelling);
     const application = applicationOfFile(ctx.meta, file);
 
     ctx.builder.addNode({
@@ -421,8 +449,10 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         ...(query.keys === undefined ? {} : { queryKeys: query.keys }),
         ...(query.unread === true ? { queryUnread: true } : {}),
         ...(query.inAddress === true ? { queryInAddress: true } : {}),
-        // The headers it writes, for a procedure whose input takes them (P258).
-        ...(headers === undefined ? {} : { headerKeys: headers }),
+        // The headers it writes, for a procedure whose input takes them (P258),
+        // and whether more may be added that are not read (P262).
+        ...(headers.keys === undefined ? {} : { headerKeys: headers.keys }),
+        ...(headers.unread === true ? { headersUnread: true } : {}),
         ...spelling.client,
         // Which application this request is written in, where the service holds
         // more than one; the other half of what an entry records about its own

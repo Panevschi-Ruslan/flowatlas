@@ -1,7 +1,9 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { hasDependency, normalizeFilePath, packageOfSpecifier, startLineOf, type PackageJson } from '@flowatlas/core';
+import { configValueAt, hasDependency, normalizeFilePath, packageOfSpecifier, parseSyntax, startLineOf, type PackageJson } from '@flowatlas/core';
+import { nuxtApplicationOf, VITE_CONFIGS } from '@flowatlas/adapters-entry';
 import type { Node as TsNode, SourceFile } from 'ts-morph';
-import { Node, SyntaxKind } from 'ts-morph';
+import { Node, SyntaxKind, ts } from 'ts-morph';
 
 /**
  * What a Vue application registers for every template besides its own files
@@ -22,10 +24,21 @@ export interface ComponentLibrary {
   readonly name: string;
   /** Its package, and the packages of the Nuxt modules that install it. */
   readonly packages: readonly string[];
-  /** Every name it registers begins with this, then a capital: `V` for `VBtn`. */
+  /**
+   * Every name it registers begins with this: `V` for `VBtn`, then a capital;
+   * where it has {@link names} too, each of them follows it (`PrimeButton`).
+   */
   readonly prefix?: string;
-  /** The names it registers, where they share no prefix. */
+  /** The names it registers, where they share no prefix of their own. */
   readonly names?: ReadonlySet<string>;
+  /**
+   * Where the application sets a prefix of its own for it (P262): a dotted
+   * key of the framework's configuration, and the function of the bundler's
+   * configuration - a component resolver, a plugin - that takes one as
+   * `prefix` or `components.prefix`, by its name or by the module it is
+   * imported from.
+   */
+  readonly prefixSetting?: { readonly config: string; readonly call?: string; readonly from?: string };
 }
 
 /** PrimeVue's components, which it registers under their own names with no prefix. */
@@ -45,14 +58,26 @@ const PRIMEVUE_COMPONENTS: ReadonlySet<string> = new Set([
   'TreeSelect', 'TreeTable', 'VirtualScroller',
 ]);
 
-/** Common libraries of components, each by the names it registers. */
+/**
+ * Common libraries of components, each by the names it registers. Kept
+ * small on purpose: a library is here only where its names are fixed by its
+ * package (a prefix, or a list), so a tag is silenced only for a fact of the
+ * package and never for a guess at one. PrimeVue and Nuxt UI take a prefix
+ * of the application's (P262), read where it is written.
+ */
 export const COMPONENT_LIBRARIES: readonly ComponentLibrary[] = [
   { name: 'Vuetify', packages: ['vuetify', 'vuetify-nuxt-module'], prefix: 'V' },
-  { name: 'PrimeVue', packages: ['primevue', '@primevue/nuxt-module'], names: PRIMEVUE_COMPONENTS },
+  {
+    name: 'PrimeVue',
+    packages: ['primevue', '@primevue/nuxt-module'],
+    names: PRIMEVUE_COMPONENTS,
+    prefixSetting: { config: 'primevue.components.prefix', call: 'PrimeVueResolver' },
+  },
   { name: 'Element Plus', packages: ['element-plus', '@element-plus/nuxt'], prefix: 'El' },
   { name: 'Naive UI', packages: ['naive-ui', '@bg-dev/nuxt-naiveui'], prefix: 'N' },
   { name: 'Quasar', packages: ['quasar', 'nuxt-quasar-ui'], prefix: 'Q' },
   { name: 'Ant Design Vue', packages: ['ant-design-vue', '@ant-design-vue/nuxt'], prefix: 'A' },
+  { name: 'Nuxt UI', packages: ['@nuxt/ui', '@nuxt/ui-pro'], prefix: 'U', prefixSetting: { config: 'ui.prefix', from: '@nuxt/ui/vite' } },
 ];
 
 /** Plugins of packages that register no component a template names: a router, a store, translations, queries. */
@@ -69,9 +94,104 @@ const PLUGINS_WITHOUT_COMPONENTS: ReadonlySet<string> = new Set([
 
 /** Whether a tag, in PascalCase, is a name a library registers. */
 export const libraryOf = (pascal: string, libraries: readonly ComponentLibrary[]): ComponentLibrary | undefined =>
-  libraries.find((library) =>
-    library.prefix !== undefined ? pascal.startsWith(library.prefix) && /^[A-Z]/.test(pascal.slice(library.prefix.length)) : (library.names?.has(pascal) ?? false),
-  );
+  libraries.find((library) => {
+    const prefix = library.prefix ?? '';
+    if (!pascal.startsWith(prefix)) return false;
+    const rest = pascal.slice(prefix.length);
+    return library.names !== undefined ? library.names.has(rest) : prefix !== '' && /^[A-Z]/.test(rest);
+  });
+
+/**
+ * What the application says about the libraries it installs beyond its
+ * manifest (P262): the modules its parts install (a library's Nuxt module a
+ * layer names), each configuration that may set a library's prefix, the
+ * application's first, and the bundler's configuration, where a resolver or
+ * a plugin takes one.
+ */
+export interface LibrarySettings {
+  readonly modules: readonly string[];
+  readonly configs: ReadonlyArray<{ readonly value: unknown; readonly file: string }>;
+  readonly bundler?: { readonly text: string; readonly file: string };
+}
+
+/**
+ * What the application says about its libraries beyond its manifest
+ * (P262): for Nuxt, the modules every part installs and every part's
+ * configuration, the application's first; the bundler's configuration either
+ * way.
+ */
+export const librarySettingsOf = (repoDir: string, pkg: PackageJson, nuxt: boolean): LibrarySettings => {
+  const application = nuxt ? nuxtApplicationOf(repoDir, pkg) : undefined;
+  const configs = (application?.layers ?? []).flatMap(({ layout }) => (layout.config === undefined ? [] : [{ value: layout.config.value, file: layout.config.file }]));
+  const modules = (application?.modules.installed ?? []).map((module) => module.name);
+  const file = VITE_CONFIGS.map((name) => join(repoDir, name)).find((path) => existsSync(path));
+  let text: string | undefined;
+  try {
+    text = file === undefined ? undefined : readFileSync(file, 'utf8');
+  } catch {
+    text = undefined;
+  }
+  return { modules, configs, ...(file === undefined || text === undefined ? {} : { bundler: { text, file } }) };
+};
+
+/** The line a key is written on in a file's text, or the first. */
+const lineOfKey = (text: string, key: string): number => {
+  const at = new RegExp(`\\b${key}\\s*:`).exec(text);
+  return at === null ? 1 : text.slice(0, at.index).split('\n').length;
+};
+
+/**
+ * The prefix the application sets for a library, where it sets one: its
+ * value, or what it is written as where that is code (named in the row of a
+ * tag nothing else registers).
+ */
+const prefixSetOf = (library: ComponentLibrary, settings: LibrarySettings | undefined): { prefix: string } | { unread: UnknownPlugin } | undefined => {
+  const setting = library.prefixSetting;
+  if (setting === undefined || settings === undefined) return undefined;
+  for (const config of settings.configs) {
+    const value = configValueAt(config.value, setting.config);
+    if (value === undefined) continue;
+    if (typeof value === 'string') return { prefix: value };
+    let text = '';
+    try {
+      text = readFileSync(config.file, 'utf8');
+    } catch {
+      // The line is the first where the file cannot be read again.
+    }
+    return { unread: { written: setting.config, file: config.file, line: lineOfKey(text, setting.config.split('.').pop() ?? '') } };
+  }
+  const bundler = settings.bundler;
+  if (bundler === undefined) return undefined;
+  const file = parseSyntax(bundler.text, bundler.file);
+  const imported = new Set<string>();
+  if (setting.from !== undefined) {
+    for (const statement of file.statements) {
+      if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier) || statement.moduleSpecifier.text !== setting.from) continue;
+      const name = statement.importClause?.name?.text;
+      if (name !== undefined) imported.add(name);
+    }
+  }
+  let found: { prefix: string } | { unread: UnknownPlugin } | undefined;
+  const visit = (node: ts.Node): void => {
+    if (found !== undefined) return;
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && (node.expression.text === setting.call || imported.has(node.expression.text))) {
+      const [options] = node.arguments;
+      const property = (object: ts.Expression | undefined, key: string): ts.Expression | undefined => {
+        if (object === undefined || !ts.isObjectLiteralExpression(object)) return undefined;
+        const written = object.properties.find((each) => ts.isPropertyAssignment(each) && (ts.isIdentifier(each.name) || ts.isStringLiteral(each.name)) && each.name.text === key);
+        return written !== undefined && ts.isPropertyAssignment(written) ? written.initializer : undefined;
+      };
+      const value = property(options, 'prefix') ?? property(property(options, 'components'), 'prefix');
+      if (value !== undefined) {
+        const line = file.getLineAndCharacterOfPosition(value.getStart(file)).line + 1;
+        found = ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value) ? { prefix: value.text } : { unread: { written: `${node.expression.text}({ prefix })`, file: bundler.file, line } };
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return found;
+};
 
 /** A plugin the application installs that the table does not know: it may register components the reader cannot see. */
 export interface UnknownPlugin {
@@ -154,8 +274,10 @@ const receiverName = (expression: TsNode): string => {
  * does not know is said by name. A plugin of the repository's own is read
  * where it registers what it registers.
  */
-export const installedPlugins = (pkg: PackageJson, sources: readonly SourceFile[], repoDir: string): InstalledPlugins => {
-  const libraries = new Set(COMPONENT_LIBRARIES.filter((library) => library.packages.some((name) => hasDependency(pkg, name))));
+export const installedPlugins = (pkg: PackageJson, sources: readonly SourceFile[], repoDir: string, settings?: LibrarySettings): InstalledPlugins => {
+  const libraries = new Set(
+    COMPONENT_LIBRARIES.filter((library) => library.packages.some((name) => hasDependency(pkg, name) || (settings?.modules.includes(name) ?? false))),
+  );
   const unknown: UnknownPlugin[] = [];
   for (const sourceFile of sources) {
     if (!/\.use\s*\(/.test(sourceFile.getFullText())) continue;
@@ -178,7 +300,15 @@ export const installedPlugins = (pkg: PackageJson, sources: readonly SourceFile[
       unknown.push({ written: `${receiverName(callee.getExpression())}.use(${plugin.getText().replace(/\s+/g, ' ').slice(0, 40)})`, file: normalizeFilePath(sourceFile.getFilePath(), repoDir), line: startLineOf(node) });
     });
   }
-  return { libraries: [...libraries], unknown };
+  // A prefix the application sets is the library's names (P262); one written as code names nothing, and is said.
+  const named: ComponentLibrary[] = [];
+  for (const library of libraries) {
+    const set = prefixSetOf(library, settings);
+    if (set === undefined) named.push(library);
+    else if ('prefix' in set) named.push({ ...library, prefix: set.prefix });
+    else unknown.push({ ...set.unread, file: normalizeFilePath(set.unread.file, repoDir) });
+  }
+  return { libraries: named, unknown };
 };
 
 /** Endings a lazy import of a component may leave off. */

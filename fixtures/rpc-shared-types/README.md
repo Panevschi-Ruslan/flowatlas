@@ -29,7 +29,9 @@ under an alias only the Vite configuration declares.
   /api/products/{id}/price`, written `inputStructure: 'detailed'` and
   `outputStructure: 'detailed'`, `GET /api/search` (input `{ q, limit }`),
   and `GET /api/browse`, detailed, whose input takes `{ query: { category,
-  page }, headers: { 'x-tenant' } }` (P258). `reports` is `lazy(() =>
+  page }, headers: { 'x-tenant' } }` (P258), and `GET /api/stock`, detailed,
+  whose input takes `{ query: { sku }, headers: { 'X-Region' } }` (P262).
+  `reports` is `lazy(() =>
   import('@lib/reports'))`, and `@lib` is declared in `vite.config.ts` alone.
   It claims `VITE_CATALOG_URL`.
 - `apps/web` (React) calls api through `createTRPCClient<AppRouter>`, and
@@ -96,9 +98,27 @@ under an alias only the Vite configuration declares.
     x-tenant } }`, the query a `URLSearchParams` in `params` and the header
     written in place (`meta.headerKeys`): `query.page` is missing
     (`missing_required`, error).
+  - `browseNorth(page)` (P262): the tenant written on the axios instance it
+    is made through (`axios.create({ headers })`) is the request's; agrees.
+  - `browseBare(page)`: no header written, and nothing that adds one:
+    `headers.x-tenant` is missing (`missing_required`, error).
+  - `browseWith(headers, page)`: headers handed by a name
+    (`meta.headersUnread`): not compared (`any-unknown-skip:headers`).
+  - `stockOf(sku)`: `GET /api/stock`, detailed, whose input spells its header
+    `X-Region`. The address is built with `+` after its `?`, its query a key
+    held in a constant (`queryKeys: [sku]`, `queryInAddress`); the call sends
+    `x-region`, as a server hands every header on, so `headers.X-Region` is
+    missing (`missing_required`, error, saying why) and `headers.x-region` is
+    not declared (`extra_field`, info).
 - The worker's `CatalogClient.teas()`: the server's request writes `{ category }`
   in `params`, and `limit` is missing (`missing_required`, error).
 - The worker's `CatalogSearch.tea()`: the request is the caller's, its query
   the caller's `q` and the wrapper's own `limit`; agrees (P258).
+- The worker's `CatalogSearch.green()` (P262): the address built with `+`
+  after its `?`, `new URLSearchParams({ [Q]: 'green' })` and a `set(LIMIT,
+  ...)` with both keys held in constants: `q` and `limit`; agrees.
+  `CatalogSearch.browse(headers)`: the headers handed by a name
+  (`meta.headersUnread`), so the tenant they may carry is not compared; the
+  query agrees.
 - A path parameter and a query key are compared by name alone: the address
   carries text, and the procedure's schema decides whether it coerces it.

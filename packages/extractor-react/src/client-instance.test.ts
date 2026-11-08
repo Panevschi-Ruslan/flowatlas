@@ -230,6 +230,41 @@ describe('an axios instance carries the base it was made with (P239)', () => {
     expect(at('/c')).toMatchObject({ queryUnread: true });
   });
 
+  it("reads a key held in a constant, an address built with `+`, an instance's own headers, and headers more may be added to (P262)", () => {
+    const graph = read({
+      '/src/api.ts': `
+        import axios from 'axios';
+        export const tenant = axios.create({ baseURL: '/t', headers: { 'X-Tenant': 'north' } });
+        export const traced = axios.create({ baseURL: '/r' });
+        traced.interceptors.request.use((config) => config);
+      `,
+      '/src/Panel.tsx': `
+        import { tenant, traced } from './api';
+        const PAGE = 'page';
+        export const Panel = () => {
+          const load = (more: Record<string, string>) => {
+            const query = new URLSearchParams({ q: 'tea' });
+            query.set(PAGE, '2');
+            fetch('/search?' + query.toString());
+            tenant.get('/orders', { headers: { Accept: 'json' } });
+            traced.get('/reports', { headers: { Accept: 'json' } });
+            traced.get('/plain');
+            fetch('/d', { headers: more });
+          };
+          return <button onClick={load} />;
+        };
+      `,
+    });
+    const at = (path: string) => requests(graph).find((node) => String(node.meta?.['path']).endsWith(path))?.meta ?? {};
+    expect(at('/search')).toMatchObject({ url: '/search?${…}', path: '/search', queryKeys: ['page', 'q'], queryInAddress: true });
+    expect(at('/t/orders')).toMatchObject({ headerKeys: ['accept', 'x-tenant'] });
+    expect(at('/t/orders')).not.toHaveProperty('headersUnread');
+    expect(at('/r/reports')).toMatchObject({ headerKeys: ['accept'], headersUnread: true });
+    expect(at('/r/plain')).toMatchObject({ headersUnread: true });
+    expect(at('/d')).toMatchObject({ headersUnread: true });
+    expect(at('/d')).not.toHaveProperty('headerKeys');
+  });
+
   it('applies the module defaults to calls on the module itself', () => {
     const graph = read({
       '/src/main.ts': `import axios from 'axios';\naxios.defaults.baseURL = '/api';\n`,

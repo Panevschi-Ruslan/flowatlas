@@ -48,3 +48,27 @@ describe('a query built in code (P258)', () => {
     expect(writtenHeaderNames(queryIn('function f(h: Record<string, string>) { send(h); }'), [PLATFORM_HEADERS])).toBeUndefined();
   });
 });
+
+describe('a key or an address held in a constant (P262)', () => {
+  it.each([
+    ['a constant', "const PAGE = 'page'; function f() { const p = new URLSearchParams(); p.set(PAGE, '1'); send(p); }", ['page']],
+    ['a member of an object written `as const`', "const KEYS = { sort: 'sort' } as const; send(new Params().set(KEYS.sort, 'asc'));", ['sort']],
+    ['a member of an enum of strings', "enum Key { Limit = 'limit' } function f() { const p = new URLSearchParams(); p.append(Key.Limit, '5'); send(p); }", ['limit']],
+    ['a pair whose key is a constant', "const Q = 'q'; send(new URLSearchParams([[Q, 'tea']]));", ['q']],
+    ['the text of a query in a constant', "const TEXT = 'a=1&b=2'; send(new URLSearchParams(TEXT));", ['a', 'b']],
+    ['an object whose key is computed from a constant', "const Q = 'q'; send(new URLSearchParams({ [Q]: 'tea', limit: '5' }));", ['limit', 'q']],
+  ])('reads %s', (_, body, keys) => {
+    expect(builtQueryOf(queryIn(body), BUILDERS)).toEqual({ keys });
+  });
+
+  it('leaves a name that may hold any string unread, as a key or computed into an object', () => {
+    expect(builtQueryOf(queryIn("function f() { let key = 'page'; const p = new URLSearchParams(); p.set(key, '1'); send(p); }"), BUILDERS)).toEqual({ unread: true });
+    expect(builtQueryOf(queryIn("function f(key: string) { send(new URLSearchParams({ [key]: '1' })); }"), BUILDERS)).toEqual({ unread: true });
+  });
+
+  it('reads an address whose text before the query is a constant, or the end of a `+` chain', () => {
+    const address = (body: string) => builtQueryInAddress(queryIn(body), BUILDERS);
+    expect(address("const SEARCH = '/api/search?'; function f() { const p = new URLSearchParams({ q: 'x' }); send(SEARCH + p.toString()); }")).toEqual({ keys: ['q'] });
+    expect(address("function f(base: string) { const p = new URLSearchParams({ q: 'x' }); send(base + '/api/search?' + p); }")).toEqual({ keys: ['q'] });
+  });
+});

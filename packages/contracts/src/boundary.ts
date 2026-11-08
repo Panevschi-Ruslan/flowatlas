@@ -70,6 +70,12 @@ export interface Exchange {
    * on the wire, and what the receiver requires is missing.
    */
   sendsNothing?: boolean;
+  /**
+   * Fields the sender writes as an object with no keys - a `detailed` input's
+   * `headers` where the call sends none the procedure declares (P262) - so
+   * what the receiver requires there is missing.
+   */
+  writtenEmptyAt?: readonly string[];
 }
 
 /** References that name no shape, so there is nothing to compare against. */
@@ -313,6 +319,37 @@ const fieldOfRef = (lookup: GraphLookup, ref: string | undefined, name: string):
   return undefined;
 };
 
+/** The names of the fields of one field of a type: the headers a `detailed` input declares (P262). */
+const fieldNamesOf = (lookup: GraphLookup, ref: string | undefined, name: string): string[] | undefined => {
+  const field = astOf(fieldOfRef(lookup, ref, name));
+  if (field?.kind === 'object') return field.fields.map((each) => each.name);
+  if (field?.kind === 'id') return lookup.type(field.id)?.fields?.map((each) => each.name);
+  return undefined;
+};
+
+/** What a field of no known type is: compared with nothing, and said so (`any-unknown-skip`). */
+const UNKNOWN: TypeRefAst = { kind: 'primitive', name: 'unknown' };
+
+/**
+ * The headers a call sends to a `detailed` input that declares some (P262).
+ *
+ * A server hands a procedure every header lower-cased, and the call's names
+ * are recorded so; only the ones the procedure declares are compared, since
+ * a request carries headers its middleware, its proxy and its platform read
+ * and no input names. Where the call's headers are not known - written in a
+ * way that is not read, or added by something that runs before the request
+ * (an instance's hook, an interceptor) - the part is `unknown`, which the
+ * comparison skips and says, rather than calling a header missing that may be
+ * sent. A call that writes none and runs through nothing that adds any sends
+ * none.
+ */
+const headersSent = (asked: Record<string, unknown>, declared: readonly string[]): TypeRefAst => {
+  if (asked['headersUnread'] === true) return UNKNOWN;
+  const written = stringsIn(asked['headerKeys']) ?? [];
+  const wanted = new Set(declared.map((name) => name.toLowerCase()));
+  return { kind: 'object', fields: [...new Set(written.map((name) => name.toLowerCase()))].filter((name) => wanted.has(name)).map(present) };
+};
+
 /**
  * A plain request to a procedure's REST route, both ways (P256).
  *
@@ -364,14 +401,18 @@ const twinExchanges = (
   const usesBody = detailedIn || verb !== 'GET';
 
   // `detailed`: each part the call writes under its own key, the headers by
-  // the names it writes in place (P258); a part nothing writes is not sent.
-  const headerKeys = stringsIn(asked['headerKeys']);
+  // the names it writes (P258) where the procedure declares any, compared
+  // from its end (P262); a part nothing writes is not sent.
+  const declaredHeaders = detailedIn ? fieldNamesOf(lookup, declared.input, 'headers') : undefined;
+  const headersPart = declaredHeaders === undefined ? undefined : headersSent(asked, declaredHeaders);
   const parts: Array<[string, TypeRefAst | undefined]> = [
     ['params', fieldsShape(params)],
     ['query', queryShape],
-    ['headers', headerKeys === undefined || headerKeys.length === 0 ? undefined : fieldsShape(headerKeys)],
+    ['headers', headersPart],
     ['body', bodyShape],
   ];
+  // A name the procedure spells with a capital is never handed to it as spelled.
+  const capitalised = (declaredHeaders ?? []).filter((name) => name !== name.toLowerCase());
   const sentParts = parts.filter((part): part is [string, TypeRefAst] => part[1] !== undefined);
   const sent = detailedIn
     ? sentParts.length === 0
@@ -408,7 +449,11 @@ const twinExchanges = (
   const request: Exchange = {
     ...both('request', sender, receiver),
     ...(sent === undefined ? { sendsNothing: true } : {}),
+    ...(headersPart?.kind === 'object' && headersPart.fields.length === 0 ? { writtenEmptyAt: ['headers'] } : {}),
     ...(inputBlocked === undefined ? {} : { blocked: inputBlocked }),
+    ...(capitalised.length === 0
+      ? {}
+      : { via: [`a server hands a procedure every header lower-cased, so ${capitalised.map((name) => `\`headers.${name}\``).join(' and ')} it declares is never handed to it as spelled`] }),
   };
 
   // The answer: the procedure's output, or its body, against what the call reads back.

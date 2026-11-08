@@ -73,6 +73,21 @@ describe("where a Vite front end's dev and preview servers listen (P254)", () =>
     expect(said(viteListens(repo({ 'vite.config.ts': 'export default defineConfig({ server: { strictPort: true } });' })))).toEqual(['vite.config.ts:1 5173 default']);
     expect(said(viteListens(repo({ 'package.json': scripts({ dev: 'vite --strictPort' }) })))).toEqual(['package.json:3 5173 default']);
   });
+
+  it("reads the port beside SvelteKit's and Remix's plugins, which take none of their own, written in a function too (P262)", () => {
+    const remix = [
+      "import { vitePlugin as remix } from '@remix-run/dev';",
+      'export default defineConfig(({ mode }) => {',
+      '  return {',
+      '    plugins: [remix({ ssr: true })],',
+      '    server: { port: 5190 },',
+      '  };',
+      '});',
+    ].join('\n');
+    expect(said(viteListens(repo({ 'vite.config.ts': remix })))).toEqual(['vite.config.ts:5 5190']);
+    const kit = "import { sveltekit } from '@sveltejs/kit/vite';\nexport default defineConfig(() => ({ plugins: [sveltekit()], server: { port: 5191 } }));";
+    expect(said(viteListens(repo({ 'vite.config.ts': kit })))).toEqual(['vite.config.ts:2 5191']);
+  });
 });
 
 describe("where an Astro site's dev server listens (P254)", () => {

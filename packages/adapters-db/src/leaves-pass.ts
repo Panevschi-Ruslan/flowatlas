@@ -1723,13 +1723,18 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return {};
   };
 
-  /** The names of the headers among a request's settings written in place: an object, or `Headers` built by calls (P258). */
-  const headersAmong = (args: readonly TsNode[]): readonly string[] | undefined => {
+  /**
+   * The names of the headers among a request's settings written in place: an
+   * object, or `Headers` built by calls (P258); `unread` where they are
+   * written and cannot be read (P262).
+   */
+  const headersAmong = (args: readonly TsNode[]): readonly string[] | 'unread' | undefined => {
     for (const argument of args) {
       if (!Node.isObjectLiteralExpression(argument)) continue;
       const property = argument.getProperty('headers');
-      const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
-      if (written !== undefined) return writtenHeaderNames(written, [PLATFORM_HEADERS]);
+      if (property === undefined) continue;
+      const written = Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+      return (written === undefined ? undefined : writtenHeaderNames(written, [PLATFORM_HEADERS])) ?? 'unread';
     }
     return undefined;
   };
@@ -1912,7 +1917,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(query.keys === undefined ? {} : { queryKeys: query.keys }),
         ...(query.unread === true ? { queryUnread: true } : {}),
         ...(queryInAddress ? { queryInAddress: true } : {}),
-        ...(headers === undefined ? {} : { headerKeys: headers }),
+        ...(headers === undefined ? {} : headers === 'unread' ? { headersUnread: true } : { headerKeys: headers }),
         ...(info.host === null ? {} : { host: info.host }),
         ...(application === undefined ? {} : { application }),
         ...(binding === undefined ? {} : { binding: binding.binding, ...(binding.typed ? {} : { bindingTyped: false }) }),
