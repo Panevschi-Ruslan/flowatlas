@@ -1,11 +1,12 @@
 import { hasDependency, makeLeafId, makeSymbolId, startLineOf, type EmbeddedFile, type NamedFunction } from '@flowatlas/core';
-import { nuxtPagesOf, sveltekitPagesOf } from '@flowatlas/adapters-entry';
+import { nuxtNamesOf, nuxtPagesOf, sveltekitPagesOf } from '@flowatlas/adapters-entry';
 import type { Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { definePass } from '../passes/types.js';
 import { positionAt, topLevelBlocks } from './blocks.js';
+import { drawChildren, type MarkupComponent } from './children.js';
 import { svelteMarkupEvents, vueTemplateEvents, type TemplateEvent, type TemplateHandler } from './events.js';
 import { COMPONENT_TAIL_NAME, componentNameOf, scriptSourceOf } from './formats.js';
 import { routedComponents } from './routes.js';
@@ -125,6 +126,7 @@ export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
   });
 
   const scopes: ComponentScope[] = [];
+  const markup: MarkupComponent[] = [];
   for (const made of ctx.embedded) {
     const tail = made.sourceFile.getVariableDeclaration(COMPONENT_TAIL_NAME);
     if (tail === undefined) continue;
@@ -160,10 +162,18 @@ export const sfcPass = definePass('components', (ctx: ReactExtractContext) => {
     }
     const scope: ComponentScope = { component, named, values, script };
     scopes.push(scope);
+    markup.push({ component, made, script });
 
     const events = made.format.extension === '.svelte' ? svelteMarkupEvents(made.text) : vueTemplateEvents(made.text);
     for (const event of events) action(ctx, scope, event, made.file, stores);
   }
+
+  // The child components each one renders, and in Nuxt each page's route
+  // middleware and layout (P255): before the calls below, so a middleware's
+  // function is in the index when they are read.
+  const names = nuxt === undefined ? undefined : nuxtNamesOf(ctx.repoDir, ctx.pkg);
+  for (const row of names?.rows ?? []) ctx.report(row);
+  drawChildren(ctx, markup, sources, names === undefined || nuxt === undefined ? undefined : { names, pages: nuxt.routes });
 
   // Calls into a store, from a component, a composable or another store: the
   // checker cannot see through a store whose library is not installed. And a

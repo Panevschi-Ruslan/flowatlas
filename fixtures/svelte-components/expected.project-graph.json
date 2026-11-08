@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:30:33.125Z",
+  "builtAt": "2026-11-07T20:10:58.719Z",
   "services": [
     {
       "name": "shop",
@@ -526,6 +526,19 @@
       "returns": "Response",
       "file": "src/routes/+page.svelte",
       "line": 13
+    },
+    {
+      "from": "shop#src/routes/+page.svelte:routes/+page",
+      "to": "shop#src/lib/OrderRow.svelte:OrderRow",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/routes/+page.svelte",
+      "line": 22,
+      "meta": {
+        "renders": "OrderRow"
+      }
     },
     {
       "from": "shop#src/routes/+page.svelte:routes/+page",

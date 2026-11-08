@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:29:09.592Z",
+  "builtAt": "2026-11-07T20:09:27.448Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -9,10 +9,10 @@
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 15,
-      "edges": 8,
+      "edges": 10,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 655,
+      "durationMs": 886,
       "packages": {
         "name": "@rendered-mail/api",
         "runtime": [
@@ -82,7 +82,7 @@
   ],
   "totals": {
     "nodes": 15,
-    "edges": 8,
+    "edges": 10,
     "types": 0,
     "missed": 6,
     "sites": 6,

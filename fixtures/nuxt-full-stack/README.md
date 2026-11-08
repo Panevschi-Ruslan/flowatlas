@@ -28,5 +28,6 @@ What `nuxi prepare` would have written, read without it (P240):
 | a composable used with no import | `pages/basket.vue`, `useBasket()` | the page calls `composables/useBasket.ts`, which requests `POST /api/basket` |
 | a utility only the template names | `@click="clearBasket"` | handles `utils/basket.ts:clearBasket`, which requests `DELETE /api/basket` |
 | `#imports` | `components/AddToBasket.vue` | the component calls `useBasket` through it |
+| a component by name (P255) | `<AddToBasket id="2" />` in `pages/basket.vue`, from `components/` | `calls` from the page to `AddToBasket` (`meta.renders`) |
 | `server/utils` with no import | `renameOrder`, `addToBasket`, `emptyBasket` in the routes | each route calls its function |
 | what was read so | `tsconfig.json`, `nuxt.config.ts` | notes `aliases-from-convention` and `implicit-imports-from-convention`, once each |

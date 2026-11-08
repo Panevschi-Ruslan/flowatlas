@@ -1,0 +1,10 @@
+{
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "vue"
+    }
+  ],
+  "output": ".flowatlas"
+}

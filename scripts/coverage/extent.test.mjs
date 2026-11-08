@@ -83,4 +83,27 @@ describe('the extent a framework configuration adds (P251)', () => {
     });
     assert.deepEqual(extentOf(coded, 'shop').dirs, ['shop']);
   });
+
+  it('counts a layer whose path is built from the directory of the configuration (P255)', () => {
+    const root = clone({
+      'package.json': WORKSPACE,
+      'shop/package.json': NUXT_APP,
+      'shop/nuxt.config.ts': [
+        "import { fileURLToPath } from 'node:url';",
+        "import { join, resolve } from 'node:path';",
+        'export default defineNuxtConfig({',
+        "  extends: [fileURLToPath(new URL('../ui-layer', import.meta.url)), resolve(__dirname, '../tokens'), join(import.meta.dirname, '..', 'brand'), resolve('../mock')],",
+        "  modules: [resolve(base, '../audit')],",
+        '});',
+      ].join('\n'),
+      'ui-layer/package.json': { name: 'ui-layer' },
+      'tokens/package.json': { name: 'tokens' },
+      'brand/package.json': { name: 'brand' },
+      'mock/package.json': { name: 'mock' },
+      'audit/package.json': { name: 'audit-tools' },
+      'audit/module.ts': 'export default {};',
+    });
+    // `resolve(base, ...)` starts from a name the configuration holds: code, not counted.
+    assert.deepEqual(extentOf(root, 'shop').dirs, ['shop', 'brand', 'mock', 'tokens', 'ui-layer']);
+  });
 });

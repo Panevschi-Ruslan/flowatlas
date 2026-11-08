@@ -241,6 +241,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     "These modules are packages the application installs, run when it builds; what a package adds is not read as the repository's code. Nothing to do for the ones whose additions are their own package's; for another, name an alias it adds in the tsconfig's paths, or describe a route it serves.",
   'framework-environment-differs': () =>
     "The configuration overrides some settings for one environment, and the graph is the production build's, so a layer, module or setting only another environment has is not read. Nothing to do; write what every build shares outside the overrides.",
+  'framework-module-skipped': () =>
+    "A module of the repository writes this call under a condition, and the options the configuration hands the module rule it out, so what it would add is not built and not drawn. Nothing to do; change the option to have it added.",
   'framework-module-unread': () =>
     "A module the application is built with, or something it adds, could not be read: the module is written as code or in the configuration itself, names nothing, or hands the framework a path that is not built from its own file. Build the path from the module's file, with `createResolver(import.meta.url).resolve(...)`, or move the module to a file of `modules/`.",
   'implicit-import-overridden': () =>
@@ -497,6 +499,12 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'The path is built at run time, so no configured route can be matched against it. Nothing to fix.',
   'template-handler-not-found': () =>
     'The binding names a function the component neither declares nor imports, so the click runs nothing the graph can follow. Declare it, import it, or correct the name in the markup.',
+  'component-unresolved': () =>
+    "A tag in the markup names a component, and nothing the file imports or registers, and nothing the framework registers by the path of a file, has that name - or two files of one part of the application give it - so what the tag renders is not joined to the screen. Import the component, register it, or put it where the framework names components; a component of a package installed and registered for every template is said here too.",
+  'layout-unresolved': () =>
+    "A page is shown in a layout by a name no file of the application's layouts directories has, by a name written as code, or with no `<NuxtLayout>` in the root component to show it, so the layout's code is not on the page's way. Correct the name, write it as a literal, or render `<NuxtLayout>` in `app.vue`.",
+  'route-middleware-unresolved': () =>
+    "A page names a route middleware that no file of the application's middleware directories and no module gives, or names it by code, so what it runs before the page is not on the page's way. Correct the name, add the middleware, or write it as a literal.",
   'route-screen-unread': () =>
     'A route answers this link, but nothing said which component it shows — a redirect, or a loader that was not read.',
   'route-target-unresolved': (row) =>

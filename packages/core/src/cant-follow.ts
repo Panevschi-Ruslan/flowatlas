@@ -43,6 +43,12 @@ export interface CausePart {
   package?: string;
   sites: number;
   samples: CauseSample[];
+  /**
+   * Every other file its places are in, beyond the samples' own (P255), so a
+   * reader by file - the read gate - finds a fourth place of one cause in one
+   * repository as it finds the first three. Written only where there is one.
+   */
+  files?: string[];
 }
 
 /** The `meta` a row carries for its cause. */
@@ -110,6 +116,7 @@ export const causePartsOf = (row: {
         ...(typeof part.package === 'string' ? { package: part.package } : {}),
         sites: part.sites,
         samples: samplesOf(part.samples),
+        ...(Array.isArray(part.files) ? { files: part.files.filter((file): file is string => typeof file === 'string') } : {}),
       }];
     });
     if (parts.length > 0) return parts;
@@ -148,6 +155,9 @@ export class CauseTally {
     part.sites += row.sites ?? 1;
     if (part.samples.length < CAUSE_SAMPLES) {
       part.samples.push({ file: row.file, line: row.line, ...(row.symbol === undefined ? {} : { symbol: row.symbol }) });
+    } else if (row.file !== '' && !part.samples.some((sample) => sample.file === row.file) && !(part.files ?? []).includes(row.file)) {
+      // A place past the samples is still in a file somebody reads by (P255).
+      part.files = [...(part.files ?? []), row.file];
     }
   }
 
@@ -156,9 +166,9 @@ export class CauseTally {
     return this.#recorded;
   }
 
-  /** The parts, most places first, then by cause and package. */
+  /** The parts, most places first, then by cause and package; the other files in name order. */
   parts(): CausePart[] {
-    return [...this.#parts.values()].sort(
+    return [...this.#parts.values()].map((part) => (part.files === undefined ? part : { ...part, files: [...part.files].sort(cmp) })).sort(
       (a, b) => b.sites - a.sites || cmp(a.cause, b.cause) || cmp(a.package ?? '', b.package ?? ''),
     );
   }

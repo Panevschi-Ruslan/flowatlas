@@ -42,6 +42,7 @@ import { sfcPass } from './sfc/pass.js';
 import { buildReactFunctionIndex } from './index-functions.js';
 import { actionsPass } from './passes/actions.js';
 import { callsPass } from './passes/calls.js';
+import { childrenPass } from './passes/children.js';
 import { entriesPass } from './passes/entries.js';
 import { functionsPass } from './passes/functions.js';
 import { graphqlPass } from './passes/graphql.js';
@@ -135,6 +136,9 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   sfcPass,
   routesPass,
   callsPass,
+  // After the routes, so a screen's node has its address before a parent's
+  // edge to it writes the node (P255).
+  childrenPass,
   actionsPass,
   httpPass,
   // After the requests, so a `fetch` that sends an operation is one node (P232).

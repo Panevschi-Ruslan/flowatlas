@@ -9,6 +9,7 @@ reaches the route it calls, in both Svelte 4's spelling and Svelte 5's.
 |---|---|---|
 | Svelte 4 | `routes/+page.svelte`, `on:click={place}` | handles `place`, which requests `POST /api/orders` |
 | Svelte 5 | `lib/OrderRow.svelte`, `onclick={() => orders.cancel(id)}` | handles `cancel` of `lib/orders.ts`, which requests `DELETE /api/orders/:param` |
+| a child component (P255) | `<OrderRow id="1" />` in `routes/+page.svelte`, imported from `$lib/OrderRow.svelte` | `calls` from the page to `OrderRow` (`meta.renders`): the component whose click requests `DELETE /api/orders/:param` is part of the page |
 | the route | `routes/api/orders/+server.ts`, `routes/api/orders/[id]/+server.ts` | entries `GET` and `POST /api/orders`, `DELETE /api/orders/:param` |
 
 Nothing is installed; `@sveltejs/kit` and `svelte` are declared and that is

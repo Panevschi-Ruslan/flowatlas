@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:29:57.112Z",
+  "builtAt": "2026-11-07T20:09:55.460Z",
   "services": [
     {
       "name": "shop",
@@ -1154,6 +1154,19 @@
       "returns": "{items:unknown;add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
       "file": "pages/basket.vue",
       "line": 14
+    },
+    {
+      "from": "shop#pages/basket.vue:basket",
+      "to": "shop#components/AddToBasket.vue:AddToBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "pages/basket.vue",
+      "line": 6,
+      "meta": {
+        "renders": "AddToBasket"
+      }
     },
     {
       "from": "shop#pages/basket.vue:basket",

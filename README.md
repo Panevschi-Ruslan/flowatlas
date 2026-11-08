@@ -835,7 +835,14 @@ prove, and the path is given so you can run it.
   the routes it serves, the pages and aliases it adds - and `dir.pages`,
   `dir.shared`, `$production` and SvelteKit's `kit.files.routes` move what is
   read where the configuration says (`fixtures/nuxt-modules`,
-  `fixtures/sveltekit-routes-dir`). A verb a helper built, aliased or re-exported is
+  `fixtures/sveltekit-routes-dir`). A child component in markup is a call of
+  it - by an import, `components: {}`, `app.component(...)`, JSX, and in Nuxt
+  by the path of a file of `components/`, a layer's or a module's - so a
+  screen reaches what its children request, and a Nuxt page goes through its
+  route middleware and its layout in the order the router runs them; a module's
+  `addServerScanDir` is a server directory, and a condition of its options is
+  decided where the configuration writes them (`fixtures/vue-components`,
+  `fixtures/nuxt-components`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
   `zsa` is a boundary with its callers (`fixtures/next-actions`).
@@ -1058,7 +1065,10 @@ Known gaps in what it can read:
   (`github:`, a URL), installed from a registry or named in code is a row and
   is not read; what a module installed from a registry adds at build time is
   not known (it is named in a note), nor what a module of the repository adds
-  with an argument written as code (a row); only the production build is read,
+  with an argument written as code (a row); a tag, a layout or a route
+  middleware named by code, or by a name nothing registers, is a row (a
+  component of a package registered for every template is one too); only the
+  production build is read,
   another environment's differences said in a note; and a
   setting written as code is read as its default and named in a row.
 - A file-system router nobody has described — `@fastify/autoload`, or a

@@ -76,7 +76,7 @@ const isDirectory = (path: string): boolean => {
 };
 
 /** A row about a setting the framework's configuration writes as code. */
-const settingRow = (file: string, adapter: string, by: string, key: string, assumed: string): Unresolved => ({
+export const settingRow = (file: string, adapter: string, by: string, key: string, assumed: string): Unresolved => ({
   file,
   line: 1,
   reason: 'framework-setting-dynamic',
@@ -529,9 +529,21 @@ export interface LayerClaim {
   readonly layer: NuxtLayer | undefined;
   /** Where that part is ranked, the application `0`. */
   readonly rank: number;
+  /** As a row names what gives it, where that is not its part: a module that adds it (P255). */
+  readonly part?: string;
 }
 
-const partName = (layer: NuxtLayer | undefined): string => (layer === undefined || layer.at === '' ? 'the application' : layer.at);
+const partName = (claim: LayerClaim): string =>
+  claim.part ?? (claim.layer === undefined || claim.layer.at === '' ? 'the application' : claim.layer.at);
+
+/** What a claim gives, in the words of its note: a page shown, a route served, a name given to a component, layout or middleware (P255). */
+type ClaimVerb = 'shows' | 'serves' | 'names';
+
+const CLAIM_WORDS: Readonly<Record<ClaimVerb, { would: string; what: string; done: string }>> = {
+  shows: { would: 'would be shown at', what: 'page', done: 'shown' },
+  serves: { would: 'would serve', what: 'route', done: 'served' },
+  names: { would: 'would be named', what: 'file', done: 'used' },
+};
 
 /**
  * The claims the application keeps (P243): of the parts that give one key,
@@ -539,7 +551,8 @@ const partName = (layer: NuxtLayer | undefined): string => (layer === undefined 
  * left out, and said as a note naming the file that wins; two files of one
  * part giving one key are both kept, as they were before layers were read.
  */
-export const keptByLayer = <T extends LayerClaim>(claims: readonly T[], does: 'shows' | 'serves'): { kept: T[]; rows: Unresolved[] } => {
+export const keptByLayer = <T extends LayerClaim>(claims: readonly T[], does: ClaimVerb): { kept: T[]; rows: Unresolved[] } => {
+  const words = CLAIM_WORDS[does];
   const best = new Map<string, T>();
   for (const claim of claims) {
     const before = best.get(claim.key);
@@ -559,8 +572,8 @@ export const keptByLayer = <T extends LayerClaim>(claims: readonly T[], does: 's
       reason: 'framework-layer-overridden',
       level: 'info',
       symbol: claim.label,
-      message: `${claim.file} ${does === 'shows' ? 'would be shown at' : 'would serve'} ${claim.label}, and Nuxt ${does} ${winner.file} there instead: ${partName(winner.layer)} ranks above ${partName(claim.layer)} among its layers`,
-      hint: `Nothing to do. Rename or remove the ${does === 'shows' ? 'page' : 'route'} of the lower layer to have it ${does === 'shows' ? 'shown' : 'served'}.`,
+      message: `${claim.file} ${words.would} ${claim.label}, and Nuxt ${does} ${winner.file} ${does === 'names' ? 'so' : 'there'} instead: ${partName(winner)} ranks above ${partName(claim)} among its layers`,
+      hint: `Nothing to do. Rename or remove the ${words.what} of the lower layer to have it ${words.done}.`,
       adapter: NUXT_ADAPTER,
       meta: { cause: 'framework-layer-overridden', key: claim.label, chosen: winner.file, layer: claim.layer?.at ?? '' },
     });
@@ -569,7 +582,7 @@ export const keptByLayer = <T extends LayerClaim>(claims: readonly T[], does: 's
 };
 
 /** What one of Nuxt's own aliases, or a path written with one, names: repo-relative. */
-const throughNuxtAlias = (layout: NuxtLayout, path: string): string | undefined => {
+export const throughNuxtAlias = (layout: NuxtLayout, path: string): string | undefined => {
   const match = /^(~~|@@|~|@)(?:\/(.*))?$/.exec(path);
   if (match === null) return undefined;
   const base = match[1] === '~~' || match[1] === '@@' ? '' : layout.srcDir;
@@ -962,7 +975,9 @@ export const nuxtConventions: ConventionsOf = (repoDir, pkg): ProjectConventions
           : [];
   // A handler a module serves is the server's code wherever it is (P251).
   const handlerDirs = [...new Set(modules.modules.flatMap((module) => module.additions.handlers.map((handler) => dirname(handler.handler))))];
-  const serverDirs = [...layers.map((layer) => layer.layout.serverDir), ...handlerDirs];
+  // A directory a module adds to the server's is one (P255), its `utils/` the server's names.
+  const scanDirs = modules.modules.flatMap((module) => module.additions.serverScanDirs.map((dir) => ({ dir, rank: module.rank })));
+  const serverDirs = [...layers.map((layer) => layer.layout.serverDir), ...handlerDirs, ...scanDirs.map(({ dir }) => dir)];
   const namedBy = (pick: (module: NuxtModules['modules'][number]) => ReadonlyArray<{ file: string; name: string; export: string }>): ImplicitImportSource[] =>
     modules.modules.flatMap((module) =>
       pick(module).map((named) => ({ file: named.file, names: [{ name: named.name, export: named.export }], ...(module.rank === 0 ? {} : { rank: module.rank }) })),
@@ -995,6 +1010,7 @@ export const nuxtConventions: ConventionsOf = (repoDir, pkg): ProjectConventions
             [],
             [
               ...layers.flatMap((layer, rank) => [{ dir: under(layer.layout.serverDir, 'utils'), nested: false, rank }, ...sharedOf(layer, rank)]),
+              ...scanDirs.map(({ dir, rank }) => ({ dir: under(dir, 'utils'), nested: false, rank })),
               ...moduleDirsOf(modules.modules, (added) => added.serverImportDirs),
             ],
             namedBy((module) => module.additions.serverImports),

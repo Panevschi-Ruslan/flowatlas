@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T12:56:18.090Z",
+  "configHash": "a27cd8f77c0e",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 61,
+      "edges": 58,
+      "types": 0,
+      "unresolved": 4,
+      "durationMs": 919,
+      "packages": {
+        "name": "components-shop",
+        "runtime": [
+          "@nuxt/image",
+          "catalog-kit",
+          "nuxt"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 10,
+    "resolved": 10,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 10,
+    "called": 10,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 61,
+    "edges": 68,
+    "types": 0,
+    "missed": 4,
+    "sites": 4,
+    "notes": 7,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

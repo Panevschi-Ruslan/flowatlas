@@ -34,12 +34,13 @@ export const VUE_READING: BrowserReading = {
   formats: [VUE_FORMAT],
   // Where the server is, as the Nuxt version and configuration say (P240), in
   // the application and in each of its layers (P243), and where a module of
-  // the repository keeps a handler it serves (P251).
+  // the repository keeps a handler it serves (P251) or adds to the server's (P255).
   elsewhere: (base) => {
     if (!hasDependency(base.pkg, 'nuxt')) return [];
     const { layers, modules } = nuxtApplicationOf(base.repoDir, base.pkg);
     const handlers = modules.modules.flatMap((module) => module.additions.handlers.map((handler) => handler.handler.replace(/\/[^/]*$/, '')));
-    return [...new Set([...layers.map((layer) => layer.layout.serverDir), ...handlers])];
+    const scanned = modules.modules.flatMap((module) => module.additions.serverScanDirs);
+    return [...new Set([...layers.map((layer) => layer.layout.serverDir), ...handlers, ...scanned])];
   },
 };
 

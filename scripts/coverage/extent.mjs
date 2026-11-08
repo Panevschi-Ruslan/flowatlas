@@ -314,7 +314,8 @@ const workspaceRootOf = (dir, stopAt) => {
  * Nuxt: `extends` names its layers, each read the same way in turn, and
  * `modules` its modules; both at the top of the configuration and under
  * `$production`, which is the build the tool reads. A path entry is a
- * directory (or a file in one) from the configuration's own directory; any
+ * directory (or a file in one) from the configuration's own directory,
+ * written as a string or built from that directory (P255); any
  * other entry is a workspace member by its name, or nothing here.
  */
 export const BUILT_FROM = [
@@ -375,6 +376,12 @@ const tokensOf = (text) => {
 
 const CODE = Symbol('code');
 
+/** The calls that join a path, by the names a configuration imports them under. */
+const PATH_CALLS = new Set(['resolve', 'join', 'path.resolve', 'path.join', 'pathe.resolve', 'pathe.join']);
+
+/** The names a path built from the configuration's own directory starts from. */
+const FROM_HERE = new Set(['__dirname', 'import.meta.dirname']);
+
 /**
  * The default export of a configuration as plain values, as far as it is
  * written in literals: objects, lists and strings. Anything else is `CODE`.
@@ -398,13 +405,57 @@ const configValueOf = (text) => {
       at += 1;
     }
   };
+  const ends = (token) => token === undefined || [',', '}', ']', ')'].includes(token.value);
+  /**
+   * A path built from the configuration's own directory (P255), as a
+   * relative string: `fileURLToPath(new URL('../ui', import.meta.url))`,
+   * `resolve(__dirname, '../ui')`, `join(import.meta.dirname, 'ui')`, or
+   * `resolve('../ui')`, which the framework runs from that directory. Any
+   * other call is code.
+   */
+  const builtPath = () => {
+    const start = at;
+    const is = (value) => tokens[at]?.value === value && (at += 1) > 0;
+    const read = () => {
+      if (tokens[at]?.value === 'fileURLToPath' && tokens[at + 1]?.value === '(') {
+        at += 2;
+        if (!is('new') || !is('URL') || !is('(')) return undefined;
+        const relativePath = tokens[at]?.kind === 'string' ? tokens[at].value : undefined;
+        at += 1;
+        if (relativePath === undefined || !is(',') || !is('import.meta.url') || !is(')') || !is(')')) return undefined;
+        return relativePath;
+      }
+      if (!PATH_CALLS.has(tokens[at]?.value) || tokens[at + 1]?.value !== '(') return undefined;
+      at += 2;
+      if (FROM_HERE.has(tokens[at]?.value)) {
+        at += 1;
+        if (!is(',')) return undefined;
+      }
+      const parts = [];
+      while (tokens[at]?.kind === 'string') {
+        parts.push(tokens[at].value);
+        at += 1;
+        if (!is(',')) break;
+      }
+      if (parts.length === 0 || !is(')')) return undefined;
+      return parts.join('/').replace(/\/+/g, '/');
+    };
+    const found = read();
+    if (found === undefined || !ends(tokens[at])) {
+      at = start;
+      return undefined;
+    }
+    return found.startsWith('.') || found.startsWith('/') ? found : `./${found}`;
+  };
   const value = () => {
     const token = tokens[at];
     const next = tokens[at + 1];
-    if (token?.kind === 'string' && (next === undefined || [',', '}', ']', ')'].includes(next.value))) {
+    if (token?.kind === 'string' && ends(next)) {
       at += 1;
       return token.value;
     }
+    const built = token?.kind === 'name' ? builtPath() : undefined;
+    if (built !== undefined) return built;
     if (token?.value === '[') {
       at += 1;
       const items = [];

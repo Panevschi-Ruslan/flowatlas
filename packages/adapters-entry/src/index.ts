@@ -141,7 +141,21 @@ export {
   type NuxtLayout,
 } from './framework-conventions.js';
 export {
+  kebabCase,
+  NUXT_BUILT_IN_COMPONENTS,
+  nuxtComponentNameOf,
+  nuxtNameFromPath,
+  nuxtNamesOf,
+  pascalCase,
+  splitByCase,
+  type NuxtComponent,
+  type NuxtComponentMode,
+  type NuxtNames,
+  type NuxtRouteMiddleware,
+} from './nuxt-names.js';
+export {
   NUXT_KNOWN_MODULES,
+  NUXT_MODULE_COMPONENTS,
   nuxtModulesOf,
   type InstalledModule,
   type NuxtModule,

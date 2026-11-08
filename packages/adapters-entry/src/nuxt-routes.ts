@@ -146,11 +146,23 @@ export const NITRO_REQUEST: RequestReadingDescription = {
   answers: [{ by: 'return' }],
 };
 
-/** Every file under `server/middleware`, in name order, and each handler a module puts in front of every route (P251). */
+/** The directories modules add to the server's (`addServerScanDir`, P255), each with the module. */
+const scanDirsOf = (modules: readonly NuxtModule[]): Array<{ dir: string; module: NuxtModule }> =>
+  modules.flatMap((module) => module.additions.serverScanDirs.map((dir) => ({ dir, module })));
+
+/**
+ * Every file under `server/middleware`, and under the `middleware/` of each
+ * directory a module adds to the server's (P255), in name order, and each
+ * handler a module puts in front of every route (P251).
+ */
 const middlewareOf = (ctx: ExtractContext, modules: readonly NuxtModule[]): EntryWrapping[] => [
   ...[...repoSources(ctx)]
     .map((sourceFile) => ({ sourceFile, file: normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir) }))
-    .filter(({ file }) => /(^|\/)server\/middleware\/[^/]+\.[cm]?[jt]s$/.test(file))
+    .filter(
+      ({ file }) =>
+        /(^|\/)server\/middleware\/[^/]+\.[cm]?[jt]s$/.test(file) ||
+        scanDirsOf(modules).some(({ dir }) => file.startsWith(`${dir}/middleware/`) && /^[^/]+\.[cm]?[jt]s$/.test(file.slice(dir.length + 12))),
+    )
     .sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0))
     .map(({ sourceFile, file }): EntryWrapping => {
       const handler = defaultHandlerOf(sourceFile);
@@ -194,15 +206,27 @@ export const nitroRoutesAdapter: EntryAdapter = {
       address: { path: string; rawPath: string; method: string };
       /** Where a route a module adds is declared: the call (P251). */
       declared?: { line: number; handlerFile: string };
+      /** A file of a directory a module adds to the server's (P255). */
+      scanned?: boolean;
     };
     const claims: Claim[] = [];
+    const scanDirs = scanDirsOf(modules);
     for (const sourceFile of repoSources(ctx)) {
       const file = normalizeFilePath(sourceFile.getFilePath(), ctx.repoDir);
       const layer = nuxtLayerOf(layers, file);
       const address = layer === undefined ? nitroAddressOf(file) : nitroAddressOf(withinLayer(layer, file), withinLayer(layer, layer.layout.serverDir));
-      if (address === null) continue;
-      const label = `${address.method} ${address.path}`;
-      claims.push({ key: makeHttpEntryKey(address.method, address.path), label, file, layer, rank: layer === undefined ? 0 : layers.indexOf(layer), sourceFile, address });
+      if (address !== null) {
+        const label = `${address.method} ${address.path}`;
+        claims.push({ key: makeHttpEntryKey(address.method, address.path), label, file, layer, rank: layer === undefined ? 0 : layers.indexOf(layer), sourceFile, address });
+        continue;
+      }
+      // A directory a module adds is read as `server/` is, at the rank of the part that registers it.
+      const scanned = scanDirs.find(({ dir }) => file.startsWith(`${dir}/`));
+      // Read from inside it, as a part's own server is: a directory beside the application climbs out with `..`.
+      const there = scanned === undefined ? null : nitroAddressOf(`server/${file.slice(scanned.dir.length + 1)}`);
+      if (scanned === undefined || there === null) continue;
+      const label = `${there.method} ${there.path}`;
+      claims.push({ key: makeHttpEntryKey(there.method, there.path), label, file, layer: scanned.module.layer, rank: scanned.module.rank, sourceFile, address: there, scanned: true });
     }
     for (const module of modules) {
       for (const handler of module.additions.handlers) {
@@ -224,7 +248,7 @@ export const nitroRoutesAdapter: EntryAdapter = {
     // A route two parts serve is the higher one's, as Nuxt ranks its layers.
     const { kept, rows } = keptByLayer(claims, 'serves');
     for (const row of rows) ctx.builder.addUnresolved(row);
-    for (const { sourceFile, file, address, label, key, declared } of kept) {
+    for (const { sourceFile, file, address, label, key, declared, scanned } of kept) {
       const handlerNode = sourceFile === undefined ? undefined : defaultHandlerOf(sourceFile);
       const handler = inlineHandlerOf(handlerNode, label, ctx);
       if (handler === undefined) {
@@ -255,7 +279,7 @@ export const nitroRoutesAdapter: EntryAdapter = {
           path: address.path,
           rawPath: address.rawPath,
           adapter: 'nitro-routes',
-          registration: declared === undefined ? 'server/file' : 'module/addServerHandler',
+          registration: declared !== undefined ? 'module/addServerHandler' : scanned === true ? 'module/addServerScanDir' : 'server/file',
         },
       });
     }

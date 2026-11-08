@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:45:21.238Z",
+  "builtAt": "2026-11-07T20:09:59.593Z",
   "services": [
     {
       "name": "shop",
@@ -327,6 +327,25 @@
         "signature": {
           "params": [],
           "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#modules/catalog/runtime/middleware/guard.ts:catalog-guard",
+      "type": "function",
+      "label": "catalog-guard",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/middleware/guard.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "any"
+            }
+          ],
+          "returns": "unknown"
         }
       }
     },
@@ -704,6 +723,22 @@
       "line": 11
     },
     {
+      "from": "shop#../admin-layer/screens/admin.vue:admin",
+      "to": "shop#modules/catalog/runtime/middleware/guard.ts:catalog-guard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "unknown",
+      "file": "../admin-layer/screens/admin.vue",
+      "line": 1,
+      "meta": {
+        "middleware": "catalog-guard",
+        "order": 0
+      }
+    },
+    {
       "from": "shop#../admin-layer/screens/admin.vue:showReport",
       "to": "shop#../admin-layer/tools/reports/useReports.ts:useReports",
       "type": "calls",
@@ -783,6 +818,22 @@
     },
     {
       "from": "shop#app/views/index.vue:views/index",
+      "to": "shop#modules/catalog/runtime/middleware/guard.ts:catalog-guard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "unknown",
+      "file": "app/views/index.vue",
+      "line": 1,
+      "meta": {
+        "middleware": "catalog-guard",
+        "order": 0
+      }
+    },
+    {
+      "from": "shop#app/views/index.vue:views/index",
       "to": "ui_api_call:shop#app/views/index.vue:15:9",
       "type": "calls",
       "confidence": "static",
@@ -806,6 +857,22 @@
       "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
       "file": "modules/catalog/runtime/pages/catalog.vue",
       "line": 15
+    },
+    {
+      "from": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",
+      "to": "shop#modules/catalog/runtime/middleware/guard.ts:catalog-guard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "unknown",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 1,
+      "meta": {
+        "middleware": "catalog-guard",
+        "order": 0
+      }
     },
     {
       "from": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",
@@ -965,6 +1032,14 @@
       "service": "shop"
     },
     {
+      "file": "modules/catalog/runtime/middleware/guard.ts",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
       "file": "nuxt.config.ts",
       "line": 1,
       "reason": "framework-environment-differs",
@@ -1039,8 +1114,8 @@
       "line": 1,
       "reason": "framework-module-read",
       "level": "info",
-      "message": "4 Nuxt modules of the repository are read for what they add when the application builds: ../audit-module/src/module.ts adds useAudit from ../audit-module/src/runtime/useAudit.ts and POST /api/audit served by ../audit-module/src/runtime/server/audit.post.ts; modules/audit.ts adds the names server-audit/utils/ exports to the server and server-audit/stamp.ts in front of every route; modules/catalog/index.ts adds the names modules/catalog/runtime/composables/ exports, GET /api/catalog served by modules/catalog/runtime/server/catalog.ts, the page /catalog (modules/catalog/runtime/pages/catalog.vue), #catalog -> modules/catalog/runtime, the components of modules/catalog/runtime/components/ by name (not drawn) and the route middleware catalog-guard (not drawn); ../admin-layer/tools/reports.ts adds the names ../admin-layer/tools/reports/ exports and #reports -> ../admin-layer/tools/reports",
-      "hint": "Nothing to do. An addition whose argument is code is a row of its own; components registered by name and route middleware are said here, not drawn.",
+      "message": "4 Nuxt modules of the repository are read for what they add when the application builds: ../audit-module/src/module.ts adds useAudit from ../audit-module/src/runtime/useAudit.ts and POST /api/audit served by ../audit-module/src/runtime/server/audit.post.ts; modules/audit.ts adds the names server-audit/utils/ exports to the server and server-audit/stamp.ts in front of every route; modules/catalog/index.ts adds the names modules/catalog/runtime/composables/ exports, GET /api/catalog served by modules/catalog/runtime/server/catalog.ts, the page /catalog (modules/catalog/runtime/pages/catalog.vue), #catalog -> modules/catalog/runtime, the components of modules/catalog/runtime/components/ by name and the route middleware catalog-guard, in front of every page (modules/catalog/runtime/middleware/guard.ts); ../admin-layer/tools/reports.ts adds the names ../admin-layer/tools/reports/ exports and #reports -> ../admin-layer/tools/reports",
+      "hint": "Nothing to do. An addition whose argument is code is a row of its own, and one under a condition its options decide is read or left out as they say.",
       "symbol": "../audit-module/src/module.ts",
       "adapter": "nitro-routes",
       "meta": {

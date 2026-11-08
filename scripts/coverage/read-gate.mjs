@@ -173,6 +173,8 @@ const GATED = {
       'deployment-plugin-unread',
       // A route a module adds whose address or handler is written as code (P251).
       'framework-module-unread',
+      // A route a module would add that the options it is handed turn off (P255).
+      'framework-module-skipped',
     ],
     perFile: true,
   },
@@ -591,20 +593,20 @@ const familiesOfEdge = (edge, nodes) => {
 };
 
 /**
- * The files a folded row's samples name (P251): `meta.causes[].samples`,
+ * The files a folded row's sites are in (P251, P255): `meta.causes[].samples`,
  * which the builder keeps for a row below `action` it folded over several
- * sites. The builder keeps three per cause, so a fourth site of one reason in
- * one repository is still read from nowhere but its count.
+ * sites, three per cause, and `meta.causes[].files`, every other file of that
+ * cause's sites, so a fourth site of one reason in one repository is read
+ * from its file as the first three are.
  */
 const sampledFiles = (row) => {
   const causes = Array.isArray(row.meta?.causes) ? row.meta.causes : [];
   return [
     ...new Set(
-      causes.flatMap((cause) =>
-        (Array.isArray(cause?.samples) ? cause.samples : [])
-          .map((sample) => sample?.file)
-          .filter((file) => typeof file === 'string'),
-      ),
+      causes.flatMap((cause) => [
+        ...(Array.isArray(cause?.samples) ? cause.samples : []).map((sample) => sample?.file),
+        ...(Array.isArray(cause?.files) ? cause.files : []),
+      ]).filter((file) => typeof file === 'string'),
     ),
   ];
 };

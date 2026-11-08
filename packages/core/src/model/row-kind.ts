@@ -58,6 +58,8 @@ export interface KindedRow {
 // How a join or a reading was made. Every one of these sits beside an edge
 // that was drawn, or a package that was read.
 const NOTES: readonly string[] = [
+  // A call of a framework module that the options it is handed rule out (P255)
+  'framework-module-skipped',
   // Stand-ins for a package that is not installed (core/stand-ins.ts, P78)
   'package-from-repo',
   'package-version-differs',
@@ -290,6 +292,11 @@ const GAPS: readonly string[] = [
   'api-client-unread',
   'handler-not-found',
   'template-handler-not-found',
+  // A child component, a layout or a route middleware a component names by a
+  // name nothing registers, or by code (P255)
+  'component-unresolved',
+  'layout-unresolved',
+  'route-middleware-unresolved',
   'handler-not-a-method',
   'template-not-found',
   'template-not-parsed',

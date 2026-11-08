@@ -120,6 +120,17 @@ export const NUXT_KNOWN_MODULES: ReadonlyMap<string, string> = new Map([
   ['@nuxtjs/color-mode', 'the `useColorMode` composable of its own package'],
 ]);
 
+/**
+ * The components a few of those modules register by name (P255), which a
+ * template uses with no import and which are their package's: a tag that
+ * names one is no child component of the repository's, and no row.
+ */
+export const NUXT_MODULE_COMPONENTS: ReadonlyMap<string, readonly string[]> = new Map([
+  ['@nuxt/image', ['NuxtImg', 'NuxtPicture']],
+  ['@nuxt/icon', ['Icon']],
+  ['@nuxtjs/color-mode', ['ColorScheme']],
+]);
+
 /** Modules whose additions are already read as the application's own (P240). */
 const READ_ELSEWHERE = new Set(['@pinia/nuxt']);
 
@@ -172,6 +183,35 @@ export interface ModuleAlias {
   readonly replaces: boolean;
 }
 
+/** A directory of components a module registers by name (`addComponentsDir`, P255). */
+export interface ModuleComponentDir {
+  /** Repo-relative. */
+  readonly dir: string;
+  /** Written before every name: `prefix: 'Ui'`. */
+  readonly prefix?: string;
+  /** Whether a folder below it is part of the name, as it is unless `pathPrefix: false`. */
+  readonly pathPrefix: boolean;
+}
+
+/** One component a module registers by name (`addComponent`, P255). */
+export interface ModuleComponent {
+  readonly name: string;
+  /** Repo-relative component file. */
+  readonly file: string;
+}
+
+/** A route middleware a module adds by name (`addRouteMiddleware`, P255). */
+export interface ModuleRouteMiddleware {
+  readonly name: string;
+  /** Repo-relative file whose default export it is. */
+  readonly file: string;
+  /** Whether it runs in front of every page. */
+  readonly global: boolean;
+  /** Whether it takes the place of a file of the application's that has its name (`{ override: true }`). */
+  readonly override: boolean;
+  readonly line: number;
+}
+
 /** Everything one module adds that this reader reads. */
 export interface NuxtModuleAdditions {
   readonly importDirs: readonly ModuleImportDir[];
@@ -181,19 +221,28 @@ export interface NuxtModuleAdditions {
   readonly handlers: readonly ModuleHandler[];
   readonly pages: readonly ModulePage[];
   readonly aliases: readonly ModuleAlias[];
-  /** Repo-relative directories of components it registers by name: said, not drawn. */
-  readonly componentDirs: readonly string[];
-  /** Route middleware it adds, by name: said, not drawn. */
-  readonly routeMiddleware: readonly string[];
+  /** Directories of components it registers by name (P255). */
+  readonly componentDirs: readonly ModuleComponentDir[];
+  /** Single components it registers by name (P255). */
+  readonly components: readonly ModuleComponent[];
+  /** Route middleware it adds, by name (P255). */
+  readonly routeMiddleware: readonly ModuleRouteMiddleware[];
+  /** Repo-relative directories it adds to the server's, read as `server/` is (`addServerScanDir`, P255). */
+  readonly serverScanDirs: readonly string[];
   /** Calls of the kit this reader does not read, by name: what they add is not drawn by any reader. */
   readonly notRead: readonly string[];
   /**
-   * The calls read that are written under a condition (`if (options.x)`):
-   * read as made, since what the condition is handed is the configuration's
-   * options at build time, and said in the note so the reading is not taken
-   * for more than it is.
+   * The calls read that are written under a condition (`if (options.x)`)
+   * the options it is handed do not decide: read as made, and said in the
+   * note so the reading is not taken for more than it is.
    */
   readonly conditional: readonly string[];
+  /**
+   * The calls not read because the condition they are written under is
+   * false for the options the configuration hands the module (P255): what
+   * the build does not add, said in the note.
+   */
+  readonly skipped: readonly string[];
 }
 
 /** One module of the repository the application is built with. */
@@ -279,12 +328,10 @@ const NOT_READ = new Set([
   'addTypeTemplate',
   'addServerTemplate',
   'addLayout',
-  'addServerScanDir',
   'addVitePlugin',
   'addWebpackPlugin',
   'addBuildPlugin',
   'addImportsSources',
-  'addComponent',
   'addPrerenderRoutes',
   'extendRouteRules',
   'extendViteConfig',
@@ -294,10 +341,224 @@ const NOT_READ = new Set([
 /** What reading one module file finds: its additions, the modules it installs and the calls it could not read. */
 interface ModuleReading {
   readonly additions: NuxtModuleAdditions;
-  /** `installModule(...)`: a path built from the file, or a package name. */
-  readonly installs: ReadonlyArray<{ path: string } | { name: string }>;
+  /** `installModule(...)`: a path built from the file, or a package name, and the options it hands it. */
+  readonly installs: ReadonlyArray<({ path: string } | { name: string }) & { options: unknown }>;
   readonly rows: readonly Unresolved[];
 }
+
+// ---------------------------------------------------------------------------
+// The options a module is handed (P255)
+
+/** A value no literal reading gives: code, or a setting the configuration writes as code. */
+const UNKNOWN: unique symbol = Symbol('unknown');
+
+/**
+ * What a module's options are made of when the application builds, first
+ * to last as `defu` lays them over each other: what the `modules` entry
+ * hands it (`['./modules/x', { enabled: false }]`), what the configuration
+ * writes under the module's `configKey`, and the module's `defaults`.
+ */
+interface OptionSources {
+  readonly inline: unknown;
+  /** The configuration's value under a key, merged over every part; {@link UNKNOWN} where one writes it as code. */
+  readonly config: (key: string) => unknown;
+}
+
+/** A literal written in a module, as a plain value, or {@link UNKNOWN}. */
+const literalValue = (node: ts.Expression | undefined, depth = 0): unknown => {
+  if (node === undefined || depth > 8) return UNKNOWN;
+  const value = unwrap(node);
+  if (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) return value.text;
+  if (ts.isNumericLiteral(value)) return Number(value.text);
+  if (value.kind === ts.SyntaxKind.TrueKeyword) return true;
+  if (value.kind === ts.SyntaxKind.FalseKeyword) return false;
+  if (value.kind === ts.SyntaxKind.NullKeyword) return null;
+  if (ts.isIdentifier(value) && value.text === 'undefined') return undefined;
+  if (ts.isPrefixUnaryExpression(value) && value.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(value.operand)) return -Number(value.operand.text);
+  if (ts.isArrayLiteralExpression(value)) {
+    const items = value.elements.map((element) => (ts.isSpreadElement(element) ? UNKNOWN : literalValue(element, depth + 1)));
+    return items.includes(UNKNOWN) ? UNKNOWN : items;
+  }
+  if (ts.isObjectLiteralExpression(value)) {
+    const out: Record<string, unknown> = {};
+    for (const property of value.properties) {
+      const name = property.name;
+      const key = name !== undefined && (ts.isIdentifier(name) || ts.isStringLiteral(name)) ? name.text : undefined;
+      if (key === undefined || !ts.isPropertyAssignment(property)) return UNKNOWN;
+      out[key] = literalValue(property.initializer, depth + 1);
+    }
+    return out;
+  }
+  return UNKNOWN;
+};
+
+const isPlainValue = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof ConfigPath) && !(value instanceof NotLiteral);
+
+/** One value laid over another as `defu` lays them: objects key by key, anything else the first that is set. */
+const defuOver = (over: unknown, base: unknown): unknown => {
+  if (over === undefined || over === null) return base;
+  if (isPlainValue(over) && isPlainValue(base)) {
+    const out: Record<string, unknown> = { ...base };
+    for (const [key, value] of Object.entries(over)) out[key] = defuOver(value, base[key]);
+    return out;
+  }
+  return over;
+};
+
+/** One option by its path, as `defu` lays the sources over each other: the first that writes it, {@link UNKNOWN} where that cannot be said. */
+const optionAt = (sources: readonly unknown[], path: readonly string[]): unknown => {
+  for (const source of sources) {
+    let at: unknown = source;
+    for (const key of path) {
+      if (at === UNKNOWN || at instanceof NotLiteral) return UNKNOWN;
+      if (typeof at !== 'object' || at === null || at instanceof ConfigPath) {
+        at = undefined;
+        break;
+      }
+      at = (at as Record<string, unknown>)[key];
+    }
+    if (at === UNKNOWN || at instanceof NotLiteral) return UNKNOWN;
+    // `defu` passes over what is not set, `null` included.
+    if (at !== undefined && at !== null) return at;
+  }
+  return undefined;
+};
+
+/** The shape of a module the reader needs to read its conditions: its options' name in `setup`, its `configKey` and its `defaults`. */
+interface ModuleDefinition {
+  readonly optionsName?: string;
+  readonly configKey?: string;
+  readonly defaults: unknown;
+}
+
+/** `defineNuxtModule({ meta: { configKey }, defaults, setup(options) })`, read where it is written in place. */
+const definitionOf = (file: ts.SourceFile): ModuleDefinition => {
+  let found: ModuleDefinition = { defaults: UNKNOWN };
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && calleeName(node) === 'defineNuxtModule') {
+      const [first] = node.arguments;
+      const object = first === undefined ? undefined : unwrap(first);
+      if (object !== undefined && ts.isObjectLiteralExpression(object)) {
+        const meta = propertyOf(object, 'meta');
+        const configKey = meta !== undefined && ts.isObjectLiteralExpression(unwrap(meta)) ? literalText(propertyOf(unwrap(meta) as ts.ObjectLiteralExpression, 'configKey')) : undefined;
+        const defaultsNode = propertyOf(object, 'defaults');
+        const setup = object.properties.find((property) => property.name !== undefined && ts.isIdentifier(property.name) && property.name.text === 'setup');
+        const fn =
+          setup === undefined
+            ? undefined
+            : ts.isMethodDeclaration(setup)
+              ? setup
+              : ts.isPropertyAssignment(setup) && (ts.isArrowFunction(unwrap(setup.initializer)) || ts.isFunctionExpression(unwrap(setup.initializer)))
+                ? (unwrap(setup.initializer) as ts.ArrowFunction | ts.FunctionExpression)
+                : undefined;
+        const param = fn?.parameters[0];
+        found = {
+          ...(param !== undefined && ts.isIdentifier(param.name) ? { optionsName: param.name.text } : {}),
+          ...(configKey === undefined ? {} : { configKey }),
+          defaults: defaultsNode === undefined ? {} : literalValue(defaultsNode),
+        };
+        return;
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return found;
+};
+
+/**
+ * What a condition of a module's code is, for the options it is handed: a
+ * literal, an option by its path (`options.enabled`, `options.server.mode`),
+ * `!`, `&&`, `||`, `??` and the four comparisons of them. Anything else is
+ * {@link UNKNOWN}, as is an option the configuration writes as code.
+ */
+const conditionValue = (node: ts.Expression, file: ts.SourceFile, optionsName: string | undefined, sources: readonly unknown[]): unknown => {
+  const value = unwrap(node);
+  const literal = literalValue(value);
+  if (literal !== UNKNOWN && !ts.isObjectLiteralExpression(value) && !ts.isArrayLiteralExpression(value)) return literal;
+  if (ts.isPropertyAccessExpression(value) || ts.isElementAccessExpression(value)) {
+    const path: string[] = [];
+    let at: ts.Expression = value;
+    while (ts.isPropertyAccessExpression(at) || ts.isElementAccessExpression(at)) {
+      const key = ts.isPropertyAccessExpression(at) ? at.name.text : literalText(at.argumentExpression);
+      if (key === undefined) return UNKNOWN;
+      path.unshift(key);
+      at = unwrap(at.expression);
+    }
+    return ts.isIdentifier(at) && at.text === optionsName ? optionAt(sources, path) : UNKNOWN;
+  }
+  if (ts.isPrefixUnaryExpression(value) && value.operator === ts.SyntaxKind.ExclamationToken) {
+    const inner = conditionValue(value.operand, file, optionsName, sources);
+    return inner === UNKNOWN ? UNKNOWN : !inner;
+  }
+  if (ts.isBinaryExpression(value)) {
+    const operator = value.operatorToken.kind;
+    const left = conditionValue(value.left, file, optionsName, sources);
+    if (operator === ts.SyntaxKind.AmpersandAmpersandToken) return left === UNKNOWN ? UNKNOWN : !left ? left : conditionValue(value.right, file, optionsName, sources);
+    if (operator === ts.SyntaxKind.BarBarToken) return left === UNKNOWN ? UNKNOWN : left ? left : conditionValue(value.right, file, optionsName, sources);
+    if (operator === ts.SyntaxKind.QuestionQuestionToken) return left === UNKNOWN ? UNKNOWN : left ?? conditionValue(value.right, file, optionsName, sources);
+    const right = conditionValue(value.right, file, optionsName, sources);
+    if (left === UNKNOWN || right === UNKNOWN || (typeof left === 'object' && left !== null) || (typeof right === 'object' && right !== null)) return UNKNOWN;
+    if (operator === ts.SyntaxKind.EqualsEqualsEqualsToken) return left === right;
+    if (operator === ts.SyntaxKind.ExclamationEqualsEqualsToken) return left !== right;
+    // eslint-disable-next-line eqeqeq
+    if (operator === ts.SyntaxKind.EqualsEqualsToken) return left == right;
+    // eslint-disable-next-line eqeqeq
+    if (operator === ts.SyntaxKind.ExclamationEqualsToken) return left != right;
+  }
+  return UNKNOWN;
+};
+
+/** Whether a statement leaves the function it is in: `return`, `throw`, or a block that ends in one. */
+const leaves = (statement: ts.Statement): boolean => {
+  if (ts.isReturnStatement(statement) || ts.isThrowStatement(statement)) return true;
+  if (ts.isBlock(statement)) {
+    const last = statement.statements[statement.statements.length - 1];
+    return last !== undefined && leaves(last);
+  }
+  return false;
+};
+
+/**
+ * Whether a call of a module's code is made, for the options it is handed
+ * (P255): each condition it is written under - a branch of an `if`, of
+ * `? :`, the right of `&&` or `||`, past an `if (...) return` - evaluated
+ * where the options decide it. `made` where every one holds, `skipped` where
+ * one does not, `conditional` where one cannot be said.
+ */
+const gateOf = (node: ts.Node, file: ts.SourceFile, definition: ModuleDefinition, sources: readonly unknown[]): { outcome: 'made' | 'skipped' | 'conditional'; written?: string } => {
+  const wants: Array<{ condition: ts.Expression | undefined; holds: boolean }> = [];
+  for (let child = node, at = node.parent; at !== undefined; child = at, at = at.parent) {
+    if (ts.isFunctionLike(at)) break;
+    if (ts.isIfStatement(at) && child !== at.expression) wants.push({ condition: at.expression, holds: child === at.thenStatement });
+    if (ts.isConditionalExpression(at) && child !== at.condition) wants.push({ condition: at.condition, holds: child === at.whenTrue });
+    if (ts.isCaseClause(at) || ts.isDefaultClause(at)) wants.push({ condition: undefined, holds: true });
+    if (ts.isBinaryExpression(at) && child === at.right) {
+      const operator = at.operatorToken.kind;
+      if (operator === ts.SyntaxKind.AmpersandAmpersandToken) wants.push({ condition: at.left, holds: true });
+      if (operator === ts.SyntaxKind.BarBarToken) wants.push({ condition: at.left, holds: false });
+      if (operator === ts.SyntaxKind.QuestionQuestionToken) wants.push({ condition: undefined, holds: true });
+    }
+    // `if (!options.enabled) return`, above the call in the same block.
+    if (ts.isBlock(at) || ts.isSourceFile(at)) {
+      for (const statement of at.statements) {
+        if (statement === child) break;
+        if (ts.isIfStatement(statement) && statement.elseStatement === undefined && leaves(statement.thenStatement)) wants.push({ condition: statement.expression, holds: false });
+      }
+    }
+  }
+  let unknown: string | undefined;
+  for (const { condition, holds } of wants) {
+    const value = condition === undefined ? UNKNOWN : conditionValue(condition, file, definition.optionsName, sources);
+    if (value === UNKNOWN) {
+      unknown ??= condition?.getText(file);
+      continue;
+    }
+    if (Boolean(value) !== holds) return { outcome: 'skipped', written: condition?.getText(file) ?? '' };
+  }
+  return unknown === undefined && wants.every(({ condition }) => condition !== undefined) ? { outcome: 'made' } : { outcome: 'conditional' };
+};
 
 /** Where a path a module writes leads: an absolute path, or nothing this reader can place. */
 interface PathScope {
@@ -442,26 +703,12 @@ const scanned = (path: string): { absolute: string; nested: boolean } => {
   return { absolute: (glob === -1 ? path : path.slice(0, glob)).replace(/[\\/]+$/, ''), nested: path.includes('**') };
 };
 
-/** Whether a call runs only when something holds: inside a branch of an `if`, a `switch`, `? :`, `&&`, `||` or `??`. */
-const underCondition = (node: ts.Node): boolean => {
-  for (let child = node, at = node.parent; at !== undefined; child = at, at = at.parent) {
-    if (ts.isFunctionLike(at)) return false;
-    if (ts.isIfStatement(at) && child !== at.expression) return true;
-    if (ts.isConditionalExpression(at) && child !== at.condition) return true;
-    if (ts.isCaseClause(at) || ts.isDefaultClause(at)) return true;
-    if (
-      ts.isBinaryExpression(at) &&
-      child === at.right &&
-      [ts.SyntaxKind.AmpersandAmpersandToken, ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken].includes(at.operatorToken.kind)
-    ) {
-      return true;
-    }
-  }
-  return false;
-};
-
-/** Reads one module file: what each call of the kit adds, and a row for each it cannot place. */
-const readModuleFile = (root: string, absolute: string, app: NuxtLayout): ModuleReading => {
+/**
+ * Reads one module file: what each call of the kit adds, and a row for each
+ * it cannot place. A call under a condition its options decide is read or
+ * left out as the options say (P255).
+ */
+const readModuleFile = (root: string, absolute: string, app: NuxtLayout, options: OptionSources): ModuleReading => {
   let text: string;
   try {
     text = readFileSync(absolute, 'utf8');
@@ -471,6 +718,8 @@ const readModuleFile = (root: string, absolute: string, app: NuxtLayout): Module
   const file = ts.createSourceFile(absolute, text, ts.ScriptTarget.Latest, true, /\.[cm]?js$/.test(absolute) ? ts.ScriptKind.JS : ts.ScriptKind.TS);
   const moduleFile = fromRepo(root, absolute);
   const scope = scopeOf(file, absolute, join(root, app.srcDir), root);
+  const definition = definitionOf(file);
+  const optionSources = [options.inline, definition.configKey === undefined ? undefined : options.config(definition.configKey), definition.defaults];
   const importDirs: ModuleImportDir[] = [];
   const serverImportDirs: ModuleImportDir[] = [];
   const imports: ModuleImport[] = [];
@@ -478,11 +727,14 @@ const readModuleFile = (root: string, absolute: string, app: NuxtLayout): Module
   const handlers: ModuleHandler[] = [];
   const pages: ModulePage[] = [];
   const aliases: ModuleAlias[] = [];
-  const componentDirs: string[] = [];
-  const routeMiddleware: string[] = [];
+  const componentDirs: ModuleComponentDir[] = [];
+  const components: ModuleComponent[] = [];
+  const routeMiddleware: ModuleRouteMiddleware[] = [];
+  const serverScanDirs: string[] = [];
   const notRead = new Set<string>();
   const conditional: string[] = [];
-  const installs: Array<{ path: string } | { name: string }> = [];
+  const skipped: string[] = [];
+  const installs: Array<({ path: string } | { name: string }) & { options: unknown }> = [];
   const rows: Unresolved[] = [];
   const lineOf = (node: ts.Node): number => file.getLineAndCharacterOfPosition(node.getStart(file)).line + 1;
   const unread = (node: ts.Node, call: string, what: string): void => {
@@ -594,49 +846,105 @@ const readModuleFile = (root: string, absolute: string, app: NuxtLayout): Module
       (node: ts.CallExpression) => {
         const [first] = node.arguments;
         const value = first === undefined ? undefined : unwrap(first);
-        const path = value !== undefined && ts.isObjectLiteralExpression(value) ? pathIn(scope, propertyOf(value, 'path')) : pathIn(scope, value);
-        if (path !== undefined) componentDirs.push(fromRepo(root, path));
+        const object = value !== undefined && ts.isObjectLiteralExpression(value) ? value : undefined;
+        const path = object !== undefined ? pathIn(scope, propertyOf(object, 'path')) : pathIn(scope, value);
+        const prefixNode = object === undefined ? undefined : propertyOf(object, 'prefix');
+        const pathPrefixNode = object === undefined ? undefined : propertyOf(object, 'pathPrefix');
+        const prefix = literalText(prefixNode);
+        const pathPrefix = pathPrefixNode === undefined ? true : literalValue(pathPrefixNode);
+        if (path === undefined || (prefixNode !== undefined && prefix === undefined) || typeof pathPrefix !== 'boolean') return unread(node, 'addComponentsDir', 'a directory');
+        componentDirs.push({ dir: fromRepo(root, path), ...(prefix === undefined || prefix === '' ? {} : { prefix }), pathPrefix });
+      },
+    ],
+    [
+      'addComponent',
+      (node: ts.CallExpression) => {
+        const [first] = node.arguments;
+        const value = first === undefined ? undefined : unwrap(first);
+        const object = value !== undefined && ts.isObjectLiteralExpression(value) ? value : undefined;
+        const name = object === undefined ? undefined : literalText(propertyOf(object, 'name'));
+        const at = object === undefined ? undefined : pathIn(scope, propertyOf(object, 'filePath'));
+        const found = at === undefined ? undefined : scriptFileAt(at);
+        if (name === undefined || found === undefined) return unread(node, 'addComponent', 'a component');
+        components.push({ name, file: fromRepo(root, found) });
       },
     ],
     [
       'addRouteMiddleware',
       (node: ts.CallExpression) => {
-        const [first] = node.arguments;
+        const [first, second] = node.arguments;
         const value = first === undefined ? undefined : unwrap(first);
         const items = value !== undefined && ts.isArrayLiteralExpression(value) ? [...value.elements] : value === undefined ? [] : [value];
+        const settings = second === undefined ? undefined : literalValue(second);
+        const override = typeof settings === 'object' && settings !== null && (settings as Record<string, unknown>).override === true;
         for (const item of items) {
-          const name = ts.isObjectLiteralExpression(item) ? literalText(propertyOf(item, 'name')) : undefined;
-          if (name !== undefined) routeMiddleware.push(name);
+          const object = ts.isObjectLiteralExpression(item) ? item : undefined;
+          const name = object === undefined ? undefined : literalText(propertyOf(object, 'name'));
+          const at = object === undefined ? undefined : pathIn(scope, propertyOf(object, 'path'));
+          const found = at === undefined ? undefined : scriptFileAt(at);
+          const global = object === undefined ? false : literalValue(propertyOf(object, 'global')) === true;
+          if (name === undefined || found === undefined) unread(item, 'addRouteMiddleware', 'a middleware');
+          else routeMiddleware.push({ name, file: fromRepo(root, found), global, override, line: lineOf(node) });
         }
+      },
+    ],
+    [
+      'addServerScanDir',
+      (node: ts.CallExpression) => {
+        const paths = pathsIn(scope, node.arguments[0]);
+        if (paths === undefined) return unread(node, 'addServerScanDir', 'a directory');
+        for (const path of paths) serverScanDirs.push(fromRepo(root, path.replace(/[\\/]+$/, '')));
       },
     ],
     [
       'installModule',
       (node: ts.CallExpression) => {
-        const [first] = node.arguments;
+        const [first, second] = node.arguments;
         const name = literalText(first);
         const path = pathIn(scope, first);
-        if (path !== undefined) installs.push({ path });
-        else if (name !== undefined && !name.startsWith('.')) installs.push({ name });
+        const handed = second === undefined ? undefined : literalValue(second);
+        if (path !== undefined) installs.push({ path, options: handed });
+        else if (name !== undefined && !name.startsWith('.')) installs.push({ name, options: handed });
         else unread(node, 'installModule', 'a module');
       },
     ],
   ]);
 
+  /** Whether a call is made for the options the module is handed, and said where not (P255). */
+  const made = (node: ts.Node, name: string): boolean => {
+    const gate = gateOf(node, file, definition, optionSources);
+    if (gate.outcome === 'skipped') {
+      skipped.push(`${name} (line ${lineOf(node)}, under \`${gate.written ?? ''}\`)`);
+      // Said where the call is, so a reader of the module's file finds why nothing came of it.
+      rows.push({
+        file: moduleFile,
+        line: lineOf(node),
+        reason: 'framework-module-skipped',
+        level: 'info',
+        symbol: name,
+        message: `${name} in ${moduleFile} is not made when the application builds: it is written under \`${gate.written ?? ''}\`, which the options the configuration hands the module rule out`,
+        hint: 'Nothing to do. Change the option in the configuration to have the module add it.',
+        adapter: NUXT_ADAPTER,
+        meta: { cause: 'framework-module-skipped', module: moduleFile, call: name },
+      });
+    }
+    if (gate.outcome === 'conditional') conditional.push(`${name} (line ${lineOf(node)})`);
+    return gate.outcome !== 'skipped';
+  };
+
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node)) {
       const name = calleeName(node);
       const read = name === undefined ? undefined : CALLS.get(name);
-      if (read !== undefined) {
-        read(node);
-        if (underCondition(node)) conditional.push(`${name} (line ${lineOf(node)})`);
-      }
-      else if (name === 'hook' && literalText(node.arguments[0]) === 'pages:extend') pagesOf(node, node.arguments[1], "hook('pages:extend')");
-      else if (name !== undefined && NOT_READ.has(name)) notRead.add(name);
+      if (read !== undefined && name !== undefined) {
+        if (made(node, name)) read(node);
+      } else if (name === 'hook' && literalText(node.arguments[0]) === 'pages:extend') {
+        if (made(node, "hook('pages:extend')")) pagesOf(node, node.arguments[1], "hook('pages:extend')");
+      } else if (name !== undefined && NOT_READ.has(name)) notRead.add(name);
       // `Object.assign(nuxt.options.alias, { '#x': path })`
       if (name === 'assign' && node.expression.getText(file) === 'Object.assign') {
         const [target, ...sources] = node.arguments;
-        if (target !== undefined && /\.options\.alias$/.test(unwrap(target).getText(file))) {
+        if (target !== undefined && /\.options\.alias$/.test(unwrap(target).getText(file)) && made(node, 'nuxt.options.alias')) {
           for (const source of sources) {
             const object = unwrap(source);
             if (!ts.isObjectLiteralExpression(object)) {
@@ -659,7 +967,7 @@ const readModuleFile = (root: string, absolute: string, app: NuxtLayout): Module
       const left = unwrap(node.left);
       if (assigns && (ts.isElementAccessExpression(left) || ts.isPropertyAccessExpression(left)) && /\.options\.alias$/.test(left.expression.getText(file))) {
         const key = ts.isPropertyAccessExpression(left) ? left.name.text : literalText(left.argumentExpression);
-        aliasOf(node, key, node.right, operator === ts.SyntaxKind.EqualsToken);
+        if (made(node, 'nuxt.options.alias')) aliasOf(node, key, node.right, operator === ts.SyntaxKind.EqualsToken);
       }
     }
     ts.forEachChild(node, visit);
@@ -667,7 +975,22 @@ const readModuleFile = (root: string, absolute: string, app: NuxtLayout): Module
   visit(file);
 
   return {
-    additions: { importDirs, serverImportDirs, imports, serverImports, handlers, pages, aliases, componentDirs, routeMiddleware, notRead: [...notRead].sort(), conditional },
+    additions: {
+      importDirs,
+      serverImportDirs,
+      imports,
+      serverImports,
+      handlers,
+      pages,
+      aliases,
+      componentDirs,
+      components,
+      routeMiddleware,
+      serverScanDirs,
+      notRead: [...notRead].sort(),
+      conditional,
+      skipped,
+    },
     installs,
     rows,
   };
@@ -709,7 +1032,57 @@ const unreadModuleRow = (layer: NuxtLayer, text: string, why: UnreadModule): Unr
   meta: { cause: 'framework-module-unread', why, module: text },
 });
 
-/** A package's own module file: its manifest's entry where that is source, else the module builder's `src/module`. */
+/** A build's output, which is the module compiled: its source is what the repository holds. */
+const BUILT_ENTRY = /^(?:\.\/)?(?:dist|build)\//;
+
+/** A declaration file, which describes a module and is none. */
+const DECLARATION_FILE = /\.d\.[cm]?ts$/;
+
+/** A file a package names that is its source: a script, not a declaration and not under its build. */
+const sourceEntry = (dir: string, entry: string): string | undefined =>
+  BUILT_ENTRY.test(entry) || DECLARATION_FILE.test(entry) ? undefined : scriptFileAt(join(dir, entry));
+
+/**
+ * The source a built file was made from, by its source map (P255): the map
+ * beside it (`<file>.map`), or the one its last line names, read for its
+ * first source that is a script of the package and not of an installed one.
+ */
+const mappedSourceOf = (dir: string, built: string): string | undefined => {
+  const file = join(dir, built);
+  const named = (() => {
+    try {
+      return /\/\/# sourceMappingURL=([^\s]+)\s*$/.exec(readFileSync(file, 'utf8'))?.[1];
+    } catch {
+      return undefined;
+    }
+  })();
+  for (const map of [`${file}.map`, ...(named === undefined || named.startsWith('data:') ? [] : [join(dirname(file), named)])]) {
+    let parsed: { sources?: unknown; sourceRoot?: unknown };
+    try {
+      parsed = JSON.parse(readFileSync(map, 'utf8')) as typeof parsed;
+    } catch {
+      continue;
+    }
+    const base = join(dirname(map), typeof parsed.sourceRoot === 'string' ? parsed.sourceRoot : '');
+    for (const source of Array.isArray(parsed.sources) ? parsed.sources : []) {
+      if (typeof source !== 'string' || source.includes('node_modules')) continue;
+      const path = resolve(base, source.replace(/^(?:webpack|file):\/+/, ''));
+      if (isWithinDir(path, dir) && isFile(path) && !DECLARATION_FILE.test(path)) return path;
+    }
+  }
+  return undefined;
+};
+
+/** The file of `src/` a built file sits in place of (P255): `dist/module.mjs` is `src/module.ts`. */
+const srcSiblingOf = (dir: string, built: string): string | undefined =>
+  scriptFileAt(join(dir, built.replace(BUILT_ENTRY, 'src/').replace(/(?:\.d)?\.[cm]?[jt]s$/, '')));
+
+/**
+ * A package's own module file: its manifest's entry where that is source;
+ * where it names only a build, the source that build was made from - a
+ * `source` condition or field, the build's source map, or the file of `src/`
+ * in its place (P255) - else the module builder's `src/module`.
+ */
 const packageModuleFile = (dir: string): string | undefined => {
   let manifest: Record<string, unknown> = {};
   try {
@@ -719,12 +1092,21 @@ const packageModuleFile = (dir: string): string | undefined => {
   }
   const exported = manifest.exports;
   const dot = typeof exported === 'string' ? exported : typeof exported === 'object' && exported !== null ? (exported as Record<string, unknown>)['.'] : undefined;
-  const conditions = typeof dot === 'string' ? [dot] : typeof dot === 'object' && dot !== null ? ['import', 'default', 'require'].map((key) => (dot as Record<string, unknown>)[key]) : [];
-  const entries = [...conditions, manifest.module, manifest.main].filter((entry): entry is string => typeof entry === 'string');
+  const conditions =
+    typeof dot === 'string'
+      ? [dot]
+      : typeof dot === 'object' && dot !== null
+        ? ['source', 'import', 'default', 'require', 'types'].map((key) => (dot as Record<string, unknown>)[key])
+        : [];
+  const entries = [...conditions, manifest.source, manifest.module, manifest.main, manifest.types, manifest.typings].filter(
+    (entry): entry is string => typeof entry === 'string',
+  );
   for (const entry of entries) {
-    // A build's output is the module compiled; its source is what the repository holds.
-    if (/^(?:\.\/)?(?:dist|build)\//.test(entry)) continue;
-    const found = scriptFileAt(join(dir, entry));
+    const found = sourceEntry(dir, entry);
+    if (found !== undefined) return found;
+  }
+  for (const entry of entries.filter((each) => BUILT_ENTRY.test(each))) {
+    const found = mappedSourceOf(dir, entry) ?? srcSiblingOf(dir, entry);
     if (found !== undefined) return found;
   }
   return scriptFileAt(join(dir, 'src', 'module')) ?? scriptFileAt(join(dir, 'index'));
@@ -769,23 +1151,34 @@ export const nuxtModulesOf = (repoDir: string, layers: readonly NuxtLayer[], bou
   if (application === undefined || app === undefined) return { modules, installed, rows };
   const seen = new Set<string>();
   const named = new Set<string>();
+  // What the configuration writes under a module's `configKey`, the
+  // application's laid over its layers' as the merged configuration has it (P255).
+  const config = (key: string): unknown => {
+    let merged: unknown;
+    for (const layer of [...layers].reverse()) {
+      const value = configValueAt(layer.layout.config?.value, key);
+      if (value instanceof NotLiteral) return UNKNOWN;
+      merged = defuOver(value, merged);
+    }
+    return merged;
+  };
 
-  const take = (absolute: string, name: string, layer: NuxtLayer, dir: string): void => {
+  const take = (absolute: string, name: string, layer: NuxtLayer, dir: string, inline: unknown = undefined): void => {
     const real = realOf(absolute);
     if (seen.has(real)) return;
     seen.add(real);
-    const reading = readModuleFile(root, absolute, app);
+    const reading = readModuleFile(root, absolute, app, { inline, config });
     modules.push({ file: fromRepo(root, absolute), name, layer, rank: layers.indexOf(layer), dir, additions: reading.additions });
     rows.push(...reading.rows);
     for (const install of reading.installs) {
-      if ('name' in install) byName(install.name, layer);
+      if ('name' in install) byName(install.name, layer, install.options);
       else {
         const found = scriptFileAt(install.path);
-        if (found !== undefined) take(found, fromRepo(root, found), layer, dirname(found));
+        if (found !== undefined) take(found, fromRepo(root, found), layer, dirname(found), install.options);
       }
     }
   };
-  const byName = (specifier: string, layer: NuxtLayer): void => {
+  const byName = (specifier: string, layer: NuxtLayer, inline: unknown = undefined): void => {
     if (named.has(specifier)) return;
     named.add(specifier);
     const placed = nuxtPackageDir(root, layer.dir, specifier);
@@ -801,13 +1194,13 @@ export const nuxtModulesOf = (repoDir: string, layers: readonly NuxtLayer[], bou
     }
     const file = packageModuleFile(placed.dir);
     if (file === undefined) rows.push(unreadModuleRow(layer, specifier, 'missing'));
-    else take(file, specifier, layer, placed.dir);
+    else take(file, specifier, layer, placed.dir, inline);
   };
-  const byPath = (path: string, text: string, layer: NuxtLayer): void => {
+  const byPath = (path: string, text: string, layer: NuxtLayer, inline: unknown): void => {
     const file = isDirectory(path) ? (packageModuleFile(path) ?? scriptFileAt(path)) : scriptFileAt(path);
     if (file === undefined) return void rows.push(unreadModuleRow(layer, text, 'missing'));
     if (!bounds.some((bound) => isWithinDir(file, bound))) return void rows.push(unreadModuleRow(layer, text, 'outside'));
-    take(file, text, layer, isDirectory(path) ? path : dirname(file));
+    take(file, text, layer, isDirectory(path) ? path : dirname(file), inline);
   };
 
   for (const layer of layers) {
@@ -816,12 +1209,13 @@ export const nuxtModulesOf = (repoDir: string, layers: readonly NuxtLayer[], bou
     for (const listed of Array.isArray(written) ? written : []) {
       // `['@nuxtjs/i18n', { ... }]`: the module and its options.
       const entry: unknown = Array.isArray(listed) ? listed[0] : listed;
-      if (entry instanceof ConfigPath) byPath(entry.path, fromRepo(root, entry.path), layer);
+      const inline: unknown = Array.isArray(listed) ? listed[1] : undefined;
+      if (entry instanceof ConfigPath) byPath(entry.path, fromRepo(root, entry.path), layer, inline);
       else if (typeof entry === 'string') {
         const alias = /^(~~|@@|~|@)\/(.*)$/.exec(entry);
-        if (alias !== null) byPath(join(alias[1] === '~~' || alias[1] === '@@' ? root : join(root, app.srcDir), alias[2] ?? ''), entry, layer);
-        else if (entry.startsWith('.') || isAbsolute(entry)) byPath(resolve(layer.dir, entry), entry, layer);
-        else byName(entry, layer);
+        if (alias !== null) byPath(join(alias[1] === '~~' || alias[1] === '@@' ? root : join(root, app.srcDir), alias[2] ?? ''), entry, layer, inline);
+        else if (entry.startsWith('.') || isAbsolute(entry)) byPath(resolve(layer.dir, entry), entry, layer, inline);
+        else byName(entry, layer, inline);
       } else if (entry instanceof NotLiteral) {
         rows.push(unreadModuleRow(layer, entry.text, /^\s*(?:defineNuxtModule\s*\(|\(|async\b|function\b)/.test(entry.text) ? 'inline' : 'dynamic'));
       } else if (typeof entry === 'object' && entry !== null) rows.push(unreadModuleRow(layer, 'an object', 'inline'));
@@ -845,12 +1239,15 @@ const additionsInWords = (module: NuxtModule): string => {
     ...added.handlers.map((handler) => (handler.middleware ? `${handler.handler} in front of every route` : `${handler.method} ${handler.route} served by ${handler.handler}`)),
     ...added.pages.map((page) => `the page ${page.path} (${page.file})`),
     ...added.aliases.map((alias) => `${alias.key} -> ${alias.target}`),
-    ...added.componentDirs.map((dir) => `the components of ${dir}/ by name (not drawn)`),
-    ...added.routeMiddleware.map((name) => `the route middleware ${name} (not drawn)`),
+    ...added.componentDirs.map((dir) => `the components of ${dir.dir}/ by name${dir.prefix === undefined ? '' : `, prefixed ${dir.prefix}`}`),
+    ...added.components.map((component) => `the component ${component.name} (${component.file})`),
+    ...added.routeMiddleware.map((middleware) => `the route middleware ${middleware.name}${middleware.global ? ', in front of every page' : ''} (${middleware.file})`),
+    ...added.serverScanDirs.map((dir) => `the server directory ${dir}/`),
   ];
   const also = added.notRead.length === 0 ? '' : `; it also calls ${inWords(added.notRead)}, which add nothing a reader draws`;
   const when = added.conditional.length === 0 ? '' : `; ${inWords(added.conditional)} ${added.conditional.length === 1 ? 'is' : 'are'} written under a condition and read as made`;
-  return `${module.file} adds ${parts.length === 0 ? 'nothing this reader reads' : inWords(parts)}${also}${when}`;
+  const not = added.skipped.length === 0 ? '' : `; ${inWords(added.skipped)} ${added.skipped.length === 1 ? 'is' : 'are'} not made, for the options the configuration hands it`;
+  return `${module.file} adds ${parts.length === 0 ? 'nothing this reader reads' : inWords(parts)}${also}${when}${not}`;
 };
 
 /** The note that says which modules of the repository were read, and what each adds. */
@@ -861,7 +1258,7 @@ export const modulesReadRow = (app: NuxtLayout, modules: readonly NuxtModule[]):
   level: 'info',
   symbol: modules[0]?.file ?? '',
   message: `${modules.length} Nuxt module${modules.length === 1 ? ' of the repository is' : 's of the repository are'} read for what ${modules.length === 1 ? 'it adds' : 'they add'} when the application builds: ${modules.map(additionsInWords).join('; ')}`,
-  hint: "Nothing to do. An addition whose argument is code is a row of its own; components registered by name and route middleware are said here, not drawn.",
+  hint: "Nothing to do. An addition whose argument is code is a row of its own, and one under a condition its options decide is read or left out as they say.",
   adapter: NUXT_ADAPTER,
   meta: { cause: 'framework-module-read', modules: modules.map((module) => module.file) },
 });

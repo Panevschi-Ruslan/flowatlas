@@ -8,6 +8,33 @@ only one of them moved.
 
 ### Added
 
+- **Child components, layouts and route middleware by name, and the last of
+  what a Nuxt module adds (P255).** A tag in a Vue or Svelte template, or in
+  JSX, that names a component of the repository is a `calls` edge from the
+  component that writes it to the one it names (`meta.renders`), so a screen's
+  flow reaches what its children request: by an import (`<script setup>`, the
+  Options API's `components`), by `app.component('Name', X)` for every
+  template, in kebab-case as Vue resolves it, through `<component :is>`,
+  `memo`, `forwardRef` and `lazy`, and in Nuxt by the path of a file of every
+  part's components directories - `prefix`, `pathPrefix: false`, `Lazy`,
+  `.client`/`.server`, the higher layer's where two give a name - and of what
+  a module adds (`addComponentsDir`, `addComponent`). A PascalCase tag that
+  names nothing is `component-unresolved`. A Nuxt page goes through its route
+  middleware - the global ones in Nuxt's order, then those
+  `definePageMeta({ middleware })` names, a module's `addRouteMiddleware` among
+  them - and its layout (`definePageMeta({ layout })`, `default`,
+  `<NuxtLayout name>`), each a `calls` edge with its `meta.order`; a name no
+  file gives is `route-middleware-unresolved` or `layout-unresolved`. A module's
+  `addServerScanDir` is read as `server/` (routes, middleware, `utils/`); a
+  condition of a module's options is decided where its `modules` entry, its
+  `configKey` setting and its `defaults` are literals, and a call it rules out
+  is not read and is said; a workspace module whose manifest names only
+  `dist/` is read from its source map, a `source` condition or the file of
+  `src/` in its place. The coverage harness counts a layer `extends` writes as
+  `fileURLToPath(new URL(...))` or `resolve(__dirname, ...)`, and a folded row
+  keeps every other file its sites are in (`meta.causes[].files`), which the
+  read gate reads. New fixtures `nuxt-components` and `vue-components`.
+
 - **The router's check on a field no resolver of its own answers, and an
   entity interface nobody can type (P252).** A field the router's
   `@authenticated`, `@requiresScopes` or `@policy` guards and no resolver of

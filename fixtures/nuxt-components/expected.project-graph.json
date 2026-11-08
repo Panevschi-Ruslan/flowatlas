@@ -1,0 +1,2065 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T12:56:18.090Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:ALL:/api/search",
+      "type": "entry",
+      "label": "ALL /api/search",
+      "repo": "shop",
+      "file": "../catalog-kit/src/kit.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/search",
+        "rawPath": "/api/search",
+        "adapter": "nitro-routes",
+        "registration": "module/addServerHandler"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/alerts",
+      "type": "entry",
+      "label": "GET /api/alerts",
+      "repo": "shop",
+      "file": "server/api/alerts.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/alerts",
+        "rawPath": "/api/alerts",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/brands",
+      "type": "entry",
+      "label": "GET /api/brands",
+      "repo": "shop",
+      "file": "../catalog-kit/src/runtime/server/api/brands.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/brands",
+        "rawPath": "/api/brands",
+        "adapter": "nitro-routes",
+        "registration": "module/addServerScanDir"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/cart",
+      "type": "entry",
+      "label": "GET /api/cart",
+      "repo": "shop",
+      "file": "server/api/cart.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/cart",
+        "rawPath": "/api/cart",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/menu",
+      "type": "entry",
+      "label": "GET /api/menu",
+      "repo": "shop",
+      "file": "server/api/menu.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/menu",
+        "rawPath": "/api/menu",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/orders/total",
+      "type": "entry",
+      "label": "GET /api/orders/total",
+      "repo": "shop",
+      "file": "server/api/orders/total.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders/total",
+        "rawPath": "/api/orders/total",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/products",
+      "type": "entry",
+      "label": "GET /api/products",
+      "repo": "shop",
+      "file": "server/api/products.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products",
+        "rawPath": "/api/products",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/session",
+      "type": "entry",
+      "label": "GET /api/session",
+      "repo": "shop",
+      "file": "server/api/session.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/session",
+        "rawPath": "/api/session",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/ratings",
+      "type": "entry",
+      "label": "POST /api/ratings",
+      "repo": "shop",
+      "file": "../base-layer/server/api/ratings.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/ratings",
+        "rawPath": "/api/ratings",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/visits",
+      "type": "entry",
+      "label": "POST /api/visits",
+      "repo": "shop",
+      "file": "server/api/visits.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/visits",
+        "rawPath": "/api/visits",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 40,
+          "filesRead": 40,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 2,
+          "components": 19,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#../base-layer/components/CartBadge.vue:CartBadge",
+      "type": "ui_component",
+      "label": "CartBadge",
+      "repo": "shop",
+      "file": "../base-layer/components/CartBadge.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../base-layer/components/Rating.vue:Rating",
+      "type": "ui_component",
+      "label": "Rating",
+      "repo": "shop",
+      "file": "../base-layer/components/Rating.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../base-layer/components/Rating.vue:rate",
+      "type": "function",
+      "label": "rate",
+      "repo": "shop",
+      "file": "../base-layer/components/Rating.vue",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../base-layer/layouts/admin.vue:admin",
+      "type": "ui_component",
+      "label": "admin",
+      "repo": "shop",
+      "file": "../base-layer/layouts/admin.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../base-layer/middleware/locale.global.ts:locale-global",
+      "type": "function",
+      "label": "locale-global",
+      "repo": "shop",
+      "file": "../base-layer/middleware/locale.global.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../base-layer/server/api/ratings.post.ts:POST /api/ratings@1",
+      "type": "function",
+      "label": "POST /api/ratings@1",
+      "repo": "shop",
+      "file": "../base-layer/server/api/ratings.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{ok:true}"
+        }
+      }
+    },
+    {
+      "id": "shop#../catalog-kit/src/runtime/components/SearchBox.vue:SearchBox",
+      "type": "ui_component",
+      "label": "SearchBox",
+      "repo": "shop",
+      "file": "../catalog-kit/src/runtime/components/SearchBox.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../catalog-kit/src/runtime/guard.ts:catalog-guard",
+      "type": "function",
+      "label": "catalog-guard",
+      "repo": "shop",
+      "file": "../catalog-kit/src/runtime/guard.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../catalog-kit/src/runtime/search.ts:ALL /api/search@1",
+      "type": "function",
+      "label": "ALL /api/search@1",
+      "repo": "shop",
+      "file": "../catalog-kit/src/runtime/search.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{results:never[]}"
+        }
+      }
+    },
+    {
+      "id": "shop#../catalog-kit/src/runtime/server/api/brands.get.ts:GET /api/brands@1",
+      "type": "function",
+      "label": "GET /api/brands@1",
+      "repo": "shop",
+      "file": "../catalog-kit/src/runtime/server/api/brands.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{name:string}[]"
+        }
+      }
+    },
+    {
+      "id": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "middleware",
+      "label": "log",
+      "repo": "shop",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "kind": "file"
+    },
+    {
+      "id": "shop#../catalog-kit/src/runtime/server/utils/brand.ts:brandName",
+      "type": "function",
+      "label": "brandName",
+      "repo": "shop",
+      "file": "../catalog-kit/src/runtime/server/utils/brand.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop#app/app.vue:app",
+      "type": "ui_component",
+      "label": "app",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/components/CartBadge.vue:CartBadge",
+      "type": "ui_component",
+      "label": "CartBadge",
+      "repo": "shop",
+      "file": "app/components/CartBadge.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/components/CartBadge.vue:open",
+      "type": "function",
+      "label": "open",
+      "repo": "shop",
+      "file": "app/components/CartBadge.vue",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/components/Map.client.vue:components/Map.client",
+      "type": "ui_component",
+      "label": "components/Map.client",
+      "repo": "shop",
+      "file": "app/components/Map.client.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/components/Map.server.vue:components/Map.server",
+      "type": "ui_component",
+      "label": "components/Map.server",
+      "repo": "shop",
+      "file": "app/components/Map.server.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/components/ProductList.vue:ProductList",
+      "type": "ui_component",
+      "label": "ProductList",
+      "repo": "shop",
+      "file": "app/components/ProductList.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/components/SiteHeader.vue:SiteHeader",
+      "type": "ui_component",
+      "label": "SiteHeader",
+      "repo": "shop",
+      "file": "app/components/SiteHeader.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/components/base/Card.vue:Card",
+      "type": "ui_component",
+      "label": "Card",
+      "repo": "shop",
+      "file": "app/components/base/Card.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/components/flat/orders/OrderTotal.vue:OrderTotal",
+      "type": "ui_component",
+      "label": "OrderTotal",
+      "repo": "shop",
+      "file": "app/components/flat/orders/OrderTotal.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/components/ui/Button.vue:Button",
+      "type": "ui_component",
+      "label": "Button",
+      "repo": "shop",
+      "file": "app/components/ui/Button.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/layouts/admin.vue:admin",
+      "type": "ui_component",
+      "label": "admin",
+      "repo": "shop",
+      "file": "app/layouts/admin.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/layouts/default.vue:default",
+      "type": "ui_component",
+      "label": "default",
+      "repo": "shop",
+      "file": "app/layouts/default.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/middleware/auth.ts:auth",
+      "type": "function",
+      "label": "auth",
+      "repo": "shop",
+      "file": "app/middleware/auth.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#app/middleware/track.global.ts:track-global",
+      "type": "function",
+      "label": "track-global",
+      "repo": "shop",
+      "file": "app/middleware/track.global.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/admin.vue:admin",
+      "type": "ui_component",
+      "label": "admin",
+      "repo": "shop",
+      "file": "app/pages/admin.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/admin"
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:pages/index",
+      "type": "ui_component",
+      "label": "pages/index",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "shop#app/pages/plain.vue:plain",
+      "type": "ui_component",
+      "label": "plain",
+      "repo": "shop",
+      "file": "app/pages/plain.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/plain"
+      }
+    },
+    {
+      "id": "shop#app/pages/reports.vue:reports",
+      "type": "ui_component",
+      "label": "reports",
+      "repo": "shop",
+      "file": "app/pages/reports.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/reports"
+      }
+    },
+    {
+      "id": "shop#server/api/alerts.get.ts:GET /api/alerts@1",
+      "type": "function",
+      "label": "GET /api/alerts@1",
+      "repo": "shop",
+      "file": "server/api/alerts.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{alerts:never[]}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/cart.get.ts:GET /api/cart@1",
+      "type": "function",
+      "label": "GET /api/cart@1",
+      "repo": "shop",
+      "file": "server/api/cart.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{cart:never[]}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/menu.get.ts:GET /api/menu@1",
+      "type": "function",
+      "label": "GET /api/menu@1",
+      "repo": "shop",
+      "file": "server/api/menu.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{menu:never[]}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/orders/total.get.ts:GET /api/orders/total@1",
+      "type": "function",
+      "label": "GET /api/orders/total@1",
+      "repo": "shop",
+      "file": "server/api/orders/total.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{total:0}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/products.get.ts:GET /api/products@1",
+      "type": "function",
+      "label": "GET /api/products@1",
+      "repo": "shop",
+      "file": "server/api/products.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{products:never[]}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/session.get.ts:GET /api/session@1",
+      "type": "function",
+      "label": "GET /api/session@1",
+      "repo": "shop",
+      "file": "server/api/session.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{session:never[]}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/visits.post.ts:POST /api/visits@1",
+      "type": "function",
+      "label": "POST /api/visits@1",
+      "repo": "shop",
+      "file": "server/api/visits.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{visits:never[]}"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop#../base-layer/components/Rating.vue:2:9",
+      "type": "ui_action",
+      "label": "@click=\"rate\"",
+      "repo": "shop",
+      "file": "../base-layer/components/Rating.vue",
+      "line": 2,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "rate",
+        "component": "shop#../base-layer/components/Rating.vue:Rating",
+        "template": "../base-layer/components/Rating.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#../catalog-kit/src/runtime/components/SearchBox.vue:2:11",
+      "type": "ui_action",
+      "label": "@click=\"search\"",
+      "repo": "shop",
+      "file": "../catalog-kit/src/runtime/components/SearchBox.vue",
+      "line": 2,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "search",
+        "component": "shop#../catalog-kit/src/runtime/components/SearchBox.vue:SearchBox",
+        "template": "../catalog-kit/src/runtime/components/SearchBox.vue",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/components/CartBadge.vue:2:9",
+      "type": "ui_action",
+      "label": "@click=\"open\"",
+      "repo": "shop",
+      "file": "app/components/CartBadge.vue",
+      "line": 2,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "open",
+        "component": "shop#app/components/CartBadge.vue:CartBadge",
+        "template": "app/components/CartBadge.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#../base-layer/components/Rating.vue:7:9",
+      "type": "ui_api_call",
+      "label": "POST /api/ratings",
+      "repo": "shop",
+      "file": "../base-layer/components/Rating.vue",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/ratings",
+        "path": "/api/ratings",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#../catalog-kit/src/runtime/components/SearchBox.vue:7:9",
+      "type": "ui_api_call",
+      "label": "GET /api/search",
+      "repo": "shop",
+      "file": "../catalog-kit/src/runtime/components/SearchBox.vue",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/search",
+        "path": "/api/search",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#../catalog-kit/src/runtime/guard.ts:2:9",
+      "type": "ui_api_call",
+      "label": "GET /api/brands",
+      "repo": "shop",
+      "file": "../catalog-kit/src/runtime/guard.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/brands",
+        "path": "/api/brands",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/components/CartBadge.vue:7:9",
+      "type": "ui_api_call",
+      "label": "GET /api/cart",
+      "repo": "shop",
+      "file": "app/components/CartBadge.vue",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/cart",
+        "path": "/api/cart",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/components/ProductList.vue:8:34",
+      "type": "ui_api_call",
+      "label": "GET /api/products",
+      "repo": "shop",
+      "file": "app/components/ProductList.vue",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/products",
+        "path": "/api/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/components/SiteHeader.vue:6:30",
+      "type": "ui_api_call",
+      "label": "GET /api/menu",
+      "repo": "shop",
+      "file": "app/components/SiteHeader.vue",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/menu",
+        "path": "/api/menu",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/components/flat/orders/OrderTotal.vue:6:31",
+      "type": "ui_api_call",
+      "label": "GET /api/orders/total",
+      "repo": "shop",
+      "file": "app/components/flat/orders/OrderTotal.vue",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders/total",
+        "path": "/api/orders/total",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/layouts/admin.vue:8:32",
+      "type": "ui_api_call",
+      "label": "GET /api/alerts",
+      "repo": "shop",
+      "file": "app/layouts/admin.vue",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/alerts",
+        "path": "/api/alerts",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/middleware/auth.ts:2:25",
+      "type": "ui_api_call",
+      "label": "GET /api/session",
+      "repo": "shop",
+      "file": "app/middleware/auth.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/session",
+        "path": "/api/session",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/middleware/track.global.ts:2:9",
+      "type": "ui_api_call",
+      "label": "POST /api/visits",
+      "repo": "shop",
+      "file": "app/middleware/track.global.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/visits",
+        "path": "/api/visits",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{path:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "path"
+        ],
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:ALL:/api/search",
+      "to": "shop#../catalog-kit/src/runtime/search.ts:ALL /api/search@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{results:never[]}",
+      "file": "../catalog-kit/src/runtime/search.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:ALL:/api/search",
+      "to": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/alerts",
+      "to": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/alerts",
+      "to": "shop#server/api/alerts.get.ts:GET /api/alerts@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{alerts:never[]}",
+      "file": "server/api/alerts.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/brands",
+      "to": "shop#../catalog-kit/src/runtime/server/api/brands.get.ts:GET /api/brands@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{name:string}[]",
+      "file": "../catalog-kit/src/runtime/server/api/brands.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/brands",
+      "to": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/cart",
+      "to": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/cart",
+      "to": "shop#server/api/cart.get.ts:GET /api/cart@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{cart:never[]}",
+      "file": "server/api/cart.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/menu",
+      "to": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/menu",
+      "to": "shop#server/api/menu.get.ts:GET /api/menu@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{menu:never[]}",
+      "file": "server/api/menu.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders/total",
+      "to": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders/total",
+      "to": "shop#server/api/orders/total.get.ts:GET /api/orders/total@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{total:0}",
+      "file": "server/api/orders/total.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/products",
+      "to": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/products",
+      "to": "shop#server/api/products.get.ts:GET /api/products@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{products:never[]}",
+      "file": "server/api/products.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/session",
+      "to": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/session",
+      "to": "shop#server/api/session.get.ts:GET /api/session@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{session:never[]}",
+      "file": "server/api/session.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/ratings",
+      "to": "shop#../base-layer/server/api/ratings.post.ts:POST /api/ratings@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:true}",
+      "file": "../base-layer/server/api/ratings.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/ratings",
+      "to": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/visits",
+      "to": "shop#../catalog-kit/src/runtime/server/middleware/log.ts:log",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/server/middleware/log.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "server/middleware"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/visits",
+      "to": "shop#server/api/visits.post.ts:POST /api/visits@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{visits:never[]}",
+      "file": "server/api/visits.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "shop#../base-layer/components/Rating.vue:Rating",
+      "to": "ui_api_call:shop#../base-layer/components/Rating.vue:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../base-layer/components/Rating.vue",
+      "line": 7
+    },
+    {
+      "from": "shop#../base-layer/components/Rating.vue:rate",
+      "to": "ui_api_call:shop#../base-layer/components/Rating.vue:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../base-layer/components/Rating.vue",
+      "line": 7
+    },
+    {
+      "from": "shop#../catalog-kit/src/runtime/components/SearchBox.vue:SearchBox",
+      "to": "ui_api_call:shop#../catalog-kit/src/runtime/components/SearchBox.vue:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/components/SearchBox.vue",
+      "line": 7
+    },
+    {
+      "from": "shop#../catalog-kit/src/runtime/guard.ts:catalog-guard",
+      "to": "ui_api_call:shop#../catalog-kit/src/runtime/guard.ts:2:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/guard.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#../catalog-kit/src/runtime/server/api/brands.get.ts:GET /api/brands@1",
+      "to": "shop#../catalog-kit/src/runtime/server/utils/brand.ts:brandName",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "../catalog-kit/src/runtime/server/api/brands.get.ts",
+      "line": 1
+    },
+    {
+      "from": "shop#app/components/CartBadge.vue:CartBadge",
+      "to": "ui_api_call:shop#app/components/CartBadge.vue:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/components/CartBadge.vue",
+      "line": 7
+    },
+    {
+      "from": "shop#app/components/CartBadge.vue:open",
+      "to": "ui_api_call:shop#app/components/CartBadge.vue:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/components/CartBadge.vue",
+      "line": 7
+    },
+    {
+      "from": "shop#app/components/ProductList.vue:ProductList",
+      "to": "ui_api_call:shop#app/components/ProductList.vue:8:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/components/ProductList.vue",
+      "line": 8
+    },
+    {
+      "from": "shop#app/components/SiteHeader.vue:SiteHeader",
+      "to": "ui_api_call:shop#app/components/SiteHeader.vue:6:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/components/SiteHeader.vue",
+      "line": 6
+    },
+    {
+      "from": "shop#app/components/flat/orders/OrderTotal.vue:OrderTotal",
+      "to": "ui_api_call:shop#app/components/flat/orders/OrderTotal.vue:6:31",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/components/flat/orders/OrderTotal.vue",
+      "line": 6
+    },
+    {
+      "from": "shop#app/layouts/admin.vue:admin",
+      "to": "ui_api_call:shop#app/layouts/admin.vue:8:32",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/layouts/admin.vue",
+      "line": 8
+    },
+    {
+      "from": "shop#app/layouts/default.vue:default",
+      "to": "shop#app/components/SiteHeader.vue:SiteHeader",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/layouts/default.vue",
+      "line": 3,
+      "meta": {
+        "renders": "SiteHeader"
+      }
+    },
+    {
+      "from": "shop#app/middleware/auth.ts:auth",
+      "to": "ui_api_call:shop#app/middleware/auth.ts:2:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/middleware/auth.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#app/middleware/track.global.ts:track-global",
+      "to": "ui_api_call:shop#app/middleware/track.global.ts:2:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/middleware/track.global.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#app/pages/admin.vue:admin",
+      "to": "shop#../base-layer/middleware/locale.global.ts:locale-global",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/admin.vue",
+      "line": 6,
+      "meta": {
+        "middleware": "locale-global",
+        "order": 0
+      }
+    },
+    {
+      "from": "shop#app/pages/admin.vue:admin",
+      "to": "shop#../catalog-kit/src/runtime/guard.ts:catalog-guard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/admin.vue",
+      "line": 6,
+      "meta": {
+        "middleware": "catalog-guard",
+        "order": 3
+      }
+    },
+    {
+      "from": "shop#app/pages/admin.vue:admin",
+      "to": "shop#app/layouts/admin.vue:admin",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/admin.vue",
+      "line": 6,
+      "meta": {
+        "layout": "admin",
+        "order": 4
+      }
+    },
+    {
+      "from": "shop#app/pages/admin.vue:admin",
+      "to": "shop#app/middleware/auth.ts:auth",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "app/pages/admin.vue",
+      "line": 6,
+      "meta": {
+        "middleware": "auth",
+        "order": 2
+      }
+    },
+    {
+      "from": "shop#app/pages/admin.vue:admin",
+      "to": "shop#app/middleware/track.global.ts:track-global",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "app/pages/admin.vue",
+      "line": 6,
+      "meta": {
+        "middleware": "track-global",
+        "order": 1
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#../base-layer/components/Rating.vue:Rating",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 8,
+      "meta": {
+        "renders": "Rating"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#../base-layer/middleware/locale.global.ts:locale-global",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "middleware": "locale-global",
+        "order": 0
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#../catalog-kit/src/runtime/components/SearchBox.vue:SearchBox",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 10,
+      "meta": {
+        "renders": "SearchBox"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/components/CartBadge.vue:CartBadge",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 3,
+      "meta": {
+        "renders": "CartBadge"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/components/Map.client.vue:components/Map.client",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 9,
+      "meta": {
+        "renders": "Map"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/components/Map.server.vue:components/Map.server",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 9,
+      "meta": {
+        "renders": "Map"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/components/ProductList.vue:ProductList",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 4,
+      "meta": {
+        "renders": "LazyProductList",
+        "lazy": true
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/components/base/Card.vue:Card",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 7,
+      "meta": {
+        "renders": "base-card"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/components/flat/orders/OrderTotal.vue:OrderTotal",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 6,
+      "meta": {
+        "renders": "order-total"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/components/ui/Button.vue:Button",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 5,
+      "meta": {
+        "renders": "UiButton"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/layouts/default.vue:default",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "layout": "default",
+        "order": 2
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/middleware/track.global.ts:track-global",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "meta": {
+        "middleware": "track-global",
+        "order": 1
+      }
+    },
+    {
+      "from": "shop#app/pages/plain.vue:plain",
+      "to": "shop#../base-layer/middleware/locale.global.ts:locale-global",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/plain.vue",
+      "line": 6,
+      "meta": {
+        "middleware": "locale-global",
+        "order": 0
+      }
+    },
+    {
+      "from": "shop#app/pages/plain.vue:plain",
+      "to": "shop#app/middleware/track.global.ts:track-global",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "app/pages/plain.vue",
+      "line": 6,
+      "meta": {
+        "middleware": "track-global",
+        "order": 1
+      }
+    },
+    {
+      "from": "shop#app/pages/reports.vue:reports",
+      "to": "shop#../base-layer/middleware/locale.global.ts:locale-global",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/reports.vue",
+      "line": 6,
+      "meta": {
+        "middleware": "locale-global",
+        "order": 0
+      }
+    },
+    {
+      "from": "shop#app/pages/reports.vue:reports",
+      "to": "shop#app/middleware/track.global.ts:track-global",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "void",
+      "file": "app/pages/reports.vue",
+      "line": 6,
+      "meta": {
+        "middleware": "track-global",
+        "order": 1
+      }
+    },
+    {
+      "from": "ui_action:shop#../base-layer/components/Rating.vue:2:9",
+      "to": "shop#../base-layer/components/Rating.vue:rate",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../base-layer/components/Rating.vue",
+      "line": 2
+    },
+    {
+      "from": "ui_action:shop#../catalog-kit/src/runtime/components/SearchBox.vue:2:11",
+      "to": "shop#../catalog-kit/src/runtime/components/SearchBox.vue:SearchBox",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/components/SearchBox.vue",
+      "line": 2
+    },
+    {
+      "from": "ui_action:shop#app/components/CartBadge.vue:2:9",
+      "to": "shop#app/components/CartBadge.vue:open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/components/CartBadge.vue",
+      "line": 2
+    },
+    {
+      "from": "ui_api_call:shop#../base-layer/components/Rating.vue:7:9",
+      "to": "entry:shop:http:POST:/api/ratings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "../base-layer/components/Rating.vue",
+      "line": 7,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#../catalog-kit/src/runtime/components/SearchBox.vue:7:9",
+      "to": "entry:shop:http:ALL:/api/search",
+      "type": "hits",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/components/SearchBox.vue",
+      "line": 7,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#../catalog-kit/src/runtime/guard.ts:2:9",
+      "to": "entry:shop:http:GET:/api/brands",
+      "type": "hits",
+      "confidence": "static",
+      "file": "../catalog-kit/src/runtime/guard.ts",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/components/CartBadge.vue:7:9",
+      "to": "entry:shop:http:GET:/api/cart",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/components/CartBadge.vue",
+      "line": 7,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/components/ProductList.vue:8:34",
+      "to": "entry:shop:http:GET:/api/products",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/components/ProductList.vue",
+      "line": 8,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/components/SiteHeader.vue:6:30",
+      "to": "entry:shop:http:GET:/api/menu",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/components/SiteHeader.vue",
+      "line": 6,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/components/flat/orders/OrderTotal.vue:6:31",
+      "to": "entry:shop:http:GET:/api/orders/total",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/components/flat/orders/OrderTotal.vue",
+      "line": 6,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/layouts/admin.vue:8:32",
+      "to": "entry:shop:http:GET:/api/alerts",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/layouts/admin.vue",
+      "line": 8,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/middleware/auth.ts:2:25",
+      "to": "entry:shop:http:GET:/api/session",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/middleware/auth.ts",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/middleware/track.global.ts:2:9",
+      "to": "entry:shop:http:POST:/api/visits",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/middleware/track.global.ts",
+      "line": 2,
+      "params": [
+        "{path:any}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "../base-layer/components/CartBadge.vue",
+      "line": 1,
+      "reason": "framework-layer-overridden",
+      "level": "info",
+      "sites": 2,
+      "message": "../base-layer/components/CartBadge.vue would be named <CartBadge>, and Nuxt names app/components/CartBadge.vue so instead: the application ranks above ../base-layer among its layers",
+      "hint": "Nothing to do. Rename or remove the file of the lower layer to have it used.",
+      "symbol": "<CartBadge>",
+      "adapter": "nitro-routes",
+      "meta": {
+        "key": "<CartBadge>",
+        "chosen": "app/components/CartBadge.vue",
+        "layer": "../base-layer",
+        "causes": [
+          {
+            "cause": "framework-layer-overridden",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "../base-layer/components/CartBadge.vue",
+                "line": 1,
+                "symbol": "<CartBadge>"
+              },
+              {
+                "file": "../base-layer/layouts/admin.vue",
+                "line": 1,
+                "symbol": "the layout admin"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "app/middleware/auth.ts",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/admin.vue",
+      "line": 6,
+      "reason": "route-middleware-unresolved",
+      "level": "action",
+      "message": "app/pages/admin.vue names the route middleware audit, and no file of a middleware directory of the application, and no module, gives one of that name",
+      "hint": "Correct the name, or add the middleware to `middleware/`.",
+      "symbol": "admin middleware audit",
+      "meta": {
+        "cause": "route-middleware-unresolved",
+        "why": "missing",
+        "middleware": "audit"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/index.vue",
+      "line": 14,
+      "reason": "component-unresolved",
+      "level": "info",
+      "message": "<Mystery> in app/pages/index.vue names no component the file imports or registers, and none the framework registers by name, so what it renders is not joined",
+      "hint": "Import the component in the script, register it, or put it where the framework registers components by name.",
+      "symbol": "pages/index <Mystery>",
+      "meta": {
+        "cause": "component-unresolved",
+        "why": "missing",
+        "tag": "Mystery"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/reports.vue",
+      "line": 6,
+      "reason": "layout-unresolved",
+      "level": "action",
+      "message": "app/pages/reports.vue is shown in the layout wide, and no file of a layouts directory of the application is named so",
+      "hint": "Correct the name, or add the layout to `layouts/`.",
+      "symbol": "reports layout wide",
+      "meta": {
+        "cause": "layout-unresolved",
+        "why": "missing",
+        "layout": "wide"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "modules/reviews/index.ts",
+      "line": 10,
+      "reason": "framework-module-skipped",
+      "level": "info",
+      "message": "addServerHandler in modules/reviews/index.ts is not made when the application builds: it is written under `!options.enabled`, which the options the configuration hands the module rule out",
+      "hint": "Nothing to do. Change the option in the configuration to have the module add it.",
+      "symbol": "addServerHandler",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-module-skipped",
+        "module": "modules/reviews/index.ts",
+        "call": "addServerHandler"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-layer-read",
+      "level": "info",
+      "message": "1 Nuxt layer is read as part of the application, ranked after it as Nuxt ranks them: ../base-layer",
+      "hint": "Nothing to do. A page, route or name the application and a layer both give is the higher one's, said as a row of its own.",
+      "symbol": "../base-layer",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-layer-read",
+        "layers": [
+          "../base-layer"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-module-installed",
+      "level": "info",
+      "message": "1 Nuxt module is a package, run when the application builds and not read as its code: @nuxt/image adds the `<NuxtImg>` and `<NuxtPicture>` components of its own package, none of it the repository's code",
+      "hint": "Nothing to do for the ones whose additions are their own package's. For another, an alias, name or route it adds can be named in the tsconfig's paths or described.",
+      "symbol": "@nuxt/image",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-module-installed",
+        "modules": [
+          "@nuxt/image"
+        ],
+        "unknown": []
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-module-read",
+      "level": "info",
+      "message": "2 Nuxt modules of the repository are read for what they add when the application builds: modules/reviews/index.ts adds nothing this reader reads; addServerHandler (line 10, under `!options.enabled`) is not made, for the options the configuration hands it; ../catalog-kit/src/kit.ts adds ALL /api/search served by ../catalog-kit/src/runtime/search.ts, the components of ../catalog-kit/src/runtime/components/ by name, the route middleware catalog-guard (../catalog-kit/src/runtime/guard.ts) and the server directory ../catalog-kit/src/runtime/server/",
+      "hint": "Nothing to do. An addition whose argument is code is a row of its own, and one under a condition its options decide is read or left out as they say.",
+      "symbol": "modules/reviews/index.ts",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-module-read",
+        "modules": [
+          "modules/reviews/index.ts",
+          "../catalog-kit/src/kit.ts"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "implicit-imports-from-convention",
+      "level": "info",
+      "message": "1 name used with no import in 1 file were read as Nuxt imports them: the server's from ../catalog-kit/src/runtime/server/utils/",
+      "hint": "Nothing to do. These are the imports Nuxt adds when it builds; a name it gives two ways is a row of its own.",
+      "symbol": "Nuxt",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "implicit-imports-from-convention",
+        "names": [
+          "brandName"
+        ],
+        "files": 1
+      },
+      "service": "shop"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> app, @ -> app, ~~ -> ., @@ -> ., #shared -> shared, #app -> node_modules/nuxt/dist/app resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "app"
+          ],
+          "~/*": [
+            "app/*"
+          ],
+          "@": [
+            "app"
+          ],
+          "@/*": [
+            "app/*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "shared"
+          ],
+          "#shared/*": [
+            "shared/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ]
+        }
+      },
+      "service": "shop"
+    }
+  ]
+}

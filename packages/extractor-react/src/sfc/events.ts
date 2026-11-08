@@ -66,9 +66,9 @@ export const handlersOf = (source: string): TemplateHandler[] => {
   return found;
 };
 
-/** Every tag in a stretch of markup, with its attributes; text in braces is passed over, so `{a < b}` is not a tag. */
+/** Every tag in a stretch of markup, with its name, where it starts and its attributes; text in braces is passed over, so `{a < b}` is not a tag. */
 const tagsIn = (text: string, start: number, end: number, braces: 'single' | 'double') => {
-  const tags: Array<NonNullable<ReturnType<typeof readTag>>> = [];
+  const tags: Array<NonNullable<ReturnType<typeof readTag>> & { name: string; at: number }> = [];
   let at = start;
   while (at < end) {
     const char = text[at];
@@ -93,10 +93,44 @@ const tagsIn = (text: string, start: number, end: number, braces: 'single' | 'do
     }
     const tag = readTag(text, at + name[0].length);
     if (tag === undefined || tag.end > end) break;
-    tags.push(tag);
+    tags.push({ ...tag, name: name[0].slice(1), at });
     at = tag.end + 1;
   }
   return tags;
+};
+
+/** One element of a component's markup (P255): its name as written, where it is, and its attributes as written. */
+export interface MarkupTag {
+  readonly name: string;
+  readonly line: number;
+  readonly column: number;
+  readonly attributes: ReadonlyMap<string, string | true>;
+}
+
+const markupTag = (text: string, tag: ReturnType<typeof tagsIn>[number]): MarkupTag => {
+  const { line, column } = positionAt(text, tag.at);
+  return { name: tag.name, line, column, attributes: new Map([...tag.attributes].map(([key, attribute]) => [key, attribute.value] as const)) };
+};
+
+/** The elements of a Vue component's `<template>`, the template itself left out. */
+export const vueTemplateTags = (text: string): MarkupTag[] => {
+  const template = topLevelBlocks(text).find((block) => block.name === 'template');
+  return template === undefined ? [] : tagsIn(text, template.contentStart, template.contentEnd, 'double').map((tag) => markupTag(text, tag));
+};
+
+/** The elements of a Svelte component's markup: everything outside its scripts and styles. */
+export const svelteMarkupTags = (text: string): MarkupTag[] => markupStretches(text).flatMap(([start, end]) => tagsIn(text, start, end, 'single').map((tag) => markupTag(text, tag)));
+
+/** A Svelte file's markup, as the stretches between its scripts and styles. */
+const markupStretches = (text: string): Array<readonly [number, number]> => {
+  const stretches: Array<readonly [number, number]> = [];
+  let from = 0;
+  for (const block of scriptAndStyleBlocks(text)) {
+    stretches.push([from, block.start]);
+    from = block.end;
+  }
+  stretches.push([from, text.length]);
+  return stretches;
 };
 
 const event = (text: string, attribute: string, name: string, source: string, at: number): TemplateEvent => {
@@ -123,15 +157,8 @@ export const vueTemplateEvents = (text: string): TemplateEvent[] => {
 
 /** The event bindings of a Svelte component's markup: everything outside its scripts and styles. */
 export const svelteMarkupEvents = (text: string): TemplateEvent[] => {
-  const stretches: Array<readonly [number, number]> = [];
-  let from = 0;
-  for (const block of scriptAndStyleBlocks(text)) {
-    stretches.push([from, block.start]);
-    from = block.end;
-  }
-  stretches.push([from, text.length]);
   const events: TemplateEvent[] = [];
-  for (const [start, end] of stretches) {
+  for (const [start, end] of markupStretches(text)) {
     for (const tag of tagsIn(text, start, end, 'single')) {
       for (const [key, attribute] of tag.attributes) {
         const shorthand = /^\{\s*(on[a-z]+)\s*\}$/.exec(key);

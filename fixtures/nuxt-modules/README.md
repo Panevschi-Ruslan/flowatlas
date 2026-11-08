@@ -22,4 +22,4 @@ no code. Nothing is installed.
 | `$development`, `$env.staging` | `extends: ['../dev-layer']`, `dir.pages: 'pages'` | not read; note `framework-environment-differs` says what each builds that production does not |
 | what was read | `nuxt.config.ts` | notes `framework-module-read`, `framework-layer-read`, `implicit-imports-from-convention`, `aliases-from-convention` |
 
-`addComponentsDir` and `addRouteMiddleware` are said in the `framework-module-read` note and not drawn.
+`addComponentsDir` and `addRouteMiddleware` are read too (P255): `catalog-guard`, added `global: true`, is a `calls` edge from every page (`meta.middleware`, `meta.order`); nothing renders `CatalogCard`, so no edge reaches it.

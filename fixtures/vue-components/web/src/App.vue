@@ -1,0 +1,4 @@
+<template>
+  <AppIcon />
+  <RouterView />
+</template>

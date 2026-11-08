@@ -374,8 +374,9 @@ with no route or `middleware: true` stands in front of every route,
 `nuxt.options.alias[...] =` an alias over the configuration's (`||=` only
 where it names none), and `installModule` reads another module. A module's
 names rank with the part that registers it; a call written under a condition
-of its options is read as made, and the note names it. `addComponentsDir` and
-`addRouteMiddleware` are said in the note and not drawn. An addition whose
+of its options is read or left out as those options say, and read as made and
+named in the note where they cannot be read (P255). `addComponentsDir`,
+`addComponent`, `addRouteMiddleware` and `addServerScanDir` are read as below. An addition whose
 argument is code, or a plain relative string, is a row
 (`framework-module-unread`, `meta.why: addition`); so is a `modules` entry
 written as code (`dynamic`), written in the configuration itself (`inline`), a
@@ -395,6 +396,74 @@ configuration is read as the production build reads it, `$production` and
 are read too and compared, and how each differs - a layer, a module, a part's
 directories or settings - is one note (`framework-environment-differs`)
 (`fixtures/nuxt-modules`).
+
+**Child components, layouts and route middleware (P255).** A tag in a
+component's markup that names a component of the repository is a `calls` edge
+from the component that writes it to the one it names, at the tag, `static`,
+with `meta.renders` the tag as written: rendering `<CartBadge />` runs that
+component, so a screen's flow reaches what its children request. A tag is
+resolved as its framework resolves it: in Vue, a name the script imports
+(`<script setup>`, and the Options API's `components: { ... }`), then one an
+application registers for every template (`app.component('Name', X)`, a Nuxt
+plugin's `nuxtApp.vueApp.component(...)`), each in the spelling written or
+camelised and capitalised (`<cart-badge>` is `CartBadge`), and
+`<component :is="X">`; in Svelte, an import (and `<svelte:component this={X}>`);
+in JSX, the checker's declaration, through `memo`, `forwardRef` and
+`lazy(() => import(...))` - a component a router shows at an address
+(`<Route element={<X />}>`, `{ path, element }`) stays a screen of its own. In
+Nuxt a tag also names a file of a components directory by its path, as Nuxt
+names one: every part's `components/` (`components/global`,
+`components/islands`), or what its `components` setting lists with each
+directory's `prefix` and `pathPrefix: false`, and each directory or component
+a module of the repository adds (`addComponentsDir`, `addComponent`); a
+folder is part of the name (`components/base/Card.vue` is `BaseCard`), the
+`Lazy` prefix is the same component (`meta.lazy`), and `.client`/`.server`
+files of one name are both drawn. Where two parts give a name the higher
+part's is used and the other said (`framework-layer-overridden`); two files
+of one part giving one name are neither, and a row. A tag written in
+PascalCase that names nothing the file imports or registers and nothing the
+framework does is a row (`component-unresolved`, folded); the framework's own
+(`<NuxtLink>`, `<RouterView>`, `<ClientOnly>`), the components of a known
+installed module (`<NuxtImg>`) and a lower-case tag with a hyphen, which HTML
+reads as a custom element, are not.
+
+A Nuxt page goes through Nuxt's router on its way to being shown: every route
+middleware in front of every page (a `.global` file of a part's
+`middleware/`, or one a module adds `global: true`), in the order Nuxt runs
+them, then each the page names in `definePageMeta({ middleware: [...] })` in
+its order, then its layout - the one `definePageMeta({ layout })` names,
+`default` where it names none, none for `layout: false`, and the one
+`<NuxtLayout name>` names in `app.vue` for every page. Each is a `calls` edge
+from the page with its place in that order (`meta.middleware` or
+`meta.layout`, `meta.order`), so a flow from the page walks them as the router
+runs them. A middleware is the function its file's default export hands
+`defineNuxtRouteMiddleware`; a middleware and a layout are found by the names
+Nuxt gives them (`middleware/myAuth.ts` is `my-auth`, `layouts/admin/panel.vue`
+is `admin-panel`) in every part, the higher part's over a lower one's, a
+module's `addRouteMiddleware` after them unless it says `override`. A name
+that matches no file is a row (`route-middleware-unresolved`,
+`layout-unresolved`, `meta.why: missing`), as is one written as code
+(`dynamic`) and a layout named where `app.vue` renders no `<NuxtLayout>`
+(`unrendered`). `<NuxtLayout name="x">` in another component draws it as a
+child.
+
+A directory a module adds with `addServerScanDir` is read as `server/` is:
+the routes of its `api/` and `routes/`
+(`meta.registration: module/addServerScanDir`), its `middleware/` in front of
+every route, and its `utils/` as names the server uses with no import.
+
+A module's options decide a condition it is written under where they can be
+read: `defu` of the options its `modules` entry hands it
+(`['./modules/x', { enabled: false }]`), what the configuration writes under
+its `meta.configKey` (every part's, merged), and its `defaults`; a condition of
+those options (`options.x`, `!`, `&&`, `||`, `??`, `===` and `!==` against a
+literal) in an `if`, `? :`, `&&`, `||` or an earlier `if (...) return` is
+evaluated, and a call it rules out is not read, is named in the note and is a
+note of its own at the call (`framework-module-skipped`). A
+workspace module whose manifest names only a build (`dist/`) is read from the
+source of that build: a `source` condition or field, the build's source map,
+or the file of `src/` in its place (`dist/kit.mjs` is `src/kit.ts`)
+(`fixtures/nuxt-components`, `fixtures/vue-components`).
 
 **SvelteKit `kit.files.routes` (P251).** Routes (`+server`, `+page.server`,
 `+layout.server`) and pages (`+page.svelte`) are read under the directory
@@ -3145,7 +3214,8 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |
 | The layers a framework builds an application from (P243) | `framework-layer-read` (info), `framework-layer-overridden` (info), `implicit-import-overridden` (info), `framework-layer-alias` |
-| What a framework still decides when it builds (P251) | `framework-module-read` (info), `framework-module-installed` (info), `framework-environment-differs` (info), `framework-module-unread` |
+| What a framework still decides when it builds (P251) | `framework-module-skipped` (info, P255), `framework-module-read` (info), `framework-module-installed` (info), `framework-environment-differs` (info), `framework-module-unread` |
+| Components, layouts and route middleware by name (P255) | `component-unresolved` (info), `layout-unresolved`, `route-middleware-unresolved` |
 | Screens and templates | `route-config-unread`, `route-loader-unread`, `route-link-dynamic`, `route-screen-unread`, `route-target-unresolved`, `handler-not-found`, `handler-not-a-method`, `template-not-found`, `template-not-parsed` |
 | The data layer | `unknown-db-package`, `db-receiver-name-only`, `db-layer-unread`, `db-handover-unstated`, `db-package-unread`, `db-call-at-module-level`, `dynamic-table-name`, `sql-parse-failed`, `unknown-db-operation`, `dynamic-cache-key`, `query-in-loop` (a query, request or publish run once per item of a loop) |
 | Channels | `channel-dynamic`, `channel-const-unresolved`, `channel-from-config`, `channel-from-environment`, `consumer-handler-unresolved`, `payload-type-unknown` |

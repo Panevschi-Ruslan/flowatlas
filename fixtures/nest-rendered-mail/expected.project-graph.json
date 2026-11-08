@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:39:44.898Z",
+  "builtAt": "2026-11-07T20:09:27.448Z",
   "services": [
     {
       "name": "api",
@@ -291,6 +291,36 @@
     }
   ],
   "edges": [
+    {
+      "from": "api#../../packages/mail/src/Receipt.tsx:Receipt",
+      "to": "api#../../packages/mail/src/Receipt.tsx:Layout",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{children:unknown}"
+      ],
+      "returns": "unknown",
+      "file": "../../packages/mail/src/Receipt.tsx",
+      "line": 19,
+      "meta": {
+        "renders": "Layout"
+      }
+    },
+    {
+      "from": "api#../../packages/mail/src/Receipt.tsx:Receipt",
+      "to": "api#../../packages/ui/src/index.tsx:ButtonLink",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{href:string;label:string}"
+      ],
+      "returns": "unknown",
+      "file": "../../packages/mail/src/Receipt.tsx",
+      "line": 21,
+      "meta": {
+        "renders": "ButtonLink"
+      }
+    },
     {
       "from": "api#../../packages/relay/src/index.ts:relay",
       "to": "config_key:api#MAIL_RELAY_URL",

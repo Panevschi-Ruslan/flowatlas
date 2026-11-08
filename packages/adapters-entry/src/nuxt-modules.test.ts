@@ -48,6 +48,30 @@ describe('which modules of the repository a Nuxt application is built with (P251
     expect(modules.rows).toEqual([]);
   });
 
+  it('reads a workspace module whose manifest names only its build from the source it was built from (P255)', () => {
+    const root = repo({
+      'package.json': JSON.stringify({ name: 'root', private: true, workspaces: ['app', 'sibling', 'mapped', 'sourced', 'built'] }),
+      'app/package.json': JSON.stringify({ name: 'app', ...NUXT_4 }),
+      'app/nuxt.config.ts': "export default defineNuxtConfig({ modules: ['sibling', 'mapped', 'sourced', 'built'] });",
+      // `dist/kit.mjs` in place of `src/kit.ts`.
+      'sibling/package.json': JSON.stringify({ name: 'sibling', exports: { '.': { types: './dist/kit.d.mts', import: './dist/kit.mjs' } } }),
+      'sibling/src/kit.ts': module(''),
+      // The build's source map names its source.
+      'mapped/package.json': JSON.stringify({ name: 'mapped', main: './dist/index.js' }),
+      'mapped/dist/index.js': 'export default {};\n//# sourceMappingURL=index.js.map\n',
+      'mapped/dist/index.js.map': JSON.stringify({ version: 3, sources: ['../lib/entry.ts'], mappings: '' }),
+      'mapped/lib/entry.ts': module(''),
+      // A `source` condition.
+      'sourced/package.json': JSON.stringify({ name: 'sourced', exports: { '.': { source: './lib/main.ts', import: './dist/main.mjs' } } }),
+      'sourced/lib/main.ts': module(''),
+      // Only a build, and no source anywhere: not read.
+      'built/package.json': JSON.stringify({ name: 'built', exports: { '.': { import: './dist/module.mjs' } } }),
+    });
+    const { modules } = nuxtApplicationOf(join(root, 'app'), NUXT_4);
+    expect(modules.modules.map((each) => each.file)).toEqual(['../sibling/src/kit.ts', '../mapped/lib/entry.ts', '../sourced/lib/main.ts']);
+    expect(modules.rows.map((row) => [row.symbol, row.meta?.why])).toEqual([['built', 'missing']]);
+  });
+
   it('reads the modules of `dir.modules`, and a layer\'s listed module from the layer', () => {
     const root = repo({
       'nuxt.config.ts': "export default defineNuxtConfig({ dir: { modules: 'kit' }, extends: ['./base'] });",
@@ -133,8 +157,9 @@ describe('what a module adds (P251)', () => {
     });
   });
 
-  it('reads an addition written under a condition as made, and says which', () => {
+  it('reads an addition written under a condition the options do not decide as made, and says which', () => {
     const root = repo({
+      'nuxt.config.ts': "export default defineNuxtConfig({ modules: [['./modules/maybe', someOptions]] });",
       'modules/maybe.ts': module(
         [
           '    const resolver = createResolver(import.meta.url);',
@@ -152,6 +177,67 @@ describe('what a module adds (P251)', () => {
     expect(modulesReadRow(nuxtApplicationOf(root, NUXT_4).layers[0]!.layout, [maybe!]).message).toContain(
       'addServerHandler (line 5) and addImportsDir (line 6) are written under a condition and read as made',
     );
+  });
+
+  it('decides a condition by the options the configuration hands the module, its `configKey` and its defaults (P255)', () => {
+    const optioned = (body: string): string =>
+      `import { createResolver, defineNuxtModule } from '@nuxt/kit';\nexport default defineNuxtModule({\n  meta: { configKey: 'shop' },\n  defaults: { server: true, mode: 'full' },\n  setup(options) {\n    const resolver = createResolver(import.meta.url);\n${body}\n  },\n});\n`;
+    const root = repo({
+      'nuxt.config.ts': "export default defineNuxtConfig({ modules: [['./modules/inline', { server: false }], './modules/keyed', './modules/early'], shop: { mode: 'lite' } });",
+      'modules/inline.ts': optioned("    if (options.server) addServerHandler({ route: '/api/inline', handler: resolver.resolve('./x') });"),
+      'modules/keyed.ts': optioned(
+        [
+          "    if (options.mode === 'lite') addImportsDir(resolver.resolve('./lite'));",
+          "    else addImportsDir(resolver.resolve('./full'));",
+          "    options.server && addServerHandler({ route: '/api/keyed', handler: resolver.resolve('./x') });",
+        ].join('\n'),
+      ),
+      'modules/early.ts': optioned(["    if (options.mode !== 'full' && options.server) return;", "    addImportsDir(resolver.resolve('./late'));"].join('\n')),
+      'modules/x.ts': 'export default defineEventHandler(() => 1);',
+    });
+    const { modules, rows } = nuxtApplicationOf(root, NUXT_4).modules;
+    const of = (file: string) => modules.find((each) => each.file === file)?.additions;
+    // Each call ruled out is a note at the call too.
+    expect(rows.map((row) => [row.reason, row.file, row.line])).toEqual([
+      ['framework-module-skipped', 'modules/inline.ts', 7],
+      // The `else` the `lite` mode does not take.
+      ['framework-module-skipped', 'modules/keyed.ts', 8],
+      ['framework-module-skipped', 'modules/early.ts', 8],
+    ]);
+    // `server: false` handed in place wins over the default.
+    expect(of('modules/inline.ts')).toMatchObject({ handlers: [], skipped: ['addServerHandler (line 7, under `options.server`)'], conditional: [] });
+    // `mode` from the configuration's `shop`, `server` from the defaults: every condition decided.
+    expect(of('modules/keyed.ts')?.importDirs.map((dir) => dir.dir)).toEqual(['modules/lite']);
+    expect(of('modules/keyed.ts')?.handlers.map((handler) => handler.route)).toEqual(['/api/keyed']);
+    expect(of('modules/keyed.ts')?.conditional).toEqual([]);
+    // An early `return` the options take: nothing after it is added.
+    expect(of('modules/early.ts')).toMatchObject({ importDirs: [], skipped: ["addImportsDir (line 8, under `options.mode !== 'full' && options.server`)"] });
+  });
+
+  it('reads the components, route middleware and server directories a module adds (P255)', () => {
+    const root = repo({
+      'modules/kit.ts': module(
+        [
+          '    const resolver = createResolver(import.meta.url);',
+          "    addComponentsDir({ path: resolver.resolve('./ui'), prefix: 'Kit', pathPrefix: false });",
+          "    addComponent({ name: 'KitChart', filePath: resolver.resolve('./chart.vue') });",
+          "    addRouteMiddleware({ name: 'kit-guard', path: resolver.resolve('./guard'), global: true }, { override: true });",
+          "    addRouteMiddleware({ name: 'lost', path: someVariable });",
+          "    addServerScanDir(resolver.resolve('./server'));",
+        ].join('\n'),
+      ),
+      'modules/chart.vue': '<template><svg /></template>',
+      'modules/guard.ts': 'export default defineNuxtRouteMiddleware(() => undefined);',
+    });
+    const { modules, rows } = nuxtApplicationOf(root, NUXT_4).modules;
+    expect(modules.find((each) => each.file === 'modules/kit.ts')?.additions).toMatchObject({
+      componentDirs: [{ dir: 'modules/ui', prefix: 'Kit', pathPrefix: false }],
+      components: [{ name: 'KitChart', file: 'modules/chart.vue' }],
+      routeMiddleware: [{ name: 'kit-guard', file: 'modules/guard.ts', global: true, override: true }],
+      serverScanDirs: ['modules/server'],
+      notRead: [],
+    });
+    expect(rows.map((row) => [row.symbol, row.meta?.why])).toEqual([['addRouteMiddleware', 'addition']]);
   });
 
   it('reads `resolve(__dirname, ...)`, `fileURLToPath(new URL(...))` and an installed module, and says a relative string and a variable', () => {
