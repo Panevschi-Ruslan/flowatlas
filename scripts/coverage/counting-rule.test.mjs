@@ -284,4 +284,16 @@ describe('where a request is written, and what stands in front of it (P244)', ()
     assert.deepEqual(sitesIn('k8s/orders.yaml', manifest), { listens: 2 });
     assert.deepEqual(sitesIn('src/api.ts', "const proxy: Proxy = { target: 'x' };"), {});
   });
+
+  it("counts a way in, a chart's value lookups, a kustomization's patches and a port-forward (P260)", () => {
+    const ingress = 'kind: Ingress\nspec:\n  defaultBackend:\n    service: { name: web }\n  rules:\n    - http:\n        paths:\n          - path: /orders\n            backend:\n              service: { name: orders }\n';
+    assert.deepEqual(sitesIn('deploy/ingress.yaml', ingress), { listens: 2 });
+    assert.deepEqual(sitesIn('deploy/route.yaml', 'kind: HTTPRoute\nspec:\n  rules:\n    - backendRefs:\n        - name: stock\n'), { listens: 1 });
+    const template = 'spec:\n  ports:\n    - port: {{ .Values.service.port }}\n      name: {{ include "x" . }}\n      targetPort: {{ .Values.service.targetPort | default 3000 }}\n';
+    assert.deepEqual(sitesIn('charts/orders/templates/service.yaml', template), { listens: 3 });
+    assert.deepEqual(sitesIn('charts/orders/values.yaml', 'service:\n  port: 80\n'), {});
+    assert.deepEqual(sitesIn('k8s/overlays/prod/kustomization.yaml', 'resources:\n  - ../../base\npatches:\n  - path: port.yaml\npatchesStrategicMerge:\n  - env.yaml\n'), { listens: 2 });
+    assert.deepEqual(sitesIn('Makefile', 'forward:\n\tkubectl port-forward svc/orders 8080:80\n\tkubectl -n shop port-forward deploy/stock 4000\n'), { listens: 2 });
+    assert.deepEqual(sitesIn('src/forward.ts', "run('kubectl port-forward svc/orders 8080:80');"), {});
+  });
 });

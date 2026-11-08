@@ -10,7 +10,7 @@ network to a port the service is not reached at there is a finding.
 |---|---|---|---|
 | `orders` | express | 3000, behind `orders:80` | `src/server.ts:10` `app.listen(3000)`; `k8s/orders.yaml` a `Deployment` naming `containerPort: 3000` `http`, a `Service` `orders` routing 80 to `targetPort: http` |
 | `stock` | express | 4000 in its pods, behind `stock-api:8080` | `src/server.ts:10` `Number(process.env.PORT) \|\| 3000`; the project's `deploy/stock.yaml`: a `Service` `stock-api` in namespace `shop` routing 8080 to 4000, selecting a `StatefulSet` whose container is given `PORT: "4000"` |
-| `notify` | express | 3000 | `src/server.ts:10`; its Helm chart's `Service` routes 80 to 8080, a port the code does not listen on (a note); the chart's templated port line and labels are not read |
+| `notify` | express | 3000 | `src/server.ts:10`; its Helm chart's `Service` routes 80 to 8080, a port the code does not listen on (a note); the chart has no values file, so its templated port gives nothing and its labels' `include` names no helper (since P260 the chart is rendered; what it reads is the same) |
 | `search` | express | 3000, published as 4010 | `Makefile` `docker run -p 4010:3000 --name search`, a command continued over three lines |
 | `audit` | express | 3000 in its container, published as 4011 | `src/server.ts:10` `app.listen(process.env.PORT)`; `scripts/run.sh` `docker run -p 4011:3000 -e PORT=3000 --name audit` |
 | `billing` | nestjs | 3012 [PORT] | `src/main.ts:10` `app.listen(config.port)`, `config = app.get<ConfigType<typeof appConfig>>(appConfig.KEY)`, `registerAs('app', () => ({ port: Number(process.env.PORT) \|\| 3012 }))` |

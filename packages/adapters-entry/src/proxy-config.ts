@@ -6,6 +6,8 @@ import {
   configValueAt,
   proxyPrefixOf,
   proxyRule,
+  proxySettingOf,
+  proxySettingRule,
   proxyUnreadRow,
   readConfigLiteral,
   toPosixPath,
@@ -54,24 +56,34 @@ export const keyLine = (text: string, key: string, from = 0): number => {
   return lineAt(text, value === null ? from : value.index);
 };
 
-/** The text of a regular expression or a string that names a prefix: `/^\/api/`, `'^/api'`, `'/api'`. */
-const patternText = (written: string): string | undefined => {
-  const regex = /^\/((?:\\\/|[^/])+)\/[a-z]*$/.exec(written.trim());
-  if (regex !== null) return (regex[1] as string).replace(/\\\//g, '/');
+/** A regular expression or a string a rewrite matches by: `/^\/api/i`, `'^/api'`; a string is matched as written. */
+const patternText = (written: string): { source: string; flags: string; literal: boolean } | undefined => {
+  const regex = /^\/((?:\\\/|[^/])+)\/([a-z]*)$/.exec(written.trim());
+  if (regex !== null) return { source: (regex[1] as string).replace(/\\\//g, '/'), flags: regex[2] as string, literal: false };
   const quoted = /^(['"`])(.*)\1$/.exec(written.trim());
-  return quoted?.[2];
+  return quoted === null ? undefined : { source: quoted[2] as string, flags: '', literal: true };
 };
 
+const escaped = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /**
- * How a pattern of a rewrite rewrites the rule's prefix, given what it is
- * replaced with: only a pattern that is the prefix itself, anchored or not,
- * is a literal replacement of it.
+ * How a pattern of a rewrite rewrites the rule's path, given what it is
+ * replaced with: a pattern that is the prefix itself, anchored or not, is a
+ * literal replacement of it; any other regular expression the language
+ * reads rewrites the whole path where it matches (P260).
  */
-const rewriteFor = (pattern: string, replacement: string, prefix: string): ProxyRewrite | undefined => {
+const rewriteFor = (pattern: string, replacement: string, prefix: string, flags = ''): ProxyRewrite | undefined => {
   const body = pattern.startsWith('^') ? pattern.slice(1) : pattern;
-  if (/[\\()[\]{}*+?.|$]/.test(body.replace(/\\\./g, ''))) return undefined;
-  if (proxyPrefixOf(body.replace(/\\\./g, '.')) !== proxyPrefixOf(prefix)) return undefined;
-  return replacement === '' || replacement === '/' ? { kind: 'strip' } : { kind: 'replace', with: replacement };
+  const literal = !/[\\()[\]{}*+?.|$]/.test(body.replace(/\\\./g, ''));
+  if (literal && prefix !== '' && flags === '' && proxyPrefixOf(body.replace(/\\\./g, '.')) === proxyPrefixOf(prefix)) {
+    return replacement === '' || replacement === '/' ? { kind: 'strip' } : { kind: 'replace', with: replacement };
+  }
+  try {
+    new RegExp(pattern, flags);
+  } catch {
+    return undefined;
+  }
+  return { kind: 'pattern', source: pattern, ...(flags === '' ? {} : { flags }), with: replacement };
 };
 
 /**
@@ -84,7 +96,9 @@ export const rewriteOfFunction = (text: string, prefix: string): ProxyRewrite | 
   if (found === null) return undefined;
   const pattern = patternText(found[2] as string);
   const replacement = patternText(found[3] as string);
-  return pattern === undefined || replacement === undefined ? undefined : rewriteFor(pattern, replacement, prefix);
+  if (pattern === undefined || replacement === undefined) return undefined;
+  // A string replaces itself where it is first written, as an expression of itself would.
+  return rewriteFor(pattern.literal ? escaped(pattern.source) : pattern.source, replacement.source, prefix, pattern.flags);
 };
 
 /** A `pathRewrite` table, `{ '^/api': '' }`: one entry that rewrites the prefix. */
@@ -104,6 +118,16 @@ interface At {
   readonly after?: 'own-routes';
 }
 
+/**
+ * The target a table writes for a prefix, as a rule: an address, or a
+ * setting read in code and filled from the service's files (P260).
+ */
+const targetRule = (prefix: string, target: unknown, how: ProxyRewrite, at: { file: string; line: number; after?: 'own-routes' }): ProxyRule | 'not-written' | 'not-address' => {
+  if (typeof target === 'string') return proxyRule(prefix, target, how, at) ?? 'not-address';
+  const setting = target instanceof NotLiteral ? proxySettingOf(target.text) : undefined;
+  return setting === undefined ? 'not-written' : proxySettingRule(prefix, setting, how, at);
+};
+
 /** A prefix as a proxy table names it, or why it is not one: a pattern, a glob with more than a trailing `**`. */
 const prefixKey = (key: string): string | undefined => {
   if (!key.startsWith('/')) return undefined;
@@ -122,11 +146,38 @@ const tableRule = (
   const prefix = prefixKey(key);
   const where = { file: at.file, line };
   if (prefix === undefined) return { row: proxyUnreadRow(where, key, 'its prefix is a pattern, not a path', at.adapter) };
-  if (typeof target !== 'string') return { row: proxyUnreadRow(where, key, 'its target is not written as an address', at.adapter) };
   const how = rewrite(prefix);
-  if (how === 'unread') return { row: proxyUnreadRow(where, key, 'its rewrite is not a literal replacement of the prefix', at.adapter) };
-  const rule = proxyRule(prefix, target, how, { ...where, ...(at.after === undefined ? {} : { after: at.after }) });
-  return rule === undefined ? { row: proxyUnreadRow(where, key, `its target (${target}) is not an address`, at.adapter) } : { rule };
+  if (how === 'unread') return { row: proxyUnreadRow(where, key, 'its rewrite is not a regular expression replaced by a literal', at.adapter) };
+  const rule = targetRule(prefix, target, how, { ...where, ...(at.after === undefined ? {} : { after: at.after }) });
+  if (rule === 'not-written') return { row: proxyUnreadRow(where, key, 'its target is not written as an address or a setting', at.adapter) };
+  return rule === 'not-address' ? { row: proxyUnreadRow(where, key, `its target (${String(target)}) is not an address`, at.adapter) } : { rule };
+};
+
+/**
+ * The rules a proxy's `router` table adds (P260): a path key under the
+ * prefix sends what it matches to its own target, rewritten as the prefix's
+ * rule rewrites. A key with a host routes by the request's host, which a
+ * request written with no host does not say: a row.
+ */
+const routerRules = (key: string, router: unknown, rewrite: (prefix: string) => ProxyRewrite | 'unread', at: At, line: number): Array<{ rule?: ProxyRule; row?: Unresolved }> => {
+  const where = { file: at.file, line };
+  if (router === undefined) return [];
+  if (!isRecord(router)) return [{ row: proxyUnreadRow(where, key, 'its router is not written as a table of literals', at.adapter) }];
+  const prefix = prefixKey(key);
+  return Object.entries(router).flatMap(([routed, target]): Array<{ rule?: ProxyRule; row?: Unresolved }> => {
+    const routedLine = keyLine(at.text, routed, Math.max(0, at.text.indexOf('router')));
+    if (!routed.startsWith('/')) return [{ row: proxyUnreadRow({ file: at.file, line: routedLine }, routed, 'its router sends by the request\'s host, which a request with no host does not say', at.adapter) }];
+    // A path the prefix does not match never reaches the router.
+    if (prefix === undefined || (prefix !== '/' && routed !== prefix && !routed.startsWith(`${prefix}/`))) return [];
+    const how = rewrite(prefix);
+    if (how === 'unread') return [];
+    // What the prefix's rewrite leaves in place of the prefix, with the rest of the routed path behind it.
+    const kept = how.kind === 'keep' ? routed : how.kind === 'strip' ? routed.slice(prefix === '/' ? 0 : prefix.length) : how.kind === 'replace' ? `${how.with}${routed.slice(prefix === '/' ? 0 : prefix.length)}` : routed;
+    const own = targetRule(routed, target, how.kind === 'pattern' ? how : kept === '' ? { kind: 'strip' } : { kind: 'replace', with: kept }, { file: at.file, line: routedLine, ...(at.after === undefined ? {} : { after: at.after }) });
+    if (own === 'not-written') return [{ row: proxyUnreadRow({ file: at.file, line: routedLine }, routed, 'its router target is not written as an address or a setting', at.adapter) }];
+    if (own === 'not-address') return [{ row: proxyUnreadRow({ file: at.file, line: routedLine }, routed, `its router target (${String(target)}) is not an address`, at.adapter) }];
+    return [{ rule: own }];
+  });
 };
 
 const collect = (found: ReadonlyArray<{ rule?: ProxyRule; row?: Unresolved }>): ProxyReading => ({
@@ -152,11 +203,12 @@ export const proxyTableRules = (value: unknown, at: At): ProxyReading => {
   } else return NO_PROXY;
   return collect(
     entries.map(({ key, options }) => {
-      const target = typeof options === 'string' ? options : isRecord(options) ? options['target'] : undefined;
+      const target = typeof options === 'string' || options instanceof NotLiteral ? options : isRecord(options) ? options['target'] : undefined;
       const table = isRecord(options) ? options['pathRewrite'] : undefined;
       const rewrite = (prefix: string): ProxyRewrite | 'unread' => (table === undefined ? { kind: 'keep' } : (rewriteOfTable(table, prefix) ?? 'unread'));
-      return tableRule(key, target, rewrite, at, keyLine(at.text, key));
-    }),
+      const line = keyLine(at.text, key);
+      return [tableRule(key, target, rewrite, at, line), ...routerRules(key, isRecord(options) ? options['router'] : undefined, rewrite, at, line)];
+    }).flat(),
   );
 };
 
@@ -201,6 +253,12 @@ const routeRuleRules = (rules: unknown, at: At, from: number): Array<{ rule?: Pr
     const proxy = rule['proxy'];
     const to = isRecord(proxy) ? proxy['to'] : proxy;
     const line = keyLine(at.text, key, from);
+    // A target read from a setting, `${process.env.API_URL}/**` (P260).
+    const setting = to instanceof NotLiteral ? proxySettingOf(to.text) : undefined;
+    if (setting !== undefined && key.endsWith('/**') && (setting.path ?? '').endsWith('/**')) {
+      const behind = (setting.path as string).replace(/\/\*\*$/, '');
+      return [{ rule: proxySettingRule(key, { name: setting.name, ...(behind === '' ? {} : { path: behind }) }, { kind: 'strip' }, { file: at.file, line }) }];
+    }
     if (typeof to !== 'string') return [{ row: proxyUnreadRow({ file: at.file, line }, key, 'its target is not written as an address', at.adapter) }];
     const every = key.endsWith('/**');
     // `/**` on both sides hands the rest of the path on; on the rule alone,
@@ -239,7 +297,7 @@ export const nitroProxies = (ctx: ExtractContext): ProxyReading => {
     if (isRecord(devProxy)) {
       const from = Math.max(0, written.text.indexOf('devProxy'));
       for (const [key, options] of Object.entries(devProxy)) {
-        const target = typeof options === 'string' ? options : isRecord(options) ? options['target'] : undefined;
+        const target = typeof options === 'string' || options instanceof NotLiteral ? options : isRecord(options) ? options['target'] : undefined;
         found.push(tableRule(key, target, () => ({ kind: 'strip' }), at, keyLine(written.text, key, from)));
       }
     } else if (devProxy instanceof NotLiteral) found.push({ row: proxyUnreadRow({ file: written.file, line: keyLine(written.text, 'devProxy') }, `${prefix}devProxy`, 'it is not written as a literal', NITRO) });
@@ -327,11 +385,23 @@ const TRAILING = /\/:[A-Za-z_]\w*[*+]$/;
 /** One rewrite of Next's, `{ source, destination }`, to an address outside the application. */
 const nextRewrite = (object: ts.ObjectLiteralExpression, file: ts.SourceFile, where: string, after: boolean): { rule?: ProxyRule; row?: Unresolved } | undefined => {
   const source = literal(propertyOf(object, 'source'));
-  const destination = literal(propertyOf(object, 'destination'));
+  const written = propertyOf(object, 'destination');
+  const destination = literal(written);
   const line = file.getLineAndCharacterOfPosition(object.getStart(file)).line + 1;
   const at = { file: where, line };
   // A destination in the application is a rewrite to its own route, not a proxy.
   if (destination !== undefined && destination.startsWith('/')) return undefined;
+  // A destination read from a setting, the rest of the path after it (P260).
+  const setting = destination === undefined && written !== undefined ? proxySettingOf(written.getText(file)) : undefined;
+  if (source !== undefined && setting !== undefined && propertyOf(object, 'has') === undefined && propertyOf(object, 'missing') === undefined) {
+    const behind = setting.path ?? '';
+    const rest = TRAILING.test(source);
+    if (/[:(*]/.test(source.replace(TRAILING, '')) || /[:(*]/.test(behind.replace(TRAILING, '')) || rest !== TRAILING.test(behind)) {
+      return { row: proxyUnreadRow(at, source, 'its source or destination has parameters other than one trailing catch-all', NEXT) };
+    }
+    const plain = behind.replace(TRAILING, '');
+    return { rule: proxySettingRule(source.replace(TRAILING, ''), { name: setting.name, ...(plain === '' ? {} : { path: plain }) }, { kind: 'strip' }, { ...at, ...(after ? { after: 'own-routes' as const } : {}) }) };
+  }
   if (source === undefined || destination === undefined) return { row: proxyUnreadRow(at, source ?? 'rewrite', 'its source or destination is not written as a literal', NEXT) };
   if (propertyOf(object, 'has') !== undefined || propertyOf(object, 'missing') !== undefined) {
     return { row: proxyUnreadRow(at, source, 'it applies only to requests a condition (has, missing) picks', NEXT) };
@@ -354,6 +424,13 @@ const nextRewrite = (object: ts.ObjectLiteralExpression, file: ts.SourceFile, wh
  * application is a rewrite to its own route, which is not a proxy.
  */
 export const nextProxies = (ctx: ExtractContext): ProxyReading => {
+  const read = nextRewrites(ctx);
+  // A Next server resolves a request its own code writes with no host
+  // against the address it is served at (P260).
+  return { ...read, ownOrigin: true };
+};
+
+const nextRewrites = (ctx: ExtractContext): ProxyReading => {
   const path = NEXT_CONFIGS.map((name) => join(ctx.repoDir, name)).find((each) => existsSync(each));
   const written = path === undefined ? undefined : configText(ctx.repoDir, path);
   if (path === undefined || written === undefined) return NO_PROXY;

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-08T07:28:09.874Z",
+  "builtAt": "2026-11-08T17:07:08.146Z",
   "services": [
     {
       "name": "shop",
@@ -167,7 +167,8 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {

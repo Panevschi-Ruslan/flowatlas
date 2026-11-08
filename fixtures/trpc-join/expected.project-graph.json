@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:42:50.592Z",
+  "builtAt": "2026-11-08T17:08:37.959Z",
   "services": [
     {
       "name": "api",
@@ -296,7 +296,8 @@
             "nextjs-routes",
             "trpc-procedures"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {
@@ -326,7 +327,8 @@
             "nextjs-routes",
             "trpc-procedures"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {

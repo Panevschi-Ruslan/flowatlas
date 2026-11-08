@@ -23,7 +23,11 @@ const repo = (files: Record<string, string>): string => {
 
 /** Each rule as `file:line prefix -> target+to`, and each row as `file:line key: why`. */
 const said = (read: ProxyReading): string[] => [
-  ...read.rules.map((rule) => `${rule.file}:${rule.line} ${rule.path} -> ${rule.target}${rule.to}${rule.after === undefined ? '' : ' after'}`),
+  ...read.rules.map(
+    (rule) =>
+      `${rule.file}:${rule.line} ${rule.match === undefined ? '' : '~'}${rule.path} -> ${rule.setting === undefined ? '' : `[${rule.setting.name}]${rule.setting.to} or `}${rule.target}${rule.to}` +
+      `${rule.rewrite === undefined ? '' : ` ${rule.rewrite.source} => '${rule.rewrite.with}'`}${rule.after === undefined ? '' : ' after'}`,
+  ),
   ...read.rows.map((row) => `${row.file}:${row.line} ${row.symbol}: ${String(row.message).replace(/^.*is not read: /, '')}`),
 ];
 
@@ -53,9 +57,36 @@ describe("where a Vite front end's dev server forwards a path (P257)", () => {
     expect(said(viteProxies(root))).toEqual([
       'vite.config.ts:6 /products -> http://localhost:3003/products',
       'vite.config.ts:7 /api -> http://localhost:3001',
-      'vite.config.ts:12 ^/fallback/.*: its prefix is a pattern, not a path',
-      'vite.config.ts:13 /legacy: its target is not written as an address',
-      'vite.config.ts:14 /odd: its rewrite is not a literal replacement of the prefix',
+      'vite.config.ts:12 ~^/fallback/.* -> http://localhost:3009',
+      'vite.config.ts:13 /legacy -> [LEGACY_URL]/legacy or /legacy',
+      'vite.config.ts:14 /odd: its rewrite is not a regular expression replaced by a literal',
+    ]);
+  });
+
+  it('reads a key written as a regular expression, a rewrite of the whole path, and a target read from a setting (P260)', () => {
+    const root = repo({
+      'vite.config.ts': [
+        "import { defineConfig, loadEnv } from 'vite';",
+        'export default defineConfig(({ mode }) => {',
+        '  const env = loadEnv(mode, process.cwd());',
+        '  return {',
+        '    server: {',
+        '      proxy: {',
+        "        '^/legacy/.*': { target: 'http://localhost:3009/v1', rewrite: (path) => path.replace(/^\\/legacy/, '') },",
+        "        '/rates': { target: env.VITE_RATES_URL, rewrite: (path) => path.replace(/^\\/rates/, '') },",
+        "        '/stock': { target: process.env.STOCK_URL ?? 'http://localhost:3002', rewrite: (p) => p.replace(/^\\/stock\\/v\\d+/, '/stock') },",
+        "        '^/[': 'http://localhost:3010',",
+        '      },',
+        '    },',
+        '  };',
+        '});',
+      ].join('\n'),
+    });
+    expect(said(viteProxies(root))).toEqual([
+      "vite.config.ts:7 ~^/legacy/.* -> http://localhost:3009/v1 ^/legacy => ''",
+      'vite.config.ts:8 /rates -> [VITE_RATES_URL] or ',
+      "vite.config.ts:9 /stock -> [STOCK_URL] or http://localhost:3002 ^/stock/v\\d+ => '/stock'",
+      'vite.config.ts:10 ^/[: its key is not a regular expression the language reads',
     ]);
   });
 

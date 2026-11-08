@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T06:06:51.860Z",
+  "builtAt": "2026-11-08T17:08:04.767Z",
   "services": [
     {
       "name": "site",
@@ -57,7 +57,8 @@
         "path": "/api/things",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "targetService": "site"
       }
     },
     {
@@ -77,7 +78,8 @@
         "bodyFrom": "literal",
         "bodyKeys": [
           "name"
-        ]
+        ],
+        "targetService": "site"
       }
     },
     {
@@ -93,7 +95,8 @@
         "path": "/api/things/:param",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "targetService": "site"
       }
     },
     {
@@ -119,7 +122,8 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {
@@ -391,6 +395,33 @@
       "line": 8,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:site#lib/things-client.ts:10:24",
+      "to": "entry:site:http:GET:/api/things",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "lib/things-client.ts",
+      "line": 10,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "site"
+      }
+    },
+    {
+      "from": "http_out:site#lib/things-client.ts:15:24",
+      "to": "entry:site:http:POST:/api/things",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "lib/things-client.ts",
+      "line": 15,
+      "params": [
+        "{name:string}"
+      ],
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "site"
       }
     },
     {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:35:47.274Z",
+  "builtAt": "2026-11-08T17:04:00.152Z",
   "services": [
     {
       "name": "orders",
@@ -323,7 +323,8 @@
         "path": "/shop-api/orders",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "targetService": "orders"
       }
     },
     {
@@ -339,7 +340,8 @@
         "path": "/shop-api/health",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "targetService": "store"
       }
     },
     {
@@ -462,6 +464,17 @@
             "to": "",
             "file": "proxy.conf.json",
             "line": 2
+          },
+          {
+            "path": "/catalog",
+            "target": "http://localhost:3003",
+            "to": "",
+            "file": "proxy.conf.json",
+            "line": 9,
+            "rewrite": {
+              "source": "^/catalog/v\\d+",
+              "with": ""
+            }
           }
         ]
       }
@@ -655,7 +668,8 @@
             "line": 5,
             "after": "own-routes"
           }
-        ]
+        ],
+        "ownOrigin": true
       }
     },
     {
@@ -750,6 +764,27 @@
             "to": "/rates",
             "file": "vite.config.ts",
             "line": 15
+          },
+          {
+            "path": "^/legacy/.*",
+            "target": "http://localhost:3009",
+            "to": "",
+            "file": "vite.config.ts",
+            "line": 16,
+            "match": {
+              "source": "^/legacy/.*"
+            }
+          },
+          {
+            "path": "/stats",
+            "target": "",
+            "to": "/stats",
+            "file": "vite.config.ts",
+            "line": 17,
+            "setting": {
+              "name": "STATS_URL",
+              "to": "/stats"
+            }
           }
         ]
       }
@@ -1370,6 +1405,33 @@
       }
     },
     {
+      "from": "http_out:store#app/page.tsx:5:28",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/page.tsx",
+      "line": 5,
+      "meta": {
+        "via": "proxy",
+        "targetService": "orders",
+        "listensAt": "src/app.ts:14",
+        "proxiedBy": "next.config.js:5",
+        "proxiedAs": "/orders"
+      }
+    },
+    {
+      "from": "http_out:store#app/page.tsx:6:28",
+      "to": "entry:store:http:GET:/shop-api/health",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/page.tsx",
+      "line": 6,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "store"
+      }
+    },
+    {
       "from": "jobs#src/server.ts:POST /jobs/sync@6",
       "to": "http_out:jobs#src/server.ts:7:9",
       "type": "calls",
@@ -1760,19 +1822,6 @@
   },
   "unresolved": [
     {
-      "file": "proxy.conf.json",
-      "line": 9,
-      "reason": "proxy-rule-unread",
-      "message": "the proxy rule for /catalog in proxy.conf.json is not read: its rewrite is not a literal replacement of the prefix",
-      "hint": "Write the prefix, the target address and the rewrite as literals, or name the request's service with an annotation (/** @flowatlas-calls <service> METHOD /path */).",
-      "symbol": "/catalog",
-      "adapter": "angular",
-      "meta": {
-        "key": "/catalog"
-      },
-      "service": "admin"
-    },
-    {
       "service": "jobs",
       "file": "src/server.ts",
       "line": 8,
@@ -1857,30 +1906,17 @@
       "symbol": "ui_api_call:web#src/Shop.tsx:7:29"
     },
     {
-      "file": "vite.config.ts",
-      "line": 16,
-      "reason": "proxy-rule-unread",
-      "message": "the proxy rule for ^/legacy/.* in vite.config.ts is not read: its prefix is a pattern, not a path",
-      "hint": "Write the prefix, the target address and the rewrite as literals, or name the request's service with an annotation (/** @flowatlas-calls <service> METHOD /path */).",
-      "symbol": "^/legacy/.*",
-      "adapter": "react",
-      "meta": {
-        "key": "^/legacy/.*"
-      },
-      "service": "web"
-    },
-    {
+      "service": "web",
       "file": "vite.config.ts",
       "line": 17,
       "reason": "proxy-rule-unread",
-      "message": "the proxy rule for /stats in vite.config.ts is not read: its target is not written as an address",
-      "hint": "Write the prefix, the target address and the rewrite as literals, or name the request's service with an annotation (/** @flowatlas-calls <service> METHOD /path */).",
       "symbol": "/stats",
-      "adapter": "react",
+      "message": "the proxy rule for /stats in vite.config.ts reads its target from STATS_URL, which the service's files give no address",
+      "hint": "Give STATS_URL one address in an example environment file of the service (.env.example), or write the target as a literal.",
       "meta": {
-        "key": "/stats"
-      },
-      "service": "web"
+        "key": "/stats",
+        "setting": "STATS_URL"
+      }
     }
   ]
 }

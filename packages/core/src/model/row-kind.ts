@@ -379,6 +379,13 @@ const GAPS: readonly string[] = [
   'local-port-shared',
   // A server's proxy rule written in a way the reader does not follow (P257)
   'proxy-rule-unread',
+  // A request forwarded through more servers than are followed, or in a circle (P260)
+  'proxy-chain-unfollowed',
+  // A cluster's manifest the reader does not follow: a template's undecided
+  // conditions, a patch, a traffic split; and overlays or installs nothing
+  // chooses among (P260)
+  'manifest-unread',
+  'manifest-overlay-unchosen',
   'route-wildcard-only',
   'marker-service-unknown',
   'marker-route-not-found',

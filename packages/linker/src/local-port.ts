@@ -69,8 +69,13 @@ export interface Listening {
   readonly devServer?: true;
   /** The file that gives the setting the code reads its port from alone its value (P254). */
   readonly valueFrom?: string;
-  /** The published side of a container's mapping this port is reached through on the machine (P254). */
-  readonly published?: { readonly port: number; readonly file: string };
+  /**
+   * The published side of a container's mapping this port is reached through
+   * on the machine (P254); or a port this machine forwards to a cluster's
+   * object, or one every node of a cluster opens for it (P260), with the
+   * object it reaches.
+   */
+  readonly published?: { readonly port: number; readonly file: string; readonly via?: 'forwarded' | 'node-port'; readonly object?: string };
   /** The container this is the port of, on the container's own network (P254). */
   readonly inContainer?: { readonly name: string; readonly file: string };
   /** The name a cluster's network routes to this port, and the port it is reached at (P257). */
@@ -155,14 +160,14 @@ export interface PortListening {
 }
 
 /** The ports a service listens on inside a container: its environment's value for the setting the code reads, else the code's own. */
-const insideContainer = (service: string, ports: readonly ListenPort[], container: Pick<ContainerRun, 'name' | 'file' | 'environment'>): Map<number, Listening> => {
+const insideContainer = (service: string, ports: readonly ListenPort[], container: Pick<ContainerRun, 'name' | 'file' | 'environment' | 'environmentFrom'>): Map<number, Listening> => {
   const inside = new Map<number, Listening>();
   for (const port of ports) {
     const given = port.setting === undefined ? undefined : container.environment[port.setting];
     const at = given ?? port.port;
     if (at === undefined) continue;
     const listening = listeningOf(service, port);
-    const read: Listening = given === undefined ? listening : { ...listening, valueFrom: `${container.file} (${container.name})` };
+    const read: Listening = given === undefined ? listening : { ...listening, valueFrom: `${container.environmentFrom ?? container.file} (${container.name})` };
     if (!inside.has(at) || isSure(read)) inside.set(at, read);
   }
   return inside;
@@ -192,6 +197,14 @@ const unroutedRow = (service: string, routed: RoutedName, port: RoutedName['port
   meta: { routed: port.port, container: port.target, listens: [...new Set(ports.flatMap((each) => (each.port === undefined ? [] : [each.port])))].sort((a, b) => a - b) },
 });
 
+/** How a file makes a port of this machine reach a container's, as a row says it (P254, P260). */
+const publishing = (container: ContainerRun, mapping: ContainerRun['ports'][number], service: string): string =>
+  container.via === 'forwarded'
+    ? `${mapping.file} forwards port ${mapping.published} of this machine to ${container.name}, port ${mapping.container} of ${service}'s containers`
+    : container.via === 'node-port'
+      ? `${mapping.file} opens node port ${mapping.published} for ${container.name}, port ${mapping.container} of ${service}'s containers`
+      : `${mapping.file} publishes port ${mapping.container} of ${container.name} (${service}) as ${mapping.published}`;
+
 const unheardRow = (service: string, container: ContainerRun, mapping: ContainerRun['ports'][number], ports: readonly ListenPort[]): Unresolved => {
   return {
     service,
@@ -199,7 +212,7 @@ const unheardRow = (service: string, container: ContainerRun, mapping: Container
     line: mapping.line,
     reason: 'published-port-unheard',
     level: 'info',
-    message: `${mapping.file} publishes port ${mapping.container} of ${container.name} (${service}) as ${mapping.published}, but ${portsSaid(service, ports)}`,
+    message: `${publishing(container, mapping, service)}, but ${portsSaid(service, ports)}`,
     hint: `Map the published port to the port the server listens on (${mapping.published}:<that port>), or check that the container's environment gives the server ${mapping.container}. A request to localhost:${mapping.published} is still joined to ${service} by the file.`,
     symbol: `${container.name}:${mapping.published}:${mapping.container}`,
     meta: { published: mapping.published, container: mapping.container, listens: [...new Set(ports.flatMap((port) => (port.port === undefined ? [] : [port.port])))].sort((a, b) => a - b) },
@@ -243,7 +256,10 @@ export const portsListening = (nodes: ReadonlyMap<string, GraphNode>, settings: 
       for (const mapping of container.ports) {
         const listening = inside.get(mapping.container);
         if (listening === undefined) rows.push(unheardRow(service, container, mapping, ports));
-        else addListening(byPort, mapping.published, { ...listening, published: { port: mapping.published, file: mapping.file } });
+        else {
+          const how = container.via === undefined ? {} : { via: container.via, object: container.name };
+          addListening(byPort, mapping.published, { ...listening, published: { port: mapping.published, file: mapping.file, ...how } });
+        }
         // The published side is the machine's: on the container's network it is nothing.
         if (inside.size === 0 || inside.has(mapping.published)) continue;
         const reachable = [...inside.keys()].sort((a, b) => a - b);
@@ -287,6 +303,14 @@ export const localPortOf = (address: string): number | undefined => {
   return port === undefined ? undefined : Number(port);
 };
 
+/** How a port of this machine reaches the one a service listens on (P254, P260). */
+const publishedAs = (published: NonNullable<Listening['published']>): string =>
+  published.via === 'forwarded'
+    ? `, forwarded from ${published.port} to ${published.object} by ${published.file}`
+    : published.via === 'node-port'
+      ? `, at node port ${published.port} of ${published.object} (${published.file})`
+      : `, published as ${published.port} by ${published.file}`;
+
 /**
  * Where a service listens, as a reader is told it: `src/main.ts:7`, with the
  * setting a fallback is behind, where the setting's value is from, the call
@@ -298,7 +322,7 @@ export const whereListening = (listening: Listening): string =>
   (listening.setting === undefined ? '' : listening.valueFrom === undefined ? ` (${listening.setting})` : ` (${listening.setting} from ${listening.valueFrom})`) +
   (listening.default === true ? ' (its default)' : '') +
   (listening.handed === undefined ? '' : ` (handed at ${listening.handed})`) +
-  (listening.published === undefined ? '' : `, published as ${listening.published.port} by ${listening.published.file}`) +
+  (listening.published === undefined ? '' : publishedAs(listening.published)) +
   (listening.inContainer === undefined ? '' : `, in the container ${listening.inContainer.name} (${listening.inContainer.file})`) +
   (listening.routed === undefined ? '' : `, behind ${listening.routed.name}:${listening.routed.port} (${listening.routed.file})`);
 

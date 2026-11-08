@@ -4,6 +4,7 @@ import {
   AdapterRegistry,
   LISTEN_META,
   listeningOf,
+  OWN_ORIGIN_META,
   PROXY_META,
   proxiesOf,
   countSources,
@@ -260,6 +261,7 @@ export const extractBrowser = (base: ExtractContext, options: FrontendExtractOpt
       },
       ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
       ...(proxy.rules.length === 0 ? {} : { [PROXY_META]: proxy.rules }),
+      ...(proxy.ownOrigin === true ? { [OWN_ORIGIN_META]: true } : {}),
     },
   });
 };

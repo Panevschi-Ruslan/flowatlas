@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:42:44.978Z",
+  "builtAt": "2026-11-08T17:07:37.202Z",
   "services": [
     {
       "name": "api",
@@ -942,7 +942,8 @@
             "nextjs-routes",
             "orpc-procedures"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {

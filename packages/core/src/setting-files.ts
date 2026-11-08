@@ -1,3 +1,6 @@
+import type { Unresolved } from './model/graph.js';
+import type { ProxyRule } from './proxy-rule.js';
+
 /**
  * Values a repository's own files give its settings (P77).
  *
@@ -73,6 +76,29 @@ export interface ContainerRun {
   readonly ports: readonly PublishedPort[];
   /** The port each setting is given in the container's environment: `PORT: 3000`. */
   readonly environment: Readonly<Record<string, number>>;
+  /**
+   * How the published port reaches the container, where it is not a
+   * container's own mapping (P260): a port this machine forwards to a
+   * cluster's object (`forwarded`), or the port every node of a cluster
+   * opens for a service object (`node-port`).
+   */
+  readonly via?: 'forwarded' | 'node-port';
+  /** Where the environment is written, where that is not `file`: the manifest of the pods a port is forwarded to (P260). */
+  readonly environmentFrom?: string;
+}
+
+/**
+ * A way in from outside a cluster's network to a service's containers
+ * (P260): a request to a public host whose path a rule matches is sent to a
+ * name the cluster routes (`rule.target`, `http://orders:80`) at the path the
+ * rule rewrites it to.
+ */
+export interface IngressRoute {
+  /** The public host, lower case; `*.shop.example.test` for any one label under it. */
+  readonly host: string;
+  readonly rule: ProxyRule;
+  /** The object the rule is written in, `ingress/shop` or `http-route/shop`. */
+  readonly object: string;
 }
 
 /** A port a name on a cluster's network routes to a port of the containers behind it (P257): `80` to `3000`. */
@@ -100,6 +126,8 @@ export interface RoutedName {
   readonly ports: readonly RoutedPort[];
   /** The port each setting is given in the environment of the containers behind it: `PORT: 3000`. */
   readonly environment: Readonly<Record<string, number>>;
+  /** Where that environment is written, where it is not `file`: a workload's manifest, or the patch that gave it (P260). */
+  readonly environmentFrom?: string;
 }
 
 /** A port one of a service's own files gives a setting, on the machine a developer runs it on (P254). */
@@ -132,6 +160,14 @@ export interface RepoSettings {
   readonly containers?: readonly ContainerRun[];
   /** The names a cluster's network routes to the service's containers (P257). Absent when no manifest does. */
   readonly routes?: readonly RoutedName[];
+  /** The ways in from outside a cluster that reach the service (P260). Absent when no manifest writes one. */
+  readonly ingress?: readonly IngressRoute[];
+  /**
+   * What the service's files, or the project's files about it, write in a
+   * way the readers do not follow (P260): a template whose conditions nothing
+   * decides, overlays nothing chooses among. Absent when there is nothing.
+   */
+  readonly rows?: readonly Unresolved[];
   /**
    * The ports the service's own example environment files give a setting, by
    * setting name (P254): what fills a port its code reads from the setting

@@ -2,7 +2,7 @@ import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
 import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
-import { defaultPortOf, proxiedOutFinding, type Forward } from './proxy-forward.js';
+import { defaultPortOf, forwardedAgain, proxiedOutFinding, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
 import { cmp } from './order.js';
 import {
   behindUnread,
@@ -43,6 +43,10 @@ export interface UiIndex {
   serviceAtHost?(host: string, defaultPort?: number): PortAnswer | undefined;
   /** How a service's server forwards a path to another server, where its proxy does (P257). */
   forwardOf?(service: string, path: string): Forward | undefined;
+  /** How a cluster's way in forwards a request to a public host, where one does (P260). */
+  ingressOf?(host: string, path: string): Forward | undefined;
+  /** The public hosts a cluster's ways in serve a service's pages at (P260). */
+  publicHostsOf?(service: string): readonly string[];
 }
 
 /**
@@ -56,7 +60,7 @@ export interface UiIndex {
  * `marker` is an annotation naming the service, `@flowatlas-calls catalog GET
  * /items`, which outranks all of them (P127).
  */
-export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'proxy' | 'same-service' | 'unique-route';
+export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'proxy' | 'ingress' | 'same-service' | 'unique-route';
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -82,6 +86,8 @@ interface Details {
   portClosed: { host: string; closed: ClosedPort };
   /** A service's proxy forwards the request to a host no service of the project is reached at (P257). */
   proxiedOut: { service: string; forward: Forward };
+  /** The request is forwarded through more servers than are followed, or in a circle (P260). */
+  proxyChain: { services: readonly string[]; loop: boolean };
   /** The address or the verb is only known at run time; the extractor said so. */
   dynamic: { reason: string };
   /** No route answers. `targetService` is null when nothing named one to ask. */
@@ -156,6 +162,7 @@ const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null
   portShared: ({ port, said }) => portSharedFinding(port, said),
   portClosed: ({ host, closed }) => portClosedFinding(host, closed),
   proxiedOut: ({ service, forward }) => proxiedOutFinding(service, forward),
+  proxyChain: ({ services, loop }) => proxyChainFinding(services, loop),
   ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'target' : 'application'](detail),
 };
 
@@ -313,6 +320,10 @@ const byHost = (ask: Ask): UiOutcome | undefined => {
   const { call, index } = ask;
   const host = call.meta?.['host'];
   if (typeof host !== 'string') return undefined;
+  // A public host a cluster's way in matches the path on sends it to the
+  // service behind it, whoever else the host names (P260).
+  const way = index.ingressOf?.(host, ask.path);
+  if (way !== undefined) return forwarded(ask, host, way);
   const found = index.serviceAtHost?.(host, defaultPortOf(call.meta?.['url']));
   if (found === undefined) return undefined;
   // Two services listen on the port this machine's address names (P250): no
@@ -343,12 +354,21 @@ const byHost = (ask: Ask): UiOutcome | undefined => {
  * guess that names the rule. A host no service is reached at is a third
  * party, said as one.
  */
-const forwarded = (ask: Ask, service: string, forward: Forward): UiOutcome => {
+const forwarded = (ask: Ask, service: string, forward: Forward, passed: readonly string[] = [service]): UiOutcome => {
   const found = ask.index.serviceAtHost?.(forward.host, forward.defaultPort);
   if (found === undefined) return { kind: 'proxiedOut', service, forward };
   if (found.kind === 'shared') return { kind: 'portShared', port: found.port, said: found.said, services: found.services };
   if (found.kind === 'closed') return { kind: 'portClosed', host: found.host, closed: found.closed };
-  const outcome = within({ ...ask, path: forward.path }, found.service, 'proxy');
+  const via = forward.via ?? 'proxy';
+  // A server forwarded to may forward the request again, by its own rules (P260).
+  const next = ask.index.forwardOf?.(found.service, forward.path);
+  if (next !== undefined && (next.rule.after === undefined || within({ ...ask, path: forward.path }, found.service, via).kind === 'noRoute')) {
+    const services = [...passed, found.service];
+    if (passed.includes(found.service)) return { kind: 'proxyChain', services, loop: true };
+    if (passed.length >= PROXY_HOPS) return { kind: 'proxyChain', services, loop: false };
+    return forwarded(ask, found.service, forwardedAgain(forward, service, next), services);
+  }
+  const outcome = within({ ...ask, path: forward.path }, found.service, via);
   if (outcome.kind === 'noRoute') return { ...outcome, proxied: forward };
   if (outcome.kind !== 'linked') return outcome;
   return { ...outcome, proxied: forward, ...(found.listening === undefined ? {} : { listening: found.listening }) };
@@ -367,6 +387,26 @@ const byProxy = (ask: Ask): UiOutcome | undefined => {
   if (forward === undefined) return undefined;
   if (forward.rule.after !== undefined && within(ask, call.repo, 'same-service').kind !== 'noRoute') return undefined;
   return forwarded(ask, call.repo, forward);
+};
+
+/**
+ * A request written with no host from a service whose pages a cluster's way
+ * in serves at a public host (P260): a request to that host, forwarded by the
+ * way in as any request to it is. Where the service is served at several
+ * hosts, only a path every one of them forwards alike is followed.
+ */
+const byIngress = (ask: Ask): UiOutcome | undefined => {
+  const { call, env, index } = ask;
+  if (typeof call.meta?.['host'] === 'string' || env !== undefined) return undefined;
+  const hosts = index.publicHostsOf?.(call.repo) ?? [];
+  const ways = hosts.flatMap((host) => {
+    const way = index.ingressOf?.(host, ask.path);
+    return way === undefined ? [] : [{ host, way }];
+  });
+  const first = ways[0];
+  if (first === undefined || ways.length !== hosts.length) return undefined;
+  if (ways.some(({ way }) => way.host !== first.way.host || way.path !== first.way.path)) return undefined;
+  return forwarded(ask, first.host, first.way);
 };
 
 /**
@@ -443,6 +483,7 @@ const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
   byBaseUrlValue,
   byHost,
   byProxy,
+  byIngress,
   bySameService,
   byUniqueRoute,
 ];

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:29:24.329Z",
+  "builtAt": "2026-11-08T17:07:13.249Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 483,
+      "durationMs": 957,
       "packages": {
         "name": "@next-reexport/web",
         "runtime": [
@@ -67,15 +67,6 @@
       "service": "web",
       "file": "../../packages/handlers/src/store.ts",
       "line": 15,
-      "reason": "unknown-base-url-env",
-      "message": "no service declares DELIVERIES_UPSTREAM_URL",
-      "hint": "Add DELIVERIES_UPSTREAM_URL to services[].baseUrlEnv of whichever service answers it.",
-      "symbol": "http_out:web#../../packages/handlers/src/store.ts:15:24"
-    },
-    {
-      "service": "web",
-      "file": "../../packages/handlers/src/store.ts",
-      "line": 15,
       "reason": "target-route-not-found",
       "message": "no configured service serves POST /deliveries",
       "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /deliveries */.",
@@ -86,10 +77,10 @@
     "nodes": 11,
     "edges": 7,
     "types": 2,
-    "missed": 3,
-    "sites": 3,
+    "missed": 2,
+    "sites": 2,
     "notes": 0,
     "findings": 0,
-    "unresolved": 3
+    "unresolved": 2
   }
 }

@@ -8,6 +8,7 @@ import {
   GraphBuilder,
   LISTEN_META,
   listeningOf,
+  OWN_ORIGIN_META,
   PROXY_META,
   proxiesOf,
   parseConfig,
@@ -220,6 +221,7 @@ export const extractAngular = (
       adapters: { frontend: base.adapters.frontend.map((adapter) => adapter.name) },
       ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
       ...(proxy.rules.length === 0 ? {} : { [PROXY_META]: proxy.rules }),
+      ...(proxy.ownOrigin === true ? { [OWN_ORIGIN_META]: true } : {}),
     },
   });
 };

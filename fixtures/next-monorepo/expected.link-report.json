@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:29:22.825Z",
+  "builtAt": "2026-11-08T17:07:10.122Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 9,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 475,
+      "durationMs": 824,
       "packages": {
         "name": "@next-monorepo/web",
         "runtime": [
@@ -66,15 +66,6 @@
       "service": "web",
       "file": "../../packages/orders-lib/src/store.ts",
       "line": 16,
-      "reason": "unknown-base-url-env",
-      "message": "no service declares ORDERS_UPSTREAM_URL",
-      "hint": "Add ORDERS_UPSTREAM_URL to services[].baseUrlEnv of whichever service answers it.",
-      "symbol": "http_out:web#../../packages/orders-lib/src/store.ts:16:24"
-    },
-    {
-      "service": "web",
-      "file": "../../packages/orders-lib/src/store.ts",
-      "line": 16,
       "reason": "target-route-not-found",
       "message": "no configured service serves GET /orders",
       "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /orders */.",
@@ -85,10 +76,10 @@
     "nodes": 12,
     "edges": 9,
     "types": 0,
-    "missed": 2,
-    "sites": 2,
+    "missed": 1,
+    "sites": 1,
     "notes": 0,
     "findings": 0,
-    "unresolved": 2
+    "unresolved": 1
   }
 }

@@ -12,7 +12,11 @@ import {
   NO_PROXY,
   NotLiteral,
   configValueAt,
+  proxyPatternRule,
   proxyRule,
+  proxySettingOf,
+  proxySettingRule,
+  proxyTargetOf,
   proxyUnreadRow,
   readConfigLiteral,
   toPosixPath,
@@ -48,15 +52,25 @@ const isRecord = (value: unknown): value is Record<string, unknown> => typeof va
 
 /** One entry of Vite's proxy table: the rule it makes, or the row that says why it makes none. */
 const viteEntry = (key: string, options: unknown, at: { file: string; line: number }): { rule?: ProxyRule; row?: Unresolved } => {
-  if (key.startsWith('^')) return { row: proxyUnreadRow(at, key, 'its prefix is a pattern, not a path', ADAPTER) };
-  const target = typeof options === 'string' ? options : isRecord(options) ? options['target'] : undefined;
-  if (typeof target !== 'string') return { row: proxyUnreadRow(at, key, 'its target is not written as an address', ADAPTER) };
+  // A key that starts with `^` is a regular expression the whole path is matched by (P260).
+  const pattern = key.startsWith('^');
+  const target = typeof options === 'string' || options instanceof NotLiteral ? options : isRecord(options) ? options['target'] : undefined;
   const written = isRecord(options) ? options['rewrite'] : undefined;
   let rewrite: ProxyRewrite | undefined = { kind: 'keep' };
-  if (written !== undefined) rewrite = written instanceof NotLiteral ? rewriteOfFunction(written.text, key) : undefined;
-  if (rewrite === undefined) return { row: proxyUnreadRow(at, key, 'its rewrite is not a literal replacement of the prefix', ADAPTER) };
-  const rule = proxyRule(key, target, rewrite, at);
-  return rule === undefined ? { row: proxyUnreadRow(at, key, `its target (${target}) is not an address`, ADAPTER) } : { rule };
+  if (written !== undefined) rewrite = written instanceof NotLiteral ? rewriteOfFunction(written.text, pattern ? '' : key) : undefined;
+  if (rewrite === undefined) return { row: proxyUnreadRow(at, key, 'its rewrite is not a regular expression replaced by a literal', ADAPTER) };
+  // A target read from a setting is filled from the service's own files (P260).
+  const setting = target instanceof NotLiteral ? proxySettingOf(target.text) : undefined;
+  if (typeof target !== 'string' && setting === undefined) return { row: proxyUnreadRow(at, key, 'its target is not written as an address or a setting', ADAPTER) };
+  const literal = typeof target === 'string' ? proxyTargetOf(target) : undefined;
+  if (typeof target === 'string' && literal === undefined) return { row: proxyUnreadRow(at, key, `its target (${target}) is not an address`, ADAPTER) };
+  if (pattern) {
+    const settled = setting === undefined ? undefined : proxySettingRule('/', setting, { kind: 'strip' }, at);
+    const rule = proxyPatternRule(key, settled ?? { target: literal?.origin ?? '', to: literal?.path ?? '' }, rewrite, at);
+    return rule === undefined ? { row: proxyUnreadRow(at, key, 'its key is not a regular expression the language reads', ADAPTER) } : { rule };
+  }
+  const rule = setting === undefined ? proxyRule(key, target as string, rewrite, at) : proxySettingRule(key, setting, rewrite, at);
+  return rule === undefined ? { row: proxyUnreadRow(at, key, `its target (${String(target)}) is not an address`, ADAPTER) } : { rule };
 };
 
 /** Every rule Vite's dev and preview servers forward by. */

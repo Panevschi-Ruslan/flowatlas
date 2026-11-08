@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-08T07:28:13.456Z",
+  "builtAt": "2026-11-08T17:07:15.605Z",
   "services": [
     {
       "name": "web",
@@ -51,7 +51,8 @@
             "nestjs-http",
             "nextjs-routes"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {

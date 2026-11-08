@@ -1,23 +1,38 @@
-import { readdirSync, readFileSync, realpathSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import {
   keptValue,
   localHostsOf,
   looksSecret,
   portOf,
+  proxyRule,
   type ContainerRun,
   type HostAlias,
+  type IngressRoute,
   type PortValue,
+  type ProxyRule,
   type RepoSettings,
   type RoutedName,
   type RoutedPort,
   type ServiceBinding,
   type SettingValue,
+  type Unresolved,
 } from '@flowatlas/core';
 import { readComposeFile, type ComposeService, type Mapping } from './compose.js';
 import { readWorkerJson, readWorkerToml, readServerlessFile, type DeploymentSettings } from './deployed.js';
-import { readManifestsUnder, type ManifestContainer, type ManifestService, type ManifestWorkload, type Manifests } from './cluster.js';
-import { readDockerRuns, readDockerRunsInScript } from './docker-run.js';
+import {
+  readManifestsUnder,
+  type ChartInstall,
+  type ManifestChoice,
+  type ManifestContainer,
+  type ManifestPath,
+  type ManifestRow,
+  type ManifestService,
+  type ManifestServicePort,
+  type ManifestWorkload,
+  type Manifests,
+} from './cluster.js';
+import { packageScriptLines, readDockerRuns, readDockerRunsInScript, readHelmInstalls, readPortForwards, scriptLines, type PortForward, type ScriptLine } from './docker-run.js';
 import { namesInEnvFile, readEnvFile, type Written } from './dotenv.js';
 import { composeEnvironment, envFileEnvironment, envFileReading, environmentName, isComposeFile } from './files.js';
 
@@ -52,9 +67,13 @@ interface Gathered {
   ports: Map<string, PortValue[]>;
   /** The names a cluster's network routes to its containers (P257). */
   routes: RoutedName[];
+  /** The ways in from outside a cluster that reach it (P260). */
+  ingress: IngressRoute[];
+  /** What its manifests write that is not read (P260). */
+  rows: Unresolved[];
 }
 
-const gathered = (): Gathered => ({ values: new Map(), namedOnly: new Map(), hosts: [], bindings: [], deployedAs: [], containers: [], ports: new Map(), routes: [] });
+const gathered = (): Gathered => ({ values: new Map(), namedOnly: new Map(), hosts: [], bindings: [], deployedAs: [], containers: [], ports: new Map(), routes: [], ingress: [], rows: [] });
 
 /** A port a setting is given, where the setting's name is no secret's: `PORT=3000`. */
 const portSetting = ({ name, raw }: Written): number | undefined => (looksSecret(name) ? undefined : portOf(raw));
@@ -282,6 +301,21 @@ const spellingsOf = (service: ManifestService): string[] => {
   return [name, `${name}.${namespace}`, `${name}.${namespace}.svc`, `${name}.${namespace}.svc.cluster.local`];
 };
 
+/** A service object of the manifests, and the project's service it routes to (P257). */
+interface Routed {
+  readonly object: ManifestService;
+  readonly service: string;
+  readonly routed: RoutedName;
+  /** Each port of the object read, with the number its target is, and the port each node opens for it. */
+  readonly ports: ReadonlyArray<{ readonly port: ManifestServicePort; readonly target: number }>;
+}
+
+/** A workload of the manifests, and the project's service it runs, where one does. */
+interface Running {
+  readonly workload: ManifestWorkload;
+  readonly runs?: string;
+}
+
 /**
  * Each service object of the manifests, as the name it routes to one of the
  * project's services (P257): the service whose workload it selects - a
@@ -291,11 +325,14 @@ const spellingsOf = (service: ManifestService): string[] => {
  * one they do not name is not read. The environment is that of the container
  * the first port reaches.
  */
-const routedNames = (manifests: ReadonlyArray<{ read: Manifests; owner?: string }>, names: ReadonlyMap<string, string>): Array<[string, RoutedName]> => {
-  const workloads = manifests.flatMap(({ read, owner }) =>
-    read.workloads.map((workload) => ({ workload, runs: serviceOfWorkload(workload, names) ?? (owner !== undefined && read.workloads.length === 1 ? owner : undefined) })),
+const routedNames = (manifests: ReadonlyArray<{ read: Manifests; owner?: string }>, names: ReadonlyMap<string, string>): { routed: Routed[]; workloads: Running[] } => {
+  const workloads: Running[] = manifests.flatMap(({ read, owner }) =>
+    read.workloads.map((workload) => {
+      const runs = serviceOfWorkload(workload, names) ?? (owner !== undefined && read.workloads.length === 1 ? owner : undefined);
+      return { workload, ...(runs === undefined ? {} : { runs }) };
+    }),
   );
-  const out: Array<[string, RoutedName]> = [];
+  const out: Routed[] = [];
   for (const { read } of manifests) {
     for (const service of read.services) {
       const selected = workloads.filter(({ workload }) => selects(service, workload));
@@ -303,14 +340,125 @@ const routedNames = (manifests: ReadonlyArray<{ read: Manifests; owner?: string 
       const target = runs.length === 1 ? runs[0] : runs.length === 0 && selected.length === 0 ? names.get(service.name.toLowerCase()) : undefined;
       if (target === undefined) continue;
       const pods = selected.map((each) => each.workload);
-      const ports: RoutedPort[] = service.ports.flatMap((each) => {
+      const read = service.ports.flatMap((each) => {
         const written = each.target ?? each.port;
         const number = typeof written === 'number' ? written : containerAt(pods, written)?.ports.find((port) => port.name === written)?.port;
-        return number === undefined ? [] : [{ port: each.port, target: number, file: service.file, line: each.line }];
+        return number === undefined ? [] : [{ port: each, target: number }];
       });
+      const ports: RoutedPort[] = read.map(({ port, target: number }) => ({ port: port.port, target: number, file: port.file, line: port.line }));
       if (ports.length === 0) continue;
       const container = containerAt(pods, (ports[0] as RoutedPort).target);
-      out.push([target, { name: service.name.toLowerCase(), names: spellingsOf(service), file: service.file, ports, environment: environmentPorts(container?.environment ?? []) }]);
+      const from = container?.environmentFile;
+      out.push({
+        object: service,
+        service: target,
+        routed: {
+          name: service.name.toLowerCase(),
+          names: spellingsOf(service),
+          file: service.file,
+          ports,
+          environment: environmentPorts(container?.environment ?? []),
+          ...(from === undefined || from === service.file ? {} : { environmentFrom: from }),
+        },
+        ports: read,
+      });
+    }
+  }
+  return { routed: out, workloads };
+};
+
+/** The service objects a name, in a namespace where one is written, may be. */
+const objectsNamed = (routed: readonly Routed[], name: string, namespace: string | undefined): Routed[] =>
+  routed.filter((each) => each.object.name === name && (namespace === undefined || each.object.namespace === undefined || each.object.namespace === namespace));
+
+/** The port of a service object a way in or a forward names, by number or by name. */
+const portNamed = (routed: Routed, port: number | string | undefined) =>
+  port === undefined ? (routed.ports.length === 1 ? routed.ports[0] : undefined) : routed.ports.find((each) => each.port.port === port || each.port.name === port);
+
+/** How a way in rewrites a path it matches, as a proxy rule's rewrite. */
+const ingressRule = (path: ManifestPath, target: string): ProxyRule | undefined => {
+  const at = { file: path.file, line: path.line };
+  if (path.match === 'pattern') {
+    const rewrite = path.rewrite?.kind === 'pattern' ? { rewrite: { source: path.rewrite.source, flags: path.rewrite.flags, with: path.rewrite.with, whole: true as const } } : {};
+    const base = proxyRule('/', target, { kind: 'strip' }, at);
+    return base === undefined ? undefined : { ...base, path: path.path, match: { source: path.path, ...(path.flags === undefined || path.flags === '' ? {} : { flags: path.flags }) }, ...rewrite };
+  }
+  if (path.rewrite?.kind === 'pattern') {
+    const base = proxyRule(path.path, target, { kind: 'strip' }, at);
+    return base === undefined ? undefined : { ...base, to: '', rewrite: { source: path.rewrite.source, ...(path.rewrite.flags === '' ? {} : { flags: path.rewrite.flags }), with: path.rewrite.with, whole: true }, ...(path.match === 'exact' ? { exact: true as const } : {}) };
+  }
+  const rewrite = path.rewrite?.kind === 'prefix' ? ({ kind: 'replace', with: path.rewrite.with } as const) : ({ kind: 'keep' } as const);
+  const rule = proxyRule(path.path, target, rewrite, at);
+  return rule === undefined ? undefined : { ...rule, ...(path.match === 'exact' ? { exact: true as const } : {}) };
+};
+
+/**
+ * The ways in the manifests write, each path handed to the service behind
+ * the service object it sends to (P260): its target the object's name at
+ * the port the path names. A path that sends to objects of two of the
+ * project's services, by weight, is a row.
+ */
+const waysIn = (manifests: readonly Manifests[], routed: readonly Routed[]): { routes: Array<[string, IngressRoute]>; rows: ManifestRow[] } => {
+  const routes: Array<[string, IngressRoute]> = [];
+  const rows: ManifestRow[] = [];
+  for (const ingress of manifests.flatMap((each) => each.ingresses ?? [])) {
+    for (const path of ingress.paths) {
+      const reached = path.backends.flatMap((backend) =>
+        objectsNamed(routed, backend.name, ingress.namespace).flatMap((each) => {
+          const port = portNamed(each, backend.port);
+          return port === undefined ? [] : [{ routed: each, port }];
+        }),
+      );
+      const services = [...new Set(reached.map((each) => each.routed.service))];
+      if (services.length === 0) continue;
+      if (services.length > 1) {
+        rows.push({
+          reason: 'manifest-unread',
+          file: path.file,
+          line: path.line,
+          message: `${path.file} sends ${path.path} on ${ingress.hosts.join(', ')} to ${services.join(' and ')} by weight, so a request to it is not one service's`,
+          hint: 'Name the request\'s service with an annotation (/** @flowatlas-calls <service> METHOD /path */).',
+          about: services,
+        });
+        continue;
+      }
+      const first = reached[0] as (typeof reached)[number];
+      const rule = ingressRule(path, `http:${'/'.repeat(2)}${first.routed.object.name.toLowerCase()}:${first.port.port.port}`);
+      if (rule === undefined) continue;
+      for (const host of ingress.hosts) routes.push([first.routed.service, { host, rule, object: `${ingress.kind}/${ingress.name}` }]);
+    }
+  }
+  return { routes, rows };
+};
+
+/** A command a script installs a chart with, resolved against where the script is run from. */
+const chartInstalls = (dirs: readonly string[], lines: readonly ScriptLine[], file: string): ChartInstall[] =>
+  readHelmInstalls(lines).flatMap((install) => {
+    const base = dirs.find((dir) => existsSync(join(resolve(dir, install.chart), 'Chart.yaml')));
+    if (base === undefined) return [];
+    return [
+      {
+        chart: resolve(base, install.chart),
+        ...(install.release === undefined ? {} : { release: install.release }),
+        ...(install.namespace === undefined ? {} : { namespace: install.namespace }),
+        values: install.values.map((each) => resolve(base, each)),
+        sets: install.sets,
+        file,
+        line: install.line,
+      },
+    ];
+  });
+
+/** The commands of the scripts at the top of a directory and in its script folders, labelled relative to it. */
+const scriptsAt = (dir: string): Array<{ lines: ScriptLine[]; file: string; dir: string }> => {
+  const out: Array<{ lines: ScriptLine[]; file: string; dir: string }> = [];
+  for (const [folder, names] of [['', filesAt(dir)] as const, ...SCRIPT_DIRS.map((each) => [each, filesAt(join(dir, each))] as const)]) {
+    for (const name of names) {
+      const isPackage = folder === '' && name === 'package.json';
+      if (!isPackage && !SCRIPT_FILES.test(name)) continue;
+      const text = read(join(dir, folder, name));
+      if (text === undefined) continue;
+      out.push({ lines: isPackage ? packageScriptLines(text) : scriptLines(text), file: folder === '' ? name : `${folder}/${name}`, dir: join(dir, folder) });
     }
   }
   return out;
@@ -323,7 +471,47 @@ export interface SettingsInput {
   readonly rootDir: string;
   /** The environment chosen under `settingFiles.environment`. */
   readonly environment?: string;
+  /** The overlays chosen under `settingFiles.overlays`, absolute (P260). */
+  readonly overlays?: readonly string[];
+  /** The values files each chart is installed with under `settingFiles.chartValues`, by the chart's absolute folder (P260). */
+  readonly chartValues?: Readonly<Record<string, readonly string[]>>;
 }
+
+/** A row a manifest reader made, as the row of a service. */
+const manifestRow = (row: ManifestRow, service: string, file: string): Unresolved => ({
+  service,
+  file,
+  line: row.line,
+  reason: row.reason,
+  message: row.message,
+  hint: row.hint,
+  symbol: `${file}:${row.line}`,
+});
+
+/**
+ * The ports this machine forwards to a cluster's objects, as containers of
+ * the services behind them (P260): `localhost:8080` reaches what the object
+ * routes the remote port to, and the service is listening there as its
+ * containers would be.
+ */
+const forwardedRuns = (forwards: ReadonlyArray<{ forward: PortForward; file: string }>, routed: readonly Routed[], workloads: readonly Running[]): Array<[string, ContainerRun]> =>
+  forwards.flatMap(({ forward, file }): Array<[string, ContainerRun]> => {
+    const name = forward.name.toLowerCase();
+    if (forward.kind === 'service') {
+      const found = objectsNamed(routed, name, forward.namespace).flatMap((each) => {
+        const port = portNamed(each, forward.remote);
+        return port === undefined ? [] : [{ each, port }];
+      });
+      if (found.length !== 1) return [];
+      const { each, port } = found[0] as (typeof found)[number];
+      return [[each.service, { name: `svc/${name}`, names: [], file, ports: [{ published: forward.local, container: port.target, file, line: forward.line }], environment: each.routed.environment, via: 'forwarded', environmentFrom: each.routed.environmentFrom ?? each.routed.file }]];
+    }
+    const found = workloads.filter((each) => each.workload.name.toLowerCase() === name && each.runs !== undefined && (forward.namespace === undefined || each.workload.namespace === undefined || each.workload.namespace === forward.namespace));
+    if (found.length !== 1) return [];
+    const { workload, runs } = found[0] as Running;
+    const container = containerAt([workload], forward.remote);
+    return [[runs as string, { name: `deploy/${name}`, names: [], file, ports: [{ published: forward.local, container: forward.remote, file, line: forward.line }], environment: environmentPorts(container?.environment ?? []), via: 'forwarded', environmentFrom: container?.environmentFile ?? workload.file }]];
+  });
 
 /**
  * The service a container is, if it is one: the one whose repository it is
@@ -365,6 +553,23 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
     }
   };
 
+  // What the scripts of each service and of the project run: the charts they
+  // install, and the ports they forward to a cluster (P260).
+  const rootIsService = input.services.some((service) => realOf(service.dir) === realOf(input.rootDir));
+  const scripts = [
+    ...input.services.flatMap((service) => scriptsAt(service.dir).map((each) => ({ ...each, base: service.dir, owner: service.name }))),
+    ...(rootIsService ? [] : scriptsAt(input.rootDir).map((each) => ({ ...each, base: input.rootDir, owner: undefined }))),
+  ];
+  const installs = scripts.flatMap((each) => chartInstalls([each.dir, each.base, input.rootDir], each.lines, each.file));
+  const forwards = scripts.flatMap((each) => readPortForwards(each.lines).map((forward) => ({ forward, file: each.file })));
+  const choice: ManifestChoice = {
+    ...(input.environment === undefined ? {} : { environment: environmentName(input.environment) }),
+    ...(input.overlays === undefined ? {} : { overlays: input.overlays.map((each) => resolve(each)) }),
+    ...(input.chartValues === undefined ? {} : { chartValues: new Map(Object.entries(input.chartValues).map(([chart, files]) => [resolve(chart), files.map((each) => resolve(each))])) }),
+    installs,
+    environmentOf: environmentName,
+  };
+
   for (const service of input.services) {
     const into = gathered();
     byService.set(service.name, into);
@@ -377,14 +582,45 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
     for (const dir of SCRIPT_DIRS) {
       for (const name of filesAt(join(service.dir, dir)).filter((each) => SCRIPT_FILES.test(each))) readRuns(into, join(service.dir, dir, name), `${dir}/${name}`);
     }
-    manifests.push({ read: readManifestsUnder(service.dir), owner: service.name });
+    manifests.push({ read: readManifestsUnder(service.dir, new Set(), choice), owner: service.name });
     composeAt(service.dir, (name) => name, service.name);
   }
   if (!byDir.has(realOf(input.rootDir))) {
     composeAt(input.rootDir, (name) => name);
-    manifests.push({ read: readManifestsUnder(input.rootDir, new Set(input.services.map((service) => resolve(service.dir)))) });
+    manifests.push({ read: readManifestsUnder(input.rootDir, new Set(input.services.map((service) => resolve(service.dir))), choice) });
   }
-  for (const [service, routed] of routedNames(manifests, names)) addRouted(byService.get(service) as Gathered, routed);
+  const { routed, workloads } = routedNames(manifests, names);
+  for (const each of routed) {
+    const into = byService.get(each.service) as Gathered;
+    addRouted(into, each.routed);
+    // The port each node opens for the object is this machine's where the cluster runs on it (P260).
+    const opened = each.ports.flatMap(({ port, target }) => (port.nodePort === undefined ? [] : [{ published: port.nodePort, container: target, file: port.file, line: port.line }]));
+    if (opened.length > 0) {
+      const from = each.routed.environmentFrom;
+      addContainer(into, { name: each.routed.name, names: [], file: each.routed.file, ports: opened, environment: each.routed.environment, via: 'node-port', ...(from === undefined ? {} : { environmentFrom: from }) });
+    }
+  }
+  for (const [service, run] of forwardedRuns(forwards, routed, workloads)) addContainer(byService.get(service) as Gathered, run);
+  const ways = waysIn(
+    manifests.map((each) => each.read),
+    routed,
+  );
+  for (const [service, way] of ways.routes) (byService.get(service) as Gathered).ingress.push(way);
+  // A row about a manifest is said by the services it is about, or by the one whose repository holds it.
+  const objectServices = new Map<string, string[]>();
+  for (const each of routed) objectServices.set(each.object.name, [...(objectServices.get(each.object.name) ?? []), each.service]);
+  for (const each of workloads) if (each.runs !== undefined) objectServices.set(each.workload.name, [...(objectServices.get(each.workload.name) ?? []), each.runs]);
+  const rowsOf = (rows: readonly ManifestRow[], owner?: string): void => {
+    for (const row of rows) {
+      const about = [...new Set(row.about.flatMap((name) => [...(objectServices.get(name) ?? []), ...(names.has(name.toLowerCase()) ? [names.get(name.toLowerCase()) as string] : [])]))];
+      for (const service of about.length > 0 ? about : owner === undefined ? [] : [owner]) {
+        const into = byService.get(service) as Gathered;
+        if (!into.rows.some((seen) => seen.file === row.file && seen.line === row.line && seen.reason === row.reason)) into.rows.push(manifestRow(row, service, row.file));
+      }
+    }
+  };
+  for (const { read, owner } of manifests) rowsOf(read.rows ?? [], owner);
+  rowsOf(ways.rows);
 
   for (const file of composeFiles) {
     for (const container of file.services) {
@@ -471,7 +707,9 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
     }
     const containers = into.containers;
     const routes = into.routes;
-    const sizes = [Object.keys(values), Object.keys(namedOnly), hosts, bindings, deployedAs, containers, Object.keys(ports), routes];
+    const ingress = into.ingress;
+    const rows = into.rows;
+    const sizes = [Object.keys(values), Object.keys(namedOnly), hosts, bindings, deployedAs, containers, Object.keys(ports), routes, ingress, rows];
     if (sizes.every((each) => each.length === 0)) continue;
     out[service] = {
       values,
@@ -481,7 +719,9 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       ...(deployedAs.length === 0 ? {} : { deployedAs }),
       ...(containers.length === 0 ? {} : { containers }),
       ...(routes.length === 0 ? {} : { routes }),
+      ...(ingress.length === 0 ? {} : { ingress }),
       ...(Object.keys(ports).length === 0 ? {} : { ports }),
+      ...(rows.length === 0 ? {} : { rows }),
     };
   }
   return out;

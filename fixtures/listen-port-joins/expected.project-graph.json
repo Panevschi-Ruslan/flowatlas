@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T16:50:03.413Z",
+  "builtAt": "2026-11-08T17:56:32.781Z",
   "services": [
     {
       "name": "orders",
@@ -543,7 +543,8 @@
             "file": "package.json",
             "line": 6
           }
-        ]
+        ],
+        "ownOrigin": true
       }
     },
     {

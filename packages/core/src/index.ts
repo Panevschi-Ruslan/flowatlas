@@ -309,7 +309,7 @@ export {
   NO_SETTINGS,
   portOf,
 } from './setting-files.js';
-export type { ContainerRun, HostAlias, PortValue, PublishedPort, RepoSettings, RoutedName, RoutedPort, ServiceBinding, SettingValue } from './setting-files.js';
+export type { ContainerRun, HostAlias, IngressRoute, PortValue, PublishedPort, RepoSettings, RoutedName, RoutedPort, ServiceBinding, SettingValue } from './setting-files.js';
 export { GUESSED_META, isTaken, RECORDED_META, strongestTaken, TAKEN_BY_META, TAKES_META } from './takes.js';
 export type { Takes, Taken, TakenInstead } from './takes.js';
 export { OPERATION_VERBS, operationsOf } from './declared-operations.js';
@@ -347,8 +347,8 @@ export {
   portWritten,
 } from './listen-port.js';
 export type { ListenAt, ListenPort, PortReading, WrittenPort } from './listen-port.js';
-export { forwardedBy, NO_PROXY, PROXY_META, proxiesOf, proxyPrefixOf, proxyRule, proxyTargetOf, proxyUnreadRow } from './proxy-rule.js';
-export type { ProxyReading, ProxyRewrite, ProxyRule } from './proxy-rule.js';
+export { forwardedBy, NO_PROXY, OWN_ORIGIN_META, PROXY_META, proxiesOf, proxyPatternRule, proxyPrefixOf, proxyRule, proxySettingOf, proxySettingRule, proxyTargetOf, proxyUnreadRow } from './proxy-rule.js';
+export type { ProxyReading, ProxyRewrite, ProxyRule, ProxySetting } from './proxy-rule.js';
 export { LOG_LEVELS, createLogger, silentLogger } from './adapters/context.js';
 export type { ExtractContext, LogLevel, Logger } from './adapters/context.js';
 export {

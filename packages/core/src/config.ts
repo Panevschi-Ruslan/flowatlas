@@ -1393,11 +1393,20 @@ export const flowatlasConfigSchema = z
      * environments a file is for is read, where files name more than one
      * (`.env.development` and `.env.staging`): the files for it are read, and
      * the files for no environment in particular, and no other.
+     *
+     * Where a cluster's manifests are built several ways (P260), the
+     * environment chooses too: the overlay whose folder is named for it, the
+     * values file named for it. `overlays` names the overlays to read
+     * outright, folders relative to this configuration, and `chartValues` the
+     * values files a chart is installed with, by the chart's folder, each
+     * relative to this configuration, read over the chart's own values.
      */
     settingFiles: z
       .strictObject({
         read: z.boolean().default(true),
         environment: z.string().min(1).optional(),
+        overlays: z.array(z.string().min(1)).optional(),
+        chartValues: z.record(z.string().min(1), z.array(z.string().min(1))).optional(),
       })
       .default({ read: true }),
     /** Directory for generated artefacts, relative to the configuration file. */

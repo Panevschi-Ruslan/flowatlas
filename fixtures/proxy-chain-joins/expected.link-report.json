@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T17:07:45.607Z",
+  "configHash": "72110bdba2d9",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1143,
+      "packages": {
+        "name": "proxy-chain-joins-admin",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1193,
+      "packages": {
+        "name": "proxy-chain-joins-billing",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1145,
+      "packages": {
+        "name": "proxy-chain-joins-catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 8,
+      "edges": 5,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1107,
+      "packages": {
+        "name": "proxy-chain-joins-gateway",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 3,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1183,
+      "packages": {
+        "name": "proxy-chain-joins-jobs",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1201,
+      "packages": {
+        "name": "proxy-chain-joins-kiosk",
+        "runtime": [
+          "react"
+        ],
+        "dev": [
+          "vite"
+        ]
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1105,
+      "packages": {
+        "name": "proxy-chain-joins-ledger",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 1145,
+      "packages": {
+        "name": "proxy-chain-joins-orders",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 10,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1085,
+      "packages": {
+        "name": "proxy-chain-joins-web",
+        "runtime": [
+          "react"
+        ],
+        "dev": [
+          "vite"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 9,
+    "resolved": 8,
+    "unresolved": 1,
+    "byReason": {
+      "proxy-chain-unfollowed": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 8,
+    "called": 6,
+    "uncalled": [
+      "entry:jobs:http:POST:/jobs/sync",
+      "entry:orders:http:GET:/orders"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/Shop.tsx",
+      "line": 6,
+      "reason": "proxy-chain-unfollowed",
+      "message": "the request is forwarded by web, then kiosk, and back to web: the proxies forward it in a circle",
+      "hint": "One of the rules forwards to the server the request came from; check the targets of the rules named.",
+      "symbol": "ui_api_call:web#src/Shop.tsx:6:26"
+    }
+  ],
+  "totals": {
+    "nodes": 49,
+    "edges": 37,
+    "types": 2,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

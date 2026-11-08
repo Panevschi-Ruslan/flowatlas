@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-08T07:28:10.886Z",
+  "builtAt": "2026-11-08T17:07:10.122Z",
   "services": [
     {
       "name": "web",
@@ -95,7 +95,8 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {
@@ -320,15 +321,6 @@
       "message": "no configured service serves GET /orders",
       "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /orders */.",
       "symbol": "ui_api_call:web#../../packages/orders-lib/src/store.ts:16:24"
-    },
-    {
-      "service": "web",
-      "file": "../../packages/orders-lib/src/store.ts",
-      "line": 16,
-      "reason": "unknown-base-url-env",
-      "message": "no service declares ORDERS_UPSTREAM_URL",
-      "hint": "Add ORDERS_UPSTREAM_URL to services[].baseUrlEnv of whichever service answers it.",
-      "symbol": "http_out:web#../../packages/orders-lib/src/store.ts:16:24"
     }
   ]
 }

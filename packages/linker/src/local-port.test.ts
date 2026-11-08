@@ -420,3 +420,148 @@ describe("a request a server's proxy forwards joins where it is forwarded (P257)
     expect(result.report.httpOut).toMatchObject({ external: 1 });
   });
 });
+
+/** A server whose repository node forwards by `rules`, serving `GET /items` itself. */
+const forwarder = (repo: string, rules: readonly Record<string, unknown>[], listen: readonly ListenPort[]): RepoGraph =>
+  graph(repo, [
+    { id: `repo:${repo}`, type: 'repo', label: repo, repo, meta: { listen, proxy: rules } },
+    { id: `entry:${repo}:http:GET:/items`, type: 'entry', kind: 'http', label: 'GET /items', repo, meta: { method: 'GET', path: '/items' } },
+  ]);
+
+describe("the rest of the ways a server's proxy forwards a request (P260)", () => {
+  it("reads a target from a setting the service's files give one address, and says where they give none", () => {
+    const setting = rule('/api', '', '', { setting: { name: 'ORDERS_URL', to: '' } });
+    const given = { web: { ...NO_SETTINGS, values: { ORDERS_URL: [{ value: `http:${SLASHES}localhost:3001`, file: '.env.example' }] } } };
+    const result = linkGraphs(proxied([setting], '/api/items'), config(), { builtAt: FIXED, settings: given });
+    expect(through(result)).toEqual([
+      'hits entry:orders:http:GET:/items heuristic proxy vite.config.ts:6 /items',
+      'http_calls entry:orders:http:GET:/items heuristic proxy vite.config.ts:6 /items',
+    ]);
+    expect(result.project.edges.find((edge) => edge.type === 'hits')?.meta?.['proxiedTo']).toBe('ORDERS_URL from .env.example');
+    const none = linkGraphs(proxied([setting], '/api/items'), config(), { builtAt: FIXED });
+    // Nothing forwards it: the request to the dev server is what its reader drew.
+    expect(through(none)).toEqual(['calls external_api:localhost:5180 static - - -']);
+    expect(none.project.unresolved.find((row) => row.reason === 'proxy-rule-unread')?.message).toBe(
+      "the proxy rule for /api in vite.config.ts reads its target from ORDERS_URL, which the service's files give no address",
+    );
+    // A fallback written beside the setting is the target where the files give none.
+    const fallback = linkGraphs(proxied([rule('/api', `http:${SLASHES}localhost:3002`, '', { setting: { name: 'ORDERS_URL', to: '' } })], '/api/items'), config(), { builtAt: FIXED });
+    expect(through(fallback)[0]).toBe('hits entry:billing:http:GET:/items heuristic proxy vite.config.ts:6 /items');
+  });
+
+  it('matches a key written as a regular expression, and rewrites the whole path by one', () => {
+    const pattern = rule('^/legacy/.*', `http:${SLASHES}localhost:3001`, '', { match: { source: '^/legacy/.*' }, rewrite: { source: '^/legacy', with: '' } });
+    expect(through(linkGraphs(proxied([pattern], '/legacy/items'), config(), { builtAt: FIXED }))).toEqual([
+      'hits entry:orders:http:GET:/items heuristic proxy vite.config.ts:6 /items',
+      'http_calls entry:orders:http:GET:/items heuristic proxy vite.config.ts:6 /items',
+    ]);
+  });
+
+  it('follows a request a proxy forwards to a server whose own proxy forwards it again, naming each rule', () => {
+    const graphs = proxied([rule('/api', `http:${SLASHES}localhost:3002`, '')], '/api/items');
+    const chained = [...graphs.filter((each) => each.repo !== 'billing'), forwarder('billing', [{ path: '/items', target: `http:${SLASHES}localhost:3001`, to: '/items', file: 'src/proxy.ts', line: 3 }], [at(3002)])];
+    const result = linkGraphs(chained, config(), { builtAt: FIXED });
+    expect(through(result)).toEqual([
+      'hits entry:orders:http:GET:/items heuristic proxy vite.config.ts:6 /items',
+      'http_calls entry:orders:http:GET:/items heuristic proxy vite.config.ts:6 /items',
+    ]);
+    expect(result.project.edges.find((edge) => edge.type === 'hits')?.meta?.['proxiedThen']).toEqual(['src/proxy.ts:3']);
+  });
+
+  it('says where proxies forward a request in a circle, and joins nothing', () => {
+    const graphs = proxied([rule('/api', `http:${SLASHES}localhost:3002`, '/api')], '/api/items');
+    const circle = [...graphs.filter((each) => each.repo !== 'billing'), forwarder('billing', [{ path: '/api', target: `http:${SLASHES}localhost:5180`, to: '/api', file: 'src/proxy.ts', line: 3 }], [at(3002)])];
+    const result = linkGraphs(circle, config(), { builtAt: FIXED });
+    expect(through(result)).toEqual([]);
+    expect(result.project.unresolved.filter((row) => row.reason === 'proxy-chain-unfollowed').map((row) => `${row.service} ${row.message}`)).toEqual([
+      'jobs the request is forwarded by web, then billing, and back to web: the proxies forward it in a circle',
+      'web the request is forwarded by web, then billing, and back to web: the proxies forward it in a circle',
+    ]);
+    expect(result.report.httpOut).toMatchObject({ noRoute: 1 });
+  });
+});
+
+/** Where a cluster's ways in send a public host's paths, and the names they route. */
+const public_ = (): Record<string, RepoSettings> => ({
+  orders: { ...routed(3000), ingress: [{ host: 'shop.example.test', object: 'ingress/shop', rule: { path: '/api', target: `http:${SLASHES}orders-svc`, to: '', file: 'k8s/ingress.yaml', line: 12 } }] },
+  web: { ...NO_SETTINGS, ingress: [{ host: 'shop.example.test', object: 'ingress/shop', rule: { path: '/', target: `http:${SLASHES}web-svc`, to: '', file: 'k8s/ingress.yaml', line: 9 } }] },
+});
+
+describe("a request to a public host a cluster's way in routes (P260)", () => {
+  it('leaves a request to a public host no rule matches the path of as it was', () => {
+    const only = { orders: public_()['orders'] as RepoSettings };
+    const result = link('shop.example.test', { orders: [at(3000)] }, config(), only);
+    expect(joins(result)).toEqual([]);
+    expect(result.project.edges.filter((edge) => edge.type === 'calls' && edge.to.startsWith('external_api')).map((edge) => edge.to)).toEqual(['external_api:shop.example.test', 'external_api:shop.example.test']);
+  });
+
+  it('forwards a request with no host from a service the way in serves, and one to the public host', () => {
+    const graphs: RepoGraph[] = [
+      server('orders', [at(3000)]),
+      server('billing'),
+      graph('web', [{ id: UI, type: 'ui_api_call', kind: 'http', label: 'GET /api/items', repo: 'web', file: 'src/api.ts', line: 3, meta: { method: 'GET', path: '/api/items', baseUrlEnv: null } }]),
+      graph(
+        'jobs',
+        [
+          { id: OUT, type: 'http_out', kind: 'http', label: 'GET /api/items', repo: 'jobs', file: 'src/sync.ts', line: 4, meta: { method: 'GET', url: `https:${SLASHES}shop.example.test/api/items`, path: '/api/items', baseUrlEnv: null, host: 'shop.example.test' } },
+          { id: 'external_api:shop.example.test', type: 'external_api', label: 'shop.example.test', repo: 'jobs', meta: { host: 'shop.example.test' } },
+        ],
+        [{ from: OUT, to: 'external_api:shop.example.test', type: 'calls', confidence: 'static' }],
+      ),
+    ];
+    const result = linkGraphs(graphs, config(), { builtAt: FIXED, settings: public_() });
+    expect(through(result)).toEqual([
+      'hits entry:orders:http:GET:/items heuristic ingress k8s/ingress.yaml:12 /items',
+      'http_calls entry:orders:http:GET:/items heuristic ingress k8s/ingress.yaml:12 /items',
+    ]);
+    const hit = result.project.edges.find((edge) => edge.type === 'http_calls');
+    expect(hit?.meta).toMatchObject({ wayIn: 'ingress/shop', listensAt: 'src/main.ts:7, behind orders-svc:80 (k8s/orders.yaml)' });
+    expect(result.project.nodes.some((node) => node.id === 'external_api:shop.example.test')).toBe(false);
+  });
+});
+
+describe('a port this machine forwards to a cluster, or a node opens for it (P260)', () => {
+  it('joins a request to the forwarded port, saying how it is reached', () => {
+    const forwarded: RepoSettings = {
+      ...NO_SETTINGS,
+      hosts: localHostsOf(8081).map((host) => ({ host, file: 'Makefile', mapped: { published: 8081, container: 3000, side: 'published' as const } })),
+      containers: [{ name: 'svc/orders', names: [], file: 'Makefile', ports: [{ published: 8081, container: 3000, file: 'Makefile', line: 2 }], environment: {}, via: 'forwarded' }],
+    };
+    expect(joins(link('localhost:8081', { orders: [at(3000)] }, config(), { orders: forwarded }))).toEqual([
+      'hits entry:orders:http:GET:/items heuristic src/main.ts:7, forwarded from 8081 to svc/orders by Makefile',
+      'http_calls entry:orders:http:GET:/items heuristic src/main.ts:7, forwarded from 8081 to svc/orders by Makefile',
+    ]);
+    const opened: RepoSettings = { ...forwarded, containers: [{ ...(forwarded.containers?.[0] as NonNullable<RepoSettings['containers']>[number]), name: 'orders-svc', file: 'k8s/orders.yaml', ports: [{ published: 8081, container: 3000, file: 'k8s/orders.yaml', line: 30 }], via: 'node-port' }] };
+    expect(joins(link('localhost:8081', { orders: [at(3000)] }, config(), { orders: opened }))[0]).toBe('hits entry:orders:http:GET:/items heuristic src/main.ts:7, at node port 8081 of orders-svc (k8s/orders.yaml)');
+    const unheard = link('localhost:8081', { orders: [at(4000)] }, config(), { orders: forwarded });
+    expect(unheard.project.unresolved.find((row) => row.reason === 'published-port-unheard')?.message).toBe(
+      "Makefile forwards port 8081 of this machine to svc/orders, port 3000 of orders's containers, but orders's code listens on 4000 (src/main.ts:7)",
+    );
+  });
+});
+
+describe('a request with no host from a server that resolves it against its own address (P260)', () => {
+  const own = (proxy: readonly Record<string, unknown>[] = []): RepoGraph[] => [
+    server('orders', [at(3001)]),
+    graph('web', [
+      { id: 'repo:web', type: 'repo', label: 'web', repo: 'web', meta: { ownOrigin: true, proxy } },
+      { id: 'entry:web:http:GET:/health', type: 'entry', kind: 'http', label: 'GET /health', repo: 'web', meta: { method: 'GET', path: '/health' } },
+      { id: 'http_out:web#app/page.tsx:3:1', type: 'http_out', kind: 'http', label: 'GET /health', repo: 'web', file: 'app/page.tsx', line: 3, meta: { method: 'GET', url: '/health', path: '/health', baseUrlEnv: null } },
+      { id: 'http_out:web#app/page.tsx:4:1', type: 'http_out', kind: 'http', label: 'GET /shop-api/items', repo: 'web', file: 'app/page.tsx', line: 4, meta: { method: 'GET', url: '/shop-api/items', path: '/shop-api/items', baseUrlEnv: null } },
+    ]),
+  ];
+
+  it("joins its own route, and a path its rewrites forward, where they are", () => {
+    const result = linkGraphs(own([rule('/shop-api', `http:${SLASHES}localhost:3001`, '', { after: 'own-routes', file: 'next.config.js', line: 5 })]), config(), { builtAt: FIXED });
+    expect(through(result)).toEqual([
+      'http_calls entry:orders:http:GET:/items heuristic proxy next.config.js:5 /items',
+      'http_calls entry:web:http:GET:/health heuristic ownOrigin - -',
+    ]);
+  });
+
+  it('stays a request nobody can place in a server that does not', () => {
+    const graphs = own();
+    const plain = graphs.map((each) => (each.repo !== 'web' ? each : { ...each, nodes: each.nodes.map((node) => (node.type === 'repo' ? { ...node, meta: {} } : node)) }));
+    expect(through(linkGraphs(plain, config(), { builtAt: FIXED }))).toEqual([]);
+  });
+});

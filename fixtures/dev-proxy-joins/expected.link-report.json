@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:35:47.274Z",
+  "builtAt": "2026-11-08T17:04:00.152Z",
   "configHash": "10c93f0052af",
   "services": [
     {
@@ -11,8 +11,8 @@
       "nodes": 5,
       "edges": 2,
       "types": 0,
-      "unresolved": 1,
-      "durationMs": 0,
+      "unresolved": 0,
+      "durationMs": 1477,
       "packages": {
         "name": "dev-proxy-joins-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1460,
       "packages": {
         "name": "dev-proxy-joins-billing",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1453,
       "packages": {
         "name": "dev-proxy-joins-catalog",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 5,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1458,
       "packages": {
         "name": "dev-proxy-joins-jobs",
         "runtime": [
@@ -86,7 +86,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1451,
       "packages": {
         "name": "dev-proxy-joins-legacy",
         "runtime": [
@@ -105,7 +105,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1486,
       "packages": {
         "name": "dev-proxy-joins-orders",
         "runtime": [
@@ -123,7 +123,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 651,
+      "durationMs": 1530,
       "packages": {
         "name": "dev-proxy-joins-store",
         "runtime": [
@@ -142,7 +142,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1527,
       "packages": {
         "name": "dev-proxy-joins-storefront",
         "runtime": [
@@ -159,8 +159,8 @@
       "nodes": 15,
       "edges": 13,
       "types": 0,
-      "unresolved": 2,
-      "durationMs": 0,
+      "unresolved": 0,
+      "durationMs": 1464,
       "packages": {
         "name": "dev-proxy-joins-web",
         "runtime": [
@@ -174,13 +174,13 @@
   ],
   "httpOut": {
     "total": 4,
-    "linked": 1,
+    "linked": 3,
     "byMarker": 0,
     "unknownEnv": 0,
     "noRoute": 0,
     "ambiguous": 0,
     "external": 1,
-    "dynamic": 2
+    "dynamic": 0
   },
   "ui": {
     "total": 12,
@@ -239,16 +239,29 @@
       "message": "target service orders has no route GET /returns",
       "hint": "Route renamed? Check orders's controllers, or annotate the method with /** @flowatlas-calls GET /returns */.",
       "symbol": "ui_api_call:web#src/Shop.tsx:7:29"
+    },
+    {
+      "service": "web",
+      "file": "vite.config.ts",
+      "line": 17,
+      "reason": "proxy-rule-unread",
+      "symbol": "/stats",
+      "message": "the proxy rule for /stats in vite.config.ts reads its target from STATS_URL, which the service's files give no address",
+      "hint": "Give STATS_URL one address in an example environment file of the service (.env.example), or write the target as a literal.",
+      "meta": {
+        "key": "/stats",
+        "setting": "STATS_URL"
+      }
     }
   ],
   "totals": {
     "nodes": 58,
-    "edges": 48,
+    "edges": 50,
     "types": 2,
-    "missed": 4,
-    "sites": 4,
+    "missed": 2,
+    "sites": 2,
     "notes": 3,
     "findings": 0,
-    "unresolved": 4
+    "unresolved": 2
   }
 }

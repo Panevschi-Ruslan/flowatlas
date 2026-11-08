@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:40:47.797Z",
+  "builtAt": "2026-11-08T17:07:54.011Z",
   "services": [
     {
       "name": "orders-api",
@@ -1013,7 +1013,8 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {

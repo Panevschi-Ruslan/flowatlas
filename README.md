@@ -634,7 +634,9 @@ and **`shapes`** names `.d.ts` shape files of the project's own for the rest;
 `flowatlas shapes --suggest --out <dir>` writes starters for the packages most
 places need. **`settingFiles`** turns reading base addresses from the
 repositories' own files off (`read: false`) or picks one environment
-(`environment`). Every key is in [the command reference](docs/CLI.md#configuration).
+(`environment`), and names the cluster overlays (`overlays`) and the values
+files a chart is installed with (`chartValues`) where several could be read.
+Every key is in [the command reference](docs/CLI.md#configuration).
 
 ---
 
@@ -972,6 +974,15 @@ prove, and the path is given so you can run it.
   workspace tool's serve target and a NestJS `ConfigType` settings object say
   where a service listens too, and a request on a network to a port only the
   machine or the pods have is a finding (`fixtures/cluster-port-joins`). A
+  chart is rendered with its values and the values its install command gives,
+  a kustomization is built over its bases with its patches (the overlay the
+  environment names), and a request to a public host an `Ingress` or an
+  `HTTPRoute` routes joins the service behind it at the rewritten path, as a
+  request to a node port or a `kubectl port-forward` does
+  (`fixtures/cluster-route-joins`); a proxy key written as a pattern, a
+  `router`, a target read from a setting, a proxy forwarding to another proxy
+  and a Next server's own requests with no host are followed too
+  (`fixtures/proxy-chain-joins`). A
   browser holding a stream open is a request like any other
   (`fixtures/sse-stream`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a

@@ -1,0 +1,23 @@
+namespace: shop
+resources:
+  - ../../base
+images:
+  - name: registry.example.test/shop/stock
+    newName: registry.example.test/shop/stock-api
+    newTag: "2.0"
+patches:
+  - path: env.yaml
+  - target:
+      kind: Deployment
+      name: stock
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/ports/0/containerPort
+        value: 4000
+  - target:
+      kind: Service
+      name: stock
+    patch: |-
+      - op: replace
+        path: /spec/ports/0/port
+        value: 8080

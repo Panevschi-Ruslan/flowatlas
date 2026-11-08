@@ -35,6 +35,31 @@ only one of them moved.
   coverage probe `sveltekit-server-load`. New fixture `nuxt-startup-names`;
   `rpc-shared-types` extended.
 
+- **Every way a cluster or a proxy routes a request (P260).** A chart's
+  templates are rendered with its `values.yaml` and the values files, `--set`s,
+  release and namespace of the `helm install`/`upgrade`/`template` a script or
+  a Makefile runs (value lookups, pipelines, `include`, `if`, `with`, `range`);
+  a condition nothing decides is rendered every way, read where the ways agree
+  and the row `manifest-unread` where they do not. A kustomization is built
+  over the folders it lists, with its strategic merge and JSON 6902 patches,
+  `images`, namespace and name prefix; where overlays nothing chooses differ,
+  the base is read alone and the row `manifest-overlay-unchosen` says so, and
+  `settingFiles.environment` or the new `settingFiles.overlays` /
+  `settingFiles.chartValues` choose. An `Ingress` (with `rewrite-target`) and
+  an `HTTPRoute` (with `URLRewrite`, hosts from its `Gateway`) send a public
+  host's request to the service behind them at the rewritten path
+  (`via: ingress`, `heuristic`, `wayIn`), a front end the way in serves
+  included; a `nodePort` and a `kubectl port-forward` make a port of this
+  machine reach the service. A Vite proxy key written as a regular
+  expression, any regular-expression rewrite replaced by a literal, an
+  http-proxy-middleware `router` table and a target read from a setting the
+  service's files fill (`proxiedTo`) are read; a request a proxy forwards to
+  another proxy is followed through up to four servers (`proxiedThen`), a
+  longer or circular chain the row `proxy-chain-unfollowed`. A Next server's
+  own request with no host joins its own route or its rewrites
+  (`via: ownOrigin`). Coverage probes `ingress-route`, `chart-value`,
+  `kustomize-patch` and `port-forward`. New fixtures `cluster-route-joins` and
+  `proxy-chain-joins`.
 - **The last values deployments share not joined, and tokens and addresses a
   configured module builds (P259).** A parameter file written as YAML is read
   as the JSON one is. A template a sceptre stack configuration names

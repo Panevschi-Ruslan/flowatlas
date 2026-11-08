@@ -1,0 +1,12 @@
+{
+  "/billing": {
+    "target": "http://localhost:3004",
+    "pathRewrite": {
+      "^/billing": ""
+    },
+    "router": {
+      "/billing/v2": "http://localhost:3006",
+      "admin.localhost:4300": "http://localhost:3007"
+    }
+  }
+}

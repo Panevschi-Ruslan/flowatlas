@@ -436,6 +436,46 @@ export const PROBES = [
     pattern: /^\s*(?:-\s+)?targetPort\s*:/gm,
   },
   {
+    // A way in from outside a cluster (P260): each path of an `Ingress` and
+    // each rule of an `HTTPRoute` sends a public host's requests to a
+    // service object. Counted where the backend is written.
+    name: 'ingress-route',
+    family: 'listens',
+    scope: 'line',
+    what: 'a backend an `Ingress` path or an `HTTPRoute` rule sends to (`backend:`, `defaultBackend:`, `backendRefs:`)',
+    path: /\.ya?ml$/,
+    pattern: /^\s*(?:-\s+)?(?:backend|defaultBackend|backendRefs)\s*:/gm,
+  },
+  {
+    // A value a chart's template looks up (P260), which the chart's values
+    // and its install command fill. One site per lookup.
+    name: 'chart-value',
+    family: 'listens',
+    scope: 'line',
+    what: 'a `.Values` lookup in a chart template',
+    path: /(?:^|\/)templates\/[^/]+\.ya?ml$/,
+    pattern: /\{\{[^}]*?\.Values\./g,
+  },
+  {
+    // A kustomization's patches (P260), each block of them where it is written.
+    name: 'kustomize-patch',
+    family: 'listens',
+    scope: 'line',
+    what: 'a `patches`, `patchesStrategicMerge` or `patchesJson6902` block of a kustomization',
+    path: /(?:^|\/)(?:kustomization\.ya?ml|Kustomization)$/,
+    pattern: /^\s*(?:patches|patchesStrategicMerge|patchesJson6902)\s*:/gm,
+  },
+  {
+    // A port this machine forwards to a cluster's object (P260), in a
+    // script or a Makefile.
+    name: 'port-forward',
+    family: 'listens',
+    scope: 'line',
+    what: 'a `kubectl port-forward` in a script, a Makefile or a `package.json`',
+    path: /(?:^|\/)(?:[Mm]akefile|GNUmakefile|[^/]+\.mk|[^/]+\.sh|package\.json)$/,
+    pattern: /\bkubectl\b[^\n]*\bport-forward\b/g,
+  },
+  {
     name: 'prisma-call-site',
     family: 'data',
     scope: 'line',

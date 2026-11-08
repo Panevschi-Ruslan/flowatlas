@@ -4593,7 +4593,9 @@ worked example of a document that declares routes.
 | `patterns` | string[] | none | pattern files of the project's own: paths or globs of `.yml` / `.yaml` files, relative to this configuration, each a list of rules that say in code what a call of an in-house wrapper is (see [Your own extraction patterns](#your-own-extraction-patterns)). Compiled into the descriptions under `adapters` and read as those are; `flowatlas patterns test` runs each rule's tests |
 | `packageSources` | boolean or `"services"` | `true` | where an import of a package that is not installed is read from: `true` for the source of a configured repository, a workspace member of one, or a directory directly under the configuration whose `package.json` `name` is the package; `"services"` for configured repositories and their members alone; `false` for nowhere. Types only; an installed package always wins |
 | `settingFiles.read` | boolean | `true` | whether a base address and an address waiting on the environment are completed from what the repositories' own files and the code's own fallbacks say a setting is; only addresses are kept, never a secret |
-| `settingFiles.environment` | string | none | the environment read where files name several (`.env.development` and `.env.staging`, `docker-compose.prod.yml`, a worker's `env.<name>.vars`): that environment's files, and the files for none in particular |
+| `settingFiles.environment` | string | none | the environment read where files name several (`.env.development` and `.env.staging`, `docker-compose.prod.yml`, a worker's `env.<name>.vars`): that environment's files, and the files for none in particular; also the cluster overlay whose folder is named for it and the chart install whose values file is (P260) |
+| `settingFiles.overlays` | string[] | none | the kustomization overlays to read where several build on one base (P260), folders relative to this file |
+| `settingFiles.chartValues` | object | none | the values files a chart is installed with (P260), by the chart's folder relative to this file, each file relative to it too; read over the chart's own `values.yaml`, in place of what an install command gives |
 | `output` | string | `.flowatlas` | where everything a build writes goes, relative to this file: the three outputs, the cache and each service's own graph under `services/`. Nothing is written into the repositories |
 | `types.maxDepth` | number | `3` | how deep an anonymous shape is written out before it becomes a reference |
 | `contracts.depth` | number | `3` | how far into nested shapes `flowatlas contracts` compares |
@@ -5404,11 +5406,10 @@ it selects). A service object is the project's service whose workload it
 selects (a workload known by the service's name, its pods' `app` labels, a
 container's or an image's name, or the only workload a service's own
 repository declares), or the service of its own name where it selects none. A
-Helm template is read where its values are literal: a line that is only a
-directive is dropped, a value that is a template expression is not read (and a
-port or a name written so is skipped), and chart values files are not read. A
-kustomization gives the files it lists its `namespace`, `namePrefix` and
-`nameSuffix`; its patches and overlays are not read. Each name a service object
+chart is rendered with its values and a kustomization built with its patches
+and overlays (P260, below); a template outside a chart is read where its values
+are literal: a line that is only a directive is dropped, and a value that is a
+template expression is not read (a port or a name written so is skipped). Each name a service object
 routes is a host (`orders`, and with a namespace `orders.shop`,
 `orders.shop.svc`, `orders.shop.svc.cluster.local`), and its ports are hosts
 with `mapped.side: 'routed'`. A request to `http://orders/orders` (the port the
@@ -5435,6 +5436,70 @@ continued with `\` read as one); the `port` of a workspace tool's target in
 of `app.get(appConfig.KEY)` or of any value typed `ConfigType<typeof
 appConfig>`, read at the `registerAs` factory's key. `fixtures/cluster-port-joins`
 shows each case.
+
+**Every way a cluster or a proxy routes a request (P260).** Manifests are read
+the way the tools that apply them build them.
+
+| Written as | Read |
+|---|---|
+| A chart (a folder with `Chart.yaml`) | each template of `templates/` rendered with the chart's `values.yaml`, then the values files (`-f`, `--values`) and `--set`s of the `helm install`, `helm upgrade` or `helm template` a script, a Makefile or a `package.json` of the service or the project runs, its release name (the chart's name where no command names one) and `--namespace`; value lookups, pipelines (`default`, `quote`, `printf`, `toYaml \| nindent`, `include` of a `define` in a `.tpl` helper), variables, `if` / `else if` / `else`, `with`, `range`, `template` |
+| A kustomization | the files and folders `resources`, `bases` and `components` list (another folder's kustomization built first), `patches` and `patchesStrategicMerge` (strategic merge: containers, env and ports merged by name or port) and `patchesJson6902` (`add`, `replace`, `remove`), `images`, `namespace`, `namePrefix`, `nameSuffix` (reaching an `Ingress`'s backends too); `replicas` and labels say nothing a join needs |
+| An `Ingress` | each rule's `host` and path (`pathType` `Prefix` by whole segments, `Exact`, and under `nginx.ingress.kubernetes.io/use-regex` or `rewrite-target` a pattern matched from the start, ignoring case), its backend's service object and port (by number or name), `defaultBackend`, and `rewrite-target` with its groups (`/$2`) |
+| An `HTTPRoute` | its `hostnames` (or its parent `Gateway`'s listeners' `hostname`), each match's `PathPrefix`, `Exact` or `RegularExpression`, its `backendRefs`, and a `URLRewrite` filter's `ReplacePrefixMatch` or `ReplaceFullPath` |
+| A `NodePort` or `LoadBalancer` service object | each port's `nodePort`, reached at `localhost:<nodePort>` where the cluster runs on the machine |
+| `kubectl port-forward` | in a script or a Makefile of a service or the project: `svc/orders 8080:80` reaches what the object routes port 80 to, `deploy/stock 4001:4000` the pods' port 4000 |
+
+A template condition the values decide is decided; one they cannot (a value
+the cluster answers, `.Capabilities`, `lookup`, a function the reader does not
+know) is rendered both ways, every way up to sixteen, and where the ways
+declare the same ports, names and routes they are read, and where they do not
+the template's literal lines are read and the row `manifest-unread` says
+which conditions. A value nothing gives is read as nothing written. Where
+overlays build on one base, or a chart is installed several ways, and they
+declare different ports, names or routes, the one the configuration names
+(`settingFiles.overlays`, `settingFiles.chartValues`) or whose folder or values
+file is named for `settingFiles.environment` is read; with no choice the base
+(or the chart's own values) is read alone and the row
+`manifest-overlay-unchosen` says so. A patch operation other than `add`,
+`replace` and `remove`, a base outside the project and a way in that splits a
+path between two services by weight are `manifest-unread`. Each row is said by
+the service the objects it names are.
+
+A request to a public host a way in routes (`https://shop.example.test/orders`)
+joins the service behind the object its rule sends to, at the path the rule
+rewrites it to: `via: ingress`, `heuristic`, `proxiedBy` (the rule's
+`file:line`), `wayIn` (`ingress/shop`, `http-route/inventory`), `proxiedAs`
+where the path changes, and the service's `listensAt` behind the name. A rule
+for the path exactly is taken first, then the longest prefix of whole segments,
+a pattern by the segments it starts with as literals and before a prefix as
+long. A request with no host from a front end a way in serves at a public host
+is a request to that host. A request to `localhost:30080` joins with
+`listensAt: …, at node port 30080 of orders (charts/orders/templates/service.yaml)`,
+and one to a forwarded port with
+`listensAt: …, forwarded from 8081 to svc/catalog by Makefile`.
+
+The proxy rules P257 left out are read too. A Vite key that starts with `^`
+is a regular expression the whole path is matched by. A rewrite that is any
+regular expression replaced by a literal (`path.replace(/^\/api\/v\d+/, '')`,
+`pathRewrite: { '^/catalog/v\\d+': '' }`) rewrites the whole path. A target
+read from a setting (`target: process.env.ORDERS_URL`, `env.VITE_API_URL` of
+`loadEnv`, `` `${process.env.ORDERS_URL}/orders/:path*` `` in a Next rewrite,
+a route rule's `proxy` built over one) takes the one address the service's own
+files give the setting (P77), or the literal fallback written beside it, and
+the edge says `proxiedTo: ORDERS_URL from .env.example`; with neither it is
+`proxy-rule-unread`. An http-proxy-middleware `router` written as a table sends
+a path key under the prefix to its own target, rewritten as the prefix is; a
+key with a host routes by the request's host and is a row. A request forwarded
+to a server whose own proxy forwards it again is followed again, through up to
+four servers, the edge carrying `proxiedThen` with each later rule; a longer
+chain, or one that comes back to a server it passed, is the row
+`proxy-chain-unfollowed` and is not joined. A Next server's request with no
+host (`fetch('/api/health')` in a server component, in a page its server half
+reads) is a request to its own address: its own route, or where its rewrites
+send it (`via: ownOrigin`, `heuristic`); where the browser makes the same
+request in the same place, what is wrong with it is said once, by the
+browser's. `fixtures/cluster-route-joins` and `fixtures/proxy-chain-joins` show
+each case.
 
 A custom broker entry:
 
