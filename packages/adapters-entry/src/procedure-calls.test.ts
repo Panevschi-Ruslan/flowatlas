@@ -16,6 +16,9 @@ const addressOf = (url: TsNode): LinkAddress => {
       ? { path: url.getLiteralText(), baseUrlEnv: null, host: null }
       : { path: match[2] === '' ? '/' : (match[2] ?? '/'), baseUrlEnv: null, host: match[1] ?? null };
   }
+  // A setting that is the whole address, as both halves read one (P91).
+  const whole = /^process\.env\.(\w+)$/.exec(url.getText());
+  if (whole !== null) return { path: '', baseUrlEnv: whole[1] ?? null, host: null };
   if (Node.isTemplateExpression(url) && url.getHead().getLiteralText() === '') {
     const [span] = url.getTemplateSpans();
     const env = /^process\.env\.(\w+)$/.exec(span?.getExpression().getText() ?? '');
@@ -501,5 +504,83 @@ describe('a client a configured module builds, one call away (P256)', () => {
       @Module({ imports: [BillingClientModule.forRoot({ url: 'http://two.internal/trpc' })] }) export class OtherModule {}
     `);
     expect(twice).not.toEqual(expect.objectContaining({ path: '/trpc' }));
+  });
+});
+
+describe('a link address built over a parameter, piece by piece (P259)', () => {
+  const PACKAGE = `
+    import { Module, type DynamicModule } from '@nestjs/common';
+    import { createTRPCClient, httpBatchLink } from '@trpc/client';
+    export const BILLING = 'BILLING';
+    const OPTIONS = 'BILLING_OPTIONS';
+    export interface BillingOptions { base: string }
+    @Module({})
+    export class BillingClientModule {
+      static forRoot(options: BillingOptions): DynamicModule {
+        return {
+          module: BillingClientModule,
+          providers: [{ provide: BILLING, useFactory: () => createTRPCClient<any>({ links: [httpBatchLink({ url: \`\${options.base}/trpc\` })] }) }],
+        };
+      }
+      static forRootAsync(options: { useFactory: (...args: any[]) => BillingOptions; inject?: any[] }): DynamicModule {
+        return {
+          module: BillingClientModule,
+          providers: [
+            { provide: OPTIONS, useFactory: options.useFactory, inject: options.inject ?? [] },
+            { provide: BILLING, useFactory: (resolved: BillingOptions) => createTRPCClient<any>({ links: [httpBatchLink({ url: \`\${resolved.base}/v2/trpc?batch=1\` })] }), inject: [OPTIONS] },
+          ],
+        };
+      }
+    }
+    export const LEDGER = 'LEDGER';
+    export const ledgerClient = (base: string) => createTRPCClient<any>({ links: [httpBatchLink({ url: base + '/rpc' })] });
+  `;
+  const SERVICE = `
+    import { Inject, Injectable } from '@nestjs/common';
+    import { BILLING, LEDGER } from '../packages/billing-client/src/module';
+    @Injectable()
+    export class BillingService {
+      constructor(@Inject(BILLING) private readonly billing: any, @Inject(LEDGER) private readonly ledger: any) {}
+      invoice(orderId: string) {
+        this.ledger.entries.record.mutate({ orderId });
+        return this.billing.invoices.create.mutate({ orderId });
+      }
+    }
+  `;
+  const graphOf = (app: string, ledger = "const LEDGER_URL = 'http://ledger.internal:4000';") =>
+    read(
+      {
+        '/packages/billing-client/src/module.ts': PACKAGE,
+        '/src/billing.service.ts': SERVICE,
+        '/src/app.module.ts': `
+          import { Module } from '@nestjs/common';
+          import { BillingClientModule, LEDGER, ledgerClient } from '../packages/billing-client/src/module';
+          ${ledger}
+          @Module({ providers: [{ provide: LEDGER, useFactory: () => ledgerClient(LEDGER_URL) }] }) export class LedgerModule {}
+          ${app}
+        `,
+      },
+      TRPC,
+    );
+  const linkOf = (graph: RepoGraph, procedure: string) => requestFor(graph, procedure)?.meta?.['link'];
+
+  it("reads a template over forRoot's option as the setting the one call hands it, and the text after it", () => {
+    const graph = graphOf('@Module({ imports: [BillingClientModule.forRoot({ base: process.env.BILLING_URL })] }) export class AppModule {}');
+    expect(linkOf(graph, 'invoices.create')).toEqual({ protocol: 'trpc', path: '/trpc', baseUrlEnv: 'BILLING_URL' });
+  });
+
+  it("reads one over forRootAsync's factory, through the token it injects, without the query", () => {
+    const graph = graphOf("@Module({ imports: [BillingClientModule.forRootAsync({ useFactory: () => ({ base: `${process.env.BILLING_URL}/api` }) })] }) export class AppModule {}");
+    expect(linkOf(graph, 'invoices.create')).toEqual({ protocol: 'trpc', path: '/api/v2/trpc', baseUrlEnv: 'BILLING_URL' });
+  });
+
+  it('reads an address joined with + over a function parameter as the URL its one call is handed', () => {
+    const graph = graphOf('@Module({}) export class AppModule {}');
+    expect(linkOf(graph, 'entries.record')).toEqual({ protocol: 'trpc', path: '/rpc', host: 'ledger.internal:4000' });
+  });
+
+  it('reads nothing where a piece after the first is not text the files hold', () => {
+    const graph = graphOf('@Module({ imports: [BillingClientModule.forRoot({ base: process.env.BILLING_URL })] }) export class AppModule {}', 'declare const LEDGER_URL: string;');
+    expect(linkOf(graph, 'entries.record')).toEqual(expect.objectContaining({ dynamic: true }));
   });
 });

@@ -6865,6 +6865,60 @@ importer meets the producer's channel and no other repository's that happens
 to declare something unnamed at the same address
 (`fixtures/multi-repo-parameters`).
 
+#### The tools a template is deployed with, rule targets and endpoints of an import, and names built of several
+
+**Parameter files in YAML.** The three documents a parameter file is - a list
+of `ParameterKey` / `ParameterValue`, a list of `Key=Value`, a template
+configuration `Parameters:` - are read written as YAML too (P259), under the
+same names with `.yaml` or `.yml` (`<template>.parameters.yaml`, ...), from
+`services[].infra.vars` and from a `samconfig`'s `file://`. A document whose
+`Parameters` are objects of a type and a default is a template, not a file of
+values.
+
+**sceptre.** A template under a project's `templates/` is read with the values
+of the stack configuration that names it (`config/<group>/<stack>.yaml`,
+`template_path` or `template: { path }`): its `parameters`, its `stack_name` or
+else the project's `project_code` and the stack's path joined by `-`
+(`shop-prod-platform`), and the `region` the nearest group `config.yaml`
+gives. A resolver (`!stack_output`, `!environment_variable`, any `!tag`) and a
+Jinja expression are values not known from the files - never the parameter's
+default. Several stacks naming one template are several environments: the
+one `services[].infra.vars` names by its file, or the group
+`services[].infra.options.config_env` names, is read; otherwise a
+`parameter-file-ambiguous` row names them and none is.
+
+**rain.** A `rain deploy <template> [<stack>]` written in a `package.json`
+script or a Makefile recipe beside the template or above it gives the template
+its `--params K=V,...` over the values of its `--config` file (a template
+configuration, JSON or YAML), its stack the name it writes or the template's
+own, and its region `--region`. A shell variable on the command is a value not
+known. Two commands with different values are a `parameter-file-ambiguous` row.
+
+Precedence, highest first: the options; the configuration's files; a
+`samconfig`'s inline overrides; the files its `parameter_overrides` names, else
+a sceptre stack or a rain command, else a file beside the template; the
+`Default`. Every file read is stamped for the build cache.
+
+**Rule targets and subscription endpoints of an import.** A rule's or a
+schedule's target (`Targets[].Arn: !ImportValue ...`,
+`aws_cloudwatch_event_target.arn = data.aws_ssm_parameter...value`) is read
+once per kind it may be - a function, a queue, a topic, a bus or a workflow -
+and the linker keeps the one the publisher's value is, as it does for a
+mapping or a destination (P253). A subscription's endpoint, a bucket
+notification's target and a dead-letter queue are of the kind their protocol
+or their property says, and are read as that one. A Terraform mapping read as
+alternatives draws its failure destination once per reading, kept and dropped
+with it; a destination that is itself an import is a `subscription-target-unread`
+row.
+
+**Names built of several imports.** An address with two imports or more written
+into it (`!Sub` with `!ImportValue` variables, `!Join`, a Serverless string with
+`${cf:...}` and `${ssm:...}`) reads each one: an import outside the name - the
+account - does not change which thing it is, and a name built of imports and
+text (`${Prefix}-orders-audit`) is written by the linker, part by part, where
+every part is joined; where one is not, the name is kept whole and the part is
+an `export-not-found` row (`fixtures/multi-repo-shared-values`).
+
 ### Procedures
 
 A tRPC server's ways in are not routes: each procedure is a key in a tree of

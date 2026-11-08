@@ -1,5 +1,5 @@
 import { exportKey, parameterKey, stackOutputKey, type PathStep } from '@flowatlas/core';
-import { intrinsicOf } from './cloudformation.js';
+import { importsInName, intrinsicOf } from './cloudformation.js';
 import type { FileReading } from './reading.js';
 import { Imported, isRecord, textOf, Unread } from './variables.js';
 
@@ -152,7 +152,7 @@ const publishValue = (
     return;
   }
   const found = reading.template.deployedOf(value);
-  if (found !== undefined && !(found instanceof Unread) && found.imported === undefined) {
+  if (found !== undefined && !(found instanceof Unread) && importsInName(found).length === 0) {
     reading.generatedRow(found, path);
     reading.parts.exports.push({ keys, address, ...site, names: { kind: found.kind, name: found.name } });
     return;
@@ -162,7 +162,7 @@ const publishValue = (
     reading.parts.exports.push({ keys, address, ...site, text });
     return;
   }
-  const key = text instanceof Imported ? text.key : !(text instanceof Unread) ? text.imported : undefined;
+  const key = text instanceof Imported ? text.key : !(text instanceof Unread) ? importsInName(text).join(', ') || undefined : undefined;
   const why = key !== undefined ? `it is itself a value another deployment publishes (${key})` : text instanceof Unread ? text.text : 'it is not read';
   reading.parts.exports.push({ keys, address, ...site, unread: why });
 };

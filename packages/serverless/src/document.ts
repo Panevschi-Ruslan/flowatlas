@@ -70,12 +70,23 @@ const getAttParts = (written: string): string[] => {
   return dot < 0 ? [written] : [written.slice(0, dot), written.slice(dot + 1)];
 };
 
+/** How a YAML file is read beyond CloudFormation's short tags. */
+export interface YamlOptions {
+  /**
+   * What a value under a tag of another tool's is (P259): a stack
+   * configuration's `!stack_output`, run when the tool deploys. Read as its
+   * plain value where this is not given, as before.
+   */
+  readonly otherTag?: (tag: string, value: unknown) => unknown;
+}
+
 class YamlReading {
   readonly positions = new Map<string, DefinitionPosition>();
 
   constructor(
     readonly document: Document,
     readonly lines: LineCounter,
+    readonly options: YamlOptions = {},
   ) {}
 
   #record(path: readonly PathStep[], offset: number | undefined): void {
@@ -124,21 +135,21 @@ class YamlReading {
     }
     const tag = 'tag' in node ? (node.tag as string | undefined) : undefined;
     const intrinsic = tag === undefined ? undefined : INTRINSIC_TAGS.get(tag);
-    if (intrinsic === undefined) return value;
+    if (intrinsic === undefined) return tag?.startsWith('!') === true && this.options.otherTag !== undefined ? this.options.otherTag(tag, value) : value;
     if (intrinsic === 'Fn::GetAtt' && typeof value === 'string') return { [intrinsic]: getAttParts(value) };
     return { [intrinsic]: value };
   }
 }
 
 /** YAML with CloudFormation's short tags, and a position for every key and list item. */
-export const readServiceYaml = (text: string): PositionedDocument => {
+export const readServiceYaml = (text: string, options: YamlOptions = {}): PositionedDocument => {
   const lines = new LineCounter();
   const document = parseDocument(text, { lineCounter: lines, prettyErrors: false, uniqueKeys: false, logLevel: 'silent' });
   const error = document.errors[0];
   if (error !== undefined) {
     throw new ServiceFileUnreadable(error.message.split('\n')[0] ?? 'not YAML', lines.linePos(error.pos[0]).line);
   }
-  const reading = new YamlReading(document, lines);
+  const reading = new YamlReading(document, lines, options);
   const value = reading.value(document.contents as YamlNode | null, []);
   reading.positions.set(keyOf([]), { line: 1, column: 1 });
   return { value, at: (path) => reading.positions.get(keyOf(path)) };

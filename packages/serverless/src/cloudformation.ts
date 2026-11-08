@@ -1,6 +1,6 @@
 import { deployedArn, deployedNameIn } from '@flowatlas/aws';
 import { exportKey, generatedName, importedName, parameterKey, type DeployedKind, type PathStep } from '@flowatlas/core';
-import { EMBEDDED, embedding, HOLE, Imported, isRecord, textOf, Unread } from './variables.js';
+import { EMBEDDED, embeddedAt, embedding, HOLE, Imported, isRecord, textOf, Unread } from './variables.js';
 
 /**
  * CloudFormation's vocabulary: resources by type, and the intrinsic functions
@@ -36,7 +36,17 @@ export interface Deployed {
    * key: an ARN or a URL written around an import of the name (P253).
    */
   readonly imported?: string;
+  /**
+   * The name is built of values other deployments publish, by their keys, and
+   * of text: an ARN whose name is two imports, or an import and a suffix
+   * (P259). The name holds each one's stand-in, and is read once every part
+   * of it is joined.
+   */
+  readonly built?: readonly string[];
 }
+
+/** The keys of the values other deployments publish a deployed thing's name is written with (P253, P259). */
+export const importsInName = (found: Deployed): readonly string[] => (found.imported !== undefined ? [found.imported] : (found.built ?? []));
 
 /** What a resource type declares, and the property that names it. */
 export interface Declares {
@@ -147,14 +157,21 @@ const deployedInText = (text: string): Deployed | undefined => {
 const DYNAMIC_REFERENCE = /\{\{resolve:(ssm|ssm-secure|secretsmanager):([^}]*)\}\}/g;
 
 /**
- * What an ARN or a URL built around a value another deployment publishes
- * names: the imported thing, where the import is the name part of it, by the
- * import's stand-in; else why it is not read.
+ * What an ARN or a URL built around values other deployments publish names:
+ * the imported thing, where one import is the name part of it, by the
+ * import's stand-in (P253); a thing whose name is built of imports and text,
+ * by that name with each import's stand-in in place (P259); else why it is
+ * not read. An import outside the name - the account - does not change which
+ * thing it is, and is left to the text that is read.
  */
 const embeddedDeployed = (unread: Unread): Deployed | Unread => {
   if (unread.embeds === undefined) return unread;
   const found = deployedNameIn(unread.embeds.text);
-  return found !== undefined && found.name === importedName(unread.embeds.key) ? { ...found, imported: unread.embeds.key } : unread;
+  if (found === undefined || found.name.includes(HOLE)) return unread;
+  const keys = unread.embeds.keys.filter((key) => found.name.includes(importedName(key)));
+  if (keys.length === 0) return unread;
+  const [only] = keys;
+  return keys.length === 1 && only !== undefined && found.name === importedName(only) ? { ...found, imported: only } : { ...found, built: keys };
 };
 
 export class Template {
@@ -336,7 +353,7 @@ export class Template {
    */
   #unread: Unread | undefined;
 
-  /** The values other deployments publish written into a text being built, at {@link EMBEDDED} (P253). */
+  /** The values other deployments publish written into a text being built, each at its {@link embeddedAt} mark (P253, P259). */
   #embedded: Imported[] = [];
 
   /** A part of a text being built, a {@link HOLE} where it is not read. */
@@ -345,13 +362,13 @@ export class Template {
     if (typeof text === 'string') return text;
     if (text instanceof Imported) {
       this.#embedded.push(text);
-      return EMBEDDED;
+      return embeddedAt(this.#embedded.length - 1);
     }
     this.#unread ??= text;
     return text.partial ?? HOLE;
   }
 
-  /** A text with each value of a parameter of the account it resolves (`{{resolve:ssm:...}}`) put at {@link EMBEDDED}. */
+  /** A text with each value of a parameter of the account it resolves (`{{resolve:ssm:...}}`) put at an {@link embeddedAt} mark. */
   #dynamic(text: string): string {
     if (!text.includes('{{resolve:')) return text;
     return text.replace(DYNAMIC_REFERENCE, (_whole, service: string, reference: string) => {
@@ -369,7 +386,7 @@ export class Template {
         return text.partial ?? HOLE;
       }
       this.#embedded.push(new Imported(parameterKey(name), `the value is the parameter ${name}, which another deployment writes`, `{{resolve:ssm:${reference}}}`));
-      return EMBEDDED;
+      return embeddedAt(this.#embedded.length - 1);
     });
   }
 
@@ -389,13 +406,11 @@ export class Template {
     }
   }
 
-  /** A text built at the top: the import itself where it is the whole text, else the text with it in place (P253). */
+  /** A text built at the top: the import itself where it is the whole text, else the text with each in place (P253, P259). */
   #built(built: string | Unread): string | Unread {
     if (typeof built !== 'string' || !built.includes(EMBEDDED)) return built;
-    const [imported] = this.#embedded;
-    if (this.#embedded.length > 1) return new Unread(`it holds ${this.#embedded.length} values other deployments publish`, imported?.variable, built.split(EMBEDDED).join(HOLE));
     const because = built.includes(HOLE) ? (this.#unread ?? new Unread('part of the value is known only once the stack is deployed')) : undefined;
-    return embedding(built, imported, because);
+    return embedding(built, this.#embedded, because);
   }
 
   #build(value: unknown, depth: number): string | Unread {

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:58:08.036Z",
+  "builtAt": "2026-11-08T14:23:50.675Z",
   "configHash": "9b0abdd105ef",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1985,
+      "durationMs": 1101,
       "packages": {
         "name": "@shop/api",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 10,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 2001,
+      "durationMs": 1152,
       "packages": {
         "name": "@shop/catalog",
         "runtime": [
@@ -54,7 +54,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 2003,
+      "durationMs": 1122,
       "packages": {
         "name": "@shop/edge",
         "runtime": [
@@ -75,7 +75,7 @@
       "edges": 9,
       "types": 6,
       "unresolved": 0,
-      "durationMs": 2004,
+      "durationMs": 1204,
       "packages": {
         "name": "@shop/web",
         "runtime": [
@@ -92,11 +92,11 @@
       "repo": "./apps/worker",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 16,
-      "edges": 10,
+      "nodes": 18,
+      "edges": 12,
       "types": 1,
-      "unresolved": 2,
-      "durationMs": 2390,
+      "unresolved": 0,
+      "durationMs": 1317,
       "packages": {
         "name": "@shop/worker",
         "runtime": [
@@ -158,13 +158,13 @@
     }
   ],
   "totals": {
-    "nodes": 61,
-    "edges": 46,
+    "nodes": 63,
+    "edges": 48,
     "types": 9,
-    "missed": 3,
-    "sites": 3,
+    "missed": 1,
+    "sites": 1,
     "notes": 1,
     "findings": 1,
-    "unresolved": 3
+    "unresolved": 1
   }
 }

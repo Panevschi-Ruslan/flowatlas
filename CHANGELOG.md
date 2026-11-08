@@ -8,6 +8,31 @@ only one of them moved.
 
 ### Added
 
+- **The last values deployments share not joined, and tokens and addresses a
+  configured module builds (P259).** A parameter file written as YAML is read
+  as the JSON one is. A template a sceptre stack configuration names
+  (`config/<group>/<stack>.yaml`) is read with its `parameters`, its stack name
+  and its region; one a `rain deploy` command in a `package.json` script or a
+  Makefile deploys, with its `--params` and `--config`; a resolver, a Jinja
+  expression or a shell variable is a value not known, and two stacks or
+  commands nothing chose between (`services[].infra.vars`,
+  `infra.options.config_env`) are a `parameter-file-ambiguous` row. A rule's
+  or a schedule's target of an import is read as each kind it may be and the
+  linker keeps the publisher's, as P253 does for a mapping; a subscription's
+  endpoint, a bucket notification's target and a dead-letter queue of an import
+  are read as the kind their protocol or property says, where each was a
+  `subscription-target-unread` row. A Terraform mapping read as alternatives
+  draws its failure destination. A string with two imports or more is read
+  part by part: an import outside the name is aside, and a name built of
+  imports and text is written where every part is joined. NestJS's injection
+  reader finds a token a configuring method (`forRoot`, `forRootAsync`,
+  `register`) provides where the application calls it, in the repository or a
+  workspace package, by the provider index the procedure reader uses (now in
+  the core), so `di-token-unknown` goes for such tokens. A link's URL built
+  over a parameter (`` `${options.base}/trpc` ``, `base + '/rpc'`) is read
+  piece by piece to the setting or URL each piece is handed. New fixtures
+  `multi-repo-shared-values` and `nest-configured-clients`.
+
 - **Child components, layouts and route middleware by name, and the last of
   what a Nuxt module adds (P255).** A tag in a Vue or Svelte template, or in
   JSX, that names a component of the repository is a `calls` edge from the

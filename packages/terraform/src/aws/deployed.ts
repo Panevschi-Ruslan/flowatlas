@@ -1,5 +1,5 @@
 import { DEFAULT_EVENT_BUS, deployedNameIn } from '@flowatlas/aws';
-import { alternativeAddress, generatedName, importedName, parameterKey, type DeployedImport, type DeployedKind, type DeliveryTarget, type Unresolved } from '@flowatlas/core';
+import { alternativeAddress, generatedName, importedName, parameterKey, type DeployedDelivery, type DeployedImport, type DeployedKind, type DeliveryTarget, type Unresolved } from '@flowatlas/core';
 import { describe, type Because, type Instance, type Value } from '../eval/values.js';
 import { argument, HOLE, referencesOf, siteOf, textOf, textWithHoles, unreadRow, whyNot } from './arguments.js';
 import type { ResourceReading } from './reading.js';
@@ -273,6 +273,38 @@ export const targetOf = (
 };
 
 export { isBecause };
+
+/**
+ * A delivery from a block onto what a value names (P23). A value another
+ * deployment writes to a parameter of the account is read as each kind of
+ * thing the delivery can hand to - `kinds`, one where the use says which (a
+ * subscription's protocol), more where it does not (a rule's target) - each
+ * under an address of its own, of which the linker keeps the one the
+ * publisher's value is (P253, P259). `shape` finishes a target as the
+ * delivery hands to it.
+ */
+export const deliverAt = (
+  reading: ResourceReading,
+  owner: Instance,
+  delivery: Omit<DeployedDelivery, 'to'>,
+  found: Deployed | Because | undefined,
+  kinds: readonly DeployedKind[],
+  what: string,
+  shape: (to: DeliveryTarget | undefined) => DeliveryTarget | undefined = (to) => to,
+): void => {
+  if (found !== undefined && isBecause(found) && found.imported !== undefined && kinds.length > 0) {
+    for (const alternative of alternativesAt(reading, owner, found.imported, kinds, what, delivery.address)) {
+      const to = shape(asTarget(alternative));
+      reading.deliveries.push({ ...delivery, address: alternative.address, ...(to === undefined ? {} : { to }) });
+    }
+    return;
+  }
+  const to = shape(targetOf(found, owner, what, reading));
+  reading.deliveries.push({ ...delivery, ...(to === undefined ? {} : { to }) });
+};
+
+/** What a rule's or a schedule's target may be, where the use does not say (P259): everything a delivery hands to. */
+export const TARGET_KINDS: readonly DeployedKind[] = ['function', 'queue', 'topic', 'bus', 'workflow'];
 
 /** That the deployment reads a value another publishes, at a block: once per block and key (P253). */
 export const importAt = (reading: { readonly imports: DeployedImport[] }, instance: Instance, key: string, what: string, kinds?: readonly DeployedKind[], alternatives?: DeployedImport['alternatives']): void => {

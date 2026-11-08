@@ -1199,6 +1199,12 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.post-orders.tree.txt', 'POST /orders'],
     ['flow.restock.tree.txt', 'invoke:catalog-prod-restock'],
   ]),
+  // Stack configurations and rain commands, YAML parameter files, rule targets
+  // and subscription endpoints of imports, and names built of several (P259).
+  terraformShape('multi-repo-shared-values', [
+    ['flow.ship.tree.txt', 'invoke:orders-prod-ship'],
+    ['flow.close-month.tree.txt', 'invoke:shop-reports-prod-close'],
+  ]),
   terraformShape('lambda-terraform-bucket-module', [
     ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
     ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],

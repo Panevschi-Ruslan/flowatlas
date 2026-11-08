@@ -16,7 +16,7 @@ import type {
   Unresolved,
 } from '@flowatlas/core';
 import { alternativeAddress, generatedName, importedName, UNREAD_SPAN } from '@flowatlas/core';
-import type { Deployed, Template } from './cloudformation.js';
+import { importsInName, type Deployed, type Template } from './cloudformation.js';
 import { Imported, isRecord, textOf, Unread } from './variables.js';
 
 /**
@@ -119,8 +119,7 @@ export class FileReading {
       return undefined;
     }
     this.generatedRow(found, path);
-    // An ARN built around a name another deployment publishes (P253).
-    if (found.imported !== undefined && found.kind !== 'url') this.importAt(found.imported, path, what, [found.kind], 'name');
+    this.importsOfName(found, path, what);
     const target = asTarget(found);
     if (target === undefined) {
       this.row(path, symbol, {
@@ -138,11 +137,22 @@ export class FileReading {
    * what it names, or, `as: 'name'`, as the name of something of `kinds`
    * written into an address of it (P253).
    */
-  importAt(key: string, path: readonly PathStep[], what: string, kinds?: readonly (DeployedKind | 'url' | 'api')[], as?: 'name'): void {
+  importAt(key: string, path: readonly PathStep[], what: string, kinds?: readonly (DeployedKind | 'url' | 'api')[], as?: 'name', within?: string): void {
     const site = this.siteOf(path);
     // A value of the provider's is every function's, and one place it is read.
-    if (this.parts.imports.some((found) => found.key === key && found.file === site.file && found.line === site.line)) return;
-    this.parts.imports.push({ key, ...site, what, ...(kinds === undefined ? {} : { kinds }), ...(as === undefined ? {} : { as }) });
+    if (this.parts.imports.some((found) => found.key === key && found.file === site.file && found.line === site.line && found.within === within)) return;
+    this.parts.imports.push({ key, ...site, what, ...(kinds === undefined ? {} : { kinds }), ...(as === undefined ? {} : { as }), ...(within === undefined ? {} : { within }) });
+  }
+
+  /**
+   * That a name is written with values other deployments publish: an ARN
+   * built around an imported name (P253), or a name built of several, or of
+   * one and text (P259) - each the name, or a part of the name, of what the
+   * thing is.
+   */
+  importsOfName(found: Deployed, path: readonly PathStep[], what: string): void {
+    if (found.kind === 'url') return;
+    for (const key of importsInName(found)) this.importAt(key, path, what, [found.kind], 'name', found.built === undefined ? undefined : found.name);
   }
 
   /**
@@ -211,8 +221,8 @@ export class FileReading {
       return { written, imported: imported.key, unread: { text: imported.text, ...(imported.variable === undefined ? {} : { variable: imported.variable }) } };
     }
     if (found !== undefined && !(found instanceof Unread)) {
-      // An ARN or a URL built around a name another deployment publishes (P253).
-      if (found.imported !== undefined && found.kind !== 'url' && path !== undefined) this.importAt(found.imported, path, what ?? 'a value a function is deployed with', [found.kind], 'name');
+      // An ARN or a URL built around a name other deployments publish (P253, P259).
+      if (path !== undefined) this.importsOfName(found, path, what ?? 'a value a function is deployed with');
       return { written, ...(text === undefined ? {} : { text }), names: { kind: found.kind, name: found.name } };
     }
     if (text !== undefined) return { written, text };

@@ -633,6 +633,8 @@ export type { DecoratorMatch } from './decorators.js';
 
 export { resolveConstructorInjection, resolveFieldInjection } from './di/constructor.js';
 export { resolveClassOfExpression, resolveClassOfType } from './di/class-ref.js';
+export { providerIndex, sameToken } from './di/providers.js';
+export type { ProviderIndex, WrittenProvider } from './di/providers.js';
 export type { ClassRef } from './di/class-ref.js';
 export {
   bodyOf,

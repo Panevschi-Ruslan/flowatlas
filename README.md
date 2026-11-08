@@ -1007,7 +1007,12 @@ prove, and the path is given so you can run it.
   each other export as the value itself; a template's parameter file is read;
   and a mapping or a destination whose import does not say what it reads is
   read as each thing it may be until the publisher says which
-  (`fixtures/multi-repo-parameters`).
+  (`fixtures/multi-repo-parameters`). A template deployed by sceptre or rain
+  is read with the values and the stack name its stack configuration or
+  command gives, a parameter file in YAML is read, a rule's target or a
+  subscription's endpoint of an import is read as what the publisher says it
+  is, and a name built of several imports is written once every part is joined
+  (`fixtures/multi-repo-shared-values`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —

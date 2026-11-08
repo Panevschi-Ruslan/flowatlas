@@ -6,9 +6,9 @@ import { readServiceFile } from './document.js';
 import { emptyParts } from './reading.js';
 import { readService } from './service.js';
 
-export { readServiceFile, readServiceYaml, ServiceFileUnreadable } from './document.js';
+export { readServiceFile, readServiceYaml, ServiceFileUnreadable, type YamlOptions } from './document.js';
 export { COMPOSE_FILES, readCompose } from './compose.js';
-export { Template, RESOURCE_KINDS, intrinsicOf, type Declares, type Deployed, type Exported, type Known, type Pseudo, type Resource, type TemplateOptions } from './cloudformation.js';
+export { Template, RESOURCE_KINDS, importsInName, intrinsicOf, type Declares, type Deployed, type Exported, type Known, type Pseudo, type Resource, type TemplateOptions } from './cloudformation.js';
 export { Variables, Unread, Imported, HOLE, DEFAULT_STAGE, DEFAULT_REGION, isRecord, textOf } from './variables.js';
 export { readOutputs, readParameters, type ApiReference, type ImplicitOutput, type OutputApi, type OutputsOptions } from './outputs.js';
 export { EVENT_READERS } from './events.js';

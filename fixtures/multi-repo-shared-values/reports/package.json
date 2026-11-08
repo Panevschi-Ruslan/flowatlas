@@ -1,0 +1,12 @@
+{
+  "name": "shop-reports",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reports for a shop, a Serverless Framework service.",
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

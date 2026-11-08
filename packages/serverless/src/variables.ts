@@ -37,12 +37,14 @@ export class Unread {
     /** The string as far as it was read, with a {@link HOLE} where it was not. */
     readonly partial?: string,
     /**
-     * The one value another deployment publishes written inside the string, by
-     * its key, and the string with that value's stand-in (`importedName`) in
-     * its place (P253): an ARN whose name is an import names the imported
-     * thing, by the stand-in the linker finishes.
+     * The values other deployments publish written inside the string, by
+     * their keys, and the string with each value's stand-in (`importedName`)
+     * in its place (P253, P259): an ARN whose name is an import names the
+     * imported thing, by the stand-in the linker finishes, and one whose name
+     * is built of several, or of an import and text, is the name the linker
+     * writes once every part of it is joined.
      */
-    readonly embeds?: { readonly key: string; readonly text: string },
+    readonly embeds?: { readonly keys: readonly string[]; readonly text: string },
   ) {}
 }
 
@@ -69,17 +71,33 @@ export class Imported extends Unread {
 /** Where a value another deployment publishes is written inside a string being built, until it is known what the string is. */
 export const EMBEDDED = '\u0004';
 
+/** Where the mark of one such value ends: the mark holds its position among the values written in. */
+const EMBEDDED_END = '\u0005';
+
+/** Every mark of a value written in, with its position. */
+const EMBEDDED_MARKS = /\u0004(\d+)\u0005/g;
+
+/** The mark of the `index`th value another deployment publishes written into a string being built (P259). */
+export const embeddedAt = (index: number): string => `${EMBEDDED}${index}${EMBEDDED_END}`;
+
+/** A string with a {@link HOLE} where each value another deployment publishes is written in. */
+export const withoutEmbedded = (built: string): string => built.replace(EMBEDDED_MARKS, HOLE);
+
 /**
- * A string built with one value another deployment publishes inside it, at
- * {@link EMBEDDED}: the import itself where it is the whole string, else an
- * `Unread` that says so and carries the string with the import's stand-in in
- * its place (P253). With no import in it, the string, or why it is not read.
+ * A string built with values other deployments publish inside it, each at
+ * its {@link embeddedAt} mark: the import itself where it is the whole
+ * string, else an `Unread` that says so and carries the string with each
+ * import's stand-in in its place (P253, P259). With no import in it, the
+ * string, or why it is not read.
  */
-export const embedding = (built: string, imported: Imported | undefined, because: Unread | undefined): Unread | string => {
-  if (imported === undefined || !built.includes(EMBEDDED)) return because === undefined ? built : new Unread(because.text, because.variable, built);
-  if (built === EMBEDDED) return imported;
-  const unread = because ?? imported;
-  return new Unread(unread.text, unread.variable, built.split(EMBEDDED).join(HOLE), { key: imported.key, text: built.split(EMBEDDED).join(importedName(imported.key)) });
+export const embedding = (built: string, imported: readonly Imported[], because: Unread | undefined): Unread | string => {
+  const [first] = imported;
+  if (first === undefined || !built.includes(EMBEDDED)) return because === undefined ? built : new Unread(because.text, because.variable, built);
+  if (built === embeddedAt(0)) return first;
+  const unread = because ?? first;
+  const keys = [...new Set(imported.map((value) => value.key))];
+  const text = built.replace(EMBEDDED_MARKS, (_whole, index: string) => importedName((imported[Number(index)] ?? first).key));
+  return new Unread(unread.text, unread.variable, withoutEmbedded(built), { keys, text });
 };
 
 /** Where the stage a service is deployed to was found. */
@@ -246,9 +264,8 @@ export class Variables {
     const kept: string[] = [];
     let text = written;
     let unread: Unread | undefined;
-    // The one import written into the string, kept apart until the string is built (P253).
-    let imported: Imported | undefined;
-    let imports = 0;
+    // The imports written into the string, kept apart until the string is built (P253, P259).
+    const imported: Imported[] = [];
     for (let guard = 0; guard < 64; guard += 1) {
       const match = /\$\{([^${}]*)\}/.exec(text);
       if (match === null) break;
@@ -264,9 +281,8 @@ export class Variables {
       if (whole && kept.length === 0) return value;
       let piece: string;
       if (value instanceof Imported) {
-        imports += 1;
-        imported = value;
-        piece = EMBEDDED;
+        piece = embeddedAt(imported.length);
+        imported.push(value);
       } else if (value instanceof Unread) {
         unread ??= value;
         piece = value.partial ?? HOLE;
@@ -279,10 +295,6 @@ export class Variables {
       text = `${text.slice(0, match.index)}${piece}${text.slice(match.index + match[0].length)}`;
     }
     const restored = text.replace(/\u0002(\d+)\u0003/g, (_whole, index: string) => kept[Number(index)] as string);
-    if (imports > 1) {
-      const first = unread ?? (imported as Imported);
-      return new Unread(`it holds ${imports} values other deployments publish`, first.variable, restored.split(EMBEDDED).join(HOLE));
-    }
     return embedding(restored, imported, unread);
   }
 

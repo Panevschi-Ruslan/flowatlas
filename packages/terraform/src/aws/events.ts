@@ -1,7 +1,7 @@
 import type { DeliverySource, DeployedDelivery } from '@flowatlas/core';
 import type { Instance } from '../eval/values.js';
 import { argument, blockOrArgument, entryOf, siteOf, textOf, unreadRow, whyNot } from './arguments.js';
-import { busOf, deployedAt, deployedOfValue, isBecause, targetOf } from './deployed.js';
+import { busOf, deliverAt, deployedAt, deployedOfValue, isBecause, TARGET_KINDS } from './deployed.js';
 import { readEventPattern } from './event-pattern.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
 
@@ -71,21 +71,19 @@ const readRuleTarget = (target: Instance, reading: ResourceReading): void => {
     }
     from = { kind: 'bus', name: bus, pattern };
   }
-  const to = targetOf(deployedAt(target, 'arn', reading), target, `the target of ${target.address}`, reading);
-  const delivery: DeployedDelivery = {
+  const delivery: Omit<DeployedDelivery, 'to'> = {
     ...siteOf(target),
     address: target.address,
     by: from.kind === 'schedule' ? 'schedule' : 'rule',
     ...(name === undefined ? {} : { name }),
     from,
-    ...(to === undefined ? {} : { to }),
     meta: {
       rule: rule.address,
       ...(disabled(rule) ? { disabled: true } : {}),
       ...(transformed(target) ? { transformed: true } : {}),
     },
   };
-  reading.deliveries.push(delivery);
+  deliverAt(reading, target, delivery, deployedAt(target, 'arn', reading), TARGET_KINDS, `the target of ${target.address}`);
 };
 
 /** EventBridge Scheduler: a schedule with one target, written as a nested block. */
@@ -94,21 +92,21 @@ const readSchedule = (schedule: Instance, reading: ResourceReading): void => {
   const expression = textOf(argument(schedule, 'schedule_expression'));
   const target = blockOrArgument(schedule, 'target');
   const arn = entryOf(target, 'arn');
-  const to = targetOf(
-    arn === undefined ? undefined : deployedOfValue(arn, `the target of ${schedule.address}`, reading),
-    schedule,
-    `the target of ${schedule.address}`,
+  deliverAt(
     reading,
+    schedule,
+    {
+      ...siteOf(schedule),
+      address: schedule.address,
+      by: 'schedule',
+      ...(name === undefined ? {} : { name }),
+      from: { kind: 'schedule', ...(expression === undefined ? {} : { expression }) },
+      ...(disabled(schedule) ? { meta: { disabled: true } } : {}),
+    },
+    arn === undefined ? undefined : deployedOfValue(arn, `the target of ${schedule.address}`, reading),
+    TARGET_KINDS,
+    `the target of ${schedule.address}`,
   );
-  reading.deliveries.push({
-    ...siteOf(schedule),
-    address: schedule.address,
-    by: 'schedule',
-    ...(name === undefined ? {} : { name }),
-    from: { kind: 'schedule', ...(expression === undefined ? {} : { expression }) },
-    ...(to === undefined ? {} : { to }),
-    ...(disabled(schedule) ? { meta: { disabled: true } } : {}),
-  });
 };
 
 export const EVENT_READERS: readonly ResourceReader[] = [

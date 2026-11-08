@@ -348,6 +348,13 @@ export interface DeployedImport {
    * name, as text, is what it names too (P253).
    */
   readonly as?: 'name';
+  /**
+   * Where the value is one part of a name built of several values other
+   * deployments publish, or of one and text (P259): the name, with each
+   * part's stand-in (`importedName`) in place. The linker writes the name
+   * where every part of it is joined, and leaves it as it is otherwise.
+   */
+  readonly within?: string;
 }
 
 /** Where something inside a document is written, 1-based, as an editor counts. */

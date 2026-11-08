@@ -2,6 +2,7 @@ import { join, posix } from 'node:path';
 import { exportKey, generatedName, parameterKey, type PathStep, type PositionedDocument, type Unresolved } from '@flowatlas/core';
 import {
   FileReading,
+  importsInName,
   isRecord,
   readOutputs,
   readParameters,
@@ -20,7 +21,8 @@ import {
 } from '@flowatlas/serverless';
 import { apiLookup, apiReference, readApis } from './apis.js';
 import { deployConfigOf, TEMPLATE_FILES, type DeployConfig } from './config.js';
-import { parameterFilesBeside, readParameterFile } from './parameter-files.js';
+import { deployerOf } from './deployers.js';
+import { PARAMETER_FILE, parameterFilesBeside, readParameterFile } from './parameter-files.js';
 import { functionEventReaders, readEvents } from './events.js';
 import { FUNCTION_TYPES, readDestinations, readFunction, readFunctionUrlConfig, withGlobals, type FunctionSite } from './functions.js';
 import { expandLoops, Resolver, type ParameterFrom } from './intrinsics.js';
@@ -128,13 +130,23 @@ const configFor = (repoDir: string, file: string, options: Readonly<Record<strin
   }
 };
 
+/** What a template's deployment gives it besides its `samconfig` and the options: values, and the stack's name and region where a tool names them. */
+interface DeployValues {
+  readonly named: Record<string, string | Unread>[];
+  readonly vars: Record<string, string>[];
+  readonly stackName?: string;
+  readonly region?: string;
+}
+
 /**
  * The parameter files a template is deployed with (P253): the ones its
- * `samconfig` names, else the one beside it whose name says it is its own -
- * two such are a row, and neither is read - and, after those, every parameter
- * file the configuration names. Each file read is stamped with the template.
+ * `samconfig` names, else the values a sceptre stack or a `rain deploy`
+ * command gives it (P259), else the one beside it whose name says it is its
+ * own - two such, or two deployments, are a row, and none is read - and,
+ * after those, every parameter file the configuration names. Each file read
+ * is stamped with the template.
  */
-const deployValues = (parts: DeploymentParts, options: TemplateReadOptions, config: DeployConfig): { named: Record<string, string>[]; vars: Record<string, string>[] } => {
+const deployValues = (parts: DeploymentParts, options: TemplateReadOptions, config: DeployConfig): DeployValues => {
   const { repoDir, file } = options;
   const read = (path: string, named: boolean): Record<string, string> | undefined => {
     options.loaded.add(join(repoDir, path));
@@ -147,15 +159,40 @@ const deployValues = (parts: DeploymentParts, options: TemplateReadOptions, conf
         symbol: `${file}#Parameters`,
         reason: 'infra-file-unparsed',
         message: `the parameter file ${path} is not read: ${found.unreadable}`,
-        hint: 'The template is read with the values the rest of its configuration gives. Point the override at a JSON file of ParameterKey and ParameterValue.',
+        hint: 'The template is read with the values the rest of its configuration gives. Point the override at a JSON or YAML file of ParameterKey and ParameterValue.',
       });
     }
     return undefined;
   };
-  const vars = (options.vars ?? []).filter((path) => path.endsWith('.json') && 'values' in readParameterFile(repoDir, path));
+  const vars = (options.vars ?? []).filter((path) => PARAMETER_FILE.test(path) && 'values' in readParameterFile(repoDir, path));
   const fromVars = vars.map((path) => read(path, false)).filter((values): values is Record<string, string> => values !== undefined);
   const named = config.parameterFiles ?? [];
   if (named.length > 0) return { named: named.map((path) => read(path, true)).filter((values): values is Record<string, string> => values !== undefined), vars: fromVars };
+  const deployer = deployerOf(repoDir, file, options.vars ?? [], options.options);
+  if (deployer !== undefined && 'several' in deployer) {
+    const labels = deployer.several.map((one) => `${one.tool} ${one.label} (${one.file})`);
+    parts.rows.push({
+      file,
+      line: 1,
+      symbol: `${file}#Parameters`,
+      reason: 'parameter-file-ambiguous',
+      message: `${file} is deployed ${deployer.several.length} ways - ${labels.join(', ')} - each with values of its own, and nothing says which is read; none is`,
+      hint: 'Name the stack configuration or the parameter file to read under services[].infra.vars, or a sceptre group as services[].infra.options.config_env.',
+    });
+    for (const one of deployer.several) for (const path of one.read) options.loaded.add(join(repoDir, path));
+    return { named: [], vars: fromVars };
+  }
+  if (deployer !== undefined) {
+    const { one } = deployer;
+    for (const path of one.read) options.loaded.add(join(repoDir, path));
+    const fromFiles = one.files.map((path) => read(path, true)).filter((values): values is Record<string, string> => values !== undefined);
+    return {
+      named: [...fromFiles, { ...one.values }],
+      vars: fromVars,
+      ...(one.stackName === undefined ? {} : { stackName: one.stackName }),
+      ...(one.region === undefined ? {} : { region: one.region }),
+    };
+  }
   if (vars.length > 0) return { named: [], vars: fromVars };
   const beside = parameterFilesBeside(repoDir, file, options.templates ?? [file]);
   if (beside.length > 1) {
@@ -227,8 +264,8 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   for (const [name, value] of Object.entries(config.parameters)) if (config.from[name] !== 'option') given[name] = { value, from: 'file' };
   for (const values of files.vars) for (const [name, value] of Object.entries(values)) given[name] = { value, from: 'file' };
   for (const [name, value] of Object.entries(config.parameters)) if (config.from[name] === 'option') given[name] = { value, from: 'option' };
-  const region = config.region ?? options.parent?.region;
-  const stackName = options.parent === undefined ? config.stackName : undefined;
+  const region = config.region ?? files.region ?? options.parent?.region;
+  const stackName = options.parent === undefined ? (config.stackName ?? files.stackName) : undefined;
   const resolver = new Resolver({
     document: written,
     given,
@@ -416,7 +453,7 @@ const exportsOf = (reading: TemplateReading, written: unknown, sink: ExportSink)
   const put = (key: string, value: unknown): void => {
     const found = reading.deployedOf(value);
     const deployed: Deployed | undefined =
-      found === undefined || found instanceof Unread || found.imported !== undefined
+      found === undefined || found instanceof Unread || importsInName(found).length > 0
         ? undefined
         : { kind: found.kind, name: found.name, ...(found.changes === true ? { changes: true } : {}), ...(found.generated === true ? { generated: true } : {}) };
     const exported: Exported = { ...(deployed === undefined ? {} : { deployed }), text: reading.template.text(value) };

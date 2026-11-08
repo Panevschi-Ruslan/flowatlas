@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:58:08.036Z",
+  "builtAt": "2026-11-08T14:23:50.675Z",
   "services": [
     {
       "name": "api",
@@ -1451,6 +1451,18 @@
       }
     },
     {
+      "id": "worker#../../packages/clients/src/index.ts:LEDGER_CLIENT",
+      "type": "provider",
+      "label": "LEDGER_CLIENT",
+      "repo": "worker",
+      "file": "../../packages/clients/src/index.ts",
+      "line": 60,
+      "kind": "factory",
+      "meta": {
+        "token": "LEDGER_CLIENT"
+      }
+    },
+    {
       "id": "worker#../../packages/clients/src/index.ts:LedgerClientModule",
       "type": "module",
       "label": "LedgerClientModule",
@@ -1462,6 +1474,18 @@
         "controllers": [],
         "providers": [],
         "exports": []
+      }
+    },
+    {
+      "id": "worker#../../packages/clients/src/index.ts:ORDERS_CLIENT",
+      "type": "provider",
+      "label": "ORDERS_CLIENT",
+      "repo": "worker",
+      "file": "../../packages/clients/src/index.ts",
+      "line": 43,
+      "kind": "factory",
+      "meta": {
+        "token": "ORDERS_CLIENT"
       }
     },
     {
@@ -2046,6 +2070,30 @@
       "line": 10
     },
     {
+      "from": "worker#src/fulfil.service.ts:FulfilService",
+      "to": "worker#../../packages/clients/src/index.ts:LEDGER_CLIENT",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/fulfil.service.ts",
+      "line": 13,
+      "meta": {
+        "token": "LEDGER_CLIENT",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "worker#src/fulfil.service.ts:FulfilService",
+      "to": "worker#../../packages/clients/src/index.ts:ORDERS_CLIENT",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/fulfil.service.ts",
+      "line": 12,
+      "meta": {
+        "token": "ORDERS_CLIENT",
+        "provider": "useFactory"
+      }
+    },
+    {
       "from": "worker#src/fulfil.service.ts:FulfilService.fulfil",
       "to": "http_out:worker#src/fulfil.service.ts:17:26",
       "type": "calls",
@@ -2231,22 +2279,6 @@
       "message": "orders.get is sent to /api/trpc and served over trpc at /trpc",
       "hint": "Nothing answers a request sent there. Point the link at /trpc, or mount the tree where the link sends.",
       "symbol": "ui_api_call:web#src/legacy.ts:8:10"
-    },
-    {
-      "file": "src/fulfil.service.ts",
-      "line": 12,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides ORDERS_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "FulfilService.constructor[0]",
-      "service": "worker"
-    },
-    {
-      "file": "src/fulfil.service.ts",
-      "line": 13,
-      "reason": "di-token-unknown",
-      "hint": "No module in this repository provides LEDGER_CLIENT. Register it with { provide, useClass } or force the adapter that does.",
-      "symbol": "FulfilService.constructor[1]",
-      "service": "worker"
     }
   ]
 }

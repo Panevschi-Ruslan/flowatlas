@@ -1,5 +1,5 @@
 import { destinationOf } from '@flowatlas/aws';
-import type { DeliverySource } from '@flowatlas/core';
+import { alternativeAddress, alternativeOf, type DeliverySource } from '@flowatlas/core';
 import type { Instance, Value } from '../eval/values.js';
 import { blockOrArgument, entryOf, siteOf, unreadRow } from './arguments.js';
 import { alternativesAt, asTarget, deployedOfValue, isBecause, targetOf } from './deployed.js';
@@ -82,12 +82,52 @@ const readInvokeConfig: ResourceReader[1] = (config, reading) => {
 };
 
 /**
+ * The failures of a mapping read once per kind of thing it may read, where
+ * what it reads is a value another deployment publishes (P253): from each
+ * reading's own way in, under an address of the reading's kind, which the
+ * import's site is told of, so the linker keeps a destination with the
+ * reading it belongs to and drops it with the others (P259). A destination
+ * that is itself such a value would be a choice inside a choice, and is a row.
+ */
+const pushOfReadings = (mapping: Instance, readings: readonly { readonly address: string; readonly kind: string }[], reading: ResourceReading): void => {
+  for (const [block, when, value] of destinationsIn(mapping, 'destination_arn')) {
+    const what = `the ${when} destination of ${mapping.address}`;
+    const found = deployedOfValue(value, what, reading);
+    if (isBecause(found) && found.imported !== undefined) {
+      reading.rows.push(
+        unreadRow(mapping, 'subscription-target-unread', what, {
+          reason: 'imported',
+          text: `it is a value another deployment publishes (${found.imported}), and so is what the mapping reads; the two are not read as a choice of kinds together`,
+        }),
+      );
+      continue;
+    }
+    const to = destinationOf(targetOf(found, mapping, what, reading), when);
+    for (const one of readings) {
+      const address = alternativeAddress(`${mapping.address}.${block}`, one.kind);
+      reading.deliveries.push({ ...siteOf(mapping), address, by: 'destination', from: { kind: 'outcome', when, of: { delivery: one.address } }, ...(to === undefined ? {} : { to }), meta: { when } });
+      const index = reading.imports.findIndex((site) => site.alternatives?.some((alternative) => alternative.address === one.address) === true);
+      const site = reading.imports[index];
+      if (site?.alternatives !== undefined) reading.imports[index] = { ...site, alternatives: [...site.alternatives, { kind: one.kind as (typeof site.alternatives)[number]['kind'], address }] };
+    }
+  }
+};
+
+/**
  * A mapping's failures: what it gave up on, from where its batches came in.
- * Read after every mapping, so the mapping's own delivery is there to start from.
+ * Read after every mapping, so the mapping's own delivery - or each of its
+ * readings (P259) - is there to start from.
  */
 const readMappingFailure: ResourceReader[1] = (mapping, reading) => {
-  if (!reading.deliveries.some((delivery) => delivery.address === mapping.address)) return;
-  push(mapping, { delivery: mapping.address }, reading, 'destination_arn');
+  if (reading.deliveries.some((delivery) => delivery.address === mapping.address)) {
+    push(mapping, { delivery: mapping.address }, reading, 'destination_arn');
+    return;
+  }
+  const readings = reading.deliveries.flatMap((delivery) => {
+    const alternative = delivery.by === 'mapping' ? alternativeOf(delivery.address) : undefined;
+    return alternative?.address === mapping.address ? [{ address: delivery.address, kind: alternative.kind }] : [];
+  });
+  if (readings.length > 0) pushOfReadings(mapping, readings, reading);
 };
 
 export const DESTINATION_READERS: readonly ResourceReader[] = [

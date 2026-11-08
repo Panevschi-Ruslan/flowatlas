@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { isRecord, textOf } from '@flowatlas/serverless';
+import { isRecord, readServiceYaml, textOf } from '@flowatlas/serverless';
 
 /**
  * The files a template's parameters are given values from at deploy time
@@ -11,6 +11,9 @@ import { isRecord, textOf } from '@flowatlas/serverless';
  * - a list of `{ "ParameterKey": "Stage", "ParameterValue": "prod" }`;
  * - a list of `"Stage=prod"`;
  * - `{ "Parameters": { "Stage": "prod" }, "Tags": {...} }`.
+ *
+ * Each is read written as JSON or as YAML (P259): the same three documents,
+ * and the YAML one is also what `rain deploy --config` takes.
  *
  * A file is read for a template where something says it is for that
  * template - the configuration's `services[].infra.vars`, the template's
@@ -52,6 +55,8 @@ export const parameterValues = (document: unknown): Record<string, string> | und
   if (isRecord(document) && isRecord(document['Parameters'])) {
     const out: Record<string, string> = {};
     for (const [key, value] of Object.entries(document['Parameters'])) {
+      // A template declares its parameters under the same key, each an object of its type and default: it is not a file of values.
+      if (isRecord(value)) return undefined;
       const text = valueText(value);
       if (text !== undefined) out[key] = text;
     }
@@ -68,29 +73,32 @@ export const readParameterFile = (repoDir: string, file: string): ParameterFile 
   } catch (cause) {
     return { unreadable: (cause as { code?: string }).code === 'ENOENT' ? `${file} is not there` : `${file} could not be read` };
   }
+  const yaml = YAML_FILE.test(file);
   let document: unknown;
   try {
-    document = JSON.parse(text);
+    document = yaml ? readServiceYaml(text).value : JSON.parse(text);
   } catch (cause) {
-    return { unreadable: `${file} is not JSON: ${cause instanceof Error ? cause.message : String(cause)}` };
+    return { unreadable: `${file} is not ${yaml ? 'YAML' : 'JSON'}: ${cause instanceof Error ? cause.message : String(cause)}` };
   }
   const values = parameterValues(document);
   return values === undefined ? { unreadable: `${file} is not a list of ParameterKey and ParameterValue, of Key=Value, or a template configuration with Parameters` } : { values };
 };
 
+/** A parameter file written as YAML rather than JSON (P259). */
+export const YAML_FILE = /\.ya?ml$/;
+
+/** What a parameter file's name may end in. */
+export const PARAMETER_FILE = /\.(?:json|ya?ml)$/;
+
+/** The spellings of one name, each format a parameter file is written in. */
+const spelled = (stem: string): string[] => ['json', 'yaml', 'yml'].map((extension) => `${stem}.${extension}`);
+
 /** Names a parameter file of one template is kept under beside it, by the template's name without its extension. */
-const OWN_NAMES = (base: string): string[] => [
-  `${base}.parameters.json`,
-  `${base}-parameters.json`,
-  `${base}.params.json`,
-  `${base}-params.json`,
-  `${base}.config.json`,
-  `${base}-config.json`,
-  `${base}-configuration.json`,
-];
+const OWN_NAMES = (base: string): string[] =>
+  [`${base}.parameters`, `${base}-parameters`, `${base}.params`, `${base}-params`, `${base}.config`, `${base}-config`, `${base}-configuration`].flatMap(spelled);
 
 /** Names a parameter file of the one template of a directory is kept under. */
-const SHARED_NAMES = ['parameters.json', 'params.json', 'template-config.json', 'template-configuration.json'];
+const SHARED_NAMES = ['parameters', 'params', 'template-config', 'template-configuration'].flatMap(spelled);
 
 /**
  * The files beside a template that say by their names they hold its values:

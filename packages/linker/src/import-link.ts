@@ -144,6 +144,24 @@ const settleEnvironment = (node: GraphNode, settled: ReadonlyMap<string, Settled
 /** A value the importer reads as the name of what it names: text with nothing in it an address is split on (P253). */
 const isPlainName = (text: string): boolean => text !== '' && !/[:/\s]/.test(text);
 
+/** Every name built of several values a graph imports, with the keys of its parts (P259). */
+const builtNames = (imports: readonly ImportedValue[]): Map<string, string[]> => {
+  const out = new Map<string, string[]>();
+  for (const site of imports) {
+    if (site.within === undefined) continue;
+    const keys = out.get(site.within) ?? [];
+    if (!keys.includes(site.key)) keys.push(site.key);
+    out.set(site.within, keys);
+  }
+  return out;
+};
+
+/** A built name with each part's stand-in replaced by what the part is, the longest stand-in first. */
+const fill = (within: string, keys: readonly string[], parts: ReadonlyMap<string, string>): string =>
+  [...keys]
+    .sort((a, b) => importedName(b).length - importedName(a).length)
+    .reduce((name, key) => name.split(importedName(key)).join(parts.get(key) as string), within);
+
 /** What joining one graph's imports decided, before anything of it is rewritten. */
 interface Plan {
   /** Every stand-in, by what it is renamed to. */
@@ -212,6 +230,8 @@ export const joinImports = (graphs: readonly RepoGraph[]): { graphs: RepoGraph[]
     const byKey = new Map<string, ImportedValue[]>();
     for (const site of imports) byKey.set(site.key, [...(byKey.get(site.key) ?? []), site]);
     const plan: Plan = { renames: new Map(), settled: new Map(), from: new Map(), dropped: new Set(), references: new Set(), standIns: new Set() };
+    /** What each joined key is as a part of a name: the name it publishes, or its text where that is a name. */
+    const parts = new Map<string, string>();
     const row = (site: ImportedValue, reason: string, message: string, hint: string): void => {
       rows.push({ service: graph.repo, file: site.file, line: site.line, reason, message, hint, symbol: `import:${site.key}`, meta: { key: site.key } });
     };
@@ -272,11 +292,15 @@ export const joinImports = (graphs: readonly RepoGraph[]): { graphs: RepoGraph[]
         if (name !== value.value) owned.set(exporter.repo, (owned.get(exporter.repo) ?? new Map<string, string>()).set(value.value, name));
         plan.renames.set(importedName(key), name);
         plan.settled.set(key, { value: name, kind: value.kind, ...(value.kind === 'api' ? { service: exporter.repo } : {}) });
+        parts.set(key, name);
       } else if (value.text !== undefined) {
         if (sites.some(named)) plan.renames.set(importedName(key), value.text);
         plan.settled.set(key, { value: value.text });
+        if (isPlainName(value.text)) parts.set(key, value.text);
       }
     }
+    // A name built of several values, or of one and text, is written where every part of it is joined, and kept whole otherwise (P259).
+    for (const [within, keys] of builtNames(imports)) plan.renames.set(within, keys.every((key) => parts.has(key)) ? fill(within, keys, parts) : within);
     return plan;
   });
   const joined = graphs.map((graph, index): RepoGraph => {

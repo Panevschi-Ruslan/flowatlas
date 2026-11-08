@@ -1,0 +1,16 @@
+service: shop-reports
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-west-1
+  stage: prod
+
+functions:
+  close:
+    handler: src/close-month.handler
+    environment:
+      # Two values other deployments publish in one address: the account the
+      # platform writes, and the queue's name billing's stack outputs.
+      INVOICES_QUEUE_URL: https://sqs.${aws:region}.amazonaws.com/${ssm:/shop/account-id}/${cf:shop-billing.InvoicesQueueName}

@@ -34,18 +34,49 @@ const declared = (resource: Resource, reading: FileReading): Deployed | undefine
   return found;
 };
 
-const pushDelivery = (reading: FileReading, resource: Resource, address: string, by: Parameters<FileReading['parts']['deliveries']['push']>[0]['by'], from: DeliverySource, target: unknown, what: string, meta: Record<string, unknown> = {}, name?: string): void => {
-  const to = reading.targetOf(reading.template.deployedOf(target), pathOf(resource), address, what);
-  reading.parts.deliveries.push({
-    ...reading.siteOf(pathOf(resource)),
-    address,
-    by,
-    ...(name === undefined ? {} : { name }),
-    from,
-    ...(to === undefined ? {} : { to }),
-    ...(Object.keys(meta).length === 0 ? {} : { meta }),
-  });
+/**
+ * A delivery from a resource onto what a value names. A value another
+ * deployment publishes is read as each kind of thing the delivery can hand
+ * to - `kinds`, one where the use says which (a subscription's protocol), more
+ * where it does not (a rule's target) - and the linker keeps the one the
+ * publisher's value is (P253, P259).
+ */
+const pushDelivery = (
+  reading: FileReading,
+  resource: Resource,
+  address: string,
+  by: Parameters<FileReading['parts']['deliveries']['push']>[0]['by'],
+  from: DeliverySource,
+  target: unknown,
+  what: string,
+  kinds: readonly DeployedKind[],
+  meta: Record<string, unknown> = {},
+  name?: string,
+): void => {
+  reading.deliverTo(
+    {
+      ...reading.siteOf(pathOf(resource)),
+      address,
+      by,
+      ...(name === undefined ? {} : { name }),
+      from,
+      ...(Object.keys(meta).length === 0 ? {} : { meta }),
+    },
+    reading.template.deployedOf(target),
+    pathOf(resource),
+    what,
+    kinds,
+  );
 };
+
+/** What a rule's or a schedule's target may be, where the use does not say (P259): everything a delivery hands to. */
+export const TARGET_KINDS: readonly DeployedKind[] = ['function', 'queue', 'topic', 'bus', 'workflow'];
+
+/** What a subscription delivers to by its protocol. */
+const SUBSCRIBED: ReadonlyMap<string, DeployedKind> = new Map([
+  ['lambda', 'function'],
+  ['sqs', 'queue'],
+]);
 
 /** A table with a stream, and a Kinesis stream: what a write in code publishes onto (P51). */
 const readTable: ResourceReader = (resource, reading) => {
@@ -76,24 +107,23 @@ const readQueue: ResourceReader = (resource, reading) => {
     { kind: 'queue', name: found.name },
     policy['deadLetterTargetArn'],
     `the dead-letter queue of ${resource.address}`,
+    ['queue'],
     typeof receives === 'number' ? { maxReceiveCount: receives } : {},
   );
 };
-
-/** Protocols a subscription delivers to something this reading follows. */
-const FOLLOWED = new Set(['lambda', 'sqs']);
 
 const subscription = (reading: FileReading, resource: Resource, address: string, topic: string, protocol: string | undefined, endpoint: unknown, policy: unknown): void => {
   const meta = {
     ...(protocol === undefined ? {} : { protocol }),
     ...(policy === undefined ? {} : { unmatched: { filter_policy: JSON.stringify(policy) } }),
   };
-  if (protocol === undefined || !FOLLOWED.has(protocol)) {
+  const kind = protocol === undefined ? undefined : SUBSCRIBED.get(protocol);
+  if (kind === undefined) {
     resourceRow(reading, resource, 'subscription-target-unread', `${address} delivers by ${protocol ?? 'a protocol not read'}, which nothing here follows`, 'An e-mail, an HTTP endpoint or a phone is outside the map. Nothing to fix.', 'info');
     reading.parts.deliveries.push({ ...reading.siteOf(pathOf(resource)), address, by: 'subscription', from: { kind: 'topic', name: topic }, meta });
     return;
   }
-  pushDelivery(reading, resource, address, 'subscription', { kind: 'topic', name: topic }, endpoint, `what ${address} delivers to`, meta);
+  pushDelivery(reading, resource, address, 'subscription', { kind: 'topic', name: topic }, endpoint, `what ${address} delivers to`, [kind], meta);
 };
 
 /** A topic, and the subscriptions written inside it. */
@@ -152,6 +182,7 @@ const readRule: ResourceReader = (resource, reading) => {
       from,
       target['Arn'],
       `the target of ${resource.address}`,
+      TARGET_KINDS,
       { rule: resource.address, ...(textOf(properties['State']) === 'DISABLED' ? { disabled: true } : {}), ...(transformed ? { transformed: true } : {}) },
       name,
     );
@@ -221,18 +252,18 @@ const readMapping: ResourceReader = (resource, reading) => {
   });
 };
 
-/** The configurations of a bucket's notification, and the property naming each target. */
-const NOTIFICATIONS: ReadonlyArray<readonly [list: string, target: string]> = [
-  ['LambdaConfigurations', 'Function'],
-  ['QueueConfigurations', 'Queue'],
-  ['TopicConfigurations', 'Topic'],
+/** The configurations of a bucket's notification, the property naming each target, and what it is. */
+const NOTIFICATIONS: ReadonlyArray<readonly [list: string, target: string, kind: DeployedKind]> = [
+  ['LambdaConfigurations', 'Function', 'function'],
+  ['QueueConfigurations', 'Queue', 'queue'],
+  ['TopicConfigurations', 'Topic', 'topic'],
 ];
 
 const readBucket: ResourceReader = (resource, reading) => {
   const found = declared(resource, reading);
   const configuration = resource.properties['NotificationConfiguration'];
   if (found === undefined || !isRecord(configuration)) return;
-  for (const [list, property] of NOTIFICATIONS) {
+  for (const [list, property, kind] of NOTIFICATIONS) {
     const items = Array.isArray(configuration[list]) ? (configuration[list] as unknown[]) : [];
     items.forEach((item, index) => {
       if (!isRecord(item)) return;
@@ -254,6 +285,7 @@ const readBucket: ResourceReader = (resource, reading) => {
         { kind: 'bucket', name: found.name, events: [event], ...(prefix === undefined ? {} : { prefix }), ...(suffix === undefined ? {} : { suffix }) },
         item[property],
         `what ${resource.address}.${list}[${index}] notifies`,
+        [kind],
       );
     });
   }
@@ -278,6 +310,7 @@ const readSchedule: ResourceReader = (resource, reading) => {
     { kind: 'schedule', ...(expression === undefined ? {} : { expression }) },
     target['Arn'],
     `the target of ${resource.address}`,
+    TARGET_KINDS,
     {
       ...(textOf(properties['State']) === 'DISABLED' ? { disabled: true } : {}),
       ...(target['Input'] === undefined ? {} : { transformed: true }),
@@ -329,7 +362,7 @@ const readUserPool: ResourceReader = (resource, reading) => {
     const target = isRecord(written) && intrinsicOf(written) === undefined ? written['LambdaArn'] : written;
     const key = cognitoTriggerKey(pool, trigger.replace(/Config$/, ''));
     const step = key.slice(key.lastIndexOf('/') + 1);
-    pushDelivery(reading, resource, `${resource.address}.LambdaConfig.${trigger}`, 'trigger', { kind: 'trigger', service: 'cognito', key }, target, `the function ${resource.address} runs at ${trigger}`, { pool, trigger: step }, step);
+    pushDelivery(reading, resource, `${resource.address}.LambdaConfig.${trigger}`, 'trigger', { kind: 'trigger', service: 'cognito', key }, target, `the function ${resource.address} runs at ${trigger}`, ['function'], { pool, trigger: step }, step);
   }
 };
 

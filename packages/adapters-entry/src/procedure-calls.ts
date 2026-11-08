@@ -1,6 +1,11 @@
 import {
   forEachCall,
   hasAnyDependency,
+  normalizePath,
+  providerIndex,
+  UNREAD_SPAN,
+  sameToken,
+  type WrittenProvider,
   makeLeafId,
   resolveStaticString,
   siteOf,
@@ -16,7 +21,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import type { ArrayLiteralExpression, CallExpression, Node as TsNode, SourceFile, Type } from 'ts-morph';
-import { Node, SyntaxKind } from 'ts-morph';
+import { Node } from 'ts-morph';
 import {
   PROCEDURE_CLIENTS,
   type ProcedureClient,
@@ -360,34 +365,6 @@ const madeBy = (value: TsNode): TsNode => {
   return (Node.isIdentifier(callee) ? returnedBy(callee) : undefined) ?? value;
 };
 
-/** Whether two tokens are the same: one symbol, or one string written twice (P247). */
-const sameToken = (a: TsNode, b: TsNode): boolean => {
-  const left = unwrap(a);
-  const right = unwrap(b);
-  const text = (node: TsNode): string | undefined =>
-    Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node) ? node.getLiteralText() : undefined;
-  if (text(left) !== undefined || text(right) !== undefined) return text(left) === text(right);
-  const symbolOf = (node: TsNode) => {
-    const symbol = node.getSymbol();
-    return symbol?.getAliasedSymbol() ?? symbol;
-  };
-  const one = symbolOf(left);
-  return one !== undefined ? one === symbolOf(right) : left.getText() === right.getText();
-};
-
-/** A function the repository declares, by the declaration its calls resolve to and the name they are written with. */
-const declaredFunction = (fn: TsNode): { readonly declaration: TsNode; readonly name: string } | undefined => {
-  if (Node.isFunctionDeclaration(fn) || Node.isMethodDeclaration(fn)) {
-    const name = fn.getName();
-    return name === undefined ? undefined : { declaration: fn, name };
-  }
-  const holder = fn.getParent();
-  if ((Node.isArrowFunction(fn) || Node.isFunctionExpression(fn)) && holder !== undefined && Node.isVariableDeclaration(holder)) {
-    return { declaration: holder, name: holder.getName() };
-  }
-  return undefined;
-};
-
 /**
  * What the repository provides for each injection token (P247), as both
  * containers write it: `{ provide: TOKEN, useFactory }` - the expression the
@@ -406,68 +383,15 @@ const declaredFunction = (fn: TsNode): { readonly declaration: TsNode; readonly 
  * place of `inject`.
  */
 const providedValues = (sources: () => readonly SourceFile[]): ProvidedValue => {
-  interface Provider {
-    readonly token: TsNode;
-    /** The factory, or the value, as the provider writes it. */
-    readonly factory?: TsNode;
-    readonly given?: TsNode;
-  }
-  let providers: Provider[] | undefined;
-  /** Every call in the sources, by the name it is written with, read once. */
-  let calls: Map<string, CallExpression[]> | undefined;
-  const callsOf = (fn: { readonly declaration: TsNode; readonly name: string }): CallExpression[] => {
-    if (calls === undefined) {
-      const index = new Map<string, CallExpression[]>();
-      for (const source of sources()) {
-        for (const call of source.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-          const name = calleeName(call);
-          if (name !== undefined) index.set(name, [...(index.get(name) ?? []), call]);
-        }
-      }
-      calls = index;
-    }
-    return (calls.get(fn.name) ?? []).filter((call) => {
-      const callee = unwrap(call.getExpression());
-      const named = Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : callee;
-      const symbol = named.getSymbol();
-      return ((symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []).includes(fn.declaration);
-    });
-  };
-  /** Whether a provider is one the repository makes: written outside any named function, or in one it calls. */
-  const made = (provider: TsNode): boolean => {
-    const within = provider.getFirstAncestor((node) => Node.isFunctionDeclaration(node) || Node.isMethodDeclaration(node) || Node.isArrowFunction(node) || Node.isFunctionExpression(node));
-    const fn = within === undefined ? undefined : declaredFunction(within);
-    return fn === undefined || callsOf(fn).length > 0;
-  };
-  const all = (): readonly Provider[] => {
-    if (providers !== undefined) return providers;
-    const found: Provider[] = [];
-    for (const source of sources()) {
-      source.forEachDescendant((node) => {
-        if (!Node.isObjectLiteralExpression(node)) return;
-        const provide = node.getProperty('provide');
-        const token = provide === undefined ? undefined : propertyValue(provide);
-        if (token === undefined) return;
-        const factory = node.getProperty('useFactory');
-        const given = node.getProperty('useValue');
-        if ((factory === undefined && given === undefined) || !made(node)) return;
-        found.push({
-          token,
-          ...(factory === undefined ? {} : { factory: Node.isMethodDeclaration(factory) ? factory : propertyValue(factory) }),
-          ...(given === undefined ? {} : { given: propertyValue(given) }),
-        });
-      });
-    }
-    providers = found;
-    return found;
-  };
+  // Which providers the repository makes, and how its functions are called, is the injection reader's rule too (P259).
+  const written = providerIndex(sources);
   /** Tokens being worked out, so a provider whose factory injects its own token is nothing rather than a loop. */
   const asking = new Set<TsNode>();
   const provided: ProvidedValue = Object.assign(
     (token: TsNode): TsNode | undefined => {
-      const mine = all().filter((provider) => sameToken(provider.token, token));
+      const mine = written.of(token).filter((provider) => provider.factory !== undefined || provider.given !== undefined);
       if (mine.length !== 1) return undefined;
-      const [one] = mine as [Provider];
+      const [one] = mine as [WrittenProvider];
       if (asking.has(one.token)) return undefined;
       asking.add(one.token);
       try {
@@ -495,14 +419,85 @@ const providedValues = (sources: () => readonly SourceFile[]): ProvidedValue => 
           return token === undefined || Node.isSpreadElement(token) ? undefined : provided(token);
         }
         // Any other function is handed the argument of the one call the repository makes of it.
-        const declared = declaredFunction(fn);
-        const found = declared === undefined ? [] : callsOf(declared);
+        const found = written.callsOf(fn);
         const [only] = found;
         return found.length === 1 && only !== undefined ? only.getArguments()[index] : undefined;
       },
     },
   );
   return provided;
+};
+
+/** The pieces of a URL written as a template or joined with `+`: text as written, and each other piece as the expression it is. */
+const urlPieces = (url: TsNode): Array<string | TsNode> | undefined => {
+  const at = unwrap(url);
+  if (Node.isTemplateExpression(at)) {
+    return [at.getHead().getLiteralText(), ...at.getTemplateSpans().flatMap((span) => [span.getExpression(), span.getLiteral().getLiteralText()])];
+  }
+  if (!Node.isBinaryExpression(at) || at.getOperatorToken().getText() !== '+') return undefined;
+  const piece = (side: TsNode): Array<string | TsNode> => {
+    const inner = unwrap(side);
+    if (Node.isStringLiteral(inner) || Node.isNoSubstitutionTemplateLiteral(inner)) return [inner.getLiteralText()];
+    return urlPieces(inner) ?? [inner];
+  };
+  return [...piece(at.getLeft()), ...piece(at.getRight())];
+};
+
+/** `scheme://host` at the start of a URL written out, and what follows it. */
+const ABSOLUTE = /^([a-z][a-z0-9+.-]*):\/\/([^/?#]+)([^?#]*)/i;
+
+/** The route part of what follows a URL's root: no query, no fragment. */
+const routeOf = (text: string): string => text.split(/[?#]/)[0] ?? '';
+
+/**
+ * A link's URL built over a value one call away (P259): `${base}/rpc` where
+ * `base` is a parameter of the function the link is built in, or `${options.
+ * base}/trpc` where it is an option of the configuring method, each piece
+ * followed to what the repository hands it - a setting, a URL written out -
+ * and read as the half reads any address; what follows the opening piece is
+ * text the files hold, or the URL is not read. Nothing (`undefined`) where no
+ * piece is a value handed in, so the half reads the URL as it always has.
+ */
+const piecewise = (url: TsNode, provided: ProvidedValue, addressOf: (url: TsNode) => LinkAddress): LinkAddress | undefined => {
+  const pieces = urlPieces(url);
+  if (pieces === undefined) return undefined;
+  let handedIn = false;
+  const followed = pieces
+    .filter((piece) => piece !== '')
+    .map((piece) => {
+      if (typeof piece === 'string') return piece;
+      let at = piece;
+      for (let step = 0; step < MAX_ALIASES; step += 1) {
+        const handed = boundOf(at, provided);
+        if (handed === undefined) break;
+        at = handed;
+        handedIn = true;
+      }
+      return at;
+    });
+  if (!handedIn) return undefined;
+  const unread: LinkAddress = { path: null, baseUrlEnv: null, host: null };
+  const textOfStatic = (piece: TsNode): string | undefined => {
+    const found = resolveStaticString(unwrap(piece));
+    return found === null || found.envRefs.length > 0 || found.guessed === true || found.value.includes(UNREAD_SPAN) ? undefined : found.value;
+  };
+  const textOf = (piece: string | TsNode): string | undefined => (typeof piece === 'string' ? piece : textOfStatic(piece));
+  const [first, ...rest] = followed;
+  if (first === undefined) return unread;
+  const tail = rest.map(textOf);
+  if (tail.some((text) => text === undefined)) return unread;
+  const after = tail.join('');
+  const opening = textOf(first);
+  if (opening === undefined) {
+    // The opening piece is the root - a setting, a URL - and the rest the path under it.
+    const root = addressOf(first as TsNode);
+    return root.path === null ? root : { ...root, path: normalizePath(`${root.path}${routeOf(after)}`) };
+  }
+  const whole = `${opening}${after}`;
+  const absolute = ABSOLUTE.exec(whole);
+  return absolute === null
+    ? { path: normalizePath(routeOf(whole)), baseUrlEnv: null, host: null }
+    : { path: normalizePath(routeOf(absolute[3] ?? '')), baseUrlEnv: null, host: (absolute[2] ?? '').toLowerCase() };
 };
 
 /** The names between a proxy and the method that ends the chain. */
@@ -625,7 +620,8 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading, prov
     if (url === undefined || Node.isArrowFunction(url) || Node.isFunctionExpression(url) || Node.isMethodDeclaration(property)) {
       return { kind: 'dynamic', protocol: link.protocol, why: `its ${urlKey} is worked out when each request is sent` };
     }
-    const address = reading.addressOf(url);
+    // A URL built over a parameter is read piece by piece, each followed one call away (P259).
+    const address = piecewise(url, provided, reading.addressOf) ?? reading.addressOf(url);
     if (address.path === null) return { kind: 'dynamic', protocol: link.protocol, why: 'its URL is not written as text or a setting' };
     return { kind: 'read', protocol: link.protocol, address };
   };

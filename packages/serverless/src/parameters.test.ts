@@ -25,12 +25,12 @@ describe('parameters of the account shared between deployments (P253)', () => {
     expect(variables.at(['d'])).not.toBeInstanceOf(Imported);
   });
 
-  it('carries an import written inside a string, with its stand-in in place, and not two', () => {
+  it('carries an import written inside a string, with its stand-in in place, and two (P259)', () => {
     const variables = new Variables({ document: { one: 'https://sqs.eu-west-1.amazonaws.com/1/${ssm:/shop/orders/queue}', two: '${ssm:/a}-${ssm:/b}' }, dir: tmpdir(), options: {}, loaded: new Set() });
     const one = variables.at(['one']) as Unread;
     expect(one).not.toBeInstanceOf(Imported);
-    expect(one.embeds).toEqual({ key: KEY, text: `https://sqs.eu-west-1.amazonaws.com/1/${importedName(KEY)}` });
-    expect((variables.at(['two']) as Unread).embeds).toBeUndefined();
+    expect(one.embeds).toEqual({ keys: [KEY], text: `https://sqs.eu-west-1.amazonaws.com/1/${importedName(KEY)}` });
+    expect((variables.at(['two']) as Unread).embeds).toEqual({ keys: ['parameter:/a', 'parameter:/b'], text: `${importedName('parameter:/a')}-${importedName('parameter:/b')}` });
   });
 
   it('names the queue an address built around an imported name is, and imports it as that name', () => {

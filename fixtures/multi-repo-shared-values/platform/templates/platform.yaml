@@ -1,0 +1,141 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: The platform, deployed by sceptre with the values its stack configuration gives.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+  Prefix:
+    Type: String
+    Default: acme
+  AccountId:
+    Type: String
+  AlertsEmail:
+    Type: String
+    Default: nobody@example.com
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+
+  FulfilFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-fulfil
+      Runtime: nodejs20.x
+      Handler: fulfil.handler
+      Code: ../src
+      Role: !GetAtt LambdaRole.Arn
+
+  JobsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${Prefix}-${Stage}-jobs
+
+  JobsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-jobs
+      Runtime: nodejs20.x
+      Handler: jobs.handler
+      Code: ../src
+      Role: !GetAtt LambdaRole.Arn
+
+  JobsMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt JobsQueue.Arn
+      FunctionName: !Ref JobsFunction
+
+  AuditQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${Prefix}-orders-audit
+
+  AuditFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${Prefix}-${Stage}-audit
+      Runtime: nodejs20.x
+      Handler: audit.handler
+      Code: ../src
+      Role: !GetAtt LambdaRole.Arn
+
+  AuditMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt AuditQueue.Arn
+      FunctionName: !Ref AuditFunction
+
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${Prefix}-${Stage}-alerts
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref AlertsEmail
+
+  ClicksStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: !Sub ${Prefix}-${Stage}-clicks
+      ShardCount: 1
+
+  # What the Terraform ledger reads back by name.
+  ClicksStreamParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /shop/clicks/stream-arn
+      Type: String
+      Value: !GetAtt ClicksStream.Arn
+
+  JobsQueueParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /shop/jobs/queue-arn
+      Type: String
+      Value: !GetAtt JobsQueue.Arn
+
+  FulfilFunctionParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /shop/fulfil/function-arn
+      Type: String
+      Value: !GetAtt FulfilFunction.Arn
+
+  AccountIdParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /shop/account-id
+      Type: String
+      Value: !Ref AccountId
+
+Outputs:
+  Prefix:
+    Value: !Ref Prefix
+    Export:
+      Name: shop-prefix
+  AccountId:
+    Value: !Ref AccountId
+    Export:
+      Name: shop-account-id
+  # Exported under the stack's own name, which sceptre gives it.
+  JobsQueueArn:
+    Value: !GetAtt JobsQueue.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-jobs-queue-arn
+  FulfilFunctionArn:
+    Value: !GetAtt FulfilFunction.Arn
+    Export:
+      Name: shop-fulfil-function-arn
+  AlertsTopicName:
+    Value: !GetAtt AlertsTopic.TopicName
+    Export:
+      Name: shop-alerts-topic-name

@@ -81,6 +81,8 @@ export interface ImportedValue {
   readonly alternatives?: readonly { readonly kind: string; readonly address: string }[];
   /** `name` where the value is the name of what it names, written into an address of it (P253). */
   readonly as?: 'name';
+  /** The name built of several values it is one part of, each part's stand-in in place (P259). */
+  readonly within?: string;
   /** The repository whose value it was joined to, once it is. */
   readonly from?: string;
 }
