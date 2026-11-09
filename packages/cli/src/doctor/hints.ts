@@ -362,6 +362,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'A cluster manifest says where a service is reached in a way the reader does not follow: a chart template whose conditions nothing in its values decides and whose ways declare different ports, names or routes; a template that ranges over a value no file gives; a patch operation other than add, replace or remove; a base that is not in the project; or a way in that splits requests between two services. What is written as a literal is still read. Give the value in the chart\'s values, write the patch as a strategic merge, or annotate the request with the service it reaches.',
   'manifest-overlay-unchosen': () =>
     'Several overlays build on the same base, or a chart is installed several ways, and they declare different ports, names or routes, so which one the cluster runs is not something the files say. The base (or the chart\'s own values) is read alone. Choose the environment under settingFiles.environment (an overlay folder or a values file named for it is then read), or name the overlay under settingFiles.overlays and the values files under settingFiles.chartValues.',
+  'release-need-undefined': () =>
+    'A helmfile release lists under `needs` a release the helmfile (with the bases it layers) does not declare, by that name or in that namespace: helmfile refuses to apply the helmfile, so nothing in it is installed as written. The releases are still read. Name a release the helmfile declares, written namespace/name where its namespace is not the one assumed, or remove the need.',
   'server-request-without-origin': () =>
     'A server\'s own code makes a request with no host through the platform `fetch` (a Next route handler or server component, a Nitro route): on the server there is no page whose address it could be resolved against, so the request throws as written. It is drawn to the route the path names, as the author meant. Build the address from a setting that gives the server\'s own address, call the code behind the route directly, or use a client that answers it in process (Nitro\'s `$fetch`).',
   'proxied-to-third-party': () =>
@@ -911,6 +913,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'procedure-unmounted': ['procedure declared where nothing serves it', 'procedures declared where nothing serves them'],
   'network-port-unreachable': ['request to a port the network does not reach', 'requests to a port the network does not reach'],
   'server-request-without-origin': ['server request with no host', 'server requests with no host'],
+  'release-need-undefined': ['release needing one nothing declares', 'releases needing one nothing declares'],
   's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],
   'stream-no-writer': ['stream nothing writes to', 'streams nothing writes to'],
   'subscription-matches-nothing': ['rule nothing published matches', 'rules nothing published matches'],

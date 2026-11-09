@@ -3,7 +3,7 @@ import { join, posix, relative } from 'node:path';
 import { toPosixPath } from '@flowatlas/core';
 import { isRecord, readServiceFile, serverlessReader, serviceFiles, textOf } from '@flowatlas/serverless';
 import { CONFIG_FILES, deployConfigOf, TEMPLATE_FILES } from './config.js';
-import { JINJA_TEMPLATE } from './deployers.js';
+import { JINJA_TEMPLATE, jinjaFileRole } from './deployers.js';
 import { localPath } from './reading.js';
 import { nestedFilesOf, SAM_TRANSFORM } from './template.js';
 
@@ -73,9 +73,17 @@ const textAt = (path: string): string | undefined => {
 const templateAt = (repoDir: string, file: string): Found | undefined => {
   const path = join(repoDir, file);
   const text = textAt(path);
-  if (text === undefined || !(text.includes('AWSTemplateFormatVersion') || (text.includes('Resources') && text.includes('AWS::')))) return undefined;
+  if (text === undefined) return undefined;
+  const declares = text.includes('AWSTemplateFormatVersion') || (text.includes('Resources') && text.includes('AWS::'));
   // A Jinja template is one only in a sceptre project, which renders it; what it declares is read once it is rendered.
-  if (JINJA_TEMPLATE.test(file)) return inSceptreProject(repoDir, file) ? { file, document: {}, sam: text.includes(SAM_TRANSFORM) } : undefined;
+  // One a stack names is one whatever its own text holds (it may extend another), and one another includes,
+  // imports or extends and no stack names is a part of those (P273).
+  if (JINJA_TEMPLATE.test(file)) {
+    if (!inSceptreProject(repoDir, file)) return undefined;
+    const role = jinjaFileRole(repoDir, file);
+    return role === 'template' || (role !== 'part' && declares) ? { file, document: {}, sam: text.includes(SAM_TRANSFORM) } : undefined;
+  }
+  if (!declares) return undefined;
   let value: unknown;
   try {
     value = readServiceFile(path).value;

@@ -1,0 +1,7 @@
+releases:
+  - name: payments
+    namespace: shop
+    chart: ../charts/payments
+    values:
+      - service:
+          port: {{ .Values.paymentsPort }}

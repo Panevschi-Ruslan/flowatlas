@@ -118,7 +118,7 @@ export interface ManifestIngress {
 
 /** Something about a manifest that is not read, said as a row by whoever the manifest is about (P260). */
 export interface ManifestRow {
-  readonly reason: 'manifest-unread' | 'manifest-overlay-unchosen';
+  readonly reason: 'manifest-unread' | 'manifest-overlay-unchosen' | 'release-need-undefined';
   readonly file: string;
   readonly line: number;
   readonly message: string;
@@ -846,9 +846,61 @@ const row = (reason: ManifestRow['reason'], at: Where, message: string, hint: st
 
 const UNREAD_HINT = 'Write what the manifest says as a literal, or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).';
 
+/** A var a kustomization declares (deprecated `vars:`, P273): what it names, and where it is written. */
+interface DeclaredVar {
+  readonly name: string;
+  readonly objref: Record<string, unknown>;
+  readonly fieldpath: string;
+  readonly at: Where;
+}
+
+/** A var's reference in a field kustomize substitutes vars in: `$(NAME)`. */
+const VAR_REFERENCE = /\$\(([A-Za-z_][\w.-]*)\)/g;
+
+/**
+ * The fields of a resource kustomize substitutes vars in by default: a
+ * container's (and an init container's) `command`, `args` and `env` values in
+ * any pod template, an `Ingress`'s hosts, and a `ConfigMap`'s data. Each as
+ * its holder and key, so the value is written back in place.
+ */
+const varFieldsOf = (value: Located): Array<{ holder: Record<string | number, unknown>; key: string | number }> => {
+  const out: Array<{ holder: Record<string | number, unknown>; key: string | number }> = [];
+  const strings = (holder: unknown, key: string | number): void => {
+    const at = (holder as Record<string | number, unknown>)[key];
+    if (typeof at === 'string') out.push({ holder: holder as Record<string | number, unknown>, key });
+  };
+  const kind = text(value['kind']);
+  const spec = isRecord(value['spec']) ? value['spec'] : {};
+  const podSpecs = [
+    kind === 'Pod' ? spec : undefined,
+    isRecord(spec['template']) ? spec['template']['spec'] : undefined,
+    isRecord(spec['jobTemplate']) && isRecord(spec['jobTemplate']['spec']) && isRecord(spec['jobTemplate']['spec']['template']) ? spec['jobTemplate']['spec']['template']['spec'] : undefined,
+  ].filter(isRecord);
+  for (const pod of podSpecs) {
+    for (const container of ['containers', 'initContainers'].flatMap((key) => (Array.isArray(pod[key]) ? pod[key] : [])).filter(isRecord)) {
+      for (const key of ['command', 'args']) {
+        const list = container[key];
+        if (Array.isArray(list)) list.forEach((_, index) => strings(list, index));
+      }
+      for (const each of (Array.isArray(container['env']) ? container['env'] : []).filter(isRecord)) strings(each, 'value');
+    }
+  }
+  if (kind === 'Ingress') {
+    for (const rule of (Array.isArray(spec['rules']) ? spec['rules'] : []).filter(isRecord)) strings(rule, 'host');
+    for (const tls of (Array.isArray(spec['tls']) ? spec['tls'] : []).filter(isRecord)) {
+      const hosts = tls['hosts'];
+      if (Array.isArray(hosts)) hosts.forEach((_, index) => strings(hosts, index));
+    }
+  }
+  if (kind === 'ConfigMap' && isRecord(value['data'])) for (const key of Object.keys(value['data'])) strings(value['data'], key);
+  return out;
+};
+
 /** Builds a kustomization as the tool that applies it does, for what a manifest's facts are read from. */
 class Builder {
   readonly rows: ManifestRow[] = [];
+  /** The vars the kustomizations of one build declare, its bases' included (P273). */
+  #vars: DeclaredVar[] = [];
 
   constructor(
     private readonly root: string,
@@ -870,6 +922,9 @@ class Builder {
   build(dir: string, seen: ReadonlySet<string> = new Set()): Resource[] {
     const kustomization = kustomizationAt(dir);
     if (kustomization === undefined || seen.has(dir) || seen.size > 12) return [];
+    // Vars are declared anywhere in the tree and substituted once the whole of it is built, as kustomize does.
+    const top = seen.size === 0;
+    if (top) this.#vars = [];
     const inner = new Set([...seen, dir]);
     const value = kustomization.value;
     const at = (key: string): Where => ({ file: this.label(kustomization.file), line: lineOfKey(kustomization.text, key) });
@@ -898,10 +953,54 @@ class Builder {
     for (const resource of resources) kustomizedResource(resource, given, services);
     // Replacements are the last transformer kustomize applies.
     this.replace(kustomization, resources, at);
-    if (Array.isArray(value['vars']) && value['vars'].length > 0) {
-      this.rows.push(row('manifest-unread', at('vars'), `${this.label(kustomization.file)} writes vars, which are not substituted; what they stand for is read as written`, 'Write the value as a literal, or as a replacement (replacements:), which is read.', resources.flatMap((each) => [...each.names])));
+    for (const entry of (Array.isArray(value['vars']) ? value['vars'] : []).filter(isRecord)) {
+      const name = text(entry['name']);
+      const fieldref = isRecord(entry['fieldref']) ? entry['fieldref'] : {};
+      if (name === undefined) continue;
+      this.#vars.push({ name, objref: isRecord(entry['objref']) ? entry['objref'] : {}, fieldpath: text(fieldref['fieldpath']) ?? 'metadata.name', at: at('vars') });
     }
+    if (top) this.substitute(resources);
     return resources;
+  }
+
+  /**
+   * The vars of a build substituted (P273): each the value at its `fieldref`
+   * (by default `metadata.name`) of the one resource its `objref` names, once
+   * every transformer has run - so a name carries its prefix - written for
+   * `$(NAME)` in the fields kustomize substitutes vars in. A var whose
+   * resource or field is not there is a row, and its references are left as
+   * written; a `$(NAME)` no var declares is the container's own, left as it is.
+   */
+  private substitute(resources: readonly Resource[]): void {
+    const values = new Map<string, string>();
+    for (const declared of this.#vars) {
+      const kind = text(declared.objref['kind']);
+      const name = text(declared.objref['name']);
+      const said = (why: string, about: readonly string[]): void => {
+        this.rows.push(row('manifest-unread', declared.at, `${declared.at.file} declares the var ${declared.name}, which is not substituted: ${why}`, 'Write the value as a literal, or as a replacement (replacements:), which is read.', about));
+      };
+      if (kind === undefined || name === undefined) {
+        said('it names no resource (objref: kind and name)', []);
+        continue;
+      }
+      const selected = selectedBy(resources, declared.objref);
+      if (selected.length !== 1) {
+        said(`${kind}/${name} is ${selected.length === 0 ? 'not built' : 'more than one resource'}`, [name]);
+        continue;
+      }
+      const found = fieldAt((selected[0] as Resource).value, stepsOf(declared.fieldpath.replace(/\[(\d+)\]/g, '.$1')));
+      if (found === undefined || found === null || isRecord(found) || Array.isArray(found)) {
+        said(`${declared.fieldpath} of ${kind}/${name} is not a value written`, [...(selected[0] as Resource).names]);
+        continue;
+      }
+      values.set(declared.name, String(found));
+    }
+    if (values.size === 0) return;
+    for (const resource of resources) {
+      for (const { holder, key } of varFieldsOf(resource.value)) {
+        holder[key] = (holder[key] as string).replace(VAR_REFERENCE, (whole, name: string) => values.get(name) ?? whole);
+      }
+    }
   }
 
   /**
@@ -1128,6 +1227,8 @@ export interface ChartInstall {
   readonly line: number;
   /** The environment it installs in, where what installs it names one (a helmfile's environment, P263). */
   readonly environment?: string;
+  /** The releases it is installed after: what a helmfile's release `needs` (P273). */
+  readonly needs?: readonly string[];
 }
 
 /** What chooses among several ways a project's manifests can be built (P260). */

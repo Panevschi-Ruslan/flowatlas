@@ -24,7 +24,19 @@ import {
 } from '@flowatlas/serverless';
 import { apiLookup, apiReference, readApis } from './apis.js';
 import { deployConfigOf, TEMPLATE_FILES, type DeployConfig } from './config.js';
-import { deployerOf, JINJA_TEMPLATE, renderedTemplate } from './deployers.js';
+import { deployerOf, JINJA_TEMPLATE, jinjaLoaderBeside, renderedTemplate, type JinjaRendered } from './deployers.js';
+
+/** A rendered template's positions said at the lines of the file they come from (P273). */
+const atLinesOf = (document: PositionedDocument, lines: readonly number[]): PositionedDocument =>
+  lines.length === 0
+    ? document
+    : {
+        value: document.value,
+        at: (path) => {
+          const at = document.at(path);
+          return at === undefined ? undefined : { ...at, line: lines[at.line - 1] ?? at.line };
+        },
+      };
 import { PARAMETER_FILE, parameterFilesBeside, readParameterFile } from './parameter-files.js';
 import { functionEventReaders, readEvents } from './events.js';
 import { FUNCTION_TYPES, readDestinations, readFunction, readFunctionUrlConfig, withGlobals, type FunctionSite } from './functions.js';
@@ -217,7 +229,7 @@ const deployValues = (parts: DeploymentParts, options: TemplateReadOptions, conf
  * A Jinja template's text, rendered with what the sceptre stack that deploys
  * it hands it (P261): the one stack the configuration chooses, else nothing.
  */
-const jinjaTemplate = (options: TemplateReadOptions): string | Unread => {
+const jinjaTemplate = (options: TemplateReadOptions): JinjaRendered | Unread => {
   const { repoDir, file } = options;
   options.loaded.add(join(repoDir, file));
   let text: string;
@@ -227,7 +239,7 @@ const jinjaTemplate = (options: TemplateReadOptions): string | Unread => {
     return new Unread('it could not be read');
   }
   const deployer = deployerOf(repoDir, file, options.vars ?? [], options.options);
-  return renderedTemplate(text, deployer !== undefined && 'one' in deployer ? (deployer.one.userData ?? {}) : {});
+  return renderedTemplate(text, deployer !== undefined && 'one' in deployer ? (deployer.one.userData ?? {}) : {}, jinjaLoaderBeside(repoDir, file), (loaded) => options.loaded.add(join(repoDir, loaded)));
 };
 
 /** What a template gives the one it is nested in: its outputs, by name. */
@@ -259,7 +271,7 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
       });
       return EMPTY;
     }
-    document = rendered === undefined ? readServiceFile(join(repoDir, file)) : readServiceYaml(rendered);
+    document = rendered === undefined ? readServiceFile(join(repoDir, file)) : atLinesOf(readServiceYaml(rendered.text), rendered.lines);
   } catch (cause) {
     parts.rows.push({
       file,

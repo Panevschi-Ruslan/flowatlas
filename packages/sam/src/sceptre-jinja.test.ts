@@ -144,3 +144,80 @@ describe('a Jinja template sceptre renders with statements (P264)', () => {
     expect(deployment.functions[0]?.environment?.['JOBS']).toMatchObject({ names: { kind: 'queue', name: 'shop-jobs' } });
   });
 });
+
+describe('Jinja macros and the files a template names (P273)', () => {
+  const files = (map: Record<string, string>) => (name: string) => (map[name] === undefined ? undefined : { text: map[name] as string, file: `config/${name}` });
+  const render = (text: string, roots: Record<string, unknown> = {}, map: Record<string, string> = {}) => renderJinja(text, lookupIn(roots), 0, { load: files(map) });
+
+  it('runs a macro with what it is handed, its defaults, keywords and a caller', () => {
+    const text = "{% macro queue(name, stage='dev', sep='-') %}{{ var.project }}{{ sep }}{{ stage }}{{ sep }}{{ name }}{% endmacro %}{{ queue('jobs') }} {{ queue('jobs', 'prod') }} {{ queue('audit', sep='_') }}"
+      + "{% macro wrap(tag) %}<{{ tag }}>{{ caller() }}</{{ tag }}>{% endmacro %} {% call wrap('b') %}{{ queue('x', stage='live') }}{% endcall %}";
+    expect(render(text, { var: { project: 'shop' } }).text).toBe('shop-dev-jobs shop-prod-jobs shop_dev_audit <b>shop-live-x</b>');
+  });
+
+  it('renders a macro every way a condition it holds goes, and a value built of it only where the ways agree', () => {
+    const text = "{% macro colour() %}{% if environment_variable.BLUE %}blue{% else %}green{% endif %}{% endmacro %}name: {{ colour() }}\nupper: {{ colour() | upper }}";
+    const rendering = render(text, { environment_variable: {} });
+    expect(rendering.ways).toEqual(['name: blue\nupper: __jinja_0_0__', 'name: green\nupper: __jinja_0_0__']);
+    expect(rendering.undecided).toEqual(['{% if environment_variable.BLUE %}']);
+  });
+
+  it('includes a file with the current names, and binds what an import and a from-import name', () => {
+    const map = {
+      'partials/tags.j2': '{% for k, v in tags.items() %}{{ k }}={{ v }};{% endfor %}{% set leaked = 1 %}',
+      'macros.j2': "{% set suffix = 'q' %}{% set _private = 1 %}{% macro queue(name) %}{{ name }}-{{ suffix }}{% endmacro %}{% macro owner() %}{{ var.team }}{% endmacro %}",
+    };
+    const text = "{% set tags = {'team': 'shop'} %}{% include 'partials/tags.j2' %}{{ leaked | default('kept') }} {% import 'macros.j2' as m %}{{ m.queue('jobs') }} {% from 'macros.j2' import queue as q, owner %}{{ q('audit') }} {{ owner() }} {% from 'macros.j2' import owner with context %}{{ owner() }}";
+    const rendering = render(text, { var: { team: 'stock' } }, map);
+    // Imported without the current names, `owner` sees no `var`, which sceptre's strict undefined refuses.
+    expect(rendering.text).toBe('team=shop;kept jobs-q audit-q __jinja_0_0__ stock');
+    expect(rendering.loaded).toEqual(['config/macros.j2', 'config/partials/tags.j2']);
+  });
+
+  it('extends a file, its blocks replaced and super() the block replaced', () => {
+    const map = { 'base.j2': "Name: {% block name %}{{ var.project }}{% endblock %}\nStage: {% block stage %}dev{% endblock %}" };
+    const text = "{% extends 'base.j2' %}{% set stage = 'prod' %}ignored{% block name %}{{ super() }}-orders{% endblock %}{% block stage %}{{ stage }}{% endblock %}";
+    expect(render(text, { var: { project: 'shop' } }, map).text).toBe('Name: shop-orders\nStage: prod');
+  });
+
+  it('says each line another file or a loop writes at the line of the statement that wrote it', () => {
+    const rendering = render("a\n{% include 'part.j2' %}\n{% for q in ['x', 'y'] %}{{ q }}\n{% endfor %}b", {}, { 'part.j2': 'p1\np2' });
+    expect(rendering.text).toBe('a\np1\np2\nx\ny\nb');
+    expect(rendering.lines).toEqual([1, 2, 2, 3, 3, 4]);
+  });
+
+  it('runs raw, with, filter and set blocks', () => {
+    const text = "{% raw %}{{ kept }}{% endraw %} {% with a = var.x, b = 'y' %}{{ a }}{{ b }}{% endwith %}{{ a | default('-') }} {% filter upper %}{{ var.x }}z{% endfilter %} {% set held | lower %}AB{{ var.x }}{% endset %}{{ held }}";
+    expect(render(text, { var: { x: 'X' } }).text).toBe('{{ kept }} Xy- XZ abx');
+  });
+
+  it('keeps the statements of a text that names a file not in the repository, or one included too deep', () => {
+    expect([...render("{% include 'gone.j2' %}{{ var.x }}", { var: { x: 'a' } }).unrendered.values()]).toEqual(["{% include 'gone.j2' %}"]);
+    expect(render("{% include 'gone.j2' ignore missing %}{{ var.x }}", { var: { x: 'a' } }).text).toBe('a');
+    expect([...render("{% include 'self.j2' %}", {}, { 'self.j2': "{% include 'self.j2' %}" }).unrendered.values()]).toEqual(["{% include 'self.j2' %}"]);
+  });
+});
+
+describe('a sceptre project whose files include and import others (P273)', () => {
+  it('reads a stack whose configuration imports a macro from a file beside it and includes another', () => {
+    const stack = "{% from 'names.j2' import named %}template_path: stack.yaml\nparameters:\n  Prefix: shop\n  Stage: prod\n  Jobs: '{{ named('jobs', 'prod') }}'\n{% include 'tags.yaml' %}";
+    const deployment = read(sceptre({ 'prod/stack.yaml': stack, 'prod/names.j2': "{% macro named(name, stage) %}shop-{{ stage }}-{{ name }}{% endmacro %}", 'prod/tags.yaml': 'stack_tags:\n  team: shop\n' }));
+    expect(names(deployment)).toEqual(['shop-prod-fn']);
+    expect(jobs(deployment)).toMatchObject({ text: 'shop-prod-jobs' });
+    expect(deployment.functions[0]?.environment?.['JOBS']).toBeDefined();
+  });
+
+  it('renders a template that extends a base and imports its macros beside it', () => {
+    const base = TEMPLATE.replace('      FunctionName: !Sub ${Prefix}-${Stage}-fn', '      FunctionName: {% block name %}base-fn{% endblock %}');
+    const template = "{% extends 'base.yaml.j2' %}{% import 'names.j2' as n %}{% block name %}{{ n.fn(sceptre_user_data.stage) }}{% endblock %}";
+    const deployment = read(sceptre({ 'prod/stack.yaml': 'template_path: stack.yaml.j2\nsceptre_user_data:\n  stage: prod\n' }, { 'templates/stack.yaml.j2': template, 'templates/base.yaml.j2': base, 'templates/names.j2': '{% macro fn(stage) %}shop-{{ stage }}-render{% endmacro %}', 'templates/stack.yaml': '' }));
+    // Imported without the current names, the macro is handed the stage.
+    expect(names(deployment)).toEqual(['shop-prod-render']);
+  });
+
+  it('does not read a template whose undecided conditions render it differently', () => {
+    const template = TEMPLATE.replace('      FunctionName: !Sub ${Prefix}-${Stage}-fn', "      FunctionName: {% if sceptre_user_data.blue %}blue-fn{% else %}green-fn{% endif %}");
+    const deployment = read(sceptre({ 'prod/stack.yaml': 'template_path: stack.yaml.j2\n' }, { 'templates/stack.yaml.j2': template, 'templates/stack.yaml': '' }));
+    expect(names(deployment)).toEqual([]);
+  });
+});

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { stackOutputKey } from '@flowatlas/core';
 import { commandsAround, commandValue, embeddedAt, embedding, Imported, isFilledIn, isRecord, readServiceYaml, textOf, under, Unread, type Command, type DeployedValue } from '@flowatlas/serverless';
-import { lookupIn, renderJinja, UNRENDERED, type Rendering } from './jinja.js';
+import { lookupIn, renderJinja, UNRENDERED, type Loader, type Rendering } from './jinja.js';
 
 export type { DeployedValue } from '@flowatlas/serverless';
 
@@ -77,6 +77,21 @@ const textAt = (repoDir: string, file: string): string | undefined => {
   }
 };
 
+/**
+ * The files a Jinja file sceptre renders names (P273), as the file loader
+ * sceptre gives Jinja finds them: under the directory of the file rendered,
+ * never above it, repo-relative.
+ */
+export const jinjaLoaderBeside =
+  (repoDir: string, file: string): Loader =>
+  (name) => {
+    const parts = name.split('/').filter((part) => part !== '' && part !== '.');
+    if (name.startsWith('/') || parts.length === 0 || parts.includes('..')) return undefined;
+    const path = posix.join(posix.dirname(file), ...parts);
+    const text = isDirectory(join(repoDir, path)) ? undefined : textAt(repoDir, path);
+    return text === undefined ? undefined : { text, file: path };
+  };
+
 const isDirectory = (path: string): boolean => {
   try {
     return statSync(path).isDirectory();
@@ -149,7 +164,7 @@ const readSceptreFile = (repoDir: string, project: Project, file: string, launch
   const text = textAt(repoDir, file);
   if (text === undefined) return undefined;
   const environment = Object.fromEntries(Object.entries(launch.env).filter(([, value]) => typeof value === 'string'));
-  const rendering = renderJinja(text, lookupIn({ var: launch.vars, environment_variable: environment, stack_group_config: groupConfig }), project.files.indexOf(file) + 1);
+  const rendering = renderJinja(text, lookupIn({ var: launch.vars, environment_variable: environment, stack_group_config: groupConfig }), project.files.indexOf(file) + 1, { load: jinjaLoaderBeside(repoDir, file) });
   // A statement not run here decides what the file is: nothing this does not run can say.
   if ([...rendering.unrendered.values()].some((written) => written.startsWith('{%'))) return undefined;
   try {
@@ -204,6 +219,51 @@ const sceptreTemplate = (root: string, stack: Record<string, unknown>): string |
   return under(root, path.startsWith('templates/') ? path : `templates/${path}`);
 };
 
+/** Every file below a directory whose name a pattern matches, repo-relative. */
+const filesUnder = (repoDir: string, dir: string, name: RegExp, depth = 0): string[] => {
+  let entries;
+  try {
+    entries = readdirSync(join(repoDir, dir), { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries
+    .sort((a, b) => (a.name < b.name ? -1 : 1))
+    .flatMap((entry) => {
+      const path = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) return depth >= MOST_GROUP_DEPTH ? [] : filesUnder(repoDir, path, name, depth + 1);
+      return name.test(entry.name) ? [path] : [];
+    });
+};
+
+/** A file a Jinja file names by a literal in `extends`, `include`, `import` or `from`. */
+const NAMED_FILE = /\{%-?\s*(?:extends|include|import|from)\s+(['"])([^'"]+)\1/g;
+
+/**
+ * What a Jinja file of a sceptre project is (P273): a template a stack's
+ * configuration names (`template_path`, or `template: { path }`), a part
+ * another Jinja file of the project includes, imports or extends, or
+ * neither - `undefined` outside a sceptre project. Read from the text, before
+ * anything is rendered.
+ */
+export const jinjaFileRole = (repoDir: string, file: string): 'template' | 'part' | 'neither' | undefined => {
+  const root = sceptreRoot(repoDir, file);
+  if (root === undefined) return undefined;
+  for (const config of yamlFilesUnder(repoDir, under(root, 'config'))) {
+    for (const match of (textAt(repoDir, config) ?? '').matchAll(/^\s*(?:template_path|path)\s*:\s*['"]?([^'"\s#{}]+)/gm)) {
+      const path = match[1] as string;
+      if (under(root, path.startsWith('templates/') ? path : `templates/${path}`) === file) return 'template';
+    }
+  }
+  for (const other of filesUnder(repoDir, under(root, 'templates'), JINJA_TEMPLATE)) {
+    if (other === file) continue;
+    for (const match of (textAt(repoDir, other) ?? '').matchAll(NAMED_FILE)) {
+      if (posix.join(posix.dirname(other), match[2] as string) === file) return 'part';
+    }
+  }
+  return 'neither';
+};
+
 /** One sceptre project: where its configuration is, and its group files by directory. */
 interface Project {
   readonly root: string;
@@ -253,6 +313,7 @@ const stackOf = (repoDir: string, project: Project, file: string, launch: Launch
     const reading = readSceptreFile(repoDir, project, group, launch, settings);
     if (reading === undefined) continue;
     const written = reading.value;
+    read.push(...reading.rendering.loaded);
     for (const [at, expression] of reading.rendering.unrendered) unrendered.set(at, expression);
     settings = { ...settings, ...written };
     parameters = { ...parameters, ...recordAt(written, 'parameters') };
@@ -260,6 +321,7 @@ const stackOf = (repoDir: string, project: Project, file: string, launch: Launch
   }
   const own = readSceptreFile(repoDir, project, file, launch, settings);
   if (own === undefined) return undefined;
+  read.push(...own.rendering.loaded);
   for (const [at, expression] of own.rendering.unrendered) unrendered.set(at, expression);
   return {
     path: file.slice(project.configDir.length + 1).replace(/\.ya?ml$/, ''),
@@ -630,19 +692,29 @@ const sceptreDeployers = (repoDir: string, template: string, vars: readonly stri
 /** A var file is a mapping of values; a template configuration or a stack's is not one. */
 const parameterless = (value: Record<string, unknown>): boolean => !('Parameters' in value) && !('template_path' in value) && !('template' in value);
 
+/** A template rendered: its text, and the line of the file each of its lines comes from where they differ (P273). */
+export interface JinjaRendered {
+  readonly text: string;
+  readonly lines: readonly number[];
+}
+
 /** A template sceptre renders with Jinja before it deploys it (P261). */
 export const JINJA_TEMPLATE = /\.j2$/;
 
 /**
  * A template sceptre renders with Jinja (`.j2`), rendered with what the stack
  * hands it (`sceptre_user_data`) where it is plain (P261); an `Unread` naming
- * what is not rendered where anything is not.
+ * what is not rendered where anything is not. The files it includes, imports
+ * or extends are read beside it (P273), each handed to `loaded`; a template
+ * whose undecided conditions render it differently is not read (P264).
  */
-export const renderedTemplate = (text: string, userData: Readonly<Record<string, unknown>>): string | Unread => {
+export const renderedTemplate = (text: string, userData: Readonly<Record<string, unknown>>, load?: Loader, loaded: (file: string) => void = () => undefined): JinjaRendered | Unread => {
   const plain = (value: unknown): unknown => (value instanceof Resolved ? undefined : Array.isArray(value) ? value.map(plain) : isRecord(value) ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, plain(item)])) : value);
-  const rendering = renderJinja(text, lookupIn({ sceptre_user_data: plain(userData) }));
+  const rendering = renderJinja(text, lookupIn({ sceptre_user_data: plain(userData) }), 0, load === undefined ? {} : { load });
+  for (const file of rendering.loaded) loaded(file);
   const [first] = rendering.unrendered.values();
-  return first === undefined ? rendering.text : new Unread(`it is a Jinja template sceptre renders, and ${first} is not rendered from what the files give`);
+  if (first !== undefined) return new Unread(`it is a Jinja template sceptre renders, and ${first} is not rendered from what the files give`);
+  return rendering.ways.length === 1 ? { text: rendering.text, lines: rendering.lines } : new Unread(`it is a Jinja template sceptre renders, and ${rendering.undecided[0] ?? 'a condition'} is not decided by what the files give, which renders it differently`);
 };
 
 // ---------------------------------------------------------------- rain

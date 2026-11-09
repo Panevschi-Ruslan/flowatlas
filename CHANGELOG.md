@@ -27,6 +27,27 @@ only one of them moved.
   one repository without labels is unchanged. The harness is not part of the
   published packages.
 
+- **Deployment templating P263 and P264 left out (P273).** A helmfile's
+  `bases` are layered under it as helmfile layers them - each base's parts,
+  environments' values and releases before the helmfile's own, its paths
+  written from the helmfile's folder - and a release's `needs` is kept as the
+  releases it is installed after; a command keeping releases by name with
+  `--include-needs` (or `--include-transitive-needs`) keeps what they need, and
+  a need no release of the helmfile is, is the new finding
+  `release-need-undefined`, as helmfile refuses to apply it. `helmfile -f`
+  naming a folder reads every helmfile in it. kustomize's deprecated `vars`
+  are substituted, each the value at its `fieldref` of the resource its
+  `objref` names once the build is named and prefixed, in containers'
+  `command`, `args` and `env`, an `Ingress`'s hosts and a `ConfigMap`'s data;
+  a var whose resource or field is not there stays `manifest-unread`. In
+  sceptre's Jinja, macros (with defaults, keywords and `{% call %}`), `include`,
+  `import`, `from ... import`, `extends` with `block` and `super()`, `raw`,
+  `with`, `filter` and `set` blocks are run, the files named read beside the
+  file rendered, every way an undecided condition goes; a template a stack
+  names is read whatever its own text declares, a `.j2` file only another names
+  is a part and not a template, and a template its undecided conditions render
+  differently is not read. `fixtures/cluster-templating-joins` and
+  `fixtures/multi-repo-jinja-files` show each case.
 - **A handler behind its wrapper, a request handed in as one object, and a
   GraphQL server made into a Lambda (P269).** A `pages/api` default export
   that is a call of wrappers - the repository's own or a package's -

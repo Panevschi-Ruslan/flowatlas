@@ -1,0 +1,45 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-09T21:45:03.949Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "producer:orders#src/ship.ts:7:9",
+        "to": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/ship.ts:7:9|emits|consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "platform#src/jobs.ts:handler does not parse the text at Records[].body of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/ship.ts:8:9",
+        "to": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.audit",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/ship.ts:8:9|emits|consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.audit",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "platform#src/audit.ts:handler does not parse the text at Records[].body of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 2,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

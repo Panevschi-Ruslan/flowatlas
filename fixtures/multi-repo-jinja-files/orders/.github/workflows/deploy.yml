@@ -1,0 +1,15 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Launch the prod stacks
+        run: |
+          pip install sceptre
+          sceptre launch -y prod

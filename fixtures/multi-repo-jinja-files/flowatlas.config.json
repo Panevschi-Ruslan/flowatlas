@@ -1,0 +1,15 @@
+{
+  "services": [
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda"
+    }
+  ],
+  "output": ".flowatlas"
+}

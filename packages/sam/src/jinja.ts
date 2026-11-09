@@ -12,6 +12,19 @@
  * `{% set %}` are run. A comment `{# #}` is taken out, and `-` trims the
  * space beside a tag, as Jinja does.
  *
+ * Macros are run too (P273): `{% macro %}` defines one, a call renders its
+ * body with its parameters bound (a default where nothing is handed), every
+ * way its conditions go, and `{% call %}` hands it a `caller()`. A file of
+ * the repository another names is read as Jinja's file loader reads it -
+ * beside the file rendered: `{% include %}` renders it with the current
+ * names (`without context`, with none; `ignore missing` where it is not
+ * there), `{% import ... as m %}` and `{% from ... import a, b as c %}` bind
+ * its macros and top-level `set`s (without the current names, unless `with
+ * context` says so), and `{% extends %}` renders the file it names with the
+ * `{% block %}`s the extending file writes (`super()` the block it
+ * replaces). `{% raw %}`, `{% with %}`, `{% filter %}` and a `{% set %}`
+ * block are run as Jinja runs them.
+ *
  * What the files do not give is not made up. An expression whose value they
  * do not give is kept, by a stand-in, as an expression not rendered; a
  * condition on such a value is not decided, and the text is rendered every
@@ -44,6 +57,15 @@ export const lookupIn =
     return at;
   };
 
+/** A file a template names by the name written, as Jinja's file loader finds it: its text, and which file it is. */
+export type Loader = (name: string) => { readonly text: string; readonly file: string } | undefined;
+
+/** What else a text is rendered with (P273). */
+export interface JinjaOptions {
+  /** The files `include`, `import`, `from` and `extends` name; none where nothing loads them. */
+  readonly load?: Loader;
+}
+
 /** A text rendered as far as the files settle it. */
 export interface Rendering {
   /** The text, the first way the conditions not decided go. */
@@ -54,6 +76,14 @@ export interface Rendering {
   readonly ways: readonly string[];
   /** Each condition not decided, as written. */
   readonly undecided: readonly string[];
+  /** The files the text names that were read to render it (P273). */
+  readonly loaded: readonly string[];
+  /**
+   * The line of the file each line of `text` comes from, where they differ
+   * (P273): a line another file, a macro or a loop wrote is said at the line
+   * of the statement that wrote it. Empty where the text keeps the file's lines.
+   */
+  readonly lines: readonly number[];
 }
 
 /** The stand-in an expression not rendered is kept by: text YAML reads as plain, that nothing else holds, distinct per file. */
@@ -64,6 +94,12 @@ export const UNRENDERED = /__jinja_\d+_\d+__/;
 
 /** How many ways the conditions of one text are rendered; more is not read. */
 export const MOST_WAYS = 16;
+
+/** How deep macros, includes, imports and extends are followed; deeper is not read (P273). */
+const MOST_DEPTH = 16;
+
+/** The lookup of a file imported without the current names: nothing is given. */
+const NOTHING: Lookup = () => undefined;
 
 // ------------------------------------------------------------------ values
 
@@ -77,11 +113,32 @@ class Unknown {
   constructor(readonly written: string) {}
 }
 
-type JinjaValue = string | number | boolean | null | readonly JinjaValue[] | { readonly [key: string]: JinjaValue } | Undefined | Unknown | Pairs;
+type JinjaValue = string | number | boolean | null | readonly JinjaValue[] | { readonly [key: string]: JinjaValue } | Undefined | Unknown | Pairs | Macro;
 
 /** What `mapping.items()` is: the pairs of a mapping, iterated as such. */
 class Pairs {
   constructor(readonly pairs: readonly (readonly [string, JinjaValue])[]) {}
+}
+
+/** A parameter of a macro: its name, and the default written for it. */
+interface Parameter {
+  readonly name: string;
+  readonly fallback?: Expression;
+}
+
+/**
+ * A macro (P273): its parameters, its body, the names bound where it is
+ * defined and the lookup of the file that defines it - none for a file
+ * imported without the current names.
+ */
+class Macro {
+  constructor(
+    readonly name: string,
+    readonly parameters: readonly Parameter[],
+    readonly body: readonly Node[],
+    readonly closure: ReadonlyMap<string, JinjaValue>,
+    readonly lookup: Lookup,
+  ) {}
 }
 
 const isUnsettled = (value: JinjaValue): value is Undefined | Unknown => value instanceof Undefined || value instanceof Unknown;
@@ -131,11 +188,17 @@ const json = (value: JinjaValue): string => {
 /** A part of a template that cannot be read here: the whole text falls back to keeping its statements. */
 class NotRead extends Error {}
 
+/** An argument of a call: by its place, or by its name. */
+interface Argument {
+  readonly name?: string;
+  readonly value: Expression;
+}
+
 type Expression =
   | { readonly kind: 'literal'; readonly value: JinjaValue }
   | { readonly kind: 'name'; readonly name: string }
   | { readonly kind: 'member'; readonly of: Expression; readonly key: Expression }
-  | { readonly kind: 'call'; readonly of: Expression; readonly args: readonly Expression[] }
+  | { readonly kind: 'call'; readonly of: Expression; readonly args: readonly Argument[] }
   | { readonly kind: 'filter'; readonly of: Expression; readonly name: string; readonly args: readonly Expression[] }
   | { readonly kind: 'list'; readonly items: readonly Expression[] }
   | { readonly kind: 'dict'; readonly entries: readonly (readonly [Expression, Expression])[] }
@@ -267,26 +330,57 @@ class ExpressionParser {
       } else if (this.take('(')) of = { kind: 'call', of, args: this.arguments() };
       else if (this.take('|')) {
         const name = this.next();
-        of = { kind: 'filter', of, name, args: this.take('(') ? this.arguments() : [] };
+        // A filter's keyword argument is read by its place: `default(x, boolean=true)`.
+        of = { kind: 'filter', of, name, args: this.take('(') ? this.arguments().map((each) => each.value) : [] };
       } else return of;
     }
   }
 
-  arguments(): Expression[] {
-    const args: Expression[] = [];
+  arguments(): Argument[] {
+    const args: Argument[] = [];
     while (!this.take(')')) {
-      // A keyword argument is read by its place: `default(x, boolean=true)`.
+      let name: string | undefined;
       if (/^[A-Za-z_]\w*$/.test(this.peek() ?? '') && this.peek(1) === '=') {
-        this.next();
+        name = this.next();
         this.next();
       }
-      args.push(this.expression());
+      args.push({ ...(name === undefined ? {} : { name }), value: this.expression() });
       if (!this.take(',')) {
         this.expect(')');
         break;
       }
     }
     return args;
+  }
+
+  /** A macro's parameters, `(a, b='x')` (P273). */
+  parameters(): Parameter[] {
+    const out: Parameter[] = [];
+    if (!this.take('(')) return out;
+    while (!this.take(')')) {
+      const name = this.next();
+      if (!/^[A-Za-z_]\w*$/.test(name)) throw new NotRead('a parameter this does not read');
+      out.push({ name, ...(this.take('=') ? { fallback: this.expression() } : {}) });
+      if (!this.take(',')) {
+        this.expect(')');
+        break;
+      }
+    }
+    return out;
+  }
+
+  /** Names bound by `a = x, b = y`, as `{% with %}` writes them (P273). */
+  assignments(): Array<readonly [string, Expression]> {
+    const out: Array<readonly [string, Expression]> = [];
+    while (!this.done) {
+      const name = this.next();
+      if (!/^[A-Za-z_]\w*$/.test(name)) throw new NotRead('an assignment this does not read');
+      this.expect('=');
+      out.push([name, this.expression()]);
+      if (!this.take(',')) break;
+    }
+    if (!this.done) throw new NotRead('more after an assignment');
+    return out;
   }
 
   primary(): Expression {
@@ -337,59 +431,113 @@ const parseExpression = (text: string): Expression => {
   return expression;
 };
 
-type Node =
+/** Whether a file named in a statement is read with the current names, and the rest of the statement. */
+const contextOf = (rest: string, byDefault: boolean): { rest: string; withContext: boolean } => {
+  const match = /\s+(with|without)\s+context\s*$/.exec(rest);
+  return match === null ? { rest, withContext: byDefault } : { rest: rest.slice(0, match.index), withContext: match[1] === 'with' };
+};
+
+/** The name a filter block or a set block's text is held by while its filters run (P273). */
+const HELD = '__jinja_held__';
+
+/** A node, and the line of the file rendered it is written on; none for a node of a file it names (P273). */
+type Node = NodeOf & { readonly line?: number };
+
+type NodeOf =
   | { readonly kind: 'text'; readonly text: string }
-  | { readonly kind: 'output'; readonly expression: Expression; readonly written: string; readonly index: number }
+  | { readonly kind: 'output'; readonly expression: Expression; readonly written: string }
   | { readonly kind: 'if'; readonly branches: readonly { readonly test: Expression; readonly written: string; readonly body: readonly Node[] }[]; readonly otherwise: readonly Node[] }
   | { readonly kind: 'for'; readonly names: readonly string[]; readonly over: Expression; readonly written: string; readonly body: readonly Node[]; readonly otherwise: readonly Node[] }
-  | { readonly kind: 'set'; readonly name: string; readonly value: Expression };
+  | { readonly kind: 'set'; readonly name: string; readonly value: Expression }
+  // P273: a set block, its text through the filters written (\`HELD\` the text).
+  | { readonly kind: 'set-block'; readonly name: string; readonly filtered: Expression; readonly written: string; readonly body: readonly Node[] }
+  | { readonly kind: 'macro'; readonly name: string; readonly parameters: readonly Parameter[]; readonly body: readonly Node[] }
+  | { readonly kind: 'call-block'; readonly call: Expression; readonly parameters: readonly Parameter[]; readonly written: string; readonly body: readonly Node[] }
+  | { readonly kind: 'include'; readonly name: Expression; readonly written: string; readonly missing: boolean; readonly withContext: boolean }
+  | { readonly kind: 'import'; readonly name: Expression; readonly written: string; readonly as: string; readonly withContext: boolean }
+  | { readonly kind: 'from'; readonly name: Expression; readonly written: string; readonly names: readonly (readonly [string, string])[]; readonly withContext: boolean }
+  | { readonly kind: 'extends'; readonly name: Expression; readonly written: string }
+  | { readonly kind: 'block'; readonly name: string; readonly body: readonly Node[] }
+  // The blocks a block replaced, as \`super()\` renders them.
+  | { readonly kind: 'super'; readonly chain: readonly (readonly Node[])[] }
+  | { readonly kind: 'with'; readonly assignments: readonly (readonly [string, Expression])[]; readonly body: readonly Node[] }
+  | { readonly kind: 'filter-block'; readonly filtered: Expression; readonly written: string; readonly body: readonly Node[] };
 
 /** One tag or run of text, with the space trimmed where a `-` asks. */
-type Piece = { readonly kind: 'text'; text: string } | { readonly kind: 'output' | 'statement'; readonly inner: string; readonly written: string };
+type Piece = ({ readonly kind: 'text'; text: string } | { readonly kind: 'output' | 'statement'; readonly inner: string; readonly written: string }) & { readonly line: number };
 
 const TAG = /\{#[\s\S]*?#\}|\{%-?([\s\S]*?)-?%\}|\{\{-?([\s\S]*?)-?\}\}/g;
+
+/** Where a raw block ends. */
+const END_RAW = /\{%-?\s*endraw\s*-?%\}/g;
 
 const piecesOf = (text: string): Piece[] => {
   const pieces: Piece[] = [];
   let last = 0;
   let trimNext = false;
-  for (const match of text.matchAll(TAG)) {
+  /** The line a place of the text is on. */
+  const lineAt = (index: number): number => text.slice(0, index).split('\n').length;
+  /** A run of text from a place, trimmed as asked, and the line its first kept character is on. */
+  const run = (from: number, to: number, trimStart: boolean, trimEnd: boolean): Piece => {
+    let held = text.slice(from, to);
+    const kept = trimStart ? held.replace(/^\s+/, '') : held;
+    const start = from + held.length - kept.length;
+    held = trimEnd ? kept.replace(/\s+$/, '') : kept;
+    return { kind: 'text', text: held, line: lineAt(start) };
+  };
+  TAG.lastIndex = 0;
+  for (let match = TAG.exec(text); match !== null; match = TAG.exec(text)) {
     const whole = match[0];
-    let before = text.slice(last, match.index);
-    if (trimNext) before = before.replace(/^\s+/, '');
-    if (whole.startsWith('{%-') || whole.startsWith('{{-') || whole.startsWith('{#-')) before = before.replace(/\s+$/, '');
-    pieces.push({ kind: 'text', text: before });
+    pieces.push(run(last, match.index, trimNext, whole.startsWith('{%-') || whole.startsWith('{{-') || whole.startsWith('{#-')));
     trimNext = whole.endsWith('-%}') || whole.endsWith('-}}') || whole.endsWith('-#}');
-    if (whole.startsWith('{%')) pieces.push({ kind: 'statement', inner: (match[1] as string).trim(), written: whole.replace(/\s+/g, ' ').trim() });
-    else if (whole.startsWith('{{')) pieces.push({ kind: 'output', inner: match[2] as string, written: whole.replace(/\s+/g, ' ').trim() });
-    last = (match.index ?? 0) + whole.length;
+    const line = lineAt(match.index);
+    last = match.index + whole.length;
+    if (whole.startsWith('{%') && (match[1] as string).trim() === 'raw') {
+      // What a raw block holds is text, its tags included (P273).
+      END_RAW.lastIndex = last;
+      const end = END_RAW.exec(text);
+      if (end === null) throw new NotRead('a raw block never ends');
+      pieces.push(run(last, end.index, trimNext, end[0].startsWith('{%-')));
+      trimNext = end[0].endsWith('-%}');
+      last = end.index + end[0].length;
+      TAG.lastIndex = last;
+      continue;
+    }
+    if (whole.startsWith('{%')) pieces.push({ kind: 'statement', inner: (match[1] as string).trim(), written: whole.replace(/\s+/g, ' ').trim(), line });
+    else if (whole.startsWith('{{')) pieces.push({ kind: 'output', inner: match[2] as string, written: whole.replace(/\s+/g, ' ').trim(), line });
   }
-  pieces.push({ kind: 'text', text: trimNext ? text.slice(last).replace(/^\s+/, '') : text.slice(last) });
+  pieces.push(run(last, text.length, trimNext, false));
   return pieces;
 };
 
 /** The statements of a text as a tree, each block closed by its end. */
-const parseTemplate = (text: string): Node[] => {
+const parseTemplate = (text: string, own = true): Node[] => {
   const pieces = piecesOf(text);
   let at = 0;
-  let outputs = 0;
   const block = (ends: readonly string[]): { body: Node[]; end: string | undefined } => {
     const body: Node[] = [];
     while (at < pieces.length) {
       const piece = pieces[at] as Piece;
       at += 1;
+      /** A node of the file rendered, at the line its piece is on. */
+      const place = <T extends NodeOf>(node: T): Node => (own ? { ...node, line: piece.line } : node);
       if (piece.kind === 'text') {
-        if (piece.text !== '') body.push({ kind: 'text', text: piece.text });
+        if (piece.text !== '') body.push(place({ kind: 'text', text: piece.text }));
         continue;
       }
       if (piece.kind === 'output') {
-        body.push({ kind: 'output', expression: parseExpression(piece.inner), written: piece.written, index: outputs });
-        outputs += 1;
+        body.push(place({ kind: 'output', expression: parseExpression(piece.inner), written: piece.written }));
         continue;
       }
       const [word = ''] = piece.inner.split(/\s+/, 1);
       const rest = piece.inner.slice(word.length).trim();
       if (ends.includes(word)) return { body, end: piece.inner };
+      /** The body of a block up to its end, which must come. */
+      const until = (end: string): Node[] => {
+        const inner = block([end]);
+        if (inner.end === undefined) throw new NotRead(`a ${word} never ends`);
+        return inner.body;
+      };
       if (word === 'if') {
         const branches: { test: Expression; written: string; body: readonly Node[] }[] = [];
         let test = rest;
@@ -411,7 +559,7 @@ const parseTemplate = (text: string): Node[] => {
           }
           break;
         }
-        body.push({ kind: 'if', branches, otherwise });
+        body.push(place({ kind: 'if', branches, otherwise }));
         continue;
       }
       if (word === 'for') {
@@ -425,13 +573,83 @@ const parseTemplate = (text: string): Node[] => {
           if (last.end === undefined) throw new NotRead('a for never ends');
           otherwise = last.body;
         }
-        body.push({ kind: 'for', names: (match[1] as string).split(',').map((name) => name.trim()), over: parseExpression(match[2] as string), written: piece.written, body: inner.body, otherwise });
+        body.push(place({ kind: 'for', names: (match[1] as string).split(',').map((name) => name.trim()), over: parseExpression(match[2] as string), written: piece.written, body: inner.body, otherwise }));
         continue;
       }
       if (word === 'set') {
         const match = /^([A-Za-z_]\w*)\s*=\s*([\s\S]+)$/.exec(rest);
-        if (match === null) throw new NotRead('a set this does not read');
-        body.push({ kind: 'set', name: match[1] as string, value: parseExpression(match[2] as string) });
+        if (match !== null) {
+          body.push(place({ kind: 'set', name: match[1] as string, value: parseExpression(match[2] as string) }));
+          continue;
+        }
+        // A set block: what its body writes, through the filters written after the name (P273).
+        const held = /^([A-Za-z_]\w*)\s*(\|[\s\S]*)?$/.exec(rest);
+        if (held === null) throw new NotRead('a set this does not read');
+        body.push(place({ kind: 'set-block', name: held[1] as string, filtered: parseExpression(`${HELD} ${held[2] ?? ''}`), written: piece.written, body: until('endset') }));
+        continue;
+      }
+      if (word === 'macro') {
+        const parser = new ExpressionParser(tokensOf(rest));
+        const name = parser.next();
+        if (!/^[A-Za-z_]\w*$/.test(name)) throw new NotRead('a macro this does not read');
+        const parameters = parser.parameters();
+        if (!parser.done) throw new NotRead('more after a macro');
+        body.push(place({ kind: 'macro', name, parameters, body: until('endmacro') }));
+        continue;
+      }
+      if (word === 'call') {
+        const parser = new ExpressionParser(tokensOf(rest));
+        const parameters = parser.peek() === '(' ? parser.parameters() : [];
+        const call = parser.expression();
+        if (!parser.done || call.kind !== 'call') throw new NotRead('a call block this does not read');
+        body.push(place({ kind: 'call-block', call, parameters, written: piece.written, body: until('endcall') }));
+        continue;
+      }
+      if (word === 'include') {
+        const { rest: named, withContext } = contextOf(rest, true);
+        const missing = /\s+ignore\s+missing\s*$/.exec(named);
+        body.push(place({ kind: 'include', name: parseExpression(missing === null ? named : named.slice(0, missing.index)), written: piece.written, missing: missing !== null, withContext }));
+        continue;
+      }
+      if (word === 'import') {
+        const { rest: named, withContext } = contextOf(rest, false);
+        const match = /^([\s\S]+?)\s+as\s+([A-Za-z_]\w*)$/.exec(named);
+        if (match === null) throw new NotRead('an import this does not read');
+        body.push(place({ kind: 'import', name: parseExpression(match[1] as string), written: piece.written, as: match[2] as string, withContext }));
+        continue;
+      }
+      if (word === 'from') {
+        const { rest: named, withContext } = contextOf(rest, false);
+        const match = /^([\s\S]+?)\s+import\s+([\s\S]+)$/.exec(named);
+        if (match === null) throw new NotRead('a from this does not read');
+        const names = (match[2] as string)
+          .replace(/,\s*$/, '')
+          .split(',')
+          .map((each): readonly [string, string] => {
+            const pair = /^\s*([A-Za-z_]\w*)(?:\s+as\s+([A-Za-z_]\w*))?\s*$/.exec(each);
+            if (pair === null) throw new NotRead('a from this does not read');
+            return [pair[1] as string, pair[2] ?? (pair[1] as string)];
+          });
+        body.push(place({ kind: 'from', name: parseExpression(match[1] as string), written: piece.written, names, withContext }));
+        continue;
+      }
+      if (word === 'extends') {
+        body.push(place({ kind: 'extends', name: parseExpression(rest), written: piece.written }));
+        continue;
+      }
+      if (word === 'block') {
+        const match = /^([A-Za-z_]\w*)(?:\s+(?:scoped|required))*$/.exec(rest);
+        if (match === null) throw new NotRead('a block this does not read');
+        body.push(place({ kind: 'block', name: match[1] as string, body: until('endblock') }));
+        continue;
+      }
+      if (word === 'with') {
+        const assignments = rest === '' ? [] : new ExpressionParser(tokensOf(rest)).assignments();
+        body.push(place({ kind: 'with', assignments, body: until('endwith') }));
+        continue;
+      }
+      if (word === 'filter') {
+        body.push(place({ kind: 'filter-block', filtered: parseExpression(`${HELD} | ${rest}`), written: piece.written, body: until('endfilter') }));
         continue;
       }
       throw new NotRead(`the statement ${word} is not run here`);
@@ -476,7 +694,7 @@ const FILTERS: ReadonlyMap<string, (value: JinjaValue, args: readonly JinjaValue
     },
   ],
   ['length', (value) => (typeof value === 'string' || Array.isArray(value) ? value.length : isRecord(value) ? Object.keys(value).length : new Unknown('length'))],
-  ['tojson', (value) => (holdsUnsettled(value) || value instanceof Pairs ? new Unknown('tojson') : json(value))],
+  ['tojson', (value) => (holdsUnsettled(value) || value instanceof Pairs || value instanceof Macro ? new Unknown('tojson') : json(value))],
 ]);
 
 /** A filter of text, on a value written as text. */
@@ -489,7 +707,58 @@ function textual(value: JinjaValue, change: (text: string) => string): JinjaValu
 interface Scope {
   readonly names: ReadonlyMap<string, JinjaValue>;
   readonly lookup: Lookup;
+  /** What a macro is rendered with; none where nothing runs a macro (P273). */
+  readonly run?: Run;
 }
+
+/** A call of a macro: the macro, and what it is handed. */
+interface MacroCall {
+  readonly macro: Macro;
+  readonly positional: readonly JinjaValue[];
+  readonly named: ReadonlyMap<string, JinjaValue>;
+}
+
+/** The macro a call expression calls and what it hands it; `undefined` where it calls no macro. */
+const macroCalled = (expression: Expression, scope: Scope): MacroCall | undefined => {
+  if (expression.kind !== 'call' || (expression.of.kind !== 'name' && expression.of.kind !== 'member')) return undefined;
+  const callee = evaluate(expression.of, scope);
+  if (!(callee instanceof Macro)) return undefined;
+  const positional: JinjaValue[] = [];
+  const named = new Map<string, JinjaValue>();
+  for (const arg of expression.args) {
+    const value = evaluate(arg.value, scope);
+    if (arg.name === undefined) positional.push(value);
+    else named.set(arg.name, value);
+  }
+  return { macro: callee, positional, named };
+};
+
+/**
+ * What a macro renders, every way its conditions go, each once (P273): its
+ * body with its parameters bound - what the call hands, else the default
+ * written, else undefined, as Jinja binds them - over the names bound where
+ * it was defined, itself, and the caller a call block hands it.
+ */
+const renderMacro = (call: MacroCall, run: Run, caller?: Macro): string[] => {
+  const { macro, positional, named } = call;
+  if (run.depth.value >= MOST_DEPTH) throw new NotRead('macros call each other deeper than is followed');
+  if (positional.length > macro.parameters.length) throw new NotRead(`${macro.name} is handed more than it takes`);
+  for (const name of named.keys()) if (!macro.parameters.some((each) => each.name === name)) throw new NotRead(`${macro.name} takes no ${name}`);
+  const names = new Map(macro.closure);
+  names.set(macro.name, macro);
+  const inner: Run = { ...run, lookup: macro.lookup };
+  macro.parameters.forEach((parameter, index) => {
+    const value = index < positional.length ? (positional[index] as JinjaValue) : named.has(parameter.name) ? (named.get(parameter.name) as JinjaValue) : parameter.fallback === undefined ? new Undefined(parameter.name) : evaluate(parameter.fallback, { names, lookup: macro.lookup, run: inner });
+    names.set(parameter.name, value);
+  });
+  if (caller !== undefined) names.set('caller', caller);
+  run.depth.value += 1;
+  try {
+    return [...new Set(renderNodes(macro.body, [{ text: '', names, lines: [] }], inner).map((way) => way.text))];
+  } finally {
+    run.depth.value -= 1;
+  }
+};
 
 const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
   switch (expression.kind) {
@@ -509,11 +778,17 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
       return new Undefined(String(key));
     }
     case 'call': {
-      // The one call read: a mapping's `items()`, as a `for` iterates it.
+      // A mapping's `items()`, as a `for` iterates it.
       if (expression.of.kind === 'member' && expression.of.key.kind === 'literal' && expression.of.key.value === 'items' && expression.args.length === 0) {
         const of = evaluate(expression.of.of, scope);
         if (isRecord(of)) return new Pairs(Object.entries(of as Record<string, JinjaValue>));
         return new Unknown('items()');
+      }
+      // A macro, where what calls it can render one (P273): what it writes, where every way writes it alike.
+      const called = scope.run === undefined ? undefined : macroCalled(expression, scope);
+      if (called !== undefined) {
+        const texts = renderMacro(called, scope.run as Run);
+        return texts.length === 1 ? (texts[0] as string) : new Unknown(`${called.macro.name}()`);
       }
       throw new NotRead('a call is not run here');
     }
@@ -614,17 +889,175 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
 interface Way {
   readonly text: string;
   readonly names: ReadonlyMap<string, JinjaValue>;
+  /** The line of the file rendered each line of the text comes from (P273). */
+  readonly lines: readonly number[];
+}
+
+/** A line of a way's text nothing has been written on yet: said where its first character is written. */
+const PENDING = 0;
+
+/**
+ * Text written on a way (P273), each line said at the line `origin` gives for
+ * the place its first character is written - `origin(n)` the line of the
+ * piece written after its nth line break.
+ */
+const appended = (way: Way, text: string, origin: (breaks: number) => number): Way => {
+  if (text === '') return way;
+  const lines = [...way.lines];
+  let breaks = 0;
+  for (const character of text) {
+    if (lines.length === 0) lines.push(origin(breaks));
+    if (character === '\n') {
+      breaks += 1;
+      lines.push(PENDING);
+    } else if (lines[lines.length - 1] === PENDING) lines[lines.length - 1] = origin(breaks);
+  }
+  return { ...way, text: way.text + text, lines };
+};
+
+/** The lines of a way, a line nothing was written on said at the line before it. */
+const settledLines = (lines: readonly number[]): number[] => {
+  const out: number[] = [];
+  for (const line of lines) out.push(line === PENDING ? (out[out.length - 1] ?? 1) : line);
+  return out;
+};
+
+/** A file a template names, parsed. */
+interface Loaded {
+  readonly nodes: readonly Node[];
+  readonly file: string;
 }
 
 /** What rendering a text works out besides its ways. */
 interface Run {
   readonly lookup: Lookup;
   readonly file: number;
-  /** Each output not rendered, by its place among the outputs, and its stand-in. */
-  readonly kept: Map<number, string>;
+  /** Each output not rendered, by the place it is written, and its stand-in. */
+  readonly kept: Map<object, string>;
   readonly unrendered: Map<string, string>;
   readonly undecided: string[];
+  readonly load: Loader | undefined;
+  /** The files named so far, parsed, by the name written (`null` where there is none). */
+  readonly templates: Map<string, Loaded | null>;
+  readonly loaded: Set<string>;
+  /** The blocks the files extending the one rendered write, nearest first, by name (P273). */
+  readonly blocks: ReadonlyMap<string, readonly (readonly Node[])[]>;
+  readonly depth: { value: number };
+  /** The line of the file rendered whose statement is being rendered, for text a node of another file writes (P273). */
+  readonly anchor?: number;
 }
+
+/** The file a statement names, parsed; `undefined` where the repository has no such file. */
+const loadNamed = (name: Expression, written: string, scope: Scope, run: Run): Loaded | undefined => {
+  const value = evaluate(name, scope);
+  // A list of names is the first of them there is, as Jinja's `select_template`.
+  const candidates = typeof value === 'string' ? [value] : Array.isArray(value) && value.every((each) => typeof each === 'string') ? (value as string[]) : undefined;
+  if (candidates === undefined) throw new NotRead(`${written} names a file the files do not give`);
+  for (const candidate of candidates) {
+    let found = run.templates.get(candidate);
+    if (found === undefined) {
+      const loaded = run.load?.(candidate);
+      found = loaded === undefined ? null : { nodes: parseTemplate(loaded.text, false), file: loaded.file };
+      run.templates.set(candidate, found);
+    }
+    if (found !== null) {
+      run.loaded.add(found.file);
+      return found;
+    }
+  }
+  return undefined;
+};
+
+/** A value written into a way's text, or kept by a stand-in for the place it is written where it is not one Jinja writes plainly. */
+const written = (way: Way, value: JinjaValue, at: object, as: string, run: Run): Way => {
+  const text = rendered(value);
+  const here = (): number => run.anchor ?? 1;
+  if (text !== undefined) return appended(way, text, here);
+  let kept = run.kept.get(at);
+  if (kept === undefined) {
+    kept = unrenderedAt(run.file, run.unrendered.size);
+    run.kept.set(at, kept);
+    run.unrendered.set(kept, as);
+  }
+  return appended(way, kept, here);
+};
+
+/** Every block a tree of nodes writes, nested ones too, by name. */
+const blocksOf = (nodes: readonly Node[], into = new Map<string, readonly Node[]>()): Map<string, readonly Node[]> => {
+  for (const node of nodes) {
+    if (node.kind !== 'block') continue;
+    if (!into.has(node.name)) into.set(node.name, node.body);
+    blocksOf(node.body, into);
+  }
+  return into;
+};
+
+/**
+ * A file's nodes rendered (P273). A file that extends another writes nothing
+ * of its own: what it binds at the top is kept, its blocks replace the ones
+ * of the same name the file it extends writes (a block the files extending it
+ * replace in turn staying replaced), and that file is rendered.
+ */
+const renderTemplate = (nodes: readonly Node[], ways: readonly Way[], run: Run): Way[] => {
+  const extended = nodes.find((node): node is Extract<Node, { kind: 'extends' }> => node.kind === 'extends');
+  if (extended === undefined) return renderNodes(nodes, ways, run);
+  if (run.depth.value >= MOST_DEPTH) throw new NotRead('files extend each other deeper than is followed');
+  const blocks = new Map(run.blocks);
+  for (const [name, body] of blocksOf(nodes)) blocks.set(name, [...(blocks.get(name) ?? []), body]);
+  const own = nodes.filter((node) => node.kind !== 'block' && node.kind !== 'extends' && node.kind !== 'text' && node.kind !== 'output');
+  return ways.flatMap((way) =>
+    renderNodes(own, [way], run).flatMap((bound) => {
+      const parent = loadNamed(extended.name, extended.written, { names: bound.names, lookup: run.lookup, run }, run);
+      if (parent === undefined) throw new NotRead(`${extended.written} names a file that is not in the repository`);
+      run.depth.value += 1;
+      try {
+        return renderTemplate(parent.nodes, [{ ...way, names: bound.names }], { ...run, blocks, ...(extended.line === undefined ? {} : { anchor: extended.line }) });
+      } finally {
+        run.depth.value -= 1;
+      }
+    }),
+  );
+};
+
+/** A block rendered: the nearest one replacing it, `super()` the one it replaced. */
+const renderBlock = (chain: readonly (readonly Node[])[], way: Way, run: Run): Way[] => {
+  const [first = [], ...rest] = chain;
+  const names = rest.length === 0 ? way.names : new Map([...way.names, ['super', new Macro('super', [], [{ kind: 'super', chain: rest }], way.names, run.lookup)]]);
+  return renderNodes(first, [{ ...way, names }], run).map((done) => ({ ...done, names: way.names }));
+};
+
+/** A file another names, rendered with the names bound and the lookup, or none of them (P273). */
+const renderLoaded = (loaded: Loaded, start: Way, withContext: boolean, run: Run): Way[] => {
+  if (run.depth.value >= MOST_DEPTH) throw new NotRead('files include each other deeper than is followed');
+  run.depth.value += 1;
+  try {
+    return renderTemplate(loaded.nodes, [withContext ? start : { ...start, names: new Map() }], withContext ? run : { ...run, lookup: NOTHING, blocks: new Map() });
+  } finally {
+    run.depth.value -= 1;
+  }
+};
+
+/**
+ * What a file imported binds (P273): its macros and top-level `set`s, a name
+ * starting `_` kept private, as Jinja exports them. A name the ways the
+ * file's conditions go bind differently is not known.
+ */
+const moduleOf = (node: Extract<Node, { kind: 'import' | 'from' }>, way: Way, run: Run): Record<string, JinjaValue> => {
+  const loaded = loadNamed(node.name, node.written, { names: way.names, lookup: run.lookup, run }, run);
+  if (loaded === undefined) throw new NotRead(`${node.written} names a file that is not in the repository`);
+  const start: Way = { text: '', names: node.withContext ? way.names : new Map(), lines: [] };
+  const ways = renderLoaded(loaded, start, node.withContext, run);
+  const out: Record<string, JinjaValue> = {};
+  // What the file binds itself: a name the current names hold is its own only where the file binds it anew.
+  const names = new Set(ways.flatMap((each) => [...each.names.entries()].filter(([name, value]) => !name.startsWith('_') && start.names.get(name) !== value).map(([name]) => name)));
+  for (const name of names) {
+    const values = ways.map((each) => each.names.get(name));
+    const [first] = values;
+    const agreed = values.every((value) => value === first || (value instanceof Macro && first instanceof Macro ? value.body === first.body : value !== undefined && first !== undefined && same(value, first)));
+    out[name] = first !== undefined && agreed ? first : new Unknown(name);
+  }
+  return out;
+};
 
 const renderNodes = (nodes: readonly Node[], ways: readonly Way[], run: Run): Way[] => {
   let out = [...ways];
@@ -635,24 +1068,64 @@ const renderNodes = (nodes: readonly Node[], ways: readonly Way[], run: Run): Wa
   return out;
 };
 
-const renderNode = (node: Node, way: Way, run: Run): Way[] => {
-  const scope = { names: way.names, lookup: run.lookup };
+/** A text rendered on its own from a way, and handed back to it with the names it had. */
+const renderApart = (body: readonly Node[], way: Way, run: Run): string[] => renderNodes(body, [{ text: '', names: way.names, lines: [] }], run).map((done) => done.text);
+
+const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
+  // What a node of the file rendered writes through another file or a macro is said at its line (P273).
+  const run: Run = node.line === undefined ? outer : { ...outer, anchor: node.line };
+  const scope: Scope = { names: way.names, lookup: run.lookup, run };
+  const here = (): number => run.anchor ?? 1;
   switch (node.kind) {
     case 'text':
-      return [{ ...way, text: way.text + node.text }];
+      return [appended(way, node.text, (line) => (node.line === undefined ? here() : node.line + line))];
     case 'output': {
-      const value = rendered(evaluate(node.expression, scope));
-      if (value !== undefined) return [{ ...way, text: way.text + value }];
-      let at = run.kept.get(node.index);
-      if (at === undefined) {
-        at = unrenderedAt(run.file, run.unrendered.size);
-        run.kept.set(node.index, at);
-        run.unrendered.set(at, node.written);
-      }
-      return [{ ...way, text: way.text + at }];
+      // A macro called where its text is written is written every way it renders (P273).
+      const called = macroCalled(node.expression, scope);
+      if (called !== undefined) return renderMacro(called, run).map((text) => appended(way, text, here));
+      return [written(way, evaluate(node.expression, scope), node, node.written, run)];
     }
     case 'set':
       return [{ ...way, names: new Map([...way.names, [node.name, evaluate(node.value, scope)]]) }];
+    case 'set-block':
+      return renderApart(node.body, way, run).map((text) => ({ ...way, names: new Map([...way.names, [node.name, evaluate(node.filtered, { ...scope, names: new Map([...way.names, [HELD, text]]) })]]) }));
+    case 'filter-block':
+      return renderApart(node.body, way, run).map((text) => written(way, evaluate(node.filtered, { ...scope, names: new Map([...way.names, [HELD, text]]) }), node, node.written, run));
+    case 'with': {
+      const bound = new Map(way.names);
+      for (const [name, value] of node.assignments) bound.set(name, evaluate(value, scope));
+      return renderNodes(node.body, [{ ...way, names: bound }], run).map((done) => ({ ...done, names: way.names }));
+    }
+    case 'macro':
+      return [{ ...way, names: new Map([...way.names, [node.name, new Macro(node.name, node.parameters, node.body, way.names, run.lookup)]]) }];
+    case 'call-block': {
+      const called = macroCalled(node.call, scope);
+      if (called === undefined) throw new NotRead(`${node.written} calls no macro the files define`);
+      const caller = new Macro('caller', node.parameters, node.body, way.names, run.lookup);
+      return renderMacro(called, run, caller).map((text) => appended(way, text, here));
+    }
+    case 'include': {
+      const loaded = loadNamed(node.name, node.written, scope, run);
+      if (loaded === undefined) {
+        if (node.missing) return [way];
+        throw new NotRead(`${node.written} names a file that is not in the repository`);
+      }
+      // What the included file binds stays in it.
+      return renderLoaded(loaded, way, node.withContext, run).map((done) => ({ ...done, names: way.names }));
+    }
+    case 'import':
+      return [{ ...way, names: new Map([...way.names, [node.as, moduleOf(node, way, run)]]) }];
+    case 'from': {
+      const module = moduleOf(node, way, run);
+      return [{ ...way, names: new Map([...way.names, ...node.names.map(([name, as]): [string, JinjaValue] => [as, module[name] ?? new Undefined(name)])]) }];
+    }
+    case 'extends':
+      // An extends below the top of a file is not read as one.
+      throw new NotRead(`${node.written} is not at the top of its file`);
+    case 'block':
+      return renderBlock([...(run.blocks.get(node.name) ?? []), node.body], way, run);
+    case 'super':
+      return renderBlock(node.chain, way, run);
     case 'if': {
       for (const [index, branch] of node.branches.entries()) {
         const test = truth(evaluate(branch.test, scope));
@@ -706,22 +1179,24 @@ const keptStatements = (text: string, lookup: Lookup, file: number): Rendering =
         throw error;
       }
     });
-  return { text: out, unrendered, ways: [out], undecided: [] };
+  return { text: out, unrendered, ways: [out], undecided: [], loaded: [], lines: [] };
 };
 
 /**
  * A text rendered as far as the files settle it: every way the conditions
  * they do not decide can go, each expression they do not settle kept by a
  * stand-in numbered under `file`, so the stand-ins of several files read
- * together stay apart. Where the text holds what is not run here, every
- * expression it settles rendered and every statement kept, as before (P261).
+ * together stay apart. The files it names are read through `options.load`
+ * (P273). Where the text holds what is not run here, every expression it
+ * settles rendered and every statement kept, as before (P261).
  */
-export const renderJinja = (text: string, lookup: Lookup, file = 0): Rendering => {
+export const renderJinja = (text: string, lookup: Lookup, file = 0, options: JinjaOptions = {}): Rendering => {
   try {
     const nodes = parseTemplate(text);
-    const run: Run = { lookup, file, kept: new Map(), unrendered: new Map(), undecided: [] };
-    const ways = [...new Set(renderNodes(nodes, [{ text: '', names: new Map() }], run).map((way) => way.text))];
-    return { text: ways[0] ?? '', unrendered: run.unrendered, ways, undecided: run.undecided };
+    const run: Run = { lookup, file, kept: new Map(), unrendered: new Map(), undecided: [], load: options.load, templates: new Map(), loaded: new Set(), blocks: new Map(), depth: { value: 0 } };
+    const all = renderTemplate(nodes, [{ text: '', names: new Map(), lines: [] }], run);
+    const ways = [...new Set(all.map((way) => way.text))];
+    return { text: ways[0] ?? '', unrendered: run.unrendered, ways, undecided: run.undecided, loaded: [...run.loaded].sort(), lines: settledLines(all[0]?.lines ?? []) };
   } catch (error) {
     if (error instanceof NotRead) return keptStatements(text, lookup, file);
     throw error;

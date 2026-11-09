@@ -34,7 +34,7 @@ import {
 } from './cluster.js';
 import { commandsAround, type Command } from '@flowatlas/serverless';
 import { dockerRunsOf, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
-import { helmfilesAt, readHelmfile } from './helmfile.js';
+import { helmfilesAt, helmfilesIn, readHelmfile } from './helmfile.js';
 import { namesInEnvFile, readEnvFile, type Written } from './dotenv.js';
 import { composeEnvironment, envFileEnvironment, envFileReading, environmentName, isComposeFile } from './files.js';
 
@@ -469,7 +469,9 @@ const chartInstalls = (each: Commands, rootDir: string): ChartInstall[] =>
 const helmfileInstalls = (each: Commands, rootDir: string): { installs: ChartInstall[]; rows: ManifestRow[] } => {
   const runs = readHelmfileRuns(each.commands).flatMap((run) => {
     const at = runsAt(each.base, run.dirs, rootDir);
-    const files = run.helmfile === undefined ? (at.map(helmfilesAt).find((found) => found.length > 0) ?? []) : at.map((dir) => resolve(dir, run.helmfile as string)).filter((path) => existsSync(path)).slice(0, 1);
+    // `-f` names a helmfile, or a folder of them read as `helmfile.d/` is (P273).
+    const named = run.helmfile === undefined ? undefined : at.map((dir) => resolve(dir, run.helmfile as string)).find((path) => existsSync(path));
+    const files = run.helmfile === undefined ? (at.map(helmfilesAt).find((found) => found.length > 0) ?? []) : named === undefined ? [] : helmfilesIn(named).length > 0 ? helmfilesIn(named) : [named];
     return files.map((path) => ({ path, run, from: at[0] as string }));
   });
   const files = [...new Set([...helmfilesAt(each.base), ...runs.map((each) => each.path)])].sort();
@@ -478,7 +480,7 @@ const helmfileInstalls = (each: Commands, rootDir: string): { installs: ChartIns
   const label = (path: string): string => relative(each.base, path).split(sep).join('/');
   for (const path of files) {
     const own = runs.filter((found) => found.path === path);
-    const readings = own.length === 0 ? [{}] : own.map(({ run, from }) => ({ environments: [run.environment], stateSets: run.stateSets, stateFiles: run.stateFiles.map((file) => resolve(from, file)), releases: run.releases }));
+    const readings = own.length === 0 ? [{}] : own.map(({ run, from }) => ({ environments: [run.environment], stateSets: run.stateSets, stateFiles: run.stateFiles.map((file) => resolve(from, file)), releases: run.releases, needs: run.needs }));
     for (const reading of readings) {
       const read = readHelmfile(path, label, reading);
       for (const install of read.installs) {

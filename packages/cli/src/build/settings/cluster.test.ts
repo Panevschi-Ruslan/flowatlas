@@ -1,9 +1,10 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { commandsAround } from '@flowatlas/serverless';
-import { readManifestsUnder } from './cluster.js';
+import { readManifestsUnder, type ChartInstall } from './cluster.js';
+import { readHelmfile } from './helmfile.js';
 import { readHelmInstalls, readPortForwards } from './docker-run.js';
 import { renderings, setValue, UNREAD_MARK, type ChartContext } from './helm.js';
 import { readProjectSettings } from './read.js';
@@ -587,5 +588,123 @@ describe('every way a cluster is installed (P263)', () => {
     const read = readProjectSettings({ services: [{ name: 'stock', dir: join(dir, 'stock') }], rootDir: dir });
     expect(read['stock']?.routes?.map((each) => each.ports.map((port) => port.port).join(','))).toEqual(['8082']);
     expect(read['stock']?.rows ?? []).toEqual([]);
+  });
+});
+
+describe('helmfile bases and needs, and kustomize vars (P273)', () => {
+  const chart = (name: string, port: number): Record<string, string> => ({
+    [`deploy/charts/${name}/Chart.yaml`]: `apiVersion: v2\nname: ${name}\nversion: 0.1.0\n`,
+    [`deploy/charts/${name}/values.yaml`]: 'port: 80\n',
+    [`deploy/charts/${name}/templates/service.yaml`]: SERVICE(name, 0, port).replace('port: 0', 'port: {{ .Values.port }}').replace(`name: ${name}`, 'name: {{ .Release.Name }}'),
+  });
+  const layered = (): string =>
+    project({
+      ...chart('orders', 3000),
+      ...chart('db', 5432),
+      'deploy/helmfile.yaml': lines(
+        'bases:',
+        '  - bases/environments.yaml',
+        '  - bases/releases.yaml.gotmpl',
+        '---',
+        'releases:',
+        '  - name: orders',
+        '    chart: ./charts/orders',
+        '    needs:',
+        '      - shop/db',
+        '      - cache',
+        '    values:',
+        '      - port: {{ .Values.ordersPort }}',
+      ),
+      'deploy/bases/environments.yaml': lines('environments:', '  staging:', '    values:', '      - ordersPort: 8081', '  production:', '    values:', '      - values/production.yaml'),
+      'deploy/values/production.yaml': 'ordersPort: 8080\ndbPort: 5433\n',
+      'deploy/bases/releases.yaml.gotmpl': lines(
+        'releases:',
+        '  - name: db',
+        '    namespace: shop',
+        '    chart: ./charts/db',
+        '    needs:',
+        '      - config',
+        '    values:',
+        '      - port: {{ .Values.dbPort | default 5432 }}',
+        '  - name: config',
+        '    chart: ./charts/db',
+      ),
+    });
+
+  const said = (installs: readonly ChartInstall[]): string[] =>
+    installs.map((each) => `${each.environment} ${each.release} ${each.file}:${each.line} ${JSON.stringify(each.values)}${each.needs === undefined ? '' : ` after ${each.needs.join(',')}`}`);
+
+  it("layers a helmfile's bases under it, their environments, values and releases first, and keeps what each release needs", () => {
+    const dir = layered();
+    const read = readHelmfile(join(dir, 'deploy/helmfile.yaml'), (path) => relative(join(dir, 'deploy'), path));
+    expect(said(read.installs)).toEqual([
+      'production db bases/releases.yaml.gotmpl:2 [{"port":5433}] after config',
+      'production config bases/releases.yaml.gotmpl:9 []',
+      'production orders helmfile.yaml:6 [{"port":8080}] after db',
+      'staging db bases/releases.yaml.gotmpl:2 [{"port":5432}] after config',
+      'staging config bases/releases.yaml.gotmpl:9 []',
+      'staging orders helmfile.yaml:6 [{"port":8081}] after db',
+    ]);
+    expect(read.rows.map((row) => `${row.reason} ${row.file}:${row.line} ${row.message}`)).toEqual([
+      'release-need-undefined helmfile.yaml:6 The release orders (helmfile.yaml:6) needs cache, which no release of the helmfile is; helmfile refuses to apply it',
+    ]);
+  });
+
+  it('keeps what the releases a command keeps need, with --include-needs and --include-transitive-needs', () => {
+    const dir = layered();
+    const kept = (needs: 'none' | 'direct' | 'transitive'): string[] =>
+      readHelmfile(join(dir, 'deploy/helmfile.yaml'), (path) => relative(join(dir, 'deploy'), path), { environments: ['production'], releases: ['orders'], needs }).installs.map((each) => each.release ?? '');
+    expect(kept('none')).toEqual(['orders']);
+    expect(kept('direct')).toEqual(['db', 'orders']);
+    expect(kept('transitive')).toEqual(['db', 'config', 'orders']);
+  });
+
+  it('reads a folder of helmfiles a command names with -f, and the needs it includes', () => {
+    const dir = project({
+      ...chart('orders', 3000),
+      ...chart('db', 5432),
+      'deploy/helmfile.d/10-shop.yaml': lines('environments:', '  production: {}', '---', 'releases:', '  - name: orders', '    chart: ../charts/orders', '    needs: [db]', '    values:', '      - port: 8080', '  - name: db', '    chart: ../charts/db', '    values:', '      - port: 5433'),
+      Makefile: lines('deploy:', '\thelmfile -f deploy/helmfile.d -e production -l name=orders --include-needs apply'),
+    });
+    const read = readProjectSettings({ services: [{ name: 'orders', dir: join(dir, 'orders') }], rootDir: dir });
+    expect(read['orders']?.routes?.map((each) => `${each.name} ${each.ports.map((port) => `${port.port}:${port.target}`).join(',')}`)).toEqual(['orders 8080:3000']);
+  });
+
+  it("substitutes a kustomization's vars, its bases' too, once the build is named and prefixed, and says one it cannot", () => {
+    const dir = project({
+      'web/k8s/base/kustomization.yaml': lines(
+        'resources:',
+        '  - web.yaml',
+        'vars:',
+        '  - name: ORDERS_SERVICE',
+        '    objref: { kind: Service, name: orders, apiVersion: v1 }',
+        '  - name: ORDERS_PORT',
+        '    objref: { kind: Service, name: orders, apiVersion: v1 }',
+        '    fieldref: { fieldpath: "spec.ports[0].port" }',
+        '  - name: WEB_PORT',
+        '    objref: { kind: ConfigMap, name: web, apiVersion: v1 }',
+        '    fieldref: { fieldpath: data.port }',
+        '  - name: GONE',
+        '    objref: { kind: Service, name: gone, apiVersion: v1 }',
+      ),
+      'web/k8s/base/web.yaml': [
+        DEPLOYMENT('web', 4000, ['          args: ["--port=$(WEB_PORT)", "--home=$(HOME)"]', '          env:', '            - name: ORDERS_URL', '              value: http://$(ORDERS_SERVICE):$(ORDERS_PORT)', '            - name: PORT', '              value: $(WEB_PORT)', '            - name: GONE_URL', '              value: http://$(GONE)']),
+        SERVICE('orders', 8080, 3000),
+        lines('apiVersion: v1', 'kind: ConfigMap', 'metadata:', '  name: web', 'data:', '  port: "4000"', '  host: shop-$(ORDERS_SERVICE).example.test'),
+        lines('apiVersion: networking.k8s.io/v1', 'kind: Ingress', 'metadata:', '  name: edge', 'spec:', '  rules:', '    - host: $(ORDERS_SERVICE).example.test', '      http:', '        paths:', '          - path: /', '            pathType: Prefix', '            backend:', '              service:', '                name: orders', '                port:', '                  number: 8080'),
+      ].join('\n---\n'),
+      'web/k8s/overlays/production/kustomization.yaml': lines('resources:', '  - ../../base', 'namePrefix: shop-'),
+    });
+    const read = readManifestsUnder(join(dir, 'web'));
+    const container = read.workloads[0]?.containers[0];
+    expect(container?.environment).toEqual([
+      { name: 'ORDERS_URL', raw: 'http://shop-orders:8080' },
+      { name: 'PORT', raw: '4000' },
+      { name: 'GONE_URL', raw: 'http://$(GONE)' },
+    ]);
+    expect(read.ingresses?.map((each) => each.hosts.join(','))).toEqual(['shop-orders.example.test']);
+    expect(read.rows?.map((row) => `${row.reason} ${row.file}:${row.line} ${row.message}`)).toEqual([
+      'manifest-unread k8s/base/kustomization.yaml:3 k8s/base/kustomization.yaml declares the var GONE, which is not substituted: Service/gone is not built',
+    ]);
   });
 });

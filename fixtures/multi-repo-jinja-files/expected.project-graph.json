@@ -1,0 +1,544 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:45:02.340Z",
+  "services": [
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sqs/shop-prod-audit",
+      "type": "channel",
+      "label": "sqs/shop-prod-audit",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 53,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-prod-jobs",
+      "type": "channel",
+      "label": "sqs/shop-prod-jobs",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 36,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:orders#AUDIT_QUEUE_URL",
+      "type": "config_key",
+      "label": "AUDIT_QUEUE_URL",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 8,
+      "meta": {
+        "key": "AUDIT_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders#JOBS_QUEUE_URL",
+      "type": "config_key",
+      "label": "JOBS_QUEUE_URL",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 7,
+      "meta": {
+        "key": "JOBS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.audit",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.audit",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 53,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.audit",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.jobs",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 36,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.jobs",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-prod-ship",
+      "type": "entry",
+      "label": "shop-prod-ship",
+      "repo": "orders",
+      "file": "templates/orders.yaml.j2",
+      "line": 5,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-prod-ship",
+        "deployedBy": "cloudformation",
+        "name": "shop-prod-ship",
+        "runtime": "nodejs20.x",
+        "declaredAs": "templates/orders.yaml.Resources.Ship",
+        "logicalId": "Ship",
+        "handler": "ship.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "!Sub ...",
+            "value": "shop-prod-audit",
+            "kind": "queue"
+          },
+          "JOBS_QUEUE_URL": {
+            "written": "!Sub ...",
+            "value": "shop-prod-jobs",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "{id:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:platform:invoke:shop-prod-audit",
+      "type": "entry",
+      "label": "shop-prod-audit",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 45,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-prod-audit",
+        "deployedBy": "terraform",
+        "name": "shop-prod-audit",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.audit",
+        "handler": "audit.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:platform:invoke:shop-prod-jobs",
+      "type": "entry",
+      "label": "shop-prod-jobs",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 28,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-prod-jobs",
+        "deployedBy": "terraform",
+        "name": "shop-prod-jobs",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.jobs",
+        "handler": "jobs.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "orders#src/ship.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "platform#src/audit.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "platform",
+      "file": "src/audit.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "platform#src/jobs.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "platform",
+      "file": "src/jobs.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:orders#src/ship.ts:7:9",
+      "type": "producer",
+      "label": "message sqs/shop-prod-jobs",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "JOBS_QUEUE_URL",
+                "forms": [
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{id:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:orders#src/ship.ts:8:9",
+      "type": "producer",
+      "label": "message sqs/shop-prod-audit",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 8,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "AUDIT_QUEUE_URL",
+                "forms": [
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:platform",
+      "type": "repo",
+      "label": "platform",
+      "repo": "platform",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:sqs/shop-prod-audit",
+      "to": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.audit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 53,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-prod-jobs",
+      "to": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 36,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.audit",
+      "to": "entry:platform:invoke:shop-prod-audit",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 53,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "to": "entry:platform:invoke:shop-prod-jobs",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 36,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:orders:invoke:shop-prod-ship",
+      "to": "orders#src/ship.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:platform:invoke:shop-prod-audit",
+      "to": "platform#src/audit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/audit.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:platform:invoke:shop-prod-jobs",
+      "to": "platform#src/jobs.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs.ts",
+      "line": 4
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "config_key:orders#AUDIT_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 8,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-prod-ship",
+            "written": "!Sub ...",
+            "value": "shop-prod-audit"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "config_key:orders#JOBS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 7,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-prod-ship",
+            "written": "!Sub ...",
+            "value": "shop-prod-jobs"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "producer:orders#src/ship.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 7
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "producer:orders#src/ship.ts:8:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:orders#src/ship.ts:7:9",
+      "to": "channel:sqs/shop-prod-jobs",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 7,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "JOBS_QUEUE_URL"
+        ],
+        "functions": [
+          "shop-prod-ship"
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#src/ship.ts:8:9",
+      "to": "channel:sqs/shop-prod-audit",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 8,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "AUDIT_QUEUE_URL"
+        ],
+        "functions": [
+          "shop-prod-ship"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": []
+}

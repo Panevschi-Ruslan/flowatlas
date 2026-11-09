@@ -5683,7 +5683,7 @@ installs the manifests is read as well as the manifests.
 | A chart's dependencies | each `dependencies` entry of `Chart.yaml` (or `requirements.yaml`) with a `file://` repository, and every chart unpacked in `charts/`, rendered inside the parent's release with the parent's `<alias or name>:` values and `global:`, the helpers of the whole tree shared; a `condition` or every `tags` false leaves it out. Read only through the parent unless a command installs it itself; a packed or a repository's chart is not in the project |
 | A kustomization's `helmCharts` | a chart under `helmGlobals.chartHome` (default `charts`) rendered with its `valuesFile`, `additionalValuesFiles`, `valuesInline`, `releaseName` and `namespace`, part of the build; one only a repository has is `manifest-unread` |
 | `configMapGenerator`, `secretGenerator` | a `ConfigMap` or `Secret` of the build from `literals` and `envs` files (`behavior: merge` / `replace` change the base's); `files` are contents, not an environment |
-| `replacements` | the value at a source's `fieldPath` (`delimiter` / `index` picking a part) written at each target's `fieldPaths` (`a.b.[name=x].c`, an index, `*`, `create`), after every other transformer; a source not built or a path not there is `manifest-unread`. `vars` are not substituted and are `manifest-unread` |
+| `replacements` | the value at a source's `fieldPath` (`delimiter` / `index` picking a part) written at each target's `fieldPaths` (`a.b.[name=x].c`, an index, `*`, `create`), after every other transformer; a source not built or a path not there is `manifest-unread`. `vars` are read as P273 says below |
 | A pod's environment from a config map or a secret | `envFrom` (`configMapRef`, `secretRef`, `prefix`) and `env[].valueFrom` (`configMapKeyRef`, `secretKeyRef`) of a `ConfigMap` or `Secret` of the same manifests, said at the file that writes the value (`PORT from deploy/base/stock.env`) |
 | An `Ingress` rule with no `host` | a way in at any host the controller is reached at, followed for the requests with no host of a front end it serves; not for a public host another rule names (ingress-nginx serves such a host by its own rules alone, other controllers fall back) nor for a host no rule names (nothing says it reaches the cluster). Each path of an `Ingress` is a way in at its own rule's host |
 | Commands in pipelines | `helm install` / `upgrade` / `template`, `helmfile`, `kubectl apply -k`, `kubectl kustomize`, `kustomize build` and `kubectl port-forward` in a GitHub workflow's `run:` and a GitLab job's `script:`, as in a script or a Makefile (`*.mk`, `GNUmakefile` too); the overlays commands apply are the ones one is chosen among, and one they alone apply is read. A pipeline's `docker run` is not a container of the service: it runs on the pipeline's machine |
@@ -5703,6 +5703,17 @@ same service: its routes answer it in process, so it joins its own route
 and nothing more is said; a `$fetch` whose options write a `baseURL` is not
 read. `fixtures/cluster-install-joins` and `fixtures/own-origin-requests` show
 each case.
+
+**The deployment templating P263 left out (P273).**
+
+| Written as | Read |
+|---|---|
+| A helmfile's `bases` | each base a helmfile of its own, layered under the part that names it as helmfile layers them: its parts first (rendered over what the parts before gave), its environments' values merged before the helmfile's own, its releases before the helmfile's; paths in a base are written from the helmfile's folder, as helmfile loads one. A base of a remote source or not in the project is `manifest-unread` |
+| A release's `needs` | kept as the releases it is installed after (`ChartInstall.needs`), by `name`, `namespace/name` or `context/namespace/name`. A command that keeps releases by name (`-l name=orders`) with `--include-needs` keeps what they need too, `--include-transitive-needs` what that needs in turn. A need no release of the helmfile (or a base it layers) is, is the finding `release-need-undefined`: helmfile refuses to apply the helmfile |
+| `helmfile -f <folder>` | every helmfile of the folder in order, as `helmfile.d/` is read |
+| kustomize `vars` (deprecated) | each var the value at its `fieldref.fieldpath` (default `metadata.name`; `spec.ports[0].port` as written) of the one resource its `objref` names, after every transformer has run (a name carries its prefix), substituted for `$(NAME)` in the fields kustomize substitutes vars in by default: a container's and an init container's `command`, `args` and `env` values in any pod template, an `Ingress`'s hosts and a `ConfigMap`'s data. Vars of the bases a build builds on are substituted in the whole build. A var whose resource is not built (or is more than one) or whose field holds no value is `manifest-unread` and its references are left as written; a `$(NAME)` no var declares is the container's own |
+
+`fixtures/cluster-templating-joins` shows each case.
 
 A custom broker entry:
 
@@ -7519,7 +7530,22 @@ and `.j2` template is rendered with `{% if %}` / `{% elif %}` / `{% else %}`,
 `~`, `+`, comparisons, `and` / `or` / `not`, `in`, `is defined`, `a if c else b`,
 and the filters `default` (`d`), `lower`, `upper`, `trim`, `replace`, `join`,
 `int`, `string`, `title`, `capitalize`, `length` and `tojson`; `-` trims the
-space beside a tag. A condition on a value the files do not give is rendered
+space beside a tag. Macros and the files a file names are run too (P273):
+`{% macro %}` and its calls (positional, keyword and default parameters, every
+way a condition inside goes, `{% call %}` with `caller()`), `{% include %}`
+(with the current names; `without context`, `ignore missing`),
+`{% import ... as m %}` and `{% from ... import a, b as c %}` (a file's macros
+and top-level `set`s, without the current names unless `with context` says so),
+`{% extends %}` with `{% block %}` and `super()`, and `{% raw %}`,
+`{% with %}`, `{% filter %}` and a `{% set %}` block. A file is looked for as
+sceptre's Jinja loader looks for it: beside the configuration file or the
+template being rendered, never above it; one not there (and not `ignore
+missing`) leaves the file read as before. A template a stack names is one
+whatever its own text declares (it may only extend a base), and a `.j2` file
+another includes, imports or extends and no stack names is a part of those,
+not a template of its own. A template whose undecided conditions render it
+differently is not read, and says which condition
+(`fixtures/multi-repo-jinja-files`). A condition on a value the files do not give is rendered
 both ways, up to 16 ways in all, and only what every way writes alike is read:
 a parameter the ways write differently is a value not known, naming the
 condition. A loop over a value not given, a filter, a test or a statement not
