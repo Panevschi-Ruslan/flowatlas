@@ -910,7 +910,12 @@ prove, and the path is given so you can run it.
   reads the workspace, not the leaf manifest (`fixtures/workspace-leaf`), and a
   framework a service has only through a member is named on `build`'s
   `at arm's length` line (`fixtures/next-sibling-nest-types`). `init` proposes
-  one service per application in a workspace.
+  one service per application in a workspace. A workspace that keeps one
+  manifest for everything - applications under `apps/` and libraries under
+  `libs/` with none of their own, as a Nest CLI, Nx or Angular workspace does -
+  is linked one application at a time (`flowatlas link apps/orders`), built with
+  the root's manifest and the libraries its code imports through the tsconfig's
+  `paths` (`fixtures/workspace-one-manifest`).
 - **Data layers** for TypeORM, Prisma, Drizzle, Mongoose, Sequelize (including
   models declared with decorators), Kysely, Knex, node-postgres and MongoDB, and
   a repository base named in the configuration (`fixtures/nest-typeorm`,

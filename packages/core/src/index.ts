@@ -6,7 +6,7 @@
  * the core only through the registry.
  */
 
-export { GraphBuilder } from './builder.js';
+export { EDGE_END_MISSING_REASON, GraphBuilder } from './builder.js';
 export type { GraphBuilderOptions, GraphCounts } from './builder.js';
 
 export {
@@ -468,6 +468,8 @@ export {
   widenServiceExtent,
 } from './workspace.js';
 export type { ExtentPackage, WorkspacePackage } from './workspace.js';
+export { applicationLibraryDirs, readServiceManifest, workspaceApplicationOf } from './workspace-application.js';
+export type { WorkspaceApplication } from './workspace-application.js';
 
 export {
   countSources,

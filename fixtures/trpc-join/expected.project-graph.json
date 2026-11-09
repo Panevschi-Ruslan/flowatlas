@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:08:37.959Z",
+  "builtAt": "2026-11-09T12:56:11.649Z",
   "services": [
     {
       "name": "api",
@@ -549,6 +549,15 @@
           "returns": "unknown"
         }
       }
+    },
+    {
+      "id": "web#src/trpc.ts:useTRPC",
+      "type": "function",
+      "label": "useTRPC",
+      "repo": "web",
+      "file": "src/trpc.ts",
+      "line": 11,
+      "kind": "hook"
     }
   ],
   "edges": [
@@ -673,6 +682,14 @@
       "confidence": "static",
       "file": "src/Daily.tsx",
       "line": 6
+    },
+    {
+      "from": "web#src/Daily.tsx:Daily",
+      "to": "web#src/trpc.ts:useTRPC",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Daily.tsx",
+      "line": 5
     },
     {
       "from": "web#src/Orders.tsx:Orders",

@@ -365,6 +365,7 @@ export const PAGE_WORDS = Object.freeze({
     'fails-filter-unread': 'exception filter status not read',
     'fails-interceptor-unread': 'interceptor error handling not read',
     'file-not-parsed': 'file could not be parsed',
+    'edge-end-missing': 'edge to a node never written',
     'function-handler-ambiguous': 'function handler ambiguous',
     'function-handler-not-found': 'function handler not found',
     'function-handler-unread': 'function handler not read',

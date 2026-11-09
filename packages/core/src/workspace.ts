@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { isBelowDir, isWithinDir, toPosixPath } from './ids.js';
 import { readPackageJson, type PackageJson } from './package-json.js';
+import { applicationLibraryDirs, forgetWorkspaceApplications } from './workspace-application.js';
 
 /**
  * What a monorepo says about itself, and what that makes a service.
@@ -352,6 +353,7 @@ export const forgetWorkspaces = (): void => {
   memberDirsByRoot.clear();
   extentByService.clear();
   builtInByService.clear();
+  forgetWorkspaceApplications();
 };
 
 /** Directories a framework builds into a service from outside it, by service (P243). */
@@ -506,6 +508,15 @@ export const serviceExtent = (repoDir: string): readonly ExtentPackage[] => {
       }
       found.push({ dir: at, role, declares });
     }
+  }
+  // The libraries an application of a one-manifest workspace is built from,
+  // which its tsconfig's aliases name because no manifest can (R180): declared
+  // by the application, and declaring nothing themselves.
+  const libraries = applicationLibraryDirs(own).filter((dir) => !found.some((pkg) => pkg.dir === dir));
+  if (libraries.length > 0) {
+    const service = found[0] as ExtentPackage;
+    found[0] = { ...service, declares: [...service.declares, ...libraries] };
+    for (const dir of libraries) found.push({ dir, role: 'member', declares: [] });
   }
   // What the service's framework builds into it from outside (P243), as a
   // member that declares nothing of its own.

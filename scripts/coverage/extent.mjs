@@ -557,6 +557,175 @@ const builtFromDirs = (own, clone, manifest, byName) => {
   ];
 };
 
+// ------------------------------------------------- one-manifest workspaces (R180)
+
+/**
+ * An application of a workspace that keeps one manifest for everything, and the
+ * libraries it is built from, read from the repository's own files.
+ *
+ * The other kind of monorepo: one `package.json` at the root, applications and
+ * libraries under `apps/` and `libs/` with none of their own, each application a
+ * TypeScript program whose tsconfig extends the root's. The libraries are what
+ * the tsconfig's `paths` alias - `@shop/order-events` to `libs/order-events/src`
+ * - so that alias, imported by the application's code (and in turn by the
+ * libraries it reaches), is what a dependency on a member is in a workspace of
+ * manifests. Imports of types alone do not count: the compiler erases them.
+ *
+ * Read here by a reader of this file's own, from the tsconfig files as text, for
+ * the reason the header gives: the tool answers the same question
+ * (`workspace-application.ts` in the core) and the two are held to each other
+ * by I14 rather than one calling the other.
+ */
+const TSCONFIGS = ['tsconfig.json', 'tsconfig.build.json', 'tsconfig.app.json'];
+
+/** A tsconfig as data: comments and trailing commas, which the format allows, removed first. */
+const readTsconfig = (path) => {
+  let text;
+  try {
+    text = readFileSync(path, 'utf8');
+  } catch {
+    return undefined;
+  }
+  let out = '';
+  for (let at = 0; at < text.length; at += 1) {
+    const char = text[at];
+    if (char === '"') {
+      const start = at;
+      for (at += 1; at < text.length && text[at] !== '"'; at += 1) if (text[at] === '\\') at += 1;
+      out += text.slice(start, at + 1);
+    } else if (text.startsWith('//', at)) {
+      const end = text.indexOf('\n', at);
+      at = end === -1 ? text.length : end - 1;
+    } else if (text.startsWith('/*', at)) {
+      const end = text.indexOf('*/', at + 2);
+      at = end === -1 ? text.length : end + 1;
+    } else out += char;
+  }
+  try {
+    const parsed = JSON.parse(out.replace(/,(\s*[}\]])/g, '$1'));
+    return typeof parsed === 'object' && parsed !== null ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/** Every tsconfig a chain of relative `extends` names, the given one first, each with its parsed text. */
+const extendsChain = (path) => {
+  const chain = [];
+  const visit = (at, depth) => {
+    if (depth > 8 || chain.some((entry) => entry.path === at)) return;
+    const config = readTsconfig(at);
+    if (config === undefined) return;
+    chain.push({ path: at, config });
+    for (const parent of Array.isArray(config.extends) ? config.extends : [config.extends]) {
+      if (typeof parent !== 'string' || !parent.startsWith('.')) continue;
+      const next = resolve(dirname(at), parent);
+      visit(existsSync(next) ? next : `${next}.json`, depth + 1);
+    }
+  };
+  visit(path, 0);
+  return chain;
+};
+
+const within = (path, dir) => path === dir || path.startsWith(`${dir}/`);
+
+/** The application `own` is, with the directory whose manifest it is built with, or nothing. */
+const applicationOf = (own, clone) => {
+  if (readManifest(own) !== undefined) return undefined;
+  const tsconfig = TSCONFIGS.map((name) => join(own, name)).find((path) => existsSync(path));
+  if (tsconfig === undefined) return undefined;
+  let root;
+  for (let at = own; at !== clone && root === undefined; ) {
+    const parent = resolve(at, '..');
+    if (parent === at) return undefined;
+    at = parent;
+    if (readManifest(at) !== undefined) root = at;
+  }
+  if (root === undefined) return undefined;
+  const chain = extendsChain(tsconfig);
+  return chain.some(({ path }) => within(path, root) && !within(path, own)) ? { root, chain } : undefined;
+};
+
+/** The `paths` the chain declares, each key with the directories it names inside the workspace. */
+const aliasesOf = (own, { root, chain }) => {
+  const declaring = chain.find(({ config }) => config.compilerOptions?.paths !== undefined);
+  const based = chain.find(({ config }) => typeof config.compilerOptions?.baseUrl === 'string');
+  if (declaring === undefined) return [];
+  const base = based === undefined ? dirname(declaring.path) : resolve(dirname(based.path), based.config.compilerOptions.baseUrl);
+  return Object.entries(declaring.config.compilerOptions.paths).map(([pattern, targets]) => [
+    pattern,
+    (Array.isArray(targets) ? targets : [])
+      .filter((target) => typeof target === 'string')
+      .map((target) => {
+        const star = target.indexOf('*');
+        const written = star === -1 ? target : target.slice(0, star);
+        const path = resolve(base, written);
+        if (star !== -1) return written === '' || written.endsWith('/') ? path : dirname(path);
+        return isDirectory(path) ? path : dirname(path);
+      })
+      .filter(
+        (dir) =>
+          within(dir, root) && !within(dir, own) && !within(own, dir) && !dir.split('/').includes('node_modules') && existsSync(dir),
+      ),
+  ]);
+};
+
+const aliasMatches = (pattern, specifier) => {
+  const star = pattern.indexOf('*');
+  if (star === -1) return pattern === specifier;
+  const prefix = pattern.slice(0, star);
+  const suffix = pattern.slice(star + 1);
+  return specifier.length >= prefix.length + suffix.length && specifier.startsWith(prefix) && specifier.endsWith(suffix);
+};
+
+const IMPORTED = /(?:\bfrom|\bimport|\brequire\s*\()\s*\(?\s*['"]([^'"\n]+)['"]/g;
+const TYPES_ONLY = /\b(?:import|export)\s+type\s*\{[^}]*\}\s*from\s*['"][^'"\n]+['"]|\bimport\s+type\s+[\w$]+\s+from\s*['"][^'"\n]+['"]/g;
+
+/** Every module specifier the scripts under `dir` import for their code. */
+const importedUnder = (dir) => {
+  const found = new Set();
+  const walk = (at) => {
+    for (const entry of (() => {
+      try {
+        return readdirSync(at, { withFileTypes: true });
+      } catch {
+        return [];
+      }
+    })()) {
+      if (entry.name.startsWith('.') || NEVER_A_PACKAGE.has(entry.name)) continue;
+      const path = join(at, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (/\.[cm]?[jt]sx?$/.test(entry.name) && !entry.name.endsWith('.d.ts')) {
+        const text = readFileSync(path, 'utf8').replace(TYPES_ONLY, '');
+        for (const match of text.matchAll(IMPORTED)) found.add(match[1]);
+      }
+    }
+  };
+  walk(dir);
+  return found;
+};
+
+/** The libraries an application of a one-manifest workspace imports, transitively. */
+const applicationLibraries = (own, application) => {
+  const aliases = aliasesOf(own, application);
+  const found = [];
+  const queue = [own];
+  while (queue.length > 0) {
+    const at = queue.shift();
+    for (const specifier of importedUnder(at)) {
+      for (const [pattern, dirs] of aliases) {
+        if (!aliasMatches(pattern, specifier)) continue;
+        for (const dir of dirs) {
+          if (found.includes(dir)) continue;
+          found.push(dir);
+          queue.push(dir);
+        }
+      }
+    }
+  }
+  return found.filter((dir) => !found.some((other) => other !== dir && within(dir, other)));
+};
+
 /**
  * One service's extent: its own directory first, then what it declares.
  *
@@ -601,14 +770,22 @@ export const extentOf = (cloneDir, readRoot) => {
       }
     }
   }
+  // An application of a one-manifest workspace: the libraries it imports by
+  // the aliases its tsconfig declares, and the root's manifest for its own.
+  const application = applicationOf(own, clone);
+  if (application !== undefined) {
+    for (const dir of applicationLibraries(own, application)) if (!dirs.includes(dir)) dirs.push(dir);
+  }
   // What a framework builds into the service from beside it (P251). Read as
   // a member that declares nothing: its own manifest adds no further package.
-  for (const dir of builtFromDirs(own, clone, readManifest(own) ?? {}, byName)) {
+  const manifest = readManifest(own) ?? (application === undefined ? undefined : readManifest(application.root));
+  for (const dir of builtFromDirs(own, clone, manifest ?? {}, byName)) {
     if (!dirs.includes(dir)) dirs.push(dir);
   }
   const asPath = (dir) => relative(clone, dir).split('\\').join('/') || '.';
+  const workspace = root ?? application?.root;
   return {
-    root: root === undefined ? null : asPath(root),
+    root: workspace === undefined ? null : asPath(workspace),
     dirs: [asPath(dirs[0]), ...dirs.slice(1).map(asPath).sort()],
   };
 };

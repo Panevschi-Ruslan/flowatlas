@@ -2,7 +2,7 @@ import {
   FAILS_META,
   forEachCall,
   hasAnyDependency,
-  readPackageJson,
+  readServiceManifest,
   lineOf,
   settleFailures,
   type EdgeType,
@@ -376,7 +376,7 @@ const withoutStatus = ({ status: _status, assumed: _assumed, declared: _declared
  * because what a way in reaches is what the failures are read along.
  */
 export const failuresPass = definePass('failures', (ctx: NestExtractContext) => {
-  const manifest = readPackageJson(ctx.repoDir) ?? {};
+  const manifest = readServiceManifest(ctx.repoDir) ?? {};
   const every = hasAnyDependency(manifest, [...NEST_PACKAGES, ...ERROR_FACTORY_FRAMEWORKS]);
   // A service with procedures and none of those has its procedures read and
   // nothing else: theirs is the framework that answers a throw (P58).

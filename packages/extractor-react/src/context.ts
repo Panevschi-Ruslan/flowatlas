@@ -130,11 +130,13 @@ export const createReactContext = (options: CreateContextOptions): ReactExtractC
 
     fileOf: (node) => fileOf(node as never, repoDir),
 
-    indexedOf: (fn) => functions.get(fn.declaration),
-    functionIdOf: (fn) => functions.get(fn.declaration)?.id,
+    // Asked by the function rather than by its declaration, which two
+    // functions can share (R180).
+    indexedOf: (fn) => functions.of(fn),
+    functionIdOf: (fn) => functions.of(fn)?.id,
 
     ensureFunctionNode: (fn, meta) => {
-      const indexed = functions.get(fn.declaration);
+      const indexed = functions.of(fn);
       return indexed === undefined ? undefined : nodeOf(indexed, meta);
     },
 

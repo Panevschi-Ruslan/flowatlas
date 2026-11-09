@@ -28,6 +28,7 @@ import {
   type StandInRequest,
 } from './stand-ins.js';
 import { isTestDirectory, isTestName } from './test-files.js';
+import { findTsconfig } from './tsconfig-file.js';
 import {
   serviceExtent,
   serviceSourceDirs,
@@ -129,13 +130,7 @@ export const SOURCE_EXTENSIONS = ['.ts', '.tsx'] as const;
  */
 const DECLARATION_SUFFIX = '.d.ts';
 
-
-/** Tried in order when the caller does not name one. */
-export const TSCONFIG_CANDIDATES = [
-  'tsconfig.json',
-  'tsconfig.build.json',
-  'tsconfig.app.json',
-] as const;
+export { findTsconfig, TSCONFIG_CANDIDATES } from './tsconfig-file.js';
 
 /**
  * What the compiler is told when the repository tells it nothing.
@@ -413,18 +408,6 @@ const SKIPPED_TEST_DIRECTORIES = new WeakMap<Project, ReadonlyMap<string, readon
 export const skippedTestDirectories = (
   project: Project,
 ): ReadonlyMap<string, readonly string[]> => SKIPPED_TEST_DIRECTORIES.get(project) ?? new Map();
-
-export const findTsconfig = (rootDir: string, tsconfig?: string): string | undefined => {
-  if (tsconfig !== undefined) {
-    const path = isAbsolute(tsconfig) ? tsconfig : join(rootDir, tsconfig);
-    return existsSync(path) ? path : undefined;
-  }
-  for (const candidate of TSCONFIG_CANDIDATES) {
-    const path = join(rootDir, candidate);
-    if (existsSync(path)) return path;
-  }
-  return undefined;
-};
 
 /**
  * The path aliases one package of a service's extent declares for its own files.
@@ -812,6 +795,17 @@ const mountedAliases = (mount: Mount): PackageAliases | undefined => {
  * - The file must be inside the package whose manifest named it and under no
  *   `node_modules`. A target written as `../elsewhere` is refused, not followed.
  *
+ * What the manifest names is tried first, and then the source it is built from
+ * ({@link sourceTargets}), for a member exactly as for a package mounted from
+ * outside. A member whose `exports` name only its build - `./dist/types/index.d.ts`,
+ * `./dist/types.mjs` - names files a fresh clone does not have, and reading the
+ * targets alone left every import of it unresolved: a server whose controllers
+ * all take their prefix from an enum of such a member read almost none of its
+ * routes, every other prefix a `route-path-dynamic` row (R180). A
+ * built member still answers with its build, because the written target is a
+ * file and comes first. `source` says only whether the file is read as an
+ * install would be: a member's files are the repository's own.
+ *
  * One answer per specifier, remembered: it depends on the manifest and the file
  * system and on nothing about the file that asked.
  */
@@ -826,7 +820,10 @@ const workspaceMemberResolution = (
     const member = split === undefined ? undefined : members.get(split.name);
     if (split === undefined || member === undefined) return undefined;
     const targets = manifestTargets(member.manifest, split.subpath);
-    for (const target of source ? sourceTargets(targets, split.subpath) : targets) {
+    // A subpath a member's map withholds stays withheld: there is no build of
+    // it to stand in for.
+    const tried = source || targets.length > 0 ? sourceTargets(targets, split.subpath) : [];
+    for (const target of tried) {
       const path = resolve(member.dir, target);
       const inside = relative(member.dir, path);
       const segments = inside.split(sep);

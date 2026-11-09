@@ -210,6 +210,53 @@ describe('what a server declares (P232)', () => {
     expect(reading.schema.types['Order']?.fields?.['id']?.type).toBe('String!');
   });
 
+  it('reads a resolver declared by a decorator of the repository that applies @Resolver (R180)', () => {
+    const made = project({
+      'order.ts': "import { Field, ObjectType } from '@nestjs/graphql';\n@ObjectType()\nexport class Order {\n  @Field()\n  id: string;\n}",
+      'scoped-resolver.ts': [
+        "import { applyDecorators, SetMetadata } from '@nestjs/common';",
+        "import { Resolver } from '@nestjs/graphql';",
+        "export const StaffResolver = (of?: () => unknown) => applyDecorators(of ? Resolver(of) : Resolver(), SetMetadata('scope', 'admin'));",
+        'export function ShopResolver(of: () => unknown) { return StaffResolver(of); }',
+        "export const Unrelated = () => SetMetadata('scope', 'none');",
+      ].join('\n'),
+      'orders.resolver.ts': [
+        "import { Query, ResolveField } from '@nestjs/graphql';",
+        "import { StaffResolver, ShopResolver, Unrelated } from './scoped-resolver';",
+        "import { Order } from './order';",
+        '@StaffResolver(() => Order)',
+        'export class OrdersResolver {',
+        '  @Query(() => [Order])',
+        '  orders() { return []; }',
+        '  @ResolveField(() => String)',
+        '  customer() { return null; }',
+        '}',
+        '@StaffResolver()',
+        'export class StatusResolver {',
+        '  @Query(() => String)',
+        "  status() { return 'ok'; }",
+        '}',
+        '@ShopResolver(() => Order)',
+        'export class TotalsResolver {',
+        '  @ResolveField(() => Number)',
+        '  total() { return 0; }',
+        '}',
+        '@Unrelated()',
+        'export class NotAResolver {',
+        '  @Query(() => String)',
+        "  hidden() { return ''; }",
+        '}',
+      ].join('\n'),
+    });
+    const reading = readGraphqlServer(made.getSourceFiles(), { schemaFiles: [], dependencies: new Set(['@nestjs/graphql']) });
+    expect(reading.fields.map((field) => `${field.type}.${field.field}`)).toEqual([
+      'Query.orders',
+      'Order.customer',
+      'Query.status',
+      'Order.total',
+    ]);
+  });
+
   it('reads the name, type and nullability an argument\'s options give, before or after its name', () => {
     const made = project({
       'order.ts': "import { Field, ObjectType, ID } from '@nestjs/graphql';\n@ObjectType()\nexport class Order {\n  @Field(() => ID)\n  id: string;\n}",

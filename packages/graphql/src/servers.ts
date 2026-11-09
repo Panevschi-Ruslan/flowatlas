@@ -115,6 +115,89 @@ const graphqlDecorators = (node: { getDecorators(): Decorator[] }, names: Readon
     return identifier.getSymbol() === undefined;
   });
 
+/** How many decorators of the repository's own a `@Resolver` is followed through. */
+const DEEPEST_COMPOSITION = 3;
+
+/** The function a decorator written in the repository is, when it is one: its parameters and its body. */
+const decoratorFactoryOf = (identifier: TsNode): { parameters: readonly TsNode[]; body: TsNode } | undefined => {
+  const symbol = identifier.getSymbol();
+  for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
+    const fn = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
+    if (fn === undefined) continue;
+    if (Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isFunctionDeclaration(fn)) {
+      const body = fn.getBody();
+      if (body !== undefined) return { parameters: fn.getParameters(), body };
+    }
+  }
+  return undefined;
+};
+
+/**
+ * What a class decorator says of a resolver: whether it is one, and the type
+ * argument it was handed, as a node to read with {@link typeArgument}.
+ *
+ * `@Resolver(() => Order)` says it outright. A server that tags each resolver
+ * with which schema it belongs to writes its own decorator round it instead:
+ * `export const StaffResolver = (of?) => applyDecorators(of ? Resolver(of) :
+ * Resolver(), SetMetadata(SCOPE, 'admin'))`, and every class is
+ * `@StaffResolver(() => Order)`. Read by its name alone, none of those classes
+ * was a resolver, and a server with more than a hundred resolvers answered a
+ * handful of fields (R180). So a decorator the repository declares is followed into its
+ * body, a few levels deep, for a `Resolver` of a GraphQL package called there.
+ * Its argument is the argument it was written with, or, where it is one of the
+ * factory's parameters, the argument the class handed the factory in that place;
+ * of several `Resolver` calls - the two sides of `of ? Resolver(of) :
+ * Resolver()` - the first whose argument is there wins, and the one with none
+ * otherwise, which is what the condition decides.
+ */
+const resolverOf = (
+  callee: TsNode,
+  handed: readonly TsNode[],
+  depth: number,
+): { argument: TsNode | undefined } | undefined => {
+  if (!Node.isIdentifier(callee)) return undefined;
+  if (isGraphqlExport(callee, 'Resolver')) return { argument: handed[0] };
+  if (depth >= DEEPEST_COMPOSITION) return undefined;
+  const factory = decoratorFactoryOf(callee);
+  if (factory === undefined) return undefined;
+  // An argument written as one of the factory's parameters is what the caller
+  // handed it in that place; anything else is what was written.
+  const argumentOf = (written: TsNode | undefined): TsNode | undefined => {
+    if (written === undefined || !Node.isIdentifier(written)) return written;
+    const at = factory.parameters.findIndex((parameter) => parameter.getSymbol() === written.getSymbol());
+    return at === -1 ? written : handed[at];
+  };
+  const calls = [
+    ...(Node.isCallExpression(factory.body) ? [factory.body] : []),
+    ...factory.body.getDescendantsOfKind(SyntaxKind.CallExpression),
+  ];
+  const readings = calls.flatMap((site) => {
+    const reading = resolverOf(site.getExpression(), site.getArguments().map(argumentOf) as TsNode[], depth + 1);
+    return reading === undefined ? [] : [reading];
+  });
+  return readings.find((reading) => reading.argument !== undefined) ?? readings[0];
+};
+
+/** Whether an identifier is one GraphQL package's export of this name, or, imported from nowhere, is spelled so. */
+const isGraphqlExport = (identifier: TsNode, name: string): boolean => {
+  if (identifier.getText() !== name) return false;
+  for (const declaration of identifier.getSymbol()?.getDeclarations() ?? []) {
+    if (Node.isImportSpecifier(declaration)) return DECORATOR_PACKAGES.includes(declaration.getImportDeclaration().getModuleSpecifierValue());
+  }
+  // A decorator with no import resolves to nothing: a stub-less fixture, read by name.
+  return identifier.getSymbol() === undefined;
+};
+
+/** The resolver a class is declared as, by `@Resolver` or by a decorator of the repository's that applies one. */
+const resolverDecoration = (declaration: ClassDeclaration): { argument: TsNode | undefined } | undefined => {
+  for (const decorator of declaration.getDecorators()) {
+    const call = decorator.getCallExpression();
+    const reading = resolverOf(call?.getExpression() ?? decorator.getNameNode(), call?.getArguments() ?? [], 0);
+    if (reading !== undefined) return reading;
+  }
+  return undefined;
+};
+
 /** `() => Order`, `() => [Order]`, `of => Order`, `'Order'`: the type a decorator's first argument names. */
 const typeArgument = (argument: TsNode | undefined): { name: string; list: boolean } | undefined => {
   if (argument === undefined) return undefined;
@@ -275,9 +358,9 @@ const decoratedFields = (sources: readonly SourceFile[], names: ReadonlyMap<stri
   const found: ResolvedField[] = [];
   for (const sourceFile of sources) {
     for (const declaration of sourceFile.getClasses()) {
-      const resolver = graphqlDecorator(declaration, ['Resolver']);
+      const resolver = resolverDecoration(declaration);
       if (resolver === undefined) continue;
-      const of = typeArgument(resolver.getArguments()[0]);
+      const of = typeArgument(resolver.argument);
       const parent = of === undefined ? undefined : (names.get(of.name) ?? of.name);
       for (const method of declaration.getMethods()) {
         const root = graphqlDecorator(method, [...ROOTS.keys()]);

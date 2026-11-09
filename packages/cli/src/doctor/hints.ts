@@ -212,6 +212,9 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // Reading (core/project.ts)
   'file-not-parsed': () =>
     'The parser could not read this file, so nothing in it is in the graph — no node, no edge, and no row but this one. Fix the syntax, or keep the file out of the globs the reader is given.',
+  // What the graph refused to write (core/builder.ts, R180)
+  'edge-end-missing': () =>
+    'A reader drew an edge to a node it never wrote, so the edge is left out and the rest of the service is read. A defect of flowatlas rather than of the code: report it with this row, which names the edge.',
 
   // What stands in for a package that is not installed (core/stand-ins.ts, P78)
   'package-from-repo': () =>

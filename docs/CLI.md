@@ -37,6 +37,21 @@ Each repository's name and kind come from its manifest. Two repositories sharing
 a package name are told apart by their directory. A repository already in the
 project is reported, never duplicated.
 
+**An application of a workspace that keeps one manifest (R180).** A monorepo
+whose build tool keeps one `package.json` at the root, with its applications and
+libraries under `apps/` and `libs/` and none of their own, is linked one
+application at a time: `flowatlas link apps/orders`. A directory with no manifest
+is taken as an application when it has a tsconfig of its own (`tsconfig.json`,
+`tsconfig.build.json` or `tsconfig.app.json`) whose `extends` chain reaches a
+tsconfig in the nearest directory above it that holds a manifest, and either the
+workspace's own description names it as an application - `nest-cli.json` and
+`angular.json` under `projects`, an older `workspace.json`, or a `project.json`
+in the directory - or the root's manifest declares a framework a reader reads.
+It is named as the description names it, or after its directory, and typed by
+the root's manifest; a library of the workspace is still refused
+(`fixtures/workspace-one-manifest`). `build` reads it with the root's manifest
+and the libraries it imports (below, under "What a service is").
+
 | Flag | Default | Does |
 |---|---|---|
 | `--config <path>` | `./flowatlas.config.json` | where to write the configuration |
@@ -89,6 +104,13 @@ directory holding it proposes `web` and nothing else. Point `--dir` at the
 directory the repository sits in, not at the workspace root itself: `init` looks
 one level below `--dir`, so from inside a root whose members are two levels down,
 as `apps/web` is, it finds nothing.
+
+A workspace that keeps one manifest for everything (see `link`) is proposed as
+the applications its build tool's description names - `nest-cli.json`,
+`angular.json`, `workspace.json`, a `project.json` per project - each named as the
+description names it, never the root, and none of its libraries. `--dir` pointed
+at the directory those applications are kept in (`apps/`) proposes each one there
+too (R180).
 
 | Flag | Default | Does |
 |---|---|---|
@@ -639,7 +661,12 @@ its options - `name`, `type: () => ID`, `nullable`) or schema-first
 (`@Query('orders')` beside the SDL); a resolver map handed to Apollo Server,
 graphql-yoga, mercurius or `makeExecutableSchema`, followed through constants,
 imports, spreads and arrays; and the schema, from `.graphql` files, `gql` type
-definitions and the classes a code-first server decorates. Guards on a
+definitions and the classes a code-first server decorates. A class decorator
+of the repository's own that applies `@Resolver` - `export const StaffResolver
+= (of?) => applyDecorators(of ? Resolver(of) : Resolver(), SetMetadata(...))`,
+how a server tags each resolver with the schema it belongs to - declares a
+resolver as `@Resolver` does, followed three levels deep, with the type it was
+handed in the place the factory passes on (R180). Guards on a
 resolver stand in front of its fields as on a controller. The endpoint the
 server answers at (`path` of `GraphQLModule`, `/` for a standalone Apollo
 Server, `/graphql` otherwise) is an ordinary `POST` route carrying the schema.
@@ -1142,13 +1169,43 @@ because its devDependencies are its own build and tests, and a member's in
 member's devDependencies are never installed for whoever depends on it
 (`fixtures/nest-dev-sibling`). Each package is compiled with its own `paths`, so
 an alias only that package's `tsconfig.json` defines resolves inside it
-(`fixtures/workspace-package-paths`). A service that is itself the root of a
+(`fixtures/workspace-package-paths`). A package of the extent imported by its
+name with nothing installed is read where its `exports` map says, and where the
+map names only a build a fresh clone has not got (`./dist/types/index.d.ts`), at
+the source that build is made from (`src/types/index.ts`); a subpath the map does
+not name is still not importable, and a built package is still read at its build
+(R180). A service that is itself the root of a
 workspace — functions in its own `src/`, the client they share in
 `packages/workflows` — takes in the members of its own workspace it declares,
 wherever they sit: a member inside the service's directory is read even though
 the service's own code is read from `src/` only, and a member it does not
 declare is not (`fixtures/lambda-workspace-root`). A workspace root that
 declares none of its members is read as it always was.
+
+An application of a workspace that keeps one manifest (see `link`) is built with
+the root's manifest, so every reader the root's dependencies switch on is
+switched on for it, and its libraries are what its tsconfig's `paths` alias:
+`@shop/order-events` to `libs/order-events/src`, imported by the application's
+code, and in turn by the libraries it reaches, is read as part of the service
+exactly as a declared workspace package is. Every project of such a workspace
+extends one root tsconfig, so every library is aliased to every application, and
+which ones it is built from is read from its imports instead; an import of types
+alone (`import type`) does not count, because the compiler erases it. A directory
+with a tsconfig that does not extend the root's - a deployment's own folder in a
+repository whose root manifest is for its tooling - is still no package at all
+(`fixtures/workspace-one-manifest`).
+
+**An edge to a node never written (R180).** A reader that draws an edge to a node
+it did not write has a defect, and the graph leaves the edge out rather than
+writing half of it. It used to refuse the whole service for it - `extract-failed`
+over one edge, and every other node and edge of the service lost with it. The
+edge is now left out and one `edge-end-missing` row at `action` stands in its
+place, naming the edge (`meta.edge`) and the end that is missing
+(`meta.missing`), on the end that is there; the rest of the service is read.
+Report such a row: it is the tool's defect, not the code's. No fixture may carry
+one (invariant I15), so a reader that starts drawing one still fails the gate.
+An incremental build that leaves an edge pointing at a node it removed still
+falls back to reading the repository whole, as before.
 
 **One build at a time.** A build holds `<output>/build.lock` while it reads and
 writes, so a watch, a build in another terminal and a hook never write one

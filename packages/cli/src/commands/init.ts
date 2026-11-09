@@ -9,11 +9,13 @@ import {
   readPackageJson,
   workspaceGlobs,
   workspacePackages,
+  workspaceApplicationOf,
   workspaceRootOf,
   type FlowatlasConfig,
   type PackageJson,
 } from '@flowatlas/core';
 import type { Command } from 'commander';
+import { workspaceApplicationsIn } from '../workspace-projects.js';
 import {
   declaresDeployment,
   guessDirectoryType,
@@ -173,6 +175,19 @@ const servicesIn = (absPath: string, configDir: string, pkg: PackageJson): Candi
     };
   };
 
+  // A workspace that keeps one manifest for everything and says in its build
+  // tool's description which projects are applications offers those, each built
+  // with the root's manifest and named as the description names it (R180); the
+  // root is not offered beside them, for the reason given below.
+  const applications = workspaceGlobs(absPath).length === 0 ? workspaceApplicationsIn(absPath) : [];
+  if (applications.length > 0) {
+    return applications.map((application) => {
+      // The root's name is the workspace's, not the application's.
+      const { declared: _workspace, ...candidate } = asOne(application.dir, pkg);
+      return { ...candidate, name: application.name };
+    });
+  }
+
   if (workspaceGlobs(absPath).length === 0) {
     // A directory scanned on its own may still be a member of a workspace
     // somewhere above it — `init --dir a video platform` finds `server` and `client` as
@@ -229,8 +244,18 @@ export const scanCandidates = (scanDir: string, configDir: string): Candidate[] 
     // that describe a deployment: a repository that is nothing but the
     // Terraform for a shared API is a service with no code (P21).
     const pkg = readPackageJson(absPath) ?? (declaresDeployment(absPath) ? {} : undefined);
-    if (pkg === undefined) continue;
-    found.push(...servicesIn(absPath, self, pkg));
+    if (pkg !== undefined) {
+      found.push(...servicesIn(absPath, self, pkg));
+      continue;
+    }
+    // Or an application of a workspace that keeps one manifest for everything,
+    // scanned from the directory its applications are kept in (R180).
+    const application = workspaceApplicationOf(absPath);
+    const manifest = application === undefined ? undefined : readPackageJson(application.root);
+    if (application === undefined || manifest === undefined) continue;
+    const type = guessDirectoryType(absPath, manifest, undefined);
+    if (type === UNKNOWN_TYPE) continue;
+    found.push({ absPath, repo: repoPathFor(self, absPath), name: basename(absPath), type });
   }
   // By name, and then by where it is, because a workspace can hold two members
   // whose manifests were copied from each other and a list that reordered

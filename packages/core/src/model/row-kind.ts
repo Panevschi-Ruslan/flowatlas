@@ -199,6 +199,8 @@ const GAPS: readonly string[] = [
   // Reading and the build (core/project.ts, cli/commands/build.ts)
   'file-not-parsed',
   'service-read-nothing',
+  // An edge a reader drew to a node it never wrote, left out (core/builder.ts, R180)
+  'edge-end-missing',
   'test-directory-skipped',
   // Stand-ins that could not be used (core/stand-ins.ts)
   'package-source-ambiguous',

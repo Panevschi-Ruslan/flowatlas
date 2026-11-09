@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>223 fixtures</span>
-    <span>582 snapshot files</span>
+    <span>224 fixtures</span>
+    <span>585 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -878,7 +878,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Workspaces and monorepos <span class="count" data-total="3">3</span></h2>
+    <h2>Workspaces and monorepos <span class="count" data-total="4">4</span></h2>
     <ul>
       <li class="fixture" data-search="workspace-leaf workspaces and monorepos a package inside a workspace, declaring nothing of its own.">
         <div class="head">
@@ -887,6 +887,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A package inside a workspace, declaring nothing of its own.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="workspace-one-manifest workspaces and monorepos a workspace that keeps one manifest for everything, as a nest cli monorepo does (r180): `package.json` and `tsconfig.json` at the root, two applications under `apps/` and a library under `libs/`, none of them with a manifest of its own.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/workspace-one-manifest">workspace-one-manifest</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>A workspace that keeps one manifest for everything, as a Nest CLI monorepo does (R180): <code>package.json</code> and <code>tsconfig.json</code> at the root, two applications under <code>apps/</code> and a library under <code>libs/</code>, none of them with a manifest of its own.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="workspace-package-by-name workspaces and monorepos a workspace package imported by its own name, with nothing installed (r152).">
         <div class="head">

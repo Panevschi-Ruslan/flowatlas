@@ -894,6 +894,40 @@ only one of them moved.
   directory of its own, started after every other watch, before it says it is
   watching, and does the same before a rebuild that started watching a new
   place counts as finished. Elsewhere the first write is heard at once.
+- **One edge to nothing no longer costs a whole service, and the React reader
+  no longer draws one (R180).** `export const [OrderProvider, useOrder] =
+  createRequired()` is two exports of one declaration, and the React reader
+  looked each up by that declaration: the second overwrote the first, the
+  first's `calls` edge left from an id nothing wrote, and the graph refused the
+  service - a large front end was `extract-failed` for a handful of
+  such edges. Each name is now found as itself, and a call of either name -
+  `useOrder()` - is joined to it. The graph itself no longer refuses a service for an
+  edge to a node never written: it leaves the edge out and writes an
+  `edge-end-missing` row at `action` naming it, and no fixture may carry one
+  (invariant I15). An incremental build still reads the repository whole when
+  a splice leaves such an edge.
+- **A workspace package whose `exports` name only its build is read from its
+  source (R180).** In a fresh clone `./dist/types/index.d.ts` is not there, and
+  every import of such a member resolved to nothing; a server whose controllers
+  take their prefix from an enum of one read almost none of its routes.
+  The member is now read where its build is made from (`src/types/index.ts`),
+  as a package mounted from outside already was; a subpath its map does not
+  name stays unimportable, and a built member is still read at its build.
+- **A GraphQL resolver declared by a decorator of the repository's own is read
+  (R180).** `@StaffResolver(() => Order)`, where `StaffResolver` applies
+  `Resolver` through `applyDecorators`, declared no resolver, so its fields were
+  no ways in; the decorator is followed into its body, three levels deep, and
+  the type it was handed is the resolver's.
+- **`link` and `init` take an application of a workspace that keeps one
+  manifest (R180).** `apps/orders` with a tsconfig that extends the root's and
+  no `package.json` was "not a repository". It is taken when the workspace's
+  own description names it as an application (`nest-cli.json`, `angular.json`,
+  `workspace.json`, a `project.json`) or the root's manifest declares a
+  framework, named as the description names it and typed by the root; `init`
+  proposes such a workspace's applications rather than its root. `build` reads
+  it with the root's manifest and the libraries its code imports through the
+  tsconfig's `paths`, as part of the service
+  (`fixtures/workspace-one-manifest`).
 
 ## [0.6.0][] - 2026-10-25
 

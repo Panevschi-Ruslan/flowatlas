@@ -13,6 +13,7 @@ import {
   parseRepoGraph,
   readPackageJson,
   readResolvedPackageJson,
+  readServiceManifest,
   SERVICES_DIRECTORY,
   serviceDirectoryName,
   serviceOutputDir,
@@ -481,7 +482,7 @@ const readNothing = (
     const declared = isDeclared(item.service);
     const note = declared
       ? undefined
-      : declinedNote(item.service.type, readPackageJson(repoDirOf(item.service)) ?? {}, config, repoDirOf(item.service));
+      : declinedNote(item.service.type, readServiceManifest(repoDirOf(item.service)) ?? {}, config, repoDirOf(item.service));
     return [
       {
         service: item.service.name,
@@ -763,7 +764,7 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
     // worth naming from the workspace it belongs to, which is the only place a
     // member of a monorepo says anything at all.
     const note =
-      noReaderNote(readPackageJson(repoDir)) ?? noReaderNote(readResolvedPackageJson(repoDir));
+      noReaderNote(readServiceManifest(repoDir)) ?? noReaderNote(readResolvedPackageJson(repoDir));
     return {
       service,
       report: { ...base, skipped: 'no-extractor', ...(note === undefined ? {} : { error: note }) },
@@ -1247,7 +1248,7 @@ const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => 
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
     settings: settingsOfProject(loaded),
     services: extracted.map((item) => {
-      const packages = packagesOf(readPackageJson(loaded.repoDir(item.service)));
+      const packages = packagesOf(readServiceManifest(loaded.repoDir(item.service)));
       return packages === undefined ? item.report : { ...item.report, packages };
     }),
   });

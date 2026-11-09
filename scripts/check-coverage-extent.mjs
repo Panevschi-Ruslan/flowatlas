@@ -78,6 +78,8 @@ const toolExtentOf = (dir) => {
  * comparing two questions again, which is the mistake this whole change is
  * about.
  */
+const SERVICE_FILES = ['package.json', 'tsconfig.json', 'tsconfig.build.json', 'tsconfig.app.json'];
+
 const candidates = () => {
   const found = [];
   const visit = (tree, dir, depth) => {
@@ -85,7 +87,9 @@ const candidates = () => {
       if (!entry.isDirectory()) continue;
       if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
       const path = join(dir, entry.name);
-      if (existsSync(join(path, 'package.json'))) found.push({ tree, dir: path });
+      // A manifest, or a tsconfig of its own: an application of a workspace
+      // that keeps one manifest for everything has only the second (R180).
+      if (SERVICE_FILES.some((file) => existsSync(join(path, file)))) found.push({ tree, dir: path });
       // Two levels below a fixture is as deep as any of them declares a member.
       if (depth < 3) visit(tree, path, depth + 1);
     }
