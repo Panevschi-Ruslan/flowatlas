@@ -39,6 +39,28 @@ only one of them moved.
   a resolver map put together from another map's members
   (`...orderResolvers.Query`) or handed a resolver by its name (`{ author }`)
   is read.
+- **A queue a service runs through a layer of its own is read where each
+  caller names it (P267).** A server that wraps BullMQ in a queue service of
+  its own - `@InjectJobQueue(Queues.mail) mailQueue: JobQueueService`, then
+  `this.mailQueue.add(SendMailJob.name, data)`, into a driver interface, into
+  `this.queues[queueName].add(jobName, data)` - had every queue's consumers
+  and not one producer. The broker's call is now followed out to the calls
+  that decide its queue: a parameter becomes what each caller passes (a
+  destructured one too), a field becomes what the instance was built with,
+  read at the `new` that built it or at the decorator a caller asked the
+  container with, through a decorator of the repository's own that wraps
+  `Inject(token(name))`, to the provider that builds the instance under that
+  token. Each enqueue is drawn at its caller with its job and its message
+  (`meta.through` names the functions it came through; `heuristic` where a
+  call on the way may run another implementation), and the broker's call
+  draws nothing of its own once every call of it is attributed. A client kept
+  in a registry by queue - `this.queues[name] = new Queue(name)` - is that
+  queue (the `receiver-registry-key` locator), and is known to be a BullMQ
+  queue from the registry's annotation with nothing installed; `new
+  Queue('reports').add(...)` is read too, as is a repeated job registered
+  with `upsertJobScheduler`. `SomeJob.name` reads as the class's name, so a
+  job named after its handler is one job at both ends. An instance whose
+  queue cannot be read is a `channel-dynamic` row at the caller naming it.
 - **Every way a cluster is installed and a server asks itself (P263).** A
   `helmfile.yaml` installs its releases in each environment it declares (or
   the one `helmfile -e` names), rendered over the environment's values; a

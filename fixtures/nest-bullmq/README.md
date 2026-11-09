@@ -90,7 +90,7 @@ deployed on its own looks like from inside one repository.
 
 | Construct | Where | Reason it must produce |
 |---|---|---|
-| `new Queue<ReportJob>(queueName)` with a parameter | `src/mail/mail.service.ts:45` | `channel-dynamic` — no token to read the queue name from |
+| `new Queue<ReportJob>(queueName)` with a parameter | `src/mail/mail.service.ts:45` | `channel-dynamic` naming `queueName` — the queue the client is made with is a parameter, which is read at each caller (P267), and nothing calls `enqueueReport` |
 | `@Process()` with no argument | `src/mail/legacy-mail.processor.ts:22` | `meta.jobName: null`; must not crash |
 | `@Processor()` with no argument | `src/mail/anonymous.processor.ts:9` | `channel-dynamic`; must not crash |
 | `@Processor({ name: 'reports' })`, the options overload | `src/mail/reports.processor.ts:30` | `channel:reports` — **not** `channel:{"name":"reports"}`, which is what reading the whole argument produced before the channel side was described with locators (R86) |

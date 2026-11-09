@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-queue-wrapper",
-  "generatedAt": "2026-11-09T16:22:12.708Z",
+  "generatedAt": "2026-11-09T16:52:59.994Z",
   "nodes": [
     {
       "id": "channel:cron-queue",
@@ -46,6 +46,18 @@
       }
     },
     {
+      "id": "config_key:nest-queue-wrapper#QUEUE_DRIVER",
+      "type": "config_key",
+      "label": "QUEUE_DRIVER",
+      "repo": "nest-queue-wrapper",
+      "file": "src/queue/queue.module.ts",
+      "line": 13,
+      "meta": {
+        "key": "QUEUE_DRIVER",
+        "source": "process.env"
+      }
+    },
+    {
       "id": "consumer:nest-queue-wrapper#src/cleanup/audit.job.ts:AuditJob.handle",
       "type": "consumer",
       "label": "AuditJob.handle",
@@ -73,7 +85,8 @@
         "kind": "job",
         "adapter": "bullmq",
         "decorator": "Process",
-        "entryId": "entry:nest-queue-wrapper:event:cron-queue"
+        "entryId": "entry:nest-queue-wrapper:event:cron-queue",
+        "jobName": "CleanupCronJob"
       }
     },
     {
@@ -88,7 +101,8 @@
         "kind": "job",
         "adapter": "bullmq",
         "decorator": "Process",
-        "entryId": "entry:nest-queue-wrapper:event:cron-queue"
+        "entryId": "entry:nest-queue-wrapper:event:cron-queue",
+        "jobName": "ReportCronJob"
       }
     },
     {
@@ -103,7 +117,8 @@
         "kind": "job",
         "adapter": "bullmq",
         "decorator": "Process",
-        "entryId": "entry:nest-queue-wrapper:event:exports-queue"
+        "entryId": "entry:nest-queue-wrapper:event:exports-queue",
+        "jobName": "BuildExportJob"
       }
     },
     {
@@ -118,7 +133,8 @@
         "kind": "job",
         "adapter": "bullmq",
         "decorator": "Process",
-        "entryId": "entry:nest-queue-wrapper:event:mail-queue"
+        "entryId": "entry:nest-queue-wrapper:event:mail-queue",
+        "jobName": "SendMailJob"
       }
     },
     {
@@ -161,21 +177,42 @@
       }
     },
     {
+      "id": "entry:nest-queue-wrapper:http:POST:/exports",
+      "type": "entry",
+      "label": "POST /exports",
+      "repo": "nest-queue-wrapper",
+      "file": "src/exports/exports.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/exports",
+        "rawPath": "/exports",
+        "controller": "ExportsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
       "id": "nest-queue-wrapper#src/app.module.ts:AppModule",
       "type": "module",
       "label": "AppModule",
       "repo": "nest-queue-wrapper",
       "file": "src/app.module.ts",
-      "line": 8,
+      "line": 13,
       "kind": "static",
       "meta": {
-        "controllers": [],
+        "controllers": [
+          "ExportsController"
+        ],
         "providers": [
           "BuildExportJob",
           "SendMailJob",
           "CleanupCronJob",
           "ReportCronJob",
-          "AuditJob"
+          "AuditJob",
+          "WelcomeService",
+          "CleanupScheduler",
+          "AuditService"
         ],
         "exports": []
       }
@@ -202,6 +239,37 @@
       "meta": {
         "signature": {
           "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/cleanup/audit.service.ts:AuditService",
+      "type": "provider",
+      "label": "AuditService",
+      "repo": "nest-queue-wrapper",
+      "file": "src/cleanup/audit.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/cleanup/audit.service.ts:AuditService.record",
+      "type": "method",
+      "label": "AuditService.record",
+      "repo": "nest-queue-wrapper",
+      "file": "src/cleanup/audit.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "action",
+              "type": "string"
+            }
+          ],
           "returns": "void"
         }
       }
@@ -259,6 +327,32 @@
       }
     },
     {
+      "id": "nest-queue-wrapper#src/cleanup/cleanup.scheduler.ts:CleanupScheduler",
+      "type": "provider",
+      "label": "CleanupScheduler",
+      "repo": "nest-queue-wrapper",
+      "file": "src/cleanup/cleanup.scheduler.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/cleanup/cleanup.scheduler.ts:CleanupScheduler.onModuleInit",
+      "type": "method",
+      "label": "CleanupScheduler.onModuleInit",
+      "repo": "nest-queue-wrapper",
+      "file": "src/cleanup/cleanup.scheduler.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
       "id": "nest-queue-wrapper#src/exports/build-export.job.ts:BuildExportJob",
       "type": "provider",
       "label": "BuildExportJob",
@@ -283,6 +377,37 @@
             {
               "name": "data",
               "type": "type:nest-queue-wrapper#BuildExportData"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/exports/exports.controller.ts:ExportsController",
+      "type": "provider",
+      "label": "ExportsController",
+      "repo": "nest-queue-wrapper",
+      "file": "src/exports/exports.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/exports/exports.controller.ts:ExportsController.start",
+      "type": "method",
+      "label": "ExportsController.start",
+      "repo": "nest-queue-wrapper",
+      "file": "src/exports/exports.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{exportId:string}"
             }
           ],
           "returns": "void"
@@ -321,16 +446,290 @@
       }
     },
     {
+      "id": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService",
+      "type": "provider",
+      "label": "WelcomeService",
+      "repo": "nest-queue-wrapper",
+      "file": "src/mail/welcome.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService.digest",
+      "type": "method",
+      "label": "WelcomeService.digest",
+      "repo": "nest-queue-wrapper",
+      "file": "src/mail/welcome.service.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService.resend",
+      "type": "method",
+      "label": "WelcomeService.resend",
+      "repo": "nest-queue-wrapper",
+      "file": "src/mail/welcome.service.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobName",
+              "type": "string"
+            },
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService.welcome",
+      "type": "method",
+      "label": "WelcomeService.welcome",
+      "repo": "nest-queue-wrapper",
+      "file": "src/mail/welcome.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService",
+      "type": "provider",
+      "label": "JobQueueService",
+      "repo": "nest-queue-wrapper",
+      "file": "src/queue/job-queue.service.ts",
+      "line": 12,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService.add",
+      "type": "method",
+      "label": "JobQueueService.add",
+      "repo": "nest-queue-wrapper",
+      "file": "src/queue/job-queue.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobName",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService.addCron",
+      "type": "method",
+      "label": "JobQueueService.addCron",
+      "repo": "nest-queue-wrapper",
+      "file": "src/queue/job-queue.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ jobName, data, pattern }",
+              "type": "{jobName:string;data:T;pattern:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/queue/queue.module.ts:QueueModule",
+      "type": "module",
+      "label": "QueueModule",
+      "repo": "nest-queue-wrapper",
+      "file": "src/queue/queue.module.ts",
+      "line": 27,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "QUEUE_DRIVER"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-queue-wrapper#src/queue/queue.module.ts:driverProvider.useFactory",
+      "type": "function",
+      "label": "driverProvider.useFactory",
+      "repo": "nest-queue-wrapper",
+      "file": "src/queue/queue.module.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-queue-wrapper#QueueDriver"
+        }
+      }
+    },
+    {
+      "id": "producer:nest-queue-wrapper#src/cleanup/audit.service.ts:15:12",
+      "type": "producer",
+      "label": "job ?",
+      "repo": "nest-queue-wrapper",
+      "file": "src/cleanup/audit.service.ts",
+      "line": 15,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "unresolved",
+        "method": "add",
+        "jobName": "audit",
+        "through": [
+          "BullMqDriver.add",
+          "JobQueueService.add"
+        ]
+      }
+    },
+    {
+      "id": "producer:nest-queue-wrapper#src/cleanup/cleanup.scheduler.ts:14:12",
+      "type": "producer",
+      "label": "job cron-queue",
+      "repo": "nest-queue-wrapper",
+      "file": "src/cleanup/cleanup.scheduler.ts",
+      "line": 14,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "upsertJobScheduler",
+        "jobName": "CleanupCronJob",
+        "through": [
+          "BullMqDriver.addCron",
+          "JobQueueService.addCron"
+        ]
+      }
+    },
+    {
+      "id": "producer:nest-queue-wrapper#src/exports/exports.controller.ts:15:11",
+      "type": "producer",
+      "label": "job exports-queue",
+      "repo": "nest-queue-wrapper",
+      "file": "src/exports/exports.controller.ts",
+      "line": 15,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "add",
+        "jobName": "BuildExportJob",
+        "through": [
+          "BullMqDriver.add",
+          "JobQueueService.add"
+        ]
+      }
+    },
+    {
+      "id": "producer:nest-queue-wrapper#src/mail/welcome.service.ts:17:12",
+      "type": "producer",
+      "label": "job mail-queue",
+      "repo": "nest-queue-wrapper",
+      "file": "src/mail/welcome.service.ts",
+      "line": 17,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "add",
+        "jobName": "SendMailJob",
+        "through": [
+          "BullMqDriver.add",
+          "JobQueueService.add"
+        ]
+      }
+    },
+    {
+      "id": "producer:nest-queue-wrapper#src/mail/welcome.service.ts:22:12",
+      "type": "producer",
+      "label": "job mail-queue",
+      "repo": "nest-queue-wrapper",
+      "file": "src/mail/welcome.service.ts",
+      "line": 22,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "add",
+        "jobName": null,
+        "through": [
+          "BullMqDriver.add",
+          "JobQueueService.add"
+        ]
+      }
+    },
+    {
+      "id": "producer:nest-queue-wrapper#src/mail/welcome.service.ts:26:12",
+      "type": "producer",
+      "label": "job mail-queue",
+      "repo": "nest-queue-wrapper",
+      "file": "src/mail/welcome.service.ts",
+      "line": 26,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "add",
+        "jobName": "SendMailJob",
+        "through": [
+          "BullMqDriver.add",
+          "JobQueueService.add"
+        ]
+      }
+    },
+    {
       "id": "repo:nest-queue-wrapper",
       "type": "repo",
       "label": "nest-queue-wrapper",
       "repo": "nest-queue-wrapper",
       "meta": {
         "stats": {
-          "files": 8,
-          "filesRead": 8,
+          "files": 19,
+          "filesRead": 19,
           "filesUnreadable": 0,
-          "classes": 6,
+          "classes": 14,
           "skippedExternalCalls": {}
         },
         "bootstrap": "src/main.ts",
@@ -505,6 +904,228 @@
         ],
         "returns": "void"
       }
+    },
+    {
+      "from": "entry:nest-queue-wrapper:http:POST:/exports",
+      "to": "nest-queue-wrapper#src/exports/exports.controller.ts:ExportsController.start",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/exports/exports.controller.ts",
+      "line": 13,
+      "params": [
+        "{exportId:string}"
+      ],
+      "returns": "void",
+      "meta": {
+        "body": "{exportId:string}"
+      }
+    },
+    {
+      "from": "nest-queue-wrapper#src/app.module.ts:AppModule",
+      "to": "nest-queue-wrapper#src/queue/queue.module.ts:QueueModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 13
+    },
+    {
+      "from": "nest-queue-wrapper#src/cleanup/audit.service.ts:AuditService.record",
+      "to": "producer:nest-queue-wrapper#src/cleanup/audit.service.ts:15:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/cleanup/audit.service.ts",
+      "line": 15
+    },
+    {
+      "from": "nest-queue-wrapper#src/cleanup/cleanup.scheduler.ts:CleanupScheduler",
+      "to": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/cleanup/cleanup.scheduler.ts",
+      "line": 11
+    },
+    {
+      "from": "nest-queue-wrapper#src/cleanup/cleanup.scheduler.ts:CleanupScheduler.onModuleInit",
+      "to": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService.addCron",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/cleanup/cleanup.scheduler.ts",
+      "line": 14,
+      "params": [
+        "{jobName:string;data:T;pattern:string}"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-queue-wrapper#src/cleanup/cleanup.scheduler.ts:CleanupScheduler.onModuleInit",
+      "to": "producer:nest-queue-wrapper#src/cleanup/cleanup.scheduler.ts:14:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/cleanup/cleanup.scheduler.ts",
+      "line": 14
+    },
+    {
+      "from": "nest-queue-wrapper#src/exports/exports.controller.ts:ExportsController",
+      "to": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/exports/exports.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "nest-queue-wrapper#src/exports/exports.controller.ts:ExportsController.start",
+      "to": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/exports/exports.controller.ts",
+      "line": 15,
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-queue-wrapper#src/exports/exports.controller.ts:ExportsController.start",
+      "to": "producer:nest-queue-wrapper#src/exports/exports.controller.ts:15:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/exports/exports.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService",
+      "to": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/mail/welcome.service.ts",
+      "line": 14
+    },
+    {
+      "from": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService.digest",
+      "to": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/mail/welcome.service.ts",
+      "line": 26,
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService.digest",
+      "to": "producer:nest-queue-wrapper#src/mail/welcome.service.ts:26:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mail/welcome.service.ts",
+      "line": 26
+    },
+    {
+      "from": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService.resend",
+      "to": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/mail/welcome.service.ts",
+      "line": 22,
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService.resend",
+      "to": "producer:nest-queue-wrapper#src/mail/welcome.service.ts:22:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mail/welcome.service.ts",
+      "line": 22
+    },
+    {
+      "from": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService.welcome",
+      "to": "nest-queue-wrapper#src/queue/job-queue.service.ts:JobQueueService.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/mail/welcome.service.ts",
+      "line": 17,
+      "params": [
+        "string",
+        "T"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "nest-queue-wrapper#src/mail/welcome.service.ts:WelcomeService.welcome",
+      "to": "producer:nest-queue-wrapper#src/mail/welcome.service.ts:17:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mail/welcome.service.ts",
+      "line": 17
+    },
+    {
+      "from": "nest-queue-wrapper#src/queue/queue.module.ts:driverProvider.useFactory",
+      "to": "config_key:nest-queue-wrapper#QUEUE_DRIVER",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/queue/queue.module.ts",
+      "line": 13
+    },
+    {
+      "from": "producer:nest-queue-wrapper#src/cleanup/cleanup.scheduler.ts:14:12",
+      "to": "channel:cron-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/cleanup/cleanup.scheduler.ts",
+      "line": 14,
+      "params": [
+        "undefined"
+      ]
+    },
+    {
+      "from": "producer:nest-queue-wrapper#src/exports/exports.controller.ts:15:11",
+      "to": "channel:exports-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/exports/exports.controller.ts",
+      "line": 15,
+      "params": [
+        "{exportId:string;format:'csv'}"
+      ]
+    },
+    {
+      "from": "producer:nest-queue-wrapper#src/mail/welcome.service.ts:17:12",
+      "to": "channel:mail-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/mail/welcome.service.ts",
+      "line": 17,
+      "params": [
+        "{to:string;template:string}"
+      ]
+    },
+    {
+      "from": "producer:nest-queue-wrapper#src/mail/welcome.service.ts:22:12",
+      "to": "channel:mail-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/mail/welcome.service.ts",
+      "line": 22,
+      "params": [
+        "{to:string;template:string}"
+      ]
+    },
+    {
+      "from": "producer:nest-queue-wrapper#src/mail/welcome.service.ts:26:12",
+      "to": "channel:mail-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/mail/welcome.service.ts",
+      "line": 26,
+      "params": [
+        "{to:string;template:string}"
+      ]
     }
   ],
   "types": {
@@ -525,6 +1146,17 @@
           "optional": false
         }
       ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:nest-queue-wrapper#QueueDriver": {
+      "name": "QueueDriver",
+      "kind": "object",
+      "declaredIn": "nest-queue-wrapper#src/queue/queue-driver.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
       "meta": {
         "declKind": "interface",
         "exported": true
@@ -560,6 +1192,66 @@
       "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate AuditJob.handle with the channel it uses.",
       "symbol": "AuditJob.handle -> {\"queue\":\"audit-queue\"}"
+    },
+    {
+      "file": "src/cleanup/audit.service.ts",
+      "line": 12,
+      "reason": "di-token-unknown",
+      "hint": "No module in this repository provides AUDIT_QUEUE. Register it with { provide, useClass } or force the adapter that does.",
+      "symbol": "AuditService.constructor[0]"
+    },
+    {
+      "file": "src/cleanup/audit.service.ts",
+      "line": 15,
+      "reason": "channel-dynamic",
+      "hint": "this.auditQueue is an instance of JobQueueService and its queue is what the instance was built with; no provider of it that builds the instance, and no construction of it, could be read. Annotate AuditService.record with the channel it uses.",
+      "symbol": "producer:nest-queue-wrapper#src/cleanup/audit.service.ts:15:12",
+      "message": "AuditService.record -> this.auditQueue"
+    },
+    {
+      "file": "src/queue/job-queue.service.ts",
+      "line": 18,
+      "reason": "type-generic-uninstantiated",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "level": "info",
+      "sites": 2
+    },
+    {
+      "file": "src/queue/job-queue.service.ts",
+      "line": 19,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "JobQueueService.add -> this.driver.add",
+      "meta": {
+        "causes": [
+          {
+            "cause": "interface-type",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/queue/job-queue.service.ts",
+                "line": 19,
+                "symbol": "JobQueueService.add -> this.driver.add"
+              },
+              {
+                "file": "src/queue/job-queue.service.ts",
+                "line": 23,
+                "symbol": "JobQueueService.addCron -> this.driver.addCron"
+              }
+            ]
+          }
+        ]
+      },
+      "sites": 2
+    },
+    {
+      "file": "src/queue/queue.module.ts",
+      "line": 21,
+      "reason": "module-providers-unread",
+      "hint": "List the providers, or a name that leads to an array of them in this repository. A guard registered as APP_GUARD among providers that cannot be read is in front of every route, and nothing here can see it.",
+      "symbol": "QueueModule providers Object.values(QueueName).map((name) => ({ provide: queueToken(name), useFactory:"
     }
   ]
 }

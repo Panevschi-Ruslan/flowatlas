@@ -357,6 +357,13 @@ const nameLocatorSchema = z.discriminatedUnion('kind', [
     /** Which argument of the constructor the path starts in. The first by default. */
     index: z.number().int().min(0).optional(),
   }),
+  z.strictObject({
+    kind: z.literal('receiver-registry-key'),
+    /** The class every entry of the registry is constructed from, with its own key (P267). */
+    class: z.string().min(1),
+    /** Which argument of the constructor is the key. The first by default. */
+    index: z.number().int().min(0).optional(),
+  }),
 ]);
 
 /**

@@ -23,6 +23,13 @@ const FIRST_ARGUMENT: readonly NameLocator[] = [{ kind: 'argument', index: 0 }];
  */
 const QUEUE_OF_RECEIVER: readonly NameLocator[] = [
   { kind: 'provider-decorator', decorator: 'InjectQueue', index: 0 },
+  // The queue made where the call is: `new Queue('reports')`, in the call or a
+  // `const` before it (P267).
+  { kind: 'receiver-constructed-path', class: 'Queue', path: [], index: 0 },
+  // One client per queue kept in a registry keyed by the queue:
+  // `this.queues[name].add(…)` beside `this.queues[name] = new Queue(name)`.
+  // The key is often a parameter, read where the callers decide it (P267).
+  { kind: 'receiver-registry-key', class: 'Queue', index: 0 },
 ];
 
 /**
@@ -133,6 +140,18 @@ const bullmq: BrokerSpec = {
       payloadArg: 0,
       kind: 'job',
       receiverPackages: ['bullmq', 'bull', '@nestjs/bullmq', '@nestjs/bull'],
+    },
+    // A job repeated on a schedule is a job of the queue too: the scheduler is
+    // handed a template, `{ name, data, opts }`, that it adds on every tick
+    // (P267).
+    {
+      method: 'upsertJobScheduler',
+      channelArg: -1,
+      channel: QUEUE_OF_RECEIVER,
+      name: [{ kind: 'argument-property', index: 2, key: 'name' }],
+      payload: [{ kind: 'argument-property', index: 2, key: 'data' }],
+      kind: 'job',
+      receiverPackages: ['bullmq'],
     },
   ],
   consumerDecorators: ['Process', 'Processor'],

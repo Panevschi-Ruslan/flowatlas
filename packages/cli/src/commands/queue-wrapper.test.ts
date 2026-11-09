@@ -41,3 +41,53 @@ describe('worker decorators of the repository’s own (R181)', () => {
     expect(row?.reason).toBe('channel-dynamic');
   });
 });
+
+/** Every producer, as `file:line channel job`. */
+const producers = (): string[] =>
+  graph.nodes
+    .filter((node) => node.type === 'producer')
+    .map((node) => {
+      const emits = graph.edges.filter((edge) => edge.type === 'emits' && edge.from === node.id);
+      const channel = emits.map((edge) => graph.nodes.find((each) => each.id === edge.to)?.label).join(',') || '-';
+      return `${node.file}:${node.line} ${channel} ${String(node.meta?.['jobName'])}`;
+    })
+    .sort();
+
+describe('enqueues through the repository’s own queue service (P267)', () => {
+  it('draws each enqueue where its caller names the queue and the job', () => {
+    expect(producers()).toEqual([
+      'src/cleanup/audit.service.ts:15 - audit',
+      'src/cleanup/cleanup.scheduler.ts:14 cron-queue CleanupCronJob',
+      'src/exports/exports.controller.ts:15 exports-queue BuildExportJob',
+      'src/mail/welcome.service.ts:17 mail-queue SendMailJob',
+      'src/mail/welcome.service.ts:22 mail-queue null',
+      'src/mail/welcome.service.ts:26 mail-queue SendMailJob',
+    ]);
+  });
+
+  it('reads the job a handler takes by its class’s name, so both ends name one job', () => {
+    const jobs = graph.nodes.filter((node) => node.type === 'consumer').map((node) => node.meta?.['jobName']).sort();
+    expect(jobs).toEqual(['BuildExportJob', 'CleanupCronJob', 'ReportCronJob', 'SendMailJob', 'audit']);
+  });
+
+  it('says which functions of its own the enqueue was handed through', () => {
+    const scheduled = graph.nodes.find((node) => node.type === 'producer' && node.file === 'src/cleanup/cleanup.scheduler.ts');
+    expect(scheduled?.meta?.['through']).toEqual(['BullMqDriver.addCron', 'JobQueueService.addCron']);
+    expect(scheduled?.meta?.['method']).toBe('upsertJobScheduler');
+  });
+
+  it('carries the message the caller hands in', () => {
+    const start = graph.nodes.find((node) => node.type === 'producer' && node.file === 'src/exports/exports.controller.ts');
+    const emits = graph.edges.find((edge) => edge.type === 'emits' && edge.from === start?.id);
+    expect(emits?.params).toEqual(["{exportId:string;format:'csv'}"]);
+  });
+
+  it('names the instance it could not read, where the enqueue is', () => {
+    const row = graph.unresolved.find((each) => each.file === 'src/cleanup/audit.service.ts' && each.reason === 'channel-dynamic');
+    expect(row?.hint).toContain('this.auditQueue is an instance of JobQueueService');
+  });
+
+  it('draws nothing in the driver every enqueue is handed down to', () => {
+    expect(producers().filter((each) => each.includes('bullmq.driver'))).toEqual([]);
+  });
+});

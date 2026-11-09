@@ -33,6 +33,8 @@ import {
   lineAndColumnAt,
   conditionsHold,
   describedCallKey,
+  locatedExpressions,
+  locatedSlots,
   precedenceOf,
   precedenceRows,
   withdrawDescribedCalls,
@@ -57,7 +59,8 @@ import {
   targetOfHandler,
   type ReceiverEvidence,
 } from './call-site.js';
-import { addressOf, appliesAt, collapsed, readAddress, type AddressedElement } from './address.js';
+import { addressOf, appliesAt, collapsed, messageValue, readAddress, readWritten, type AddressedElement } from './address.js';
+import { forwardedPublish, heldAt, waits } from './forwarded.js';
 import { payloadParameter, typeAtPath } from './payload.js';
 import { isResolved, nameForKind, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
 import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointShaping } from './endpoint.js';
@@ -109,6 +112,54 @@ const channelAt = (
   fallback: string,
 ): ChannelResolution =>
   collapsed(readAddress(site, addressOf(pattern), undefined, context, config, fallback));
+
+/**
+ * A publish read where a caller decided it (P267): the call the broker's
+ * client is called with stays the call the shape is read from, and these are
+ * the values read at the caller instead of at it.
+ */
+interface ForwardedReading {
+  /** The call the publish is drawn at. */
+  readonly site: CallExpression;
+  readonly elements: AddressedElement[];
+  readonly jobName: string | null | undefined;
+  /** What the message is written as there, where it was followed out to it. */
+  readonly payload: TsNode | undefined;
+  /** A call on the way may run another implementation instead. */
+  readonly undecided: boolean;
+  /** The functions it was handed out of, innermost first. */
+  readonly through: readonly string[];
+  /** The class the broker's call is written in. */
+  readonly writtenIn: ClassDeclaration | undefined;
+}
+
+/** Whether a description names a unit of work at all. */
+const namesJobs = (pattern: CallPattern): boolean => pattern.name !== undefined || pattern.nameArg !== undefined;
+
+/** Where a publish names its unit of work: the locators first, then the plain argument. */
+const jobNameAt = (call: CallExpression, pattern: CallPattern, context: LocatorContext): TsNode | undefined =>
+  pattern.name !== undefined
+    ? locatedExpressions(call, pattern.name, context)[0]
+    : pattern.nameArg === undefined
+      ? undefined
+      : call.getArguments()[pattern.nameArg];
+
+/** A unit of work's name as the code writes it, or `null` where it is not written. */
+const jobNameOf = (expression: TsNode): string | null => {
+  const value = evaluateExpression(expression);
+  return value.resolved && typeof value.value === 'string' ? value.value : null;
+};
+
+/** Where a publish's message is written, as its description says. */
+const messageAt = (call: CallExpression, pattern: CallPattern, context: LocatorContext): TsNode | undefined => {
+  if (pattern.payload !== undefined) {
+    const slot = pattern.payload
+      .flatMap((locator) => locatedSlots(call, locator, context))
+      .find((each) => each !== undefined && each.reached);
+    return slot === undefined ? undefined : messageValue(slot.expression);
+  }
+  return pattern.payloadArg === undefined ? undefined : call.getArguments()[pattern.payloadArg];
+};
 
 /**
  * What to do about a channel named by an environment variable.
@@ -220,6 +271,8 @@ export const extractBrokers = (ctx: PassContext): void => {
             : lookup !== undefined
             ? `${resolution.text} is looked up in ${lookup.collection} by ${lookup.key}, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere. ` +
               `Send to an address the code or the deployment states, or annotate ${site.named} with the channels it may use.`
+            : resolution.why !== undefined
+            ? `${resolution.why} Annotate ${site.named} with the channel it uses.`
             : `The channel name cannot be read here. Annotate ${site.named} with the channel it uses.`,
       ...rowAbout(site, resolution.text),
       ...(resolution.variable === undefined ? {} : { meta: { variable: resolution.variable } }),
@@ -287,6 +340,63 @@ export const extractBrokers = (ctx: PassContext): void => {
   };
 
   /**
+   * The callers a publish's queue is decided at, each read, where the queue is
+   * a parameter of the function the broker's call is written in or a field its
+   * instance was built with (P267).
+   *
+   * Only a one-part address that could not be read where it is written: a
+   * queue read here is drawn here, as it always was. The job and the message
+   * are followed out along the same calls, so each reading is one caller's.
+   * Absent where there is nothing to follow.
+   */
+  const forwardedOut = (
+    call: CallExpression,
+    pattern: CallPattern,
+    spec: BrokerSpec,
+    elements: readonly AddressedElement[],
+    context: LocatorContext,
+  ): { readings: ForwardedReading[]; here: boolean } | undefined => {
+    const [only] = elements;
+    if (elements.length !== 1 || only === undefined || isResolved(only.resolution)) return undefined;
+    const [part, ...more] = addressOf(pattern);
+    if (part === undefined || more.length > 0 || 'literal' in part) return undefined;
+    const address = locatedExpressions(call, part.at, context).map(heldAt).find(waits);
+    if (address === undefined) return undefined;
+    const named = jobNameAt(call, pattern, context);
+    const carried = messageAt(call, pattern, context);
+    const walked = forwardedPublish(
+      [address, named === undefined ? undefined : heldAt(named), carried === undefined ? undefined : heldAt(carried)],
+      ctx.di,
+    );
+    const readings = walked.sites.map((site): ForwardedReading => {
+      const [queue, job, message] = site.values;
+      const element: AddressedElement =
+        queue?.kind === 'written'
+          ? readWritten(queue.expression, part, ctx.config)
+          : {
+              resolution: {
+                unresolved: 'channel-dynamic',
+                text: (queue?.expression ?? site.site).getText().slice(0, 60),
+                why:
+                  queue?.kind === 'unread'
+                    ? queue.why
+                    : `The queue is handed in from further out than ${site.through.length} calls, which is as far as it is followed.`,
+              },
+            };
+      return {
+        site: site.site,
+        elements: [{ ...element, resolution: nameForKind(element.resolution, spec.channelKind) }],
+        jobName: !namesJobs(pattern) ? undefined : job?.kind === 'written' ? jobNameOf(job.expression) : null,
+        payload: message === undefined || message.kind === 'unread' ? undefined : messageValue(message.expression),
+        undecided: site.undecided,
+        through: site.through,
+        writtenIn: undefined,
+      };
+    });
+    return { readings, here: walked.here };
+  };
+
+  /**
    * Records one publish, wherever it is written.
    *
    * `holder` is the body the call sits in: a method, a module-level function, a
@@ -304,12 +414,17 @@ export const extractBrokers = (ctx: PassContext): void => {
     owner: ClassDeclaration | undefined,
     evidence: ReceiverEvidence,
     caller?: CallerReading,
+    from?: ForwardedReading,
   ): boolean => {
     const { id: methodId, file } = caller?.holder ?? holder;
     const args = call.getArguments();
-    const { line, column } = lineColOf(caller?.site ?? call);
+    const { line, column } = lineColOf(caller?.site ?? from?.site ?? call);
     const callee = call.getExpression();
     const receiver = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
+    // The class the broker's call is written in, which says what its own
+    // receiver is; `owner` is the one the publish is drawn in.
+    const writtenIn = from === undefined ? owner : from.writtenIn;
+    const context = contextOf(receiver, writtenIn);
     const fallback =
       // A receiver that is the channel and names nothing readable is best shown
       // as the receiver: `queue.add(job)` says nothing, and `queue` is the thing
@@ -322,8 +437,22 @@ export const extractBrokers = (ctx: PassContext): void => {
     // one per entry for a call that sends a list of them.
     // A record read where a queue is named is no queue (R181).
     const elements = (
-      caller?.elements ?? readAddress(call, addressOf(pattern), pattern.payload, contextOf(receiver, owner), ctx.config, fallback)
+      caller?.elements ?? from?.elements ?? readAddress(call, addressOf(pattern), pattern.payload, context, ctx.config, fallback)
     ).map((element) => ({ ...element, resolution: nameForKind(element.resolution, spec.channelKind) }));
+
+    // A queue its callers decide is drawn where each of them decides it, and
+    // here only where nothing calls this or the walk out stopped short (P267).
+    if (from === undefined && caller === undefined) {
+      const forwarded = forwardedOut(call, pattern, spec, elements, context);
+      if (forwarded !== undefined) {
+        for (const reading of forwarded.readings) {
+          const scope = holderAt(reading.site);
+          if (scope === undefined) continue;
+          emitProducer(call, pattern, spec, scope, scope.owner, evidence, undefined, { ...reading, writtenIn: owner });
+        }
+        if (!forwarded.here) return true;
+      }
+    }
 
     // An address read from a record a parameter chooses, or that is one, is
     // decided by each caller of the function the call is written in (P268):
@@ -332,11 +461,11 @@ export const extractBrokers = (ctx: PassContext): void => {
     const [selector, ...others] = new Set(elements.flatMap((element) => (element.selector === undefined ? [] : [element.selector])));
     /** What the row says where the callers leave the address unread. */
     let decidedBy: string | undefined;
-    if (caller === undefined && selector !== undefined && others.length === 0) {
+    if (caller === undefined && from === undefined && selector !== undefined && others.length === 0) {
       // A caller that reads no more than the call does decides nothing anyone
       // can name: the call keeps its own producer and its row, as it does
       // for a caller that may run another function (R158).
-      const here = { holder, elements };
+      const here: { holder: Holder; elements: readonly AddressedElement[] } = { holder, elements };
       const sureness = (reading: typeof here): number =>
         reading === here ? 0 : reading.elements.every((element) => isResolved(element.resolution)) ? 1 : -1;
       const forwarded = forwardedFrom(selector);
@@ -348,7 +477,7 @@ export const extractBrokers = (ctx: PassContext): void => {
           const bound = new Map<TsNode, TsNode>([[selector, hop.argument]]);
           return {
             holder: owned,
-            elements: readAddress(call, addressOf(pattern), pattern.payload, { ...contextOf(receiver, owner), bound }, ctx.config, fallback),
+            elements: readAddress(call, addressOf(pattern), pattern.payload, { ...context, bound }, ctx.config, fallback),
           };
         },
         sureness,
@@ -366,25 +495,25 @@ export const extractBrokers = (ctx: PassContext): void => {
     // (P52). A value written and not read is recorded as no values, which a
     // reader further on says; a field not written at all is left out, so the
     // two stay apart: a delete naming a version nobody can read still names one
-    // (P56).
-    const recordedRead = Object.entries(pattern.recorded ?? {}).flatMap(([name, at]) => {
-      const elements = readAddress(call, [{ at }], undefined, contextOf(receiver, owner), ctx.config, '');
+    // (P56). Not read for a publish drawn at a caller: they are written where
+    // the broker's call is, about values that caller does not decide.
+    const recordedRead = Object.entries(from === undefined ? (pattern.recorded ?? {}) : {}).flatMap(([name, at]) => {
+      const elements = readAddress(call, [{ at }], undefined, context, ctx.config, '');
       const read = collapsed(elements);
       if (isResolved(read)) return [[name, [...read.names]] as const];
       return elements.some((element) => element.written !== undefined) ? [[name, [] as string[]] as const] : [];
     });
     const recorded = recordedRead.length === 0 ? undefined : Object.fromEntries(recordedRead);
 
-    const jobNameArg = pattern.nameArg === undefined ? undefined : args[pattern.nameArg];
+    const jobNameArg = jobNameAt(call, pattern, context);
     const jobName =
-      jobNameArg === undefined
-        ? undefined
-        : (() => {
-            const value = evaluateExpression(jobNameArg);
-            return value.resolved && typeof value.value === 'string' ? value.value : null;
-          })();
+      from !== undefined
+        ? from.jobName
+        : jobNameArg === undefined
+          ? (pattern.name === undefined ? undefined : null)
+          : jobNameOf(jobNameArg);
 
-    const exchangeArg = pattern.exchangeArg === undefined ? undefined : args[pattern.exchangeArg];
+    const exchangeArg = from !== undefined || pattern.exchangeArg === undefined ? undefined : args[pattern.exchangeArg];
     const exchange =
       exchangeArg === undefined
         ? undefined
@@ -430,9 +559,15 @@ export const extractBrokers = (ctx: PassContext): void => {
     };
     // A description that says where the message is written reads it per
     // element, as an expression; one that names an argument reads it once.
-    const shared = pattern.payload === undefined ? argumentPayload() : undefined;
+    // A publish drawn at a caller carries what that caller hands in, where the
+    // message was followed out to it, and what the broker's call declares where
+    // it was not.
+    const forwardedPayload =
+      from?.payload === undefined ? undefined : ctx.types.collectType(from.payload.getType(), from.payload);
+    const shared =
+      forwardedPayload ?? (pattern.payload === undefined ? argumentPayload() : undefined);
     const payloadOf = (element: AddressedElement): string | undefined =>
-      pattern.payload === undefined
+      forwardedPayload !== undefined || pattern.payload === undefined
         ? shared
         : element.payload === undefined
           ? undefined
@@ -441,7 +576,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     // The transport has the last word on the name the call wrote: an endpoint
     // the class declares is part of it, and a name the transport keeps for its
     // own signalling is not a channel at all.
-    const shaping = endpointShapingAt(spec, owner, receiver);
+    const shaping = endpointShapingAt(spec, writtenIn, receiver);
     const readable = !isUnreadable(shaping);
     /** Every channel reached, once, with the first element that reached it. */
     const reached = new Map<string, AddressedElement>();
@@ -488,7 +623,9 @@ export const extractBrokers = (ctx: PassContext): void => {
     });
     // A receiver known only from what the source says it is constructed from
     // is what the author meant rather than what a compiler checked.
-    const confidence = evidence === 'checked' ? 'static' : 'heuristic';
+    // So is one drawn at a caller through a call that may run another
+    // implementation of the method instead (R158).
+    const confidence = evidence === 'checked' && from?.undecided !== true ? 'static' : 'heuristic';
     // The label names every channel the address reaches, which is how the
     // marker path already spells a producer of several (R38). `name` is the
     // representative pattern and stays the dedupe key, but showing it alone
@@ -526,6 +663,8 @@ export const extractBrokers = (ctx: PassContext): void => {
         // How a loop around it is read (P89): a batch, or a send with none.
         ...(pattern.batch === true ? { batch: true } : {}),
         ...(pattern.perItem === true ? { perItem: true } : {}),
+        // The functions of the repository's own it was handed out of (P267).
+        ...(from === undefined ? {} : { through: [...from.through] }),
         // Which rule of the project's patterns drew it, when one did (P121).
         ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
       },

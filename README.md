@@ -945,7 +945,13 @@ prove, and the path is given so you can run it.
 - **Channels** for Kafka, RabbitMQ, BullMQ and Redis pub/sub — both clients, and
   every spelling of a subscribe verb, `pSubscribe` and `sSubscribe` among them
   (`fixtures/nest-kafka`, `fixtures/nest-rabbitmq`, `fixtures/nest-bullmq`,
-  `fixtures/nest-redis-pubsub`, `fixtures/nest-redis-v4`). socket.io is read
+  `fixtures/nest-redis-pubsub`, `fixtures/nest-redis-v4`). A queue a service
+  runs through a layer of its own is read where each caller names it: the
+  broker's call is followed out through the layer's parameters and the queue
+  its instance was built with, to the decorator that asked the container for
+  that instance and the provider that built it, and a job named after its
+  handler's class (`SendMailJob.name`) is that job at both ends
+  (`fixtures/nest-queue-wrapper`). socket.io is read
   from both ends under the namespace each end is on, whether a gateway declares
   it or the server opens it with `io.of('/live')` (`fixtures/socket-channels`,
   `fixtures/socket-namespaces`). An in-house bus is described in configuration,

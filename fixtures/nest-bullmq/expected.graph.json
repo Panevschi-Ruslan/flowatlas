@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-11-09T11:43:17.127Z",
+  "generatedAt": "2026-11-09T16:52:55.692Z",
   "nodes": [
     {
       "id": "channel:digest",
@@ -1088,7 +1088,7 @@
       "reason": "channel-dynamic",
       "hint": "The channel name cannot be read here. Annotate MailService.enqueueReport with the channel it uses.",
       "symbol": "producer:nest-bullmq#src/mail/mail.service.ts:46:12",
-      "message": "MailService.enqueueReport -> queue"
+      "message": "MailService.enqueueReport -> queueName"
     }
   ]
 }

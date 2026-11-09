@@ -124,6 +124,77 @@ export const importOf = (binding: TsNode): { module: string; exported?: string }
   return undefined;
 };
 
+/** The containers whose element type is their last type argument, read as written. */
+const KEYED_CONTAINERS: ReadonlySet<string> = new Set(['Record', 'Map', 'ReadonlyMap', 'Partial', 'Readonly']);
+const LISTS: ReadonlySet<string> = new Set(['Array', 'ReadonlyArray']);
+
+/**
+ * The type a container's annotation says each of its entries is.
+ *
+ * `Record<QueueName, Queue>`, `Map<string, Queue>`, `Queue[]`, `{ [name:
+ * string]: Queue }`: a registry of a library's clients keyed by what each one
+ * is for. A `Partial` or a `Readonly` of one is the same registry.
+ */
+const entryOf = (statement: TsNode | undefined, depth = 0): TsNode | undefined => {
+  if (statement === undefined || depth > 2) return undefined;
+  if (Node.isArrayTypeNode(statement)) return statement.getElementTypeNode();
+  if (Node.isTypeLiteral(statement)) {
+    const [index] = statement.getIndexSignatures();
+    return index?.getReturnTypeNode();
+  }
+  if (!Node.isTypeReference(statement)) return undefined;
+  const name = statement.getTypeName().getText();
+  const args = statement.getTypeArguments();
+  if (name === 'Partial' || name === 'Readonly') return entryOf(args[0], depth + 1);
+  if (KEYED_CONTAINERS.has(name)) return args.at(-1);
+  if (LISTS.has(name)) return args[0];
+  return undefined;
+};
+
+/** The declaration a name or `this.name` stands for, past an import. */
+const declaredAs = (node: TsNode): TsNode | undefined => {
+  const symbol = node.getSymbol();
+  return (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+};
+
+/**
+ * A registry and the key a value is looked up in it by: `this.queues[name]`
+ * or `this.queues.get(name)`.
+ */
+export const registryOf = (receiver: TsNode): { registry: TsNode; key: TsNode } | undefined => {
+  if (Node.isElementAccessExpression(receiver)) {
+    const key = receiver.getArgumentExpression();
+    return key === undefined ? undefined : { registry: receiver.getExpression(), key };
+  }
+  if (!Node.isCallExpression(receiver)) return undefined;
+  const callee = receiver.getExpression();
+  const [key, ...rest] = receiver.getArguments();
+  if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'get' || key === undefined || rest.length > 0) return undefined;
+  return { registry: callee.getExpression(), key };
+};
+
+/** The entry of a registry a receiver is, as the registry's annotation states it. */
+const registryEntryOf = (receiver: TsNode): TsNode | undefined => {
+  const registry = registryOf(receiver)?.registry;
+  if (registry === undefined) return undefined;
+  if (!Node.isIdentifier(registry) && !Node.isPropertyAccessExpression(registry)) return undefined;
+  const declaration = declaredAs(registry);
+  if (declaration === undefined) return undefined;
+  if (!Node.isVariableDeclaration(declaration) && !Node.isPropertyDeclaration(declaration) && !Node.isParameterDeclaration(declaration)) {
+    return undefined;
+  }
+  const annotation = declaration.getTypeNode();
+  if (annotation !== undefined) return entryOf(annotation);
+  // `new Map<string, Queue>()`, or a value asserted to be one, says the same
+  // with no annotation.
+  const initial = declaration.getInitializer();
+  if (initial !== undefined && Node.isAsExpression(initial)) return entryOf(initial.getTypeNode());
+  if (initial === undefined || !Node.isNewExpression(initial)) return undefined;
+  const name = initial.getExpression().getText();
+  const args = initial.getTypeArguments();
+  return KEYED_CONTAINERS.has(name) ? args.at(-1) : LISTS.has(name) ? args[0] : undefined;
+};
+
 /** The node that states a receiver's class: its construction, or what declared it. */
 const statementOf = (receiver: TsNode): TsNode | undefined => {
   let current = receiver;
@@ -133,6 +204,10 @@ const statementOf = (receiver: TsNode): TsNode | undefined => {
       continue;
     }
     if (Node.isNewExpression(current)) return current.getExpression();
+    // An entry of a registry of clients is the class the registry says it
+    // holds: `this.queues[name].add(…)` on `queues: Record<QueueName, Queue>`
+    // is a call on a `Queue` whether or not the package is installed (P267).
+    if (Node.isElementAccessExpression(current) || Node.isCallExpression(current)) return registryEntryOf(current);
     if (!Node.isIdentifier(current) && !Node.isPropertyAccessExpression(current)) return undefined;
     // A client constructed in one module of the repository and imported into
     // another is declared where it was constructed, and that module is the

@@ -59,6 +59,12 @@ export interface UnresolvedChannel {
    * the code works out when it runs (P268): `cache.get(queueNameOf(event))`.
    */
   readonly lookup?: { readonly collection: string; readonly key: string };
+  /**
+   * Where the walk out to whoever decides the name stopped, said as the row's
+   * advice: a publish followed out of a layer of the repository's own names
+   * the instance or the argument it could not read past (P267).
+   */
+  readonly why?: string;
 }
 
 export type ChannelResolution = ResolvedChannel | UnresolvedChannel;

@@ -13,6 +13,7 @@ import {
 import { classMembersOf } from '../di/class-members.js';
 import { functionOf, methodNamedOn } from '../di/member-call.js';
 import { evaluateExpression } from '../static-value.js';
+import { registryOf } from '../stated-origin.js';
 import { returnedExpression } from '../trace.js';
 
 /**
@@ -136,7 +137,20 @@ export type NameLocator =
    * nothing here (P52). `index` is the constructor's argument the path starts
    * in, the first by default.
    */
-  | { kind: 'receiver-constructed-path'; class: string; path: readonly string[]; index?: number };
+  | { kind: 'receiver-constructed-path'; class: string; path: readonly string[]; index?: number }
+  /**
+   * The key the receiver is looked up by in a registry whose every entry is
+   * constructed with its own key.
+   *
+   * A service that keeps one client per queue writes the queue once, where
+   * the client is made - `this.queues[name] = new Queue(name)` - and every
+   * call after that is made on `this.queues[name]`, so the key the call looks
+   * the client up by is the name the client was made with. Only where every
+   * write into the registry the class or module makes is such a construction,
+   * with the argument at `index` (the first by default) the very key it is
+   * stored under; a registry filled any other way reaches nothing here (P267).
+   */
+  | { kind: 'receiver-registry-key'; class: string; index?: number };
 
 /**
  * What one locator found at one element of the address.
@@ -581,6 +595,22 @@ const peeled = (node: TsNode): TsNode => {
       continue;
     }
     return current;
+  }
+  return current;
+};
+
+/**
+ * The value an expression is written as, past parentheses, assertions and the
+ * `const` bindings it names, with no parameter followed to its callers: what a
+ * registry is filled with and the key it is filled under (P267).
+ */
+const writtenValue = (node: TsNode): TsNode => {
+  let current = node;
+  for (let depth = 0; depth < MOST_LINKS; depth += 1) {
+    current = peeled(current);
+    const bound = constValue(current);
+    if (bound === undefined) return current;
+    current = bound;
   }
   return current;
 };
@@ -1042,6 +1072,92 @@ const annotatedName = (argument: TsNode): string | undefined => {
 const one = (expression: TsNode | undefined): LocatedSlot[] =>
   expression === undefined ? [] : [{ expression, reached: true }];
 
+/** Two expressions that name the same binding: the key a value is stored under and an argument it was made with. */
+const sameBinding = (left: TsNode | undefined, right: TsNode | undefined): boolean => {
+  if (left === undefined || right === undefined) return false;
+  const a = writtenValue(left);
+  const b = writtenValue(right);
+  if (!Node.isIdentifier(a) || !Node.isIdentifier(b)) return false;
+  const declaration = a.getSymbol()?.getDeclarations()[0];
+  return declaration !== undefined && declaration === b.getSymbol()?.getDeclarations()[0];
+};
+
+/** One write into a registry: the key and the value stored under it. */
+interface RegistryWrite {
+  readonly key: TsNode | undefined;
+  readonly value: TsNode | undefined;
+}
+
+/**
+ * Every write into a registry, where the registry is a field of the class or
+ * a binding of the module the read is written in: `registry[key] = value` and
+ * `registry.set(key, value)`, and an initialiser that is not empty, which is a
+ * write nothing here can line up with a key.
+ */
+const registryWrites = (registry: TsNode): RegistryWrite[] | undefined => {
+  const text = registry.getText();
+  const field = Node.isPropertyAccessExpression(registry) && Node.isThisExpression(registry.getExpression());
+  const scope: TsNode | undefined = field ? classesAround(registry)[0] : registry.getSourceFile();
+  if (scope === undefined) return undefined;
+  if (!field && !Node.isIdentifier(registry)) return undefined;
+  const writes: RegistryWrite[] = [];
+  scope.forEachDescendant((node) => {
+    if (Node.isBinaryExpression(node) && node.getOperatorToken().getKind() === SyntaxKind.EqualsToken) {
+      const left = node.getLeft();
+      if (Node.isElementAccessExpression(left) && left.getExpression().getText() === text) {
+        writes.push({ key: left.getArgumentExpression(), value: node.getRight() });
+      }
+      return;
+    }
+    if (Node.isCallExpression(node)) {
+      const callee = node.getExpression();
+      if (Node.isPropertyAccessExpression(callee) && callee.getName() === 'set' && callee.getExpression().getText() === text) {
+        const [key, value] = node.getArguments();
+        writes.push({ key, value });
+      }
+    }
+  });
+  const declaration = registry.getSymbol()?.getDeclarations()[0];
+  const initial =
+    declaration !== undefined && (Node.isPropertyDeclaration(declaration) || Node.isVariableDeclaration(declaration))
+      ? declaration.getInitializer()
+      : undefined;
+  if (initial !== undefined) {
+    const value = writtenValue(initial);
+    const empty =
+      (Node.isObjectLiteralExpression(value) && value.getProperties().length === 0) ||
+      (Node.isNewExpression(value) && (value.getArguments().length === 0));
+    if (!empty) writes.push({ key: undefined, value });
+  }
+  return writes;
+};
+
+/**
+ * The key a receiver is looked up by, where the registry it is looked up in
+ * holds only clients made with their own key ({@link NameLocator}
+ * `receiver-registry-key`).
+ */
+const registryKey = (site: LocatorSite, className: string, index: number): LocatedSlot[] => {
+  const receiver = receiverOf(site);
+  if (receiver === undefined) return [];
+  let read = writtenValue(receiver);
+  if (Node.isNonNullExpression(read)) read = read.getExpression();
+  const found = registryOf(read);
+  if (found === undefined) return [];
+  const writes = registryWrites(found.registry);
+  if (writes === undefined || writes.length === 0) return [];
+  const made = writes.every(({ key, value }) => {
+    const construction = value === undefined ? undefined : writtenValue(value);
+    return (
+      construction !== undefined &&
+      Node.isNewExpression(construction) &&
+      constructedName(construction) === className &&
+      sameBinding(key, construction.getArguments()[index])
+    );
+  });
+  return made ? one(found.key) : [stopped(receiver)];
+};
+
 /**
  * Where a value handed to a call was made: the call whose result it is, or is
  * read from, within the body the call is written in.
@@ -1266,6 +1382,7 @@ const resolvers: LocatorResolvers = {
     const input = made.value.getArguments()[locator.index ?? 0];
     return input === undefined ? [undefined] : walkPath(input, locator.path, made.bound);
   },
+  'receiver-registry-key': (site, locator) => registryKey(site, locator.class, locator.index ?? 0),
   'origin-call-argument': (site, locator) => {
     const producer = Node.isCallExpression(site) ? producingCall(site, locator.call) : undefined;
     const argument = producer?.getArguments()[locator.index ?? 0];
