@@ -101,12 +101,12 @@ describe('the type the source states for a receiver', () => {
     ).toBeNull();
   });
 
-  it('says nothing about a receiver that is not a name', () => {
+  it('says nothing about a receiver that is not a name and states no type', () => {
     expect(
       statedOrigin(
         receiverIn(`
           import { Kysely } from 'kysely';
-          declare const of: (n: number) => Kysely<unknown>;
+          declare const of: any;
           const rows = of(1).selectFrom('asset');
         `),
       ),
@@ -293,6 +293,60 @@ describe('a Prisma client whose generated code does not exist', () => {
       `),
     );
     expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('reads a client a method of the repository returns, held or called in place (P277)', () => {
+    const held = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        class ClientFactory {
+          private shared?: PrismaClient;
+          client(): PrismaClient { return (this.shared ??= new PrismaClient()); }
+        }
+        export const all = (factory: ClientFactory) => {
+          const db = factory.client();
+          return db.order.findMany();
+        };
+      `),
+    );
+    expect(held?.package).toBe('@prisma/client');
+    const inPlace = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        interface Registry { db(): Promise<PrismaClient>; }
+        declare const registry: Registry;
+        export const all = async () => (await registry.db()).order.findMany();
+      `),
+    );
+    expect(inPlace?.package).toBe('@prisma/client');
+  });
+
+  it('reads a return type that is a type parameter as the type the call hands it (P277)', () => {
+    const origin = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        abstract class Base { protected pick<T>(): T { return undefined as T; } }
+        export class Orders extends Base {
+          all() {
+            const db = this.pick<PrismaClient>();
+            return db.order.findMany();
+          }
+        }
+      `),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('does not read a method call whose method writes no return type (P277)', () => {
+    expect(
+      statedOrigin(
+        clientIn(`
+          import { PrismaClient } from '@prisma/client';
+          class ClientFactory { client() { return new PrismaClient(); } }
+          export const all = (factory: ClientFactory) => factory.client().order.findMany();
+        `),
+      ),
+    ).toBeNull();
   });
 
   it('does not read a call of a function that writes no return type', () => {

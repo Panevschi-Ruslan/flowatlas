@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T17:50:50.948Z",
+  "builtAt": "2026-11-09T22:27:53.008Z",
   "configHash": "fd704d3b0785",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 827,
+      "durationMs": 0,
       "packages": {
         "name": "start-functions-assistant",
         "runtime": [
@@ -27,11 +27,11 @@
       "repo": "./storefront",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 12,
-      "edges": 9,
+      "nodes": 16,
+      "edges": 12,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 672,
+      "durationMs": 0,
       "packages": {
         "name": "start-functions-storefront",
         "runtime": [
@@ -77,8 +77,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 23,
-    "edges": 14,
+    "nodes": 27,
+    "edges": 17,
     "types": 0,
     "missed": 5,
     "sites": 5,

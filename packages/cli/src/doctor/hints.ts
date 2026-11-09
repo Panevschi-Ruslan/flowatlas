@@ -417,7 +417,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'entry-http-routes-unplaced': () =>
     'Routes were read and only some of them could be placed at an address, so the ways in recorded for that service are a part of what it serves rather than the whole of it. The rows above name each application whose base could not be read.',
   'mcp-name-dynamic': () =>
-    'An MCP server registers a tool, a prompt or a resource under a name decided at run time - usually a loop over a registry of them - so what a client may ask the server for is not drawn. Register each under a name written as text.',
+    'An MCP server registers a tool, a prompt or a resource under a name decided at run time - usually a loop over a registry of them - so what a client may ask the server for is not drawn, or is drawn only as far as the source states it: a name written in part as a pattern, a name a record carries from the records the repository writes. Register each under a name written as text.',
   'route-registry-unread': () =>
     'One mount installs every application in a collection, and nothing here puts an application into that collection, so however many routes it installs are missing. Put them in a list, or register each on the application it is mounted on with a literal path.',
 

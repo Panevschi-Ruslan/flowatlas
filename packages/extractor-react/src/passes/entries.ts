@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import {
   addEntryWrapping,
+  declarationOf,
   functionAt,
   inlineFunction,
   isFunctionHandler,
@@ -13,10 +14,11 @@ import {
   recordStatedSignatures,
   type EntryHandler,
   type EntryNode,
+  normalizeFilePath,
   startLineOf,
 } from '@flowatlas/core';
-import type { CallExpression } from 'ts-morph';
-import { Node } from 'ts-morph';
+import type { CallExpression, Node as TsNode, Symbol as TsSymbol } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { definePass } from './types.js';
@@ -114,6 +116,144 @@ const enclosingIndexed = (
   return undefined;
 };
 
+/** The variable a way in reached by import is declared as, where the index keeps no function for it (P277). */
+const declarationAt = (ctx: ReactExtractContext, entry: EntryNode): TsNode | undefined => {
+  const sourceFile = ctx.project.getSourceFile(join(ctx.repoDir, entry.file));
+  return sourceFile?.getVariableDeclarations().find((declaration) => startLineOf(declaration) === entry.line);
+};
+
+/** A function written in the repository, the one a callee names. */
+const repositoryFunction = (callee: TsNode): TsNode | undefined => {
+  const declaration = declarationOf(callee);
+  if (declaration === undefined || declaration.getSourceFile().getFilePath().includes('/node_modules/')) return undefined;
+  const fn = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
+  return fn !== undefined && (Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn)) ? fn : undefined;
+};
+
+/** Where a value is handed to a call: the call, the argument's place, and the key of the object it is under. */
+interface Handing {
+  readonly call: CallExpression;
+  readonly at: number;
+  readonly key?: string;
+}
+
+/** How a reference is handed to a call, directly or under a key of an object written as the argument. */
+const handingOf = (reference: TsNode): Handing | undefined => {
+  let at: TsNode = reference;
+  let key: string | undefined;
+  const parent = at.getParent();
+  if (parent !== undefined && (Node.isShorthandPropertyAssignment(parent) || (Node.isPropertyAssignment(parent) && parent.getInitializer() === at))) {
+    key = parent.getName();
+    at = parent.getParent() as TsNode;
+  }
+  const call = at.getParent();
+  if (call === undefined || !Node.isCallExpression(call)) return undefined;
+  const index = call.getArguments().indexOf(at);
+  return index < 0 ? undefined : { call, at: index, ...(key === undefined ? {} : { key }) };
+};
+
+/**
+ * The calls a function makes of what it is handed in one place: a parameter
+ * called by name, `run(...)`, a member of a destructured parameter, `({ run })`,
+ * or a member of a parameter called through it, `options.run(...)`.
+ */
+const callsOfHanded = (fn: TsNode, handing: Handing): CallExpression[] => {
+  if (!Node.isFunctionDeclaration(fn) && !Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn)) return [];
+  const parameter = fn.getParameters()[handing.at];
+  if (parameter === undefined) return [];
+  const name = parameter.getNameNode();
+  let symbol: TsNode | undefined;
+  let through: string | undefined;
+  if (handing.key === undefined) {
+    if (!Node.isIdentifier(name)) return [];
+    symbol = name;
+  } else if (Node.isObjectBindingPattern(name)) {
+    const element = name.getElements().find((each) => (each.getPropertyNameNode() ?? each.getNameNode()).getText() === handing.key);
+    const bound = element?.getNameNode();
+    if (bound === undefined || !Node.isIdentifier(bound)) return [];
+    symbol = bound;
+  } else if (Node.isIdentifier(name)) {
+    symbol = name;
+    through = handing.key;
+  }
+  const wanted = symbol?.getSymbol();
+  if (wanted === undefined) return [];
+  return fn.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => {
+    const callee = call.getExpression();
+    if (through === undefined) return Node.isIdentifier(callee) && callee.getSymbol() === wanted;
+    return Node.isPropertyAccessExpression(callee) && callee.getName() === through && callee.getExpression().getSymbol() === wanted;
+  });
+};
+
+/**
+ * Edges to a way in reached by import from where a function of the repository
+ * calls it after being handed it (P277): `createServerClient({
+ * runOnServer: run })`, whose closure calls `runOnServer(...)`, calls `run`.
+ * The edge is drawn from the function that makes the call, `static` where
+ * every call of the factory hands it this way in and `heuristic` where some
+ * hand it something else, since the call reaches whichever it was handed.
+ */
+const drawThroughParameters = (ctx: ReactExtractContext, entry: EntryNode, declared: TsNode): void => {
+  const nameNode = Node.isVariableDeclaration(declared) || Node.isFunctionDeclaration(declared) ? declared.getNameNode() : undefined;
+  if (nameNode === undefined || !Node.isIdentifier(nameNode)) return;
+  const own = nameNode.getSymbol();
+  for (const reference of nameNode.findReferencesAsNodes()) {
+    const handing = handingOf(reference);
+    if (handing === undefined) continue;
+    const fn = repositoryFunction(handing.call.getExpression());
+    if (fn === undefined) continue;
+    const calls = callsOfHanded(fn, handing);
+    if (calls.length === 0) continue;
+    // What every call of the factory hands in the same place.
+    const handedElsewhere = callsOfFunction(fn).some((other) => {
+      const handed = handedSymbol(other, handing);
+      return (handed?.getAliasedSymbol() ?? handed) !== own;
+    });
+    const site = `${fileOfReference(ctx, handing.call)}:${startLineOf(handing.call)}`;
+    for (const call of calls) {
+      const caller = enclosingIndexed(ctx, call);
+      if (caller === undefined) continue;
+      ctx.ensureFunctionNode(caller.fn);
+      ctx.builder.addEdge({
+        from: caller.id,
+        to: entry.id,
+        type: 'calls',
+        confidence: handedElsewhere ? 'heuristic' : 'static',
+        file: caller.file,
+        line: startLineOf(call),
+        meta: { through: call.getExpression().getText().slice(0, 60), handedAt: site },
+      });
+    }
+  }
+};
+
+/** The symbol a call hands in one place, directly or under a key of an object written there. */
+const handedSymbol = (call: CallExpression, handing: Handing): TsSymbol | undefined => {
+  const argument = call.getArguments()[handing.at];
+  if (argument === undefined) return undefined;
+  if (handing.key === undefined) return argument.getSymbol();
+  if (!Node.isObjectLiteralExpression(argument)) return undefined;
+  const property = argument.getProperty(handing.key);
+  if (property !== undefined && Node.isShorthandPropertyAssignment(property)) return property.getValueSymbol();
+  return property !== undefined && Node.isPropertyAssignment(property) ? property.getInitializer()?.getSymbol() : undefined;
+};
+
+/** Every call of a function of the repository, by the name it is declared under. */
+const callsOfFunction = (fn: TsNode): CallExpression[] => {
+  const holder = Node.isFunctionDeclaration(fn) ? fn : fn.getParent();
+  const nameNode = holder !== undefined && (Node.isFunctionDeclaration(holder) || Node.isVariableDeclaration(holder)) ? holder.getNameNode() : undefined;
+  if (nameNode === undefined || !Node.isIdentifier(nameNode)) return [];
+  const calls: CallExpression[] = [];
+  for (const reference of nameNode.findReferencesAsNodes()) {
+    const parent = reference.getParent();
+    if (parent !== undefined && Node.isCallExpression(parent) && parent.getExpression() === reference) calls.push(parent);
+  }
+  return calls;
+};
+
+const fileOfReference = (ctx: ReactExtractContext, node: TsNode): string =>
+  normalizeFilePath(node.getSourceFile().getFilePath(), ctx.repoDir);
+
 /**
  * Turns what the entry adapters found into nodes and edges.
  *
@@ -183,6 +323,16 @@ export const entriesPass = definePass('entries', (ctx: ReactExtractContext) => {
       // could not be named at all: the boundary is real and who crosses it is
       // the question being asked.
       const exported = ctx.functions.at(entry.file, entry.line);
+      // Handed to a function of the repository that calls it, `createClient({
+      // runOnServer })`, it is called where that function calls its parameter (P277).
+      // The handler written on the declaration's own line is indexed at the
+      // same position, so the position alone does not say which one is meant.
+      const atPosition = exported?.fn.declaration;
+      const declared =
+        atPosition !== undefined && (Node.isVariableDeclaration(atPosition) || Node.isFunctionDeclaration(atPosition))
+          ? atPosition
+          : declarationAt(ctx, entry);
+      if (declared !== undefined) drawThroughParameters(ctx, entry, declared);
       if (exported === undefined) continue;
       for (const call of callSitesOf(exported)) {
         const caller = enclosingIndexed(ctx, call);

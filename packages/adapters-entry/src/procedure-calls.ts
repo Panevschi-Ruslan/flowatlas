@@ -20,14 +20,18 @@ import {
   type TypeRefField,
   type Unresolved,
 } from '@flowatlas/core';
-import type { ArrayLiteralExpression, CallExpression, Node as TsNode, SourceFile, Type } from 'ts-morph';
-import { Node } from 'ts-morph';
+import type { ArrayLiteralExpression, CallExpression, NewExpression, Node as TsNode, SourceFile, Type } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import {
   PROCEDURE_CLIENTS,
   type ProcedureClient,
   type ProcedureLink,
   type ProcedureOperation,
+  type UntypedOperation,
 } from './procedure-clients.js';
+
+/** What makes a proxy: a factory's call, or a class of the client's package built with `new` (P277). */
+type Made = CallExpression | NewExpression;
 
 /** How far a name is followed to the value it was assigned, before giving up. */
 const MAX_ALIASES = 4;
@@ -122,8 +126,8 @@ const unwrap = (node: TsNode): TsNode => {
   return at;
 };
 
-/** The name a call is made by: `f()` is `f`, and `a.b.f()` is `f` too. */
-const calleeName = (call: CallExpression): string | undefined => {
+/** The name a call is made by: `f()` is `f`, and `a.b.f()` is `f` too; `new A()` is `A`. */
+const calleeName = (call: Made): string | undefined => {
   const callee = unwrap(call.getExpression());
   if (Node.isIdentifier(callee)) return callee.getText();
   if (Node.isPropertyAccessExpression(callee)) return callee.getName();
@@ -316,9 +320,9 @@ const factoryOf = (
   factories: readonly string[],
   provided?: ProvidedValue,
   depth = 0,
-): CallExpression | undefined => {
+): Made | undefined => {
   const at = unwrap(expression);
-  if (Node.isCallExpression(at)) {
+  if (Node.isCallExpression(at) || Node.isNewExpression(at)) {
     const name = calleeName(at);
     return name !== undefined && factories.includes(name) ? at : undefined;
   }
@@ -599,6 +603,7 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading, prov
     if (!Node.isNewExpression(made) && !Node.isCallExpression(made)) {
       return { kind: 'dynamic', protocol: link.protocol, why: 'the link is not built here' };
     }
+    if (link.urlAt !== undefined) return urlHandedTo(made, link, link.urlAt);
     const options = made.getArguments()[link.optionsAt];
     const written = options === undefined ? undefined : valueOf(options, provided);
     if (written === undefined || !Node.isObjectLiteralExpression(written)) {
@@ -608,6 +613,39 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading, prov
     const property = written.getProperty(urlKey);
     if (property === undefined) return { kind: 'dynamic', protocol: link.protocol, why: `its options name no ${urlKey}` };
     const value = Node.isPropertyAssignment(property) ? property.getInitializer() : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : undefined;
+    if (Node.isMethodDeclaration(property)) {
+      return { kind: 'dynamic', protocol: link.protocol, why: `its ${urlKey} is worked out when each request is sent` };
+    }
+    return addressFrom(value, link, `its ${urlKey}`);
+  };
+
+  /**
+   * The URL a link is handed as an argument of its own (P277): a transport
+   * built `new StreamableHTTPClientTransport(new URL(url))`, the `new URL`
+   * read as the text or setting it is made from, and one handed a base read
+   * as the path under it.
+   */
+  const urlHandedTo = (made: Made, link: ProcedureLink, at: number): LinkReading => {
+    const argument = made.getArguments()[at];
+    let value = argument === undefined ? undefined : valueOf(argument, provided);
+    if (value !== undefined && Node.isNewExpression(value) && unwrap(value.getExpression()).getText() === 'URL') {
+      const [path, base] = value.getArguments();
+      if (base !== undefined && path !== undefined) {
+        const root = addressFrom(base, link, 'the base of its URL');
+        const text = resolveStaticString(unwrap(path));
+        if (root.kind !== 'read') return root;
+        if (text === null || text.envRefs.length > 0 || text.guessed === true) {
+          return { kind: 'dynamic', protocol: link.protocol, why: 'the path of its URL is not written as text' };
+        }
+        return { ...root, address: { ...root.address, path: normalizePath(`${root.address.path ?? ''}/${routeOf(text.value)}`) } };
+      }
+      value = path;
+    }
+    return addressFrom(value, link, 'its URL');
+  };
+
+  /** The address a value holding a link's URL names, followed one call away, or why it names none. */
+  const addressFrom = (value: TsNode | undefined, link: ProcedureLink, what: string): LinkReading => {
     // A parameter of the configuring method or factory the link is built in
     // is what the repository hands it, one call away (P256).
     const stated = value === undefined ? undefined : unwrap(value);
@@ -617,12 +655,14 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading, prov
       if (handed === undefined) break;
       url = handed;
     }
-    if (url === undefined || Node.isArrowFunction(url) || Node.isFunctionExpression(url) || Node.isMethodDeclaration(property)) {
-      return { kind: 'dynamic', protocol: link.protocol, why: `its ${urlKey} is worked out when each request is sent` };
+    if (url === undefined || Node.isArrowFunction(url) || Node.isFunctionExpression(url)) {
+      return { kind: 'dynamic', protocol: link.protocol, why: `${what} is worked out when each request is sent` };
     }
     // A URL built over a parameter is read piece by piece, each followed one call away (P259).
     const address = piecewise(url, provided, reading.addressOf) ?? reading.addressOf(url);
-    if (address.path === null) return { kind: 'dynamic', protocol: link.protocol, why: 'its URL is not written as text or a setting' };
+    if (address.path === null) {
+      return { kind: 'dynamic', protocol: link.protocol, why: what === 'its url' ? 'its URL is not written as text or a setting' : `${what} is not written as text or a setting` };
+    }
     return { kind: 'read', protocol: link.protocol, address };
   };
 
@@ -681,8 +721,10 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading, prov
    * made from: `createTanstackQueryUtils(client)` to `createORPCClient(link)` to
    * `new RPCLink({ url })`.
    */
-  const linkOf = (factory: CallExpression, depth = 0): LinkReading | undefined => {
+  const linkOf = (factory: Made, depth = 0): LinkReading | undefined => {
     if (links.length === 0 || depth >= MAX_ALIASES) return undefined;
+    const connected = connectedTo(factory);
+    if (connected !== undefined) return connected;
     for (const argument of factory.getArguments()) {
       const found = readSending(argument, 0);
       if (found !== undefined) return found;
@@ -693,6 +735,34 @@ const linkReader = (client: ProcedureClient, reading: ProcedureCallReading, prov
       }
     }
     return undefined;
+  };
+
+  /**
+   * The links a client made with none is handed afterwards (P277),
+   * `client.connect(transport)`: every such call on a value the factory made,
+   * in the repository's own sources, read as the factory's own argument would
+   * be. One address for all of them, or why there is none.
+   */
+  let connects: CallExpression[] | undefined;
+  const connectedTo = (factory: Made): LinkReading | undefined => {
+    const method = client.connect;
+    if (method === undefined) return undefined;
+    connects ??= reading.sources().flatMap((source) =>
+      source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => {
+        const callee = unwrap(call.getExpression());
+        return Node.isPropertyAccessExpression(callee) && callee.getName() === method && call.getArguments().length > 0;
+      }),
+    );
+    const proxies = [...client.proxies, ...(client.untyped?.proxies ?? [])];
+    const readings: LinkReading[] = [];
+    for (const call of connects) {
+      const callee = unwrap(call.getExpression());
+      if (!Node.isPropertyAccessExpression(callee) || factoryOf(callee.getExpression(), proxies, provided) !== factory) continue;
+      const [handed] = call.getArguments();
+      const read = handed === undefined ? undefined : readSending(handed, 0);
+      if (read !== undefined) readings.push(read);
+    }
+    return together(readings, links[0]?.protocol ?? client.name, 'it is connected to links that send to different addresses');
   };
 
   /**
@@ -856,10 +926,12 @@ interface Asked {
   readonly operation: string;
   readonly shape: ProcedureOperation;
   readonly path: Path;
-  readonly factory?: CallExpression;
+  readonly factory?: Made;
   /** The procedure's declaration, where its value could be followed (P58). */
   readonly procedureAt?: string;
   readonly inProcess?: boolean;
+  /** What the server's entry key puts in front of the name (P277). */
+  readonly prefix?: string;
 }
 
 /**
@@ -867,11 +939,14 @@ interface Asked {
  * `client.query('orders.list', input)`. A computed one is a path with a
  * computed step, said as such.
  */
-const writtenPath = (call: CallExpression, at: number, separator: string): Path => {
-  const argument = call.getArguments()[at];
+const writtenPath = (call: CallExpression, operation: UntypedOperation, separator: string): Path => {
+  const handed = call.getArguments()[operation.pathAt];
+  // The path under a key of the object handed in, `callTool({ name: 'x' })` (P277).
+  const argument =
+    operation.pathKey === undefined || handed === undefined ? handed : memberIn(objectIn(handed), operation.pathKey);
   const read = argument === undefined ? null : resolveStaticString(unwrap(argument));
   if (read === null || read.envRefs.length > 0 || read.guessed === true || read.value === '') {
-    return { root: call, names: [`[${argument?.getText().slice(0, 40) ?? '?'}]`], dynamic: true };
+    return { root: call, names: [`[${(argument ?? handed)?.getText().slice(0, 40) ?? '?'}]`], dynamic: true };
   }
   return { root: call, names: read.value.split(separator), dynamic: false };
 };
@@ -904,8 +979,8 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
   const provided = providedValues(() => reading.sources());
   const readers = new Map(clients.map((client) => [client, linkReader(client, reading, provided)]));
   /** A link read once per proxy factory, however many requests go through it. */
-  const links = new Map<CallExpression, LinkReading | undefined>();
-  const linkFor = (factory: CallExpression, client: ProcedureClient): LinkReading | undefined => {
+  const links = new Map<Made, LinkReading | undefined>();
+  const linkFor = (factory: Made, client: ProcedureClient): LinkReading | undefined => {
     if (!links.has(factory)) {
       const reader = readers.get(client);
       links.set(factory, reader === undefined ? undefined : (reader.linkOf(factory) ?? reader.repositoryLinkOf()));
@@ -920,7 +995,7 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
     if (reading.readAlready?.(file, at.line, at.column) === true) return;
     read.push({ file, line: at.line, call });
     const id = makeLeafId(reading.type, reading.repo, file, at.line, at.column);
-    const procedure = path.dynamic || path.names.length === 0 ? null : path.names.join(client.separator);
+    const procedure = path.dynamic || path.names.length === 0 ? null : `${asked.prefix ?? ''}${path.names.join(client.separator)}`;
     const argument = shape.inputAt === undefined ? undefined : call.getArguments()[shape.inputAt];
     const options = argument === undefined ? undefined : unwrap(argument);
     const input =
@@ -1008,7 +1083,7 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
         file,
         line: at.line,
         reason: 'procedure-path-dynamic',
-        hint: 'A step of the path is computed, so the procedure it reaches cannot be named. Write each step as a name.',
+        hint: client.dynamicHint ?? 'A step of the path is computed, so the procedure it reaches cannot be named. Write each step as a name.',
         symbol: call.getText().slice(0, 80),
       });
     }
@@ -1061,8 +1136,16 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
     const untyped = client.untyped !== undefined && Object.hasOwn(client.untyped.operations, operation) ? client.untyped.operations[operation] : undefined;
     if (untyped !== undefined && client.untyped !== undefined) {
       const factory = factoryOf(callee.getExpression(), client.untyped.proxies, provided);
-      if (factory !== undefined) {
-        return { operation, shape: untyped, path: writtenPath(node, untyped.pathAt, client.separator), factory };
+      // A class built with `new` is the client's only where its package's (P277).
+      const own = factory !== undefined && (!Node.isNewExpression(factory) || importedFrom(unwrap(factory.getExpression()), client.packages));
+      if (factory !== undefined && own) {
+        return {
+          operation,
+          shape: untyped,
+          path: writtenPath(node, untyped, client.separator),
+          factory,
+          ...(untyped.prefix === undefined ? {} : { prefix: untyped.prefix }),
+        };
       }
     }
     const shape = Object.hasOwn(client.operations, operation) ? client.operations[operation] : undefined;

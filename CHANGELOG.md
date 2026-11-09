@@ -88,6 +88,34 @@ only one of them moved.
   every handler names another job is the finding `job-no-handler` (info); a
   queue with a handler that takes every job is not asked about, and neither is
   a handler of a job nothing adds.
+- **An MCP client joined to the server's tools, MCP names read as far as the
+  source states them, a server function reached through a client the
+  repository builds, and a written return type read for a method call
+  (P277).** An MCP client - `new Client(...)` from the SDK, connected with
+  `client.connect(transport)` to a `StreamableHTTPClientTransport` or
+  `SSEClientTransport` handed its URL - asking with
+  `client.callTool({ name, arguments })`, `client.getPrompt({ name })` or
+  `client.readResource({ uri })` is a request joined by the procedure join to
+  the `mcp:tool:`, `mcp:prompt:` or `mcp:resource:` way in of its own service,
+  of the service its transport's URL names, or of the one `apiTarget` names;
+  a name worked out at run time is `procedure-path-dynamic`, a name nothing
+  declares `procedure-not-found`, and a tool asked for as a prompt is
+  refused. A resource is now keyed by the URI a client reads it with, a
+  `ResourceTemplate`'s URI a pattern every URI it matches reaches. A name
+  written in part, `` `find${collection}` ``, is a pattern named by its
+  written text, joined `heuristic`, with an info `mcp-name-dynamic` row naming
+  the part the run decides; a name a record carries, `registerTool(item.wireName,
+  ...)` in a loop, is read from the records the repository writes with that
+  member as text beside the definition the registration dispatches to
+  (`{ wireName: 'countOrders', tool: countOrdersTool }`), each tool drawn where
+  its builder defines it (`defineTool({...}).handler(fn)`), its handler behind
+  it as sure as the guess that the configuration serves it. A server function
+  or server action handed to a function of the repository that calls it,
+  `createOrdersClient({ runOnServer })`, is called from that function, `static`
+  where every call of it hands the same way in. A method of the repository
+  that writes its return type, `this.factory.client()` or
+  `await Registry.get().db()`, states the client's type for a call written in
+  place and for a name holding its value, as a function called by name did.
 
 - **A handler behind its wrapper, a request handed in as one object, and a
   GraphQL server made into a Lambda (P269).** A `pages/api` default export

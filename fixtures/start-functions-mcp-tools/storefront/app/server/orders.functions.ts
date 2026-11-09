@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 import { requireSession } from './auth';
+import { createOrdersClient } from './client';
 
 interface PlaceOrder {
   sku: string;
@@ -23,6 +24,11 @@ async function archiveOldOrders(): Promise<{ archived: number }> {
 const archiveOrders = createServerFn({ method: 'POST' }).handler(archiveOldOrders);
 
 export const archiveNow = async (): Promise<{ archived: number }> => archiveOrders();
+
+/** Handed to a client the application builds, which calls it: an edge from the client's maker (P277). */
+const runOrders = createServerFn({ method: 'POST' }).handler(async ({ data }) => ({ ran: data }));
+
+export const ordersClient = createOrdersClient({ runOnServer: runOrders });
 
 /** Made inside an object, so nothing names what the browser would import: a row. */
 export const refunds = {

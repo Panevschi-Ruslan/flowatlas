@@ -1,8 +1,46 @@
 {
   "schemaVersion": 7,
   "repo": "nest-prisma-base-url",
-  "generatedAt": "2026-11-09T17:44:55.515Z",
+  "generatedAt": "2026-11-09T22:24:36.650Z",
   "nodes": [
+    {
+      "id": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:36:12",
+      "type": "db_query",
+      "label": "read coupons",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 36,
+      "meta": {
+        "op": "read",
+        "table": "coupons",
+        "tables": [
+          "coupons"
+        ],
+        "package": "@prisma/client",
+        "method": "findMany",
+        "receiver": "this.factory.client().coupon",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:42:12",
+      "type": "db_query",
+      "label": "read coupons",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 42,
+      "meta": {
+        "op": "read",
+        "table": "coupons",
+        "tables": [
+          "coupons"
+        ],
+        "package": "@prisma/client",
+        "method": "count",
+        "receiver": "db.coupon",
+        "source": "receiver-prop"
+      }
+    },
     {
       "id": "db_query:nest-prisma-base-url#src/coupons/coupon-codes.ts:17:25",
       "type": "db_query",
@@ -228,6 +266,108 @@
         "controllers": [],
         "providers": [],
         "exports": []
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:ClientFactory",
+      "type": "provider",
+      "label": "ClientFactory",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:ClientFactory.client",
+      "type": "method",
+      "label": "ClientFactory.client",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-prisma-base-url#PrismaService"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit",
+      "type": "provider",
+      "label": "CouponAudit",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 31,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issued",
+      "type": "method",
+      "label": "CouponAudit.issued",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issuedTo",
+      "type": "method",
+      "label": "CouponAudit.issuedTo",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "issuedTo",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry",
+      "type": "provider",
+      "label": "Registry",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 18,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry.db",
+      "type": "method",
+      "label": "Registry.db",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-prisma-base-url#PrismaService"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry.get",
+      "type": "method",
+      "label": "Registry.get",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-prisma-base-url#Registry"
+        }
       }
     },
     {
@@ -460,10 +600,10 @@
       "repo": "nest-prisma-base-url",
       "meta": {
         "stats": {
-          "files": 8,
-          "filesRead": 8,
+          "files": 9,
+          "filesRead": 9,
           "filesUnreadable": 0,
-          "classes": 6,
+          "classes": 9,
           "skippedExternalCalls": {
             "@nestjs/common": 2
           }
@@ -497,6 +637,22 @@
     }
   ],
   "edges": [
+    {
+      "from": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:36:12",
+      "to": "table:nest-prisma-base-url#coupons",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 36
+    },
+    {
+      "from": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:42:12",
+      "to": "table:nest-prisma-base-url#coupons",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 42
+    },
     {
       "from": "db_query:nest-prisma-base-url#src/coupons/coupon-codes.ts:17:25",
       "to": "table:nest-prisma-base-url#coupons",
@@ -623,6 +779,62 @@
       "line": 4
     },
     {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issued",
+      "to": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:42:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 42
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issued",
+      "to": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry.db",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 41,
+      "params": [],
+      "returns": "type:nest-prisma-base-url#PrismaService"
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issued",
+      "to": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry.get",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 41,
+      "params": [],
+      "returns": "type:nest-prisma-base-url#Registry"
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issuedTo",
+      "to": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:36:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 36
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issuedTo",
+      "to": "nest-prisma-base-url#src/coupons/coupon-audit.ts:ClientFactory.client",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 36,
+      "params": [],
+      "returns": "type:nest-prisma-base-url#PrismaService"
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry.db",
+      "to": "nest-prisma-base-url#src/coupons/coupon-audit.ts:ClientFactory.client",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 27,
+      "params": [],
+      "returns": "type:nest-prisma-base-url#PrismaService"
+    },
+    {
       "from": "nest-prisma-base-url#src/coupons/coupon-codes.ts:codesInUse",
       "to": "db_query:nest-prisma-base-url#src/coupons/coupon-codes.ts:17:25",
       "type": "calls",
@@ -734,47 +946,75 @@
         "declKind": "external",
         "package": "@nestjs/common"
       }
+    },
+    "type:nest-prisma-base-url#PrismaService": {
+      "name": "PrismaService",
+      "kind": "object",
+      "declaredIn": "nest-prisma-base-url#src/prisma/prisma.service.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "class",
+        "exported": true,
+        "extends": [
+          "unknown"
+        ]
+      }
+    },
+    "type:nest-prisma-base-url#Registry": {
+      "name": "Registry",
+      "kind": "object",
+      "declaredIn": "nest-prisma-base-url#src/coupons/coupon-audit.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
     }
   },
   "unresolved": [
     {
-      "file": "src/coupons/coupons.service.ts",
+      "file": "src/coupons/coupon-audit.ts",
       "line": 12,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "TE.TaskEither<string, DbCoupon[]>",
-      "meta": {
-        "cause": "module-not-installed",
-        "package": "fp-ts"
-      }
+      "symbol": "any"
     },
     {
-      "file": "src/coupons/coupons.service.ts",
-      "line": 13,
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 35,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
+    {
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 36,
       "reason": "call-dynamic-receiver",
       "level": "info",
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
-      "symbol": "CouponsService.list -> TE.tryCatch",
+      "symbol": "CouponAudit.issuedTo -> this.factory.client().coupon.findMany",
       "meta": {
         "causes": [
           {
             "cause": "untyped-value",
-            "sites": 4,
+            "sites": 6,
             "samples": [
+              {
+                "file": "src/coupons/coupon-audit.ts",
+                "line": 36,
+                "symbol": "CouponAudit.issuedTo -> this.factory.client().coupon.findMany"
+              },
+              {
+                "file": "src/coupons/coupon-audit.ts",
+                "line": 42,
+                "symbol": "CouponAudit.issued -> db.coupon.count"
+              },
               {
                 "file": "src/coupons/coupons.service.ts",
                 "line": 14,
                 "symbol": "CouponsService.list -> this.prisma.coupon.findMany"
-              },
-              {
-                "file": "src/coupons/coupons.service.ts",
-                "line": 20,
-                "symbol": "CouponsService.issue -> this.prisma.coupon.create"
-              },
-              {
-                "file": "src/coupons/coupons.service.ts",
-                "line": 24,
-                "symbol": "CouponsService.revoke -> this.prisma.coupon.deleteMany"
               }
             ],
             "files": [
@@ -806,7 +1046,18 @@
           }
         ]
       },
-      "sites": 6
+      "sites": 8
+    },
+    {
+      "file": "src/coupons/coupons.service.ts",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "TE.TaskEither<string, DbCoupon[]>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "fp-ts"
+      }
     },
     {
       "file": "src/coupons/coupons.service.ts",

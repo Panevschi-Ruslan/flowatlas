@@ -67,6 +67,12 @@ export interface ProcedureLink {
   readonly made?: 'new' | 'call';
   /** The argument of the constructor or the call holding the options. */
   readonly optionsAt: number;
+  /**
+   * The argument holding the URL itself rather than options naming it (P277):
+   * an MCP transport, `new StreamableHTTPClientTransport(new URL(url))`. A
+   * `new URL(...)` written there is read as the URL it makes.
+   */
+  readonly urlAt?: number;
   /** The key of the options holding the URL. A link that names none carries no address. */
   readonly urlKey?: string;
   /**
@@ -145,11 +151,37 @@ export interface ProcedureClient {
    * `client.query('orders.list', input)`.
    */
   readonly untyped?: {
+    /**
+     * The factories, or the classes built with `new` and imported from one of
+     * `packages` (P277): an MCP SDK's `new Client(info)`.
+     */
     readonly proxies: readonly string[];
-    readonly operations: Readonly<Record<string, ProcedureOperation & { readonly pathAt: number }>>;
+    readonly operations: Readonly<Record<string, UntypedOperation>>;
   };
+  /**
+   * The method a client made with no link is handed one by afterwards (P277):
+   * `client.connect(transport)`. Its first argument is read as a link the
+   * factory could have been handed.
+   */
+  readonly connect?: string;
+  /** What a row about a name decided at run time tells the reader to do, where the family's own words differ. */
+  readonly dynamicHint?: string;
   /** Functions handed a procedure by its value (P58). */
   readonly callers?: readonly ProcedureCaller[];
+}
+
+/** An operation of an untyped client, which names the path as an argument (P242). */
+export interface UntypedOperation extends ProcedureOperation {
+  /** The argument holding the path. */
+  readonly pathAt: number;
+  /** The key of that argument holding the path, where it is an object: `callTool({ name })` (P277). */
+  readonly pathKey?: string;
+  /**
+   * What the server's entry key puts in front of the name (P277): an MCP tool
+   * is the entry `mcp:tool:<name>`, so `callTool({ name: 'x' })` asks for
+   * `mcp:tool:x`.
+   */
+  readonly prefix?: string;
 }
 
 const QUERY: ProcedureOperation = { call: 'query', inputAt: 0 };
@@ -322,5 +354,45 @@ export const ORPC_CLIENT: ProcedureClient = {
   callers: [{ name: 'call', procedureAt: 0, inputAt: 1, call: 'handler', answers: true }],
 };
 
+/** The packages an MCP client is written with: the SDK, and its newer client package. */
+const MCP_CLIENT_PACKAGES = ['@modelcontextprotocol/sdk', '@modelcontextprotocol/client'] as const;
+
+/**
+ * An MCP client asking a server for a tool, a prompt or a resource (P277).
+ *
+ * The server side registers each under a name and draws it as the entry
+ * `mcp:<tool|prompt|resource>:<name>` (P270), a resource under the URI a client
+ * reads it by. The client is `new Client(info)` from the SDK, handed its
+ * transport afterwards with `client.connect(transport)`, and asks by naming
+ * the thing in the request's object: `client.callTool({ name, arguments })`,
+ * `client.getPrompt({ name, arguments })`, `client.readResource({ uri })`.
+ * So it is an untyped client - the path is an argument - whose operations
+ * put the entry's prefix in front of the name, and is joined by the procedure
+ * join: in its own service, in the one the transport's URL names, or in the
+ * one `apiTarget` names. A transport over HTTP is handed the URL itself; one
+ * over a process's standard streams has no address and is not a link.
+ */
+export const MCP_CLIENT: ProcedureClient = {
+  name: 'mcp-client',
+  packages: MCP_CLIENT_PACKAGES,
+  proxies: [],
+  separator: '\u0000',
+  operations: {},
+  links: [
+    { name: 'StreamableHTTPClientTransport', protocol: 'mcp', optionsAt: 1, urlAt: 0 },
+    { name: 'SSEClientTransport', protocol: 'mcp-sse', optionsAt: 1, urlAt: 0 },
+  ],
+  untyped: {
+    proxies: ['Client'],
+    operations: {
+      callTool: { call: 'tool', pathAt: 0, pathKey: 'name', prefix: 'mcp:tool:', inputAt: 0, inputKey: 'arguments', answers: true },
+      getPrompt: { call: 'prompt', pathAt: 0, pathKey: 'name', prefix: 'mcp:prompt:', inputAt: 0, inputKey: 'arguments', answers: true },
+      readResource: { call: 'resource', pathAt: 0, pathKey: 'uri', prefix: 'mcp:resource:', answers: true },
+    },
+  },
+  connect: 'connect',
+  dynamicHint: 'The name is computed, so the tool, prompt or resource it asks for cannot be named. Write the name as text where the request is made.',
+};
+
 /** Every client this extractor reads a procedure path from. */
-export const PROCEDURE_CLIENTS: readonly ProcedureClient[] = [TRPC_CLIENT, ORPC_CLIENT];
+export const PROCEDURE_CLIENTS: readonly ProcedureClient[] = [TRPC_CLIENT, ORPC_CLIENT, MCP_CLIENT];

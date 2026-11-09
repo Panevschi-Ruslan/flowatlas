@@ -113,7 +113,7 @@ describe("an MCP server's tools, prompts and resources (P270)", () => {
     );
     expect(read.entries.map((entry) => entry.id).sort()).toEqual([
       'entry:app:rpc:mcp:prompt:summarise',
-      'entry:app:rpc:mcp:resource:catalog',
+      'entry:app:rpc:mcp:resource:shop://catalog',
       'entry:app:rpc:mcp:tool:find_products',
       'entry:app:rpc:mcp:tool:stock_level',
     ]);
@@ -161,5 +161,87 @@ describe("an MCP server's tools, prompts and resources (P270)", () => {
     );
     expect(read.entries).toEqual([]);
     expect(read.unresolved.map((row) => row.reason)).toEqual(['mcp-name-dynamic']);
+  });
+});
+
+describe('MCP ways in named as far as the source states them (P277)', () => {
+  it('draws a name or a URI written in part as a pattern, with a row naming the part the run decides', () => {
+    const read = readWith(
+      mcpServerAdapter,
+      `
+      import { McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
+      const server = new McpServer({ name: 'shop', version: '1' });
+      export const registerFinders = (collection: string) =>
+        server.registerTool(\`find\${collection}\`, {}, async () => ({ content: [] }));
+      server.registerResource('order', new ResourceTemplate('shop://orders/{id}', { list: undefined }), {}, async () => ({ contents: [] }));
+    `,
+    );
+    expect(read.entries.map((entry) => [entry.key, entry.meta?.['keyPattern'], entry.meta?.['call']]).sort()).toEqual([
+      ['mcp:resource:shop://orders/{id}', 'uri-template', 'resource'],
+      ['mcp:tool:find{collection}', 'name-template', 'tool'],
+    ]);
+    expect(read.unresolved.map((row) => [row.reason, row.level])).toEqual([['mcp-name-dynamic', 'info']]);
+  });
+
+  it("reads the tools a registry's records name, each where its builder defines it", () => {
+    const read = readWith(
+      mcpServerAdapter,
+      `
+      import { McpServer } from '@modelcontextprotocol/server';
+      import type { Item } from './registry';
+      export const build = (items: Item[]) => {
+        const server = new McpServer({ name: 'shop', version: '1' });
+        for (const item of items) {
+          switch (item.type) {
+            case 'tool': {
+              server.registerTool(item.wireName, { description: item.tool.description }, async (input: unknown) => item.tool.handler(input));
+              break;
+            }
+            case 'prompt': {
+              const prompt = item.prompt;
+              server.registerPrompt(item.wireName, {}, async () => prompt.handler());
+              break;
+            }
+          }
+        }
+        return server;
+      };
+    `,
+      {
+        '/src/define.ts': `
+          export const defineTool = (args: { description: string }) => ({ handler: (fn: (input: unknown) => unknown) => ({ ...args, handler: fn }) });
+        `,
+        '/src/tools/count.ts': `
+          import { defineTool } from '../define';
+          export const countTool = defineTool({ description: 'count' }).handler(async () => ({ content: [] }));
+        `,
+        '/src/tools/lookup.ts': `
+          import { defineTool } from '../define';
+          async function lookup() { return { content: [] }; }
+          export const lookupTool = defineTool({ description: 'lookup' }).handler(lookup);
+          export const notATool = { wireName: 'stray', label: 'nothing' };
+        `,
+        '/src/registry.ts': `
+          import { countTool } from './tools/count';
+          import { lookupTool } from './tools/lookup';
+          export type Item = { type: string; wireName: string; tool: any; prompt: any };
+          export const BUILTINS = {
+            count: { wireName: 'countOrders', tool: countTool },
+            lookup: { wireName: 'lookupOrder', tool: lookupTool },
+          };
+        `,
+      },
+    );
+    expect(read.entries.map((entry) => [entry.key, entry.file, entry.handlerConfidence]).sort()).toEqual([
+      ['mcp:tool:countOrders', 'src/tools/count.ts', 'heuristic'],
+      ['mcp:tool:lookupOrder', 'src/tools/lookup.ts', 'heuristic'],
+    ]);
+    expect(read.entries.find((entry) => entry.key === 'mcp:tool:lookupOrder')?.handler).toMatchObject({ functionName: 'lookup' });
+    expect(read.entries[0]?.meta).toMatchObject({ nameFrom: 'record.wireName', servedWhen: 'configuration' });
+    // The tool's registration read two; the prompt's has no record to read, and stays a gap.
+    expect(read.unresolved.map((row) => [row.reason, row.level ?? 'action']).sort()).toEqual([
+      ['mcp-name-dynamic', 'action'],
+      ['mcp-name-dynamic', 'info'],
+    ]);
   });
 });

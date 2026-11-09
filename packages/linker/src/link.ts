@@ -248,6 +248,22 @@ const buildUiIndex = (
  * Folding them together is how a procedure path would come to be matched as a
  * URL, which it is not.
  */
+/** A way in keyed by a pattern: `{...}` stands for any text, the rest is matched as written (P277). */
+interface KeyPattern {
+  readonly key: string;
+  readonly entry: GraphNode;
+  readonly test: RegExp;
+  /** How much of the key is written text, so the most specific pattern answers first. */
+  readonly written: number;
+}
+
+const keyPatternOf = (entry: GraphNode): KeyPattern => {
+  const key = String(entry.meta?.['key']);
+  const parts = key.split(/\{[^}]*\}/);
+  const escaped = parts.map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return { key, entry, test: new RegExp(`^${escaped.join('.+')}$`), written: parts.join('').length };
+};
+
 const buildProcedureIndex = (
   nodes: ReadonlyMap<string, GraphNode>,
   config: FlowatlasConfig,
@@ -256,11 +272,18 @@ const buildProcedureIndex = (
   const byService = new Map<string, Map<string, GraphNode>>();
   /** Each procedure by where it is declared, for a caller that named it by its value (P58). */
   const bySite = new Map<string, GraphNode>();
+  /** The ways in keyed by a pattern, per service, the most written text first (P277). */
+  const patterns = new Map<string, KeyPattern[]>();
   for (const node of nodes.values()) {
     if (!isProcedureEntry(node)) continue;
     const declared = byService.get(node.repo) ?? new Map<string, GraphNode>();
     declared.set(String(node.meta?.['key']), node);
     byService.set(node.repo, declared);
+    if (typeof node.meta?.['keyPattern'] === 'string') {
+      const own = patterns.get(node.repo) ?? [];
+      own.push(keyPatternOf(node));
+      patterns.set(node.repo, own);
+    }
     if (node.file !== undefined && node.line !== undefined) bySite.set(`${node.repo}\0${node.file}:${node.line}`, node);
   }
   const names = serviceNamesOf(config);
@@ -277,8 +300,10 @@ const buildProcedureIndex = (
   }
   const declaring = [...byService.keys()].sort(cmp);
   const none = new Map<string, GraphNode>();
+  for (const list of patterns.values()) list.sort((a, b) => b.written - a.written || cmp(a.key, b.key));
   return {
     proceduresOf: (service) => byService.get(service) ?? none,
+    matching: (service, procedure) => patterns.get(service)?.find((pattern) => pattern.test.test(procedure))?.entry,
     targetsOf: (service) => targets.get(service) ?? [],
     services: () => declaring,
     declaredAt: (service, site) => bySite.get(`${service}\0${site}`),

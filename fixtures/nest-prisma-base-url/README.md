@@ -21,6 +21,8 @@ nothing - no query, no table, and no row naming the file.
 | `this.prisma.coupon.deleteMany(...)` | `coupons` | delete | the same |
 | `this.prisma.apiToken.findUnique(...)` in the guard | `ApiToken` | read | the same, in a guard rather than a service |
 | `prisma.coupon.findMany()` in `coupon-codes.ts` | `coupons` | read | `const prisma = sharedPrisma()`, a function of the repository that writes its return type, `PrismaService` |
+| `this.factory.client().coupon.findMany(...)` in `coupon-audit.ts` | `coupons` | read | the call written in place, its method `client(): PrismaService` writing its return type (P277) |
+| `db.coupon.count()` in `coupon-audit.ts` | `coupons` | read | `const db = await Registry.get().db()`, a method writing `Promise<PrismaService>`, awaited (P277) |
 
 `model Coupon` says `@@map("coupons")`, so `prisma.coupon` reads `coupons`;
 `model ApiToken` says nothing, so it is `ApiToken`. The schema is the one at

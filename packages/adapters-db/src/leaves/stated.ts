@@ -103,25 +103,81 @@ const constructedBy = (initializer: TsNode | undefined): TsNode | undefined => {
 
 /**
  * The return type a function of this repository writes, for a call of it by
- * name. Awaited, a written `Promise<T>` is `T`. A function of a package, or one
- * that writes no return type, states nothing here.
+ * name, or of a method of a value whose type the checker reads here (P277):
+ * `sharedDb()`, and `this.factory.client()` or `Container.get(Db).db()` where
+ * the class or interface declaring `client` is the repository's. Awaited, a
+ * written `Promise<T>` is `T`. A function of a package, or one that writes no
+ * return type, states nothing here.
  */
 const returnTypeWritten = (call: TsNode, awaited: boolean): TsNode | undefined => {
   if (!Node.isCallExpression(call)) return undefined;
   const callee = call.getExpression();
-  if (!Node.isIdentifier(callee)) return undefined;
-  const symbol = callee.getSymbol();
+  const named = Node.isIdentifier(callee) ? callee : Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : undefined;
+  if (named === undefined) return undefined;
+  const symbol = named.getSymbol();
   const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
   if (declaration === undefined || declaration.getSourceFile().getFilePath().includes('/node_modules/')) return undefined;
-  const fn = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
-  if (fn === undefined || !(Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) {
-    return undefined;
-  }
-  const written = fn.getReturnTypeNode();
+  const returned = writtenReturnOf(declaration);
+  const written = returned === undefined ? undefined : typeArgumentFor(returned, declaration, call);
   if (!awaited || written === undefined || !Node.isTypeReference(written) || written.getTypeName().getText() !== 'Promise') {
     return written;
   }
   return written.getTypeArguments()[0];
+};
+
+/**
+ * A return type that is a type parameter of the function states what the call
+ * hands it - `getActiveManager<SqlEntityManager>()` returns
+ * `SqlEntityManager` - and nothing where the call hands none (P277).
+ */
+const typeArgumentFor = (returned: TsNode, declaration: TsNode, call: TsNode): TsNode | undefined => {
+  if (!Node.isTypeReference(returned) || !Node.isCallExpression(call)) return returned;
+  const holder = Node.isVariableDeclaration(declaration) || Node.isPropertyDeclaration(declaration) || Node.isPropertyAssignment(declaration)
+    ? declaration.getInitializer()
+    : declaration;
+  const parameters =
+    holder !== undefined && 'getTypeParameters' in holder && typeof holder.getTypeParameters === 'function'
+      ? (holder.getTypeParameters() as TsNode[])
+      : [];
+  const name = returned.getTypeName().getText();
+  const index = parameters.findIndex((parameter) => Node.isTypeParameterDeclaration(parameter) && parameter.getName() === name);
+  return index < 0 ? returned : call.getTypeArguments()[index];
+};
+
+/**
+ * The return type a declaration of something callable writes: a function, a
+ * method of a class or of an interface, or a member holding an arrow or typed
+ * as a function (`client: () => Db`) (P277).
+ */
+const writtenReturnOf = (declaration: TsNode): TsNode | undefined => {
+  if (
+    Node.isFunctionDeclaration(declaration) ||
+    Node.isMethodDeclaration(declaration) ||
+    Node.isMethodSignature(declaration)
+  ) {
+    return declaration.getReturnTypeNode();
+  }
+  if (!Node.isVariableDeclaration(declaration) && !Node.isPropertyDeclaration(declaration) && !Node.isPropertyAssignment(declaration) && !Node.isPropertySignature(declaration)) {
+    return undefined;
+  }
+  const initializer = Node.isPropertySignature(declaration) ? undefined : declaration.getInitializer();
+  if (initializer !== undefined && (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer))) {
+    return initializer.getReturnTypeNode();
+  }
+  const typed = Node.isPropertyAssignment(declaration) ? undefined : declaration.getTypeNode();
+  return typed !== undefined && Node.isFunctionTypeNode(typed) ? typed.getReturnTypeNode() : undefined;
+};
+
+/**
+ * The type a call written where a client is used states -
+ * `this.factory.client().order.findMany()` - by the return type its function
+ * writes (P277): the reading a variable holding the call's value gets.
+ */
+const callStated = (receiver: TsNode): TsNode | undefined => {
+  let at = receiver;
+  while (Node.isParenthesizedExpression(at) || Node.isNonNullExpression(at)) at = at.getExpression();
+  if (Node.isAwaitExpression(at)) return returnTypeWritten(at.getExpression(), true);
+  return Node.isCallExpression(at) ? returnTypeWritten(at, false) : undefined;
 };
 
 /**
@@ -764,17 +820,20 @@ export interface StatedOrigin extends TypeOrigin {
  */
 export const statedOrigin = (receiver: TsNode): StatedOrigin | null => {
   const start = Node.isIdentifier(receiver) ? followName(receiver) : null;
+  // A call written in place states what its function writes it returns (P277).
+  let called = start === null ? callStated(receiver) : undefined;
   let declaration =
     start !== null && 'declaration' in start
       ? start.declaration
-      : (declarationOf(receiver) ?? memberReachedBy(receiver));
+      : (called ?? declarationOf(receiver) ?? memberReachedBy(receiver));
   for (let depth = 0; declaration !== undefined && depth < MAX_HOPS; depth += 1) {
-    const through = STATED_THROUGH[declaration.getKind()]?.(declaration);
+    const through = called === undefined ? STATED_THROUGH[declaration.getKind()]?.(declaration) : undefined;
     if (through !== undefined) {
       declaration = through;
       continue;
     }
-    const name = nameNodeOf(STATED_TYPE[declaration.getKind()]?.(declaration));
+    const name = nameNodeOf(called ?? STATED_TYPE[declaration.getKind()]?.(declaration));
+    called = undefined;
     if (name === undefined) return null;
     const step = followName(name);
     if (step === null) return null;

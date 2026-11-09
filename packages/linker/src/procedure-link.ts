@@ -13,6 +13,13 @@ import { cmp } from './order.js';
 export interface ProcedureIndex {
   /** The procedures a service declares, by path. Empty when it declares none. */
   proceduresOf(service: string): ReadonlyMap<string, GraphNode>;
+  /**
+   * The way in of a service whose key is a pattern the path matches (P277):
+   * an MCP resource registered by a URI template, `orders://{id}`, or a tool
+   * whose name is written in part, `find{collection}`. Asked only where no key
+   * is the path letter for letter.
+   */
+  matching?(service: string, procedure: string): GraphNode | undefined;
   /** The services a caller's service is configured to call. */
   targetsOf(service: string): readonly string[];
   /** Every service declaring a procedure, for saying where else one lives. */
@@ -140,6 +147,9 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
   const site = call.meta?.['procedureAt'];
   const asked = typeof call.meta?.['call'] === 'string' ? (call.meta['call'] as string) : undefined;
   const link = linkOf(call);
+  /** The way in a service declares for the path: by its key, or by a pattern it matches (P277). */
+  const declaredBy = (service: string, path: string): GraphNode | undefined =>
+    index.proceduresOf(service).get(path) ?? index.matching?.(service, path);
 
   const linked = (
     entry: GraphNode,
@@ -149,6 +159,8 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
   ): ProcedureOutcome => {
     const declared = entry.meta?.['call'];
     const unserved = link === undefined ? undefined : unservedBy(link, entry);
+    // A name written in part matched by its written parts is a guess; a URI template is how the server matches it (P277).
+    const guessed = entry.meta?.['keyPattern'] === 'name-template' && entry.meta?.['key'] !== procedure;
     return {
       kind: 'linked',
       via,
@@ -158,14 +170,14 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
         ? { mismatch: { asked, declared } }
         : {}),
       ...(unserved === undefined ? {} : { unserved }),
-      ...(address?.confidence === 'heuristic' ? { confidence: 'heuristic' as const } : {}),
+      ...(address?.confidence === 'heuristic' || guessed ? { confidence: 'heuristic' as const } : {}),
       ...(address?.baseUrl === undefined ? {} : { baseUrl: address.baseUrl }),
     };
   };
   const elsewhereThan = (asking: readonly string[], path: string): string[] =>
     index
       .services()
-      .filter((other) => !asking.includes(other) && index.proceduresOf(other).has(path))
+      .filter((other) => !asking.includes(other) && declaredBy(other, path) !== undefined)
       .sort(cmp);
 
   // A procedure the caller named by its value, in its own service: the
@@ -177,7 +189,7 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
   }
   if (typeof procedure !== 'string') return { kind: 'dynamic' };
 
-  const own = index.proceduresOf(call.repo).get(procedure);
+  const own = declaredBy(call.repo, procedure);
   if (own !== undefined) return linked(own, call.repo, 'same-service');
 
   // The link's address, placed the way any request's address is (P242): the
@@ -185,7 +197,7 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
   // address that names nobody is said with the row its address would get.
   const address = index.addressOf?.(call);
   if (address?.kind === 'service' && address.service !== call.repo) {
-    const entry = index.proceduresOf(address.service).get(procedure);
+    const entry = declaredBy(address.service, procedure);
     if (entry !== undefined) return linked(entry, address.service, 'link-url', address);
     const asking = [call.repo, address.service];
     return { kind: 'noProcedure', procedure, asked: asking, elsewhere: elsewhereThan(asking, procedure) };
@@ -205,28 +217,28 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
     const claimants = named === undefined ? (index.claimantsOf?.(env) ?? []) : [];
     const service = named ?? (claimants.length === 1 ? claimants[0] : undefined);
     if (service !== undefined && service !== call.repo) {
-      const entry = index.proceduresOf(service).get(procedure);
+      const entry = declaredBy(service, procedure);
       if (entry !== undefined) return linked(entry, service, 'link-url');
       const elsewhere = index
         .services()
-        .filter((other) => other !== call.repo && other !== service && index.proceduresOf(other).has(procedure))
+        .filter((other) => other !== call.repo && other !== service && declaredBy(other, procedure) !== undefined)
         .sort(cmp);
       return { kind: 'noProcedure', procedure, asked: [call.repo, service], elsewhere };
     }
   }
 
   const targets = [...new Set(index.targetsOf(call.repo))].filter((service) => service !== call.repo).sort(cmp);
-  const answering = targets.filter((service) => index.proceduresOf(service).has(procedure));
+  const answering = targets.filter((service) => declaredBy(service, procedure) !== undefined);
   const [only] = answering;
   if (answering.length === 1 && only !== undefined) {
-    return linked(index.proceduresOf(only).get(procedure) as GraphNode, only, 'api-target');
+    return linked(declaredBy(only, procedure) as GraphNode, only, 'api-target');
   }
   if (answering.length > 1) return { kind: 'ambiguous', procedure, candidates: answering };
 
   const asking = [call.repo, ...targets];
   const elsewhere = index
     .services()
-    .filter((service) => !asking.includes(service) && index.proceduresOf(service).has(procedure))
+    .filter((service) => !asking.includes(service) && declaredBy(service, procedure) !== undefined)
     .sort(cmp);
   return { kind: 'noProcedure', procedure, asked: asking, elsewhere };
 };

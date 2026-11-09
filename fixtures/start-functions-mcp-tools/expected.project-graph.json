@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T17:50:50.948Z",
+  "builtAt": "2026-11-09T22:27:53.008Z",
   "services": [
     {
       "name": "storefront",
@@ -121,6 +121,7 @@
       "kind": "rpc",
       "meta": {
         "key": "mcp:prompt:summarise_order",
+        "call": "prompt",
         "prompt": "summarise_order",
         "primitive": "prompt",
         "adapter": "mcp-server",
@@ -129,7 +130,7 @@
       }
     },
     {
-      "id": "entry:assistant:rpc:mcp:resource:catalog",
+      "id": "entry:assistant:rpc:mcp:resource:shop://catalog",
       "type": "entry",
       "label": "resource catalog",
       "repo": "assistant",
@@ -137,9 +138,11 @@
       "line": 42,
       "kind": "rpc",
       "meta": {
-        "key": "mcp:resource:catalog",
+        "key": "mcp:resource:shop://catalog",
+        "call": "resource",
         "resource": "catalog",
         "primitive": "resource",
+        "uri": "shop://catalog",
         "adapter": "mcp-server",
         "registration": "McpServer.registerResource",
         "handlerVia": "inline"
@@ -155,6 +158,7 @@
       "kind": "rpc",
       "meta": {
         "key": "mcp:tool:cancel_order",
+        "call": "tool",
         "tool": "cancel_order",
         "primitive": "tool",
         "adapter": "mcp-server",
@@ -172,6 +176,7 @@
       "kind": "rpc",
       "meta": {
         "key": "mcp:tool:find_products",
+        "call": "tool",
         "tool": "find_products",
         "primitive": "tool",
         "adapter": "mcp-server",
@@ -189,6 +194,7 @@
       "kind": "rpc",
       "meta": {
         "key": "mcp:tool:stock_level",
+        "call": "tool",
         "tool": "stock_level",
         "primitive": "tool",
         "adapter": "mcp-server",
@@ -202,7 +208,7 @@
       "label": "server function archiveOrders",
       "repo": "storefront",
       "file": "app/server/orders.functions.ts",
-      "line": 23,
+      "line": 24,
       "kind": "rpc",
       "meta": {
         "serverFunction": "archiveOrders",
@@ -220,7 +226,7 @@
       "label": "server function listOrders",
       "repo": "storefront",
       "file": "app/server/orders.functions.ts",
-      "line": 10,
+      "line": 11,
       "kind": "rpc",
       "meta": {
         "serverFunction": "listOrders",
@@ -238,7 +244,7 @@
       "label": "server function placeOrder",
       "repo": "storefront",
       "file": "app/server/orders.functions.ts",
-      "line": 13,
+      "line": 14,
       "kind": "rpc",
       "meta": {
         "serverFunction": "placeOrder",
@@ -246,6 +252,24 @@
         "adapter": "tanstack-start",
         "registration": "createServerFn().handler",
         "exported": true,
+        "viaImport": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#runOrders",
+      "type": "entry",
+      "label": "server function runOrders",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 29,
+      "kind": "rpc",
+      "meta": {
+        "serverFunction": "runOrders",
+        "method": "POST",
+        "adapter": "tanstack-start",
+        "registration": "createServerFn().handler",
+        "exported": false,
         "viaImport": true,
         "handlerVia": "inline"
       }
@@ -277,10 +301,10 @@
       "repo": "storefront",
       "meta": {
         "stats": {
-          "files": 3,
-          "filesRead": 3,
+          "files": 4,
+          "filesRead": 4,
           "filesUnreadable": 0,
-          "functions": 6,
+          "functions": 8,
           "components": 1,
           "hooks": 0,
           "skippedExternalCalls": {}
@@ -311,12 +335,31 @@
       }
     },
     {
+      "id": "storefront#app/server/client.ts:createOrdersClient",
+      "type": "function",
+      "label": "createOrdersClient",
+      "repo": "storefront",
+      "file": "app/server/client.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{\n  runOnServer,\n}",
+              "type": "{runOnServer:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
+    },
+    {
       "id": "storefront#app/server/orders.functions.ts:archiveOldOrders",
       "type": "function",
       "label": "archiveOldOrders",
       "repo": "storefront",
       "file": "app/server/orders.functions.ts",
-      "line": 18,
+      "line": 19,
       "meta": {
         "signature": {
           "params": [],
@@ -330,7 +373,15 @@
       "label": "listOrders",
       "repo": "storefront",
       "file": "app/server/orders.functions.ts",
-      "line": 10
+      "line": 11
+    },
+    {
+      "id": "storefront#app/server/orders.functions.ts:ordersClient",
+      "type": "function",
+      "label": "ordersClient",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 31
     },
     {
       "id": "storefront#app/server/orders.functions.ts:placeOrder",
@@ -338,7 +389,7 @@
       "label": "placeOrder",
       "repo": "storefront",
       "file": "app/server/orders.functions.ts",
-      "line": 13
+      "line": 14
     },
     {
       "id": "storefront#app/server/orders.functions.ts:requireSession",
@@ -346,16 +397,16 @@
       "label": "requireSession",
       "repo": "storefront",
       "file": "app/server/orders.functions.ts",
-      "line": 14,
+      "line": 15,
       "kind": "function"
     },
     {
-      "id": "storefront#app/server/orders.functions.ts:server function listOrders@10",
+      "id": "storefront#app/server/orders.functions.ts:server function listOrders@11",
       "type": "function",
-      "label": "server function listOrders@10",
+      "label": "server function listOrders@11",
       "repo": "storefront",
       "file": "app/server/orders.functions.ts",
-      "line": 10,
+      "line": 11,
       "meta": {
         "signature": {
           "params": [],
@@ -364,12 +415,12 @@
       }
     },
     {
-      "id": "storefront#app/server/orders.functions.ts:server function placeOrder@16",
+      "id": "storefront#app/server/orders.functions.ts:server function placeOrder@17",
       "type": "function",
-      "label": "server function placeOrder@16",
+      "label": "server function placeOrder@17",
       "repo": "storefront",
       "file": "app/server/orders.functions.ts",
-      "line": 16,
+      "line": 17,
       "meta": {
         "signature": {
           "params": [
@@ -379,6 +430,25 @@
             }
           ],
           "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/server/orders.functions.ts:server function runOrders@29",
+      "type": "function",
+      "label": "server function runOrders@29",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ data }",
+              "type": "object"
+            }
+          ],
+          "returns": "{ran:any}"
         }
       }
     },
@@ -408,7 +478,7 @@
       "line": 39
     },
     {
-      "from": "entry:assistant:rpc:mcp:resource:catalog",
+      "from": "entry:assistant:rpc:mcp:resource:shop://catalog",
       "to": "assistant#src/server.ts:resource catalog@42",
       "type": "handles",
       "confidence": "static",
@@ -445,15 +515,15 @@
       "type": "handles",
       "confidence": "static",
       "file": "app/server/orders.functions.ts",
-      "line": 18
+      "line": 19
     },
     {
       "from": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#listOrders",
-      "to": "storefront#app/server/orders.functions.ts:server function listOrders@10",
+      "to": "storefront#app/server/orders.functions.ts:server function listOrders@11",
       "type": "handles",
       "confidence": "static",
       "file": "app/server/orders.functions.ts",
-      "line": 10
+      "line": 11
     },
     {
       "from": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#placeOrder",
@@ -461,7 +531,7 @@
       "type": "guarded_by",
       "confidence": "static",
       "file": "app/server/orders.functions.ts",
-      "line": 14,
+      "line": 15,
       "meta": {
         "order": 0,
         "scope": "route",
@@ -471,11 +541,19 @@
     },
     {
       "from": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#placeOrder",
-      "to": "storefront#app/server/orders.functions.ts:server function placeOrder@16",
+      "to": "storefront#app/server/orders.functions.ts:server function placeOrder@17",
       "type": "handles",
       "confidence": "static",
       "file": "app/server/orders.functions.ts",
-      "line": 16
+      "line": 17
+    },
+    {
+      "from": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#runOrders",
+      "to": "storefront#app/server/orders.functions.ts:server function runOrders@29",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/server/orders.functions.ts",
+      "line": 29
     },
     {
       "from": "storefront#app/routes/orders.tsx:OrdersPage",
@@ -508,6 +586,30 @@
       "confidence": "static",
       "file": "app/routes/orders.tsx",
       "line": 13
+    },
+    {
+      "from": "storefront#app/server/client.ts:createOrdersClient",
+      "to": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#runOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/server/client.ts",
+      "line": 10,
+      "meta": {
+        "through": "runOnServer",
+        "handedAt": "app/server/orders.functions.ts:31"
+      }
+    },
+    {
+      "from": "storefront#app/server/orders.functions.ts:ordersClient",
+      "to": "storefront#app/server/client.ts:createOrdersClient",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{runOnServer:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "app/server/orders.functions.ts",
+      "line": 31
     },
     {
       "from": "ui_action:storefront#app/routes/orders.tsx:18:15",
@@ -564,7 +666,7 @@
     },
     {
       "file": "app/server/orders.functions.ts",
-      "line": 29,
+      "line": 35,
       "reason": "server-action-unread",
       "message": "A server function is made here and is not the whole value of a variable, so nothing names what the browser imports and calls.",
       "hint": "Declare it as `export const name = createServerFn(...).handler(async (...) => ...)`, so the boundary can be named and joined to its callers.",

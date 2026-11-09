@@ -871,7 +871,11 @@ prove, and the path is given so you can run it.
   Start server function, `createServerFn(...).handler(fn)`, is one too, with
   its verb and its middleware, and an MCP server's tools, prompts and resources
   are ways in by the names they are registered under
-  (`fixtures/start-functions-mcp-tools`).
+  (`fixtures/start-functions-mcp-tools`); an MCP client's `callTool`,
+  `getPrompt` and `readResource` are requests joined to them across services,
+  a name written in part or carried by a registry's records is read as far as
+  the source states it, and a server function handed to a client the
+  repository builds is called from that client (`fixtures/mcp-clients-registries`).
 - **Procedures.** A tRPC tree is read on the server as one way in per procedure,
   addressed by the dotted path its callers write, with the guards inherited
   through the procedure it was built from (`fixtures/trpc-router`); a tree or a

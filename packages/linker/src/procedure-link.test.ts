@@ -391,3 +391,45 @@ describe("a server's request for another service's procedure (P242)", () => {
     expect(project.nodes.find((node) => node.type === 'http_out')?.meta?.['baseUrlValues']).toEqual(['http://archive.shop.internal:7000']);
   });
 });
+
+describe('an MCP request for a way in keyed by a pattern (P277)', () => {
+  const patterned = (repo: string, key: string, call: string, keyPattern: string): GraphNode => ({
+    ...procedure(repo, key, call),
+    meta: { key, call, keyPattern },
+  });
+  const askAt = (repo: string, path: string, call: string, line: number): GraphNode => ({
+    ...ask(repo, path, call),
+    id: `ui_api_call:${repo}#src/orders.ts:${line}:10`,
+    line,
+  });
+
+  it('joins a URI a resource template matches, and a name written in part as a guess', () => {
+    const { hits } = hitsOf(
+      [
+        graph('api', [
+          patterned('api', 'mcp:resource:shop://orders/{id}', 'resource', 'uri-template'),
+          patterned('api', 'mcp:tool:find{collection}', 'tool', 'name-template'),
+          procedure('api', 'mcp:tool:findOrders', 'tool'),
+          askAt('api', 'mcp:resource:shop://orders/42', 'resource', 3),
+          askAt('api', 'mcp:tool:findProducts', 'tool', 4),
+          askAt('api', 'mcp:tool:findOrders', 'tool', 5),
+        ]),
+      ],
+      config(),
+    );
+    expect(hits.map((edge) => [edge.to, edge.confidence]).sort()).toEqual([
+      ['entry:api:rpc:mcp:resource:shop://orders/{id}', 'static'],
+      ['entry:api:rpc:mcp:tool:findOrders', 'static'],
+      ['entry:api:rpc:mcp:tool:find{collection}', 'heuristic'],
+    ]);
+  });
+
+  it('does not join a tool to a resource whose pattern the name happens to match', () => {
+    const { hits, reasons } = hitsOf(
+      [graph('api', [patterned('api', 'mcp:resource:{anything}', 'resource', 'uri-template'), askAt('api', 'mcp:tool:find', 'tool', 3)])],
+      config(),
+    );
+    expect(hits).toEqual([]);
+    expect(reasons).toEqual(['procedure-not-found']);
+  });
+});

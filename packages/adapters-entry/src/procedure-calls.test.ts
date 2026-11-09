@@ -174,6 +174,55 @@ describe("a tRPC client's chain of links (P242)", () => {
   });
 });
 
+const MCP = { '@modelcontextprotocol/sdk': '^1.0.0' };
+
+describe('an MCP client asking for a tool, a prompt or a resource (P277)', () => {
+  it('reads the name each request writes, prefixed as the server keys it, and the URL its transport is connected to', () => {
+    const graph = read(
+      {
+        '/src/assistant.ts': `
+          import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+          import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+          const client = new Client({ name: 'storefront', version: '1' });
+          const transport = new StreamableHTTPClientTransport(new URL(\`\${process.env.ASSISTANT_URL}/mcp\`));
+          export const start = () => client.connect(transport);
+          export const find = (q: string) => client.callTool({ name: 'find_products', arguments: { q } });
+          export const summary = () => client.getPrompt({ name: 'summarise' });
+          export const catalog = () => client.readResource({ uri: 'shop://catalog' });
+          export const any = (name: string) => client.callTool({ name });
+        `,
+      },
+      MCP,
+    );
+    expect(requests(graph).map((node) => [node.meta?.['procedure'], node.meta?.['call']]).sort()).toEqual([
+      [null, 'tool'],
+      ['mcp:prompt:summarise', 'prompt'],
+      ['mcp:resource:shop://catalog', 'resource'],
+      ['mcp:tool:find_products', 'tool'],
+    ]);
+    const find = requestFor(graph, 'mcp:tool:find_products');
+    expect(find?.meta).toMatchObject({ client: 'mcp-client', operation: 'callTool', inputKeys: ['q'] });
+    expect(find?.meta?.['link']).toEqual({ protocol: 'mcp', path: '/mcp', baseUrlEnv: 'ASSISTANT_URL' });
+    expect(graph.unresolved.map((row) => [row.reason, row.hint])).toEqual([
+      ['procedure-path-dynamic', 'The name is computed, so the tool, prompt or resource it asks for cannot be named. Write the name as text where the request is made.'],
+    ]);
+  });
+
+  it('reads no request of a class of the same name from another package', () => {
+    const graph = read(
+      {
+        '/src/db.ts': `
+          import { Client } from 'pg';
+          const client = new Client();
+          export const run = () => client.callTool({ name: 'find_products' });
+        `,
+      },
+      MCP,
+    );
+    expect(requests(graph)).toEqual([]);
+  });
+});
+
 describe("a server's client held on a class (P242)", () => {
   it('is read from the member it is kept in, initialised in place or in the constructor', () => {
     const graph = read(

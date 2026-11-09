@@ -25,6 +25,12 @@ calls them, and each call is a `calls` edge from `OrdersPage` to the way in.
 Before P270 none of these was read, and the file, which the counting rule
 sees as `.handler(fn)` chains, was silent.
 
+`const runOrders = createServerFn(...)` is handed to a client the application
+builds, `createOrdersClient({ runOnServer: runOrders })` in `app/server/client.ts`,
+whose closure calls `runOnServer(...)`. That call is a `calls` edge from
+`createOrdersClient` to `server function runOrders` (P277), `static` because
+every call of the maker hands it the same server function.
+
 ## assistant: an MCP server
 
 `src/server.ts` makes `new McpServer(...)` from the SDK and registers:
@@ -35,7 +41,7 @@ sees as `.handler(fn)` chains, was silent.
 | `server.tool('stock_level', schema, lookupStock)` | `tool stock_level`, handled by `lookupStock` in `src/stock.ts` |
 | `server.registerTool('cancel_order', config, traced('cancel_order', async (...) => ...))` | `tool cancel_order`, handled by the function inside the repository's own wrapper |
 | `server.registerPrompt('summarise_order', ...)` | `prompt summarise_order` |
-| `server.registerResource('catalog', 'shop://catalog', ...)` | `resource catalog` |
+| `server.registerResource('catalog', 'shop://catalog', ...)` | `resource catalog`, keyed by the URI a client reads it with, `mcp:resource:shop://catalog` (P277) |
 | `server.registerTool(tool.name, ...)` in a loop over tools a plugin hands in | a name decided at run time: an `mcp-name-dynamic` row |
 | `toolbox.tool('hammer', ...)` on a plain object | nothing: not a server |
 
