@@ -55,6 +55,11 @@ const JOB_ENVELOPE: readonly string[] = ['data'];
 
 const QUEUE_OF_CLASS: readonly NameLocator[] = [
   { kind: 'argument-property', index: 0, key: 'name' },
+  // The same statement as a repository's own worker decorator spells it, over
+  // the same library: `@Processor({ queueName: 'cron', scope: Scope.REQUEST })`.
+  // Read whole it was the channel `{"queueName":"cron"}`, beside the `cron` the
+  // string form of the same decorator landed on (R181).
+  { kind: 'argument-property', index: 0, key: 'queueName' },
   { kind: 'argument', index: 0 },
 ];
 

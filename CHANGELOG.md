@@ -960,6 +960,17 @@ only one of them moved.
   function URL with two segments, was read as the queue `<path>`: a request
   rooted at it said no service declared its setting. Neither is read as a
   queue now.
+- **A queue named in a worker's options object is that queue, and a queue is
+  never named by a record (R181).** A repository's own worker decorator over
+  BullMQ written `@Processor({ queueName: Queues.cron, scope: Scope.REQUEST })`
+  was read as the queue named by its whole argument: where the options could
+  be read the channel was `{"queueName":"cron-queue"}`, a node beside the
+  `cron-queue` its string form landed on and one no producer can reach, and
+  where the scope could not be read every such worker was `channel-dynamic`.
+  `queueName` is now read as BullMQ's own `name` is; and a record read where a
+  queue is named is refused as `channel-dynamic` rather than drawn, while a
+  transport that matches records - `@MessagePattern({ cmd: 'sum' })` - keeps
+  them as patterns.
 - **A tRPC root a workspace package holds is read where the service serves
   the trees under it (R179).** Since P256 a root kept in a package beside the
   service was read only where the service mounted that root itself, so an

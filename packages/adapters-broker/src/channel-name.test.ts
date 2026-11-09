@@ -1,7 +1,7 @@
 import { parseConfig } from '@flowatlas/core';
 import { Project, type SourceFile } from 'ts-morph';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { isResolved, resolveChannelName } from './channel-name.js';
+import { isResolved, nameForKind, resolveChannelName } from './channel-name.js';
 
 const SHARED = `export const EVENTS = { orderShipped: 'order.shipped' } as const;
 export declare const ORDER_CHANNELS: readonly ['order.created', 'order.paid'];`;
@@ -270,6 +270,21 @@ describe('resolving which channel a call addresses', () => {
 
   it('turns an object pattern into a stable name', () => {
     expect(of('objectPattern')).toEqual({ name: '{"cmd":"sum"}', names: ['{"cmd":"sum"}'], via: 'pattern' });
+  });
+
+  /**
+   * A queue is named by a word, so a record read where a queue is named is the
+   * options of whatever named it: `@Processor({ queueName, scope })` read whole
+   * was the channel `{"queueName":"cron-queue"}`, which no producer can reach
+   * (R181). Kept for a transport that matches patterns.
+   */
+  it('refuses a record as the name of a queue, and keeps it as a pattern', () => {
+    const record = of('objectPattern');
+    expect(nameForKind(record, 'topic')).toEqual(record);
+    expect(nameForKind(record, 'exchange')).toEqual(record);
+    expect(nameForKind(record, 'queue')).toEqual({ unresolved: 'channel-dynamic', text: '{"cmd":"sum"}' });
+    const word = of('literal');
+    expect(nameForKind(word, 'queue')).toEqual(word);
   });
 
   /**

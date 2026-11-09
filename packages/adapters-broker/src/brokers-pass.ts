@@ -59,7 +59,7 @@ import {
 } from './call-site.js';
 import { addressOf, appliesAt, collapsed, readAddress, type AddressedElement } from './address.js';
 import { payloadParameter, typeAtPath } from './payload.js';
-import { isResolved, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
+import { isResolved, nameForKind, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
 import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointShaping } from './endpoint.js';
 import { pairKey, readBrokerMarkers } from './markers.js';
 import { rowAbout, type RowSite } from './row-site.js';
@@ -320,8 +320,10 @@ export const extractBrokers = (ctx: PassContext): void => {
 
     // One element per address the call is sent to: one for an ordinary publish,
     // one per entry for a call that sends a list of them.
-    const elements =
-      caller?.elements ?? readAddress(call, addressOf(pattern), pattern.payload, contextOf(receiver, owner), ctx.config, fallback);
+    // A record read where a queue is named is no queue (R181).
+    const elements = (
+      caller?.elements ?? readAddress(call, addressOf(pattern), pattern.payload, contextOf(receiver, owner), ctx.config, fallback)
+    ).map((element) => ({ ...element, resolution: nameForKind(element.resolution, spec.channelKind) }));
 
     // An address read from a record a parameter chooses, or that is one, is
     // decided by each caller of the function the call is written in (P268):
@@ -608,6 +610,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     pattern: ConsumerPattern,
     method: MethodDeclaration,
     owner: ClassDeclaration,
+    channelKind: string,
   ): { resolution: ChannelResolution; jobName?: string | null } => {
     const site =
       pattern.classDecorator === undefined
@@ -622,14 +625,17 @@ export const extractBrokers = (ctx: PassContext): void => {
       return { resolution: { unresolved: 'channel-dynamic', text: pattern.decorator }, ...jobName };
     }
     return {
-      resolution: channelAt(
-        site,
-        { channel: pattern.channel, channelArg: -1 },
-        {},
-        ctx.config,
-        // What a reader has to go and look at is the decorator that was supposed
-        // to name the channel, not the method under it.
-        site.getText().slice(0, 60),
+      resolution: nameForKind(
+        channelAt(
+          site,
+          { channel: pattern.channel, channelArg: -1 },
+          {},
+          ctx.config,
+          // What a reader has to go and look at is the decorator that was supposed
+          // to name the channel, not the method under it.
+          site.getText().slice(0, 60),
+        ),
+        channelKind,
       ),
       ...jobName,
     };
@@ -664,7 +670,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     const methodId = ctx.methodIdOf(method);
     if (methodId === undefined) return;
     const { line } = lineColOf(method);
-    const { resolution, jobName } = consumerChannel(pattern, method, owner);
+    const { resolution, jobName } = consumerChannel(pattern, method, owner, spec.channelKind);
     const shaping = endpointShapingAt(spec, owner);
     const names = isResolved(resolution) && !isUnreadable(shaping)
       ? shapeChannelNames(resolution.names, shaping)
@@ -911,12 +917,9 @@ export const extractBrokers = (ctx: PassContext): void => {
           const spelling = callee.getName();
 
           const args = call.getArguments();
-          const resolution = channelAt(
-            call,
-            pattern,
-            contextOf(callee.getExpression(), owner),
-            ctx.config,
-            call.getText().slice(0, 60),
+          const resolution = nameForKind(
+            channelAt(call, pattern, contextOf(callee.getExpression(), owner), ctx.config, call.getText().slice(0, 60)),
+            spec.channelKind,
           );
           const { line } = lineColOf(call);
           // Read as a subscription, so the row saying its receiver could not

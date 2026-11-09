@@ -344,6 +344,24 @@ export const isResolved = (resolution: ChannelResolution): resolution is Resolve
   'name' in resolution;
 
 /**
+ * A name read for a transport, kept only where that transport can be addressed so.
+ *
+ * A record is a name on exactly one kind of transport: one that matches a
+ * message against a pattern written the same way at both ends, `send({ cmd:
+ * 'sum' })` against `@MessagePattern({ cmd: 'sum' })`. A queue is named by a
+ * word, and a record read where a queue is named is the options of whatever
+ * named it - `@Processor({ queueName: 'cron', scope })` read whole became a
+ * channel called `{"queueName":"cron"}`, a node no producer can ever reach,
+ * beside the `cron` channel the same queue's string form landed on (R181).
+ * So a record read for a queue is refused, with the row any unreadable name
+ * gets, and nothing serialised is ever drawn as a queue.
+ */
+export const nameForKind = (resolution: ChannelResolution, channelKind: string): ChannelResolution =>
+  isResolved(resolution) && resolution.via === 'pattern' && channelKind === 'queue'
+    ? { unresolved: 'channel-dynamic', text: resolution.name }
+    : resolution;
+
+/**
  * An endpoint written with or without its slashes, read as one name.
  *
  * `'orders'`, `'/orders'` and `'/orders/'` are the same namespace, and a gateway
