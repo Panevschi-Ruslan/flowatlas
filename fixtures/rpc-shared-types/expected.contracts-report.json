@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-08T16:52:40.582Z",
+  "generatedAt": "2026-11-09T11:47:09.637Z",
   "edges": [
     {
       "edge": {
@@ -224,6 +224,162 @@
     },
     {
       "edge": {
+        "from": "http_out:worker#src/catalog.tenant.ts:23:12",
+        "to": "entry:catalog:http:GET:/api/browse",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/catalog.tenant.ts:23:12|http_calls|entry:catalog:http:GET:/api/browse",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "worker",
+        "typeId": "{query:{category:unknown;page:unknown};headers:{x-tenant:unknown}}",
+        "symbol": "worker#src/catalog.tenant.ts:CatalogTenant.browse",
+        "writes": [
+          "query",
+          "headers"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{query:{category:string;page:string};headers:{x-tenant:string}}",
+        "symbol": "catalog#src/router.ts:products.browse@46"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:headers.x-tenant",
+        "any-unknown-skip:query.category",
+        "any-unknown-skip:query.page"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/catalog.tenant.ts:23:12",
+        "to": "entry:catalog:http:GET:/api/browse",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/catalog.tenant.ts:23:12|http_calls|entry:catalog:http:GET:/api/browse",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "catalog#src/router.ts:products.browse@46"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "worker#src/catalog.tenant.ts:CatalogTenant.browse"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/catalog.tenant.ts:28:12",
+        "to": "entry:catalog:http:GET:/api/browse",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/catalog.tenant.ts:28:12|http_calls|entry:catalog:http:GET:/api/browse",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "worker",
+        "typeId": "{query:{category:unknown;page:unknown};headers:{x-tenant:unknown}}",
+        "symbol": "worker#src/catalog.tenant.ts:CatalogTenant.browseShared",
+        "writes": [
+          "query",
+          "headers"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{query:{category:string;page:string};headers:{x-tenant:string}}",
+        "symbol": "catalog#src/router.ts:products.browse@46"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:headers.x-tenant",
+        "any-unknown-skip:query.category",
+        "any-unknown-skip:query.page"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/catalog.tenant.ts:28:12",
+        "to": "entry:catalog:http:GET:/api/browse",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/catalog.tenant.ts:28:12|http_calls|entry:catalog:http:GET:/api/browse",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "catalog#src/router.ts:products.browse@46"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "worker#src/catalog.tenant.ts:CatalogTenant.browseShared"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/catalog.tenant.ts:33:23",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/catalog.tenant.ts:33:23|http_calls|entry:catalog:http:GET:/api/page",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "worker",
+        "typeId": "{category:unknown}",
+        "symbol": "worker#src/catalog.tenant.ts:CatalogTenant.total",
+        "writes": [
+          "category"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{category:string}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:category"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:worker#src/catalog.tenant.ts:33:23",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:worker#src/catalog.tenant.ts:33:23|http_calls|entry:catalog:http:GET:/api/page",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{headers:{x-total:unknown};body:{id:string;name:string}[]}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "receiver": {
+        "service": "worker",
+        "typeId": "{headers:{x-total:unknown};body:{id:string;name:string}[]}",
+        "symbol": "worker#src/catalog.tenant.ts:CatalogTenant.total"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
         "from": "http_out:worker#src/fulfil.service.ts:17:26",
         "to": "entry:api:rpc:orders.place",
         "type": "hits"
@@ -342,6 +498,373 @@
         "service": "worker",
         "typeId": "{id:string;sku:'sku-1';quantity:1}",
         "symbol": "worker#src/fulfil.service.ts:FulfilService.fulfil"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:105:21",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:105:21|hits|entry:catalog:http:GET:/api/page",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{category:unknown}",
+        "symbol": "web#src/catalog.ts:pageNext",
+        "writes": [
+          "category"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{category:string}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:category"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:105:21",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:105:21|hits|entry:catalog:http:GET:/api/page",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{headers:{};body:{id:string;name:string}[]}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{headers:{x-next:unknown};body:type:web#Product[]}",
+        "symbol": "web#src/catalog.ts:pageNext"
+      },
+      "findings": [
+        {
+          "severity": "warning",
+          "kind": "missing_required",
+          "edge": {
+            "from": "ui_api_call:web#src/catalog.ts:105:21",
+            "to": "entry:catalog:http:GET:/api/page",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/catalog.ts:105:21|hits|entry:catalog:http:GET:/api/page",
+          "direction": "response",
+          "sender": {
+            "service": "catalog",
+            "typeId": "{headers:{};body:{id:string;name:string}[]}",
+            "symbol": "catalog#src/router.ts:products.page@58"
+          },
+          "receiver": {
+            "service": "web",
+            "typeId": "{headers:{x-next:unknown};body:type:web#Product[]}",
+            "symbol": "web#src/catalog.ts:pageNext"
+          },
+          "typeId": "{headers:{x-next:unknown};body:type:web#Product[]}",
+          "field": "headers.x-next",
+          "expected": "unknown",
+          "actual": null,
+          "rule": "header-not-declared",
+          "message": "receiver web requires `headers.x-next: unknown`; sender catalog does not send it; the procedure's output does not declare it, so it is not sent unless a middleware or the platform sets it",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "any-unknown-skip:headers.x-next",
+        "http-layer-header:headers.etag"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:111:21",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:111:21|hits|entry:catalog:http:GET:/api/page",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{category:unknown}",
+        "symbol": "web#src/catalog.ts:pageCapital",
+        "writes": [
+          "category"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{category:string}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:category"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:111:21",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:111:21|hits|entry:catalog:http:GET:/api/page",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{headers:{x-total:unknown};body:{id:string;name:string}[]}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{headers:{X-Total:unknown};body:type:web#Product[]}",
+        "symbol": "web#src/catalog.ts:pageCapital"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "ui_api_call:web#src/catalog.ts:111:21",
+            "to": "entry:catalog:http:GET:/api/page",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/catalog.ts:111:21|hits|entry:catalog:http:GET:/api/page",
+          "direction": "response",
+          "sender": {
+            "service": "catalog",
+            "typeId": "{headers:{x-total:unknown};body:{id:string;name:string}[]}",
+            "symbol": "catalog#src/router.ts:products.page@58"
+          },
+          "receiver": {
+            "service": "web",
+            "typeId": "{headers:{X-Total:unknown};body:type:web#Product[]}",
+            "symbol": "web#src/catalog.ts:pageCapital"
+          },
+          "typeId": "{headers:{X-Total:unknown};body:type:web#Product[]}",
+          "field": "headers.X-Total",
+          "expected": "unknown",
+          "actual": null,
+          "rule": null,
+          "message": "receiver web requires `headers.X-Total: unknown`; sender catalog does not send it; a client hands every response header lower-cased, so `headers.X-Total` read as a key is never there",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:web#src/catalog.ts:111:21",
+            "to": "entry:catalog:http:GET:/api/page",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/catalog.ts:111:21|hits|entry:catalog:http:GET:/api/page",
+          "direction": "response",
+          "sender": {
+            "service": "catalog",
+            "typeId": "{headers:{x-total:unknown};body:{id:string;name:string}[]}",
+            "symbol": "catalog#src/router.ts:products.page@58"
+          },
+          "receiver": {
+            "service": "web",
+            "typeId": "{headers:{X-Total:unknown};body:type:web#Product[]}",
+            "symbol": "web#src/catalog.ts:pageCapital"
+          },
+          "typeId": "{headers:{X-Total:unknown};body:type:web#Product[]}",
+          "field": "headers.x-total",
+          "expected": null,
+          "actual": "unknown",
+          "rule": null,
+          "message": "sender catalog sends `headers.x-total: unknown`; receiver web declares no such field; a client hands every response header lower-cased, so `headers.X-Total` read as a key is never there",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "any-unknown-skip:headers.X-Total",
+        "any-unknown-skip:headers.x-total"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:124:10",
+        "to": "entry:catalog:http:GET:/api/stock",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:124:10|hits|entry:catalog:http:GET:/api/stock",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{query:{sku:unknown};headers:{x-region:unknown}}",
+        "symbol": "web#src/catalog.ts:stockOf",
+        "writes": [
+          "query",
+          "headers"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{query:{sku:string};headers:{X-Region:string}}",
+        "symbol": "catalog#src/router.ts:products.stock@52"
+      },
+      "findings": [
+        {
+          "severity": "error",
+          "kind": "missing_required",
+          "edge": {
+            "from": "ui_api_call:web#src/catalog.ts:124:10",
+            "to": "entry:catalog:http:GET:/api/stock",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/catalog.ts:124:10|hits|entry:catalog:http:GET:/api/stock",
+          "direction": "request",
+          "sender": {
+            "service": "web",
+            "typeId": "{query:{sku:unknown};headers:{x-region:unknown}}",
+            "symbol": "web#src/catalog.ts:stockOf",
+            "writes": [
+              "query",
+              "headers"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "catalog",
+            "typeId": "{query:{sku:string};headers:{X-Region:string}}",
+            "symbol": "catalog#src/router.ts:products.stock@52"
+          },
+          "typeId": "{query:{sku:string};headers:{X-Region:string}}",
+          "field": "headers.X-Region",
+          "expected": "string",
+          "actual": null,
+          "rule": null,
+          "message": "receiver catalog requires `headers.X-Region: string`; sender web does not send it; a server hands a procedure every header lower-cased, so `headers.X-Region` it declares is never handed to it as spelled",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "ui_api_call:web#src/catalog.ts:124:10",
+            "to": "entry:catalog:http:GET:/api/stock",
+            "type": "hits"
+          },
+          "edgeKey": "ui_api_call:web#src/catalog.ts:124:10|hits|entry:catalog:http:GET:/api/stock",
+          "direction": "request",
+          "sender": {
+            "service": "web",
+            "typeId": "{query:{sku:unknown};headers:{x-region:unknown}}",
+            "symbol": "web#src/catalog.ts:stockOf",
+            "writes": [
+              "query",
+              "headers"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "catalog",
+            "typeId": "{query:{sku:string};headers:{X-Region:string}}",
+            "symbol": "catalog#src/router.ts:products.stock@52"
+          },
+          "typeId": "{query:{sku:string};headers:{X-Region:string}}",
+          "field": "headers.x-region",
+          "expected": null,
+          "actual": "unknown",
+          "rule": null,
+          "message": "sender web sends `headers.x-region: unknown`; receiver catalog declares no such field; a server hands a procedure every header lower-cased, so `headers.X-Region` it declares is never handed to it as spelled",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "any-unknown-skip:headers.x-region",
+        "any-unknown-skip:query.sku"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:124:10",
+        "to": "entry:catalog:http:GET:/api/stock",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:124:10|hits|entry:catalog:http:GET:/api/stock",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{sku:string;count:number}",
+        "symbol": "catalog#src/router.ts:products.stock@52"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{sku:string;count:number}",
+        "symbol": "web#src/catalog.ts:stockOf"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:129:10",
+        "to": "entry:catalog:http:PATCH:/api/products/:param/price",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:129:10|hits|entry:catalog:http:PATCH:/api/products/:param/price",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{params:{id:unknown};body:{price:number}}",
+        "symbol": "web#src/catalog.ts:reprice",
+        "writes": [
+          "params",
+          "body"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{params:{id:string};body:{price:number}}",
+        "symbol": "catalog#src/router.ts:products.reprice@34"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:params.id"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:129:10",
+        "to": "entry:catalog:http:PATCH:/api/products/:param/price",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:129:10|hits|entry:catalog:http:PATCH:/api/products/:param/price",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{id:string;name:string}",
+        "symbol": "catalog#src/router.ts:products.reprice@34"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#Product",
+        "symbol": "web#src/catalog.ts:reprice"
       },
       "findings": [],
       "rulesApplied": []
@@ -1075,16 +1598,16 @@
     {
       "edge": {
         "from": "ui_api_call:web#src/catalog.ts:88:10",
-        "to": "entry:catalog:http:GET:/api/stock",
+        "to": "entry:catalog:http:GET:/api/browse",
         "type": "hits"
       },
-      "edgeKey": "ui_api_call:web#src/catalog.ts:88:10|hits|entry:catalog:http:GET:/api/stock",
+      "edgeKey": "ui_api_call:web#src/catalog.ts:88:10|hits|entry:catalog:http:GET:/api/browse",
       "direction": "request",
       "status": "hash_differs",
       "sender": {
         "service": "web",
-        "typeId": "{query:{sku:unknown};headers:{x-region:unknown}}",
-        "symbol": "web#src/catalog.ts:stockOf",
+        "typeId": "{query:{category:unknown;page:unknown};headers:{x-tenant:unknown}}",
+        "symbol": "web#src/catalog.ts:browseHooked",
         "writes": [
           "query",
           "headers"
@@ -1093,156 +1616,139 @@
       },
       "receiver": {
         "service": "catalog",
-        "typeId": "{query:{sku:string};headers:{X-Region:string}}",
-        "symbol": "catalog#src/router.ts:products.stock@52"
+        "typeId": "{query:{category:string;page:string};headers:{x-tenant:string}}",
+        "symbol": "catalog#src/router.ts:products.browse@46"
       },
-      "findings": [
-        {
-          "severity": "error",
-          "kind": "missing_required",
-          "edge": {
-            "from": "ui_api_call:web#src/catalog.ts:88:10",
-            "to": "entry:catalog:http:GET:/api/stock",
-            "type": "hits"
-          },
-          "edgeKey": "ui_api_call:web#src/catalog.ts:88:10|hits|entry:catalog:http:GET:/api/stock",
-          "direction": "request",
-          "sender": {
-            "service": "web",
-            "typeId": "{query:{sku:unknown};headers:{x-region:unknown}}",
-            "symbol": "web#src/catalog.ts:stockOf",
-            "writes": [
-              "query",
-              "headers"
-            ],
-            "writesEvery": true
-          },
-          "receiver": {
-            "service": "catalog",
-            "typeId": "{query:{sku:string};headers:{X-Region:string}}",
-            "symbol": "catalog#src/router.ts:products.stock@52"
-          },
-          "typeId": "{query:{sku:string};headers:{X-Region:string}}",
-          "field": "headers.X-Region",
-          "expected": "string",
-          "actual": null,
-          "rule": null,
-          "message": "receiver catalog requires `headers.X-Region: string`; sender web does not send it; a server hands a procedure every header lower-cased, so `headers.X-Region` it declares is never handed to it as spelled",
-          "ignored": false,
-          "ignoredBy": null
-        },
-        {
-          "severity": "info",
-          "kind": "extra_field",
-          "edge": {
-            "from": "ui_api_call:web#src/catalog.ts:88:10",
-            "to": "entry:catalog:http:GET:/api/stock",
-            "type": "hits"
-          },
-          "edgeKey": "ui_api_call:web#src/catalog.ts:88:10|hits|entry:catalog:http:GET:/api/stock",
-          "direction": "request",
-          "sender": {
-            "service": "web",
-            "typeId": "{query:{sku:unknown};headers:{x-region:unknown}}",
-            "symbol": "web#src/catalog.ts:stockOf",
-            "writes": [
-              "query",
-              "headers"
-            ],
-            "writesEvery": true
-          },
-          "receiver": {
-            "service": "catalog",
-            "typeId": "{query:{sku:string};headers:{X-Region:string}}",
-            "symbol": "catalog#src/router.ts:products.stock@52"
-          },
-          "typeId": "{query:{sku:string};headers:{X-Region:string}}",
-          "field": "headers.x-region",
-          "expected": null,
-          "actual": "unknown",
-          "rule": null,
-          "message": "sender web sends `headers.x-region: unknown`; receiver catalog declares no such field; a server hands a procedure every header lower-cased, so `headers.X-Region` it declares is never handed to it as spelled",
-          "ignored": false,
-          "ignoredBy": null
-        }
-      ],
+      "findings": [],
       "rulesApplied": [
-        "any-unknown-skip:headers.x-region",
-        "any-unknown-skip:query.sku"
+        "any-unknown-skip:headers.x-tenant",
+        "any-unknown-skip:query.category",
+        "any-unknown-skip:query.page"
       ]
     },
     {
       "edge": {
         "from": "ui_api_call:web#src/catalog.ts:88:10",
-        "to": "entry:catalog:http:GET:/api/stock",
+        "to": "entry:catalog:http:GET:/api/browse",
         "type": "hits"
       },
-      "edgeKey": "ui_api_call:web#src/catalog.ts:88:10|hits|entry:catalog:http:GET:/api/stock",
+      "edgeKey": "ui_api_call:web#src/catalog.ts:88:10|hits|entry:catalog:http:GET:/api/browse",
       "direction": "response",
-      "status": "identical",
+      "status": "hash_differs",
       "sender": {
         "service": "catalog",
-        "typeId": "{sku:string;count:number}",
-        "symbol": "catalog#src/router.ts:products.stock@52"
+        "typeId": "{id:string;name:string}[]",
+        "symbol": "catalog#src/router.ts:products.browse@46"
       },
       "receiver": {
         "service": "web",
-        "typeId": "{sku:string;count:number}",
-        "symbol": "web#src/catalog.ts:stockOf"
+        "typeId": "type:web#Product[]",
+        "symbol": "web#src/catalog.ts:browseHooked"
       },
       "findings": [],
       "rulesApplied": []
     },
     {
       "edge": {
-        "from": "ui_api_call:web#src/catalog.ts:93:10",
-        "to": "entry:catalog:http:PATCH:/api/products/:param/price",
+        "from": "ui_api_call:web#src/catalog.ts:93:21",
+        "to": "entry:catalog:http:GET:/api/page",
         "type": "hits"
       },
-      "edgeKey": "ui_api_call:web#src/catalog.ts:93:10|hits|entry:catalog:http:PATCH:/api/products/:param/price",
+      "edgeKey": "ui_api_call:web#src/catalog.ts:93:21|hits|entry:catalog:http:GET:/api/page",
       "direction": "request",
       "status": "hash_differs",
       "sender": {
         "service": "web",
-        "typeId": "{params:{id:unknown};body:{price:number}}",
-        "symbol": "web#src/catalog.ts:reprice",
+        "typeId": "{category:unknown}",
+        "symbol": "web#src/catalog.ts:pageTotal",
         "writes": [
-          "params",
-          "body"
+          "category"
         ],
         "writesEvery": true
       },
       "receiver": {
         "service": "catalog",
-        "typeId": "{params:{id:string};body:{price:number}}",
-        "symbol": "catalog#src/router.ts:products.reprice@34"
+        "typeId": "{category:string}",
+        "symbol": "catalog#src/router.ts:products.page@58"
       },
       "findings": [],
       "rulesApplied": [
-        "any-unknown-skip:params.id"
+        "any-unknown-skip:category"
       ]
     },
     {
       "edge": {
-        "from": "ui_api_call:web#src/catalog.ts:93:10",
-        "to": "entry:catalog:http:PATCH:/api/products/:param/price",
+        "from": "ui_api_call:web#src/catalog.ts:93:21",
+        "to": "entry:catalog:http:GET:/api/page",
         "type": "hits"
       },
-      "edgeKey": "ui_api_call:web#src/catalog.ts:93:10|hits|entry:catalog:http:PATCH:/api/products/:param/price",
+      "edgeKey": "ui_api_call:web#src/catalog.ts:93:21|hits|entry:catalog:http:GET:/api/page",
       "direction": "response",
       "status": "hash_differs",
       "sender": {
         "service": "catalog",
-        "typeId": "{id:string;name:string}",
-        "symbol": "catalog#src/router.ts:products.reprice@34"
+        "typeId": "{headers:{x-total:unknown};body:{id:string;name:string}[]}",
+        "symbol": "catalog#src/router.ts:products.page@58"
       },
       "receiver": {
         "service": "web",
-        "typeId": "type:web#Product",
-        "symbol": "web#src/catalog.ts:reprice"
+        "typeId": "{headers:{x-total:unknown};body:type:web#Product[]}",
+        "symbol": "web#src/catalog.ts:pageTotal"
       },
       "findings": [],
       "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:99:21",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:99:21|hits|entry:catalog:http:GET:/api/page",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{category:unknown}",
+        "symbol": "web#src/catalog.ts:pageCount",
+        "writes": [
+          "category"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{category:string}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:category"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:99:21",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:99:21|hits|entry:catalog:http:GET:/api/page",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{headers:{x-total:unknown};body:{id:string;name:string}[]}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{headers:{x-total:unknown};body:unknown}",
+        "symbol": "web#src/catalog.ts:pageCount"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:body"
+      ]
     },
     {
       "edge": {
@@ -1421,6 +1927,161 @@
       "actual": null,
       "rule": null,
       "message": "receiver catalog requires `limit: number`; sender worker does not send it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "warning",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:105:21",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:105:21|hits|entry:catalog:http:GET:/api/page",
+      "direction": "response",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{headers:{};body:{id:string;name:string}[]}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{headers:{x-next:unknown};body:type:web#Product[]}",
+        "symbol": "web#src/catalog.ts:pageNext"
+      },
+      "typeId": "{headers:{x-next:unknown};body:type:web#Product[]}",
+      "field": "headers.x-next",
+      "expected": "unknown",
+      "actual": null,
+      "rule": "header-not-declared",
+      "message": "receiver web requires `headers.x-next: unknown`; sender catalog does not send it; the procedure's output does not declare it, so it is not sent unless a middleware or the platform sets it",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:111:21",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:111:21|hits|entry:catalog:http:GET:/api/page",
+      "direction": "response",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{headers:{x-total:unknown};body:{id:string;name:string}[]}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{headers:{X-Total:unknown};body:type:web#Product[]}",
+        "symbol": "web#src/catalog.ts:pageCapital"
+      },
+      "typeId": "{headers:{X-Total:unknown};body:type:web#Product[]}",
+      "field": "headers.X-Total",
+      "expected": "unknown",
+      "actual": null,
+      "rule": null,
+      "message": "receiver web requires `headers.X-Total: unknown`; sender catalog does not send it; a client hands every response header lower-cased, so `headers.X-Total` read as a key is never there",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:111:21",
+        "to": "entry:catalog:http:GET:/api/page",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:111:21|hits|entry:catalog:http:GET:/api/page",
+      "direction": "response",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{headers:{x-total:unknown};body:{id:string;name:string}[]}",
+        "symbol": "catalog#src/router.ts:products.page@58"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "{headers:{X-Total:unknown};body:type:web#Product[]}",
+        "symbol": "web#src/catalog.ts:pageCapital"
+      },
+      "typeId": "{headers:{X-Total:unknown};body:type:web#Product[]}",
+      "field": "headers.x-total",
+      "expected": null,
+      "actual": "unknown",
+      "rule": null,
+      "message": "sender catalog sends `headers.x-total: unknown`; receiver web declares no such field; a client hands every response header lower-cased, so `headers.X-Total` read as a key is never there",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "error",
+      "kind": "missing_required",
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:124:10",
+        "to": "entry:catalog:http:GET:/api/stock",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:124:10|hits|entry:catalog:http:GET:/api/stock",
+      "direction": "request",
+      "sender": {
+        "service": "web",
+        "typeId": "{query:{sku:unknown};headers:{x-region:unknown}}",
+        "symbol": "web#src/catalog.ts:stockOf",
+        "writes": [
+          "query",
+          "headers"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{query:{sku:string};headers:{X-Region:string}}",
+        "symbol": "catalog#src/router.ts:products.stock@52"
+      },
+      "typeId": "{query:{sku:string};headers:{X-Region:string}}",
+      "field": "headers.X-Region",
+      "expected": "string",
+      "actual": null,
+      "rule": null,
+      "message": "receiver catalog requires `headers.X-Region: string`; sender web does not send it; a server hands a procedure every header lower-cased, so `headers.X-Region` it declares is never handed to it as spelled",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "ui_api_call:web#src/catalog.ts:124:10",
+        "to": "entry:catalog:http:GET:/api/stock",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/catalog.ts:124:10|hits|entry:catalog:http:GET:/api/stock",
+      "direction": "request",
+      "sender": {
+        "service": "web",
+        "typeId": "{query:{sku:unknown};headers:{x-region:unknown}}",
+        "symbol": "web#src/catalog.ts:stockOf",
+        "writes": [
+          "query",
+          "headers"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{query:{sku:string};headers:{X-Region:string}}",
+        "symbol": "catalog#src/router.ts:products.stock@52"
+      },
+      "typeId": "{query:{sku:string};headers:{X-Region:string}}",
+      "field": "headers.x-region",
+      "expected": null,
+      "actual": "unknown",
+      "rule": null,
+      "message": "sender web sends `headers.x-region: unknown`; receiver catalog declares no such field; a server hands a procedure every header lower-cased, so `headers.X-Region` it declares is never handed to it as spelled",
       "ignored": false,
       "ignoredBy": null
     },
@@ -1651,74 +2312,6 @@
       "message": "receiver catalog requires `headers.x-tenant: string`; sender web does not send it",
       "ignored": false,
       "ignoredBy": null
-    },
-    {
-      "severity": "error",
-      "kind": "missing_required",
-      "edge": {
-        "from": "ui_api_call:web#src/catalog.ts:88:10",
-        "to": "entry:catalog:http:GET:/api/stock",
-        "type": "hits"
-      },
-      "edgeKey": "ui_api_call:web#src/catalog.ts:88:10|hits|entry:catalog:http:GET:/api/stock",
-      "direction": "request",
-      "sender": {
-        "service": "web",
-        "typeId": "{query:{sku:unknown};headers:{x-region:unknown}}",
-        "symbol": "web#src/catalog.ts:stockOf",
-        "writes": [
-          "query",
-          "headers"
-        ],
-        "writesEvery": true
-      },
-      "receiver": {
-        "service": "catalog",
-        "typeId": "{query:{sku:string};headers:{X-Region:string}}",
-        "symbol": "catalog#src/router.ts:products.stock@52"
-      },
-      "typeId": "{query:{sku:string};headers:{X-Region:string}}",
-      "field": "headers.X-Region",
-      "expected": "string",
-      "actual": null,
-      "rule": null,
-      "message": "receiver catalog requires `headers.X-Region: string`; sender web does not send it; a server hands a procedure every header lower-cased, so `headers.X-Region` it declares is never handed to it as spelled",
-      "ignored": false,
-      "ignoredBy": null
-    },
-    {
-      "severity": "info",
-      "kind": "extra_field",
-      "edge": {
-        "from": "ui_api_call:web#src/catalog.ts:88:10",
-        "to": "entry:catalog:http:GET:/api/stock",
-        "type": "hits"
-      },
-      "edgeKey": "ui_api_call:web#src/catalog.ts:88:10|hits|entry:catalog:http:GET:/api/stock",
-      "direction": "request",
-      "sender": {
-        "service": "web",
-        "typeId": "{query:{sku:unknown};headers:{x-region:unknown}}",
-        "symbol": "web#src/catalog.ts:stockOf",
-        "writes": [
-          "query",
-          "headers"
-        ],
-        "writesEvery": true
-      },
-      "receiver": {
-        "service": "catalog",
-        "typeId": "{query:{sku:string};headers:{X-Region:string}}",
-        "symbol": "catalog#src/router.ts:products.stock@52"
-      },
-      "typeId": "{query:{sku:string};headers:{X-Region:string}}",
-      "field": "headers.x-region",
-      "expected": null,
-      "actual": "unknown",
-      "rule": null,
-      "message": "sender web sends `headers.x-region: unknown`; receiver catalog declares no such field; a server hands a procedure every header lower-cased, so `headers.X-Region` it declares is never handed to it as spelled",
-      "ignored": false,
-      "ignoredBy": null
     }
   ],
   "ignored": [],
@@ -1785,14 +2378,14 @@
     }
   ],
   "summary": {
-    "edges": 41,
+    "edges": 57,
     "shared": 0,
-    "identical": 16,
-    "hash_differs": 25,
+    "identical": 19,
+    "hash_differs": 38,
     "unchecked": 5,
-    "errors": 7,
-    "warnings": 0,
-    "infos": 3,
+    "errors": 8,
+    "warnings": 1,
+    "infos": 4,
     "ignored": 0
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:47:23.004Z",
+  "builtAt": "2026-11-09T12:55:21.950Z",
   "services": [
     {
       "name": "shop",
@@ -1374,6 +1374,22 @@
     },
     {
       "from": "shop#app/middleware/auth.ts:auth",
+      "to": "shop#app/pages/index.vue:pages/index",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/middleware/auth.ts",
+      "line": 3,
+      "meta": {
+        "navigates": "/",
+        "route": "/",
+        "page": "app/pages/index.vue",
+        "redirects": true
+      }
+    },
+    {
+      "from": "shop#app/middleware/auth.ts:auth",
       "to": "ui_api_call:shop#app/middleware/auth.ts:2:25",
       "type": "calls",
       "confidence": "static",
@@ -1620,6 +1636,22 @@
       "meta": {
         "middleware": "track-global",
         "order": 1
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/pages/admin.vue:admin",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 12,
+      "meta": {
+        "navigates": "/admin",
+        "route": "/admin",
+        "page": "app/pages/admin.vue",
+        "link": "NuxtLink"
       }
     },
     {

@@ -588,6 +588,41 @@ which P254 reads in every form the file is written (`defineConfig({...})`,
 a function returning one). Astro's `--host` and `server.host` choose an
 interface, not a port, and join nothing.
 
+**Navigations, and a middleware the root component adds once mounted
+(P265).** `navigateTo(...)` - in a page, a component, a route middleware or a
+composable - and `<NuxtLink to>` (or `<RouterLink>`) in a template are joined
+to the page each shows: a `calls` edge from the function that navigates (the
+handler it is written in, the middleware, or the component for a link and a
+call at the top of its setup) to the page's component, `static`, with
+`meta.navigates` (the address or name written), `meta.route` and
+`meta.page` (the page's), and `meta.byName`, `meta.replace`, `meta.link`
+where they apply; a `return navigateTo(...)` in a route middleware is a
+redirect (`meta.redirects: true`). What the page is, is the router's answer: a
+path is matched against every page's address, a static segment before a
+parameter before a catch-all, a template's `${…}` standing for a parameter;
+a name (`{ name, params }`, `:to="{ name: '...' }"`) against the name Nuxt
+gives a page from its file under `pages/` (`orders/[id].vue` is `orders-id`,
+`orders/index.vue` is `orders`, a route group left out) or the one
+`definePageMeta({ name })` writes. An address with a host, or one navigated to
+with `{ external: true }` (`external` on a link), leaves the application: a
+`navigation-external` note (info). An address no page shows, one two pages fit
+as well, and one written as code are `navigation-unresolved` rows (`meta.why`:
+`missing` and `ambiguous`, action; `dynamic`, info). `abortNavigation()` is
+recorded on the function that calls it (`meta.abortsNavigation: true`): the
+navigation it runs in shows nothing. No coverage probe counts navigations: a
+navigation is an edge between two screens, which every family's `calls`
+answers and none may own. `cycles` leaves navigations out of its walk (two
+pages linking to each other are no cycle); `dead` and every flow keep them, a
+page a link reaches being reached (`fixtures/nuxt-navigation`).
+
+`onMounted` (or `onBeforeMount`) at the top of `app.vue`'s setup, or of a
+composable that setup calls, runs its function once, on the client, when the
+root component is mounted - after the router's first navigation, before any
+other. An `addRouteMiddleware` inside it is read as one at the top of the setup
+is (P262): in every page's order after the plugins', its edge carrying
+`meta.mounted: true` beside `meta.setup`, `meta.addedIn` and
+`meta.firstNavigation: false`, rather than the `scoped` row it was.
+
 **SvelteKit `kit.files.routes` (P251).** Routes (`+server`, `+page.server`,
 `+layout.server`) and pages (`+page.svelte`) are read under the directory
 `kit.files.routes` names, `src/routes` without one; written as code, it is a
@@ -1642,7 +1677,11 @@ receiver removes it).
 ### `flowatlas cycles`
 
 Circular dependencies, cross-service ones first. A channel is collapsed into the
-one hop it really is, so a publisher and its handler read as a single step.
+one hop it really is, so a publisher and its handler read as a single step. A
+navigation from one screen to another (`meta.navigates`, P265) is left out: two
+pages linking to each other is how a front end is moved through, not a loop
+that never ends. The overview's cycle count leaves it out the same way; `dead`,
+`impact` and every flow keep it, since a page a link reaches is reached.
 
 | Flag | Default | Does |
 |---|---|---|
@@ -7473,6 +7512,49 @@ interceptor that sets its headers another way - the request records
 headers` in the edge's `rulesApplied`) rather than called missing. A call that
 writes none and runs through nothing that adds any sends none: what the
 procedure requires there is missing.
+
+What a function a client runs before every request does to the headers is
+read where it is written (P265): an axios interceptor
+(`api.interceptors.request.use(fn)`), ofetch's `onRequest` (`options.headers`)
+and ky's `beforeRequest` (`request.headers`), and on the server the same
+interceptor on an axios instance or the module, and the NestJS client's
+(`httpService.axiosRef.interceptors`, with `HttpModule.register({ headers })`
+or a `registerAsync` factory answering one) - so a server's request carries the
+headers its client adds, as a browser's does. A name set unconditionally, as a
+literal or a constant of one (`config.headers['X-Tenant'] = t`,
+`config.headers.Authorization = t`, `headers.set('X', v)`, `{
+...config.headers, X: v }`, `Object.assign(config.headers, {...})`), is a
+header every request through the client carries. A name written as code, one
+set under a condition (an early `return` included), one removed, the options
+or the headers handed to another function or read in a callback, and options
+answered with that are not the ones handed in, leave the request
+`meta.headersUnread`; a function that does nothing to the headers adds none,
+and no longer makes them unread. A set written in place of the request's own
+(`config.headers = { ... }`, an Angular `headers: new HttpHeaders({...})`)
+replaces them. An Angular interceptor's `req.clone({ headers: req.headers.set('X',
+v) })` - chained, with `.append`, through a `const` - is read as `setHeaders`
+is; `.delete` leaves them unread.
+
+The headers a caller reads off a `detailed` answer are compared with the ones
+the procedure's output declares (P265). Each reader records the names a
+request's caller reads off its answer, where the request is made where it is
+read (`meta.responseHeaderKeys`): through `get` or `has`
+(`res.headers.get('X-Total')`, the platform's response, ky's, ofetch's
+`.raw`, an Angular call observing the whole response with `observe:
+'response'`), lower-cased since the lookup ignores case; as a key
+(`response.headers['x-total']`, axios's), as written. A name written as code,
+or the headers handed on, is `meta.responseHeadersUnread`. The answer is then
+compared as `{ headers, body }`, from the caller's end: only the names it reads
+are compared, so a header the procedure declares and nobody reads is nothing;
+one it reads that the output declares agrees; one read as a key with a capital
+is never there, as a client hands every name lower-cased (`missing_required`,
+error, saying why); one the output does not declare is `missing_required`
+softened to a warning by the rule `header-not-declared`, since a middleware or
+the platform may still set it; one the HTTP layer writes by itself (`etag`,
+`content-type`, `cache-control`, ...) is not compared
+(`http-layer-header:headers.etag` in `rulesApplied`). A body neither end types is
+compared with nothing and said (`any-unknown-skip:body`), and the headers are
+still compared.
 
 A path parameter and a query key are compared by name alone: the address
 carries text, and whether the schema coerces it is the schema's to say. The

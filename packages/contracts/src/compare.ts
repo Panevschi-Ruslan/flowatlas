@@ -43,6 +43,20 @@ export interface CompareOptions {
    * call sends none of the procedure's (P262).
    */
   emptyWrittenAt?: readonly string[];
+  /**
+   * Names under a field whose absence on the sender's side is said with a
+   * rule of its own (P265): a response header a caller reads that the
+   * procedure's output does not declare, which something else may still set.
+   */
+  missingRules?: readonly MissingRule[];
+}
+
+/** A rule a `missing_required` takes at some names of one field, with the note that says why. */
+export interface MissingRule {
+  readonly path: string;
+  readonly names: readonly string[];
+  readonly rule: string;
+  readonly note: string;
 }
 
 export interface CompareResult {
@@ -61,6 +75,8 @@ interface Walk {
   emptyIsWritten: boolean;
   /** Fields where the sender's `{}` was written with no keys (P262). */
   emptyWrittenAt: readonly string[];
+  /** Names whose absence takes a rule of its own (P265). */
+  missingRules: readonly MissingRule[];
   diffs: FieldDiff[];
   rules: Set<string>;
   /** Pairs of types already being compared further up this path. */
@@ -780,13 +796,15 @@ const compareFields = (
       // A field the sender has and never sends is a different story from one it
       // does not have, and which rule took it off the wire is the story.
       const took = have?.rules.find((rule) => DROPS.has(rule));
+      // A name whose absence something else may make up for says so (P265).
+      const ruled = took === undefined ? walk.missingRules.find((each) => each.path === path && each.names.includes(want.name)) : undefined;
       record(walk, {
         kind: 'missing_required',
         path: here,
         expected: formatTypeRef(want.type),
         actual: null,
-        rule: took ?? null,
-        ...(took === undefined ? {} : { note: DROPS.get(took) as string }),
+        rule: took ?? ruled?.rule ?? null,
+        ...(took === undefined ? (ruled === undefined ? {} : { note: ruled.note }) : { note: DROPS.get(took) as string }),
       });
       continue;
     }
@@ -1035,6 +1053,7 @@ export const diffTypes = (
     whitelist: options.whitelist === true,
     emptyIsWritten: options.emptyIsWritten === true,
     emptyWrittenAt: options.emptyWrittenAt ?? [],
+    missingRules: options.missingRules ?? [],
     diffs: [],
     rules: new Set(),
     open: new Set(),
@@ -1063,6 +1082,7 @@ export const diffRefs = (
     whitelist: options.whitelist === true,
     emptyIsWritten: options.emptyIsWritten === true,
     emptyWrittenAt: options.emptyWrittenAt ?? [],
+    missingRules: options.missingRules ?? [],
     diffs: [],
     rules: new Set(),
     open: new Set(),

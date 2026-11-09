@@ -50,6 +50,12 @@ export const router = {
       .input(z.object({ query: z.object({ sku: z.string() }), headers: z.object({ 'X-Region': z.string() }) }))
       .output(z.object({ sku: z.string(), count: z.number() }))
       .handler(async ({ input }) => ({ sku: input.query.sku, count: 0 })),
+    // A detailed answer whose headers carry the count of products (P265).
+    page: os
+      .route({ method: 'GET', path: '/page', outputStructure: 'detailed' })
+      .input(z.object({ category: z.string() }))
+      .output(z.object({ headers: z.object({ 'x-total': z.string() }), body: z.array(Product) }))
+      .handler(async () => ({ headers: { 'x-total': '0' }, body: [] })),
   },
   // Loaded when first asked for, through the alias the Vite configuration declares.
   reports: lazy(() => import('@lib/reports')),

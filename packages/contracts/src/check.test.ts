@@ -1152,6 +1152,41 @@ describe("a plain request to a procedure's REST route (P256)", () => {
     expect(twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['authorization'] }, { ...tenant, signature: { params: [{ name: 'input', type: '{query:{category:string}}' }], returns: `${PRODUCT}[]` } }, { returns: `${PRODUCT}[]` }).summary).toMatchObject({ errors: 0, infos: 0 });
   });
 
+  it("compares the headers a caller reads off a detailed answer with the ones its output declares (P265)", () => {
+    const paged = {
+      method: 'GET',
+      rawPath: '/api/page',
+      outputStructure: 'detailed',
+      signature: { params: [{ name: 'input', type: '{category:string}' }], returns: `{headers:{'x-total':string};body:${PRODUCT}[]}` },
+    };
+    const answer = (meta: Record<string, unknown>) => twin({ method: 'GET', queryKeys: ['category'], ...meta }, paged, { returns: `${PRODUCT}[]` });
+    const response = (report: ContractReport) => report.edges.find((each) => each.direction === 'response');
+    // A name the output declares agrees, looked up in any case (recorded lower-cased).
+    expect(answer({ responseHeaderKeys: ['x-total'] }).summary).toMatchObject({ errors: 0, warnings: 0, infos: 0 });
+    // One the output does not declare: missing, and a middleware may still set it.
+    const more = answer({ responseHeaderKeys: ['x-next', 'x-total'] });
+    expect(findings(more)).toEqual([['response', 'missing_required', 'headers.x-next', 'warning']]);
+    expect(more.findings[0]?.message).toContain('does not declare it');
+    // Alone, too: the output's headers are then an object holding none of the names read.
+    expect(findings(answer({ responseHeaderKeys: ['x-next'] }))).toEqual([['response', 'missing_required', 'headers.x-next', 'warning']]);
+    // Read as a key with a capital: a client hands every name lower-cased, so it is never there.
+    const capital = answer({ responseHeaderKeys: ['X-Total'] });
+    expect(findings(capital)).toEqual([
+      ['response', 'missing_required', 'headers.X-Total', 'error'],
+      ['response', 'extra_field', 'headers.x-total', 'info'],
+    ]);
+    expect(capital.findings.find((each) => each.kind === 'missing_required')?.message).toContain('every response header lower-cased');
+    // One the HTTP layer writes by itself is not compared, and said; a name not known is said too.
+    const layer = answer({ responseHeaderKeys: ['etag', 'x-total'], responseHeadersUnread: true });
+    expect(findings(layer)).toEqual([]);
+    expect(response(layer)?.rulesApplied).toEqual(expect.arrayContaining(['http-layer-header:headers.etag', 'any-unknown-skip:headers']));
+    // A caller that reads none compares the body alone, as before; and a body neither end types is skipped, not blocked.
+    expect(response(answer({}))?.sender.typeId).toBe(`${PRODUCT}[]`);
+    const untyped = twin({ method: 'GET', queryKeys: ['category'], responseHeaderKeys: ['x-total'] }, paged, {});
+    expect(response(untyped)?.status).not.toBe('unchecked');
+    expect(response(untyped)?.rulesApplied).toContain('any-unknown-skip:body');
+  });
+
   it('says so where the procedure declares no input, or one whose type does not resolve', () => {
     expect(rows(twin({ method: 'GET' }, { method: 'GET', rawPath: '/api/health', input: undefined, signature: { params: [], returns: 'string' } }, { returns: 'string' }))).toEqual([
       ['request', 'procedure-input-undeclared'],

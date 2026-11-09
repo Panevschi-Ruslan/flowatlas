@@ -234,16 +234,19 @@ const judge = (lookup: GraphLookup, exchange: Exchange, options: CheckOptions): 
   }
 
   const whitelist = exchange.direction === 'request' && stripsUndecorated(lookup, exchange.edge.to);
-  const compare = (status: ContractStatus): Verdict => ({
-    status,
-    ...diffRefs(parse(sentRef), parse(wantRef), (id) => lookup.type(id), {
+  const compare = (status: ContractStatus): Verdict => {
+    const compared = diffRefs(parse(sentRef), parse(wantRef), (id) => lookup.type(id), {
       depth: options.depth ?? DEFAULT_DEPTH,
       ...(options.disableRules === undefined ? {} : { disableRules: options.disableRules }),
       ...(whitelist ? { whitelist } : {}),
       ...(exchange.sendsNothing === true ? { emptyIsWritten: true } : {}),
       ...(exchange.writtenEmptyAt === undefined ? {} : { emptyWrittenAt: exchange.writtenEmptyAt }),
-    }),
-  });
+      ...(exchange.missingRules === undefined ? {} : { missingRules: exchange.missingRules }),
+    });
+    // What the exchange left out of the comparison before it began, and why (P265).
+    const rulesApplied = exchange.rulesApplied === undefined ? compared.rulesApplied : [...new Set([...compared.rulesApplied, ...exchange.rulesApplied])].sort();
+    return { status, diffs: compared.diffs, rulesApplied };
+  };
 
   if (sentId !== undefined && sentId === wantId) {
     // One declaration, imported by both. Drift is impossible — unless the two
@@ -280,7 +283,7 @@ const judge = (lookup: GraphLookup, exchange: Exchange, options: CheckOptions): 
     // because the hash deliberately ignores what the annotations do (P02).
     return { ...compare('identical') };
   }
-  if (sentRef === wantRef) return { status: 'identical', ...nothing };
+  if (sentRef === wantRef) return { status: 'identical', diffs: [], rulesApplied: [...(exchange.rulesApplied ?? [])].sort() };
 
   return compare('hash_differs');
 };

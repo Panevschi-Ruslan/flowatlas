@@ -20,6 +20,7 @@ import {
   PLATFORM_HEADERS,
   PLATFORM_QUERY,
   writtenHeaderNames,
+  responseHeadersRead,
   precedenceOf,
   precedenceRows,
   toPosixPath,
@@ -29,8 +30,12 @@ import {
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import {
+  AXIOS,
   BASE_FIELDS,
   CLIENT_FACTORIES,
+  FETCH,
+  KY,
+  OFETCH,
   REQUEST_CLIENTS,
   VERB_CALLS,
   type CallShape,
@@ -240,9 +245,12 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const own: readonly string[] | 'unread' | undefined =
       property !== undefined && written === undefined ? 'unread' : written === undefined ? (spread ? 'unread' : undefined) : (writtenHeaderNames(written, [PLATFORM_HEADERS]) ?? 'unread');
     const instance = runs?.headers;
-    const keys = [...(Array.isArray(own) ? own : []), ...(Array.isArray(instance) ? instance : [])];
-    const unread = own === 'unread' || instance === 'unread' || runs?.hooked === true;
-    if (own === undefined && instance === undefined) return unread ? { unread: true } : {};
+    // What its hooks add once the options are merged (P265); a set written in place of the request's own replaces them.
+    const hooks = runs?.hookHeaders;
+    const replaced = hooks?.replaces === true;
+    const keys = [...(Array.isArray(own) && !replaced ? own : []), ...(Array.isArray(instance) && !replaced ? instance : []), ...(hooks?.keys ?? [])];
+    const unread = (!replaced && (own === 'unread' || instance === 'unread')) || hooks?.unread === true;
+    if (own === undefined && instance === undefined && (hooks === undefined || hooks.keys.length === 0)) return unread ? { unread: true } : {};
     return { ...(keys.length === 0 && unread ? {} : { keys: [...new Set(keys)].sort() }), ...(unread ? { unread: true as const } : {}) };
   };
 
@@ -356,6 +364,17 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     });
   };
 
+  /**
+   * Whether a client answers with the response itself, its headers on it
+   * (P265): the platform's, axios's and ky's do; ofetch's answers with the
+   * body, and its `.raw` with the response.
+   */
+  const answersWithResponse = (client: RequestClient, network: CallExpression): boolean => {
+    if (client === FETCH || client === AXIOS || client === KY) return true;
+    const callee = network.getExpression();
+    return client === OFETCH && Node.isPropertyAccessExpression(callee) && callee.getName() === 'raw';
+  };
+
   const record = (found: FoundCall, request: ReadRequest, handedIn?: string | null): void => {
     const { call: network, client, shape } = found;
     const { site } = request;
@@ -397,6 +416,8 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const body = found.described === undefined ? bodyOf(network, client, shape) : describedBodyOf(found.described);
     const query = found.described === undefined ? queryOf(network, shape) : {};
     const headers = found.described === undefined ? headersOf(network, shape, runs) : {};
+    // The headers the caller reads off the answer, where the request is made where it is read (P265).
+    const answerHeaders = site.call === network && found.described === undefined && answersWithResponse(client, network) ? responseHeadersRead(network, 'promise') : undefined;
     const application = applicationOfFile(ctx.meta, site.file);
 
     ctx.builder.addNode({
@@ -425,6 +446,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         // and whether more may be added that are not read (P262).
         ...(headers.keys === undefined ? {} : { headerKeys: headers.keys }),
         ...(headers.unread === true ? { headersUnread: true } : {}),
+        // The headers it reads off the answer, for a procedure whose output declares them (P265).
+        ...(answerHeaders === undefined || answerHeaders.keys.length === 0 ? {} : { responseHeaderKeys: answerHeaders.keys }),
+        ...(answerHeaders?.unread === true ? { responseHeadersUnread: true } : {}),
         package: client.package,
         client: client.name,
         // Which application this request is written in, where the service holds

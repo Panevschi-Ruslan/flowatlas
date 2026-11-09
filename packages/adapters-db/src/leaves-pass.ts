@@ -33,6 +33,7 @@ import {
   operationOf,
   packageNameOf,
   resolveTypeOrigin,
+  responseHeadersRead,
   causeMeta,
   whyUntyped,
   type DbDescriptor,
@@ -90,6 +91,7 @@ import { entityTableName, locateTable, locateTableAt, statedEntityTable } from '
 import { readConfig } from './leaves/config.js';
 import { loadedSettings, type LoadedSetting } from './leaves/config-load.js';
 import { configuredAccessesOf, repositoryExports } from './leaves/configured.js';
+import { serverClientHeaders, type ClientHeaders } from './leaves/client-headers.js';
 import { describedRequestOf } from './leaves/http-clients.js';
 import { hostCallOf } from './leaves/fragment.js';
 import { namesNoTable, readSqlArgument, type SqlArgument } from './leaves/sql-argument.js';
@@ -1819,6 +1821,22 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return undefined;
   };
 
+  /** What the client a request is made through adds to its headers (P265), read once for the repository. */
+  const clientHeadersOf = serverClientHeaders(() => [...repoFiles()], (node) => resolveTypeOrigin(node)?.package ?? undefined);
+
+  /**
+   * A request's own headers and its client's together (P265): the names of
+   * both, and `unread` where either may carry ones nothing here reads. A set
+   * a client's function writes in place of the request's own replaces them.
+   */
+  const headersWith = (own: readonly string[] | 'unread' | undefined, client: ClientHeaders | undefined): { keys?: readonly string[]; unread?: true } => {
+    const replaced = client?.replaces === true;
+    const keys = [...(Array.isArray(own) && !replaced ? own : []), ...(client?.keys ?? [])];
+    const unread = (own === 'unread' && !replaced) || client?.unread === true;
+    if (own === undefined && keys.length === 0) return unread ? { unread: true } : {};
+    return { ...(keys.length === 0 && unread ? {} : { keys: [...new Set(keys)].sort() }), ...(unread ? { unread: true as const } : {}) };
+  };
+
   /**
    * The query a wrapper writes into the request it makes for its callers
    * (P258): the keys it writes itself, and what it spreads or hands on from
@@ -1954,7 +1972,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const query = bothQueries(bothQueries(atSite, wrapped), builtIn === undefined ? {} : fromBuilt(builtIn));
     const queryInAddress = builtIn !== undefined && query.keys !== undefined;
     // The headers the settings written at the site write, for a procedure whose input takes them (P258).
-    const headers = readsSite ? headersAmong(init === undefined ? site.getArguments().slice(1) : [init]) : undefined;
+    const ownHeaders = readsSite ? headersAmong(init === undefined ? site.getArguments().slice(1) : [init]) : undefined;
+    // With the ones its client adds (P265): the client of the call that reaches the network.
+    const network = inner?.call ?? site;
+    const headers = headersWith(ownHeaders, clientHeadersOf(network));
+    // The headers the caller reads off the answer, where the request is made where it is read (P265).
+    const callee = network.getExpression();
+    // The framework's injected client answers with an observable, the others with a promise.
+    const observed = Node.isPropertyAccessExpression(callee) && resolveTypeOrigin(callee.getExpression())?.package === '@nestjs/axios';
+    const answerHeaders = network === site ? responseHeadersRead(site, observed ? 'observable' : 'promise') : undefined;
 
     const place = siteOf(ctx, site, owner.file);
     const id = makeLeafId('http_out', ctx.repo, owner.file, place.line, place.column);
@@ -1997,7 +2023,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(query.keys === undefined ? {} : { queryKeys: query.keys }),
         ...(query.unread === true ? { queryUnread: true } : {}),
         ...(queryInAddress ? { queryInAddress: true } : {}),
-        ...(headers === undefined ? {} : headers === 'unread' ? { headersUnread: true } : { headerKeys: headers }),
+        ...(headers.keys === undefined ? {} : { headerKeys: headers.keys }),
+        ...(headers.unread === true ? { headersUnread: true } : {}),
+        ...(answerHeaders === undefined || answerHeaders.keys.length === 0 ? {} : { responseHeaderKeys: answerHeaders.keys }),
+        ...(answerHeaders?.unread === true ? { responseHeadersUnread: true } : {}),
         ...(info.host === null ? {} : { host: info.host }),
         ...(application === undefined ? {} : { application }),
         ...(binding === undefined ? {} : { binding: binding.binding, ...(binding.typed ? {} : { bindingTyped: false }) }),

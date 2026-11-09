@@ -1,4 +1,4 @@
-import { declarationOf, isPlatformProvided, PLATFORM_HEADERS, writtenHeaderNames } from '@flowatlas/core';
+import { declarationOf, headersAHookAdds, isPlatformProvided, joinHookHeaders, NO_HOOK_HEADERS, PLATFORM_HEADERS, writtenHeaderNames, type HookHeaders } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { CLIENT_FACTORIES, type ClientFactory } from '../clients.js';
@@ -47,11 +47,13 @@ export interface ClientInstance {
    */
   readonly headers?: readonly string[] | 'unread';
   /**
-   * Whether a function runs before each of its requests - a hook among its
-   * options, an interceptor registered on it - which may add headers nothing
-   * here reads (P262).
+   * What the functions that run before each of its requests - a hook among
+   * its options, an interceptor registered on it, a call's own hook - do to
+   * its headers (P265): the names they add, and whether they may add or
+   * remove ones nothing here reads. Absent where nothing runs, or nothing
+   * that runs touches them.
    */
-  readonly hooked?: true;
+  readonly hookHeaders?: HookHeaders;
 }
 
 export interface InstanceOptions {
@@ -59,6 +61,10 @@ export interface InstanceOptions {
   /** The repository's own source files, where `defaults` assignments are looked for. */
   readonly files: () => readonly SourceFile[];
 }
+
+/** The `hookHeaders` an instance keeps: nothing where its hooks do nothing to its headers. */
+const withHeaders = (headers: HookHeaders): { hookHeaders?: HookHeaders } =>
+  headers.unread || headers.keys.length > 0 || headers.replaces === true ? { hookHeaders: headers } : {};
 
 /** How many names, functions and parents an instance is followed through before giving up. */
 const DEPTH = 6;
@@ -360,6 +366,13 @@ export const clientInstances = (options: InstanceOptions) => {
     scan();
     return assignments?.get(holder) ?? [];
   };
+  /** What the functions registered on an instance afterwards do to its headers (P265). */
+  const registeredHeaders = (holder: TsNode | ClientFactory, factory: ClientFactory): HookHeaders => {
+    scan();
+    const handed = factory.rewrites?.handed;
+    const fns = (registrations?.get(holder) ?? []).filter((each) => each.factory === factory);
+    return handed === undefined ? NO_HOOK_HEADERS : joinHookHeaders(fns.map((each) => headersAHookAdds(each.fn, handed, [PLATFORM_HEADERS])));
+  };
   /** What the functions registered on an instance afterwards do to its address (P244). */
   const registeredOn = (holder: TsNode | ClientFactory, factory: ClientFactory): RewriteReading[] => {
     scan();
@@ -444,15 +457,19 @@ export const clientInstances = (options: InstanceOptions) => {
     if (holder === undefined) return instance;
     const registered = registeredOn(holder, instance.factory);
     const readings = registered.length === 0 ? instance.readings : [...(instance.readings ?? []), ...registered];
-    // An interceptor registered on it runs before its requests whatever it does to the address (P262).
-    const hooked =
-      instance.hooked === true ||
-      (registrations?.get(holder) ?? []).some((each) => each.factory === instance.factory) ||
-      (headerDefaults && instance.factory.defaults !== undefined);
+    // What an interceptor registered on it does to its headers (P265); a default
+    // header assigned anywhere may be on its requests, and is not read (P262).
+    const hookHeaders = withHeaders(
+      joinHookHeaders([
+        instance.hookHeaders ?? NO_HOOK_HEADERS,
+        registeredHeaders(holder, instance.factory),
+        headerDefaults && instance.factory.defaults !== undefined ? { keys: [], unread: true } : NO_HOOK_HEADERS,
+      ]),
+    );
     const kept = {
       ...(readings === undefined ? {} : { readings }),
       ...(instance.headers === undefined ? {} : { headers: instance.headers }),
-      ...(hooked ? { hooked: true as const } : {}),
+      ...hookHeaders,
     };
     const based = instance.factory.defaults === undefined ? [] : defaultsOf(holder);
     if (based.length === 0) return { ...instance, ...kept };
@@ -484,21 +501,39 @@ export const clientInstances = (options: InstanceOptions) => {
     bindings: Bindings | undefined,
     at = 0,
     who?: string,
-  ): { readings: RewriteReading[]; written: boolean } => {
+  ): { readings: RewriteReading[]; written: boolean; headers: HookHeaders } => {
     const path = factory.rewrites?.optionAt;
     const config = call.getArguments()[at];
-    if (path === undefined || config === undefined) return { readings: [], written: false };
+    const none = { readings: [], written: false, headers: NO_HOOK_HEADERS };
+    if (path === undefined || config === undefined || factory.rewrites === undefined) return none;
+    const { handed } = factory.rewrites;
     let object = objectOf(config, bindings, 0);
     let found: Found = { kind: 'absent' };
     for (const [index, key] of path.entries()) {
-      if (object === undefined) return { readings: [], written: false };
+      if (object === undefined) return none;
       found = keyIn(object, key, bindings, 0);
-      if (found.kind !== 'value') return { readings: [], written: false };
+      if (found.kind !== 'value') return none;
       if (index < path.length - 1) object = objectOf(found.node, bindings, 0);
     }
-    if (found.kind !== 'value') return { readings: [], written: false };
-    const readings = functionsOf(found.node).flatMap((fn) => rewritesOf(fn, factory, (node) => readBase(node, bindings), who));
-    return { readings, written: true };
+    if (found.kind !== 'value') return none;
+    const fns = functionsOf(found.node);
+    const readings = fns.flatMap((fn) => rewritesOf(fn, factory, (node) => readBase(node, bindings), who));
+    // A hook written as code is one whose headers are not read either (P265).
+    const headers = fns.length === 0 ? { keys: [], unread: true } : joinHookHeaders(fns.map((fn) => headersAHookAdds(fn, handed, [PLATFORM_HEADERS])));
+    return { readings, written: true, headers };
+  };
+
+  /** What an instance made from an instance keeps of its parent's hooks' headers, beside its own (P265). */
+  const inheritHeaders = (factory: ClientFactory, own: { headers: HookHeaders; written: boolean }, parent: ClientInstance | undefined): HookHeaders => {
+    const inherited = parent?.hookHeaders ?? NO_HOOK_HEADERS;
+    switch (factory.rewrites?.inherited ?? 'none') {
+      case 'merged':
+        return joinHookHeaders([inherited, own.headers]);
+      case 'replaced':
+        return own.written ? own.headers : inherited;
+      case 'none':
+        return own.headers;
+    }
   };
 
   /** The readings an instance made from an instance keeps of its parent's, beside its own. */
@@ -580,7 +615,7 @@ export const clientInstances = (options: InstanceOptions) => {
           : { factory, ...(parent?.base === undefined ? {} : { base: parent.base }), ...(parent?.unread === undefined ? {} : { unread: parent.unread }) }),
         ...(readings.length === 0 ? {} : { readings }),
         ...(headers === undefined ? {} : { headers }),
-        ...(hooks.written || parent?.hooked === true ? { hooked: true as const } : {}),
+        ...withHeaders(inheritHeaders(factory, hooks, parent)),
       };
       return withDefaults(made, holderAt(target));
     }
@@ -609,8 +644,8 @@ export const clientInstances = (options: InstanceOptions) => {
     const own = hooksIn(factory, call, undefined, optionsAt, 'a hook this call runs before its request');
     if (!own.written) return undefined;
     const readings = inherit(factory, own, instance);
-    const { rewrite: _rewrite, rewriteUnread: _unread, readings: _readings, ...made } = instance ?? { factory };
-    return finished({ ...made, ...(readings.length === 0 ? {} : { readings }), hooked: true });
+    const { rewrite: _rewrite, rewriteUnread: _unread, readings: _readings, hookHeaders: _headers, ...made } = instance ?? { factory };
+    return finished({ ...made, ...(readings.length === 0 ? {} : { readings }), ...withHeaders(inheritHeaders(factory, own, instance)) });
   };
 
   return {

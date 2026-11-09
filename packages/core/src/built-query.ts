@@ -64,7 +64,7 @@ const literalText = (node: TsNode | undefined): string | undefined =>
  * checker's answer to what the name can hold, so a `let` or a parameter typed
  * `string` stays unread.
  */
-const keyText = (node: TsNode | undefined): string | undefined => {
+export const writtenKey = (node: TsNode | undefined): string | undefined => {
   if (node === undefined) return undefined;
   const value = unwrapped(node);
   const literal = literalText(value);
@@ -101,14 +101,14 @@ const keysOfInit = (builder: QueryBuilder, argument: TsNode | undefined): BuiltQ
   const object = builder.object === undefined ? undefined : builder.object === '' ? value : objectProperty(value, builder.object);
   const text = builder.text === undefined ? undefined : builder.text === '' ? value : objectProperty(value, builder.text);
   if (text !== undefined) {
-    const written = keyText(text);
+    const written = writtenKey(text);
     if (written !== undefined) return { keys: keysOfText(written) };
   }
   if (builder.pairs === true && Node.isArrayLiteralExpression(value)) {
     const keys: string[] = [];
     for (const element of value.getElements()) {
       const pair = unwrapped(element);
-      const key = Node.isArrayLiteralExpression(pair) ? keyText(pair.getElements()[0]) : undefined;
+      const key = Node.isArrayLiteralExpression(pair) ? writtenKey(pair.getElements()[0]) : undefined;
       if (key === undefined) return UNREAD;
       keys.push(key);
     }
@@ -165,7 +165,7 @@ const read = (node: TsNode, builders: readonly QueryBuilder[], seen: Set<TsSymbo
     if (base === undefined) return undefined;
     const builder = builderOf(callee.getExpression(), builders);
     if (builder === undefined || !builder.adds.includes(callee.getName())) return undefined;
-    const key = keyText(value.getArguments()[0]);
+    const key = writtenKey(value.getArguments()[0]);
     return join([base, key === undefined ? UNREAD : { keys: [key] }]);
   }
   if (!Node.isIdentifier(value)) return undefined;
@@ -199,7 +199,7 @@ const read = (node: TsNode, builders: readonly QueryBuilder[], seen: Set<TsSymbo
     if (!Node.isPropertyAccessExpression(callee) || !builder.adds.includes(callee.getName())) return;
     const target = unwrapped(callee.getExpression());
     if (!Node.isIdentifier(target) || symbolOf(target) !== symbol) return;
-    const key = keyText(each.getArguments()[0]);
+    const key = writtenKey(each.getArguments()[0]);
     parts.push(key === undefined ? UNREAD : { keys: [key] });
   });
   return join(parts);
@@ -247,7 +247,7 @@ const trailingText = (node: TsNode): string | undefined => {
   const value = unwrapped(node);
   if (Node.isTemplateExpression(value)) return value.getTemplateSpans().at(-1)?.getLiteral().getLiteralText();
   if (Node.isBinaryExpression(value) && value.getOperatorToken().getText() === '+') return trailingText(value.getRight());
-  return keyText(value);
+  return writtenKey(value);
 };
 
 /**

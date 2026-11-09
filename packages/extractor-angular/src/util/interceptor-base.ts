@@ -1,4 +1,4 @@
-import { asksAbsolute, conditionsAround, PLATFORM_HEADERS, prefixOfRewrite, writtenHeaderNames } from '@flowatlas/core';
+import { asksAbsolute, builtQueryOf, conditionsAround, PLATFORM_HEADERS, prefixOfRewrite, writtenHeaderNames, writtenKey, type QueryBuilder } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { analyzeBaseUrl, type ApiUrl } from './url.js';
@@ -129,20 +129,69 @@ export const interceptorBaseOf = (files: readonly SourceFile[], sharedPackages: 
 /**
  * The headers the repository's interceptors put on every request of the
  * framework's client (P262): the names `req.clone({ setHeaders: { ... } })`
- * writes in place, unconditionally. `unread` where an interceptor sets its
- * headers any other way - `headers:` built from the request's, names written
- * as code, under a condition - since a request may then carry, or lack, ones
- * nothing here reads.
+ * writes in place, unconditionally, and the ones `headers:` writes (P265) -
+ * the request's own with `.set` and `.append` after them, or a new set made
+ * in their place, `new HttpHeaders({ ... })`. `unread` where an interceptor
+ * sets its headers any other way - names written as code, one removed, under
+ * a condition - since a request may then carry, or lack, ones nothing here
+ * reads.
  */
 export interface InterceptorHeaders {
   readonly keys: readonly string[];
   readonly unread: boolean;
+  /** An interceptor writes a whole set in place of the request's own (`headers: new HttpHeaders(...)`). */
+  readonly replaces?: true;
 }
+
+/** The framework's headers and the platform's, as a set written in place of a request's own is built. */
+const HEADER_BUILDERS: readonly QueryBuilder[] = [{ class: 'HttpHeaders', object: '', adds: ['set', 'append'], immutable: true }, PLATFORM_HEADERS];
+
+/** How many names a value written for `headers:` is followed through. */
+const HEADERS_DEPTH = 4;
+
+/**
+ * What `headers:` in a clone writes (P265): the request's own headers with
+ * names added - `req.headers.set('X-Tenant', t).append('X-Trace', id)` - or a
+ * set made in their place. `undefined` where it is written in a way not read.
+ */
+const clonedHeaders = (written: TsNode, request: TsNode, depth = 0): { keys: string[]; based: boolean } | undefined => {
+  const value = unwrap(written);
+  // `req.headers`: the request's own, as they are.
+  if (Node.isPropertyAccessExpression(value) && value.getName() === 'headers') {
+    const owner = unwrap(value.getExpression());
+    return Node.isIdentifier(owner) && owner.getSymbol()?.getDeclarations()[0] === request ? { keys: [], based: true } : undefined;
+  }
+  if (Node.isCallExpression(value)) {
+    const callee = value.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    const method = callee.getName();
+    if (method === 'set' || method === 'append') {
+      const before = clonedHeaders(callee.getExpression(), request, depth);
+      const key = writtenKey(value.getArguments()[0]);
+      if (before === undefined || key === undefined) return undefined;
+      return { keys: [...before.keys, key.toLowerCase()], based: before.based };
+    }
+    // `delete` takes a name off: which the request still carries is not read.
+    if (method === 'delete') return undefined;
+  }
+  // A name holding them, a `const` written in the interceptor.
+  if (Node.isIdentifier(value) && depth < HEADERS_DEPTH) {
+    const declaration = value.getSymbol()?.getDeclarations()[0];
+    const held = declaration !== undefined && Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
+    if (held !== undefined) return clonedHeaders(held, request, depth + 1);
+  }
+  // `new HttpHeaders({ ... })`, `new HttpHeaders().set(...)`: a set in place of the request's own.
+  const built = builtQueryOf(value, HEADER_BUILDERS);
+  if (built === undefined || 'unread' in built) return undefined;
+  return { keys: built.keys.map((key) => key.toLowerCase()), based: false };
+};
 
 export const interceptorHeadersOf = (files: readonly SourceFile[]): InterceptorHeaders => {
   const texts = files.map((file) => file.getFullText());
   const keys = new Set<string>();
   let unread = false;
+  let replacing = 0;
+  let writing = 0;
   files.forEach((file, index) => {
     const text = texts[index] ?? '';
     if (!text.includes('.clone(') || !/\b(?:setHeaders|headers)\b/.test(text)) return;
@@ -158,18 +207,33 @@ export const interceptorHeadersOf = (files: readonly SourceFile[]): InterceptorH
         unread = true;
         continue;
       }
-      if (options.getProperty('headers') !== undefined) unread = true;
+      const conditional = conditionsAround(call, interceptor.fn).length > 0;
+      // `headers: req.headers.set('X-Tenant', t)`, `headers: new HttpHeaders({ ... })` (P265).
+      const whole = options.getProperty('headers');
+      if (whole !== undefined) {
+        const value = Node.isPropertyAssignment(whole) ? whole.getInitializer() : Node.isShorthandPropertyAssignment(whole) ? whole.getNameNode() : undefined;
+        const read = value === undefined ? undefined : clonedHeaders(value, interceptor.request);
+        if (read === undefined || conditional) unread = true;
+        else {
+          writing += 1;
+          if (!read.based) replacing += 1;
+          for (const name of read.keys) keys.add(name);
+        }
+      }
       const property = options.getProperty('setHeaders');
       if (property === undefined) continue;
       const written = Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
       const names = written === undefined ? undefined : writtenHeaderNames(written, [PLATFORM_HEADERS]);
       // A header set only for some requests may be missing from the one compared.
-      if (names === undefined || conditionsAround(call, interceptor.fn).length > 0) {
+      if (names === undefined || conditional) {
         unread = true;
         continue;
       }
+      writing += 1;
       for (const name of names) keys.add(name);
     }
   });
-  return { keys: [...keys].sort(), unread };
+  // A set written in place of a request's own, beside another interceptor's: which runs last is not read.
+  if (replacing > 0 && writing > 1) return { keys: [...keys].sort(), unread: true };
+  return { keys: [...keys].sort(), unread, ...(replacing > 0 && !unread ? { replaces: true as const } : {}) };
 };

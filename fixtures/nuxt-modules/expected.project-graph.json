@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:47:28.104Z",
+  "builtAt": "2026-11-09T12:55:27.065Z",
   "services": [
     {
       "name": "shop",
@@ -848,6 +848,22 @@
       "confidence": "static",
       "file": "modules/catalog/runtime/composables/useCatalog.ts",
       "line": 2
+    },
+    {
+      "from": "shop#modules/catalog/runtime/middleware/guard.ts:catalog-guard",
+      "to": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "modules/catalog/runtime/middleware/guard.ts",
+      "line": 2,
+      "meta": {
+        "navigates": "/catalog",
+        "route": "/catalog",
+        "page": "modules/catalog/runtime/pages/catalog.vue",
+        "redirects": true
+      }
     },
     {
       "from": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",

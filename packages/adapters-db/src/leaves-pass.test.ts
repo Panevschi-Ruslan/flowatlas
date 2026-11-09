@@ -411,6 +411,18 @@ describe('the query a request writes in its options (P256)', () => {
     expect(browse?.meta).toMatchObject({ queryKeys: ['category', 'page'], headersUnread: true });
     expect(browse?.meta).not.toHaveProperty('headerKeys');
   });
+
+  it("reads the headers a server's client adds - an instance's interceptor, the framework's module - and the ones read off the answer (P265)", async () => {
+    const graph = await graphOf('rpc-shared-types/apps/worker');
+    const from = (method: string) => {
+      const call = graph.edges.find((edge) => edge.type === 'calls' && edge.from.endsWith(`:CatalogTenant.${method}`) && edge.to.startsWith('http_out'));
+      return graph.nodes.find((node) => node.id === call?.to)?.meta ?? {};
+    };
+    expect(from('browse')).toMatchObject({ path: '/api/browse', headerKeys: ['x-tenant'] });
+    expect(from('browse')).not.toHaveProperty('headersUnread');
+    expect(from('browseShared')).toMatchObject({ path: '/api/browse', headerKeys: ['x-tenant'] });
+    expect(from('total')).toMatchObject({ path: '/api/page', headerKeys: ['x-tenant'], responseHeaderKeys: ['x-total'] });
+  });
 });
 
 describe('tables named where they are set (P88)', () => {

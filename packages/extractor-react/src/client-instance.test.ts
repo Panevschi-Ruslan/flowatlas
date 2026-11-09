@@ -259,10 +259,84 @@ describe('an axios instance carries the base it was made with (P239)', () => {
     expect(at('/search')).toMatchObject({ url: '/search?${…}', path: '/search', queryKeys: ['page', 'q'], queryInAddress: true });
     expect(at('/t/orders')).toMatchObject({ headerKeys: ['accept', 'x-tenant'] });
     expect(at('/t/orders')).not.toHaveProperty('headersUnread');
-    expect(at('/r/reports')).toMatchObject({ headerKeys: ['accept'], headersUnread: true });
-    expect(at('/r/plain')).toMatchObject({ headersUnread: true });
+    // An interceptor that does nothing to the headers adds none (P265).
+    expect(at('/r/reports')).toMatchObject({ headerKeys: ['accept'] });
+    expect(at('/r/reports')).not.toHaveProperty('headersUnread');
+    expect(at('/r/plain')).not.toHaveProperty('headersUnread');
     expect(at('/d')).toMatchObject({ headersUnread: true });
     expect(at('/d')).not.toHaveProperty('headerKeys');
+  });
+
+  it('reads the headers an interceptor, an `onRequest` and a `beforeRequest` hook set, and says the ones it cannot (P265)', () => {
+    const graph = read({
+      '/src/api.ts': `
+        import axios from 'axios';
+        import { ofetch } from 'ofetch';
+        import ky from 'ky';
+        declare const session: { token?: string; tenant: string };
+        export const tenant = axios.create({ baseURL: '/t' });
+        tenant.interceptors.request.use((config) => {
+          config.headers['X-Tenant'] = session.tenant;
+          return config;
+        });
+        export const signed = axios.create({ baseURL: '/s' });
+        signed.interceptors.request.use((config) => {
+          if (session.token) config.headers.Authorization = session.token;
+          return config;
+        });
+        export const fetcher = ofetch.create({ baseURL: '/f', onRequest({ options }) { options.headers.set('X-Tenant', session.tenant); } });
+        export const kyApi = ky.create({ prefixUrl: '/k', hooks: { beforeRequest: [(request) => { request.headers.set('X-Trace', '1'); }] } });
+        export const child = kyApi.extend({ hooks: { beforeRequest: [(request) => request.headers.set('X-Tenant', session.tenant)] } });
+      `,
+      '/src/Panel.tsx': `
+        import { tenant, signed, fetcher, kyApi, child } from './api';
+        export const Panel = () => {
+          const load = () => {
+            tenant.get('/orders', { headers: { Accept: 'json' } });
+            signed.get('/me');
+            fetcher('/carts');
+            kyApi.get('/stock');
+            child.get('/stores');
+          };
+          return <button onClick={load} />;
+        };
+      `,
+    });
+    const at = (path: string) => requests(graph).find((node) => String(node.meta?.['path']).endsWith(path))?.meta ?? {};
+    expect(at('/t/orders')).toMatchObject({ headerKeys: ['accept', 'x-tenant'] });
+    expect(at('/t/orders')).not.toHaveProperty('headersUnread');
+    // Set only when there is a token: a request may lack it.
+    expect(at('/s/me')).toMatchObject({ headersUnread: true });
+    expect(at('/f/carts')).toMatchObject({ headerKeys: ['x-tenant'] });
+    expect(at('/f/carts')).not.toHaveProperty('headersUnread');
+    expect(at('/k/stock')).toMatchObject({ headerKeys: ['x-trace'] });
+    // ky's `extend` keeps its parent's hooks beside its own.
+    expect(at('/k/stores')).toMatchObject({ headerKeys: ['x-tenant', 'x-trace'] });
+  });
+
+  it('reads the headers a caller reads off the answer, where the client answers with the response (P265)', () => {
+    const graph = read({
+      '/src/Panel.tsx': `
+        import axios from 'axios';
+        import { ofetch } from 'ofetch';
+        export const Panel = () => {
+          const load = async () => {
+            const a = await fetch('/a');
+            const b = await axios.get('/b');
+            const c = await ofetch.raw('/c');
+            const d = await ofetch('/d');
+            return [a.headers.get('X-Total'), b.headers['x-page'], c.headers.get('x-next'), (d as any).headers];
+          };
+          return <button onClick={load} />;
+        };
+      `,
+    });
+    const at = (path: string) => requests(graph).find((node) => String(node.meta?.['path']).endsWith(path))?.meta ?? {};
+    expect(at('/a')).toMatchObject({ responseHeaderKeys: ['x-total'] });
+    expect(at('/b')).toMatchObject({ responseHeaderKeys: ['x-page'] });
+    expect(at('/c')).toMatchObject({ responseHeaderKeys: ['x-next'] });
+    // ofetch answers with the body: nothing on it is a header.
+    expect(at('/d')).not.toHaveProperty('responseHeaderKeys');
   });
 
   it('applies the module defaults to calls on the module itself', () => {

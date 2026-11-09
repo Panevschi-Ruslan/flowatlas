@@ -860,7 +860,9 @@ prove, and the path is given so you can run it.
   every page's order and one a component adds is said; Nuxt UI and a prefix
   the application sets for PrimeVue or Nuxt UI are the libraries' names; and
   tasks a build without Nitro's tasks flag never registers are marked so
-  (`fixtures/nuxt-startup-names`). A verb a helper built, aliased or re-exported is
+  (`fixtures/nuxt-startup-names`). A `navigateTo` or a `<NuxtLink>` joins the
+  page it shows, by its address or its name, and one out of the application or
+  to no page is said (`fixtures/nuxt-navigation`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
   `zsa` is a boundary with its callers (`fixtures/next-actions`).
@@ -888,8 +890,10 @@ prove, and the path is given so you can run it.
   headers and body - a query built in code (`URLSearchParams`, `HttpParams`,
   a wrapper's own, keys held in constants, an address joined with `+`) read as
   one written out, and the headers a detailed input declares compared from its
-  end - and its answer with the
-  procedure's output; a client typed from an
+  end, with the ones a client's interceptors and hooks add, in a browser or on
+  a server - and its answer with the
+  procedure's output, a detailed answer's headers with the ones its caller
+  reads off it; a client typed from an
   `AppRouter` a workspace package exports is compared through it, and joins the
   service that mounts the tree; Fastify's and Hono's tRPC mounts are read; and a
   client a module's `forRoot` / `forRootAsync` builds is followed to its address

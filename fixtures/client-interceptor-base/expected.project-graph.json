@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T16:48:47.652Z",
+  "builtAt": "2026-11-09T11:33:11.705Z",
   "services": [
     {
       "name": "orders",
@@ -597,7 +597,9 @@
         "bodyKeys": [
           "name"
         ],
-        "headersUnread": true,
+        "headerKeys": [
+          "x-client"
+        ],
         "package": "axios",
         "client": "axios",
         "baseFrom": "interceptor",
@@ -620,7 +622,6 @@
         "baseUrlEnv": "VITE_BILLING_URL",
         "responseType": null,
         "bodyType": null,
-        "headersUnread": true,
         "package": null,
         "client": "ofetch",
         "baseFrom": "interceptor",
@@ -647,7 +648,6 @@
         "bodyKeys": [
           "name"
         ],
-        "headersUnread": true,
         "package": "ky",
         "client": "ky",
         "baseFrom": "interceptor",
@@ -671,7 +671,6 @@
         "baseUrlEnv": "VITE_BILLING_URL",
         "responseType": null,
         "bodyType": null,
-        "headersUnread": true,
         "package": "axios",
         "client": "axios",
         "baseFrom": "interceptor",
@@ -694,7 +693,6 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "headersUnread": true,
         "package": "axios",
         "client": "axios",
         "via": "literal"
@@ -715,7 +713,9 @@
         "baseUrlEnv": "VITE_ORDERS_URL",
         "responseType": null,
         "bodyType": null,
-        "headersUnread": true,
+        "headerKeys": [
+          "x-client"
+        ],
         "package": "axios",
         "client": "axios",
         "baseFrom": "interceptor",

@@ -62,6 +62,8 @@ const NOTES: readonly string[] = [
   'framework-module-skipped',
   // A feature the files use that the build's own flag turns off: Nitro's tasks (P262)
   'framework-feature-off',
+  // A navigation out of the application, to an address with a host (P265)
+  'navigation-external',
   // Stand-ins for a package that is not installed (core/stand-ins.ts, P78)
   'package-from-repo',
   'package-version-differs',
@@ -310,6 +312,8 @@ const GAPS: readonly string[] = [
   'component-unresolved',
   'layout-unresolved',
   'route-middleware-unresolved',
+  // A navigation to an address no page shows, two fit, or written as code (P265)
+  'navigation-unresolved',
   'handler-not-a-method',
   'template-not-found',
   'template-not-parsed',

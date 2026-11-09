@@ -76,6 +76,42 @@ export function browseWith(headers: Record<string, string>, page: string) {
   return axios.get<Product[]>(`${CATALOG}/api/browse`, { params: { category: 'tea', page }, headers });
 }
 
+/** An instance whose interceptor sets the tenant on every request made through it (P265). */
+const hookedCatalog = axios.create({ baseURL: CATALOG });
+hookedCatalog.interceptors.request.use((config) => {
+  config.headers['X-Tenant'] = 'north';
+  return config;
+});
+
+/** The tenant the interceptor sets reaches `products.browse`: agrees (P265). */
+export function browseHooked(page: string) {
+  return hookedCatalog.get<Product[]>('/api/browse', { params: { category: 'tea', page } });
+}
+
+/** The count `products.page` answers in a header, read as the key it arrives under: agrees (P265). */
+export async function pageTotal(category: string) {
+  const res = await axios.get<Product[]>(`${CATALOG}/api/page`, { params: { category } });
+  return Number(res.headers['x-total']);
+}
+
+/** Looked up through the platform's `get`, whatever its case: agrees (P265). */
+export async function pageCount(category: string) {
+  const res = await fetch(`${CATALOG}/api/page?category=${category}`);
+  return Number(res.headers.get('X-Total'));
+}
+
+/** A header the output does not declare (a warning), and one the HTTP layer writes (not compared) (P265). */
+export async function pageNext(category: string) {
+  const res = await axios.get<Product[]>(`${CATALOG}/api/page`, { params: { category } });
+  return { next: res.headers['x-next'], etag: res.headers.etag };
+}
+
+/** Read as a key with a capital: never there, as a client hands every name lower-cased (P265). */
+export async function pageCapital(category: string) {
+  const res = await axios.get<Product[]>(`${CATALOG}/api/page`, { params: { category } });
+  return Number(res.headers['X-Total']);
+}
+
 const SKU = 'sku';
 
 /**

@@ -46,6 +46,32 @@ only one of them moved.
   installed is read by its import and said as `module-import-not-installed`
   (new reason), where it was `module-import-dynamic`. New fixture
   `multi-repo-failure-values`.
+- **Navigations, the headers a client's hooks add, and the headers an answer
+  is read for (P265).** `navigateTo(...)` and `<NuxtLink to>` are `calls`
+  edges to the page each shows (`meta.navigates`, `meta.route`,
+  `meta.page`), matched by path - a template's `${…}` as a parameter - or by
+  the name Nuxt gives a page's file or its `definePageMeta({ name })`; a
+  middleware's `return navigateTo(...)` is `meta.redirects`; an address with
+  a host or `{ external: true }` is a `navigation-external` note, and one no
+  page shows, two fit or written as code a `navigation-unresolved` row;
+  `abortNavigation()` is `meta.abortsNavigation` on the function that calls
+  it; `cycles` (and the overview's count) leaves navigations out, so two pages
+  linking to each other are no cycle. An `addRouteMiddleware` inside `onMounted` (or `onBeforeMount`) in
+  `app.vue`'s setup is in every page's order as one at the top of the setup is,
+  `meta.mounted: true`. What an axios interceptor, ofetch's `onRequest` and
+  ky's `beforeRequest` do to the headers is read - names set unconditionally
+  are the request's, anything else `meta.headersUnread`, and one that does
+  nothing to them adds none - in the browser and on the server, where an axios
+  instance's own headers and interceptors, the module's, and NestJS's
+  `HttpModule.register({ headers })` and `axiosRef` interceptors are read too.
+  An Angular interceptor's `req.clone({ headers: req.headers.set(...) })` and
+  `headers: new HttpHeaders({...})` are read as `setHeaders` is. The three
+  readers record the headers a caller reads off the answer
+  (`meta.responseHeaderKeys`), and a detailed oRPC output's `headers` are
+  compared with them from the caller's end: a capital read as a key is an
+  error, a name the output does not declare a warning (`header-not-declared`),
+  one the HTTP layer writes not compared. New fixture `nuxt-navigation`;
+  `rpc-shared-types` extended.
 
 - **The front end's and the RPC readers' last open names (P262).** An
   `addRouteMiddleware` at the top of `app.vue`'s setup, or of a composable

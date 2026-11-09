@@ -565,6 +565,23 @@ export const makeDeployedReference = (kind: DeployedEntryKind, name: string): st
 export const STARTS_META = 'starts';
 
 /**
+ * The key of a `calls` edge's `meta` that says the call is a navigation
+ * (P265): the address or name a screen navigates by, the edge running to the
+ * screen it shows.
+ *
+ * A navigation is a call of the screen it lands on for every question about
+ * what showing a screen leads to, and for whether a screen is reached. It is
+ * not one for a cycle: two screens linking to each other is how a front end
+ * is moved through, not a recursion that never ends, so a walk for cycles
+ * leaves it out ({@link isNavigationEdge}).
+ */
+export const NAVIGATES_META = 'navigates';
+
+/** Whether an edge is a navigation from one screen to another (P265). */
+export const isNavigationEdge = (edge: { readonly type: string; readonly meta?: Readonly<Record<string, unknown>> | null | undefined }): boolean =>
+  edge.type === 'calls' && typeof edge.meta?.[NAVIGATES_META] === 'string';
+
+/**
  * The reference an entry id answers to, or `undefined` for an id that is not
  * an entry's.
  *

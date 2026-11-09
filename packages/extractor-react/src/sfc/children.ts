@@ -7,6 +7,7 @@ import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { svelteMarkupTags, vueTemplateTags, type MarkupTag } from './events.js';
+import { drawNavigations } from './navigation.js';
 import { asyncComponentFile, installedPlugins, librarySettingsOf, libraryOf, type InstalledPlugins } from './registrations.js';
 
 /**
@@ -323,6 +324,27 @@ export const drawChildren = (
     if (nuxt !== undefined && rendering !== undefined && nuxt.pages.has(made.file)) pageFlow(ctx, nuxt, rendering, runtime, scoped, byFile, component, made, script, edge);
     if (sveltekit !== undefined && svelte) sveltekitPageFlow(ctx, sveltekit, byFile, component, made, edge);
   }
+
+  // Where the application navigates, each to the page it shows (P265).
+  if (nuxt !== undefined) {
+    const scripts = new Set(components.map(({ script }) => script));
+    const middlewareFiles = new Map(nuxt.names.middleware.map((each) => [each.file, each.name] as const));
+    drawNavigations(
+      ctx,
+      nuxt.pages,
+      byFile,
+      (file) => components.find(({ made }) => made.file === file)?.script,
+      [
+        ...components.map(({ component, made, script }) => ({ file: made.file, script, component, ...(made.format.extension === '.vue' ? { markup: made.text } : {}) })),
+        ...sources.filter((source) => !scripts.has(source)).map((script) => ({ file: ctx.fileOf(script), script })),
+      ],
+      (file) => {
+        const name = middlewareFiles.get(file);
+        return name === undefined ? undefined : middlewareFunction(ctx, name, file);
+      },
+      edge,
+    );
+  }
 };
 
 const isTag = (tag: MarkupTag, pascal: string): boolean => pascalOf(tag.name) === pascal;
@@ -517,7 +539,8 @@ interface RuntimeMiddleware {
    * repo-relative plugin file; `{ setup, addedIn, firstNavigation: false }`
    * the root component and the file of the call - a middleware the root
    * component adds runs from the navigation after the first, which the
-   * router makes before the root component is set up.
+   * router makes before the root component is set up; `mounted: true` beside
+   * them where it is added in `onMounted` (P265), on the client alone.
    */
   readonly from: Readonly<Record<string, unknown>>;
 }
@@ -588,6 +611,13 @@ const additionOf = (ctx: ReactExtractContext, node: CallExpression, file: string
 const STARTUP_DEPTH = 4;
 
 /**
+ * The hooks of the root component that run once, on the client, once it is
+ * mounted (P265): after the router's first navigation, as its setup is, and
+ * never on the server.
+ */
+const MOUNT_HOOKS: ReadonlySet<string> = new Set(['onMounted', 'onBeforeMount']);
+
+/**
  * The route middleware added outside a plugin (P262). Nuxt runs its plugins,
  * makes its first navigation, and then sets up the root component; an
  * `addRouteMiddleware` at the top of that setup - `app.vue`'s `<script
@@ -598,6 +628,11 @@ const STARTUP_DEPTH = 4;
  * startup calls - it runs when that code runs, so which navigations it stands
  * in front of is not something the files say: a row at the call, and the
  * names it adds kept for the page that names one.
+ *
+ * `onMounted` (or `onBeforeMount`) at the top of that setup runs its function
+ * once too (P265), on the client, when the root component is mounted - after
+ * the first navigation, before any other - so what it adds is the setup's,
+ * said `mounted: true`.
  */
 const startupMiddlewareOf = (
   ctx: ReactExtractContext,
@@ -615,11 +650,11 @@ const startupMiddlewareOf = (
   });
   if (calls.length === 0) return { added, scoped };
 
-  // The calls the root component's setup makes, each with the file it is written in.
-  const atStartup = new Map<TsNode, string>();
+  // The calls the root component's setup makes, each with the file it is written in, and whether once it is mounted.
+  const atStartup = new Map<TsNode, { file: string; mounted: boolean }>();
   const root = components.find(({ made }) => made.file === nuxt.names.root);
   const walked = new Set<TsNode>();
-  const walk = (body: TsNode, depth: number): void => {
+  const walk = (body: TsNode, depth: number, mounted = false): void => {
     if (walked.has(body) || depth > STARTUP_DEPTH) return;
     walked.add(body);
     body.forEachDescendant((node, traversal) => {
@@ -630,18 +665,25 @@ const startupMiddlewareOf = (
       }
       if (!Node.isCallExpression(node)) return;
       if (isAddRouteMiddleware(node)) {
-        atStartup.set(node, ctx.fileOf(node));
+        atStartup.set(node, { file: ctx.fileOf(node), mounted });
         return;
       }
       const callee = node.getExpression();
       if (!Node.isIdentifier(callee)) return;
+      // `onMounted(() => ...)`: the function runs once, when the root component is mounted (P265).
+      if (MOUNT_HOOKS.has(callee.getText())) {
+        const [hook] = node.getArguments();
+        const hookBody = hook !== undefined && (Node.isArrowFunction(hook) || Node.isFunctionExpression(hook)) ? hook.getBody() : undefined;
+        if (hookBody !== undefined) walk(hookBody, depth + 1, true);
+        return;
+      }
       const symbol = callee.getSymbol();
       for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
         if (declaration.getSourceFile().getFilePath().includes('/node_modules/')) continue;
         const fn = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
         if (fn !== undefined && (Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isFunctionDeclaration(fn))) {
           const fnBody = fn.getBody();
-          if (fnBody !== undefined) walk(fnBody, depth + 1);
+          if (fnBody !== undefined) walk(fnBody, depth + 1, mounted);
         }
       }
     });
@@ -661,10 +703,11 @@ const startupMiddlewareOf = (
     sourceFile.forEachDescendant((node) => {
       if (!isAddRouteMiddleware(node)) return;
       const file = ctx.fileOf(node);
-      const addedIn = atStartup.get(node);
-      if (addedIn !== undefined && nuxt.names.root !== undefined) {
+      const startup = atStartup.get(node);
+      if (startup !== undefined && nuxt.names.root !== undefined) {
         const read = additionOf(ctx, node as CallExpression, file);
-        if (read !== undefined) added.push({ ...read, from: { setup: nuxt.names.root, addedIn, firstNavigation: false } });
+        const from = { setup: nuxt.names.root, addedIn: startup.file, firstNavigation: false, ...(startup.mounted ? { mounted: true } : {}) };
+        if (read !== undefined) added.push({ ...read, from });
         return;
       }
       const [first] = (node as CallExpression).getArguments();

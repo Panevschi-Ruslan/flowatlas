@@ -21,6 +21,7 @@ import {
   type GraphNode,
   type TypeRefAst,
 } from '@flowatlas/core';
+import type { MissingRule } from './compare.js';
 import { envelopeOf, readThrough, wrapped, type Blocked } from './envelope.js';
 import { edgeKeyOf } from './key.js';
 import type { ContractParty, Direction, GraphLookup, UncheckedReason } from './types.js';
@@ -76,6 +77,10 @@ export interface Exchange {
    * what the receiver requires there is missing.
    */
   writtenEmptyAt?: readonly string[];
+  /** Names whose absence on the sender's side is said with a rule of its own (P265). */
+  missingRules?: readonly MissingRule[];
+  /** Rules that took something out of the comparison before it began, with the path (P265). */
+  rulesApplied?: readonly string[];
 }
 
 /** References that name no shape, so there is nothing to compare against. */
@@ -351,6 +356,71 @@ const headersSent = (asked: Record<string, unknown>, declared: readonly string[]
 };
 
 /**
+ * The headers a server's HTTP layer writes on an answer by itself (P265):
+ * a caller reading one is not reading anything the procedure decides.
+ */
+const HTTP_LAYER_HEADERS: ReadonlySet<string> = new Set([
+  'age',
+  'cache-control',
+  'connection',
+  'content-encoding',
+  'content-length',
+  'content-type',
+  'date',
+  'etag',
+  'expires',
+  'keep-alive',
+  'last-modified',
+  'server',
+  'transfer-encoding',
+  'vary',
+]);
+
+/** What the headers of an answer compare: both ends' fields, the names said apart, and why. */
+interface AnswerHeaders {
+  readonly sent: TypeRefAst;
+  readonly read: TypeRefAst;
+  readonly missingRules: readonly MissingRule[];
+  readonly rulesApplied: readonly string[];
+  readonly via: readonly string[];
+}
+
+/**
+ * The headers a caller reads off a `detailed` answer, against the ones the
+ * procedure's output declares (P265).
+ *
+ * Compared from the caller's end, as the request's are from the
+ * procedure's (P262): only the names the caller reads are compared, since an
+ * answer carries headers no caller reads. A name the procedure declares
+ * reaches the caller lower-cased, so a name read through `get` - looked up
+ * whatever its case - agrees with it, and one read as a key with a capital is
+ * never there. A name it reads that the procedure does not declare is
+ * missing, said as one a middleware or the platform may still set (a
+ * warning); one the HTTP layer writes by itself is not compared, and said.
+ */
+const answerHeaders = (declared: readonly string[], read: readonly string[], unread: boolean): AnswerHeaders => {
+  const sent = new Set(declared.map((name) => name.toLowerCase()));
+  const layer = read.filter((name) => HTTP_LAYER_HEADERS.has(name.toLowerCase()) && !sent.has(name.toLowerCase()));
+  const compared = [...new Set(read.filter((name) => !layer.includes(name)))];
+  const wanted = new Set(compared.map((name) => name.toLowerCase()));
+  const undeclared = compared.filter((name) => !sent.has(name.toLowerCase()));
+  const capitalised = compared.filter((name) => name !== name.toLowerCase() && sent.has(name.toLowerCase()));
+  return {
+    sent: { kind: 'object', fields: [...sent].filter((name) => wanted.has(name)).map(present) },
+    read: { kind: 'object', fields: compared.map(present) },
+    missingRules:
+      undeclared.length === 0
+        ? []
+        : [{ path: 'headers', names: undeclared, rule: 'header-not-declared', note: "the procedure's output does not declare it, so it is not sent unless a middleware or the platform sets it" }],
+    rulesApplied: [...layer.map((name) => `http-layer-header:headers.${name}`), ...(unread ? ['any-unknown-skip:headers'] : [])],
+    via:
+      capitalised.length === 0
+        ? []
+        : [`a client hands every response header lower-cased, so ${capitalised.map((name) => `\`headers.${name}\``).join(' and ')} read as a key is never there`],
+  };
+};
+
+/**
  * A plain request to a procedure's REST route, both ways (P256).
  *
  * The OpenAPI handler hands the procedure one input assembled from the
@@ -458,6 +528,29 @@ const twinExchanges = (
 
   // The answer: the procedure's output, or its body, against what the call reads back.
   const output = detailedOut ? fieldOfRef(lookup, declared.returns, 'body') : declared.returns;
+  // With the headers the caller reads, where the output declares some (P265).
+  const declaredOut = detailedOut ? fieldNamesOf(lookup, declared.returns, 'headers') : undefined;
+  const readOff = stringsIn(asked['responseHeaderKeys']) ?? [];
+  const headersOut = declaredOut === undefined || readOff.length === 0 ? undefined : answerHeaders(declaredOut, readOff, asked['responseHeadersUnread'] === true);
+  if (headersOut !== undefined) {
+    // Both parts under their own keys: a body neither end says is compared with nothing, and said.
+    const whole = (headers: TypeRefAst, body: string | undefined): TypeRefAst => ({
+      kind: 'object',
+      fields: [
+        { name: 'headers', optional: false, type: headers },
+        { name: 'body', optional: false, type: astOf(body) ?? UNKNOWN },
+      ],
+    });
+    const response: Exchange = {
+      ...both('response', party(lookup, handler.service, formatTypeRef(whole(headersOut.sent, output)), handler.symbol), party(lookup, caller.service, formatTypeRef(whole(headersOut.read, edge.returns)), caller.symbol)),
+      // None of the names read is declared: the procedure's headers are an object written with none of them.
+      ...(headersOut.sent.kind === 'object' && headersOut.sent.fields.length === 0 ? { writtenEmptyAt: ['headers'] } : {}),
+      ...(headersOut.missingRules.length === 0 ? {} : { missingRules: headersOut.missingRules }),
+      ...(headersOut.rulesApplied.length === 0 ? {} : { rulesApplied: headersOut.rulesApplied }),
+      ...(headersOut.via.length === 0 ? {} : { via: [...headersOut.via] }),
+    };
+    return [request, response];
+  }
   const answering = party(lookup, handler.service, output, handler.symbol);
   const reading = party(lookup, caller.service, edge.returns, caller.symbol);
   const answerBlocked: Blocked | undefined = !namesAShape(edge.returns)

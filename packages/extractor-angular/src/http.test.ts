@@ -276,6 +276,64 @@ export const providers = [withInterceptors([tenantInterceptor])];`,
   });
 });
 
+describe("an interceptor's `headers:` and the headers a caller reads off the answer (P265)", () => {
+  const STUBS = `declare class HttpHeaders { constructor(headers?: Record<string, string>); set(name: string, value: string): HttpHeaders; append(name: string, value: string): HttpHeaders; delete(name: string): HttpHeaders; }`;
+  const at = (graph: RepoGraph, path: string) => callsOf(graph).find((node) => String(node.meta?.['path']).startsWith(path))?.meta ?? {};
+  const ORDERS = `
+  a(): Observable<OrderDto> { return this.http.get<OrderDto>('/a', { headers: { Accept: 'json' } }); }
+`;
+
+  it('reads the request\'s own headers with names set and appended after them', () => {
+    const graph = extract(
+      ORDERS,
+      {},
+      `${STUBS}
+const TRACE = 'X-Trace';
+export const tenantInterceptor: HttpInterceptorFn = (req, next) => next(req.clone({ headers: req.headers.set('X-Tenant', 'north').append(TRACE, '1') }));
+export const providers = [withInterceptors([tenantInterceptor])];`,
+    );
+    expect(at(graph, '/a')).toMatchObject({ headerKeys: ['accept', 'x-tenant', 'x-trace'] });
+    expect(at(graph, '/a')).not.toHaveProperty('headersUnread');
+  });
+
+  it('reads a set written in place of the request\'s own, and says one taken off or written as code', () => {
+    const replaced = extract(
+      ORDERS,
+      {},
+      `${STUBS}
+export const onlyInterceptor: HttpInterceptorFn = (req, next) => {
+  const headers = new HttpHeaders({ 'X-Only': '1' });
+  return next(req.clone({ headers }));
+};
+export const providers = [withInterceptors([onlyInterceptor])];`,
+    );
+    // The call's own `accept` is replaced.
+    expect(at(replaced, '/a')).toMatchObject({ headerKeys: ['x-only'] });
+    const removed = extract(
+      ORDERS,
+      {},
+      `${STUBS}
+export const stripInterceptor: HttpInterceptorFn = (req, next) => next(req.clone({ headers: req.headers.delete('Accept') }));
+export const providers = [withInterceptors([stripInterceptor])];`,
+    );
+    expect(at(removed, '/a')).toMatchObject({ headersUnread: true });
+  });
+
+  it('reads the headers a caller reads off a response it observes whole, and none off a body', () => {
+    const graph = extract(
+      `
+  b(): void { this.http.get<OrderDto[]>('/b', { observe: 'response' }).subscribe((res) => console.log(res.headers.get('X-Total'))); }
+  c(): void { this.http.get<OrderDto[]>('/c').subscribe((res) => console.log((res as any).headers)); }
+  async d(): Promise<number> { const res = await fetch('/d'); return Number(res.headers.get('X-Total')); }
+`,
+      {},
+    );
+    expect(at(graph, '/b')).toMatchObject({ responseHeaderKeys: ['x-total'] });
+    expect(at(graph, '/c')).not.toHaveProperty('responseHeaderKeys');
+    expect(at(graph, '/d')).toMatchObject({ responseHeaderKeys: ['x-total'] });
+  });
+});
+
 describe('a request made with the platform client (R140)', () => {
   it('reads the verb and the address from a call with options written in place', () => {
     const graph = extract(`

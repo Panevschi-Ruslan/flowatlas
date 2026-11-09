@@ -30,7 +30,9 @@ under an alias only the Vite configuration declares.
   `outputStructure: 'detailed'`, `GET /api/search` (input `{ q, limit }`),
   and `GET /api/browse`, detailed, whose input takes `{ query: { category,
   page }, headers: { 'x-tenant' } }` (P258), and `GET /api/stock`, detailed,
-  whose input takes `{ query: { sku }, headers: { 'X-Region' } }` (P262).
+  whose input takes `{ query: { sku }, headers: { 'X-Region' } }` (P262),
+  and `GET /api/page`, whose `detailed` output answers `{ headers: {
+  'x-total' }, body }` (P265).
   `reports` is `lazy(() =>
   import('@lib/reports'))`, and `@lib` is declared in `vite.config.ts` alone.
   It claims `VITE_CATALOG_URL`.
@@ -47,7 +49,10 @@ under an alias only the Vite configuration declares.
   Its `CatalogClient` asks catalog's `GET /api/products` with axios, the query
   `{ category }` in `params`, and its `CatalogSearch` asks `GET /api/search`
   through a wrapper of its own that writes `limit` beside the `params` its
-  caller hands it (P258). catalog claims `CATALOG_URL` too.
+  caller hands it (P258). Its `CatalogTenant` (P265) asks catalog through an
+  axios instance whose interceptor sets `X-Tenant`, and through the NestJS
+  client `HttpModule.register({ headers: { 'X-Tenant': 'north' } })`
+  configures in `AppModule`. catalog claims `CATALOG_URL` too.
 
 ## What the graph says
 
@@ -110,6 +115,26 @@ under an alias only the Vite configuration declares.
     `x-region`, as a server hands every header on, so `headers.X-Region` is
     missing (`missing_required`, error, saying why) and `headers.x-region` is
     not declared (`extra_field`, info).
+  - `browseHooked(page)` (P265): the tenant set by an interceptor of the
+    instance (`config.headers['X-Tenant'] = 'north'`) is the request's;
+    agrees.
+  - `pageTotal(category)` (P265): reads `res.headers['x-total']`
+    (`meta.responseHeaderKeys`), the header `products.page`'s detailed
+    output declares; the answer `{ headers, body }` agrees.
+  - `pageCount(category)`: `res.headers.get('X-Total')` off the platform's
+    response, looked up whatever its case; agrees, the body untyped
+    (`any-unknown-skip:body`).
+  - `pageNext(category)`: reads `x-next`, which the output does not declare
+    (`missing_required headers.x-next`, a warning, `header-not-declared`), and
+    `etag`, which the HTTP layer writes (`http-layer-header:headers.etag`, not
+    compared).
+  - `pageCapital(category)`: reads `res.headers['X-Total']`, a key never there
+    as axios hands every name lower-cased (`missing_required
+    headers.X-Total`, error, saying why; `extra_field headers.x-total`, info).
+- The worker's `CatalogTenant` (P265): `browse(page)` through the instance the
+  interceptor sets the tenant on, and `browseShared(page)` through the NestJS
+  client its module configures with it, both agree; `total(category)` reads
+  `res.headers['x-total']` and agrees.
 - The worker's `CatalogClient.teas()`: the server's request writes `{ category }`
   in `params`, and `limit` is missing (`missing_required`, error).
 - The worker's `CatalogSearch.tea()`: the request is the caller's, its query

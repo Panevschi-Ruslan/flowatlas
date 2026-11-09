@@ -16,6 +16,9 @@ import {
   PLATFORM_HEADERS,
   PLATFORM_QUERY,
   writtenHeaderNames,
+  writtenKey,
+  responseHeadersRead,
+  type AnswerHanded,
   requestBodyOf,
   requestVerbOf,
   resolveTypeOrigin,
@@ -114,6 +117,12 @@ interface Spelling {
   readonly query?: (network: CallExpression) => QueryShape;
   /** The names of the headers the call writes among its options (P258), or `unread` where they are written and cannot be read (P262). */
   readonly headers?: (network: CallExpression) => readonly string[] | 'unread' | undefined;
+  /**
+   * How the answer reaches the caller, where its headers can be read off it
+   * (P265): the platform's as a promise, the framework's as an observable
+   * only where the call observes the whole response.
+   */
+  readonly answer?: (network: CallExpression) => AnswerHanded | undefined;
 }
 
 /**
@@ -182,8 +191,18 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         : {
             query: (network: CallExpression) => queryAt(network, shape.optionsIndex as number, shape.urlIndex),
             headers: (network: CallExpression) => headersAt(network, shape.optionsIndex as number),
+            answer: (network: CallExpression) => (observesResponse(network, shape.optionsIndex as number) ? ('observable' as const) : undefined),
           }),
     };
+  };
+
+  /** Whether a call's options ask for the whole response, `observe: 'response'`, whose headers can be read (P265). */
+  const observesResponse = (network: CallExpression, index: number): boolean => {
+    const options = network.getArguments()[index];
+    if (options === undefined || !Node.isObjectLiteralExpression(options)) return false;
+    const property = options.getProperty('observe');
+    const value = property !== undefined && Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+    return value !== undefined && writtenKey(value) === 'response';
   };
 
   /**
@@ -250,6 +269,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     typedAnswer: false,
     client: { package: null, client: PLATFORM_FETCH.name },
     headers: (network) => headersAt(network, PLATFORM_FETCH.optionsAt),
+    answer: () => 'promise',
   };
 
   const typeOfResponse = (call: CallExpression): string | null => {
@@ -382,9 +402,11 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
   /** What a request's headers are: its own and its interceptors', and whether more may be added that are not read (P262). */
   const headersOf = (network: CallExpression, spelling: Spelling): { keys?: readonly string[]; unread?: true } => {
     const own = spelling.headers?.(network);
-    const added = spelling.intercepted === true ? headersIntercepted() : { keys: [], unread: false };
-    const keys = [...(Array.isArray(own) ? own : []), ...added.keys];
-    const unread = own === 'unread' || (added.unread && (own !== undefined || keys.length > 0));
+    const added: InterceptorHeaders = spelling.intercepted === true ? headersIntercepted() : { keys: [], unread: false };
+    // A set an interceptor writes in place of the request's own is all it carries (P265).
+    const ownKeys = added.replaces === true ? [] : Array.isArray(own) ? own : [];
+    const keys = [...ownKeys, ...added.keys];
+    const unread = (own === 'unread' && added.replaces !== true) || (added.unread && (own !== undefined || keys.length > 0));
     if (own === undefined && added.keys.length === 0) return added.unread ? { unread: true } : {};
     return { ...(keys.length === 0 && unread ? {} : { keys: [...new Set(keys)].sort() }), ...(unread ? { unread: true as const } : {}) };
   };
@@ -420,6 +442,9 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     const bodyType = body.type;
     const query = spelling.query?.(network) ?? {};
     const headers = headersOf(network, spelling);
+    // The headers the caller reads off the answer, where the request is made where it is read (P265).
+    const handed = call === network ? spelling.answer?.(network) : undefined;
+    const answerHeaders = handed === undefined ? undefined : responseHeadersRead(network, handed);
     const application = applicationOfFile(ctx.meta, file);
 
     ctx.builder.addNode({
@@ -453,6 +478,9 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         // and whether more may be added that are not read (P262).
         ...(headers.keys === undefined ? {} : { headerKeys: headers.keys }),
         ...(headers.unread === true ? { headersUnread: true } : {}),
+        // The headers it reads off the answer, for a procedure whose output declares them (P265).
+        ...(answerHeaders === undefined || answerHeaders.keys.length === 0 ? {} : { responseHeaderKeys: answerHeaders.keys }),
+        ...(answerHeaders?.unread === true ? { responseHeadersUnread: true } : {}),
         ...spelling.client,
         // Which application this request is written in, where the service holds
         // more than one; the other half of what an entry records about its own

@@ -243,6 +243,10 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     "The configuration overrides some settings for one environment, and the graph is the production build's, so a layer, module or setting only another environment has is not read. Nothing to do; write what every build shares outside the overrides.",
   'framework-module-skipped': () =>
     "A module of the repository writes this call under a condition, and the options the configuration hands the module rule it out, so what it would add is not built and not drawn. Nothing to do; change the option to have it added.",
+  'navigation-external': () =>
+    "A page, a component or a route middleware navigates to an address with a host, or with `{ external: true }`: it leaves the application, so no page of it is joined. Nothing to do; the row says where the application hands the visitor on.",
+  'navigation-unresolved': () =>
+    "A page, a component or a route middleware navigates - `navigateTo(...)`, `<NuxtLink to>` - to an address no page of the application shows, to one two pages fit as well, or to one written as code, so the page it shows is not joined. Correct the address or the name, add the page, or write the address as a literal (a template of one, or `{ name: '...' }`).",
   'framework-feature-off': () =>
     "The repository writes code for a feature its framework builds only behind a flag - Nitro's tasks, before Nitro 3 - and the configuration leaves the flag off, so the build registers none of it. The code is drawn and marked `enabled: false`. Turn the flag on to have it built, or remove the code.",
   'framework-module-unread': () =>

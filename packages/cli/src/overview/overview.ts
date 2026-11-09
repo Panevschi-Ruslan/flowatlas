@@ -347,7 +347,7 @@ export const overviewOf = (db: GraphDb, handle: DbHandle | undefined, options: O
   const contractBreaks = loadContractBreaks(handle.path);
   const findings = rankedFindingsOf(db, split.fresh, contractBreaks, rules?.violations).filter((row) => relevant(row.service));
   const findingCount = (kind: string): number => findings.filter((row) => row.kind === kind).length;
-  const cycles = tarjanScc(loadGraph(db, { edgeTypes: [...CYCLE_EDGES], collapseChannels: true }), { minLength: 2 }).filter((cycle) => cycle.crossService);
+  const cycles = tarjanScc(loadGraph(db, { edgeTypes: [...CYCLE_EDGES], collapseChannels: true, withoutNavigations: true }), { minLength: 2 }).filter((cycle) => cycle.crossService);
   const dead = deadRows(db, deadOptionsOf(handle, options.service), ['entries']).filter((row) => row.verdict === 'dead');
   const drift = driftOf(db.allTypes(options.service === undefined ? {} : { repo: options.service }));
   const checks: Check[] = [

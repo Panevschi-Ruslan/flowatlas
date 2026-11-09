@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T16:52:40.002Z",
+  "builtAt": "2026-11-09T11:39:16.263Z",
   "services": [
     {
       "name": "api",
@@ -144,6 +144,20 @@
         "signature": {
           "params": [],
           "returns": "never[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/router.ts:products.page@58",
+      "type": "function",
+      "label": "products.page@58",
+      "repo": "catalog",
+      "file": "src/router.ts",
+      "line": 58,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{headers:{x-total:string};body:never[]}"
         }
       }
     },
@@ -379,6 +393,50 @@
             "at": "entry:catalog:http:GET:/api/browse",
             "file": "src/router.ts",
             "line": 44,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/api/page",
+      "type": "entry",
+      "label": "GET /api/page",
+      "repo": "catalog",
+      "file": "src/router.ts",
+      "line": 54,
+      "kind": "http",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{category:string}"
+            }
+          ],
+          "returns": "{headers:{x-total:string};body:{id:string;name:string}[]}"
+        },
+        "method": "GET",
+        "path": "/api/page",
+        "rawPath": "/api/page",
+        "adapter": "orpc-procedures",
+        "registration": "new OpenAPIHandler(…)",
+        "procedure": "products.page",
+        "input": "z.object({ category: z.string() })",
+        "inputAt": "src/router.ts:56",
+        "outputStructure": "detailed",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:catalog:http:GET:/api/page",
+            "file": "src/router.ts",
+            "line": 56,
             "source": "pipe"
           }
         ]
@@ -881,6 +939,60 @@
       }
     },
     {
+      "id": "entry:catalog:rpc:products.page",
+      "type": "entry",
+      "label": "rpc products.page",
+      "repo": "catalog",
+      "file": "src/router.ts",
+      "line": 54,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "input",
+              "type": "{category:string}"
+            }
+          ],
+          "returns": "{headers:{x-total:string};body:{id:string;name:string}[]}"
+        },
+        "key": "products.page",
+        "adapter": "orpc-procedures",
+        "call": "handler",
+        "registration": "{ … }",
+        "input": "z.object({ category: z.string() })",
+        "inputAt": "src/router.ts:56",
+        "output": "z.object({ headers: z.object({ 'x-total'",
+        "route": {
+          "method": "GET",
+          "path": "/page",
+          "outputStructure": "detailed"
+        },
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "src/server.ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "openapi",
+            "prefix": "/api",
+            "file": "src/server.ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "ORPCError(BAD_REQUEST)",
+            "at": "entry:catalog:rpc:products.page",
+            "file": "src/router.ts",
+            "line": 56,
+            "source": "pipe"
+          }
+        ]
+      }
+    },
+    {
       "id": "entry:catalog:rpc:products.reprice",
       "type": "entry",
       "label": "rpc products.reprice",
@@ -1248,6 +1360,83 @@
       }
     },
     {
+      "id": "http_out:worker#src/catalog.tenant.ts:23:12",
+      "type": "http_out",
+      "label": "GET /api/browse",
+      "repo": "worker",
+      "file": "src/catalog.tenant.ts",
+      "line": 23,
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_URL}/api/browse",
+        "path": "/api/browse",
+        "baseUrlEnv": "CATALOG_URL",
+        "responseType": "{id:string;name:string}[]",
+        "bodyType": null,
+        "queryType": "{category:string;page:string}",
+        "queryKeys": [
+          "category",
+          "page"
+        ],
+        "headerKeys": [
+          "x-tenant"
+        ],
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:worker#src/catalog.tenant.ts:28:12",
+      "type": "http_out",
+      "label": "GET /api/browse",
+      "repo": "worker",
+      "file": "src/catalog.tenant.ts",
+      "line": 28,
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_URL}/api/browse",
+        "path": "/api/browse",
+        "baseUrlEnv": "CATALOG_URL",
+        "responseType": "{id:string;name:string}[]",
+        "bodyType": null,
+        "queryType": "{category:string;page:string}",
+        "queryKeys": [
+          "category",
+          "page"
+        ],
+        "headerKeys": [
+          "x-tenant"
+        ],
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:worker#src/catalog.tenant.ts:33:23",
+      "type": "http_out",
+      "label": "GET /api/page",
+      "repo": "worker",
+      "file": "src/catalog.tenant.ts",
+      "line": 33,
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_URL}/api/page",
+        "path": "/api/page",
+        "baseUrlEnv": "CATALOG_URL",
+        "responseType": "{id:string;name:string}[]",
+        "bodyType": null,
+        "queryType": "{category:string}",
+        "queryKeys": [
+          "category"
+        ],
+        "headerKeys": [
+          "x-tenant"
+        ],
+        "responseHeaderKeys": [
+          "x-total"
+        ],
+        "targetService": "catalog"
+      }
+    },
+    {
       "id": "http_out:worker#src/fulfil.service.ts:17:26",
       "type": "http_out",
       "label": "rpc orders.place",
@@ -1407,11 +1596,11 @@
           "files": 5,
           "filesRead": 5,
           "filesUnreadable": 0,
-          "functions": 18,
+          "functions": 23,
           "components": 0,
           "hooks": 0,
           "skippedExternalCalls": {
-            "axios": 11,
+            "axios": 15,
             "@trpc/client": 5,
             "@trpc/server": 6
           }
@@ -1433,12 +1622,13 @@
       "repo": "worker",
       "meta": {
         "stats": {
-          "files": 8,
-          "filesRead": 8,
+          "files": 9,
+          "filesRead": 9,
           "filesUnreadable": 0,
-          "classes": 7,
+          "classes": 8,
           "skippedExternalCalls": {
-            "axios": 4,
+            "axios": 6,
+            "@nestjs/axios": 1,
             "@trpc/client": 2
           }
         },
@@ -1456,6 +1646,116 @@
             "line": 6
           }
         ]
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/catalog.ts:105:21",
+      "type": "ui_api_call",
+      "label": "GET /api/page",
+      "repo": "web",
+      "file": "src/catalog.ts",
+      "line": 105,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_CATALOG_URL}/api/page",
+        "path": "/api/page",
+        "baseUrlEnv": "VITE_CATALOG_URL",
+        "responseType": "type:web#Product[]",
+        "bodyType": null,
+        "queryType": "{category:string}",
+        "queryKeys": [
+          "category"
+        ],
+        "responseHeaderKeys": [
+          "etag",
+          "x-next"
+        ],
+        "package": "axios",
+        "client": "axios",
+        "via": "template-env",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/catalog.ts:111:21",
+      "type": "ui_api_call",
+      "label": "GET /api/page",
+      "repo": "web",
+      "file": "src/catalog.ts",
+      "line": 111,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_CATALOG_URL}/api/page",
+        "path": "/api/page",
+        "baseUrlEnv": "VITE_CATALOG_URL",
+        "responseType": "type:web#Product[]",
+        "bodyType": null,
+        "queryType": "{category:string}",
+        "queryKeys": [
+          "category"
+        ],
+        "responseHeaderKeys": [
+          "X-Total"
+        ],
+        "package": "axios",
+        "client": "axios",
+        "via": "template-env",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/catalog.ts:124:10",
+      "type": "ui_api_call",
+      "label": "GET /api/stock",
+      "repo": "web",
+      "file": "src/catalog.ts",
+      "line": 124,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_CATALOG_URL}/api/stock?${…}",
+        "path": "/api/stock",
+        "baseUrlEnv": "VITE_CATALOG_URL",
+        "responseType": "{sku:string;count:number}",
+        "bodyType": null,
+        "queryKeys": [
+          "sku"
+        ],
+        "queryInAddress": true,
+        "headerKeys": [
+          "x-region"
+        ],
+        "package": "axios",
+        "client": "axios",
+        "via": "template-env",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/catalog.ts:129:10",
+      "type": "ui_api_call",
+      "label": "PATCH /api/products/:param/price",
+      "repo": "web",
+      "file": "src/catalog.ts",
+      "line": 129,
+      "kind": "http",
+      "meta": {
+        "method": "PATCH",
+        "url": "${VITE_CATALOG_URL}/api/products/:param/price",
+        "path": "/api/products/:param/price",
+        "baseUrlEnv": "VITE_CATALOG_URL",
+        "responseType": "type:web#Product",
+        "bodyType": "{price:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "price"
+        ],
+        "package": "axios",
+        "client": "axios",
+        "via": "template-env",
+        "targetService": "catalog"
       }
     },
     {
@@ -1734,24 +2034,25 @@
     {
       "id": "ui_api_call:web#src/catalog.ts:88:10",
       "type": "ui_api_call",
-      "label": "GET /api/stock",
+      "label": "GET /api/browse",
       "repo": "web",
       "file": "src/catalog.ts",
       "line": 88,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "url": "${VITE_CATALOG_URL}/api/stock?${…}",
-        "path": "/api/stock",
+        "url": "${VITE_CATALOG_URL}/api/browse",
+        "path": "/api/browse",
         "baseUrlEnv": "VITE_CATALOG_URL",
-        "responseType": "{sku:string;count:number}",
+        "responseType": "type:web#Product[]",
         "bodyType": null,
+        "queryType": "{category:string;page:string}",
         "queryKeys": [
-          "sku"
+          "category",
+          "page"
         ],
-        "queryInAddress": true,
         "headerKeys": [
-          "x-region"
+          "x-tenant"
         ],
         "package": "axios",
         "client": "axios",
@@ -1760,26 +2061,53 @@
       }
     },
     {
-      "id": "ui_api_call:web#src/catalog.ts:93:10",
+      "id": "ui_api_call:web#src/catalog.ts:93:21",
       "type": "ui_api_call",
-      "label": "PATCH /api/products/:param/price",
+      "label": "GET /api/page",
       "repo": "web",
       "file": "src/catalog.ts",
       "line": 93,
       "kind": "http",
       "meta": {
-        "method": "PATCH",
-        "url": "${VITE_CATALOG_URL}/api/products/:param/price",
-        "path": "/api/products/:param/price",
+        "method": "GET",
+        "url": "${VITE_CATALOG_URL}/api/page",
+        "path": "/api/page",
         "baseUrlEnv": "VITE_CATALOG_URL",
-        "responseType": "type:web#Product",
-        "bodyType": "{price:number}",
-        "bodyFrom": "literal",
-        "bodyKeys": [
-          "price"
+        "responseType": "type:web#Product[]",
+        "bodyType": null,
+        "queryType": "{category:string}",
+        "queryKeys": [
+          "category"
+        ],
+        "responseHeaderKeys": [
+          "x-total"
         ],
         "package": "axios",
         "client": "axios",
+        "via": "template-env",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/catalog.ts:99:21",
+      "type": "ui_api_call",
+      "label": "GET /api/page",
+      "repo": "web",
+      "file": "src/catalog.ts",
+      "line": 99,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_CATALOG_URL}/api/page?category=${…}",
+        "path": "/api/page",
+        "baseUrlEnv": "VITE_CATALOG_URL",
+        "responseType": null,
+        "bodyType": null,
+        "responseHeaderKeys": [
+          "x-total"
+        ],
+        "package": null,
+        "client": "fetch",
         "via": "template-env",
         "targetService": "catalog"
       }
@@ -1870,6 +2198,25 @@
       "repo": "web",
       "file": "src/catalog.ts",
       "line": 70,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "page",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<type:web#Product[]>"
+        }
+      }
+    },
+    {
+      "id": "web#src/catalog.ts:browseHooked",
+      "type": "function",
+      "label": "browseHooked",
+      "repo": "web",
+      "file": "src/catalog.ts",
+      "line": 87,
       "meta": {
         "signature": {
           "params": [
@@ -1995,6 +2342,82 @@
       }
     },
     {
+      "id": "web#src/catalog.ts:pageCapital",
+      "type": "function",
+      "label": "pageCapital",
+      "repo": "web",
+      "file": "src/catalog.ts",
+      "line": 110,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "category",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "web#src/catalog.ts:pageCount",
+      "type": "function",
+      "label": "pageCount",
+      "repo": "web",
+      "file": "src/catalog.ts",
+      "line": 98,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "category",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "web#src/catalog.ts:pageNext",
+      "type": "function",
+      "label": "pageNext",
+      "repo": "web",
+      "file": "src/catalog.ts",
+      "line": 104,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "category",
+              "type": "string"
+            }
+          ],
+          "returns": "{next:string;etag:string}"
+        }
+      }
+    },
+    {
+      "id": "web#src/catalog.ts:pageTotal",
+      "type": "function",
+      "label": "pageTotal",
+      "repo": "web",
+      "file": "src/catalog.ts",
+      "line": 92,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "category",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
       "id": "web#src/catalog.ts:productCard",
       "type": "function",
       "label": "productCard",
@@ -2019,7 +2442,7 @@
       "label": "reprice",
       "repo": "web",
       "file": "src/catalog.ts",
-      "line": 92,
+      "line": 128,
       "meta": {
         "signature": {
           "params": [
@@ -2094,7 +2517,7 @@
       "label": "stockOf",
       "repo": "web",
       "file": "src/catalog.ts",
-      "line": 85,
+      "line": 121,
       "meta": {
         "signature": {
           "params": [
@@ -2221,12 +2644,36 @@
       }
     },
     {
+      "id": "worker#node_modules/@nestjs/axios:HttpModule",
+      "type": "module",
+      "label": "HttpModule",
+      "repo": "worker",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
+      "id": "worker#node_modules/@nestjs/axios:HttpService",
+      "type": "provider",
+      "label": "HttpService",
+      "repo": "worker",
+      "file": "node_modules/@nestjs/axios",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/axios",
+        "external": true
+      }
+    },
+    {
       "id": "worker#src/app.module.ts:AppModule",
       "type": "module",
       "label": "AppModule",
       "repo": "worker",
       "file": "src/app.module.ts",
-      "line": 13,
+      "line": 16,
       "kind": "static",
       "meta": {
         "controllers": [
@@ -2234,7 +2681,8 @@
         ],
         "providers": [
           "FulfilService",
-          "CatalogClient"
+          "CatalogClient",
+          "CatalogTenant"
         ],
         "exports": []
       }
@@ -2345,6 +2793,75 @@
       }
     },
     {
+      "id": "worker#src/catalog.tenant.ts:CatalogTenant",
+      "type": "provider",
+      "label": "CatalogTenant",
+      "repo": "worker",
+      "file": "src/catalog.tenant.ts",
+      "line": 17,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/catalog.tenant.ts:CatalogTenant.browse",
+      "type": "method",
+      "label": "CatalogTenant.browse",
+      "repo": "worker",
+      "file": "src/catalog.tenant.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "page",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<{id:string;name:string}[]>"
+        }
+      }
+    },
+    {
+      "id": "worker#src/catalog.tenant.ts:CatalogTenant.browseShared",
+      "type": "method",
+      "label": "CatalogTenant.browseShared",
+      "repo": "worker",
+      "file": "src/catalog.tenant.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "page",
+              "type": "string"
+            }
+          ],
+          "returns": "type:axios#AxiosResponse<{id:string;name:string}[]>"
+        }
+      }
+    },
+    {
+      "id": "worker#src/catalog.tenant.ts:CatalogTenant.total",
+      "type": "method",
+      "label": "CatalogTenant.total",
+      "repo": "worker",
+      "file": "src/catalog.tenant.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "category",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
       "id": "worker#src/fulfil.controller.ts:FulfilController",
       "type": "provider",
       "label": "FulfilController",
@@ -2437,6 +2954,14 @@
       "line": 46
     },
     {
+      "from": "entry:catalog:http:GET:/api/page",
+      "to": "catalog#src/router.ts:products.page@58",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 58
+    },
+    {
       "from": "entry:catalog:http:GET:/api/products",
       "to": "catalog#src/router.ts:products.list@24",
       "type": "handles",
@@ -2523,6 +3048,14 @@
       "confidence": "static",
       "file": "src/router.ts",
       "line": 24
+    },
+    {
+      "from": "entry:catalog:rpc:products.page",
+      "to": "catalog#src/router.ts:products.page@58",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 58
     },
     {
       "from": "entry:catalog:rpc:products.reprice",
@@ -2642,6 +3175,45 @@
       }
     },
     {
+      "from": "http_out:worker#src/catalog.tenant.ts:23:12",
+      "to": "entry:catalog:http:GET:/api/browse",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/catalog.tenant.ts",
+      "line": 23,
+      "returns": "{id:string;name:string}[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "http_out:worker#src/catalog.tenant.ts:28:12",
+      "to": "entry:catalog:http:GET:/api/browse",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/catalog.tenant.ts",
+      "line": 28,
+      "returns": "{id:string;name:string}[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "http_out:worker#src/catalog.tenant.ts:33:23",
+      "to": "entry:catalog:http:GET:/api/page",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/catalog.tenant.ts",
+      "line": 33,
+      "returns": "{id:string;name:string}[]",
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "catalog"
+      }
+    },
+    {
       "from": "http_out:worker#src/fulfil.service.ts:17:26",
       "to": "entry:api:rpc:orders.place",
       "type": "hits",
@@ -2687,6 +3259,61 @@
       "meta": {
         "via": "link-url",
         "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/catalog.ts:105:21",
+      "to": "entry:catalog:http:GET:/api/page",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/catalog.ts",
+      "line": 105,
+      "returns": "type:web#Product[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/catalog.ts:111:21",
+      "to": "entry:catalog:http:GET:/api/page",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/catalog.ts",
+      "line": 111,
+      "returns": "type:web#Product[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/catalog.ts:124:10",
+      "to": "entry:catalog:http:GET:/api/stock",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/catalog.ts",
+      "line": 124,
+      "returns": "{sku:string;count:number}",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/catalog.ts:129:10",
+      "to": "entry:catalog:http:PATCH:/api/products/:param/price",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/catalog.ts",
+      "line": 129,
+      "params": [
+        "{price:number}"
+      ],
+      "returns": "type:web#Product",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog"
       }
     },
     {
@@ -2835,28 +3462,37 @@
     },
     {
       "from": "ui_api_call:web#src/catalog.ts:88:10",
-      "to": "entry:catalog:http:GET:/api/stock",
+      "to": "entry:catalog:http:GET:/api/browse",
       "type": "hits",
       "confidence": "static",
       "file": "src/catalog.ts",
       "line": 88,
-      "returns": "{sku:string;count:number}",
+      "returns": "type:web#Product[]",
       "meta": {
         "via": "api-target",
         "targetService": "catalog"
       }
     },
     {
-      "from": "ui_api_call:web#src/catalog.ts:93:10",
-      "to": "entry:catalog:http:PATCH:/api/products/:param/price",
+      "from": "ui_api_call:web#src/catalog.ts:93:21",
+      "to": "entry:catalog:http:GET:/api/page",
       "type": "hits",
       "confidence": "static",
       "file": "src/catalog.ts",
       "line": 93,
-      "params": [
-        "{price:number}"
-      ],
-      "returns": "type:web#Product",
+      "returns": "type:web#Product[]",
+      "meta": {
+        "via": "api-target",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/catalog.ts:99:21",
+      "to": "entry:catalog:http:GET:/api/page",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/catalog.ts",
+      "line": 99,
       "meta": {
         "via": "api-target",
         "targetService": "catalog"
@@ -2919,6 +3555,14 @@
       "line": 71
     },
     {
+      "from": "web#src/catalog.ts:browseHooked",
+      "to": "ui_api_call:web#src/catalog.ts:88:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.ts",
+      "line": 88
+    },
+    {
       "from": "web#src/catalog.ts:browseNorth",
       "to": "ui_api_call:web#src/catalog.ts:66:10",
       "type": "calls",
@@ -2967,6 +3611,38 @@
       "line": 24
     },
     {
+      "from": "web#src/catalog.ts:pageCapital",
+      "to": "ui_api_call:web#src/catalog.ts:111:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.ts",
+      "line": 111
+    },
+    {
+      "from": "web#src/catalog.ts:pageCount",
+      "to": "ui_api_call:web#src/catalog.ts:99:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.ts",
+      "line": 99
+    },
+    {
+      "from": "web#src/catalog.ts:pageNext",
+      "to": "ui_api_call:web#src/catalog.ts:105:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.ts",
+      "line": 105
+    },
+    {
+      "from": "web#src/catalog.ts:pageTotal",
+      "to": "ui_api_call:web#src/catalog.ts:93:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.ts",
+      "line": 93
+    },
+    {
       "from": "web#src/catalog.ts:productCard",
       "to": "ui_api_call:web#src/catalog.ts:39:10",
       "type": "calls",
@@ -2976,11 +3652,11 @@
     },
     {
       "from": "web#src/catalog.ts:reprice",
-      "to": "ui_api_call:web#src/catalog.ts:93:10",
+      "to": "ui_api_call:web#src/catalog.ts:129:10",
       "type": "calls",
       "confidence": "static",
       "file": "src/catalog.ts",
-      "line": 93
+      "line": 129
     },
     {
       "from": "web#src/catalog.ts:searchBy",
@@ -3008,11 +3684,11 @@
     },
     {
       "from": "web#src/catalog.ts:stockOf",
-      "to": "ui_api_call:web#src/catalog.ts:88:10",
+      "to": "ui_api_call:web#src/catalog.ts:124:10",
       "type": "calls",
       "confidence": "static",
       "file": "src/catalog.ts",
-      "line": 88
+      "line": 124
     },
     {
       "from": "web#src/legacy.ts:findLegacyOrder",
@@ -3044,7 +3720,7 @@
       "type": "imports",
       "confidence": "static",
       "file": "src/app.module.ts",
-      "line": 13,
+      "line": 16,
       "meta": {
         "moduleKind": "dynamic"
       }
@@ -3055,9 +3731,20 @@
       "type": "imports",
       "confidence": "static",
       "file": "src/app.module.ts",
-      "line": 13,
+      "line": 16,
       "meta": {
         "moduleKind": "dynamic"
+      }
+    },
+    {
+      "from": "worker#src/app.module.ts:AppModule",
+      "to": "worker#node_modules/@nestjs/axios:HttpModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 16,
+      "meta": {
+        "moduleKind": "external"
       }
     },
     {
@@ -3136,6 +3823,62 @@
       "returns": "type:axios#AxiosResponse<{id:string;name:string}[]>",
       "file": "src/catalog.search.ts",
       "line": 14
+    },
+    {
+      "from": "worker#src/catalog.tenant.ts:CatalogTenant",
+      "to": "worker#node_modules/@nestjs/axios:HttpService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/catalog.tenant.ts",
+      "line": 19
+    },
+    {
+      "from": "worker#src/catalog.tenant.ts:CatalogTenant.browse",
+      "to": "config_key:worker#CATALOG_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/catalog.tenant.ts",
+      "line": 23
+    },
+    {
+      "from": "worker#src/catalog.tenant.ts:CatalogTenant.browse",
+      "to": "http_out:worker#src/catalog.tenant.ts:23:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.tenant.ts",
+      "line": 23
+    },
+    {
+      "from": "worker#src/catalog.tenant.ts:CatalogTenant.browseShared",
+      "to": "config_key:worker#CATALOG_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/catalog.tenant.ts",
+      "line": 28
+    },
+    {
+      "from": "worker#src/catalog.tenant.ts:CatalogTenant.browseShared",
+      "to": "http_out:worker#src/catalog.tenant.ts:28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.tenant.ts",
+      "line": 28
+    },
+    {
+      "from": "worker#src/catalog.tenant.ts:CatalogTenant.total",
+      "to": "config_key:worker#CATALOG_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/catalog.tenant.ts",
+      "line": 33
+    },
+    {
+      "from": "worker#src/catalog.tenant.ts:CatalogTenant.total",
+      "to": "http_out:worker#src/catalog.tenant.ts:33:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/catalog.tenant.ts",
+      "line": 33
     },
     {
       "from": "worker#src/fulfil.controller.ts:FulfilController",
