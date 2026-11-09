@@ -2,8 +2,9 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { commandsAround } from '@flowatlas/serverless';
 import { readManifestsUnder } from './cluster.js';
-import { packageScriptLines, readHelmInstalls, readPortForwards, scriptLines } from './docker-run.js';
+import { readHelmInstalls, readPortForwards } from './docker-run.js';
 import { renderings, setValue, UNREAD_MARK, type ChartContext } from './helm.js';
 import { readProjectSettings } from './read.js';
 
@@ -104,21 +105,25 @@ describe('a chart template rendered with its values (P260)', () => {
   });
 });
 
+/** The commands the shared reader finds in a repository of these files (P263). */
+const commandsOf = (files: Record<string, string>) => commandsAround(project(files), '.');
+
 describe('the commands a script runs against a cluster (P260)', () => {
   it('reads a chart installed with its values files, sets, release and namespace', () => {
     const make = lines('deploy:', '\thelm upgrade --install orders ./charts/orders \\', '\t  -f charts/orders/values-prod.yaml --set service.port=80 -n shop', 'render:', '\t@helm template ./charts/orders --values=a.yaml,b.yaml');
-    expect(readHelmInstalls(scriptLines(make))).toEqual([
-      { release: 'orders', chart: './charts/orders', namespace: 'shop', values: ['charts/orders/values-prod.yaml'], sets: ['service.port=80'], line: 2 },
-      { chart: './charts/orders', values: ['a.yaml', 'b.yaml'], sets: [], line: 5 },
+    const commands = commandsOf({ Makefile: make, 'package.json': JSON.stringify({ scripts: { deploy: 'helm install $RELEASE ./chart' } }) });
+    expect(readHelmInstalls(commands)).toEqual([
+      { chart: './chart', values: [], sets: [], line: 1, file: 'package.json', dirs: ['.'] },
+      { release: 'orders', chart: './charts/orders', namespace: 'shop', values: ['charts/orders/values-prod.yaml'], sets: ['service.port=80'], line: 2, file: 'Makefile', dirs: ['.'] },
+      { chart: './charts/orders', values: ['a.yaml', 'b.yaml'], sets: [], line: 5, file: 'Makefile', dirs: ['.'] },
     ]);
-    expect(readHelmInstalls(packageScriptLines(JSON.stringify({ scripts: { deploy: 'helm install $RELEASE ./chart' } })))).toEqual([{ chart: './chart', values: [], sets: [], line: 1 }]);
   });
 
-  it('reads the ports a port-forward makes this machine reach', () => {
+  it('reads the ports a port-forward makes this machine reach, its namespace written anywhere (P263)', () => {
     const script = lines('kubectl port-forward svc/orders 8080:80 -n shop &', 'kubectl -n shop port-forward deploy/stock 4000', 'kubectl port-forward pod/x 1:2', 'kubectl port-forward svc/billing :80');
-    expect(readPortForwards(scriptLines(script))).toEqual([
-      { kind: 'service', name: 'orders', namespace: 'shop', local: 8080, remote: 80, line: 1 },
-      { kind: 'workload', name: 'stock', local: 4000, remote: 4000, line: 2 },
+    expect(readPortForwards(commandsOf({ 'forward.sh': script }))).toEqual([
+      { kind: 'service', name: 'orders', namespace: 'shop', local: 8080, remote: 80, line: 1, file: 'forward.sh' },
+      { kind: 'workload', name: 'stock', namespace: 'shop', local: 4000, remote: 4000, line: 2, file: 'forward.sh' },
     ]);
   });
 });
@@ -321,7 +326,7 @@ describe("what a cluster's manifests say, built as the tools that apply them bui
         kind: 'ingress',
         name: 'shop',
         hosts: ['shop.example.test'],
-        paths: [{ match: 'pattern', path: '^/api(/|$)(.*)', flags: 'i', backends: [{ name: 'orders', port: 'web' }], rewrite: { kind: 'pattern', source: '^/api(/|$)(.*)', flags: 'i', with: '/$2' }, file: 'k8s/ingress.yaml', line: 12 }],
+        paths: [{ match: 'pattern', path: '^/api(/|$)(.*)', flags: 'i', backends: [{ name: 'orders', port: 'web' }], rewrite: { kind: 'pattern', source: '^/api(/|$)(.*)', flags: 'i', with: '/$2' }, hosts: ['shop.example.test'], file: 'k8s/ingress.yaml', line: 12 }],
         file: 'k8s/ingress.yaml',
       },
       {
@@ -376,5 +381,211 @@ describe('what a project’s cluster files say about how its services are reache
       { name: 'svc/orders', names: [], file: 'Makefile', ports: [{ published: 8081, container: 3000, file: 'Makefile', line: 2 }], environment: {}, via: 'forwarded', environmentFrom: 'k8s/orders.yaml' },
     ]);
     expect(read['stock']?.containers?.map((each) => `${each.via} ${each.name} ${each.ports.map((port) => `${port.published}:${port.container}`).join(',')}`)).toEqual(['forwarded deploy/stock 4001:4000']);
+  });
+});
+
+describe('every way a cluster is installed (P263)', () => {
+  const ordersChart = {
+    'orders/charts/orders/Chart.yaml': 'apiVersion: v2\nname: orders\nversion: 0.1.0\n',
+    'orders/charts/orders/values.yaml': 'service:\n  port: 80\n',
+    'orders/charts/orders/templates/service.yaml': SERVICE('orders', 0, 3000).replace('port: 0', 'port: {{ .Values.service.port }}'),
+    'orders/charts/orders/templates/deployment.yaml': DEPLOYMENT('orders', 3000),
+  };
+
+  it("reads a helmfile's releases in each environment it declares, its values rendered over the environment", () => {
+    const dir = project({
+      ...ordersChart,
+      'orders/helmfile.yaml': lines(
+        'environments:',
+        '  staging:',
+        '    values:',
+        '      - env/staging.yaml',
+        '  production:',
+        '    values:',
+        '      - replicas: 3',
+        '---',
+        'releases:',
+        '  - name: orders',
+        '    namespace: shop',
+        '    chart: ./charts/orders',
+        '    values:',
+        '      - values/orders-{{ .Environment.Name }}.yaml',
+        '      - service:',
+        '          type: ClusterIP',
+        '    set:',
+        '      - name: replicas',
+        '        value: {{ .Values.replicas | default 1 }}',
+        '  - name: cache',
+        '    chart: bitnami/redis',
+        '  - name: off',
+        '    chart: ./charts/orders',
+        '    installed: false',
+      ),
+      'orders/env/staging.yaml': 'replicas: 1\n',
+      'orders/values/orders-staging.yaml': 'service:\n  port: 8081\n',
+      'orders/values/orders-production.yaml': 'service:\n  port: 8080\n',
+    });
+    const read = readProjectSettings({ services: [{ name: 'orders', dir: join(dir, 'orders') }], rootDir: dir, environment: 'production' });
+    expect(read['orders']?.routes?.map((each) => each.ports.map((port) => `${port.port}:${port.target}`).join(','))).toEqual(['8080:3000']);
+    // With nothing choosing, the two environments disagree, and the chart's own values are read.
+    const unchosen = readProjectSettings({ services: [{ name: 'orders', dir: join(dir, 'orders') }], rootDir: dir });
+    expect(unchosen['orders']?.routes?.map((each) => each.ports.map((port) => `${port.port}:${port.target}`).join(','))).toEqual(['80:3000']);
+    expect(unchosen['orders']?.rows?.map((row) => `${row.reason} ${row.file}`)).toEqual(['manifest-overlay-unchosen charts/orders/Chart.yaml']);
+    expect(unchosen['orders']?.rows?.[0]?.message).toContain('helmfile.yaml:10 (environment production)');
+  });
+
+  it('reads the environment a pipeline runs helmfile with, and a port-forward and a chart install a GitLab job writes', () => {
+    const dir = project({
+      ...ordersChart,
+      'orders/helmfile.yaml': lines('environments:', '  staging: {}', '  production: {}', '---', 'releases:', '  - name: orders', '    chart: ./charts/orders', '    values:', '      - values/{{ .Environment.Name }}.yaml'),
+      'orders/values/staging.yaml': 'service:\n  port: 8081\n',
+      'orders/values/production.yaml': 'service:\n  port: 8080\n',
+      'orders/.github/workflows/deploy.yml': lines('jobs:', '  deploy:', '    runs-on: ubuntu-latest', '    steps:', '      - run: helmfile -e production apply'),
+      'orders/.gitlab-ci.yml': lines('forward:', '  script:', '    - kubectl port-forward svc/orders 8082:8080'),
+    });
+    const read = readProjectSettings({ services: [{ name: 'orders', dir: join(dir, 'orders') }], rootDir: dir });
+    expect(read['orders']?.routes?.map((each) => each.ports.map((port) => `${port.port}:${port.target}`).join(','))).toEqual(['8080:3000']);
+    expect(read['orders']?.containers?.filter((each) => each.via === 'forwarded').map((each) => `${each.file} ${each.ports.map((port) => `${port.published}:${port.container}`).join(',')}`)).toEqual(['.gitlab-ci.yml 8082:3000']);
+  });
+
+  it("renders a chart's dependencies inside its release, with its values' subtree, and leaves out one its condition turns off", () => {
+    const dir = project({
+      'shop/charts/shop/Chart.yaml': lines('apiVersion: v2', 'name: shop', 'version: 1.0.0', 'dependencies:', '  - name: common', '    repository: file://../common', '  - name: metrics', '    condition: metrics.enabled', '  - name: catalog', '    alias: products'),
+      'shop/charts/shop/values.yaml': 'metrics:\n  enabled: false\nproducts:\n  port: 8083\nglobal:\n  zone: eu\n',
+      'shop/charts/shop/templates/service.yaml': SERVICE('x', 80, 3000).replace('name: x', 'name: {{ include "common.name" . }}').replace('app: x', 'app: shop'),
+      'shop/charts/common/Chart.yaml': 'apiVersion: v2\nname: common\ntype: library\nversion: 1.0.0\n',
+      'shop/charts/common/templates/_names.tpl': '{{- define "common.name" -}}\n{{ .Release.Name }}-{{ .Chart.Name }}\n{{- end }}\n',
+      'shop/charts/shop/charts/metrics/Chart.yaml': 'apiVersion: v2\nname: metrics\nversion: 1.0.0\n',
+      'shop/charts/shop/charts/metrics/templates/service.yaml': SERVICE('metrics', 9100, 9100),
+      'shop/charts/shop/charts/catalog/Chart.yaml': 'apiVersion: v2\nname: catalog\nversion: 1.0.0\n',
+      'shop/charts/shop/charts/catalog/values.yaml': 'port: 80\n',
+      'shop/charts/shop/charts/catalog/templates/service.yaml': SERVICE('catalog', 0, 3003).replace('port: 0', 'port: {{ .Values.port }}').replace('name: catalog', 'name: {{ include "common.name" . }}-{{ .Values.global.zone }}'),
+    });
+    const read = readManifestsUnder(dir);
+    expect(read.services.map((each) => `${each.name} ${each.ports.map((port) => port.port).join(',')} ${each.file}`)).toEqual([
+      'shop-shop 80 shop/charts/shop/templates/service.yaml',
+      'shop-catalog-eu 8083 shop/charts/shop/charts/catalog/templates/service.yaml',
+    ]);
+  });
+
+  it("inflates a kustomization's charts, generates its config maps into the pods' environment, and applies its replacements", () => {
+    const dir = project({
+      'stock/k8s/kustomization.yaml': lines(
+        'resources:',
+        '  - stock.yaml',
+        'configMapGenerator:',
+        '  - name: stock-config',
+        '    literals:',
+        '      - PORT=4100',
+        '    envs:',
+        '      - stock.env',
+        'helmCharts:',
+        '  - name: stock-api',
+        '    releaseName: stock-api',
+        '    valuesInline:',
+        '      port: 9090',
+        '  - name: redis',
+        '    repo: https://charts.example.test',
+        'replacements:',
+        '  - source:',
+        '      kind: ConfigMap',
+        '      name: stock-config',
+        '      fieldPath: data.PORT',
+        '    targets:',
+        '      - select:',
+        '          kind: Service',
+        '          name: stock',
+        '        fieldPaths:',
+        '          - spec.ports.0.targetPort',
+        '  - source:',
+        '      kind: ConfigMap',
+        '      name: missing',
+        '    targets: []',
+        'vars:',
+        '  - name: X',
+      ),
+      'stock/k8s/stock.env': 'METRICS_PORT=9464\n',
+      'stock/k8s/stock.yaml': `${DEPLOYMENT('stock', 4100, ['          envFrom:', '            - configMapRef:', '                name: stock-config'])}\n---\n${SERVICE('stock', 80, 3000)}\n`,
+      'stock/k8s/charts/stock-api/Chart.yaml': 'apiVersion: v2\nname: stock-api\nversion: 1.0.0\n',
+      'stock/k8s/charts/stock-api/values.yaml': 'port: 80\n',
+      'stock/k8s/charts/stock-api/templates/service.yaml': SERVICE('stock-api', 0, 4200).replace('port: 0', 'port: {{ .Values.port }}'),
+    });
+    const read = readManifestsUnder(join(dir, 'stock'));
+    expect(read.services.map((each) => `${each.name} ${each.ports.map((port) => `${port.port}:${port.target}`).join(',')}`)).toEqual(['stock 80:4100', 'stock-api 9090:4200']);
+    expect(read.workloads[0]?.containers[0]?.environment).toEqual([
+      { name: 'PORT', raw: '4100' },
+      { name: 'METRICS_PORT', raw: '9464' },
+    ]);
+    expect(read.workloads[0]?.containers[0]?.environmentFile).toBe('k8s/kustomization.yaml');
+    expect(read.rows?.map((row) => `${row.reason} ${row.file}:${row.line}`)).toEqual(['manifest-unread k8s/kustomization.yaml:9', 'manifest-unread k8s/kustomization.yaml:16', 'manifest-unread k8s/kustomization.yaml:31']);
+  });
+
+  it('reads a value a pod takes from a config map or a secret by key', () => {
+    const dir = project({
+      'k8s/orders.yaml': lines(
+        DEPLOYMENT('orders', 3000, ['          env:', '            - name: PORT', '              valueFrom:', '                configMapKeyRef:', '                  name: orders', '                  key: port', '            - name: ADMIN_PORT', '              valueFrom:', '                secretKeyRef:', '                  name: orders', '                  key: admin']),
+        '---',
+        'apiVersion: v1',
+        'kind: ConfigMap',
+        'metadata:',
+        '  name: orders',
+        'data:',
+        '  port: "3000"',
+        '---',
+        'apiVersion: v1',
+        'kind: Secret',
+        'metadata:',
+        '  name: orders',
+        'data:',
+        `  admin: ${Buffer.from('3001').toString('base64')}`,
+      ),
+    });
+    expect(readManifestsUnder(dir).workloads[0]?.containers[0]?.environment).toEqual([
+      { name: 'PORT', raw: '3000' },
+      { name: 'ADMIN_PORT', raw: '3001' },
+    ]);
+  });
+
+  it('reads a rule with no host as a way in at any host, each path at its own rule\'s host', () => {
+    const dir = project({
+      'k8s/ingress.yaml': lines(
+        'apiVersion: networking.k8s.io/v1',
+        'kind: Ingress',
+        'metadata:',
+        '  name: shop',
+        'spec:',
+        '  rules:',
+        '    - host: shop.example.test',
+        '      http:',
+        '        paths:',
+        '          - path: /orders',
+        '            pathType: Prefix',
+        '            backend:',
+        '              service: { name: orders, port: { number: 80 } }',
+        '    - http:',
+        '        paths:',
+        '          - path: /',
+        '            pathType: Prefix',
+        '            backend:',
+        '              service: { name: web, port: { number: 80 } }',
+      ),
+    });
+    const [ingress] = readManifestsUnder(dir).ingresses ?? [];
+    expect(ingress?.hosts).toEqual(['shop.example.test', '*']);
+    expect(ingress?.paths.map((path) => `${path.path} ${path.hosts?.join(',')}`)).toEqual(['/orders shop.example.test', '/ *']);
+  });
+
+  it('chooses the overlay a pipeline applies among those nothing else chooses', () => {
+    const overlay = (port: number) => lines('resources:', '  - ../../base', 'patches:', '  - target:', '      kind: Service', '      name: stock', '    patch: |-', '      - op: replace', '        path: /spec/ports/0/port', `        value: ${port}`);
+    const dir = project({
+      'stock/deploy/base/kustomization.yaml': 'resources:\n  - stock.yaml\n',
+      'stock/deploy/base/stock.yaml': `${DEPLOYMENT('stock', 4000)}\n---\n${SERVICE('stock', 80, 4000)}\n`,
+      'stock/deploy/overlays/blue/kustomization.yaml': overlay(8081),
+      'stock/deploy/overlays/green/kustomization.yaml': overlay(8082),
+      '.gitlab-ci.yml': lines('deploy:', '  script:', '    - cd stock && kubectl apply -k deploy/overlays/green'),
+    });
+    const read = readProjectSettings({ services: [{ name: 'stock', dir: join(dir, 'stock') }], rootDir: dir });
+    expect(read['stock']?.routes?.map((each) => each.ports.map((port) => port.port).join(','))).toEqual(['8082']);
+    expect(read['stock']?.rows ?? []).toEqual([]);
   });
 });

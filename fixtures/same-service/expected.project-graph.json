@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:08:04.767Z",
+  "builtAt": "2026-11-09T11:48:10.003Z",
   "services": [
     {
       "name": "site",
@@ -58,6 +58,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "originless": true,
         "targetService": "site"
       }
     },
@@ -79,6 +80,7 @@
         "bodyKeys": [
           "name"
         ],
+        "originless": true,
         "targetService": "site"
       }
     },
@@ -96,6 +98,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "originless": true,
         "targetService": "site"
       }
     },

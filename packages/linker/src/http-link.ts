@@ -1,4 +1,4 @@
-import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
+import { IN_PROCESS_META, normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
 import {
   behindUnread,
   callingApplication,
@@ -95,7 +95,7 @@ export type BindingAnswer =
 /** What each way a call can end carries with it. */
 interface Details {
   linked: {
-    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host' | 'proxy' | 'ingress' | 'ownOrigin';
+    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host' | 'proxy' | 'ingress' | 'ownOrigin' | 'inProcess';
     entry: GraphNode;
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
@@ -694,11 +694,14 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     const way = typeof host === 'string' && typeof path === 'string' ? index.ingressOf?.(host, path) : undefined;
     if (way !== undefined) return throughProxy(host as string, way);
     // A request with no host from a server that resolves it against its own
-    // address is one to its own routes, or to where its rewrites send it (P260).
-    if (typeof host !== 'string' && typeof path === 'string' && path.startsWith('/') && index.ownOrigin?.(call.repo) === true) {
+    // address is one to its own routes, or to where its rewrites send it
+    // (P260); one its client hands the server's own routes in process is a
+    // call into the same service (P263).
+    const inProcess = call.meta?.[IN_PROCESS_META] === true;
+    if (typeof host !== 'string' && typeof path === 'string' && path.startsWith('/') && (inProcess || index.ownOrigin?.(call.repo) === true)) {
       const forward = index.forwardOf?.(call.repo, path);
       if (forward !== undefined && forward.rule.after === undefined) return throughProxy(call.repo, forward);
-      const own = within(call.repo, 'ownOrigin', {});
+      const own = within(call.repo, inProcess ? 'inProcess' : 'ownOrigin', {});
       if (own.outcome.kind === 'noRoute' && forward !== undefined) return throughProxy(call.repo, forward);
       return own;
     }

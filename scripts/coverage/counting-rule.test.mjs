@@ -296,4 +296,16 @@ describe('where a request is written, and what stands in front of it (P244)', ()
     assert.deepEqual(sitesIn('Makefile', 'forward:\n\tkubectl port-forward svc/orders 8080:80\n\tkubectl -n shop port-forward deploy/stock 4000\n'), { listens: 2 });
     assert.deepEqual(sitesIn('src/forward.ts', "run('kubectl port-forward svc/orders 8080:80');"), {});
   });
+
+  it("counts a helmfile's releases, a kustomization's generators, and install commands and port-forwards in pipelines (P263)", () => {
+    const helmfile = 'environments:\n  production: {}\n---\nreleases:\n  - name: shop\n    chart: ./charts/shop\n  - name: cache\n    chart: bitnami/redis\n';
+    assert.deepEqual(sitesIn('deploy/helmfile.yaml', helmfile), { listens: 2 });
+    assert.deepEqual(sitesIn('deploy/helmfile.d/10-shop.yaml.gotmpl', helmfile), { listens: 2 });
+    assert.deepEqual(sitesIn('deploy/charts/shop/Chart.yaml', 'name: shop\n'), {});
+    assert.deepEqual(sitesIn('k8s/kustomization.yaml', 'resources:\n  - a.yaml\nconfigMapGenerator:\n  - name: x\nhelmCharts:\n  - name: y\nreplacements:\n  - path: r.yaml\n'), { listens: 3 });
+    const workflow = 'jobs:\n  deploy:\n    steps:\n      - run: helmfile -e production apply\n      - run: kubectl apply -k overlays/production\n      - run: kubectl port-forward svc/orders 8080:80\n';
+    assert.deepEqual(sitesIn('.github/workflows/deploy.yml', workflow), { listens: 3 });
+    assert.deepEqual(sitesIn('.gitlab-ci.yml', 'preview:\n  script:\n    - helm upgrade --install x ./chart\n    - kustomize build overlays/x\n'), { listens: 2 });
+    assert.deepEqual(sitesIn('src/deploy.ts', "run('helm upgrade --install x ./chart');"), {});
+  });
 });

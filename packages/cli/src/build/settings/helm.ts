@@ -706,7 +706,17 @@ export const definesOf = (helpers: readonly string[]): Map<string, Node[]> => {
  * condition is decided by the values, one per way the conditions nothing
  * decides can go otherwise, up to a bound.
  */
-export const renderings = (source: string, context: ChartContext, helpers: ReadonlyMap<string, Node[]> = new Map()): Renderings => {
+export const renderings = (source: string, context: ChartContext, helpers: ReadonlyMap<string, Node[]> = new Map()): Renderings => renderingsOver(source, rootOf(context), helpers);
+
+/** A value of a root the files do not give: a field rendered through it is unknown, a condition on it undecided. */
+export const UNKNOWN_VALUE: unknown = UNKNOWN;
+
+/**
+ * Every way a template renders over a root of its own (P263): a helmfile's
+ * `.Environment`, `.Values` and `.StateValues` rather than a chart's. A field
+ * of the root that is `UNKNOWN_VALUE` is one nothing in the files gives.
+ */
+export const renderingsOver = (source: string, root: Record<string, unknown>, helpers: ReadonlyMap<string, Node[]> = new Map()): Renderings => {
   const defines = new Map(helpers);
   let tree: Node[];
   try {
@@ -714,7 +724,6 @@ export const renderings = (source: string, context: ChartContext, helpers: Reado
   } catch (error) {
     return { kind: 'unread', why: error instanceof Error ? error.message : 'it is not read' };
   }
-  const root = rootOf(context);
   const ways: Rendered[] = [];
   const undecided = new Set<number>();
   const pending: Array<Map<number, boolean>> = [new Map()];

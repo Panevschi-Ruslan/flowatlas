@@ -987,7 +987,13 @@ prove, and the path is given so you can run it.
   (`fixtures/cluster-route-joins`); a proxy key written as a pattern, a
   `router`, a target read from a setting, a proxy forwarding to another proxy
   and a Next server's own requests with no host are followed too
-  (`fixtures/proxy-chain-joins`). A
+  (`fixtures/proxy-chain-joins`). A `helmfile`, a chart's dependencies, a
+  kustomization's charts, generated config maps and replacements, an
+  `Ingress` rule with no host and the install commands of GitHub workflows and
+  GitLab jobs are read (`fixtures/cluster-install-joins`), and a Next or Nitro
+  server's own `fetch('/api/x')` is a finding where it will not work, while
+  Nitro's `$fetch` joins its own route in process
+  (`fixtures/own-origin-requests`). A
   browser holding a stream open is a request like any other
   (`fixtures/sse-stream`).
 - **Bots.** Telegraf, both the decorator style and the imperative one, and a

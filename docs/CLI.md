@@ -5494,7 +5494,8 @@ read from a setting (`target: process.env.ORDERS_URL`, `env.VITE_API_URL` of
 `loadEnv`, `` `${process.env.ORDERS_URL}/orders/:path*` `` in a Next rewrite,
 a route rule's `proxy` built over one) takes the one address the service's own
 files give the setting (P77), or the literal fallback written beside it, and
-the edge says `proxiedTo: ORDERS_URL from .env.example`; with neither it is
+the edge says `proxiedTo: [ORDERS_URL from .env.example]` (one entry per hop
+whose target a setting gives, in the order the request passes them, P263); with neither it is
 `proxy-rule-unread`. An http-proxy-middleware `router` written as a table sends
 a path key under the prefix to its own target, rewritten as the prefix is; a
 key with a host routes by the request's host and is a row. A request forwarded
@@ -5507,6 +5508,36 @@ reads) is a request to its own address: its own route, or where its rewrites
 send it (`via: ownOrigin`, `heuristic`); where the browser makes the same
 request in the same place, what is wrong with it is said once, by the
 browser's. `fixtures/cluster-route-joins` and `fixtures/proxy-chain-joins` show
+each case.
+
+**Every way a cluster is installed and a server asks itself (P263).** What
+installs the manifests is read as well as the manifests.
+
+| Written as | Read |
+|---|---|
+| A `helmfile.yaml` (or `helmfile.yaml.gotmpl`, `helmfile.d/`) at the top of a service or the project, or one `helmfile -f` names | each part rendered over the environment (`.Environment.Name`, `.Values`, `.StateValues`), `environments.<name>.values` (files, `.gotmpl` rendered, or inline), and each release's chart (a folder of the project), values files and inline values in order, `set`, `namespace`; `installed: false` and a false `condition` leave it out. One install per release per environment: those `helmfile -e` commands name, else every one it declares |
+| A chart's dependencies | each `dependencies` entry of `Chart.yaml` (or `requirements.yaml`) with a `file://` repository, and every chart unpacked in `charts/`, rendered inside the parent's release with the parent's `<alias or name>:` values and `global:`, the helpers of the whole tree shared; a `condition` or every `tags` false leaves it out. Read only through the parent unless a command installs it itself; a packed or a repository's chart is not in the project |
+| A kustomization's `helmCharts` | a chart under `helmGlobals.chartHome` (default `charts`) rendered with its `valuesFile`, `additionalValuesFiles`, `valuesInline`, `releaseName` and `namespace`, part of the build; one only a repository has is `manifest-unread` |
+| `configMapGenerator`, `secretGenerator` | a `ConfigMap` or `Secret` of the build from `literals` and `envs` files (`behavior: merge` / `replace` change the base's); `files` are contents, not an environment |
+| `replacements` | the value at a source's `fieldPath` (`delimiter` / `index` picking a part) written at each target's `fieldPaths` (`a.b.[name=x].c`, an index, `*`, `create`), after every other transformer; a source not built or a path not there is `manifest-unread`. `vars` are not substituted and are `manifest-unread` |
+| A pod's environment from a config map or a secret | `envFrom` (`configMapRef`, `secretRef`, `prefix`) and `env[].valueFrom` (`configMapKeyRef`, `secretKeyRef`) of a `ConfigMap` or `Secret` of the same manifests, said at the file that writes the value (`PORT from deploy/base/stock.env`) |
+| An `Ingress` rule with no `host` | a way in at any host the controller is reached at, followed for the requests with no host of a front end it serves; not for a public host another rule names (ingress-nginx serves such a host by its own rules alone, other controllers fall back) nor for a host no rule names (nothing says it reaches the cluster). Each path of an `Ingress` is a way in at its own rule's host |
+| Commands in pipelines | `helm install` / `upgrade` / `template`, `helmfile`, `kubectl apply -k`, `kubectl kustomize`, `kustomize build` and `kubectl port-forward` in a GitHub workflow's `run:` and a GitLab job's `script:`, as in a script or a Makefile (`*.mk`, `GNUmakefile` too); the overlays commands apply are the ones one is chosen among, and one they alone apply is read. A pipeline's `docker run` is not a container of the service: it runs on the pipeline's machine |
+
+A server's own request with no host is said where it will not work. In a
+service whose server resolves its requests against its own address (Next, and
+now Nitro and Nuxt), a request the platform `fetch` (or `ofetch` imported) makes
+with a path and no host is drawn to the route the path names, as P260 drew it,
+and the finding `server-request-without-origin` says it throws as written: on
+the server there is no page address to resolve it against. It is not said where
+the browser makes the same request at the same place, unless the file holds
+one of the service's own ways in (a route handler runs on the server whoever
+else reads it), nor for a client whose base the reader does not see (an axios
+instance). Nitro's `$fetch('/api/orders')` on the server is a call into the
+same service: its routes answer it in process, so it joins its own route
+`via: inProcess`, `static`, or where its route rules and `devProxy` forward it,
+and nothing more is said; a `$fetch` whose options write a `baseURL` is not
+read. `fixtures/cluster-install-joins` and `fixtures/own-origin-requests` show
 each case.
 
 A custom broker entry:

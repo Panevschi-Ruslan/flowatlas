@@ -163,6 +163,8 @@ const FINDINGS: readonly string[] = [
   'procedure-link-unserved',
   // A request on a container's or a cluster's network to a port only the machine or the containers have (P257)
   'network-port-unreachable',
+  // A server's own request with no host, made by a client with no origin to resolve it against (P263)
+  'server-request-without-origin',
   'workflow-definition-invalid',
   // Ends that nothing on the other side meets
   's3-write-matches-nothing',
@@ -511,6 +513,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
       'procedure-call-mismatch',
       'procedure-link-unserved',
       'network-port-unreachable',
+      'server-request-without-origin',
       'workflow-definition-invalid',
       's3-write-matches-nothing',
       'stream-no-writer',

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:41:27.138Z",
+  "builtAt": "2026-11-09T11:47:23.004Z",
   "services": [
     {
       "name": "shop",
@@ -193,7 +193,8 @@
           "entry": [
             "nitro-routes"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {

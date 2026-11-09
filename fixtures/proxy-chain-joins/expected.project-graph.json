@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:07:45.607Z",
+  "builtAt": "2026-11-09T11:47:49.310Z",
   "services": [
     {
       "name": "orders",
@@ -368,6 +368,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "originless": true,
         "targetService": "gateway"
       }
     },
@@ -385,6 +386,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "originless": true,
         "targetService": "orders"
       }
     },
@@ -1324,7 +1326,9 @@
         "targetService": "orders",
         "listensAt": "src/app.ts:14",
         "proxiedBy": "next.config.js:5",
-        "proxiedTo": "ORDERS_URL from .env.example"
+        "proxiedTo": [
+          "ORDERS_URL from .env.example"
+        ]
       }
     },
     {
@@ -1344,7 +1348,10 @@
           "next.config.js:5"
         ],
         "proxiedAs": "/orders/7",
-        "proxiedTo": "ORDERS_URL from .env.example"
+        "proxiedTo": [
+          "VITE_GATEWAY_URL from .env.example",
+          "ORDERS_URL from .env.example"
+        ]
       }
     },
     {
@@ -1459,7 +1466,9 @@
         "targetService": "orders",
         "listensAt": "src/app.ts:14",
         "proxiedBy": "next.config.js:5",
-        "proxiedTo": "ORDERS_URL from .env.example"
+        "proxiedTo": [
+          "ORDERS_URL from .env.example"
+        ]
       }
     },
     {
@@ -1479,7 +1488,10 @@
           "next.config.js:5"
         ],
         "proxiedAs": "/orders/7",
-        "proxiedTo": "ORDERS_URL from .env.example"
+        "proxiedTo": [
+          "VITE_GATEWAY_URL from .env.example",
+          "ORDERS_URL from .env.example"
+        ]
       }
     },
     {
@@ -1498,7 +1510,10 @@
           "next.config.js:5"
         ],
         "proxiedAs": "/orders/7",
-        "proxiedTo": "ORDERS_URL from .env.example"
+        "proxiedTo": [
+          "VITE_GATEWAY_URL from .env.example",
+          "ORDERS_URL from .env.example"
+        ]
       }
     },
     {

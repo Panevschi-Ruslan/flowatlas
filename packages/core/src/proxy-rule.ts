@@ -87,6 +87,20 @@ export interface ProxyReading {
 /** Where the repository node says its server's own requests with no host reach its own address (P260). */
 export const OWN_ORIGIN_META = 'ownOrigin';
 
+/**
+ * Where a server's request says its client resolves an address with no host
+ * against no origin at all (P263): the platform's own client, handed a path,
+ * has nothing to put in front of it, and the request fails as written.
+ */
+export const ORIGINLESS_META = 'originless';
+
+/**
+ * Where a server's request says its client hands an address with no host to
+ * the server's own routes in process (P263), so the request is a call into
+ * the same service rather than one over the network.
+ */
+export const IN_PROCESS_META = 'inProcess';
+
 export const NO_PROXY: ProxyReading = { rules: [], rows: [] };
 
 /** A path's segments, with no empty ones. */

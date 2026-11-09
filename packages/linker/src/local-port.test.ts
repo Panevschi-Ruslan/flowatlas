@@ -437,7 +437,7 @@ describe("the rest of the ways a server's proxy forwards a request (P260)", () =
       'hits entry:orders:http:GET:/items heuristic proxy vite.config.ts:6 /items',
       'http_calls entry:orders:http:GET:/items heuristic proxy vite.config.ts:6 /items',
     ]);
-    expect(result.project.edges.find((edge) => edge.type === 'hits')?.meta?.['proxiedTo']).toBe('ORDERS_URL from .env.example');
+    expect(result.project.edges.find((edge) => edge.type === 'hits')?.meta?.['proxiedTo']).toEqual(['ORDERS_URL from .env.example']);
     const none = linkGraphs(proxied([setting], '/api/items'), config(), { builtAt: FIXED });
     // Nothing forwards it: the request to the dev server is what its reader drew.
     expect(through(none)).toEqual(['calls external_api:localhost:5180 static - - -']);
@@ -563,5 +563,74 @@ describe('a request with no host from a server that resolves it against its own 
     const graphs = own();
     const plain = graphs.map((each) => (each.repo !== 'web' ? each : { ...each, nodes: each.nodes.map((node) => (node.type === 'repo' ? { ...node, meta: {} } : node)) }));
     expect(through(linkGraphs(plain, config(), { builtAt: FIXED }))).toEqual([]);
+  });
+});
+
+describe('a server asking itself, a way in at any host and every setting a chain reads (P263)', () => {
+  /** A Next-like server's requests with no host: one marked as the platform fetch's, one in a file a browser reads too, one through another client. */
+  const asking = (marks: Record<string, unknown>, ownOrigin = true): RepoGraph[] => {
+    const out = (line: number, meta: Record<string, unknown> = {}): GraphNode => ({ id: `http_out:web#app/api/report/route.ts:${line}:1`, type: 'http_out', kind: 'http', label: 'GET /health', repo: 'web', file: 'app/api/report/route.ts', line, meta: { method: 'GET', url: '/health', path: '/health', baseUrlEnv: null, ...meta } });
+    return [
+      server('orders', [at(3001)]),
+      graph('web', [
+        { id: 'repo:web', type: 'repo', label: 'web', repo: 'web', meta: ownOrigin ? { ownOrigin: true } : {} },
+        { id: 'entry:web:http:GET:/health', type: 'entry', kind: 'http', label: 'GET /health', repo: 'web', meta: { method: 'GET', path: '/health' } },
+        out(3, marks),
+        out(4, marks),
+        out(5),
+        { id: 'ui_api_call:web#app/api/report/route.ts:4:1', type: 'ui_api_call', kind: 'http', label: 'GET /health', repo: 'web', file: 'app/api/report/route.ts', line: 4, meta: { method: 'GET', path: '/health', baseUrlEnv: null } },
+      ]),
+    ];
+  };
+
+  it('says a server request with no host through the platform fetch will not work, once, where no browser makes it too', () => {
+    const result = linkGraphs(asking({ originless: true }), config(), { builtAt: FIXED });
+    expect(through(result).filter((each) => each.startsWith('http_calls'))).toEqual([
+      'http_calls entry:web:http:GET:/health heuristic ownOrigin - -',
+      'http_calls entry:web:http:GET:/health heuristic ownOrigin - -',
+      'http_calls entry:web:http:GET:/health heuristic ownOrigin - -',
+    ]);
+    expect(result.project.unresolved.filter((row) => row.reason === 'server-request-without-origin').map((row) => `${row.file}:${row.line} ${row.message}`)).toEqual([
+      "app/api/report/route.ts:3 web's server makes this request to /health with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+    ]);
+    // A file that holds one of the service's own ways in is the server's, whatever else reads it.
+    const handler: GraphNode = { id: 'entry:web:http:GET:/api/report', type: 'entry', kind: 'http', label: 'GET /api/report', repo: 'web', file: 'app/api/report/route.ts', meta: { method: 'GET', path: '/api/report' } };
+    const served = asking({ originless: true }).map((each) => (each.repo === 'web' ? { ...each, nodes: [...each.nodes, handler] } : each));
+    expect(linkGraphs(served, config(), { builtAt: FIXED }).project.unresolved.filter((row) => row.reason === 'server-request-without-origin').map((row) => row.line)).toEqual([3, 4]);
+  });
+
+  it('joins a request its client answers in process to its own route, static, and says nothing more, its own address resolving or not', () => {
+    for (const ownOrigin of [true, false]) {
+      const result = linkGraphs(asking({ inProcess: true }, ownOrigin), config(), { builtAt: FIXED });
+      expect(through(result).filter((each) => each.includes('inProcess'))).toEqual(['http_calls entry:web:http:GET:/health static inProcess - -', 'http_calls entry:web:http:GET:/health static inProcess - -']);
+      expect(result.project.unresolved.filter((row) => row.reason === 'server-request-without-origin')).toEqual([]);
+    }
+  });
+
+  it("forwards a front end's request with no host through a way in at any host that serves it, and no public host's", () => {
+    const any = (path: string, target: string, line: number) => ({ host: '*', object: 'ingress/edge', rule: { path, target: `http:${SLASHES}${target}`, to: '', file: 'k8s/ingress.yaml', line } });
+    const settings: Record<string, RepoSettings> = {
+      orders: { ...routed(3000), ingress: [any('/api', 'orders-svc', 12)] },
+      web: { ...NO_SETTINGS, ingress: [any('/', 'web-svc', 9)] },
+    };
+    const graphs: RepoGraph[] = [
+      server('orders', [at(3000)]),
+      server('billing'),
+      graph('web', [{ id: UI, type: 'ui_api_call', kind: 'http', label: 'GET /api/items', repo: 'web', file: 'src/api.ts', line: 3, meta: { method: 'GET', path: '/api/items', baseUrlEnv: null } }]),
+    ];
+    expect(through(linkGraphs(graphs, config(), { builtAt: FIXED, settings }))).toEqual(['hits entry:orders:http:GET:/items heuristic ingress k8s/ingress.yaml:12 /items']);
+    // A request to a public host is not the hostless rule's: whether the host reaches the cluster is not in the files.
+    expect(joins(link('shop.example.test', { orders: [at(3000)] }, config(), { orders: settings['orders'] as RepoSettings }))).toEqual([]);
+  });
+
+  it('names every setting a hop of a chain reads its target from, in the order the request passes them', () => {
+    const graphs = proxied([rule('/api', '', '', { setting: { name: 'GATEWAY_URL', to: '' } })], '/api/items');
+    const chained = [...graphs.filter((each) => each.repo !== 'billing'), forwarder('billing', [{ path: '/items', target: '', to: '/items', file: 'src/proxy.ts', line: 3, setting: { name: 'ORDERS_URL', to: '/items' } }], [at(3002)])];
+    const settings = {
+      web: { ...NO_SETTINGS, values: { GATEWAY_URL: [{ value: `http:${SLASHES}localhost:3002`, file: '.env.example' }] } },
+      billing: { ...NO_SETTINGS, values: { ORDERS_URL: [{ value: `http:${SLASHES}localhost:3001`, file: '.env' }] } },
+    };
+    const result = linkGraphs(chained, config(), { builtAt: FIXED, settings });
+    expect(result.project.edges.find((edge) => edge.type === 'hits')?.meta).toMatchObject({ proxiedThen: ['src/proxy.ts:3'], proxiedTo: ['GATEWAY_URL from .env.example', 'ORDERS_URL from .env'] });
   });
 });

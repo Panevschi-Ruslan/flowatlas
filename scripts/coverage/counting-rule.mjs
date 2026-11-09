@@ -471,9 +471,38 @@ export const PROBES = [
     name: 'port-forward',
     family: 'listens',
     scope: 'line',
-    what: 'a `kubectl port-forward` in a script, a Makefile or a `package.json`',
-    path: /(?:^|\/)(?:[Mm]akefile|GNUmakefile|[^/]+\.mk|[^/]+\.sh|package\.json)$/,
+    what: 'a `kubectl port-forward` in a script, a Makefile, a `package.json` or a pipeline (P263)',
+    path: /(?:^|\/)(?:[Mm]akefile|GNUmakefile|[^/]+\.mk|[^/]+\.sh|package\.json|\.gitlab-ci\.ya?ml)$|(?:^|\/)\.github\/workflows\/[^/]+\.ya?ml$/,
     pattern: /\bkubectl\b[^\n]*\bport-forward\b/g,
+  },
+  {
+    // A release a helmfile installs (P263), counted where its chart is written.
+    name: 'helmfile-release',
+    family: 'listens',
+    scope: 'line',
+    what: 'a release of a `helmfile.yaml` (its `chart:`)',
+    path: /(?:^|\/)(?:helmfile\.ya?ml(?:\.gotmpl)?|helmfile\.d\/[^/]+\.ya?ml(?:\.gotmpl)?)$/,
+    pattern: /^\s*(?:-\s+)?chart\s*:/gm,
+  },
+  {
+    // What a kustomization makes beside what it lists (P263): generated config
+    // maps and secrets, inflated charts and replacements, each block where it is written.
+    name: 'kustomize-generator',
+    family: 'listens',
+    scope: 'line',
+    what: 'a `configMapGenerator`, `secretGenerator`, `helmCharts` or `replacements` block of a kustomization',
+    path: /(?:^|\/)(?:kustomization\.ya?ml|Kustomization)$/,
+    pattern: /^\s*(?:configMapGenerator|secretGenerator|helmCharts|replacements)\s*:/gm,
+  },
+  {
+    // A command that installs a cluster's manifests (P263), in a script, a
+    // Makefile, a `package.json` or a pipeline.
+    name: 'cluster-install-command',
+    family: 'listens',
+    scope: 'line',
+    what: 'a `helm install`/`upgrade`/`template`, `helmfile` run, `kubectl apply -k` or `kustomize build` in a script, a Makefile, a `package.json` or a pipeline',
+    path: /(?:^|\/)(?:[Mm]akefile|GNUmakefile|[^/]+\.mk|[^/]+\.sh|package\.json|\.gitlab-ci\.ya?ml)$|(?:^|\/)\.github\/workflows\/[^/]+\.ya?ml$/,
+    pattern: /\bhelm\s+(?:install|upgrade|template)\b|\bhelmfile\b[^\n]*\b(?:apply|sync|template|diff|deploy)\b|\bkubectl\b[^\n]*\bapply\b[^\n]*(?:-k\b|--kustomize\b)|\bkustomize\s+build\b/g,
   },
   {
     name: 'prisma-call-site',

@@ -347,7 +347,7 @@ export {
   portWritten,
 } from './listen-port.js';
 export type { ListenAt, ListenPort, PortReading, WrittenPort } from './listen-port.js';
-export { forwardedBy, NO_PROXY, OWN_ORIGIN_META, PROXY_META, proxiesOf, proxyPatternRule, proxyPrefixOf, proxyRule, proxySettingOf, proxySettingRule, proxyTargetOf, proxyUnreadRow } from './proxy-rule.js';
+export { forwardedBy, IN_PROCESS_META, NO_PROXY, ORIGINLESS_META, OWN_ORIGIN_META, PROXY_META, proxiesOf, proxyPatternRule, proxyPrefixOf, proxyRule, proxySettingOf, proxySettingRule, proxyTargetOf, proxyUnreadRow } from './proxy-rule.js';
 export type { ProxyReading, ProxyRewrite, ProxyRule, ProxySetting } from './proxy-rule.js';
 export { LOG_LEVELS, createLogger, silentLogger } from './adapters/context.js';
 export type { ExtractContext, LogLevel, Logger } from './adapters/context.js';

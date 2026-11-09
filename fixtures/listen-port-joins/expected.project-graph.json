@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:56:32.781Z",
+  "builtAt": "2026-11-09T11:45:05.805Z",
   "services": [
     {
       "name": "orders",
@@ -747,7 +747,8 @@
             "file": "nuxt.config.ts",
             "line": 3
           }
-        ]
+        ],
+        "ownOrigin": true
       }
     },
     {

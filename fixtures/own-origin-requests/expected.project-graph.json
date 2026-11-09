@@ -1,0 +1,881 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:47:40.066Z",
+  "services": [
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/app.ts:GET /items@6",
+      "type": "function",
+      "label": "GET /items@6",
+      "repo": "catalog",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/items",
+      "type": "entry",
+      "label": "GET /items",
+      "repo": "catalog",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/items",
+        "rawPath": "/items",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/legacy",
+      "type": "entry",
+      "label": "GET /api/legacy",
+      "repo": "shop",
+      "file": "server/api/legacy.get.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/legacy",
+        "rawPath": "/api/legacy",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/remote",
+      "type": "entry",
+      "label": "GET /api/remote",
+      "repo": "shop",
+      "file": "server/api/remote.get.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/remote",
+        "rawPath": "/api/remote",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/summary",
+      "type": "entry",
+      "label": "GET /api/summary",
+      "repo": "shop",
+      "file": "server/api/summary.get.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/summary",
+        "rawPath": "/api/summary",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:site:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "site",
+      "file": "app/api/orders/route.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:site:http:GET:/api/report",
+      "type": "entry",
+      "label": "GET /api/report",
+      "repo": "site",
+      "file": "app/api/report/route.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/report",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "http_out:shop#server/api/legacy.get.ts:3:24",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "server/api/legacy.get.ts",
+      "line": 3,
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "originless": true,
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "http_out:shop#server/api/remote.get.ts:6:24",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "server/api/remote.get.ts",
+      "line": 6,
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "originless": true,
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "http_out:shop#server/api/summary.get.ts:3:24",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "server/api/summary.get.ts",
+      "line": 3,
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "inProcess": true,
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "http_out:shop#server/api/summary.get.ts:4:23",
+      "type": "http_out",
+      "label": "GET /catalog/items",
+      "repo": "shop",
+      "file": "server/api/summary.get.ts",
+      "line": 4,
+      "meta": {
+        "method": "GET",
+        "url": "/catalog/items",
+        "path": "/catalog/items",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "inProcess": true,
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:site#app/api/report/route.ts:3:24",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "site",
+      "file": "app/api/report/route.ts",
+      "line": 3,
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "originless": true,
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "http_out:site#app/page.tsx:3:24",
+      "type": "http_out",
+      "label": "GET /api/orders",
+      "repo": "site",
+      "file": "app/page.tsx",
+      "line": 3,
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "originless": true,
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3003,
+            "file": "src/app.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 0,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        },
+        "proxy": [
+          {
+            "path": "/catalog",
+            "target": "http://localhost:3003",
+            "to": "",
+            "file": "nuxt.config.ts",
+            "line": 3
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "repo:site",
+      "type": "repo",
+      "label": "site",
+      "repo": "site",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 3,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3010,
+            "file": "package.json",
+            "line": 6
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "shop#server/api/legacy.get.ts:GET /api/legacy@2",
+      "type": "function",
+      "label": "GET /api/legacy@2",
+      "repo": "shop",
+      "file": "server/api/legacy.get.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/orders.get.ts:GET /api/orders@1",
+      "type": "function",
+      "label": "GET /api/orders@1",
+      "repo": "shop",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "never[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/remote.get.ts:GET /api/remote@4",
+      "type": "function",
+      "label": "GET /api/remote@4",
+      "repo": "shop",
+      "file": "server/api/remote.get.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{items:unknown;orders:unknown}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/summary.get.ts:GET /api/summary@2",
+      "type": "function",
+      "label": "GET /api/summary@2",
+      "repo": "shop",
+      "file": "server/api/summary.get.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{orders:unknown;items:unknown}"
+        }
+      }
+    },
+    {
+      "id": "site#app/api/orders/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "site",
+      "file": "app/api/orders/route.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "site#app/api/report/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "site",
+      "file": "app/api/report/route.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "site#app/page.tsx:Page",
+      "type": "ui_component",
+      "label": "Page",
+      "repo": "site",
+      "file": "app/page.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "ui_api_call:site#app/api/report/route.ts:3:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "site",
+      "file": "app/api/report/route.ts",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "site"
+      }
+    },
+    {
+      "id": "ui_api_call:site#app/page.tsx:3:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "site",
+      "file": "app/page.tsx",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "site"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/items",
+      "to": "catalog#src/app.ts:GET /items@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/legacy",
+      "to": "shop#server/api/legacy.get.ts:GET /api/legacy@2",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/api/legacy.get.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#server/api/orders.get.ts:GET /api/orders@1",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/remote",
+      "to": "shop#server/api/remote.get.ts:GET /api/remote@4",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{items:unknown;orders:unknown}",
+      "file": "server/api/remote.get.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/summary",
+      "to": "shop#server/api/summary.get.ts:GET /api/summary@2",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{orders:unknown;items:unknown}",
+      "file": "server/api/summary.get.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:http:GET:/api/orders",
+      "to": "site#app/api/orders/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/orders/route.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:site:http:GET:/api/report",
+      "to": "site#app/api/report/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{count:any}",
+      "file": "app/api/report/route.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:shop#server/api/legacy.get.ts:3:24",
+      "to": "entry:shop:http:GET:/api/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "server/api/legacy.get.ts",
+      "line": 3,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "http_out:shop#server/api/remote.get.ts:6:24",
+      "to": "entry:shop:http:GET:/api/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "server/api/remote.get.ts",
+      "line": 6,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "http_out:shop#server/api/summary.get.ts:3:24",
+      "to": "entry:shop:http:GET:/api/orders",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "server/api/summary.get.ts",
+      "line": 3,
+      "meta": {
+        "via": "inProcess",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "http_out:shop#server/api/summary.get.ts:4:23",
+      "to": "entry:catalog:http:GET:/items",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "server/api/summary.get.ts",
+      "line": 4,
+      "meta": {
+        "via": "proxy",
+        "targetService": "catalog",
+        "listensAt": "src/app.ts:10",
+        "proxiedBy": "nuxt.config.ts:3",
+        "proxiedAs": "/items"
+      }
+    },
+    {
+      "from": "http_out:site#app/api/report/route.ts:3:24",
+      "to": "entry:site:http:GET:/api/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/api/report/route.ts",
+      "line": 3,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "site"
+      }
+    },
+    {
+      "from": "http_out:site#app/page.tsx:3:24",
+      "to": "entry:site:http:GET:/api/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/page.tsx",
+      "line": 3,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "site"
+      }
+    },
+    {
+      "from": "shop#server/api/legacy.get.ts:GET /api/legacy@2",
+      "to": "http_out:shop#server/api/legacy.get.ts:3:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/api/legacy.get.ts",
+      "line": 3
+    },
+    {
+      "from": "shop#server/api/remote.get.ts:GET /api/remote@4",
+      "to": "http_out:shop#server/api/remote.get.ts:6:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/api/remote.get.ts",
+      "line": 6
+    },
+    {
+      "from": "shop#server/api/summary.get.ts:GET /api/summary@2",
+      "to": "http_out:shop#server/api/summary.get.ts:3:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/api/summary.get.ts",
+      "line": 3
+    },
+    {
+      "from": "shop#server/api/summary.get.ts:GET /api/summary@2",
+      "to": "http_out:shop#server/api/summary.get.ts:4:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "server/api/summary.get.ts",
+      "line": 4
+    },
+    {
+      "from": "site#app/api/report/route.ts:GET",
+      "to": "http_out:site#app/api/report/route.ts:3:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/report/route.ts",
+      "line": 3
+    },
+    {
+      "from": "site#app/api/report/route.ts:GET",
+      "to": "ui_api_call:site#app/api/report/route.ts:3:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/api/report/route.ts",
+      "line": 3
+    },
+    {
+      "from": "site#app/page.tsx:Page",
+      "to": "http_out:site#app/page.tsx:3:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/page.tsx",
+      "line": 3
+    },
+    {
+      "from": "site#app/page.tsx:Page",
+      "to": "ui_api_call:site#app/page.tsx:3:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/page.tsx",
+      "line": 3
+    },
+    {
+      "from": "ui_api_call:site#app/api/report/route.ts:3:24",
+      "to": "entry:site:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/api/report/route.ts",
+      "line": 3,
+      "meta": {
+        "via": "same-service",
+        "targetService": "site"
+      }
+    },
+    {
+      "from": "ui_api_call:site#app/page.tsx:3:24",
+      "to": "entry:site:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/page.tsx",
+      "line": 3,
+      "meta": {
+        "via": "same-service",
+        "targetService": "site"
+      }
+    }
+  ],
+  "types": {
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "server/api/legacy.get.ts",
+      "line": 3,
+      "reason": "server-request-without-origin",
+      "message": "shop's server makes this request to /api/orders with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives shop's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:shop#server/api/legacy.get.ts:3:24"
+    },
+    {
+      "service": "shop",
+      "file": "server/api/remote.get.ts",
+      "line": 6,
+      "reason": "server-request-without-origin",
+      "message": "shop's server makes this request to /api/orders with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives shop's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:shop#server/api/remote.get.ts:6:24"
+    },
+    {
+      "file": "server/api/remote.get.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "server/api/summary.get.ts",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> ., @ -> ., ~~ -> ., @@ -> ., #shared -> shared, #app -> node_modules/nuxt/dist/app resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "."
+          ],
+          "~/*": [
+            "./*"
+          ],
+          "@": [
+            "."
+          ],
+          "@/*": [
+            "./*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "shared"
+          ],
+          "#shared/*": [
+            "shared/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ]
+        }
+      },
+      "service": "shop"
+    },
+    {
+      "service": "site",
+      "file": "app/api/report/route.ts",
+      "line": 3,
+      "reason": "server-request-without-origin",
+      "message": "site's server makes this request to /api/orders with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives site's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:site#app/api/report/route.ts:3:24"
+    }
+  ]
+}

@@ -32,7 +32,9 @@ import {
   type ManifestWorkload,
   type Manifests,
 } from './cluster.js';
-import { packageScriptLines, readDockerRuns, readDockerRunsInScript, readHelmInstalls, readPortForwards, scriptLines, type PortForward, type ScriptLine } from './docker-run.js';
+import { commandsAround, type Command } from '@flowatlas/serverless';
+import { dockerRunsOf, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
+import { helmfilesAt, readHelmfile } from './helmfile.js';
 import { namesInEnvFile, readEnvFile, type Written } from './dotenv.js';
 import { composeEnvironment, envFileEnvironment, envFileReading, environmentName, isComposeFile } from './files.js';
 
@@ -169,12 +171,14 @@ const readEnv = (into: Gathered, path: string, file: string, container?: Record<
   }
 };
 
-/** The containers the scripts of a repository's `package.json` start with `docker run` (P254), or a shell script or a Makefile does (P257). */
-const readRuns = (into: Gathered, path: string, file: string): void => {
-  const text = read(path);
-  if (text === undefined || !text.includes('docker')) return;
-  for (const run of file.endsWith('package.json') ? readDockerRuns(text) : readDockerRunsInScript(text)) {
-    addContainer(into, { name: run.name, names: run.names, file, ports: portsOf(run.mappings, file), environment: environmentPorts(run.environment) });
+/**
+ * The containers the commands of a repository start with `docker run`: its
+ * `package.json` scripts (P254), its shell scripts and Makefiles (P257), read
+ * by the one command reader (P263).
+ */
+const readRuns = (into: Gathered, commands: readonly Command[]): void => {
+  for (const run of dockerRunsOf(commands)) {
+    addContainer(into, { name: run.name, names: run.names, file: run.file, ports: portsOf(run.mappings, run.file), environment: environmentPorts(run.environment) });
   }
 };
 
@@ -213,16 +217,8 @@ const deploymentReader = (parse: (text: string) => DeploymentSettings) => (into:
   if (text !== undefined) fromDeployment(into, parse(text), file);
 };
 
-/** A Makefile or a shell script, which may start the service's container (P257). */
-const SCRIPT_FILES = /^(?:[Mm]akefile|GNUmakefile|.+\.mk|.+\.sh)$/;
-
-/** Where a repository keeps scripts besides its top: each is read as a script at its top is. */
-const SCRIPT_DIRS = ['scripts', 'bin'];
-
 const READERS: readonly Reader[] = [
   { matches: (name) => envFileReading(name) !== undefined, read: (into, path, file) => readEnv(into, path, file) },
-  { matches: (name) => name === 'package.json', read: readRuns },
-  { matches: (name) => SCRIPT_FILES.test(name), read: readRuns },
   { matches: (name) => name === 'serverless.yml' || name === 'serverless.yaml', read: deploymentReader(readServerlessFile) },
   { matches: (name) => name === 'wrangler.json' || name === 'wrangler.jsonc', read: deploymentReader(readWorkerJson) },
   { matches: (name) => name === 'wrangler.toml', read: deploymentReader(readWorkerToml) },
@@ -425,44 +421,83 @@ const waysIn = (manifests: readonly Manifests[], routed: readonly Routed[]): { r
       const first = reached[0] as (typeof reached)[number];
       const rule = ingressRule(path, `http:${'/'.repeat(2)}${first.routed.object.name.toLowerCase()}:${first.port.port.port}`);
       if (rule === undefined) continue;
-      for (const host of ingress.hosts) routes.push([first.routed.service, { host, rule, object: `${ingress.kind}/${ingress.name}` }]);
+      // A path is a way in at its own rule's hosts (P263); `*` at any host the controller is reached at.
+      for (const host of path.hosts ?? ingress.hosts) routes.push([first.routed.service, { host, rule, object: `${ingress.kind}/${ingress.name}` }]);
     }
   }
   return { routes, rows };
 };
 
-/** A command a script installs a chart with, resolved against where the script is run from. */
-const chartInstalls = (dirs: readonly string[], lines: readonly ScriptLine[], file: string): ChartInstall[] =>
-  readHelmInstalls(lines).flatMap((install) => {
-    const base = dirs.find((dir) => existsSync(join(resolve(dir, install.chart), 'Chart.yaml')));
+/** The commands of one repository (a service's, or the project's), and the directory they are read under. */
+interface Commands {
+  readonly base: string;
+  readonly owner?: string;
+  readonly commands: readonly Command[];
+}
+
+/**
+ * Where a command runs, absolute and the likeliest first: each directory the
+ * command reader says, under its repository; the repository where a `cd` the
+ * files do not settle leaves it nowhere; and the project's directory.
+ */
+const runsAt = (base: string, dirs: readonly string[] | undefined, rootDir: string): string[] => [...new Set([...(dirs ?? []).map((dir) => resolve(base, dir)), ...((dirs ?? []).length === 0 ? [base] : []), base, rootDir])];
+
+/** A command that installs a chart, resolved against where it runs (P260), in a pipeline too (P263). */
+const chartInstalls = (each: Commands, rootDir: string): ChartInstall[] =>
+  readHelmInstalls(each.commands).flatMap((install) => {
+    const base = runsAt(each.base, install.dirs, rootDir).find((dir) => existsSync(join(resolve(dir, install.chart), 'Chart.yaml')));
     if (base === undefined) return [];
     return [
       {
         chart: resolve(base, install.chart),
         ...(install.release === undefined ? {} : { release: install.release }),
         ...(install.namespace === undefined ? {} : { namespace: install.namespace }),
-        values: install.values.map((each) => resolve(base, each)),
+        values: install.values.map((value) => resolve(base, value)),
         sets: install.sets,
-        file,
+        file: install.file,
         line: install.line,
       },
     ];
   });
 
-/** The commands of the scripts at the top of a directory and in its script folders, labelled relative to it. */
-const scriptsAt = (dir: string): Array<{ lines: ScriptLine[]; file: string; dir: string }> => {
-  const out: Array<{ lines: ScriptLine[]; file: string; dir: string }> = [];
-  for (const [folder, names] of [['', filesAt(dir)] as const, ...SCRIPT_DIRS.map((each) => [each, filesAt(join(dir, each))] as const)]) {
-    for (const name of names) {
-      const isPackage = folder === '' && name === 'package.json';
-      if (!isPackage && !SCRIPT_FILES.test(name)) continue;
-      const text = read(join(dir, folder, name));
-      if (text === undefined) continue;
-      out.push({ lines: isPackage ? packageScriptLines(text) : scriptLines(text), file: folder === '' ? name : `${folder}/${name}`, dir: join(dir, folder) });
+/**
+ * What the helmfiles of a repository install (P263): its own `helmfile.yaml`
+ * (or `helmfile.d/`), and one a `helmfile -f` command names, each read for
+ * the environments, state values and releases its commands give, or for
+ * every environment it declares where no command runs it.
+ */
+const helmfileInstalls = (each: Commands, rootDir: string): { installs: ChartInstall[]; rows: ManifestRow[] } => {
+  const runs = readHelmfileRuns(each.commands).flatMap((run) => {
+    const at = runsAt(each.base, run.dirs, rootDir);
+    const files = run.helmfile === undefined ? (at.map(helmfilesAt).find((found) => found.length > 0) ?? []) : at.map((dir) => resolve(dir, run.helmfile as string)).filter((path) => existsSync(path)).slice(0, 1);
+    return files.map((path) => ({ path, run, from: at[0] as string }));
+  });
+  const files = [...new Set([...helmfilesAt(each.base), ...runs.map((each) => each.path)])].sort();
+  const installs: ChartInstall[] = [];
+  const rows: ManifestRow[] = [];
+  const label = (path: string): string => relative(each.base, path).split(sep).join('/');
+  for (const path of files) {
+    const own = runs.filter((found) => found.path === path);
+    const readings = own.length === 0 ? [{}] : own.map(({ run, from }) => ({ environments: [run.environment], stateSets: run.stateSets, stateFiles: run.stateFiles.map((file) => resolve(from, file)), releases: run.releases }));
+    for (const reading of readings) {
+      const read = readHelmfile(path, label, reading);
+      for (const install of read.installs) {
+        if (!installs.some((seen) => seen.chart === install.chart && seen.line === install.line && seen.environment === install.environment && seen.file === install.file)) installs.push(install);
+      }
+      for (const row of read.rows) if (!rows.some((seen) => seen.line === row.line && seen.file === row.file)) rows.push(row);
     }
   }
-  return out;
+  return { installs, rows };
 };
+
+/** The kustomizations a repository's commands build or apply, absolute (P263). */
+const appliedKustomizations = (each: Commands, rootDir: string): string[] =>
+  readKustomizeApplies(each.commands).flatMap((apply) => {
+    const dir = runsAt(each.base, apply.dirs, rootDir)
+      .map((at) => resolve(at, apply.folder))
+      .find((path) => ['kustomization.yaml', 'kustomization.yml', 'Kustomization'].some((name) => existsSync(join(path, name))));
+    return dir === undefined ? [] : [dir];
+  });
 
 export interface SettingsInput {
   /** Every service with a repository to look in, by name, with its directory. */
@@ -494,8 +529,9 @@ const manifestRow = (row: ManifestRow, service: string, file: string): Unresolve
  * routes the remote port to, and the service is listening there as its
  * containers would be.
  */
-const forwardedRuns = (forwards: ReadonlyArray<{ forward: PortForward; file: string }>, routed: readonly Routed[], workloads: readonly Running[]): Array<[string, ContainerRun]> =>
-  forwards.flatMap(({ forward, file }): Array<[string, ContainerRun]> => {
+const forwardedRuns = (forwards: readonly PortForward[], routed: readonly Routed[], workloads: readonly Running[]): Array<[string, ContainerRun]> =>
+  forwards.flatMap((forward): Array<[string, ContainerRun]> => {
+    const { file } = forward;
     const name = forward.name.toLowerCase();
     if (forward.kind === 'service') {
       const found = objectsNamed(routed, name, forward.namespace).flatMap((each) => {
@@ -553,20 +589,23 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
     }
   };
 
-  // What the scripts of each service and of the project run: the charts they
-  // install, and the ports they forward to a cluster (P260).
+  // What the commands of each service and of the project run - scripts,
+  // Makefiles, pipelines (P263): the charts and helmfiles they install, the
+  // overlays they apply, and the ports they forward to a cluster (P260).
   const rootIsService = input.services.some((service) => realOf(service.dir) === realOf(input.rootDir));
-  const scripts = [
-    ...input.services.flatMap((service) => scriptsAt(service.dir).map((each) => ({ ...each, base: service.dir, owner: service.name }))),
-    ...(rootIsService ? [] : scriptsAt(input.rootDir).map((each) => ({ ...each, base: input.rootDir, owner: undefined }))),
+  const scripts: Commands[] = [
+    ...input.services.map((service) => ({ base: service.dir, owner: service.name, commands: commandsAround(service.dir, '.') })),
+    ...(rootIsService ? [] : [{ base: input.rootDir, commands: commandsAround(input.rootDir, '.') }]),
   ];
-  const installs = scripts.flatMap((each) => chartInstalls([each.dir, each.base, input.rootDir], each.lines, each.file));
-  const forwards = scripts.flatMap((each) => readPortForwards(each.lines).map((forward) => ({ forward, file: each.file })));
+  const helmfiles = scripts.map((each) => ({ owner: each.owner, ...helmfileInstalls(each, input.rootDir) }));
+  const installs = [...scripts.flatMap((each) => chartInstalls(each, input.rootDir)), ...helmfiles.flatMap((each) => each.installs)];
+  const forwards = scripts.flatMap((each) => readPortForwards(each.commands));
   const choice: ManifestChoice = {
     ...(input.environment === undefined ? {} : { environment: environmentName(input.environment) }),
     ...(input.overlays === undefined ? {} : { overlays: input.overlays.map((each) => resolve(each)) }),
     ...(input.chartValues === undefined ? {} : { chartValues: new Map(Object.entries(input.chartValues).map(([chart, files]) => [resolve(chart), files.map((each) => resolve(each))])) }),
     installs,
+    applied: [...new Set(scripts.flatMap((each) => appliedKustomizations(each, input.rootDir)))],
     environmentOf: environmentName,
   };
 
@@ -579,9 +618,7 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
       const reader = READERS.find((each) => each.matches(name));
       reader?.read(into, join(service.dir, name), name);
     }
-    for (const dir of SCRIPT_DIRS) {
-      for (const name of filesAt(join(service.dir, dir)).filter((each) => SCRIPT_FILES.test(each))) readRuns(into, join(service.dir, dir, name), `${dir}/${name}`);
-    }
+    readRuns(into, scripts.find((each) => each.owner === service.name)?.commands ?? []);
     manifests.push({ read: readManifestsUnder(service.dir, new Set(), choice), owner: service.name });
     composeAt(service.dir, (name) => name, service.name);
   }
@@ -620,6 +657,7 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
     }
   };
   for (const { read, owner } of manifests) rowsOf(read.rows ?? [], owner);
+  for (const { rows, owner } of helmfiles) rowsOf(rows, owner);
   rowsOf(ways.rows);
 
   for (const file of composeFiles) {

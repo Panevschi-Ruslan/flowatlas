@@ -1,11 +1,13 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { isRecord, readServiceYaml, textOf, Unread } from '@flowatlas/serverless';
+import { readServiceYaml } from './document.js';
+import { isRecord, textOf, Unread } from './variables.js';
 
 /**
  * The commands a repository writes down for a person or a pipeline to run
  * (P259, P261), where a tool that deploys a template is run: the scripts of a
- * `package.json` and the recipes of a `Makefile` in a directory, the shell
+ * `package.json` and the recipes of a Makefile (`Makefile`, `makefile`,
+ * `GNUmakefile`, `*.mk`, P263) in a directory, the shell
  * scripts (`*.sh`) beside them and in the repository's `scripts/` and `bin/`,
  * the steps of a GitHub Actions workflow (`.github/workflows/*.yml`) and the
  * scripts of a GitLab CI job (`.gitlab-ci.yml`).
@@ -16,7 +18,14 @@ import { isRecord, readServiceYaml, textOf, Unread } from '@flowatlas/serverless
  * `export X=v`, a `X=v` written before a command, and a pipeline's `env:` or
  * `variables:` are its environment. A value with a shell variable or an
  * expression of the pipeline's in it (`$X`, `$(x)`, backticks, `${{ }}`) is
- * not known from the files, and is said so where it is used.
+ * not known from the files, and is said so where it is used. A `cd` to such a
+ * directory leaves the commands after it with no directory (`dirs` empty):
+ * what they run is still read, and where they run is each caller's to decide.
+ *
+ * Read by every reader of the commands that deploy or run something - the
+ * stacks a template is deployed as (`sam`), the charts and overlays a cluster
+ * is installed from (the CLI's settings, P263) - so a pipeline's command and a
+ * Makefile's are read alike, once.
  */
 
 /** A value written on a command or in its environment, or why it is not known from the files. */
@@ -30,7 +39,7 @@ export interface Command {
   readonly line: number;
   /** What a person calls it: a script's or a recipe's name, a pipeline's job. */
   readonly label: string;
-  /** The directories it may run in, repo-relative, the likeliest first: a shell script's own, then the repository's. */
+  /** The directories it may run in, repo-relative, the likeliest first: a shell script's own, then the repository's; none after a `cd` the files do not settle. */
   readonly dirs: readonly string[];
   /** Its words, quotes taken off, the environment written before it left out. */
   readonly words: readonly string[];
@@ -117,7 +126,6 @@ const commandsOfScript = (text: string, at: { file: string; line: number; label:
         where = to === undefined ? ['.'] : OWN_DIRECTORY.test(to) ? [own] : isFilledIn(to) || to === '-' ? [] : where.map((dir) => under(dir, to));
         continue;
       }
-      if (where.length === 0) continue;
       found.push({ file: at.file, line, label: at.label, dirs: where, words: command, env: { ...scope, ...inline } });
     }
   }
@@ -142,19 +150,33 @@ const packageScripts = (repoDir: string, dir: string): Command[] => {
   });
 };
 
-/** The recipes of a `Makefile`, each line where it is written. */
-const makeRecipes = (repoDir: string, dir: string): Command[] => {
-  const makefile = under(dir, 'Makefile');
+/** The names a Makefile goes by, beside the included `*.mk` files. */
+const MAKEFILES = /^(?:Makefile|makefile|GNUmakefile|.+\.mk)$/;
+
+/** The recipes of every Makefile of a directory, each line where it is written. */
+const makeRecipes = (repoDir: string, dir: string): Command[] => filesIn(repoDir, dir).filter((file) => MAKEFILES.test(posix.basename(file))).flatMap((file) => recipesOf(repoDir, file));
+
+/** The recipes of one Makefile. */
+const recipesOf = (repoDir: string, makefile: string): Command[] => {
   const make = textAt(repoDir, makefile);
   if (make === undefined) return [];
   const found: Command[] = [];
   let target = '';
-  make.split('\n').forEach((raw, index) => {
+  const lines = make.split('\n');
+  for (let index = 0; index < lines.length; index += 1) {
+    const raw = lines[index] as string;
     const rule = /^([A-Za-z0-9_.\-/]+)\s*:(?!=)/.exec(raw);
     if (rule !== null) target = rule[1] as string;
-    if (!raw.startsWith('\t')) return;
-    found.push(...commandsOfScript(raw.trim().replace(/^[@-]+/, ''), { file: makefile, line: index + 1, label: target }, [dir], {}));
-  });
+    if (!raw.startsWith('\t')) continue;
+    // A recipe line ending in a backslash goes on on the next, as the shell is handed it.
+    const start = index;
+    let written = raw.trim();
+    while (/\\\s*$/.test(written) && index + 1 < lines.length) {
+      index += 1;
+      written = `${written.replace(/\\\s*$/, ' ')}${(lines[index] as string).trim()}`;
+    }
+    found.push(...commandsOfScript(written.replace(/^[@-]+/, ''), { file: makefile, line: start + 1, label: target }, [posix.dirname(makefile)], {}));
+  }
   return found;
 };
 
@@ -244,7 +266,7 @@ const gitlabJobs = (repoDir: string, file: string): Command[] => {
 
 /** The pipelines and shell scripts kept at the top of the repository, read once wherever a template is. */
 const topCommands = (repoDir: string): Command[] => [
-  ...['scripts', 'bin'].flatMap((dir) => filesIn(repoDir, dir).filter((file) => file.endsWith('.sh')).flatMap((file) => shellScript(repoDir, file))),
+  ...['scripts', 'bin'].flatMap((dir) => [...filesIn(repoDir, dir).filter((file) => file.endsWith('.sh')).flatMap((file) => shellScript(repoDir, file)), ...makeRecipes(repoDir, dir)]),
   ...filesIn(repoDir, '.github/workflows')
     .filter((file) => /\.ya?ml$/.test(file))
     .flatMap((file) => workflowSteps(repoDir, file)),

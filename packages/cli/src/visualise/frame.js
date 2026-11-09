@@ -290,6 +290,7 @@ export const PAGE_WORDS = Object.freeze({
     'manifest-unread': 'cluster manifest not read',
     'manifest-overlay-unchosen': 'no overlay chosen',
     'proxied-to-third-party': 'proxied to a third party',
+    'server-request-without-origin': 'server request with no host',
     'network-port-unreachable': 'port not reached on the network',
     'api-base-override-unread': 'own base address not read',
     'api-base-unknown': 'base address setting unknown',

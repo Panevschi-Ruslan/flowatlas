@@ -1,11 +1,10 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { stackOutputKey } from '@flowatlas/core';
-import { Imported, isRecord, readServiceYaml, textOf, Unread } from '@flowatlas/serverless';
-import { commandsAround, commandValue, isFilledIn, under, type Command, type DeployedValue } from './commands.js';
+import { commandsAround, commandValue, Imported, isFilledIn, isRecord, readServiceYaml, textOf, under, Unread, type Command, type DeployedValue } from '@flowatlas/serverless';
 import { lookupIn, renderJinja, UNRENDERED, type Rendering } from './jinja.js';
 
-export type { DeployedValue } from './commands.js';
+export type { DeployedValue } from '@flowatlas/serverless';
 
 /**
  * The tools that deploy a plain template with its values written down beside

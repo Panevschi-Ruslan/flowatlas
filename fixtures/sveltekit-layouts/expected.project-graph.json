@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:43:32.908Z",
+  "builtAt": "2026-11-09T11:48:36.080Z",
   "services": [
     {
       "name": "shop",
@@ -106,7 +106,8 @@
         "path": "/api/orders/:param",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "originless": true
       }
     },
     {
@@ -122,7 +123,8 @@
         "path": "/api/session",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "originless": true
       }
     },
     {
@@ -138,7 +140,8 @@
         "path": "/api/session",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "originless": true
       }
     },
     {
@@ -154,7 +157,8 @@
         "path": "/api/menu",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "originless": true
       }
     },
     {

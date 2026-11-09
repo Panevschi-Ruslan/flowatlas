@@ -187,6 +187,11 @@ describe("Next's rewrites to an address outside the application (P257)", () => {
     expect(read.ownOrigin).toBe(true);
     expect(nextProxies(ctxOf(repo({ 'package.json': '{}' }))).ownOrigin).toBe(true);
   });
+
+  it("says a Nitro server resolves its own requests with no host against its own address, configured or not (P263)", () => {
+    expect(nitroProxies(ctxOf(repo({ 'package.json': '{}' }))).ownOrigin).toBe(true);
+    expect(nitroProxies(ctxOf(repo({ 'nuxt.config.ts': "export default defineNuxtConfig({ routeRules: { '/x/**': { proxy: 'http://localhost:3001/**' } } });" }))).ownOrigin).toBe(true);
+  });
 });
 
 describe("a proxy's router, and a target read from a setting (P260)", () => {

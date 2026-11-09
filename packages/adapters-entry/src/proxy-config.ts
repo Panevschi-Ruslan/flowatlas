@@ -306,7 +306,11 @@ export const nitroProxies = (ctx: ExtractContext): ProxyReading => {
       found.push(...routeRuleRules(configValueAt(config.value, key), at, Math.max(0, written.text.indexOf('routeRules', from))));
     }
   }
-  return collect(found);
+  // A Nitro server resolves a request its own code writes with no host
+  // against the address it is served at, as Next's does (P263): its `$fetch`
+  // hands one to its own routes in process, and the platform `fetch` has no
+  // origin to resolve it against, which the request's own reading says.
+  return { ...collect(found), ownOrigin: true };
 };
 
 const NEXT = 'nextjs-routes';

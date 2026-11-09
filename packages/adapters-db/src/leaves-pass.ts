@@ -1,6 +1,9 @@
-import { relative, sep } from 'node:path';
+import { existsSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 import {
   addressOnly,
+  IN_PROCESS_META,
+  ORIGINLESS_META,
   builtQueryInAddress,
   builtQueryOf,
   isBelowDir,
@@ -266,7 +269,44 @@ interface RecordOptions {
    * edge is a guess, as a described publish on such a receiver is (P121).
    */
   stated?: boolean;
+  /**
+   * What the client does with an address that has no host (P263): the
+   * platform's `fetch` has no origin to resolve it against, and a framework's
+   * own `$fetch` hands it to the server's routes in process.
+   */
+  client?: HostlessClient;
 }
+
+/** The names a Nuxt application's configuration goes by. */
+const NUXT_CONFIG_NAMES = ['nuxt.config.ts', 'nuxt.config.js', 'nuxt.config.mjs', 'nuxt.config.mts', 'nuxt.config.cjs'];
+
+/** What a client does with an address written with no host (P263). */
+type HostlessClient = 'originless' | 'in-process';
+
+/** Whether a request's settings give it a base address the reader does not follow: `$fetch(url, { baseURL })`. */
+const writesBase = (settings: TsNode | undefined): boolean => {
+  const object = settings === undefined ? undefined : deref(settings);
+  return object !== undefined && Node.isObjectLiteralExpression(object) && (object.getProperty('baseURL') !== undefined || object.getProperty('baseUrl') !== undefined);
+};
+
+/**
+ * What a request with an address written as a path and nothing in front of
+ * it says of its client (P263); nothing where the address has a host, a base
+ * read from a setting, or does not start with the path.
+ */
+const hostlessMark = (client: HostlessClient | undefined, info: UrlInfo): Record<string, true> => {
+  if (client === undefined || info.host !== null || info.baseUrlEnv !== null || info.url === null || !info.url.startsWith('/')) return {};
+  return client === 'in-process' ? { [IN_PROCESS_META]: true } : { [ORIGINLESS_META]: true };
+};
+
+/** The module an identifier is imported from, where an import statement of the file names it. */
+const importedFrom = (identifier: TsNode): string | undefined => {
+  for (const declaration of identifier.getSymbol()?.getDeclarations() ?? []) {
+    if (!Node.isImportSpecifier(declaration) && !Node.isImportClause(declaration)) continue;
+    return declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration)?.getModuleSpecifierValue();
+  }
+  return undefined;
+};
 
 /**
  * The address and options a `Request` was built with, when the call is handed one.
@@ -1606,21 +1646,61 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     return untyped && /^[A-Z][A-Z0-9_]*$/.test(receiver.getName()) ? { binding: receiver.getName(), typed: false } : undefined;
   };
 
+  /**
+   * Whether `$fetch` is the framework's own: the global Nitro and Nuxt hand a
+   * server (P263), declared nowhere in the repository, or imported from the
+   * framework's own modules.
+   */
+  const isFrameworkFetch = (callee: TsNode): boolean => {
+    if (!Node.isIdentifier(callee) || callee.getText() !== '$fetch') return false;
+    const from = importedFrom(callee);
+    if (from !== undefined) return ['ofetch', '#imports', 'nitropack', 'nitro', 'nuxt', 'nuxt/app', '#app'].includes(from) || from.startsWith('nitropack/');
+    return isGlobal(callee);
+  };
+
+  /**
+   * Whether a file is one a Nitro server runs (P263): in a Nuxt application,
+   * one under a `server/` folder (its own or a layer's); the rest of it is
+   * the browser's, read by the browser reader, and runs on the server only
+   * as a page rendered there. A repository that is no Nuxt application is
+   * all server.
+   */
+  const nuxtApplication = NUXT_CONFIG_NAMES.some((name) => existsSync(join(ctx.repoDir, name)));
+  const isNitroServerFile = (call: CallExpression): boolean =>
+    !nuxtApplication || /(?:^|\/)server\//.test(relative(ctx.repoDir, call.getSourceFile().getFilePath()).split(sep).join('/'));
+
+  /** Whether an identifier is a global: declared nowhere in the repository (a parameter named `fetch` is a framework's own, P263). */
+  const isGlobal = (identifier: TsNode): boolean =>
+    (identifier.getSymbol()?.getDeclarations() ?? []).every((declaration) => {
+      const path = declaration.getSourceFile().getFilePath();
+      return path.includes('/node_modules/') || !isBelowDir(path, ctx.repoDir);
+    });
+
   /** Whether a call reaches the network, and where its address sits. */
-  const recogniseHttp = (call: CallExpression): { method: string; urlIndex: number; binding?: { binding: string; typed: boolean } } | null => {
+  const recogniseHttp = (call: CallExpression): { method: string; urlIndex: number; binding?: { binding: string; typed: boolean }; client?: HostlessClient } | null => {
     const callee = call.getExpression();
 
     const binding = bindingOf(callee);
     if (binding !== undefined) return { method: 'GET', urlIndex: 0, binding };
 
     if (Node.isIdentifier(callee) && callee.getText() === 'fetch') {
-      return { method: 'GET', urlIndex: 0 };
+      // The platform's own, unless the code declares the name: SvelteKit's `load({ fetch })` resolves a path itself.
+      return { method: 'GET', urlIndex: 0, ...(isGlobal(callee) ? { client: 'originless' as const } : {}) };
     }
     // `const send = this.http ?? fetch; send(url)` — a transport a test can
     // swap, falling back to the platform's. The binding is still fetch, and
     // every call through it is a request.
     if (Node.isIdentifier(callee) && isFetchAlias(callee)) {
-      return { method: 'GET', urlIndex: 0 };
+      return { method: 'GET', urlIndex: 0, client: 'originless' };
+    }
+    // Nitro's and Nuxt's `$fetch` on the server, and ofetch's own (P263): an
+    // address and the request's settings, its verb `method`. A base written
+    // in the settings is one the reader does not follow, so the call is not
+    // read. Nitro's own hands a path to its routes in process; ofetch
+    // imported is the platform's fetch underneath.
+    if ((isFrameworkFetch(callee) || (Node.isIdentifier(callee) && callee.getText() === 'ofetch' && importedFrom(callee) === 'ofetch')) && isNitroServerFile(call)) {
+      if (writesBase(call.getArguments()[1])) return null;
+      return { method: 'GET', urlIndex: 0, client: callee.getText() === '$fetch' && importedFrom(callee) !== 'ofetch' ? 'in-process' : 'originless' };
     }
     if (Node.isPropertyAccessExpression(callee)) {
       const origin = resolveTypeOrigin(callee.getExpression());
@@ -1800,7 +1880,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     owner: Holder,
     options: RecordOptions = {},
   ): void => {
-    const { init, readsSite = true, binding, body: handed, describedBy, stated, inner, address } = options;
+    const { init, readsSite = true, binding, body: handed, describedBy, stated, inner, address, client } = options;
     // A request through a binding names a host the platform ignores: the
     // binding is where it goes (P91).
     const info: UrlInfo = binding === undefined ? written : { ...written, host: null, baseUrlEnv: null };
@@ -1922,6 +2002,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         ...(application === undefined ? {} : { application }),
         ...(binding === undefined ? {} : { binding: binding.binding, ...(binding.typed ? {} : { bindingTyped: false }) }),
         ...(describedBy === undefined ? {} : { describedBy }),
+        ...hostlessMark(client, info),
       },
     });
     owner.ensure();
@@ -1990,7 +2071,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // one dead end standing in for every caller.
     const here = analyzeUrl(urlArg, { whole: true });
     const split = isReadable(urlArg) ? undefined : splitAtParameterIn(urlArg, settingReader);
-    const through = recognised.binding === undefined ? {} : { binding: recognised.binding };
+    const through = { ...(recognised.binding === undefined ? {} : { binding: recognised.binding }), ...(recognised.client === undefined ? {} : { client: recognised.client }) };
     const stated = statedVerbOf(call, recognised.method, request?.init);
     const verbParameter = stated === undefined ? verbParameterAt(call, request?.init) : undefined;
     // The body a wrapper is handed, read at each caller along the same calls
@@ -2029,7 +2110,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         const handedHere = along !== undefined && verbAlong(verbParameter as ParameterDeclaration, hops.slice(0, -1)) === undefined;
         recordHttp(site, reading.info, verb, reading.owner, {
           readsSite: stated?.settings !== true && !handedHere,
-          ...(recognised.binding === undefined ? {} : { binding: recognised.binding }),
+          ...through,
           ...bodyAlong(hops),
           inner: { call, hops },
         });

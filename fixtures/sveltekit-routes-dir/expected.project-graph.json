@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:43:38.896Z",
+  "builtAt": "2026-11-09T11:48:37.703Z",
   "services": [
     {
       "name": "shop",
@@ -56,7 +56,8 @@
         "path": "/api/items",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "originless": true
       }
     },
     {

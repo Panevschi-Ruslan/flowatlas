@@ -186,7 +186,8 @@ export const waysIn = (
   for (const [service, own] of Object.entries(settings)) {
     for (const route of own.ingress ?? []) {
       byHost.set(route.host, [...(byHost.get(route.host) ?? []), route]);
-      if (!route.host.startsWith('*')) hostsOf.set(service, new Set([...(hostsOf.get(service) ?? []), route.host]));
+      // A wildcard host is no one page's; `*`, a way in at any host (P263), is the page's of a front end it serves.
+      if (!route.host.startsWith('*.')) hostsOf.set(service, new Set([...(hostsOf.get(service) ?? []), route.host]));
     }
   }
   const ingressOf = (host: string, path: string): Forward | undefined => {
@@ -209,19 +210,35 @@ export const forwardedAgain = (before: Forward, service: string, next: Forward):
   through: [...(before.through ?? []), { service, forward: { ...before, through: [] } }],
 });
 
-/** What an edge joined through a proxy carries: the rule, the servers it passed and the path it was forwarded as where that differs. */
+/**
+ * What an edge joined through a proxy carries: the rule, the servers it
+ * passed, the path it was forwarded as where that differs, and every setting
+ * a hop's target was read from, in the order the request passes them (P263).
+ */
 export const proxiedMeta = (forward: Forward | undefined, asked: string): Record<string, unknown> => {
   if (forward === undefined) return {};
   const first = forward.through?.[0]?.forward ?? forward;
   const then = [...(forward.through ?? []).slice(1).map((each) => each.forward), ...(forward.through === undefined || forward.through.length === 0 ? [] : [forward])];
+  const settings = [...(forward.through ?? []).map((each) => each.forward), forward].flatMap((each) => (each.targetFrom === undefined ? [] : [each.targetFrom]));
   return {
     proxiedBy: `${first.rule.file}:${first.rule.line}`,
     ...(then.length === 0 ? {} : { proxiedThen: then.map((each) => `${each.rule.file}:${each.rule.line}`) }),
     ...(forward.path === asked ? {} : { proxiedAs: forward.path }),
     ...(forward.object === undefined ? {} : { wayIn: forward.object }),
-    ...(forward.targetFrom === undefined ? {} : { proxiedTo: forward.targetFrom }),
+    ...(settings.length === 0 ? {} : { proxiedTo: settings }),
   };
 };
+
+/**
+ * What is said of a server's own request with no host that its client has no
+ * origin to resolve against (P263): the platform `fetch` on a server, handed
+ * a path. It is drawn where it was meant to go; as written it throws.
+ */
+export const originlessFinding = (service: string, path: string): Finding => ({
+  reason: 'server-request-without-origin',
+  message: `${service}'s server makes this request to ${path} with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written`,
+  hint: `Build the address from a setting that gives ${service}'s own address, call the code behind the route directly, or use a client that answers it in process.`,
+});
 
 /** What is said of a request a proxy forwards to a host no service of the project is reached at. */
 export const proxiedOutFinding = (service: string, forward: Forward): Finding => ({

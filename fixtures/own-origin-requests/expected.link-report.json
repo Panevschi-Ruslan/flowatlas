@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:47:40.066Z",
+  "configHash": "8629e6e75be8",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 707,
+      "packages": {
+        "name": "own-origin-requests-catalog",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 761,
+      "packages": {
+        "name": "own-origin-requests-shop",
+        "runtime": [
+          "nuxt"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 758,
+      "packages": {
+        "name": "own-origin-requests-site",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 6,
+    "linked": 6,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 2,
+    "resolved": 2,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 3,
+    "uncalled": [
+      "entry:shop:http:GET:/api/legacy",
+      "entry:shop:http:GET:/api/remote",
+      "entry:shop:http:GET:/api/summary",
+      "entry:site:http:GET:/api/report"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "server/api/legacy.get.ts",
+      "line": 3,
+      "reason": "server-request-without-origin",
+      "message": "shop's server makes this request to /api/orders with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives shop's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:shop#server/api/legacy.get.ts:3:24"
+    },
+    {
+      "service": "shop",
+      "file": "server/api/remote.get.ts",
+      "line": 6,
+      "reason": "server-request-without-origin",
+      "message": "shop's server makes this request to /api/orders with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives shop's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:shop#server/api/remote.get.ts:6:24"
+    },
+    {
+      "service": "site",
+      "file": "app/api/report/route.ts",
+      "line": 3,
+      "reason": "server-request-without-origin",
+      "message": "site's server makes this request to /api/orders with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives site's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:site#app/api/report/route.ts:3:24"
+    }
+  ],
+  "totals": {
+    "nodes": 26,
+    "edges": 23,
+    "types": 2,
+    "missed": 2,
+    "sites": 2,
+    "notes": 1,
+    "findings": 3,
+    "unresolved": 2
+  }
+}

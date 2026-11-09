@@ -8,6 +8,23 @@ only one of them moved.
 
 ### Added
 
+- **Every way a cluster is installed and a server asks itself (P263).** A
+  `helmfile.yaml` installs its releases in each environment it declares (or
+  the one `helmfile -e` names), rendered over the environment's values; a
+  chart renders its dependencies (`file://` charts and `charts/`) inside its
+  release with its values' subtree, a false `condition` leaving one out; a
+  kustomization inflates its `helmCharts`, generates its `configMapGenerator`
+  and `secretGenerator` config maps and applies its `replacements`, and a
+  pod's `envFrom` and `configMapKeyRef` read the values they hold. An
+  `Ingress` rule with no `host` serves the front ends behind it, and each path
+  is a way in at its own rule's host only. `helm`, `helmfile`, `kubectl apply
+  -k` and `kubectl port-forward` in GitHub workflows and GitLab jobs are read,
+  by the one command reader the deployment readers share (moved to
+  `@flowatlas/serverless`), and the overlay a pipeline applies is the one
+  read. A Next or Nitro server's own `fetch('/api/x')` with no host is the
+  finding `server-request-without-origin` (it throws as written), while
+  Nitro's `$fetch('/api/x')` joins its own route in process, `static`.
+  `proxiedTo` is now a list naming every hop's setting.
 - **The front end's and the RPC readers' last open names (P262).** An
   `addRouteMiddleware` at the top of `app.vue`'s setup, or of a composable
   that setup calls, is a route middleware in every page's order after the

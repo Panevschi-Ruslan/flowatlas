@@ -615,3 +615,24 @@ describe("TypeORM's raw SQL, read as a statement (P126)", () => {
     expect(reasons).not.toContain('sql-parse-failed');
   });
 });
+
+describe("a server's own requests with no host (P263)", () => {
+  it("reads Nitro's $fetch as a call its routes answer in process, and the platform fetch and ofetch as having no origin", async () => {
+    const graph = await graphOf('own-origin-requests/shop');
+    const requests = graph.nodes
+      .filter((node) => node.type === 'http_out')
+      .map((node) => `${node.file}:${node.line} ${String(node.meta?.['method'])} ${String(node.meta?.['path'])} ${node.meta?.['inProcess'] === true ? 'in process' : node.meta?.['originless'] === true ? 'no origin' : '-'}`);
+    // `$fetch('/items', { baseURL })` writes a base the reader does not follow, and is not read.
+    expect(requests.sort()).toEqual([
+      'server/api/legacy.get.ts:3 GET /api/orders no origin',
+      'server/api/remote.get.ts:6 GET /api/orders no origin',
+      'server/api/summary.get.ts:3 GET /api/orders in process',
+      'server/api/summary.get.ts:4 GET /catalog/items in process',
+    ]);
+  });
+
+  it('marks nothing where the address has a host', async () => {
+    const graph = await graphOf('own-origin-requests/catalog');
+    expect(graph.nodes.filter((node) => node.meta?.['originless'] === true || node.meta?.['inProcess'] === true)).toEqual([]);
+  });
+});

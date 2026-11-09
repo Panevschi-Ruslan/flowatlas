@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:07:03.141Z",
+  "builtAt": "2026-11-09T11:47:13.970Z",
   "services": [
     {
       "name": "shop",
@@ -149,6 +149,7 @@
         "responseType": null,
         "bodyType": null,
         "application": ".",
+        "originless": true,
         "targetService": "shop"
       }
     },
@@ -185,6 +186,7 @@
         "responseType": null,
         "bodyType": null,
         "application": "examples/blog",
+        "originless": true,
         "targetService": "shop"
       }
     },
@@ -203,6 +205,7 @@
         "responseType": null,
         "bodyType": null,
         "application": "examples/blog",
+        "originless": true,
         "targetService": "shop"
       }
     },
@@ -239,6 +242,7 @@
         "responseType": null,
         "bodyType": null,
         "application": "examples/template",
+        "originless": true,
         "targetService": "shop"
       }
     },

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:04:00.152Z",
+  "builtAt": "2026-11-09T11:43:42.010Z",
   "services": [
     {
       "name": "orders",
@@ -324,6 +324,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "originless": true,
         "targetService": "orders"
       }
     },
@@ -341,6 +342,7 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
+        "originless": true,
         "targetService": "store"
       }
     },
@@ -711,7 +713,8 @@
             "file": "nuxt.config.ts",
             "line": 7
           }
-        ]
+        ],
+        "ownOrigin": true
       }
     },
     {

@@ -1,0 +1,13 @@
+apiVersion: v2
+name: shop
+version: 1.0.0
+dependencies:
+  - name: common
+    repository: file://../common
+  - name: orders
+    repository: file://../orders
+  - name: catalog
+    repository: file://../catalog
+  - name: metrics
+    repository: file://../metrics
+    condition: metrics.enabled

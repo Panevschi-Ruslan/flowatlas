@@ -1,0 +1,894 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:43:29.594Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/server.ts:GET /catalog/products@6",
+      "type": "function",
+      "label": "GET /catalog/products@6",
+      "repo": "catalog",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/catalog/products",
+      "type": "entry",
+      "label": "GET /catalog/products",
+      "repo": "catalog",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/catalog/products",
+        "rawPath": "/catalog/products",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/jobs/run",
+      "type": "entry",
+      "label": "POST /jobs/run",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/jobs/run",
+        "rawPath": "/jobs/run",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/stock",
+      "type": "entry",
+      "label": "GET /stock",
+      "repo": "stock",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stock",
+        "rawPath": "/stock",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "external_api:other.example.test",
+      "type": "external_api",
+      "label": "other.example.test",
+      "repo": "jobs",
+      "meta": {
+        "host": "other.example.test"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:10:9",
+      "type": "http_out",
+      "label": "GET /stock",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 10,
+      "meta": {
+        "method": "GET",
+        "url": "http://stock-admin:9090/stock",
+        "path": "/stock",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "stock-admin:9090",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:11:9",
+      "type": "http_out",
+      "label": "GET /catalog/products",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "http://catalog-preview-catalog:9093/catalog/products",
+        "path": "/catalog/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "catalog-preview-catalog:9093",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:12:9",
+      "type": "http_out",
+      "label": "GET /orders",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 12,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:8085/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:8085",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:13:9",
+      "type": "http_out",
+      "label": "GET /orders",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "method": "GET",
+        "url": "https://admin.example.test/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "admin.example.test",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:14:9",
+      "type": "http_out",
+      "label": "GET /catalog/products",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 14,
+      "meta": {
+        "method": "GET",
+        "url": "https://other.example.test/catalog/products",
+        "path": "/catalog/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "other.example.test"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:7:9",
+      "type": "http_out",
+      "label": "GET /orders",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "method": "GET",
+        "url": "http://shop-orders:8080/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "shop-orders:8080",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:8:9",
+      "type": "http_out",
+      "label": "GET /catalog/products",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "http://shop-catalog:8083/catalog/products",
+        "path": "/catalog/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "shop-catalog:8083",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:9:9",
+      "type": "http_out",
+      "label": "GET /stock",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "method": "GET",
+        "url": "http://stock:8080/stock",
+        "path": "/stock",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "stock:8080",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "jobs#src/server.ts:POST /jobs/run@6",
+      "type": "function",
+      "label": "POST /jobs/run@6",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/server.ts:GET /orders@6",
+      "type": "function",
+      "label": "GET /orders@6",
+      "repo": "orders",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3003,
+            "file": "src/server.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3009,
+            "file": "src/server.ts",
+            "line": 18
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4000,
+            "file": "src/server.ts",
+            "line": 10,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "stock#src/server.ts:GET /stock@6",
+      "type": "function",
+      "label": "GET /stock@6",
+      "repo": "stock",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/Shop.tsx:7:15",
+      "type": "ui_action",
+      "label": "onClick={loadOrders}",
+      "repo": "web",
+      "file": "src/Shop.tsx",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadOrders",
+        "component": "web#src/Shop.tsx:Shop",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Shop.tsx:8:15",
+      "type": "ui_action",
+      "label": "onClick={loadProducts}",
+      "repo": "web",
+      "file": "src/Shop.tsx",
+      "line": 8,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadProducts",
+        "component": "web#src/Shop.tsx:Shop",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Shop.tsx:3:28",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "src/Shop.tsx",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Shop.tsx:4:30",
+      "type": "ui_api_call",
+      "label": "GET /catalog/products",
+      "repo": "web",
+      "file": "src/Shop.tsx",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/catalog/products",
+        "path": "/catalog/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "web#src/Shop.tsx:Shop",
+      "type": "ui_component",
+      "label": "Shop",
+      "repo": "web",
+      "file": "src/Shop.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/catalog/products",
+      "to": "catalog#src/server.ts:GET /catalog/products@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:jobs:http:POST:/jobs/run",
+      "to": "jobs#src/server.ts:POST /jobs/run@6",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders",
+      "to": "orders#src/server.ts:GET /orders@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/stock",
+      "to": "stock#src/server.ts:GET /stock@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:10:9",
+      "to": "entry:stock:http:GET:/stock",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 10,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/server.ts:10 (PORT from deploy/base/stock.env (stock-admin)), behind stock-admin:9090 (deploy/overlays/production/charts/stock-admin/templates/service.yaml)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:11:9",
+      "to": "entry:catalog:http:GET:/catalog/products",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 11,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/server.ts:10, behind catalog-preview-catalog:9093 (deploy/charts/catalog/templates/service.yaml)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:12:9",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 12,
+      "meta": {
+        "via": "host",
+        "targetService": "orders",
+        "listensAt": "src/server.ts:10, forwarded from 8085 to svc/shop-orders by .gitlab-ci.yml"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:13:9",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "via": "ingress",
+        "targetService": "orders",
+        "listensAt": "src/server.ts:10, behind shop-orders:8080 (deploy/charts/orders/templates/service.yaml)",
+        "proxiedBy": "deploy/ingress.yaml:11",
+        "wayIn": "ingress/edge"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:14:9",
+      "to": "external_api:other.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 14
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:7:9",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "via": "host",
+        "targetService": "orders",
+        "listensAt": "src/server.ts:10, behind shop-orders:8080 (deploy/charts/orders/templates/service.yaml)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:8:9",
+      "to": "entry:catalog:http:GET:/catalog/products",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/server.ts:10, behind shop-catalog:8083 (deploy/charts/catalog/templates/service.yaml)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:9:9",
+      "to": "entry:stock:http:GET:/stock",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/server.ts:10 (PORT from deploy/base/stock.env (stock)), behind stock:8080 (deploy/base/stock.yaml)"
+      }
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:10:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 10
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:11:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 11
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:12:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 12
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:13:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 13
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:14:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 14
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 7
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:8:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 9
+    },
+    {
+      "from": "ui_action:web#src/Shop.tsx:7:15",
+      "to": "web#src/Shop.tsx:Shop",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Shop.tsx",
+      "line": 7
+    },
+    {
+      "from": "ui_action:web#src/Shop.tsx:8:15",
+      "to": "web#src/Shop.tsx:Shop",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Shop.tsx",
+      "line": 8
+    },
+    {
+      "from": "ui_api_call:web#src/Shop.tsx:3:28",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Shop.tsx",
+      "line": 3,
+      "meta": {
+        "via": "ingress",
+        "targetService": "orders",
+        "listensAt": "src/server.ts:10, behind shop-orders:8080 (deploy/charts/orders/templates/service.yaml)",
+        "proxiedBy": "deploy/ingress.yaml:20",
+        "wayIn": "ingress/edge"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Shop.tsx:4:30",
+      "to": "entry:catalog:http:GET:/catalog/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Shop.tsx",
+      "line": 4,
+      "meta": {
+        "via": "ingress",
+        "targetService": "catalog",
+        "listensAt": "src/server.ts:10, behind shop-catalog:8083 (deploy/charts/catalog/templates/service.yaml)",
+        "proxiedBy": "deploy/ingress.yaml:27",
+        "wayIn": "ingress/edge"
+      }
+    },
+    {
+      "from": "web#src/Shop.tsx:Shop",
+      "to": "ui_api_call:web#src/Shop.tsx:3:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Shop.tsx",
+      "line": 3
+    },
+    {
+      "from": "web#src/Shop.tsx:Shop",
+      "to": "ui_api_call:web#src/Shop.tsx:4:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Shop.tsx",
+      "line": 4
+    }
+  ],
+  "types": {
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "k8s/web.yaml",
+      "line": 7,
+      "reason": "published-port-unheard",
+      "level": "info",
+      "message": "k8s/web.yaml routes web:80 to port 80 of web's containers, but nothing in web's code is read listening on a port",
+      "hint": "Route the name to the port the server listens on (targetPort), or check that the containers' environment gives the server 80. A request to web:80 is still joined to web by the file.",
+      "symbol": "web:80:80",
+      "meta": {
+        "routed": 80,
+        "container": 80,
+        "listens": []
+      }
+    }
+  ]
+}

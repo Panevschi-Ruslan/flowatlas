@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>218 fixtures</span>
-    <span>568 snapshot files</span>
+    <span>220 fixtures</span>
+    <span>574 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -1489,7 +1489,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="49">49</span></h2>
+    <h2>Everything else <span class="count" data-total="51">51</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1521,6 +1521,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">4 services</span>
         </div>
         <p>Two NestJS services that serve the same two routes, a third that calls one of them by its host, and a React front end whose clients get their base from a function run before every request (P244).</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="cluster-install-joins everything else every way a cluster's manifests are installed, read as the tools that install them do (p263): a `helmfile` and the environment a pipeline runs it with, an umbrella chart rendering the charts it depends on inside its own release, a kustomization that generates its config map, replaces a port with it and inflates a chart, an `ingress` rule with no host, and the commands of a github workflow and a gitlab job.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/cluster-install-joins">cluster-install-joins</a>
+          <span class="kind">5 services</span>
+        </div>
+        <p>Every way a cluster's manifests are installed, read as the tools that install them do (P263): a <code>helmfile</code> and the environment a pipeline runs it with, an umbrella chart rendering the charts it depends on inside its own release, a kustomization that generates its config map, replaces a port with it and inflates a chart, an <code>Ingress</code> rule with no host, and the commands of a GitHub workflow and a GitLab job.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="cluster-port-joins everything else services a cluster's manifests route to, containers a `makefile` or a shell script starts, a workspace tool's serve target, and nestjs settings objects handed in by their token (p257).">
@@ -1729,6 +1737,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">2 services</span>
         </div>
         <p>An oRPC service and the clients that call it (P58): the second library of the family <code>fixtures/trpc-router</code> and <code>fixtures/trpc-join</code> are about, read by the same tree walk and joined by the same path.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="own-origin-requests everything else a server's own requests with no host (p263): a next route handler and a nitro route asking `fetch('/api/orders')`, which throws on the server as written, and nitro's `$fetch('/api/orders')`, which nitro answers from its own routes in process.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/own-origin-requests">own-origin-requests</a>
+          <span class="kind">3 services</span>
+        </div>
+        <p>A server's own requests with no host (P263): a Next route handler and a Nitro route asking <code>fetch('/api/orders')</code>, which throws on the server as written, and Nitro's <code>$fetch('/api/orders')</code>, which Nitro answers from its own routes in process.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="port-sources-joins everything else twelve services on one machine, each deciding the port its server listens on somewhere other than a literal `app.listen(3001)` (p254): a front end's dev server configuration, a function the port is handed to, a settings object, a settings library's default, a setting the service's example environment file fills, a container that publishes the code's port as another one.">

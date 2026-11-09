@@ -99,6 +99,8 @@ export interface ManifestPath {
   readonly flags?: string;
   readonly backends: ReadonlyArray<{ readonly name: string; readonly port?: number | string }>;
   readonly rewrite?: ManifestRewrite;
+  /** The hosts the path is a way in at, where they are its own rule's rather than every host of its object's (P263); `*` for any host. */
+  readonly hosts?: readonly string[];
   readonly file: string;
   readonly line: number;
 }
@@ -108,7 +110,7 @@ export interface ManifestIngress {
   readonly kind: 'ingress' | 'http-route';
   readonly name: string;
   readonly namespace?: string;
-  /** The hosts a request is written to, lower case; `*.shop.example.test` for a wildcard. */
+  /** The hosts a request is written to, lower case; `*.shop.example.test` for a wildcard, `*` for any host a rule with none answers (P263). */
   readonly hosts: readonly string[];
   readonly paths: readonly ManifestPath[];
   readonly file: string;
@@ -267,7 +269,91 @@ const resourceOf = (value: Located, file: string): Resource => {
 const resourcesOf = (source: string, file: string, lineOf?: (line: number) => number): Resource[] =>
   documentsOf(source, file, lineOf).flatMap((value) => (isRecord(value) ? [resourceOf(value as Located, file)] : []));
 
-const containersOf = (spec: unknown): ManifestContainer[] => {
+/** The values a `ConfigMap` or a `Secret` holds, each with the file that writes it (P263). */
+interface ConfigValues {
+  readonly values: ReadonlyMap<string, { readonly raw: string; readonly file: string }>;
+}
+
+/** The config maps and secrets of a set of resources, by kind and every name each has had. */
+type Configs = (kind: 'ConfigMap' | 'Secret', name: string, namespace: string | undefined) => ConfigValues | undefined;
+
+/** Where each key of a generated config map's `data` is written, beside the mapping's own place. */
+const KEYS_AT: unique symbol = Symbol('keys at');
+
+type KeyedData = Record<string, unknown> & { [KEYS_AT]?: Record<string, Where> };
+
+const configsOf = (resources: readonly Resource[]): Configs => {
+  const found: Array<{ kind: string; names: ReadonlySet<string>; namespace?: string; read: ConfigValues }> = [];
+  for (const resource of resources) {
+    const kind = text(resource.value['kind']);
+    if (kind !== 'ConfigMap' && kind !== 'Secret') continue;
+    const values = new Map<string, { raw: string; file: string }>();
+    const fileOf = (data: unknown, key: string): string => (data as KeyedData)[KEYS_AT]?.[key]?.file ?? whereOf(data)?.file ?? resource.file;
+    const data = resource.value['data'];
+    if (isRecord(data)) {
+      for (const [key, value] of Object.entries(data)) {
+        const written = text(value);
+        if (written === undefined) continue;
+        // A secret's data is written in base64.
+        const raw = kind === 'Secret' && !(data as KeyedData)[KEYS_AT] ? Buffer.from(written, 'base64').toString('utf8') : written;
+        values.set(key, { raw, file: fileOf(data, key) });
+      }
+    }
+    const plain = resource.value['stringData'];
+    if (kind === 'Secret' && isRecord(plain)) {
+      for (const [key, value] of Object.entries(plain)) if (text(value) !== undefined) values.set(key, { raw: text(value) as string, file: fileOf(plain, key) });
+    }
+    const metadata = isRecord(resource.value['metadata']) ? resource.value['metadata'] : {};
+    const namespace = text(metadata['namespace']);
+    found.push({ kind, names: resource.names, ...(namespace === undefined ? {} : { namespace }), read: { values } });
+  }
+  return (kind, name, namespace) => {
+    const named = found.filter((each) => each.kind === kind && each.names.has(name));
+    return (named.find((each) => namespace === undefined || each.namespace === undefined || each.namespace === namespace) ?? named[0])?.read;
+  };
+};
+
+/**
+ * The environment of a container: each `env` entry's literal value, or the
+ * value of the config map or secret key it names (`valueFrom`), over every
+ * key of the config maps and secrets it takes whole (`envFrom`, with its
+ * `prefix`), as the cluster gives a pod them (P263). Each said at the file
+ * that writes it.
+ */
+const environmentOf = (container: Record<string, unknown>, namespace: string | undefined, configs: Configs): Array<Written & { file: string }> => {
+  const out = new Map<string, Written & { file: string }>();
+  for (const source of (Array.isArray(container['envFrom']) ? container['envFrom'] : []).filter(isRecord)) {
+    const ref = isRecord(source['configMapRef']) ? (['ConfigMap', source['configMapRef']] as const) : isRecord(source['secretRef']) ? (['Secret', source['secretRef']] as const) : undefined;
+    const name = ref === undefined ? undefined : text(ref[1]['name']);
+    if (ref === undefined || name === undefined) continue;
+    const prefix = text(source['prefix']) ?? '';
+    for (const [key, { raw, file }] of configs(ref[0], name, namespace)?.values ?? []) out.set(`${prefix}${key}`, { name: `${prefix}${key}`, raw, file });
+  }
+  for (const each of (Array.isArray(container['env']) ? container['env'] : []).filter(isRecord)) {
+    const key = text(each['name']);
+    if (key === undefined) continue;
+    const from = isRecord(each['valueFrom']) ? each['valueFrom'] : undefined;
+    const ref = from === undefined ? undefined : isRecord(from['configMapKeyRef']) ? (['ConfigMap', from['configMapKeyRef']] as const) : isRecord(from['secretKeyRef']) ? (['Secret', from['secretKeyRef']] as const) : undefined;
+    if (ref !== undefined) {
+      const name = text(ref[1]['name']);
+      const wanted = text(ref[1]['key']);
+      const found = name === undefined || wanted === undefined ? undefined : configs(ref[0], name, namespace)?.values.get(wanted);
+      if (found !== undefined) out.set(key, { name: key, raw: found.raw, file: found.file });
+      else out.delete(key);
+      continue;
+    }
+    const raw = text(each['value']);
+    const settled = raw === undefined ? undefined : interpolated(raw);
+    if (settled === undefined || settled === '') {
+      out.delete(key);
+      continue;
+    }
+    out.set(key, { name: key, raw: settled, file: whereOf(each)?.file ?? '' });
+  }
+  return [...out.values()];
+};
+
+const containersOf = (spec: unknown, namespace?: string, configs: Configs = () => undefined): ManifestContainer[] => {
   const containers = isRecord(spec) ? spec['containers'] : undefined;
   if (!Array.isArray(containers)) return [];
   return containers.filter(isRecord).map((container) => {
@@ -278,14 +364,10 @@ const containersOf = (spec: unknown): ManifestContainer[] => {
       const named = text(each['name']);
       return port === undefined ? [] : [{ port, ...(named === undefined ? {} : { name: named }) }];
     });
-    const entries = (Array.isArray(container['env']) ? container['env'] : []).filter(isRecord);
-    const environment = entries.flatMap((each): Written[] => {
-      const key = text(each['name']);
-      const raw = text(each['value']);
-      const settled = raw === undefined ? undefined : interpolated(raw);
-      return key === undefined || settled === undefined || settled === '' ? [] : [{ name: key, raw: settled }];
-    });
-    const environmentFile = entries.map(whereOf).find((at) => at !== undefined)?.file;
+    const written = environmentOf(container, namespace, configs);
+    const environment = written.map(({ name: key, raw }): Written => ({ name: key, raw }));
+    // Where the environment is said to be written: where its first port is, else where its first value is.
+    const environmentFile = (written.find((each) => /^\d+$/.test(each.raw) && each.file !== '') ?? written.find((each) => each.file !== ''))?.file;
     return {
       ...(name === undefined ? {} : { name }),
       ...(image === undefined || image === '' ? {} : { image }),
@@ -295,6 +377,15 @@ const containersOf = (spec: unknown): ManifestContainer[] => {
     };
   });
 };
+
+/**
+ * The host a rule with no `host` is a way in at (P263): any host the
+ * controller is reached at. It answers the requests of the front ends it
+ * serves (their pages are served at whatever host reached it), and nothing
+ * more: whether it is also tried for a host other rules name depends on the
+ * controller, and a host no rule names is not known to reach the cluster.
+ */
+export const ANY_HOST = '*';
 
 /** The annotation an ingress controller is told to rewrite a matched path by, and to read paths as patterns by. */
 const REWRITE_TARGET = 'nginx.ingress.kubernetes.io/rewrite-target';
@@ -319,9 +410,11 @@ const ingressOf = (value: Located, name: string, namespace: string | undefined, 
   const regex = target !== undefined || annotations[USE_REGEX] === 'true';
   const spec = isRecord(value['spec']) ? value['spec'] : {};
   const rules = (Array.isArray(spec['rules']) ? spec['rules'] : []).filter(isRecord);
-  const hosts = [...new Set(rules.flatMap((rule) => (text(rule['host']) === undefined ? [] : [(text(rule['host']) as string).toLowerCase()])))];
+  // A rule with no host answers any host the controller is reached at (P263).
+  const hostOf = (rule: Record<string, unknown>): string => text(rule['host'])?.toLowerCase() ?? ANY_HOST;
+  const hosts = [...new Set(rules.map(hostOf))];
   const paths: ManifestPath[] = [];
-  const pathOf = (path: string, pathType: string | undefined, backend: unknown, at: Where): void => {
+  const pathOf = (path: string, pathType: string | undefined, backend: unknown, at: Where, own: readonly string[]): void => {
     const to = ingressBackend(backend);
     if (to === undefined) return;
     // A controller told to read paths as patterns matches each from the start, ignoring case, and
@@ -334,25 +427,29 @@ const ingressOf = (value: Located, name: string, namespace: string | undefined, 
         flags: 'i',
         backends: [to],
         ...(target === undefined ? {} : { rewrite: { kind: 'pattern' as const, source, flags: 'i', with: target } }),
+        hosts: own,
         ...at,
       });
       return;
     }
-    paths.push({ match: pathType === 'Exact' ? 'exact' : 'prefix', path, backends: [to], ...at });
+    paths.push({ match: pathType === 'Exact' ? 'exact' : 'prefix', path, backends: [to], hosts: own, ...at });
   };
   for (const rule of rules) {
-    if (text(rule['host']) === undefined) continue;
     const http = isRecord(rule['http']) ? rule['http'] : {};
+    // Each path is a way in at its own rule's host only (P263).
     for (const each of (Array.isArray(http['paths']) ? http['paths'] : []).filter(isRecord)) {
       const at = whereOf(each) ?? { file, line: 1 };
-      pathOf(text(each['path']) ?? '/', text(each['pathType']), each['backend'], at);
+      pathOf(text(each['path']) ?? '/', text(each['pathType']), each['backend'], at, [hostOf(rule)]);
     }
   }
-  // What no path of a host matches goes to the default backend.
+  // What no path of a host matches goes to the default backend; an `Ingress`
+  // with no rule at all sends every request there, at any host.
   const fallback = spec['defaultBackend'] ?? spec['backend'];
-  if (fallback !== undefined && hosts.length > 0) {
+  const fallbackHosts = rules.length === 0 ? [ANY_HOST] : hosts;
+  if (fallback !== undefined) {
     const to = ingressBackend(fallback);
-    if (to !== undefined) paths.push({ match: 'prefix', path: '/', backends: [to], ...(whereOf(fallback) ?? { file, line: 1 }) });
+    if (to !== undefined) paths.push({ match: 'prefix', path: '/', backends: [to], hosts: fallbackHosts, ...(whereOf(fallback) ?? { file, line: 1 }) });
+    if (rules.length === 0) hosts.push(ANY_HOST);
   }
   if (hosts.length === 0 || paths.length === 0) return undefined;
   return { kind: 'ingress', name, ...(namespace === undefined ? {} : { namespace }), hosts, paths, file };
@@ -409,8 +506,9 @@ const gatewayHosts = (resources: readonly Resource[]): Map<string, string[]> => 
     if (text(value['kind']) !== 'Gateway') continue;
     const name = text(isRecord(value['metadata']) ? value['metadata']['name'] : undefined);
     const spec = isRecord(value['spec']) ? value['spec'] : {};
-    const hosts = (Array.isArray(spec['listeners']) ? spec['listeners'] : []).filter(isRecord).flatMap((listener) => (text(listener['hostname']) === undefined ? [] : [(text(listener['hostname']) as string).toLowerCase()]));
-    if (name !== undefined) out.set(name, hosts);
+    // A listener with no hostname answers any host (P263), as an `Ingress` rule with none does.
+    const hosts = (Array.isArray(spec['listeners']) ? spec['listeners'] : []).filter(isRecord).map((listener) => text(listener['hostname'])?.toLowerCase() ?? ANY_HOST);
+    if (name !== undefined) out.set(name, [...new Set(hosts)]);
   }
   return out;
 };
@@ -421,6 +519,7 @@ const manifestsOf = (resources: readonly Resource[]): Required<Pick<Manifests, '
   const services: ManifestService[] = [];
   const ingresses: ManifestIngress[] = [];
   const gateways = gatewayHosts(resources);
+  const configs = configsOf(resources);
   for (const { value, file } of resources) {
     const kind = text(value['kind']);
     const metadata = isRecord(value['metadata']) ? value['metadata'] : {};
@@ -435,7 +534,7 @@ const manifestsOf = (resources: readonly Resource[]): Required<Pick<Manifests, '
         name,
         ...(namespace === undefined ? {} : { namespace }),
         labels: labelsOf(templateMeta['labels']),
-        containers: containersOf(template['spec']),
+        containers: containersOf(template['spec'], namespace, configs),
         file,
       });
       continue;
@@ -607,6 +706,88 @@ const targetOf = (value: unknown): Target | undefined => {
 const targets = (resources: readonly Resource[], target: Target): Resource[] =>
   resources.filter((each) => (target.kind === undefined || text(each.value['kind']) === target.kind) && (target.name === undefined || each.names.has(target.name)));
 
+// ---------------------------------------------------------------- replacements
+
+/** One step of a kustomize field path: a key, an index, every item, or the item of a list a key's value picks. */
+type Step = { readonly key: string } | { readonly index: number } | { readonly every: true } | { readonly where: string; readonly is: string };
+
+/** The steps of a field path: `spec.template.spec.containers.[name=orders].env.[name=PORT].value`, `[a.b/c]` a key with dots. */
+const stepsOf = (path: string): Step[] => {
+  const out: Step[] = [];
+  for (const match of path.matchAll(/\[([^\]]*)\]|([^.[\]]+)/g)) {
+    const bracketed = match[1];
+    if (bracketed !== undefined) {
+      const equals = bracketed.indexOf('=');
+      out.push(equals > 0 ? { where: bracketed.slice(0, equals), is: bracketed.slice(equals + 1) } : { key: bracketed });
+      continue;
+    }
+    const word = match[2] as string;
+    out.push(word === '*' ? { every: true } : /^\d+$/.test(word) ? { index: Number(word) } : { key: word });
+  }
+  return out;
+};
+
+/** What one step reaches from a value: the values it names. */
+const stepped = (value: unknown, step: Step): unknown[] => {
+  if ('key' in step) return isRecord(value) && step.key in value ? [value[step.key]] : [];
+  if (!Array.isArray(value)) return [];
+  if ('index' in step) return step.index < value.length ? [value[step.index]] : [];
+  if ('every' in step) return value;
+  return value.filter((item) => isRecord(item) && String(item[step.where]) === step.is);
+};
+
+/** The value at a field path, where it reaches one. */
+const fieldAt = (value: unknown, steps: readonly Step[]): unknown => {
+  let at: unknown[] = [value];
+  for (const step of steps) at = at.flatMap((each) => stepped(each, step));
+  return at.length === 1 ? at[0] : undefined;
+};
+
+/** A value written at a field path, in every place it reaches; a missing key made where `create` says. */
+const setFieldAt = (value: unknown, steps: readonly Step[], written: unknown, create: boolean, delimiter: string | undefined, index: number): boolean => {
+  const [step, ...rest] = steps;
+  if (step === undefined) return false;
+  if (rest.length === 0) {
+    const holder = value as Record<string | number, unknown>;
+    const slot = 'key' in step && isRecord(value) && (step.key in value || create) ? step.key : 'index' in step && Array.isArray(value) && step.index < value.length ? step.index : undefined;
+    if (slot === undefined) return false;
+    const before = holder[slot];
+    // A delimiter and an index replace one part of the value written there.
+    if (delimiter === undefined || typeof before !== 'string') {
+      holder[slot] = written;
+      return true;
+    }
+    const parts = before.split(delimiter);
+    if (index < 0 || index >= parts.length) return false;
+    parts[index] = String(written);
+    holder[slot] = parts.join(delimiter);
+    return true;
+  }
+  let next = stepped(value, step);
+  if (next.length === 0 && create && 'key' in step && isRecord(value)) {
+    value[step.key] = {};
+    next = [value[step.key]];
+  }
+  let any = false;
+  for (const each of next) if (setFieldAt(each, rest, written, create, delimiter, index)) any = true;
+  return any;
+};
+
+/** The resources a replacement's `source`, `select` or `reject` names by kind, name and namespace. */
+const selectedBy = (resources: readonly Resource[], selector: Record<string, unknown>): Resource[] => {
+  const kind = text(selector['kind']);
+  const name = text(selector['name']);
+  const namespace = text(selector['namespace']);
+  return resources.filter((each) => {
+    const metadata = isRecord(each.value['metadata']) ? each.value['metadata'] : {};
+    return (kind === undefined || text(each.value['kind']) === kind) && (name === undefined || each.names.has(name)) && (namespace === undefined || text(metadata['namespace']) === namespace);
+  });
+};
+
+/** The folder a kustomization keeps an inflated chart in: `<home>/<name>`, or `<home>/<name>-<version>/<name>` as newer kustomize pulls it. */
+const chartHomeOf = (home: string, name: string, version: string | undefined): string | undefined =>
+  [join(home, name), ...(version === undefined ? [] : [join(home, `${name}-${version}`, name)])].find((dir) => existsSync(join(dir, 'Chart.yaml')));
+
 // ---------------------------------------------------------------- kustomizations
 
 const KUSTOMIZATIONS = ['kustomization.yaml', 'kustomization.yml', 'Kustomization'];
@@ -672,6 +853,8 @@ class Builder {
   constructor(
     private readonly root: string,
     private readonly read: (path: string) => Resource[],
+    /** A chart rendered with one reading, its dependencies with it (P263). */
+    private readonly inflate: (dir: string, reading: ChartReading, rows: ManifestRow[]) => Resource[] = () => [],
   ) {}
 
   /** The documents of a patch file, lists of operations included. */
@@ -701,6 +884,9 @@ class Builder {
       if (!existsSync(path)) continue;
       resources.push(...(statSync(path).isDirectory() ? this.build(path, inner) : this.read(path)));
     }
+    // What it generates and inflates is part of what it builds, before any of it is transformed (P263).
+    this.generate(kustomization, resources, at);
+    resources.push(...this.helmCharts(kustomization, at));
     this.patch(kustomization, resources, at);
     this.images(value, resources);
     const given: Kustomized = {
@@ -710,7 +896,143 @@ class Builder {
     };
     const services = new Set(resources.filter((each) => text(each.value['kind']) === 'Service').flatMap((each) => [...each.names]));
     for (const resource of resources) kustomizedResource(resource, given, services);
+    // Replacements are the last transformer kustomize applies.
+    this.replace(kustomization, resources, at);
+    if (Array.isArray(value['vars']) && value['vars'].length > 0) {
+      this.rows.push(row('manifest-unread', at('vars'), `${this.label(kustomization.file)} writes vars, which are not substituted; what they stand for is read as written`, 'Write the value as a literal, or as a replacement (replacements:), which is read.', resources.flatMap((each) => [...each.names])));
+    }
     return resources;
+  }
+
+  /**
+   * The config maps and secrets a kustomization generates (P263): one per
+   * `configMapGenerator` / `secretGenerator` entry, its `literals` and the
+   * keys of its `envs` (`env`) files, each key said at the file that writes
+   * it; `behavior: merge` or `replace` changes the one of its name the bases
+   * build. A generator's `files` are file contents, not an environment, and
+   * are not read.
+   */
+  private generate(kustomization: Kustomization, resources: Resource[], at: (key: string) => Where): void {
+    const value = kustomization.value;
+    for (const [key, kind] of [['configMapGenerator', 'ConfigMap'], ['secretGenerator', 'Secret']] as const) {
+      const where = at(key);
+      for (const entry of (Array.isArray(value[key]) ? value[key] : []).filter(isRecord)) {
+        const name = text(entry['name']);
+        if (name === undefined) continue;
+        const data: KeyedData = {};
+        const keysAt: Record<string, Where> = {};
+        for (const literal of Array.isArray(entry['literals']) ? entry['literals'] : []) {
+          const written = text(literal);
+          const equals = written?.indexOf('=') ?? -1;
+          if (written === undefined || equals <= 0) continue;
+          data[written.slice(0, equals)] = written.slice(equals + 1).replace(/^(['"])(.*)\1$/, '$2');
+          keysAt[written.slice(0, equals)] = where;
+        }
+        const files = [...(Array.isArray(entry['envs']) ? entry['envs'] : []), ...(text(entry['env']) === undefined ? [] : [entry['env']])];
+        for (const written of files) {
+          const path = text(written) === undefined ? undefined : resolve(kustomization.dir, text(written) as string);
+          const source = path === undefined ? undefined : readText(path);
+          if (path === undefined || source === undefined) continue;
+          source.split('\n').forEach((line, index) => {
+            const assignment = /^\s*([A-Za-z_][\w.-]*)\s*=(.*)$/.exec(line);
+            if (assignment === null || /^\s*#/.test(line)) return;
+            data[assignment[1] as string] = (assignment[2] as string).trim().replace(/^(['"])(.*)\1$/, '$2');
+            keysAt[assignment[1] as string] = { file: this.label(path), line: index + 1 };
+          });
+        }
+        Object.defineProperty(data, KEYS_AT, { value: keysAt, enumerable: false, writable: true });
+        located(data, where);
+        const behavior = text(entry['behavior']) ?? 'create';
+        const existing = behavior === 'create' ? undefined : resources.find((each) => text(each.value['kind']) === kind && each.names.has(name));
+        if (existing !== undefined) {
+          const before = isRecord(existing.value['data']) ? (existing.value['data'] as KeyedData) : {};
+          const merged: KeyedData = behavior === 'merge' ? { ...before, ...data } : data;
+          Object.defineProperty(merged, KEYS_AT, { value: { ...(behavior === 'merge' ? (before[KEYS_AT] ?? {}) : {}), ...keysAt }, enumerable: false, writable: true });
+          located(merged, where);
+          existing.value['data'] = merged;
+          continue;
+        }
+        const namespace = text(entry['namespace']);
+        const metadata = located({ name, ...(namespace === undefined ? {} : { namespace }) }, where);
+        resources.push({ value: located({ apiVersion: 'v1', kind, metadata, data }, where), file: where.file, names: new Set([name]) });
+      }
+    }
+  }
+
+  /**
+   * The charts a kustomization inflates (P263): each `helmCharts` entry whose
+   * chart is under `helmGlobals.chartHome` (by default `charts`), rendered
+   * with its values file, additional values files and inline values under its
+   * release and namespace. A chart only a repository has is a row.
+   */
+  private helmCharts(kustomization: Kustomization, at: (key: string) => Where): Resource[] {
+    const value = kustomization.value;
+    const globals = isRecord(value['helmGlobals']) ? value['helmGlobals'] : {};
+    const home = resolve(kustomization.dir, text(globals['chartHome']) ?? 'charts');
+    const out: Resource[] = [];
+    for (const entry of (Array.isArray(value['helmCharts']) ? value['helmCharts'] : []).filter(isRecord)) {
+      const name = text(entry['name']);
+      if (name === undefined) continue;
+      const version = text(entry['version']);
+      const dir = chartHomeOf(home, name, version);
+      const where = at('helmCharts');
+      if (dir === undefined) {
+        this.rows.push(row('manifest-unread', where, `${where.file} inflates the chart ${name}${text(entry['repo']) === undefined ? '' : ` from ${text(entry['repo'])}`}, which is not in the project`, 'Keep the chart in the project under helmGlobals.chartHome, or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).', [name]));
+        continue;
+      }
+      const files = [entry['valuesFile'], ...(Array.isArray(entry['additionalValuesFiles']) ? entry['additionalValuesFiles'] : [])].flatMap((each) => (text(each) === undefined ? [] : [resolve(kustomization.dir, text(each) as string)]));
+      const inline = isRecord(entry['valuesInline']) ? [entry['valuesInline']] : [];
+      const reading = chartReadingOf(dir, [...files, ...inline], [], text(entry['releaseName']) ?? name, text(entry['namespace']), `${where.file}:${where.line}`);
+      out.push(...this.inflate(dir, reading, this.rows));
+    }
+    return out;
+  }
+
+  /**
+   * A kustomization's replacements (P263), inline or in the files `path`
+   * names: the value at a source's field path, or the part of it a delimiter
+   * and an index pick, written at each target's field paths, created where
+   * `create` says. What does not apply is a row.
+   */
+  private replace(kustomization: Kustomization, resources: readonly Resource[], at: (key: string) => Where): void {
+    const where = at('replacements');
+    const entries = (Array.isArray(kustomization.value['replacements']) ? kustomization.value['replacements'] : []).filter(isRecord).flatMap((entry): unknown[] => {
+      const path = text(entry['path']);
+      if (path === undefined) return [entry];
+      return this.readPatch(resolve(kustomization.dir, path)).flatMap((document) => (Array.isArray(document) ? document : [document]));
+    });
+    const said = (message: string, about: readonly string[]): void => {
+      this.rows.push(row('manifest-unread', where, `${where.file} does not replace as written: ${message}`, UNREAD_HINT, about));
+    };
+    for (const entry of entries.filter(isRecord)) {
+      const source = isRecord(entry['source']) ? entry['source'] : {};
+      const selected = selectedBy(resources, source);
+      const fieldPath = text(source['fieldPath']) ?? 'metadata.name';
+      if (selected.length !== 1) {
+        said(`its source ${text(source['kind']) ?? ''}/${text(source['name']) ?? '?'} is ${selected.length === 0 ? 'not built' : 'more than one resource'}`, []);
+        continue;
+      }
+      const found = fieldAt((selected[0] as Resource).value, stepsOf(fieldPath));
+      if (found === undefined || isRecord(found) || Array.isArray(found)) {
+        said(`${fieldPath} of its source is not a value written`, [...(selected[0] as Resource).names]);
+        continue;
+      }
+      const options = isRecord(source['options']) ? source['options'] : {};
+      const delimiter = text(options['delimiter']);
+      const picked = delimiter === undefined ? found : String(found).split(delimiter)[Number(text(options['index']) ?? 0)];
+      if (picked === undefined) continue;
+      for (const target of (Array.isArray(entry['targets']) ? entry['targets'] : []).filter(isRecord)) {
+        const rejected = (Array.isArray(target['reject']) ? target['reject'] : []).filter(isRecord).flatMap((each) => selectedBy(resources, each));
+        const chosen = selectedBy(resources, isRecord(target['select']) ? target['select'] : {}).filter((each) => !rejected.includes(each));
+        const written = isRecord(target['options']) ? target['options'] : {};
+        for (const resource of chosen) {
+          for (const path of (Array.isArray(target['fieldPaths']) ? target['fieldPaths'] : []).flatMap((each) => (text(each) === undefined ? [] : [text(each) as string]))) {
+            const set = setFieldAt(resource.value, stepsOf(path), picked, written['create'] === true, text(written['delimiter']), Number(text(written['index']) ?? 0));
+            if (!set) said(`${path} is not in ${[...resource.names][0] ?? 'a resource'}`, [...resource.names]);
+          }
+        }
+      }
+    }
   }
 
   /** The documents of a patch: a file it names, or the text it writes inline. */
@@ -798,12 +1120,14 @@ export interface ChartInstall {
   readonly chart: string;
   readonly release?: string;
   readonly namespace?: string;
-  /** Values files, absolute, in the order given. */
-  readonly values: readonly string[];
+  /** Values files, absolute, or values written inline (a helmfile's, P263), in the order given. */
+  readonly values: ReadonlyArray<string | Readonly<Record<string, unknown>>>;
   readonly sets: readonly string[];
   /** Where the command is written. */
   readonly file: string;
   readonly line: number;
+  /** The environment it installs in, where what installs it names one (a helmfile's environment, P263). */
+  readonly environment?: string;
 }
 
 /** What chooses among several ways a project's manifests can be built (P260). */
@@ -816,6 +1140,8 @@ export interface ManifestChoice {
   readonly chartValues?: ReadonlyMap<string, readonly string[]>;
   /** Every command the project's scripts install a chart with. */
   readonly installs?: readonly ChartInstall[];
+  /** The kustomizations the project's commands build or apply, absolute (P263). */
+  readonly applied?: readonly string[];
   /** How a word of a file's or a folder's name is spelt as an environment. */
   readonly environmentOf?: (word: string) => string;
 }
@@ -840,47 +1166,160 @@ const yamlValue = (path: string): Record<string, unknown> => {
 };
 
 /** One way a chart is installed: its values, release and namespace, and where that is said. */
-interface ChartReading {
+export interface ChartReading {
   readonly context: ChartContext;
   readonly label: string;
   /** The values files it is given past the chart's own, for an environment to choose by. */
   readonly files: readonly string[];
+  /** The environment what installs it names (P263). */
+  readonly environment?: string;
 }
 
-/** The ways a chart is installed: as the configuration names, as each command does, or with its own values alone. */
-const chartReadings = (dir: string, choice: ManifestChoice): ChartReading[] => {
+/** What a chart's `Chart.yaml` says of it, as a template reads `.Chart`. */
+const chartMetaOf = (dir: string): ChartContext['chart'] => {
   const meta = yamlValue(join(dir, 'Chart.yaml'));
-  const chart = {
+  return {
     ...(text(meta['name']) === undefined ? {} : { name: text(meta['name']) as string }),
     ...(text(meta['version']) === undefined ? {} : { version: text(meta['version']) as string }),
     ...(text(meta['appVersion']) === undefined ? {} : { appVersion: text(meta['appVersion']) as string }),
   };
-  const own = yamlValue(join(dir, 'values.yaml'));
-  const reading = (files: readonly string[], sets: readonly string[], release: string | undefined, namespace: string | undefined, label: string): ChartReading => {
-    let values = own;
-    for (const file of files) values = mergedValues(values, yamlValue(file));
-    for (const set of sets) values = setValue(values, set);
-    // With no command naming it, the release is taken to be named for the chart.
-    const name = release ?? chart.name;
-    return { context: { values, release: { ...(name === undefined ? {} : { name }), ...(namespace === undefined ? {} : { namespace }) }, chart }, label, files };
-  };
-  const configured = choice.chartValues?.get(dir);
-  if (configured !== undefined) return [reading(configured, [], undefined, undefined, 'the configuration')];
-  const installs = (choice.installs ?? []).filter((each) => each.chart === dir);
-  if (installs.length === 0) return [reading([], [], undefined, undefined, 'values.yaml')];
-  return installs.map((each) => reading(each.values, each.sets, each.release, each.namespace, `${each.file}:${each.line}`));
 };
 
-/** Every template of a chart, rendered every way one reading makes it go. */
-const chartResources = (dir: string, reading: ChartReading, label: (path: string) => string, rows: ManifestRow[]): Resource[] => {
-  const templates = join(dir, 'templates');
-  let names: string[];
+/**
+ * A chart installed with values files or inline values (in order) and sets
+ * over its own `values.yaml`, under a release and a namespace. With nothing
+ * naming the release, it is taken to be named for the chart.
+ */
+export const chartReadingOf = (
+  dir: string,
+  given: ReadonlyArray<string | Readonly<Record<string, unknown>>>,
+  sets: readonly string[],
+  release: string | undefined,
+  namespace: string | undefined,
+  label: string,
+  environment?: string,
+): ChartReading => {
+  const chart = chartMetaOf(dir);
+  let values = yamlValue(join(dir, 'values.yaml'));
+  for (const each of given) values = mergedValues(values, typeof each === 'string' ? yamlValue(each) : (each as Record<string, unknown>));
+  for (const set of sets) values = setValue(values, set);
+  const name = release ?? chart.name;
+  return {
+    context: { values, release: { ...(name === undefined ? {} : { name }), ...(namespace === undefined ? {} : { namespace }) }, chart },
+    label,
+    files: given.filter((each): each is string => typeof each === 'string'),
+    ...(environment === undefined ? {} : { environment }),
+  };
+};
+
+/** The ways a chart is installed: as the configuration names, as each command does, or with its own values alone. */
+const chartReadings = (dir: string, choice: ManifestChoice): ChartReading[] => {
+  const configured = choice.chartValues?.get(dir);
+  if (configured !== undefined) return [chartReadingOf(dir, configured, [], undefined, undefined, 'the configuration')];
+  const installs = (choice.installs ?? []).filter((each) => each.chart === dir);
+  if (installs.length === 0) return [chartReadingOf(dir, [], [], undefined, undefined, 'values.yaml')];
+  return installs.map((each) =>
+    chartReadingOf(dir, each.values, each.sets, each.release, each.namespace, `${each.file}:${each.line}${each.environment === undefined ? '' : ` (environment ${each.environment})`}`, each.environment),
+  );
+};
+
+/** A chart a chart renders inside its own release (P263): the values key it is given under, and what leaves it out. */
+interface Subchart {
+  readonly dir: string;
+  /** The key of the parent's values its own are under: its alias, or its name. */
+  readonly key: string;
+  readonly condition?: string;
+  readonly tags: readonly string[];
+}
+
+/**
+ * The charts a chart depends on that are in the project (P263): each
+ * `dependencies` entry (of `Chart.yaml`, or an older `requirements.yaml`)
+ * with a `file://` repository or unpacked in `charts/`, and every other chart
+ * unpacked in `charts/`, which the tool that installs it renders too. A
+ * packed (`.tgz`) or a repository's chart is not in the project.
+ */
+export const subchartsOf = (dir: string): Subchart[] => {
+  const meta = yamlValue(join(dir, 'Chart.yaml'));
+  const written = Array.isArray(meta['dependencies']) ? meta['dependencies'] : (yamlValue(join(dir, 'requirements.yaml'))['dependencies'] as unknown);
+  const out: Subchart[] = [];
+  for (const dependency of (Array.isArray(written) ? written : []).filter(isRecord)) {
+    const name = text(dependency['name']);
+    if (name === undefined) continue;
+    const repository = text(dependency['repository']) ?? '';
+    const path = repository.startsWith('file://') ? resolve(dir, repository.slice('file://'.length)) : join(dir, 'charts', name);
+    if (!existsSync(join(path, 'Chart.yaml'))) continue;
+    const condition = text(dependency['condition']);
+    const tags = (Array.isArray(dependency['tags']) ? dependency['tags'] : []).flatMap((tag) => (text(tag) === undefined ? [] : [text(tag) as string]));
+    out.push({ dir: path, key: text(dependency['alias']) ?? name, ...(condition === undefined ? {} : { condition }), tags });
+  }
+  let unpacked: string[];
   try {
-    names = readdirSync(templates).sort();
+    unpacked = readdirSync(join(dir, 'charts')).sort();
+  } catch {
+    unpacked = [];
+  }
+  for (const name of unpacked) {
+    const path = join(dir, 'charts', name);
+    if (out.some((each) => each.dir === path) || !existsSync(join(path, 'Chart.yaml'))) continue;
+    out.push({ dir: path, key: chartMetaOf(path).name ?? name, tags: [] });
+  }
+  return out;
+};
+
+/** How deep a chart's dependencies are followed. */
+const CHART_DEPTH = 4;
+
+/** Whether a dependency is left out by the values: its condition's first path the values set is false, or every tag it names is. */
+const leftOut = (values: Record<string, unknown>, sub: Subchart): boolean => {
+  const at = (path: string): unknown => path.split('.').reduce<unknown>((value, key) => (isRecord(value) ? value[key] : undefined), values);
+  for (const path of (sub.condition ?? '').split(',').map((each) => each.trim()).filter((each) => each !== '')) {
+    const set = at(path);
+    if (typeof set === 'boolean') return !set;
+  }
+  const tags = isRecord(values['tags']) ? values['tags'] : {};
+  return sub.tags.length > 0 && sub.tags.every((tag) => tags[tag] === false);
+};
+
+/** The chart and every chart it renders inside its release, with the values each is given. */
+const chartTree = (dir: string, reading: ChartReading, depth = 0): Array<{ dir: string; reading: ChartReading }> => {
+  if (depth > CHART_DEPTH) return [];
+  const out = [{ dir, reading }];
+  const parent = reading.context.values;
+  for (const sub of subchartsOf(dir)) {
+    if (leftOut(parent, sub)) continue;
+    const own = yamlValue(join(sub.dir, 'values.yaml'));
+    const given = isRecord(parent[sub.key]) ? (parent[sub.key] as Record<string, unknown>) : {};
+    const global = mergedValues(isRecord(own['global']) ? own['global'] : {}, isRecord(parent['global']) ? parent['global'] : {});
+    const values = mergedValues(mergedValues(own, given), Object.keys(global).length === 0 ? {} : { global });
+    out.push(...chartTree(sub.dir, { ...reading, context: { values, release: reading.context.release, chart: chartMetaOf(sub.dir) } }, depth + 1));
+  }
+  return out;
+};
+
+const templatesOf = (dir: string): string[] => {
+  try {
+    return readdirSync(join(dir, 'templates')).sort();
   } catch {
     return [];
   }
-  const helpers = definesOf(names.filter((name) => name.endsWith('.tpl')).flatMap((name) => readText(join(templates, name)) ?? []));
+};
+
+/**
+ * Every template of a chart, and of every chart it depends on (P263),
+ * rendered every way one reading makes it go; the helpers are the whole
+ * tree's, as the tool that installs it shares them.
+ */
+const chartResources = (dir: string, reading: ChartReading, label: (path: string) => string, rows: ManifestRow[]): Resource[] => {
+  const tree = chartTree(dir, reading);
+  const helpers = definesOf(tree.flatMap((each) => templatesOf(each.dir).filter((name) => name.endsWith('.tpl')).flatMap((name) => readText(join(each.dir, 'templates', name)) ?? [])));
+  return tree.flatMap((each) => templateResources(each.dir, each.reading, helpers, label, rows));
+};
+
+/** Every template of one chart, rendered every way one reading makes it go. */
+const templateResources = (dir: string, reading: ChartReading, helpers: ReturnType<typeof definesOf>, label: (path: string) => string, rows: ManifestRow[]): Resource[] => {
+  const templates = join(dir, 'templates');
+  const names = templatesOf(dir);
   const out: Resource[] = [];
   for (const name of names.filter((each) => /\.ya?ml$/.test(each))) {
     const path = join(templates, name);
@@ -928,7 +1367,8 @@ const factsOf = (resources: readonly Resource[]): string => JSON.stringify(manif
 /** The resources of a chart, read the one way it is installed, or where every way agrees. */
 const readChart = (dir: string, choice: ManifestChoice, label: (path: string) => string, rows: ManifestRow[]): Resource[] => {
   const readings = chartReadings(dir, choice);
-  const chosen = readings.length === 1 ? readings[0] : chosenBy(readings, (reading) => reading.files.flatMap(nameWords), choice);
+  // An install's environment chooses it as a values file named for it does (P263).
+  const chosen = readings.length === 1 ? readings[0] : chosenBy(readings, (reading) => [...reading.files.flatMap(nameWords), ...(reading.environment === undefined ? [] : [reading.environment])], choice);
   if (chosen !== undefined) return chartResources(dir, chosen, label, rows);
   const read = readings.map((reading) => chartResources(dir, reading, label, rows));
   if (new Set(read.map(factsOf)).size === 1) return read[0] ?? [];
@@ -954,7 +1394,7 @@ const DEPTH = 6;
 
 /** Whether a file's text may hold a manifest at all. */
 const looksLikeManifest = (source: string): boolean =>
-  /^\s*apiVersion\s*:/m.test(source) && /^\s*kind\s*:\s*(?:Service|Deployment|StatefulSet|DaemonSet|ReplicaSet|Ingress|HTTPRoute|Gateway)\b/m.test(source);
+  /^\s*apiVersion\s*:/m.test(source) && /^\s*kind\s*:\s*(?:Service|Deployment|StatefulSet|DaemonSet|ReplicaSet|Ingress|HTTPRoute|Gateway|ConfigMap|Secret)\b/m.test(source);
 
 /** What a walk of a directory finds: plain manifests, kustomizations and charts. */
 interface Found {
@@ -1013,7 +1453,8 @@ export const readManifestsUnder = (root: string, skip: ReadonlySet<string> = new
     if (source === undefined || !/^\s*(?:apiVersion|kind)\s*:/m.test(source)) return [];
     return resourcesOf(source.includes('{{') ? untemplated(source) : source, label(path));
   };
-  const builder = new Builder(root, plain);
+  const inflate = (dir: string, reading: ChartReading, into: ManifestRow[]): Resource[] => chartResources(dir, reading, label, into);
+  const builder = new Builder(root, plain, inflate);
   const kustomizations = new Map(found.kustomizations.flatMap((dir) => (kustomizationAt(dir) === undefined ? [] : [[dir, kustomizationAt(dir) as Kustomization] as const])));
   // What each kustomization builds on, all the way down.
   const below = new Map<string, { folders: Set<string>; files: Set<string> }>();
@@ -1061,13 +1502,16 @@ export const readManifestsUnder = (root: string, skip: ReadonlySet<string> = new
     if (group === undefined) groups.push([dir]);
     else group.push(dir);
   }
-  for (const group of groups) {
-    if (group.length === 1) {
-      resources.push(...builder.build(group[0] as string));
+  for (const every of groups) {
+    if (every.length === 1) {
+      resources.push(...builder.build(every[0] as string));
       continue;
     }
-    const named = group.filter((dir) => (choice.overlays ?? []).includes(dir));
-    const chosen = named.length === 1 ? named[0] : chosenBy(group, (dir) => relative(root, dir).split(sep).flatMap((part) => part.split(/[._-]/)), choice);
+    // The overlays the project's commands apply are the ones among which one is applied (P263).
+    const applied = every.filter((dir) => (choice.applied ?? []).includes(dir));
+    const group = applied.length > 0 ? applied : every;
+    const named = every.filter((dir) => (choice.overlays ?? []).includes(dir));
+    const chosen = named.length === 1 ? named[0] : group.length === 1 ? group[0] : chosenBy(group, (dir) => relative(root, dir).split(sep).flatMap((part) => part.split(/[._-]/)), choice);
     if (chosen !== undefined) {
       resources.push(...builder.build(chosen));
       continue;
@@ -1090,10 +1534,34 @@ export const readManifestsUnder = (root: string, skip: ReadonlySet<string> = new
         built.flatMap((each) => each.flatMap((resource) => [...resource.names])),
       ),
     );
-    for (const base of bases) resources.push(...new Builder(root, plain).build(base));
+    for (const base of bases) resources.push(...new Builder(root, plain, inflate).build(base));
   }
   rows.push(...builder.rows);
-  for (const chart of found.charts) resources.push(...readChart(chart, choice, label, rows));
+  // A chart another renders as its dependency, or a kustomization inflates,
+  // is read through it, unless a command or the configuration installs it
+  // itself (P263).
+  const claimedCharts = new Set<string>();
+  const claimBelow = (dir: string, depth = 0): void => {
+    if (depth > CHART_DEPTH) return;
+    for (const sub of subchartsOf(dir)) {
+      claimedCharts.add(sub.dir);
+      claimBelow(sub.dir, depth + 1);
+    }
+  };
+  for (const chart of found.charts) claimBelow(chart);
+  for (const kustomization of kustomizations.values()) {
+    const globals = isRecord(kustomization.value['helmGlobals']) ? kustomization.value['helmGlobals'] : {};
+    const home = resolve(kustomization.dir, text(globals['chartHome']) ?? 'charts');
+    for (const entry of (Array.isArray(kustomization.value['helmCharts']) ? kustomization.value['helmCharts'] : []).filter(isRecord)) {
+      const dir = text(entry['name']) === undefined ? undefined : chartHomeOf(home, text(entry['name']) as string, text(entry['version']));
+      if (dir !== undefined) {
+        claimedCharts.add(dir);
+        claimBelow(dir);
+      }
+    }
+  }
+  const installed = (dir: string): boolean => choice.chartValues?.has(dir) === true || (choice.installs ?? []).some((each) => each.chart === dir);
+  for (const chart of found.charts) if (!claimedCharts.has(chart) || installed(chart)) resources.push(...readChart(chart, choice, label, rows));
   const read = manifestsOf(resources);
   return { ...read, ...(rows.length === 0 ? {} : { rows }) };
 };

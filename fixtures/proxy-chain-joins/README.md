@@ -22,7 +22,7 @@ and a Next server's own requests with no host.
 
 | Where | Request | Joins | Before P260 |
 |---|---|---|---|
-| `web` `Shop.tsx:3` | `/api/orders/7` | orders `GET /orders/:param` through web's proxy and then gateway's rewrite: `proxiedBy: vite.config.ts:11`, `proxiedThen: [next.config.js:5]`, `proxiedAs: /orders/7`, `proxiedTo: ORDERS_URL from .env.example` | `target-route-not-found` |
+| `web` `Shop.tsx:3` | `/api/orders/7` | orders `GET /orders/:param` through web's proxy and then gateway's rewrite: `proxiedBy: vite.config.ts:11`, `proxiedThen: [next.config.js:5]`, `proxiedAs: /orders/7`, `proxiedTo: [VITE_GATEWAY_URL from .env.example, ORDERS_URL from .env.example]`, each hop's setting (P263; P260 named the last only) | `target-route-not-found` |
 | `web` `Shop.tsx:4` | `/legacy/products` | catalog `GET /products` by the pattern key | `target-route-not-found` |
 | `web` `Shop.tsx:5` | `/v2/catalog/products/1` | catalog `GET /products/:param`, the whole path rewritten | `target-route-not-found` |
 | `web` `Shop.tsx:6` | `/loop/ping` | nothing: `proxy-chain-unfollowed`, web forwards to kiosk and kiosk back to web | `target-route-not-found` at kiosk |
@@ -31,7 +31,7 @@ and a Next server's own requests with no host.
 | `admin` `invoices.service.ts:11` | `/billing/invoices` | billing `GET /invoices` | the same |
 | `admin` `invoices.service.ts:15` | `/billing/v2/invoices` | ledger `GET /v2/invoices` by the router, `proxiedBy: proxy.conf.json:8` | `target-route-not-found` at billing |
 | `gateway` `page.tsx:3` | `/api/health`, read by the server half | gateway's own route, `via: ownOrigin` (and by the browser's reading, `same-service`, as before) | `dynamic` |
-| `gateway` `page.tsx:4` | `/orders/today`, read by the server half | orders through gateway's rewrite, `proxiedTo: ORDERS_URL from .env.example` (and by the browser's reading, the same) | `dynamic`; the browser's reading by its route alone |
+| `gateway` `page.tsx:4` | `/orders/today`, read by the server half | orders through gateway's rewrite, `proxiedTo: [ORDERS_URL from .env.example]` (and by the browser's reading, the same) | `dynamic`; the browser's reading by its route alone |
 
 ## Expected
 

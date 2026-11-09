@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import {
   CONFIDENCE_RANK,
   ENVIRONMENT_META,
+  ORIGINLESS_META,
   hostOf,
   namesGivenTo,
   SCHEMA_VERSION,
@@ -66,7 +67,7 @@ import {
   type PortAnswer,
   type PortIndex,
 } from './local-port.js';
-import { forwarding, ownOriginsAt, proxiedMeta, proxiedOutFinding, waysIn } from './proxy-forward.js';
+import { forwarding, originlessFinding, ownOriginsAt, proxiedMeta, proxiedOutFinding, waysIn } from './proxy-forward.js';
 import type { GatewayRouteMeta } from '@flowatlas/graphql';
 import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
@@ -480,6 +481,9 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
   // A request with no host from a server that resolves it against its own
   // address (P260): the address it is served at is how it is run.
   ownOrigin: () => 'heuristic',
+  // One its client hands the server's own routes in process (P263): a call
+  // into the same service, as sure as one between its own files.
+  inProcess: () => 'static',
 };
 
 /** The edge a resolved call becomes. */
@@ -997,6 +1001,15 @@ export const linkGraphs = (
   const placeOf = (call: GraphNode): string => [call.repo, call.file, call.line, call.meta?.['method'], call.meta?.['path']].join('\0');
   const browserPlaces = new Set([...nodes.values()].filter((node) => node.type === 'ui_api_call').map(placeOf));
   const browserTwinned = (call: GraphNode): boolean => typeof call.meta?.['host'] !== 'string' && ownOrigins.has(call.repo) && browserPlaces.has(placeOf(call));
+  /** The files that hold a service's own HTTP ways in: the server runs them, whatever else reads them (P263). */
+  const serverFiles = new Set([...nodes.values()].filter((node) => node.type === 'entry' && node.kind === 'http' && node.file !== undefined).map((node) => `${node.repo}\0${node.file}`));
+  /** A server's own request with no host, from a server that resolves its requests against its own address, through a client with no origin (P263). */
+  const originless = (call: GraphNode): boolean =>
+    call.meta?.[ORIGINLESS_META] === true &&
+    typeof call.meta?.['host'] !== 'string' &&
+    typeof call.meta?.['baseUrlEnv'] !== 'string' &&
+    typeof call.meta?.['path'] === 'string' &&
+    ownOrigins.has(call.repo);
 
   for (const call of [...nodes.values()]) {
     if (call.type !== 'http_out') continue;
@@ -1124,6 +1137,11 @@ export const linkGraphs = (
     // in a file a browser runs too, is the browser's request as well: what is
     // wrong with it is said once, by the browser's (P260).
     if (finding !== undefined && !browserTwinned(call)) record(call, finding);
+    // Read on the server alone, the platform client has no page address to
+    // resolve it against (P263): it will not work as written. A file that
+    // holds one of the service's own ways in is the server's, whatever else
+    // reads it.
+    if (originless(call) && (!browserTwinned(call) || serverFiles.has(`${call.repo}\0${call.file ?? ''}`))) record(call, originlessFinding(call.repo, String(call.meta?.['path'])));
   }
 
   // A request made in a browser is joined the same way and counted apart: the
