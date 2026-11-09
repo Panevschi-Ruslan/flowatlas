@@ -1,0 +1,16 @@
+{
+  "name": "shop-ledger",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The ledger of a shop, a plain template deployed by rain.",
+  "scripts": {
+    "deploy": "rain deploy infra/ledger.yaml shop-ledger -y"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.700.0",
+    "@aws-sdk/client-sqs": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

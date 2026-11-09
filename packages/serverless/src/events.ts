@@ -266,7 +266,26 @@ const readStream: EventReader = (value, site, reading) => {
     return;
   }
   deliver(reading, site, 'mapping', { kind: 'changes', of, name: found.name }, { ...(disabled(settings) ? { disabled: true } : {}), ...filtersOf(settings) });
+  // A batch it gives up on goes to `destinations.onFailure`: an ARN, or `{ arn, type }` saying which of a queue or a topic it is (P264).
+  const failure = isRecord(settings['destinations']) ? settings['destinations']['onFailure'] : undefined;
+  if (failure === undefined) return;
+  const target = isRecord(failure) && intrinsicOf(failure) === undefined ? failure['arn'] : failure;
+  const typed = isRecord(failure) ? STREAM_FAILURE_TYPES.get(textOf(failure['type']) ?? '') : undefined;
+  const path = [...site.path, 'stream', 'destinations', 'onFailure'];
+  reading.file.deliverTo(
+    { ...reading.file.siteOf(path), address: `${site.address}.destinations.onFailure`, by: 'destination', from: { kind: 'outcome', when: 'failure', of: { delivery: site.address } }, meta: { when: 'failure' } },
+    reading.file.template.deployedOf(target),
+    path,
+    `where ${site.address} hands the batches it gives up on`,
+    typed === undefined ? ['queue', 'topic'] : [typed],
+  );
 };
+
+/** What a stream event's `destinations.onFailure.type` says its destination is (P264). */
+const STREAM_FAILURE_TYPES: ReadonlyMap<string, DeployedKind> = new Map([
+  ['sqs', 'queue'],
+  ['sns', 'topic'],
+]);
 
 /** `schedule: rate(1 hour)`, or `schedule: { rate: [cron(...), ...], name, enabled }`: a clock. */
 const readSchedule: EventReader = (value, site, reading) => {

@@ -402,6 +402,7 @@ export const PAGE_WORDS = Object.freeze({
     'middleware-route-dynamic': 'middleware route computed',
     'module-controllers-unread': 'module controllers not read',
     'module-import-dynamic': 'module import computed',
+    'module-import-not-installed': 'module of a package not installed',
     'module-providers-unread': 'module providers not read',
     'no-type-on-receiver': 'receiver has no type',
     'no-type-on-sender': 'sender has no type',

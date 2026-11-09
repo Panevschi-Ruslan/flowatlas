@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:21:33.230Z",
+  "builtAt": "2026-11-09T11:26:46.850Z",
   "configHash": "6380be62f418",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./customers",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 13,
-      "edges": 7,
+      "nodes": 14,
+      "edges": 8,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 3987,
+      "durationMs": 1032,
       "packages": {
         "name": "federation-customers",
         "runtime": [
@@ -35,7 +35,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 3200,
+      "durationMs": 831,
       "packages": {
         "name": "federation-gateway",
         "runtime": [
@@ -56,7 +56,7 @@
       "edges": 11,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 3108,
+      "durationMs": 821,
       "packages": {
         "name": "federation-orders",
         "runtime": [
@@ -77,7 +77,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 3077,
+      "durationMs": 817,
       "packages": {
         "name": "federation-web",
         "runtime": [
@@ -144,8 +144,8 @@
     }
   ],
   "totals": {
-    "nodes": 46,
-    "edges": 40,
+    "nodes": 47,
+    "edges": 41,
     "types": 2,
     "missed": 8,
     "sites": 8,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:36:57.234Z",
+  "builtAt": "2026-11-09T11:41:33.337Z",
   "services": [
     {
       "name": "gateway",
@@ -58,6 +58,18 @@
     }
   ],
   "nodes": [
+    {
+      "id": "accounts#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "module",
+      "label": "GraphQLModule",
+      "repo": "accounts",
+      "file": "node_modules/@nestjs/graphql",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "external": true
+      }
+    },
     {
       "id": "accounts#src/accounts.resolver.ts:AccountsResolver",
       "type": "provider",
@@ -2975,6 +2987,17 @@
       "line": 53
     },
     {
+      "from": "accounts#src/app.module.ts:AppModule",
+      "to": "accounts#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 8,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
       "from": "accounts#src/main.ts:bootstrap",
       "to": "config_key:accounts#PORT",
       "type": "reads_config",
@@ -3930,9 +3953,13 @@
     {
       "file": "src/app.module.ts",
       "line": 9,
-      "reason": "module-import-dynamic",
-      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
       "symbol": "AppModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
       "service": "accounts"
     },
     {

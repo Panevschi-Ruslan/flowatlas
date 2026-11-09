@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T18:11:27.558Z",
+  "builtAt": "2026-11-09T11:26:53.283Z",
   "configHash": "5d3577024f80",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./accounts",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 28,
-      "edges": 16,
+      "nodes": 29,
+      "edges": 17,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 929,
+      "durationMs": 1544,
       "packages": {
         "name": "interfaces-accounts",
         "runtime": [
@@ -35,7 +35,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1262,
       "packages": {
         "name": "interfaces-gateway",
         "runtime": [
@@ -56,7 +56,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1330,
       "packages": {
         "name": "interfaces-inventory",
         "runtime": [
@@ -77,7 +77,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 3,
-      "durationMs": 0,
+      "durationMs": 1252,
       "packages": {
         "name": "interfaces-kiosk",
         "runtime": [
@@ -97,7 +97,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1260,
       "packages": {
         "name": "interfaces-legacy",
         "runtime": [
@@ -116,7 +116,7 @@
       "edges": 6,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1297,
       "packages": {
         "name": "interfaces-media",
         "runtime": [
@@ -136,7 +136,7 @@
       "edges": 8,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1327,
       "packages": {
         "name": "interfaces-reviews",
         "runtime": [
@@ -158,7 +158,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 8
+      "durationMs": 12
     },
     {
       "name": "web",
@@ -169,7 +169,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 0,
+      "durationMs": 1260,
       "packages": {
         "name": "interfaces-web",
         "runtime": [
@@ -260,8 +260,8 @@
     }
   ],
   "totals": {
-    "nodes": 78,
-    "edges": 71,
+    "nodes": 79,
+    "edges": 72,
     "types": 4,
     "missed": 10,
     "sites": 10,

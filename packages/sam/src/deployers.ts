@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { stackOutputKey } from '@flowatlas/core';
-import { commandsAround, commandValue, Imported, isFilledIn, isRecord, readServiceYaml, textOf, under, Unread, type Command, type DeployedValue } from '@flowatlas/serverless';
+import { commandsAround, commandValue, embeddedAt, embedding, Imported, isFilledIn, isRecord, readServiceYaml, textOf, under, Unread, type Command, type DeployedValue } from '@flowatlas/serverless';
 import { lookupIn, renderJinja, UNRENDERED, type Rendering } from './jinja.js';
 
 export type { DeployedValue } from '@flowatlas/serverless';
@@ -100,6 +100,30 @@ class Resolved {
   }
 }
 
+/**
+ * A value of a configuration file its Jinja's conditions decide, and the
+ * files do not (P264): the ways they can go write it differently.
+ */
+class Undecided {
+  constructor(readonly conditions: readonly string[]) {}
+
+  get text(): string {
+    return `it is written differently as ${this.conditions.join(' and ')} goes, which the files do not decide`;
+  }
+}
+
+/** A plain mapping, as a configuration file's YAML reads one: not a resolver's value. */
+const isMapping = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
+
+/** What every way a file renders agrees on, key by key; what they do not, {@link Undecided}. */
+const agreed = (values: readonly unknown[], conditions: readonly string[]): unknown => {
+  const [first] = values;
+  if (values.every((value) => JSON.stringify(value) === JSON.stringify(first))) return first;
+  if (!values.every(isMapping)) return new Undecided(conditions);
+  const keys = [...new Set(values.flatMap((value) => Object.keys(value as Record<string, unknown>)))];
+  return Object.fromEntries(keys.map((key) => [key, values.every((value) => key in (value as Record<string, unknown>)) ? agreed(values.map((value) => (value as Record<string, unknown>)[key]), conditions) : new Undecided(conditions)]));
+};
+
 /** What a stack's files are rendered with: the vars and the environment the commands that launch it give, or none. */
 interface Launch {
   /** The command that launches it, where one is written. */
@@ -115,16 +139,23 @@ interface SceptreFile {
   readonly rendering: Rendering;
 }
 
-const readSceptreFile = (repoDir: string, project: Project, file: string, launch: Launch): SceptreFile | undefined => {
+/**
+ * A sceptre configuration file under a launch, rendered with its vars and
+ * environment and the configuration of the groups above it
+ * (`stack_group_config`, P264), every way its conditions can go, and read
+ * where the ways agree.
+ */
+const readSceptreFile = (repoDir: string, project: Project, file: string, launch: Launch, groupConfig: Readonly<Record<string, unknown>> = {}): SceptreFile | undefined => {
   const text = textAt(repoDir, file);
   if (text === undefined) return undefined;
   const environment = Object.fromEntries(Object.entries(launch.env).filter(([, value]) => typeof value === 'string'));
-  const rendering = renderJinja(text, lookupIn({ var: launch.vars, environment_variable: environment }), project.files.indexOf(file) + 1);
-  // A statement decides what the file is: nothing this does not run can say.
+  const rendering = renderJinja(text, lookupIn({ var: launch.vars, environment_variable: environment, stack_group_config: groupConfig }), project.files.indexOf(file) + 1);
+  // A statement not run here decides what the file is: nothing this does not run can say.
   if ([...rendering.unrendered.values()].some((written) => written.startsWith('{%'))) return undefined;
   try {
-    const value = readServiceYaml(rendering.text, { otherTag: (tag, written) => new Resolved(tag, written) }).value;
-    return isRecord(value) ? { value, rendering } : undefined;
+    const values = rendering.ways.map((way) => readServiceYaml(way, { otherTag: (tag, written) => new Resolved(tag, written) }).value);
+    const value = values.length === 1 ? values[0] : agreed(values, rendering.undecided);
+    return isMapping(value) ? { value, rendering } : undefined;
   } catch {
     return undefined;
   }
@@ -198,15 +229,18 @@ interface Stack {
 
 const recordAt = (value: Record<string, unknown> | undefined, key: string): Record<string, unknown> => (value !== undefined && isRecord(value[key]) ? (value[key] as Record<string, unknown>) : {});
 
-/** A stack's configuration under a launch, merged with every group configuration above it. */
+/**
+ * A stack's configuration under a launch, merged with every group
+ * configuration above it: the groups from the project's down, each rendered
+ * with the configuration of those above it, and the stack's own with all of
+ * theirs, as sceptre renders `stack_group_config` (P264).
+ */
 const stackOf = (repoDir: string, project: Project, file: string, launch: Launch): Stack | undefined => {
-  const own = readSceptreFile(repoDir, project, file, launch);
-  if (own === undefined) return undefined;
   const read = [file];
   let settings: Record<string, unknown> = {};
   let parameters: Record<string, unknown> = {};
   let userData: Record<string, unknown> = {};
-  const unrendered = new Map(own.rendering.unrendered);
+  const unrendered = new Map<string, string>();
   const dirs: string[] = [];
   for (let dir = posix.dirname(file); dir.length >= project.configDir.length; dir = posix.dirname(dir)) {
     dirs.unshift(dir);
@@ -216,7 +250,7 @@ const stackOf = (repoDir: string, project: Project, file: string, launch: Launch
     const group = project.groups.get(dir);
     if (group === undefined) continue;
     read.push(group);
-    const reading = readSceptreFile(repoDir, project, group, launch);
+    const reading = readSceptreFile(repoDir, project, group, launch, settings);
     if (reading === undefined) continue;
     const written = reading.value;
     for (const [at, expression] of reading.rendering.unrendered) unrendered.set(at, expression);
@@ -224,6 +258,9 @@ const stackOf = (repoDir: string, project: Project, file: string, launch: Launch
     parameters = { ...parameters, ...recordAt(written, 'parameters') };
     userData = { ...userData, ...recordAt(written, 'sceptre_user_data') };
   }
+  const own = readSceptreFile(repoDir, project, file, launch, settings);
+  if (own === undefined) return undefined;
+  for (const [at, expression] of own.rendering.unrendered) unrendered.set(at, expression);
   return {
     path: file.slice(project.configDir.length + 1).replace(/\.ya?ml$/, ''),
     file,
@@ -256,35 +293,176 @@ const outputNamed = (value: unknown): { readonly stack: string; readonly output:
   return { stack: text.slice(0, at), output: text.slice(at + 2) };
 };
 
+/** What a stack's resolvers are read with. */
+interface Resolving {
+  readonly unrendered: ReadonlyMap<string, string>;
+  readonly launch: Launch;
+  /** The name another stack of the project is launched under, by its path from `config/`. */
+  readonly outputOf: (stackPath: string) => string | undefined;
+  /** The stack's own configuration, merged with its groups': what `!stack_attr` reads (P264). */
+  readonly config: Readonly<Record<string, unknown>>;
+  /** The project's directory, repo-relative: what `!file` reads under. */
+  readonly root: string;
+  readonly repoDir: string;
+  /** Every file a resolver read, repo-relative. */
+  readonly read: string[];
+}
+
+/** That a resolver leaves the value out: `!no_value` (P264). */
+const NO_VALUE = Symbol('no value');
+
+/** A value of a stack's configuration as far as it is read: text, a list, another deployment's value, why not, or none. */
+type Part = string | Unread | typeof NO_VALUE | readonly Part[];
+
+/** How deep resolvers are followed into each other. */
+const MOST_RESOLVER_DEPTH = 6;
+
+/** The two arguments a resolver of a list is written with: `!join [",", [a, b]]`. */
+const pairOf = (value: unknown): readonly [unknown, unknown] | undefined => (Array.isArray(value) && value.length === 2 ? [value[0], value[1]] : undefined);
+
 /**
- * What a stack's configuration gives a parameter: its text; the output of
- * another stack, which its publisher's reading joins (P261); a value of the
- * environment it is launched in; or why it is not known from the files.
+ * Text built of parts, each value another deployment publishes at its mark
+ * (P259): the text, the import where it is the whole, or the text with each
+ * one's stand-in in place for the reader of the name to finish.
  */
-const sceptreValue = (value: unknown, unrendered: ReadonlyMap<string, string>, launch: Launch, outputOf: (stackPath: string) => string | undefined): DeployedValue | undefined => {
-  if (value === null || value === undefined) return undefined;
-  if (value instanceof Resolved) {
-    const named = outputNamed(value.value);
-    if ((value.tag === '!stack_output' || value.tag === '!stack_output_external') && named !== undefined) {
-      const stack = value.tag === '!stack_output' ? outputOf(named.stack) : named.stack;
-      if (stack === undefined) return new Unread(`it is given by ${value.text}, a stack whose configuration is not read`);
-      return new Imported(stackOutputKey(stack, named.output), `the value is the output ${named.output} of the stack ${stack}, which its deployment publishes`, value.text);
-    }
-    const variable = textOf(value.value);
-    const given = value.tag === '!environment_variable' && variable !== undefined ? launch.env[variable.trim()] : undefined;
-    if (typeof given === 'string') return given;
-    return new Unread(`it is given by ${value.text}, and sceptre's ${value.tag} resolver runs when the stack is launched`);
+const built = (parts: readonly Part[], separator: string): Part => {
+  const imports: Imported[] = [];
+  const texts: string[] = [];
+  for (const part of parts) {
+    if (part === NO_VALUE) continue;
+    if (part instanceof Imported) {
+      texts.push(embeddedAt(imports.length));
+      imports.push(part);
+    } else if (part instanceof Unread) return part;
+    else if (typeof part === 'string') texts.push(part);
+    else return new Unread('it joins a list inside a list');
   }
-  if (Array.isArray(value)) {
-    const parts = value.map((part) => sceptreValue(part, unrendered, launch, outputOf));
-    const unread = parts.find((part): part is Unread => part instanceof Unread);
-    return unread ?? parts.map((part) => part ?? '').join(',');
-  }
+  return embedding(texts.join(separator), imports, undefined);
+};
+
+/**
+ * What a stack's configuration gives a value (P261, P264): its text; the
+ * output of another stack, which its publisher's reading joins; a value of
+ * the environment it is launched in; the contents of a file (`!file`); another
+ * field of the stack (`!stack_attr`); the joins, splits, picks and formats of
+ * sceptre's own resolvers (`!join`, `!split`, `!select`, `!sub`); or nothing
+ * (`!no_value`). A command a resolver runs (`!rcmd`, `!cmd`), any other
+ * resolver and an expression not rendered are why it is not known.
+ */
+const resolveValue = (value: unknown, at: Resolving, depth = 0): Part => {
+  if (value === null || value === undefined) return NO_VALUE;
+  if (depth > MOST_RESOLVER_DEPTH) return new Unread('its resolvers lead into each other too deep');
+  if (value instanceof Undecided) return new Unread(value.text);
+  if (value instanceof Resolved) return resolverValue(value, at, depth);
+  if (Array.isArray(value)) return value.map((part) => resolveValue(part, at, depth + 1));
   const text = typeof value === 'boolean' || typeof value === 'number' ? String(value) : textOf(value);
   if (text === undefined) return new Unread('it is not text');
   const kept = UNRENDERED.exec(text);
-  if (kept !== null) return new Unread(`it is a Jinja expression (${unrendered.get(kept[0]) ?? text.trim()}), rendered when sceptre runs with what the files do not give`);
+  if (kept !== null) return new Unread(`it is a Jinja expression (${at.unrendered.get(kept[0]) ?? text.trim()}), rendered when sceptre runs with what the files do not give`);
   return text;
+};
+
+const resolverValue = (value: Resolved, at: Resolving, depth: number): Part => {
+  const written = textOf(value.value)?.trim();
+  switch (value.tag) {
+    case '!stack_output':
+    case '!stack_output_external': {
+      const named = outputNamed(value.value);
+      if (named === undefined) break;
+      const stack = value.tag === '!stack_output' ? at.outputOf(named.stack) : named.stack;
+      if (stack === undefined) return new Unread(`it is given by ${value.text}, a stack whose configuration is not read`);
+      return new Imported(stackOutputKey(stack, named.output), `the value is the output ${named.output} of the stack ${stack}, which its deployment publishes`, value.text);
+    }
+    case '!environment_variable': {
+      const given = written === undefined ? undefined : at.launch.env[written];
+      if (typeof given === 'string') return given;
+      break;
+    }
+    case '!no_value':
+      return NO_VALUE;
+    case '!rcmd':
+    case '!cmd':
+      return new Unread(`it is what ${value.text} prints, a command sceptre runs when the stack is launched`);
+    case '!file':
+    case '!file_contents': {
+      if (written === undefined || UNRENDERED.test(written)) break;
+      const file = under(at.root, written);
+      const text = textAt(at.repoDir, file);
+      if (text === undefined) return new Unread(`it is the contents of ${file}, which is not in the repository`);
+      at.read.push(file);
+      if (!/\.(?:ya?ml|json)$/.test(file)) return text;
+      try {
+        return resolveValue(readServiceYaml(text).value, at, depth + 1);
+      } catch {
+        return new Unread(`it is the contents of ${file}, which does not read`);
+      }
+    }
+    case '!stack_attr': {
+      if (written === undefined) break;
+      let found: unknown = at.config;
+      for (const step of written.split('.')) found = isMapping(found) ? found[step] : undefined;
+      if (found === undefined) return new Unread(`it is ${value.text}, a field the stack's configuration does not hold`);
+      return resolveValue(found, at, depth + 1);
+    }
+    case '!join': {
+      const pair = pairOf(value.value);
+      const separator = pair === undefined ? undefined : textOf(pair[0]);
+      const items = pair === undefined ? undefined : resolveValue(pair[1], at, depth + 1);
+      if (separator === undefined || items === undefined || !Array.isArray(items)) break;
+      return built(items, separator);
+    }
+    case '!split': {
+      const pair = pairOf(value.value);
+      const separator = pair === undefined ? undefined : textOf(pair[0]);
+      const text = pair === undefined ? undefined : resolveValue(pair[1], at, depth + 1);
+      if (separator === undefined || text === undefined) break;
+      if (text instanceof Unread) return text;
+      return typeof text === 'string' ? text.split(separator) : new Unread(`${value.tag} is handed what is not text`);
+    }
+    case '!select': {
+      const pair = pairOf(value.value);
+      const index = pair === undefined ? undefined : Number(textOf(pair[0]));
+      const items = pair === undefined ? undefined : resolveValue(pair[1], at, depth + 1);
+      if (index === undefined || !Number.isInteger(index) || items === undefined) break;
+      if (items instanceof Unread) return items;
+      return Array.isArray(items) && items[index] !== undefined ? (items[index] as Part) : new Unread(`${value.tag} picks what the list does not hold`);
+    }
+    case '!sub': {
+      const pair = Array.isArray(value.value) ? pairOf(value.value) : [value.value, {}];
+      const format = pair === undefined ? undefined : textOf(pair[0]);
+      const vars = pair === undefined || !isMapping(pair[1]) ? undefined : pair[1];
+      if (format === undefined || vars === undefined) break;
+      // Python's format: `{name}` is a value handed in, `{{` and `}}` a brace.
+      const parts: Part[] = [];
+      let missing: string | undefined;
+      let last = 0;
+      for (const match of format.matchAll(/\{\{|\}\}|\{([A-Za-z_]\w*)\}/g)) {
+        parts.push(format.slice(last, match.index));
+        last = (match.index ?? 0) + match[0].length;
+        if (match[1] === undefined) {
+          parts.push(match[0][0] as string);
+          continue;
+        }
+        if (!(match[1] in vars)) missing ??= match[1];
+        parts.push(resolveValue(vars[match[1]], at, depth + 1));
+      }
+      parts.push(format.slice(last));
+      if (missing !== undefined) return new Unread(`${value.tag} formats {${missing}}, which it is not handed`);
+      return built(parts, '');
+    }
+    default:
+      break;
+  }
+  return new Unread(`it is given by ${value.text}, and sceptre's ${value.tag} resolver runs when the stack is launched`);
+};
+
+/** What a stack's configuration gives a parameter, as the template is handed it: a list joined by commas, as sceptre joins one. */
+const sceptreValue = (value: unknown, at: Resolving): DeployedValue | undefined => {
+  const part = resolveValue(value, at);
+  if (part === NO_VALUE) return undefined;
+  if (!Array.isArray(part)) return part as DeployedValue;
+  const joined = built(part as readonly Part[], ',');
+  return joined === NO_VALUE ? undefined : (joined as DeployedValue);
 };
 
 /** The sceptre subcommands that deploy a stack. */
@@ -302,6 +480,8 @@ interface SceptreRun {
   readonly path: string;
   readonly varFiles: readonly string[];
   readonly vars: Readonly<Record<string, string | Unread>>;
+  /** `--merge-vars`: successive var files merged key by key at every depth, not replaced at the top (P264). */
+  readonly mergeVars: boolean;
 }
 
 /** Every sceptre command written around a project that launches its stacks. */
@@ -312,6 +492,7 @@ const sceptreRuns = (repoDir: string, root: string): SceptreRun[] =>
     const varFiles: string[] = [];
     const vars: Record<string, string | Unread> = {};
     let dir = '.';
+    let mergeVars = false;
     let subcommand: string | undefined;
     const positional: string[] = [];
     const rest = command.words.slice(at + 1);
@@ -324,6 +505,7 @@ const sceptreRuns = (repoDir: string, root: string): SceptreRun[] =>
         else positional.push(word);
         continue;
       }
+      if (flag === '--merge-vars') mergeVars = true;
       if (!SCEPTRE_VALUED.has(flag)) continue;
       const value = equals > 0 ? word.slice(equals + 1) : rest[(index += 1)];
       if (value === undefined) continue;
@@ -342,11 +524,21 @@ const sceptreRuns = (repoDir: string, root: string): SceptreRun[] =>
     if (subcommand === undefined || !LAUNCHES.has(subcommand) || path === undefined || isFilledIn(path)) return [];
     const dirs = command.dirs.map((from) => under(from, dir)).filter((projectDir) => projectDir === root);
     if (dirs.length === 0) return [];
-    return [{ command, dirs, path: posix.normalize(path.replace(/\.ya?ml$/, '')), varFiles: varFiles.map((file) => under(root, file)), vars }];
+    return [{ command, dirs, path: posix.normalize(path.replace(/\.ya?ml$/, '')), varFiles: varFiles.map((file) => under(root, file)), vars, mergeVars }];
   });
 
 /** Whether a run launches a stack: the whole project, the stack's group or one above it, or the stack. */
 const launches = (run: SceptreRun, stackPath: string): boolean => run.path === '.' || run.path === stackPath || stackPath.startsWith(`${run.path}/`);
+
+/** Two mappings merged key by key at every depth, the later winning where either is not a mapping: `--merge-vars` (P264). */
+const mergedDeeply = (into: Record<string, unknown>, from: Record<string, unknown>): Record<string, unknown> => {
+  const out: Record<string, unknown> = { ...into };
+  for (const [key, value] of Object.entries(from)) {
+    const before = out[key];
+    out[key] = isMapping(before) && isMapping(value) ? mergedDeeply(before, value) : value;
+  }
+  return out;
+};
 
 /** A var file sceptre reads: a mapping of names to values. */
 const readVarFile = (repoDir: string, file: string): Record<string, unknown> | undefined => {
@@ -371,7 +563,8 @@ const launchesOf = (repoDir: string, runs: readonly SceptreRun[], stackPath: str
   const covering = runs.filter((run) => launches(run, stackPath));
   if (covering.length === 0) return [{ vars: over, env: {}, varFiles: [] }];
   return covering.map((run) => {
-    const fromFiles = Object.assign({}, ...run.varFiles.map((file) => readVarFile(repoDir, file) ?? {})) as Record<string, unknown>;
+    const files = run.varFiles.map((file) => readVarFile(repoDir, file) ?? {});
+    const fromFiles = run.mergeVars ? files.reduce<Record<string, unknown>>((into, file) => mergedDeeply(into, file), {}) : (Object.assign({}, ...files) as Record<string, unknown>);
     // A var a shell variable fills in is not known: it is left out, and renders nothing.
     const given = Object.fromEntries(Object.entries(run.vars).filter(([, value]) => typeof value === 'string'));
     return { command: run.command, vars: { ...fromFiles, ...given, ...over }, env: run.command.env, varFiles: run.varFiles };
@@ -407,8 +600,9 @@ const sceptreDeployers = (repoDir: string, template: string, vars: readonly stri
         return that === undefined ? undefined : stackNameOf(that);
       };
       const values: Record<string, DeployedValue> = {};
+      const resolving: Resolving = { unrendered: stack.unrendered, launch, outputOf, config: { ...stack.settings, ...stack.own.value, parameters: stack.parameters, sceptre_user_data: stack.userData }, root, repoDir, read: [] };
       for (const [name, value] of Object.entries(stack.parameters)) {
-        const given = sceptreValue(value, stack.unrendered, launch, outputOf);
+        const given = sceptreValue(value, resolving);
         if (given !== undefined) values[name] = given;
       }
       const stackName = stackNameOf(stack);
@@ -426,7 +620,7 @@ const sceptreDeployers = (repoDir: string, template: string, vars: readonly stri
         userData: stack.userData,
         files: [],
         varFiles: launch.varFiles,
-        read: [...new Set([...stack.read, ...launch.varFiles, ...namedFiles, ...(launch.command === undefined ? [] : [launch.command.file])])],
+        read: [...new Set([...stack.read, ...launch.varFiles, ...namedFiles, ...resolving.read, ...(launch.command === undefined ? [] : [launch.command.file])])],
       });
     }
   }

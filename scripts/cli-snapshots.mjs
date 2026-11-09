@@ -1213,6 +1213,12 @@ const TERRAFORM_SHAPE_SUITES = [
     ['flow.ship.tree.txt', 'invoke:shop-prod-ship'],
     ['flow.clicks.tree.txt', 'event:kinesis/shop-prod-clicks'],
   ]),
+  terraformShape('multi-repo-failure-values', [
+    ['flow.clicks-ledger.tree.txt', 'entry:ledger:event:kinesis/shop-prod-clicks'],
+    ['flow.clicks-audit.tree.txt', 'entry:audit:event:kinesis/shop-prod-clicks'],
+    ['flow.ship.tree.txt', 'invoke:shop-prod-ship'],
+    ['flow.count.tree.txt', 'invoke:shop-stock-count'],
+  ]),
   terraformShape('lambda-terraform-bucket-module', [
     ['flow.withdraw-page.tree.txt', 'invoke:library-scans-withdraw-page'],
     ['flow.import-batch.tree.txt', 'invoke:library-scans-import-batch'],

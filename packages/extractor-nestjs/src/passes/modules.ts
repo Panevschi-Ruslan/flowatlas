@@ -2,11 +2,44 @@ import type { ClassDeclaration, Expression, MethodDeclaration, ObjectLiteralExpr
 import { Node, SyntaxKind } from 'ts-morph';
 import type { NestExtractContext } from '../context.js';
 import type { ModuleInfo, ModuleKind, ProviderRegistration } from '../modules-index.js';
-import { getDecorator, lineOf } from '@flowatlas/core';
+import { getDecorator, importOf, lineOf, whyNoClass } from '@flowatlas/core';
 import { NEST_COMMON } from '../index-classes.js';
-import { isDynamicModuleExpression, resolveClassExpression } from '../util/resolve-class.js';
+import { isDynamicModuleExpression, resolveClassExpression, unwrapClassExpression } from '../util/resolve-class.js';
 import { tokenOf, tokensProvidedBy } from './module-tokens.js';
 import { definePass } from './types.js';
+
+/**
+ * The module class an import names, where the package it is imported from
+ * is not installed (P264): the name the import states, of the package its
+ * specifier names. `undefined` for anything else the checker could not
+ * place - a computed import, a name of this repository.
+ */
+const statedModule = (expr: Node): { typeName: string; package: string } | undefined => {
+  const target = unwrapClassExpression(expr);
+  if (!Node.isIdentifier(target) && !Node.isPropertyAccessExpression(target)) return undefined;
+  const cause = whyNoClass(target);
+  if (cause.cause !== 'module-not-installed' || cause.package === undefined) return undefined;
+  let root: Node = target;
+  while (Node.isPropertyAccessExpression(root)) root = root.getExpression();
+  const imported = importOf(root);
+  if (imported === undefined) return undefined;
+  return { typeName: Node.isPropertyAccessExpression(target) ? target.getName() : (imported.exported ?? target.getText()), package: cause.package };
+};
+
+/**
+ * The class a module import calls a configuring method of, where the method
+ * is not one `unwrapClassExpression` already looks through (P264):
+ * `X.registerQueue(...)` configures `X` as `X.forRoot(...)` does. `undefined`
+ * for anything else.
+ */
+const configuringReceiver = (expr: Node): Node | undefined => {
+  const call = Node.isParenthesizedExpression(expr) ? expr.getExpression() : expr;
+  if (!Node.isCallExpression(call) || isDynamicModuleExpression(call)) return undefined;
+  const callee = call.getExpression();
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const receiver = callee.getExpression();
+  return Node.isIdentifier(receiver) || Node.isPropertyAccessExpression(receiver) ? receiver : undefined;
+};
 
 const arrayProperty = (
   literal: ObjectLiteralExpression | undefined,
@@ -403,17 +436,37 @@ export const modulesPass = definePass('modules', (ctx) => {
     const imports: ModuleInfo['imports'] = [];
     const providedByImports: ProviderRegistration[] = [];
     for (const { written, expr } of importedModules(arrayProperty(options, 'imports'))) {
-      const dynamic = isDynamicModuleExpression(expr);
-      const ref = resolveClassExpression(expr);
+      // A module configured by a static method of any name - `BullModule.registerQueue(...)` - is that module (P264).
+      const receiver = configuringReceiver(expr);
+      const dynamic = isDynamicModuleExpression(expr) || receiver !== undefined;
+      let ref = resolveClassExpression(receiver ?? expr);
+      let stated: { typeName: string; package: string } | undefined;
       if (ref.kind === 'unknown') {
+        const symbol = `${indexed.name} imports ${written === expr && receiver === undefined ? ref.text : written.getText().replace(/\s+/g, ' ').slice(0, 80)}`;
+        stated = statedModule(receiver ?? expr);
+        if (stated === undefined) {
+          ctx.report({
+            file: ctx.fileOf(written),
+            line: lineOf(written),
+            reason: 'module-import-dynamic',
+            hint: 'Import a module class, or X.forRoot(...); a computed import cannot be followed.',
+            symbol,
+          });
+          continue;
+        }
+        // A module of a package that is not installed is no computed import:
+        // it is the class its import names, of the package it names (P264),
+        // read as an installed package's is, and said, since its class is not
+        // there to read.
         ctx.report({
           file: ctx.fileOf(written),
           line: lineOf(written),
-          reason: 'module-import-dynamic',
-          hint: 'Import a module class, or X.forRoot(...); a computed import cannot be followed.',
-          symbol: `${indexed.name} imports ${written === expr ? ref.text : written.getText().replace(/\s+/g, ' ').slice(0, 80)}`,
+          reason: 'module-import-not-installed',
+          hint: `${stated.typeName} is a module of ${stated.package}, which is not installed; it is read by its import alone. Install the dependencies where the map is built.`,
+          symbol,
+          meta: { package: stated.package, module: stated.typeName },
         });
-        continue;
+        ref = { kind: 'external', ...stated };
       }
       if (ref.kind === 'external') {
         // `ClientsModule.register([{ name: 'KAFKA_CLIENT' }])` provides that
@@ -425,7 +478,7 @@ export const modulesPass = definePass('modules', (ctx) => {
           package: ref.package,
           role: 'module',
         });
-        imports.push({ id: node.id, kind: 'external', name: ref.typeName });
+        imports.push({ id: node.id, kind: 'external', name: ref.typeName, ...(stated === undefined ? {} : { stated: true as const }) });
         continue;
       }
       const target = ctx.classes.get(ref.declaration);
@@ -508,7 +561,8 @@ export const modulesPass = definePass('modules', (ctx) => {
         from: info.id,
         to: imported.id,
         type: 'imports',
-        confidence: 'static',
+        // What the author wrote rather than what a compiler checked (P264).
+        confidence: imported.stated === true ? 'heuristic' : 'static',
         file: info.file,
         line: info.line,
         ...(kind === 'static' ? {} : { meta: { moduleKind: kind } }),

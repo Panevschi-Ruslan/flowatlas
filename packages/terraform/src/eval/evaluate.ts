@@ -59,12 +59,33 @@ const templated = (value: Value, at: Expression): string | Value => {
   return failure(`a template cannot hold ${describe(value)}`, at.pos);
 };
 
+/** The pieces a rendered part of a template stands for: its text, the pieces it was rendered from, or the value not known (P264). */
+const piecesOf = (rendered: string | Value): readonly (string | Value)[] =>
+  typeof rendered === 'string' ? [rendered] : rendered.kind === 'unknown' && rendered.template !== undefined ? rendered.template : [rendered];
+
 const renderParts = (parts: readonly TemplatePart[], scope: Scope): string | Value => {
   let out = '';
   /** Every piece, text or a value not known, while no piece is anything else (P261). */
   const pieces: (string | Value)[] = [];
   /** The first value not known: what the template is, as it always was. */
   let first: Value | undefined;
+  /**
+   * A directive's body, rendered: its text, or - where a value in it is not
+   * known - its pieces, kept in place among the template's (P264), so a value
+   * another deployment publishes inside `%{ if }` or `%{ for }` is read as one
+   * outside any directive is.
+   */
+  const add = (rendered: string | Value): Value | undefined => {
+    if (typeof rendered === 'string') {
+      out += rendered;
+      pieces.push(rendered);
+      return undefined;
+    }
+    if (isError(rendered)) return first ?? rendered;
+    first ??= rendered;
+    pieces.push(...piecesOf(rendered));
+    return undefined;
+  };
   for (const part of parts) {
     if (part.kind === 'text') {
       out += part.text;
@@ -84,28 +105,43 @@ const renderParts = (parts: readonly TemplatePart[], scope: Scope): string | Val
       pieces.push(piece);
       continue;
     }
-    // A directive is read only where everything before it is known.
-    if (first !== undefined) return first;
     if (part.kind === 'if') {
       const condition = evaluate(part.condition, scope);
-      if (condition.kind === 'unknown') return condition;
+      if (condition.kind === 'unknown') {
+        if (isError(condition)) return first ?? condition;
+        // A condition the files do not decide: the template is rendered both ways, a piece holding each (P264).
+        const then = renderParts(part.then, scope);
+        const otherwise = renderParts(part.otherwise, scope);
+        if (typeof then !== 'string' && isError(then)) return first ?? then;
+        if (typeof otherwise !== 'string' && isError(otherwise)) return first ?? otherwise;
+        if (typeof then === 'string' && then === otherwise) {
+          out += then;
+          pieces.push(then);
+          continue;
+        }
+        first ??= condition;
+        pieces.push({ ...condition, ways: [piecesOf(then), piecesOf(otherwise)] });
+        continue;
+      }
       if (condition.kind !== 'bool') return failure('a template condition must be true or false', part.condition.pos);
-      const piece = renderParts(condition.value ? part.then : part.otherwise, scope);
-      if (typeof piece !== 'string') return piece;
-      out += piece;
-      pieces.push(piece);
+      const failed = add(renderParts(condition.value ? part.then : part.otherwise, scope));
+      if (failed !== undefined) return failed;
       continue;
     }
     const collection = evaluate(part.collection, scope);
     const pairs = iterate(collection);
-    if (!Array.isArray(pairs)) return pairs;
+    if (!Array.isArray(pairs)) {
+      if (isError(pairs)) return first ?? pairs;
+      // Repeated over what the files do not settle, the body is a value not known as a whole.
+      first ??= pairs;
+      pieces.push(pairs);
+      continue;
+    }
     for (const [key, value] of pairs) {
       const names = new Map<string, Value>([[part.valueName, value]]);
       if (part.keyName !== undefined) names.set(part.keyName, key);
-      const piece = renderParts(part.body, withNames(scope, names));
-      if (typeof piece !== 'string') return piece;
-      out += piece;
-      pieces.push(piece);
+      const failed = add(renderParts(part.body, withNames(scope, names)));
+      if (failed !== undefined) return failed;
     }
   }
   return first === undefined ? out : { ...(first as Extract<Value, { kind: 'unknown' }>), template: pieces };

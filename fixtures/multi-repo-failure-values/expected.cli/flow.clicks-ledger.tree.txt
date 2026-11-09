@@ -1,0 +1,8 @@
+~  event kinesis/shop-prod-clicks                                    ledger/infra/ledger.yaml:26
+  -> handler                                                         ledger/src/tally.ts:2
+  ~  message sqs/shop-prod-failed                                    ledger/infra/ledger.yaml:33
+    ~  sqs/shop-prod-failed                                          infra/main.tf:62
+      => platform ~  mapping aws_lambda_event_source_mapping.failed  platform/infra/main.tf:62
+        @  shop-prod-replay                                          platform/infra/main.tf:54
+          -> handler                                                 platform/src/replay.ts:4
+unresolved on this path: 0

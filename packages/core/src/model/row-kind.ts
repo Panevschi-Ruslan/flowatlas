@@ -219,6 +219,7 @@ const GAPS: readonly string[] = [
   'call-through-token',
   // Modules and globals
   'module-import-dynamic',
+  'module-import-not-installed',
   'module-controllers-unread',
   'module-providers-unread',
   'global-wrapper-dynamic',

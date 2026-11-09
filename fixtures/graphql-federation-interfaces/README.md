@@ -50,8 +50,8 @@ Rows that remain, on purpose:
 - `graphql-subgraph-not-joined` at the router: `localhost:4004` is where both
   `inventory` and `legacy` listen, so it is not one service.
 - As in the other federation fixtures: `type-unresolved` in the browsers
-  (nothing is installed), `module-import-dynamic` for NestJS's
-  `GraphQLModule.forRoot<...>(...)`, and `entry-http-routes-unmatched` for the
+  (nothing is installed), `module-import-not-installed` for NestJS's
+  `GraphQLModule.forRoot<...>(...)` (read by its import, P264), and `entry-http-routes-unmatched` for the
   Express servers.
 
 Nothing is installed; every package is declared and none is needed.

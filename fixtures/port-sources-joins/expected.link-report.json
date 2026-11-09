@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:47:43.474Z",
+  "builtAt": "2026-11-09T11:30:14.403Z",
   "configHash": "7c602655c404",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 2444,
       "packages": {
         "name": "port-sources-joins-admin",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1658,
+      "durationMs": 2422,
       "packages": {
         "name": "port-sources-joins-audit",
         "runtime": [
@@ -44,11 +44,11 @@
       "repo": "./billing",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 9,
-      "edges": 3,
+      "nodes": 10,
+      "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 2591,
       "packages": {
         "name": "port-sources-joins-billing",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1633,
+      "durationMs": 2360,
       "packages": {
         "name": "port-sources-joins-catalog",
         "runtime": [
@@ -86,7 +86,7 @@
       "edges": 7,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1631,
+      "durationMs": 730,
       "packages": {
         "name": "port-sources-joins-jobs",
         "runtime": [
@@ -104,7 +104,7 @@
       "edges": 1,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1627,
+      "durationMs": 2321,
       "packages": {
         "name": "port-sources-joins-ledger",
         "runtime": [
@@ -124,7 +124,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1638,
+      "durationMs": 2371,
       "packages": {
         "name": "port-sources-joins-notify",
         "runtime": [
@@ -142,7 +142,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1637,
+      "durationMs": 2398,
       "packages": {
         "name": "port-sources-joins-orders",
         "runtime": [
@@ -160,7 +160,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1619,
+      "durationMs": 2364,
       "packages": {
         "name": "port-sources-joins-search",
         "runtime": [
@@ -178,7 +178,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1649,
+      "durationMs": 2441,
       "packages": {
         "name": "port-sources-joins-shop",
         "runtime": [],
@@ -198,7 +198,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1715,
+      "durationMs": 2285,
       "packages": {
         "name": "port-sources-joins-stock",
         "runtime": [
@@ -216,7 +216,7 @@
       "edges": 33,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1605,
+      "durationMs": 2286,
       "packages": {
         "name": "port-sources-joins-web",
         "runtime": [
@@ -280,8 +280,8 @@
     }
   ],
   "totals": {
-    "nodes": 66,
-    "edges": 52,
+    "nodes": 67,
+    "edges": 53,
     "types": 3,
     "missed": 1,
     "sites": 1,

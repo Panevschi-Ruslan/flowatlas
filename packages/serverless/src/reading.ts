@@ -174,6 +174,17 @@ export class FileReading {
   }
 
   /**
+   * That something drawn belongs to a reading of a choice (P264): listed on
+   * the import's site beside the reading at `of`, under an address of the
+   * same kind, so the linker keeps and drops it with that reading.
+   */
+  alongside(of: string, alternative: { readonly kind: DeployedKind; readonly address: string }): void {
+    const index = this.parts.imports.findIndex((site) => site.alternatives?.some((one) => one.address === of) === true);
+    const site = this.parts.imports[index];
+    if (site?.alternatives !== undefined) this.parts.imports[index] = { ...site, alternatives: [...site.alternatives, alternative] };
+  }
+
+  /**
    * Something another deployment publishes, used where what it is - a queue an
    * event reads, a topic it subscribes to - is said by the use: named by its
    * key's stand-in, which the linker finishes where the publisher is read.

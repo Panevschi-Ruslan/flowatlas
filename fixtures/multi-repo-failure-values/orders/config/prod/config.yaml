@@ -1,0 +1,4 @@
+{# Every stack of the group names its resources with the project's code and stage. #}
+{% set prefix = stack_group_config.project_code ~ '-' ~ stack_group_config.stage %}
+parameters:
+  Prefix: "{{ prefix | lower }}"

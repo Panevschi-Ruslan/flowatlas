@@ -25,6 +25,28 @@ only one of them moved.
   finding `server-request-without-origin` (it throws as written), while
   Nitro's `$fetch('/api/x')` joins its own route in process, `static`.
   `proxiedTo` is now a list naming every hop's setting.
+- **Failure destinations of every mapping, Jinja statements, sceptre's
+  resolvers and Terraform directives (P264).** A CloudFormation or SAM
+  `AWS::Lambda::EventSourceMapping`'s `DestinationConfig.OnFailure`, a SAM
+  stream event's destination of the kind its `Type` says, a Serverless stream
+  event's `destinations.onFailure` and the CDK's `onFailure` (`SqsDlq`,
+  `SnsDlq`, `S3OnFailureDestination`) hand what a mapping gives up on to its
+  destination, as Terraform's do; where both the source and the destination
+  are imports, the destination is a choice inside each of the mapping's
+  readings, which the linker settles. sceptre's files are rendered with
+  `{% if %}`, `{% for %}` and `{% set %}`, the common filters (`default`,
+  `lower`, `upper`, `replace`, `join`, `int`, `string`, `trim`, `tojson`, ...),
+  `stack_group_config` and `--merge-vars`; a condition the files do not decide
+  is rendered every way, and only what every way agrees on is read. Its
+  resolvers `!file`, `!stack_attr`, `!join`, `!split`, `!select`, `!sub` and
+  `!no_value` are read, `!rcmd` and `!cmd` said as values not known.
+  Terraform's `%{ if }` and `%{ for }` in a string template or a
+  `templatefile` are read part by part around imports, a condition nothing
+  decides read both ways. A NestJS module imported from a package that is not
+  installed is read by its import and said as `module-import-not-installed`
+  (new reason), where it was `module-import-dynamic`. New fixture
+  `multi-repo-failure-values`.
+
 - **The front end's and the RPC readers' last open names (P262).** An
   `addRouteMiddleware` at the top of `app.vue`'s setup, or of a composable
   that setup calls, is a route middleware in every page's order after the

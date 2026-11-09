@@ -207,6 +207,13 @@ const readSns: EventReader = (properties, site, reading) => {
   });
 };
 
+/** What a stream event's `DestinationConfig.OnFailure.Type` says its destination is (P264). */
+const FAILURE_TYPES: ReadonlyMap<string, DeployedKind> = new Map([
+  ['SQS', 'queue'],
+  ['SNS', 'topic'],
+  ['S3', 'bucket'],
+]);
+
 /** A table's stream or a Kinesis stream, read in order; a batch it gives up on goes to its failure destination (P54). */
 const streamReader =
   (of: 'table' | 'stream'): EventReader =>
@@ -222,13 +229,14 @@ const streamReader =
     if (!isRecord(failure)) return;
     const address = `${site.address}.DestinationConfig.OnFailure`;
     const path = [...site.path, 'Properties', 'DestinationConfig', 'OnFailure'];
-    // A mapping hands what it gives up on to a queue or a topic, which an import's use does not tell apart (P253).
+    // A mapping hands what it gives up on to a queue or a topic, which an import's use does not tell apart (P253) where its Type does not say (P264).
+    const typed = FAILURE_TYPES.get(textOf(failure['Type']) ?? '');
     reading.file.deliverTo(
       { ...reading.file.siteOf(path), address, by: 'destination', from: { kind: 'outcome', when: 'failure', of: { delivery: site.address } }, meta: { when: 'failure', ...reading.conditionOf(site.logicalId) } },
       reading.deployedOf(failure['Destination']),
       path,
       `where ${site.address} hands the batches it gives up on`,
-      ['queue', 'topic'],
+      typed === undefined ? ['queue', 'topic'] : [typed],
     );
   };
 

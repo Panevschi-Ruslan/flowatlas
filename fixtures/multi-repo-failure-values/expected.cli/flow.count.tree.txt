@@ -1,0 +1,23 @@
+@  shop-stock-count                                                    stock/infra/main.tf:48
+  -> handler                                                           stock/src/count.ts:8
+    $  JOBS_QUEUE_URL                                                  stock/src/count.ts:10
+    ~  message sqs/shop-prod-jobs                                      stock/src/count.ts:10
+      ~  sqs/shop-prod-jobs                                            infra/main.tf:49
+        => platform ~  mapping aws_lambda_event_source_mapping.jobs    platform/infra/main.tf:49
+          @  shop-prod-jobs                                            platform/infra/main.tf:41
+            -> handler                                                 platform/src/jobs.ts:4
+    $  FAILED_QUEUE_URL                                                stock/src/count.ts:11
+    ~  message sqs/shop-prod-failed                                    stock/src/count.ts:11
+      ~  sqs/shop-prod-failed                                          infra/main.tf:62
+        => platform ~  mapping aws_lambda_event_source_mapping.failed  platform/infra/main.tf:62
+          @  shop-prod-replay                                          platform/infra/main.tf:54
+            -> handler                                                 platform/src/replay.ts:4
+    $  SPILL_QUEUE_URL                                                 stock/src/count.ts:12
+    ~  message ? ~heuristic                                            stock/src/count.ts:12
+    $  ALERTS_TOPIC_ARN                                                stock/src/count.ts:13
+    ~  message sns/shop-prod-alerts                                    stock/src/count.ts:13
+      ~  sns/shop-prod-alerts                                          infra/main.tf:75
+        => platform ~  subscription aws_sns_topic_subscription.alerts  platform/infra/main.tf:75
+          @  shop-prod-page                                            platform/infra/main.tf:67
+            -> handler                                                 platform/src/page.ts:4
+unresolved on this path: 2

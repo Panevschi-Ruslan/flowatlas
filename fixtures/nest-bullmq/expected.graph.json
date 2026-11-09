@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "nest-bullmq",
-  "generatedAt": "2026-11-07T17:38:37.418Z",
+  "generatedAt": "2026-11-09T11:43:17.127Z",
   "nodes": [
     {
       "id": "channel:digest",
@@ -1075,13 +1075,6 @@
     }
   },
   "unresolved": [
-    {
-      "file": "src/app.module.ts",
-      "line": 15,
-      "reason": "module-import-dynamic",
-      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
-      "symbol": "AppModule imports BullModule.registerQueue({ name: 'mail' }, { name: 'digest' })"
-    },
     {
       "file": "src/mail/anonymous.processor.ts",
       "line": 11,

@@ -78,6 +78,13 @@ const DECLARES: ReadonlyMap<string, { readonly kind: DeployedKind; readonly name
   ['aws-stepfunctions.StateMachine', { kind: 'workflow', name: 'stateMachineName' }],
 ]);
 
+/** The classes a mapping's `onFailure` is built of, and what each hands to (P264). */
+const FAILURE_DESTINATIONS: ReadonlyMap<string, DeployedKind> = new Map([
+  ['SqsDlq', 'queue'],
+  ['SnsDlq', 'topic'],
+  ['S3OnFailureDestination', 'bucket'],
+]);
+
 /** An API another stack creates, by the key of the point its routes hang from (P249). */
 interface SharedApi {
   readonly root: string;
@@ -853,6 +860,7 @@ export class AppDeployment {
       const to = { kind: 'function' as const, function: this.#functionIndex.get(fn) as number };
       const push = (from: DeliverySource, kind: DeployedDelivery['by'], extra: Record<string, unknown> = {}): void => {
         this.parts.deliveries.push({ ...site, address, by: kind, from, to, meta: { ...meta, ...extra } });
+        if (kind === 'mapping') this.#mappingFailure(options instanceof ObjectValue ? options.get('onFailure') : undefined, site, `${address}/onFailure`, address, this.#conditional(fn.conditional, conditional));
       };
       if (by === 'SqsEventSource' && found.kind === 'queue') push({ kind: 'queue', name: found.name }, 'mapping');
       else if (by === 'SnsEventSource' && found.kind === 'topic') {
@@ -882,6 +890,32 @@ export class AppDeployment {
       found.kind === 'queue' ? { kind: 'queue', name: found.name } : found.kind === 'stream' || (found.kind === 'table' && found.changes === true) ? { kind: 'changes', of: found.kind === 'stream' ? 'stream' : 'table', name: found.name } : undefined;
     if (from === undefined) return;
     this.#deliver({ ...mapping.site, address: mapping.path, by: 'mapping', from, toValue: prop(mapping, 'target'), meta: { ...this.#filters(mapping.props), ...this.#conditional(mapping.conditional) } });
+    this.#mappingFailure(prop(mapping, 'onFailure'), mapping.site, `${mapping.path}/onFailure`, mapping.path, this.#conditional(mapping.conditional));
+  }
+
+  /**
+   * Where a mapping hands the batches it gives up on (P264): its `onFailure`,
+   * an `SqsDlq`, an `SnsDlq` or an `S3OnFailureDestination` of what it is
+   * handed, whose class says the kind - so even one another deployment
+   * publishes is no choice, and joins as any looked-up construct does.
+   */
+  #mappingFailure(destination: Value, site: Site, address: string, of: string, meta: Record<string, unknown>): void {
+    if (destination === undefined) return;
+    const what = `where ${of} hands the batches it gives up on`;
+    const by = builtBy(destination);
+    const kind = by === undefined ? undefined : FAILURE_DESTINATIONS.get(by);
+    const delivery = { ...site, address, by: 'destination', from: { kind: 'outcome', when: 'failure', of: { delivery: of } }, meta: { when: 'failure', ...meta } } as const;
+    if (kind === undefined || !(destination instanceof Built)) {
+      this.#row(site, address, {
+        reason: 'subscription-target-unread',
+        message: `${what} is not read: it is ${by ?? 'a value'}, not an SqsDlq, an SnsDlq or an S3OnFailureDestination`,
+        hint: 'Hand onFailure an SqsDlq, an SnsDlq or an S3OnFailureDestination of a queue, a topic or a bucket the app creates or looks up.',
+      });
+      this.parts.deliveries.push(delivery);
+      return;
+    }
+    const to = this.#target(destination.args[0], site, address, what);
+    this.parts.deliveries.push({ ...delivery, ...(to === undefined ? {} : { to }) });
   }
 
   /**
@@ -894,11 +928,16 @@ export class AppDeployment {
     const kinds: readonly DeployedKind[] = prop(mapping, 'startingPosition') === undefined ? ['queue'] : ['stream', 'table'];
     const what = `what ${mapping.path} reads`;
     const alternatives = kinds.length === 1 ? undefined : kinds.map((kind) => ({ kind, address: alternativeAddress(mapping.path, kind) }));
-    this.#importAt(imported.key, mapping.site, what, kinds, alternatives);
+    // What each reading gives up on goes with the reading: under an address of its kind the import's site is told of (P264).
+    const failure = prop(mapping, 'onFailure');
+    const failureAt = (kind: DeployedKind): string => (alternatives === undefined ? `${mapping.path}/onFailure` : alternativeAddress(`${mapping.path}/onFailure`, kind));
+    const failures = failure === undefined || alternatives === undefined ? [] : alternatives.map(({ kind }) => ({ kind, address: failureAt(kind) }));
+    this.#importAt(imported.key, mapping.site, what, kinds, alternatives === undefined ? undefined : [...alternatives, ...failures]);
     const name = importedName(imported.key);
     for (const { kind, address } of alternatives ?? [{ kind: 'queue' as DeployedKind, address: mapping.path }]) {
       const from: DeliverySource = kind === 'queue' ? { kind: 'queue', name } : { kind: 'changes', of: kind === 'stream' ? 'stream' : 'table', name };
       this.#deliver({ ...mapping.site, address, by: 'mapping', from, toValue: prop(mapping, 'target'), meta: { ...this.#filters(mapping.props), ...this.#conditional(mapping.conditional) } });
+      this.#mappingFailure(failure, mapping.site, failureAt(kind), address, this.#conditional(mapping.conditional));
     }
   }
 

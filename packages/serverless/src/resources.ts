@@ -1,7 +1,7 @@
 import { cognitoTriggerKey, DEFAULT_EVENT_BUS, deployedNameIn, destinationOf, eventPatternOf, READ_PRINCIPALS } from '@flowatlas/aws';
-import { generatedName, makeFunctionUrlEntryKey, type DeployedKind, type DeliverySource, type PathStep } from '@flowatlas/core';
+import { alternativeAddress, generatedName, importedName, makeFunctionUrlEntryKey, type DeployedKind, type DeliverySource, type PathStep } from '@flowatlas/core';
 import { intrinsicOf, type Deployed, type Resource } from './cloudformation.js';
-import type { FileReading } from './reading.js';
+import { asTarget, type FileReading } from './reading.js';
 import { Imported, isRecord, textOf, Unread } from './variables.js';
 
 /**
@@ -210,7 +210,8 @@ const readMapping: ResourceReader = (resource, reading) => {
   if (source instanceof Imported) {
     const what = `what ${resource.address} reads`;
     const to = reading.targetOf(functionIn(reading, resource.properties['FunctionName']), pathOf(resource), resource.address, `the function ${resource.address} hands its batches to`);
-    for (const alternative of reading.alternativesOf(source, mappedKinds(resource.properties['StartingPosition']), pathOf(resource), what, resource.address)) {
+    const readings = reading.alternativesOf(source, mappedKinds(resource.properties['StartingPosition']), pathOf(resource), what, resource.address);
+    for (const alternative of readings) {
       const from = mappedSource(alternative.kind, alternative.name);
       if (from === undefined) continue;
       reading.parts.deliveries.push({
@@ -222,6 +223,7 @@ const readMapping: ResourceReader = (resource, reading) => {
         ...(resource.properties['Enabled'] === false ? { meta: { disabled: true } } : {}),
       });
     }
+    readMappingFailure(resource, reading, readings);
     return;
   }
   if (source === undefined || source instanceof Unread) {
@@ -250,6 +252,59 @@ const readMapping: ResourceReader = (resource, reading) => {
     ...(to === undefined ? {} : { to }),
     ...(resource.properties['Enabled'] === false ? { meta: { disabled: true } } : {}),
   });
+  readMappingFailure(resource, reading, [{ kind: from.kind === 'queue' ? 'queue' : from.of, address: resource.address }]);
+};
+
+/** What a mapping hands the batches it gives up on to, where the use does not say (P253). */
+export const MAPPING_DESTINATION_KINDS: readonly DeployedKind[] = ['queue', 'topic'];
+
+/**
+ * Where a mapping hands the batches it gives up on (P264): its
+ * `DestinationConfig.OnFailure`, from each reading of the mapping - one, or
+ * one per kind what it reads may be (P253). A reading of a choice draws its
+ * destination under an address of the reading's kind, which the import's
+ * site is told of, so the linker keeps it with its reading and drops it with
+ * the others; a destination that is itself a value another deployment
+ * publishes is a choice inside that choice, drawn once per kind it may be
+ * under each reading's address, its own import's site listing them, so the
+ * linker keeps the one of the kind its publisher's value is, of the reading
+ * the mapping's publisher's is, and renames it back through both - as
+ * Terraform's reading of a mapping does (P261).
+ */
+const readMappingFailure = (resource: Resource, reading: FileReading, readings: readonly { readonly kind: DeployedKind; readonly address: string }[]): void => {
+  const config = resource.properties['DestinationConfig'];
+  const failure = isRecord(config) && isRecord(config['OnFailure']) ? config['OnFailure'] : undefined;
+  if (failure === undefined) return;
+  const base = `${resource.address}.DestinationConfig.OnFailure`;
+  const path = [...pathOf(resource), 'Properties', 'DestinationConfig', 'OnFailure'];
+  const what = `where ${resource.address} hands the batches it gives up on`;
+  const found = reading.template.deployedOf(failure['Destination']);
+  const site = reading.siteOf(path);
+  const delivery = (address: string, of: string) =>
+    ({ ...site, address, by: 'destination', from: { kind: 'outcome', when: 'failure', of: { delivery: of } }, meta: { when: 'failure' } }) as const;
+  const [only] = readings;
+  if (readings.length === 1 && only !== undefined && only.address === resource.address) {
+    reading.deliverTo(delivery(base, only.address), found, path, what, MAPPING_DESTINATION_KINDS);
+    return;
+  }
+  const to = found instanceof Imported ? undefined : reading.targetOf(found, path, base, what);
+  /** The destination's readings, under each reading of the mapping. */
+  const inner: { kind: DeployedKind; address: string }[] = [];
+  for (const one of readings) {
+    const address = alternativeAddress(base, one.kind);
+    if (found instanceof Imported) {
+      for (const kind of MAPPING_DESTINATION_KINDS) {
+        const alternative = { kind, address: alternativeAddress(address, kind) };
+        inner.push(alternative);
+        const target = asTarget({ kind, name: importedName(found.key) });
+        reading.parts.deliveries.push({ ...delivery(alternative.address, one.address), ...(target === undefined ? {} : { to: target }) });
+      }
+    } else {
+      reading.parts.deliveries.push({ ...delivery(address, one.address), ...(to === undefined ? {} : { to }) });
+    }
+    reading.alongside(one.address, { kind: one.kind, address });
+  }
+  if (found instanceof Imported) reading.parts.imports.push({ key: found.key, ...site, what, kinds: MAPPING_DESTINATION_KINDS, alternatives: inner });
 };
 
 /** The configurations of a bucket's notification, the property naming each target, and what it is. */

@@ -184,3 +184,48 @@ export class AppModule {}
     expect(rows(graph, 'module-import-dynamic')).toEqual(['AppModule imports process.env.MAIL ? MailModule : MemoryModule']);
   });
 });
+
+describe('a module of a package that is not installed (P264)', () => {
+  it('is the class its import names, of the package it names, said as not installed rather than computed', async () => {
+    const graph = await read({
+      'src/app.module.ts': `
+import { Module } from '@nestjs/common';
+import * as queues from '@nestjs/bullmq';
+import { ClientsModule as Clients, Transport } from '@nestjs/microservices';
+import { ShopModule } from '@shop/kit';
+import { ReportsModule } from './reports.module';
+@Module({ imports: [Clients.register([{ name: 'EVENTS', transport: Transport.TCP }]), queues.BullModule.forRoot({}), queues.BullModule.registerQueue({ name: 'mail' }), ShopModule, ReportsModule.forReports('daily'), process.env.MAIL ? ShopModule : Clients] })
+export class AppModule {}
+`,
+      'src/reports.module.ts': `
+import { Module } from '@nestjs/common';
+@Module({})
+export class ReportsModule {
+  static forReports(kind: string) {
+    return { module: ReportsModule, providers: [{ provide: 'REPORT_KIND', useValue: kind }] };
+  }
+}
+`,
+    });
+    const imported = graph.edges
+      .filter((edge) => edge.type === 'imports')
+      .map((edge) => graph.nodes.find((node) => node.id === edge.to))
+      .map((node) => `${node?.label ?? '?'} ${String(node?.meta?.['package'] ?? '')}`.trim())
+      .sort();
+    // A configuring method of any name configures its module, here and in a package.
+    expect(imported).toEqual(['BullModule @nestjs/bullmq', 'ClientsModule @nestjs/microservices', 'ReportsModule', 'ShopModule @shop/kit']);
+    const reports = graph.edges.find((edge) => edge.type === 'imports' && graph.nodes.find((node) => node.id === edge.to)?.label === 'ReportsModule');
+    expect(reports?.meta?.['moduleKind']).toBe('dynamic');
+    // Known by the import alone, which no compiler checked.
+    const confidence = (label: string) => graph.edges.find((edge) => edge.type === 'imports' && graph.nodes.find((node) => node.id === edge.to)?.label === label)?.confidence;
+    expect([confidence('BullModule'), confidence('ShopModule'), confidence('ClientsModule')]).toEqual(['heuristic', 'heuristic', 'static']);
+    const notInstalled = graph.unresolved.filter((row) => row.reason === 'module-import-not-installed');
+    // The microservices package is read from its built-in shape (P78), so only the two with none are said.
+    expect(notInstalled.map((row) => [row.symbol, row.meta?.['package']])).toEqual([
+      ['AppModule imports queues.BullModule', '@nestjs/bullmq'],
+      ["AppModule imports queues.BullModule.registerQueue({ name: 'mail' })", '@nestjs/bullmq'],
+      ['AppModule imports ShopModule', '@shop/kit'],
+    ]);
+    expect(rows(graph, 'module-import-dynamic')).toEqual(['AppModule imports process.env.MAIL ? ShopModule : Clients']);
+  });
+});

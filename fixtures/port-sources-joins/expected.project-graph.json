@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T12:47:43.474Z",
+  "builtAt": "2026-11-09T11:45:11.121Z",
   "services": [
     {
       "name": "orders",
@@ -114,6 +114,18 @@
           ],
           "returns": "void"
         }
+      }
+    },
+    {
+      "id": "billing#node_modules/@nestjs/config:ConfigModule",
+      "type": "module",
+      "label": "ConfigModule",
+      "repo": "billing",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
       }
     },
     {
@@ -1419,6 +1431,17 @@
       "line": 5
     },
     {
+      "from": "billing#src/app.module.ts:AppModule",
+      "to": "billing#node_modules/@nestjs/config:ConfigModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
       "from": "billing#src/main.ts:bootstrap",
       "to": "config_key:billing#app.port",
       "type": "reads_config",
@@ -1964,9 +1987,13 @@
     {
       "file": "src/app.module.ts",
       "line": 7,
-      "reason": "module-import-dynamic",
-      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "reason": "module-import-not-installed",
+      "hint": "ConfigModule is a module of @nestjs/config, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
       "symbol": "AppModule imports ConfigModule",
+      "meta": {
+        "package": "@nestjs/config",
+        "module": "ConfigModule"
+      },
       "service": "billing"
     },
     {

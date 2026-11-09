@@ -1062,7 +1062,13 @@ prove, and the path is given so you can run it.
   too, Terraform over another configuration's state outputs as well; a
   sceptre stack is read with its groups' parameters, its Jinja rendered from
   the pipeline that launches it and its stack outputs joined; rain is read
-  from pipelines and scripts (`fixtures/multi-repo-deploy-values`).
+  from pipelines and scripts (`fixtures/multi-repo-deploy-values`). A
+  mapping's failure destination is read wherever it is written -
+  CloudFormation, SAM, Serverless and the CDK's `onFailure` - even when both
+  ends are imports; sceptre's Jinja statements, filters and other resolvers are
+  run where the files decide them, and Terraform's `%{ if }` / `%{ for }`
+  directives around an import are read part by part, every way a condition
+  nothing decides goes (`fixtures/multi-repo-failure-values`).
 - **Guards.** Everything in front of a way in is a node and an ordered
   `guarded_by` edge — NestJS guards, interceptors and pipes, call-registered
   middleware, a procedure's `.use(…)`, a file-system router's declarative list —

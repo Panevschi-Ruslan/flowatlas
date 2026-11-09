@@ -111,7 +111,7 @@ describe('Jinja in a stack configuration, rendered where the files give the valu
     const two = read(files);
     expect(reasons(two)).toContain('parameter-file-ambiguous');
     expect(names(read(files, { vars: ['vars/test.yaml'] }))).toEqual(['shop-test-fn']);
-    expect(names(read(sceptre({ 'prod/stack.yaml': "template_path: stack.yaml\nparameters:\n  Stage: '{{ var.stage | upper }}'\n  Prefix: shop\n" }, { 'vars/prod.yaml': 'stage: prod\n' }), { vars: ['vars/prod.yaml'] }))).toEqual([undefined]);
+    expect(names(read(sceptre({ 'prod/stack.yaml': "template_path: stack.yaml\nparameters:\n  Stage: '{{ var.stage | wordwrap }}'\n  Prefix: shop\n" }, { 'vars/prod.yaml': 'stage: prod\n' }), { vars: ['vars/prod.yaml'] }))).toEqual([undefined]);
   });
 
   it('gives a stack the environment variable the step launching it sets', () => {

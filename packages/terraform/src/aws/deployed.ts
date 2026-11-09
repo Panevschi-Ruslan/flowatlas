@@ -123,34 +123,45 @@ const isBecause = (found: Deployed | Because): found is Because => 'reason' in f
 /** The key an output of a state is read under: by the backend's identity and the output's name (P21, P261). */
 export const stateOutputKey = (state: string, output: string): string => `state:${state}#${output}`;
 
+/** One way a string template renders: its text, and the keys of the values other deployments publish written into it. */
+interface Way {
+  readonly text: string;
+  readonly keys: readonly string[];
+}
+
+/** At most this many ways a template's undecided conditions can go are read; more is not read at all. */
+const MAX_WAYS = 16;
+
 /**
  * A string template as text, with each value another deployment publishes
  * written as its stand-in (`importedName`) and every other part not known a
- * {@link HOLE} (P261); `undefined` where it holds no such value.
+ * {@link HOLE} (P261): once per way the `%{ if }`s the files do not decide
+ * can go (P264); `undefined` where there are more ways than are read.
  */
-const embeddedText = (value: Extract<Value, { kind: 'unknown' }>, reading: Pick<ResourceReading, 'functionIndex'>, depth: number): { text: string; keys: string[] } | undefined => {
-  if (value.template === undefined || depth > 8) return undefined;
-  let text = '';
-  const keys: string[] = [];
-  for (const piece of value.template) {
-    if (typeof piece === 'string') {
-      text += piece;
-      continue;
+const waysOf = (pieces: readonly (string | Value)[], reading: Pick<ResourceReading, 'functionIndex'>, depth: number): Way[] | undefined => {
+  if (depth > 8) return undefined;
+  let ways: Way[] = [{ text: '', keys: [] }];
+  for (const piece of pieces) {
+    let options: Way[] | undefined;
+    if (typeof piece === 'string') options = [{ text: piece, keys: [] }];
+    else if (piece.kind === 'unknown' && piece.ways !== undefined) {
+      const each = piece.ways.map((way) => waysOf(way, reading, depth + 1));
+      options = each.some((way) => way === undefined) ? undefined : (each as Way[][]).flat();
+    } else if (piece.kind === 'unknown' && piece.template !== undefined) options = waysOf(piece.template, reading, depth + 1);
+    else {
+      const found = piece.kind === 'unknown' ? undefined : deployedOf(piece, reading, depth + 1);
+      options = [found !== undefined && isBecause(found) && found.imported !== undefined ? { text: importedName(found.imported), keys: [found.imported] } : { text: HOLE, keys: [] }];
     }
-    const inner = piece.kind === 'unknown' ? embeddedText(piece, reading, depth + 1) : undefined;
-    const found = inner === undefined && piece.kind !== 'unknown' ? deployedOf(piece, reading, depth + 1) : undefined;
-    if (inner !== undefined) {
-      text += inner.text;
-      keys.push(...inner.keys);
-    } else if (found !== undefined && isBecause(found) && found.imported !== undefined) {
-      text += importedName(found.imported);
-      keys.push(found.imported);
-    } else {
-      text += HOLE;
-    }
+    if (options === undefined) return undefined;
+    ways = ways.flatMap((way) => (options as Way[]).map((option) => ({ text: way.text + option.text, keys: [...way.keys, ...option.keys] })));
+    if (ways.length > MAX_WAYS) return undefined;
   }
-  return keys.length === 0 ? undefined : { text, keys: [...new Set(keys)] };
+  return ways;
 };
+
+/** Whether a template holds a piece a condition the files do not decide stands for. */
+const isUndecided = (pieces: readonly (string | Value)[]): boolean =>
+  pieces.some((piece) => typeof piece !== 'string' && piece.kind === 'unknown' && (piece.ways !== undefined || (piece.template !== undefined && isUndecided(piece.template))));
 
 /**
  * What a string written around values other deployments publish names
@@ -158,17 +169,33 @@ const embeddedText = (value: Extract<Value, { kind: 'unknown' }>, reading: Pick<
  * whose name is built of several, or of one and text, by that name with each
  * stand-in in place, which the linker writes once every part is joined. An
  * import outside the name - the account - does not change which thing it is.
+ *
+ * A template with `%{ if }`s the files do not decide is read every way they
+ * can go, and names what every way names, with the imports of every way
+ * written into the name; where the ways name different things, it names none
+ * of them and says so (P264). A template of nothing but text and such
+ * conditions is read the same way, though it holds no import.
  */
 const builtOf = (value: Extract<Value, { kind: 'unknown' }>, reading: Pick<ResourceReading, 'functionIndex'>, depth: number): Deployed | Because | undefined => {
-  const embedded = embeddedText(value, reading, depth);
-  if (embedded === undefined) return undefined;
-  const found = deployedNameIn(embedded.text);
-  if (found === undefined || found.name.includes(HOLE)) return value.because;
-  const keys = embedded.keys.filter((key) => found.name.includes(importedName(key)));
-  const [only] = keys;
+  const template = value.template ?? [];
+  const undecided = isUndecided(template);
+  const ways = waysOf(template, reading, depth);
+  if (ways === undefined) return undecided ? { reason: 'undecided', text: `the conditions in it can go more than ${MAX_WAYS} ways, which are not read` } : undefined;
+  const keys = [...new Set(ways.flatMap((way) => way.keys))];
+  if (keys.length === 0 && !undecided) return undefined;
+  const named = ways.map((way) => deployedNameIn(way.text));
+  // A template of no import with a part not known is read as it always was, by what it refers to.
+  if (named.some((found) => found === undefined || found.name.includes(HOLE))) return keys.length === 0 ? undefined : value.because;
+  const [found] = named as NonNullable<(typeof named)[number]>[];
+  if (found === undefined) return value.because;
+  if (named.some((other) => other?.kind !== found.kind || other.name !== found.name)) {
+    return { ...value.because, reason: 'undecided', text: `which ${found.kind} it names depends on a condition the files do not decide: ${value.because.text}` };
+  }
+  const inName = keys.filter((key) => found.name.includes(importedName(key)));
+  const [only] = inName;
   const base: Deployed = { kind: found.kind, name: found.name, ...(found.changes === true ? { changes: true } : {}) };
   if (only === undefined) return base;
-  return { ...base, embeds: keys.length === 1 && found.name === importedName(only) ? { keys } : { keys, within: found.name } };
+  return { ...base, embeds: inName.length === 1 && found.name === importedName(only) ? { keys: inName } : { keys: inName, within: found.name } };
 };
 
 /** That a name read at a block is written with values other deployments publish: each one's import, as the name or a part of it (P261). */

@@ -1,0 +1,1917 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:28:20.121Z",
+  "services": [
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "audit#src/index-audit.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "audit",
+      "file": "src/index-audit.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:unknown[]}"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "audit#src/sample-audit.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "audit",
+      "file": "src/sample-audit.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:unknown[]}"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "channel:kinesis/shop-prod-clicks",
+      "type": "channel",
+      "label": "kinesis/shop-prod-clicks",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 24,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-kinesis"
+        ],
+        "declaredBy": "aws_kinesis_stream.clicks",
+        "producers": 0,
+        "consumers": 3
+      }
+    },
+    {
+      "id": "channel:sns/shop-prod-alerts",
+      "type": "channel",
+      "label": "sns/shop-prod-alerts",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 75,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 3,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-prod-failed",
+      "type": "channel",
+      "label": "sqs/shop-prod-failed",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 62,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 3,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/shop-prod-jobs",
+      "type": "channel",
+      "label": "sqs/shop-prod-jobs",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 49,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:orders#ALERTS_TOPIC_ARN",
+      "type": "config_key",
+      "label": "ALERTS_TOPIC_ARN",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 10,
+      "meta": {
+        "key": "ALERTS_TOPIC_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders#JOBS_QUEUE_URL",
+      "type": "config_key",
+      "label": "JOBS_QUEUE_URL",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 9,
+      "meta": {
+        "key": "JOBS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:stock#ALERTS_TOPIC_ARN",
+      "type": "config_key",
+      "label": "ALERTS_TOPIC_ARN",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 13,
+      "meta": {
+        "key": "ALERTS_TOPIC_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:stock#FAILED_QUEUE_URL",
+      "type": "config_key",
+      "label": "FAILED_QUEUE_URL",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 11,
+      "meta": {
+        "key": "FAILED_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:stock#JOBS_QUEUE_URL",
+      "type": "config_key",
+      "label": "JOBS_QUEUE_URL",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 10,
+      "meta": {
+        "key": "JOBS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:stock#SPILL_QUEUE_URL",
+      "type": "config_key",
+      "label": "SPILL_QUEUE_URL",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 12,
+      "meta": {
+        "key": "SPILL_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:audit#lib/audit-stack.ts:shop-audit/Index/KinesisEventSource:shop-audit/Clicks",
+      "type": "consumer",
+      "label": "mapping shop-audit/Index/KinesisEventSource:shop-audit/Clicks",
+      "repo": "audit",
+      "file": "lib/audit-stack.ts",
+      "line": 33,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "by": "mapping",
+        "declaredAs": "shop-audit/Index/KinesisEventSource:shop-audit/Clicks",
+        "deployedBy": "cdk"
+      }
+    },
+    {
+      "id": "consumer:audit#lib/audit-stack.ts:shop-audit/Sampled",
+      "type": "consumer",
+      "label": "mapping shop-audit/Sampled",
+      "repo": "audit",
+      "file": "lib/audit-stack.ts",
+      "line": 41,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "by": "mapping",
+        "declaredAs": "shop-audit/Sampled",
+        "deployedBy": "cdk"
+      }
+    },
+    {
+      "id": "consumer:ledger#infra/ledger.yaml:infra/ledger.Resources.Clicks",
+      "type": "consumer",
+      "label": "mapping infra/ledger.Resources.Clicks",
+      "repo": "ledger",
+      "file": "infra/ledger.yaml",
+      "line": 26,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "by": "mapping",
+        "declaredAs": "infra/ledger.Resources.Clicks",
+        "deployedBy": "cloudformation"
+      }
+    },
+    {
+      "id": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.failed",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.failed",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 62,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.failed",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.jobs",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 49,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.jobs",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts",
+      "type": "consumer",
+      "label": "subscription aws_sns_topic_subscription.alerts",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 75,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "aws_sns_topic_subscription.alerts",
+        "deployedBy": "terraform",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:audit:event:kinesis/shop-prod-clicks",
+      "type": "entry",
+      "label": "event kinesis/shop-prod-clicks",
+      "repo": "audit",
+      "file": "lib/audit-stack.ts",
+      "line": 33,
+      "kind": "event",
+      "meta": {
+        "key": "kinesis/shop-prod-clicks",
+        "by": "mapping",
+        "declaredAs": "shop-audit/Index/KinesisEventSource:shop-audit/Clicks",
+        "deployedBy": "cdk",
+        "changesOf": "stream",
+        "name": "shop-prod-clicks",
+        "function": "shop-audit-index",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:audit:invoke:shop-audit-index",
+      "type": "entry",
+      "label": "shop-audit-index",
+      "repo": "audit",
+      "file": "lib/audit-stack.ts",
+      "line": 28,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-audit-index",
+        "deployedBy": "cdk",
+        "name": "shop-audit-index",
+        "runtime": "nodejs20.x",
+        "declaredAs": "shop-audit/Index",
+        "constructPath": "shop-audit/Index",
+        "handler": "src/index-audit.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{Records:unknown[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:audit:invoke:shop-audit-sample",
+      "type": "entry",
+      "label": "shop-audit-sample",
+      "repo": "audit",
+      "file": "lib/audit-stack.ts",
+      "line": 36,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-audit-sample",
+        "deployedBy": "cdk",
+        "name": "shop-audit-sample",
+        "runtime": "nodejs20.x",
+        "declaredAs": "shop-audit/Sample",
+        "constructPath": "shop-audit/Sample",
+        "handler": "src/sample-audit.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{Records:unknown[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:event:kinesis/shop-prod-clicks",
+      "type": "entry",
+      "label": "event kinesis/shop-prod-clicks",
+      "repo": "ledger",
+      "file": "infra/ledger.yaml",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "key": "kinesis/shop-prod-clicks",
+        "by": "mapping",
+        "declaredAs": "infra/ledger.Resources.Clicks",
+        "deployedBy": "cloudformation",
+        "changesOf": "stream",
+        "name": "shop-prod-clicks",
+        "function": "shop-ledger-tally",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:ledger:invoke:shop-ledger-tally",
+      "type": "entry",
+      "label": "shop-ledger-tally",
+      "repo": "ledger",
+      "file": "infra/ledger.yaml",
+      "line": 15,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-ledger-tally",
+        "deployedBy": "cloudformation",
+        "name": "shop-ledger-tally",
+        "runtime": "nodejs20.x",
+        "declaredAs": "infra/ledger.Resources.Tally",
+        "logicalId": "Tally",
+        "handler": "tally.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{Records:unknown[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:shop-prod-ship",
+      "type": "entry",
+      "label": "shop-prod-ship",
+      "repo": "orders",
+      "file": "templates/orders.yaml.j2",
+      "line": 30,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-prod-ship",
+        "deployedBy": "cloudformation",
+        "name": "shop-prod-ship",
+        "runtime": "nodejs20.x",
+        "declaredAs": "templates/orders.yaml.Resources.Ship",
+        "logicalId": "Ship",
+        "handler": "ship.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "ALERTS_TOPIC_ARN": {
+            "written": "!Sub ...",
+            "value": "shop-prod-alerts",
+            "kind": "topic"
+          },
+          "BUILD": {
+            "written": "a value not known from the files",
+            "unread": "it is what !rcmd git rev-parse --short HEAD prints, a command sceptre runs when the stack is launched"
+          },
+          "COLOUR": {
+            "written": "a value not known from the files",
+            "unread": "it is written differently as {% if environment_variable.CANARY %} goes, which the files do not decide"
+          },
+          "JOBS_QUEUE_URL": {
+            "written": "!Sub ...",
+            "value": "shop-prod-jobs",
+            "kind": "queue"
+          },
+          "OWNER": {
+            "written": "\"orders-team\"",
+            "value": "orders-team"
+          },
+          "REGION_NAME": {
+            "written": "\"eu-west-1\"",
+            "value": "eu-west-1"
+          },
+          "TEAM": {
+            "written": "\"shop\"",
+            "value": "shop"
+          }
+        },
+        "reads": {
+          "": "{id:string;late?:false|true}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:platform:invoke:shop-prod-jobs",
+      "type": "entry",
+      "label": "shop-prod-jobs",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 41,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-prod-jobs",
+        "deployedBy": "terraform",
+        "name": "shop-prod-jobs",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.jobs",
+        "handler": "jobs.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:platform:invoke:shop-prod-page",
+      "type": "entry",
+      "label": "shop-prod-page",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 67,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-prod-page",
+        "deployedBy": "terraform",
+        "name": "shop-prod-page",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.alerts",
+        "handler": "page.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SNSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:platform:invoke:shop-prod-replay",
+      "type": "entry",
+      "label": "shop-prod-replay",
+      "repo": "platform",
+      "file": "infra/main.tf",
+      "line": 54,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-prod-replay",
+        "deployedBy": "terraform",
+        "name": "shop-prod-replay",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.replay",
+        "handler": "replay.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stock:invoke:shop-stock-count",
+      "type": "entry",
+      "label": "shop-stock-count",
+      "repo": "stock",
+      "file": "infra/main.tf",
+      "line": 48,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-stock-count",
+        "deployedBy": "terraform",
+        "name": "shop-stock-count",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.count",
+        "handler": "count.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "ALERTS_TOPIC_ARN": {
+            "written": "a value depending on var.secondary",
+            "value": "shop-prod-alerts",
+            "kind": "topic"
+          },
+          "FAILED_QUEUE_URL": {
+            "written": "a value not known from the files",
+            "value": "shop-prod-failed",
+            "kind": "queue"
+          },
+          "JOBS_QUEUE_URL": {
+            "written": "a value not known from the files",
+            "value": "shop-prod-jobs",
+            "kind": "queue"
+          },
+          "SPILL_QUEUE_URL": {
+            "written": "a value not known from the files",
+            "unread": "which queue it names depends on a condition the files do not decide: data.aws_ssm_parameter.prefix.value is known only once it has been created"
+          }
+        },
+        "reads": {
+          "": "{shelves:{id:string;empty:boolean;failed:boolean}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "ledger#src/tally.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "ledger",
+      "file": "src/tally.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:unknown[]}"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "orders#src/ship.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{id:string;late?:false|true}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "platform#src/jobs.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "platform",
+      "file": "src/jobs.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "platform#src/page.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "platform",
+      "file": "src/page.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SNSEvent"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "platform#src/replay.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "platform",
+      "file": "src/replay.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "producer:audit#lib/audit-stack.ts:shop-audit/Index/KinesisEventSource:shop-audit/Clicks/onFailure",
+      "type": "producer",
+      "label": "message sqs/shop-prod-failed",
+      "repo": "audit",
+      "file": "lib/audit-stack.ts",
+      "line": 33,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "shop-audit/Index/KinesisEventSource:shop-audit/Clicks/onFailure",
+        "deployedBy": "cdk",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "producer:audit#lib/audit-stack.ts:shop-audit/Sampled/onFailure",
+      "type": "producer",
+      "label": "message sns/shop-prod-alerts",
+      "repo": "audit",
+      "file": "lib/audit-stack.ts",
+      "line": 41,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "shop-audit/Sampled/onFailure",
+        "deployedBy": "cdk",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "producer:ledger#infra/ledger.yaml:infra/ledger.Resources.Clicks.DestinationConfig.OnFailure",
+      "type": "producer",
+      "label": "message sqs/shop-prod-failed",
+      "repo": "ledger",
+      "file": "infra/ledger.yaml",
+      "line": 33,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "deployment",
+        "by": "destination",
+        "declaredAs": "infra/ledger.Resources.Clicks.DestinationConfig.OnFailure",
+        "deployedBy": "cloudformation",
+        "when": "failure"
+      }
+    },
+    {
+      "id": "producer:orders#src/ship.ts:10:34",
+      "type": "producer",
+      "label": "message sns/shop-prod-alerts",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 10,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "ALERTS_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:orders#src/ship.ts:9:9",
+      "type": "producer",
+      "label": "message sqs/shop-prod-jobs",
+      "repo": "orders",
+      "file": "src/ship.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "JOBS_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{id:string;late?:false|true}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:stock#src/count.ts:10:11",
+      "type": "producer",
+      "label": "message sqs/shop-prod-jobs",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 10,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "JOBS_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:stock#src/count.ts:11:29",
+      "type": "producer",
+      "label": "message sqs/shop-prod-failed",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 11,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "FAILED_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:stock#src/count.ts:12:29",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 12,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "unresolved",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "SPILL_QUEUE_URL",
+                "forms": [
+                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:stock#src/count.ts:13:28",
+      "type": "producer",
+      "label": "message sns/shop-prod-alerts",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 13,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "ALERTS_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:audit",
+      "type": "repo",
+      "label": "audit",
+      "repo": "audit",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "imports": [
+          {
+            "key": "parameter:/shop/clicks",
+            "file": "lib/audit-stack.ts",
+            "line": 24,
+            "what": "shop-audit/Clicks",
+            "kinds": [
+              "stream"
+            ],
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/failed",
+            "file": "lib/audit-stack.ts",
+            "line": 25,
+            "what": "shop-audit/Failed",
+            "kinds": [
+              "queue"
+            ],
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/clicks",
+            "file": "lib/audit-stack.ts",
+            "line": 41,
+            "what": "what shop-audit/Sampled reads",
+            "kinds": [
+              "stream",
+              "table"
+            ],
+            "from": "platform"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "imports": [
+          {
+            "key": "parameter:/shop/clicks",
+            "file": "infra/ledger.yaml",
+            "line": 26,
+            "what": "what infra/ledger.Resources.Clicks reads",
+            "kinds": [
+              "stream",
+              "table"
+            ],
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/failed",
+            "file": "infra/ledger.yaml",
+            "line": 33,
+            "what": "where infra/ledger.Resources.Clicks hands the batches it gives up on",
+            "kinds": [
+              "queue",
+              "topic"
+            ],
+            "from": "platform"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 1,
+            "@aws-sdk/client-sns": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:platform",
+      "type": "repo",
+      "label": "platform",
+      "repo": "platform",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "parameter:/shop/clicks"
+            ],
+            "address": "aws_ssm_parameter.clicks",
+            "file": "infra/main.tf",
+            "line": 82,
+            "kind": "stream",
+            "value": "shop-prod-clicks",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "parameter:/shop/failed"
+            ],
+            "address": "aws_ssm_parameter.failed",
+            "file": "infra/main.tf",
+            "line": 88,
+            "kind": "queue",
+            "value": "shop-prod-failed",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "parameter:/shop/prefix"
+            ],
+            "address": "aws_ssm_parameter.prefix",
+            "file": "infra/main.tf",
+            "line": 94,
+            "text": "shop",
+            "deployedBy": "terraform"
+          },
+          {
+            "keys": [
+              "parameter:/shop/stage"
+            ],
+            "address": "aws_ssm_parameter.stage",
+            "file": "infra/main.tf",
+            "line": 100,
+            "text": "prod",
+            "deployedBy": "terraform"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 3,
+            "@aws-sdk/client-sns": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "imports": [
+          {
+            "key": "parameter:/shop/prefix",
+            "file": "infra/main.tf",
+            "line": 48,
+            "what": "the value of ALERTS_TOPIC_ARN aws_lambda_function.count is deployed with",
+            "kinds": [
+              "topic"
+            ],
+            "as": "name",
+            "within": "shop-prod-alerts",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/stage",
+            "file": "infra/main.tf",
+            "line": 48,
+            "what": "the value of ALERTS_TOPIC_ARN aws_lambda_function.count is deployed with",
+            "kinds": [
+              "topic"
+            ],
+            "as": "name",
+            "within": "shop-prod-alerts",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/prefix",
+            "file": "infra/main.tf",
+            "line": 48,
+            "what": "the value of FAILED_QUEUE_URL aws_lambda_function.count is deployed with",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "within": "shop-prod-failed",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/stage",
+            "file": "infra/main.tf",
+            "line": 48,
+            "what": "the value of FAILED_QUEUE_URL aws_lambda_function.count is deployed with",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "within": "shop-prod-failed",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/prefix",
+            "file": "infra/main.tf",
+            "line": 48,
+            "what": "the value of JOBS_QUEUE_URL aws_lambda_function.count is deployed with",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "within": "shop-prod-jobs",
+            "from": "platform"
+          },
+          {
+            "key": "parameter:/shop/stage",
+            "file": "infra/main.tf",
+            "line": 48,
+            "what": "the value of JOBS_QUEUE_URL aws_lambda_function.count is deployed with",
+            "kinds": [
+              "queue"
+            ],
+            "as": "name",
+            "within": "shop-prod-jobs",
+            "from": "platform"
+          }
+        ]
+      }
+    },
+    {
+      "id": "stock#src/count.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/count.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{shelves:{id:string;empty:boolean;failed:boolean}[]}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:kinesis/shop-prod-clicks",
+      "to": "consumer:audit#lib/audit-stack.ts:shop-audit/Index/KinesisEventSource:shop-audit/Clicks",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 33,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:kinesis/shop-prod-clicks",
+      "to": "consumer:audit#lib/audit-stack.ts:shop-audit/Sampled",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 41,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:kinesis/shop-prod-clicks",
+      "to": "consumer:ledger#infra/ledger.yaml:infra/ledger.Resources.Clicks",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/ledger.yaml",
+      "line": 26,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sns/shop-prod-alerts",
+      "to": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 75,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-prod-failed",
+      "to": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.failed",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 62,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/shop-prod-jobs",
+      "to": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 49,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:audit#lib/audit-stack.ts:shop-audit/Index/KinesisEventSource:shop-audit/Clicks",
+      "to": "entry:audit:event:kinesis/shop-prod-clicks",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 33,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:audit#lib/audit-stack.ts:shop-audit/Sampled",
+      "to": "entry:audit:event:kinesis/shop-prod-clicks",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 41,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:ledger#infra/ledger.yaml:infra/ledger.Resources.Clicks",
+      "to": "entry:ledger:event:kinesis/shop-prod-clicks",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/ledger.yaml",
+      "line": 26,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.failed",
+      "to": "entry:platform:invoke:shop-prod-replay",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 62,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:platform#infra/main.tf:aws_lambda_event_source_mapping.jobs",
+      "to": "entry:platform:invoke:shop-prod-jobs",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 49,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:platform#infra/main.tf:aws_sns_topic_subscription.alerts",
+      "to": "entry:platform:invoke:shop-prod-page",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 75,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:audit:event:kinesis/shop-prod-clicks",
+      "to": "audit#src/index-audit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index-audit.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:audit:event:kinesis/shop-prod-clicks",
+      "to": "entry:audit:invoke:shop-audit-sample",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 41,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:audit:event:kinesis/shop-prod-clicks",
+      "to": "producer:audit#lib/audit-stack.ts:shop-audit/Index/KinesisEventSource:shop-audit/Clicks/onFailure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 33,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:audit:event:kinesis/shop-prod-clicks",
+      "to": "producer:audit#lib/audit-stack.ts:shop-audit/Sampled/onFailure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 41,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:audit:invoke:shop-audit-index",
+      "to": "audit#src/index-audit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index-audit.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:audit:invoke:shop-audit-sample",
+      "to": "audit#src/sample-audit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/sample-audit.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:ledger:event:kinesis/shop-prod-clicks",
+      "to": "ledger#src/tally.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/tally.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:ledger:event:kinesis/shop-prod-clicks",
+      "to": "producer:ledger#infra/ledger.yaml:infra/ledger.Resources.Clicks.DestinationConfig.OnFailure",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "infra/ledger.yaml",
+      "line": 33,
+      "meta": {
+        "via": "deployment",
+        "when": "failure"
+      }
+    },
+    {
+      "from": "entry:ledger:invoke:shop-ledger-tally",
+      "to": "ledger#src/tally.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/tally.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:orders:invoke:shop-prod-ship",
+      "to": "orders#src/ship.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:platform:invoke:shop-prod-jobs",
+      "to": "platform#src/jobs.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:platform:invoke:shop-prod-page",
+      "to": "platform#src/page.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/page.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:platform:invoke:shop-prod-replay",
+      "to": "platform#src/replay.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/replay.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:stock:invoke:shop-stock-count",
+      "to": "stock#src/count.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 8
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "config_key:orders#ALERTS_TOPIC_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 10,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-prod-ship",
+            "written": "!Sub ...",
+            "value": "shop-prod-alerts"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "config_key:orders#JOBS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 9,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-prod-ship",
+            "written": "!Sub ...",
+            "value": "shop-prod-jobs"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "producer:orders#src/ship.ts:10:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 10
+    },
+    {
+      "from": "orders#src/ship.ts:handler",
+      "to": "producer:orders#src/ship.ts:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 9
+    },
+    {
+      "from": "producer:audit#lib/audit-stack.ts:shop-audit/Index/KinesisEventSource:shop-audit/Clicks/onFailure",
+      "to": "channel:sqs/shop-prod-failed",
+      "type": "emits",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 33,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:audit#lib/audit-stack.ts:shop-audit/Sampled/onFailure",
+      "to": "channel:sns/shop-prod-alerts",
+      "type": "emits",
+      "confidence": "static",
+      "file": "lib/audit-stack.ts",
+      "line": 41,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:ledger#infra/ledger.yaml:infra/ledger.Resources.Clicks.DestinationConfig.OnFailure",
+      "to": "channel:sqs/shop-prod-failed",
+      "type": "emits",
+      "confidence": "static",
+      "file": "infra/ledger.yaml",
+      "line": 33,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "producer:orders#src/ship.ts:10:34",
+      "to": "channel:sns/shop-prod-alerts",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 10,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ALERTS_TOPIC_ARN"
+        ],
+        "functions": [
+          "shop-prod-ship"
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#src/ship.ts:9:9",
+      "to": "channel:sqs/shop-prod-jobs",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/ship.ts",
+      "line": 9,
+      "params": [
+        "{id:string;late?:false|true}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "JOBS_QUEUE_URL"
+        ],
+        "functions": [
+          "shop-prod-ship"
+        ]
+      }
+    },
+    {
+      "from": "producer:stock#src/count.ts:10:11",
+      "to": "channel:sqs/shop-prod-jobs",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 10,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "JOBS_QUEUE_URL"
+        ],
+        "functions": [
+          "shop-stock-count"
+        ]
+      }
+    },
+    {
+      "from": "producer:stock#src/count.ts:11:29",
+      "to": "channel:sqs/shop-prod-failed",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 11,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "FAILED_QUEUE_URL"
+        ],
+        "functions": [
+          "shop-stock-count"
+        ]
+      }
+    },
+    {
+      "from": "producer:stock#src/count.ts:13:28",
+      "to": "channel:sns/shop-prod-alerts",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 13,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ALERTS_TOPIC_ARN"
+        ],
+        "functions": [
+          "shop-stock-count"
+        ]
+      }
+    },
+    {
+      "from": "stock#src/count.ts:handler",
+      "to": "config_key:stock#ALERTS_TOPIC_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 13,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-stock-count",
+            "written": "a value depending on var.secondary",
+            "value": "shop-prod-alerts"
+          }
+        ]
+      }
+    },
+    {
+      "from": "stock#src/count.ts:handler",
+      "to": "config_key:stock#FAILED_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 11,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-stock-count",
+            "written": "a value not known from the files",
+            "value": "shop-prod-failed"
+          }
+        ]
+      }
+    },
+    {
+      "from": "stock#src/count.ts:handler",
+      "to": "config_key:stock#JOBS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 10,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-stock-count",
+            "written": "a value not known from the files",
+            "value": "shop-prod-jobs"
+          }
+        ]
+      }
+    },
+    {
+      "from": "stock#src/count.ts:handler",
+      "to": "config_key:stock#SPILL_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 12,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-stock-count",
+            "written": "a value not known from the files"
+          }
+        ]
+      }
+    },
+    {
+      "from": "stock#src/count.ts:handler",
+      "to": "producer:stock#src/count.ts:10:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 10,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 9
+        }
+      }
+    },
+    {
+      "from": "stock#src/count.ts:handler",
+      "to": "producer:stock#src/count.ts:11:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 11,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 9
+        }
+      }
+    },
+    {
+      "from": "stock#src/count.ts:handler",
+      "to": "producer:stock#src/count.ts:12:29",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/count.ts",
+      "line": 12,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 9
+        }
+      }
+    },
+    {
+      "from": "stock#src/count.ts:handler",
+      "to": "producer:stock#src/count.ts:13:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/count.ts",
+      "line": 13,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 9
+        }
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#SNSEvent": {
+      "name": "SNSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "17e8e52b989c5abe",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "platform",
+      "file": "infra/main.tf",
+      "line": 24,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "kinesis/shop-prod-clicks is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:kinesis/shop-prod-clicks"
+    },
+    {
+      "file": "src/count.ts",
+      "line": 9,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 4 publishes once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "stock#src/count.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 9
+        },
+        "reaches": [
+          {
+            "id": "producer:stock#src/count.ts:10:11",
+            "type": "producer",
+            "words": "publish"
+          },
+          {
+            "id": "producer:stock#src/count.ts:11:29",
+            "type": "producer",
+            "words": "publish"
+          },
+          {
+            "id": "producer:stock#src/count.ts:12:29",
+            "type": "producer",
+            "words": "publish"
+          },
+          {
+            "id": "producer:stock#src/count.ts:13:28",
+            "type": "producer",
+            "words": "publish"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 1,
+        "entries": [
+          "entry:stock:invoke:shop-stock-count"
+        ]
+      },
+      "service": "stock"
+    },
+    {
+      "service": "stock",
+      "file": "src/count.ts",
+      "line": 12,
+      "reason": "environment-value-unread",
+      "message": "the call at src/count.ts:12 sends to the value of SPILL_QUEUE_URL, which shop-stock-count is deployed with as a value not known from the files, and that is not read: which queue it names depends on a condition the files do not decide: data.aws_ssm_parameter.prefix.value is known only once it has been created",
+      "hint": "Write the value so the files settle it: a literal, or a reference to the queue, topic or bus the deployment declares.",
+      "symbol": "producer:stock#src/count.ts:12:29",
+      "meta": {
+        "function": "entry:stock:invoke:shop-stock-count",
+        "variable": "SPILL_QUEUE_URL"
+      }
+    }
+  ]
+}

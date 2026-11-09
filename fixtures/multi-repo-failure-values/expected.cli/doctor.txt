@@ -1,0 +1,26 @@
+unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 1 to act on · missed: 1 · notes: 0 · findings: 2
+  2 findings: 1 likely N+1, 1 stream nothing writes to
+  environment-value-unread: 1 row
+    Write the value so the files settle it: a literal, or a reference to the queue, topic or bus the deployment declares.
+      stock/src/count.ts:12  the call at src/count.ts:12 sends to the value of SPILL_QUEUE_URL, which shop-stock-count is deployed with as a value not known from the files, and that is not read: which queue it names depends on a condition the files do not decide: data.aws_ssm_parameter.prefix.value is known only once it has been created
+  query-in-loop (finding): 1 row
+    Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.
+      stock/src/count.ts:9  A `for-of` loop runs 4 publishes once per item: likely N+1.  (1 way in)
+  stream-no-writer (finding): 1 row
+    Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.
+      platform/infra/main.tf:24  kinesis/shop-prod-clicks is read by a function and nothing in the configured services writes to it
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 9 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 1 now, +1)
+  no baseline at <root>/fixtures/multi-repo-failure-values/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  environment-value-unread: 0 → 1 (+1)
+  new (1):
+    stock|src/count.ts|producer:stock#src/count.ts:12:29|environment-value-unread

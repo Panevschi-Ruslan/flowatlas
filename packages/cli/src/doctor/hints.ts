@@ -302,6 +302,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   // Modules and globals (extractor-nestjs)
   'module-import-dynamic': () =>
     'Import a module class, or X.forRoot(...); a computed import cannot be followed.',
+  'module-import-not-installed': (row) =>
+    `The module is a class of ${typeof row.meta?.['package'] === 'string' ? row.meta['package'] : 'a package'}, which is not installed, so what it provides and exports is not read. Install the dependencies where the map is built; nothing in the code needs to change.`,
   'module-controllers-unread': () =>
     'List the controller classes in the module, or a name that leads to an array of them in this repository. A spread of an array built elsewhere reads as no controllers at all, and which application serves an address is read from the module that declares its controller.',
   'module-providers-unread': () =>

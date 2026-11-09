@@ -187,6 +187,54 @@ resource "aws_cloudwatch_event_target" "alerts" {
     ]);
   });
 
+  it('reads a name with %{ if } and %{ for } around values other deployments publish part by part, every way a condition nothing decides goes (P264)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'flowatlas-shared-values-'));
+    scratch.push(dir);
+    writeFileSync(join(dir, 'queue.tftpl'), '%{ if kind == "sqs" }https://sqs.eu-west-1.amazonaws.com/1/${prefix}-jobs%{ endif }');
+    writeFileSync(
+      join(dir, 'main.tf'),
+      `${data('prefix', '/shop/prefix')}${data('stage', '/shop/stage')}
+variable "region" {
+  type = string
+}
+variable "blue" {
+  type = bool
+}
+locals {
+  parts = ["jobs"]
+}
+resource "aws_lambda_function" "tally" {
+  function_name = "shop-tally"
+  runtime       = "nodejs20.x"
+  handler       = "tally.handler"
+  filename      = "tally.zip"
+  environment {
+    variables = {
+      DECIDED   = "arn:aws:sqs:eu-west-1:1:%{ if true }\${data.aws_ssm_parameter.prefix.value}%{ else }none%{ endif }-%{ for part in local.parts }\${part}%{ endfor }"
+      ASIDE     = "arn:aws:sqs:%{ if var.blue }us-east-1%{ else }eu-west-1%{ endif }:1:\${data.aws_ssm_parameter.prefix.value}-\${data.aws_ssm_parameter.stage.value}-audit"
+      UNDECIDED = "arn:aws:sqs:eu-west-1:1:\${data.aws_ssm_parameter.prefix.value}-%{ if var.blue }blue%{ else }green%{ endif }"
+      FROM_FILE = templatefile("\${path.module}/queue.tftpl", { kind = "sqs", prefix = data.aws_ssm_parameter.prefix.value })
+    }
+  }
+}
+`,
+    );
+    const deployment = terraformReader.read({ repoDir: dir, config: parseConfig({}) });
+    const prefix = importedName('parameter:/shop/prefix');
+    const stage = importedName('parameter:/shop/stage');
+    const environment = deployment.functions[0]?.environment ?? {};
+    expect(environment['DECIDED']?.names).toEqual({ kind: 'queue', name: `${prefix}-jobs` });
+    expect(environment['ASIDE']?.names).toEqual({ kind: 'queue', name: `${prefix}-${stage}-audit` });
+    expect(environment['UNDECIDED']?.names).toBeUndefined();
+    expect(environment['UNDECIDED']?.unread?.text).toMatch(/which queue it names depends on a condition the files do not decide/);
+    expect(environment['FROM_FILE']?.names).toEqual({ kind: 'queue', name: `${prefix}-jobs` });
+    expect(deployment.imports?.filter((site) => site.within !== undefined).map((site) => [site.key, site.within])).toEqual([
+      ['parameter:/shop/prefix', `${prefix}-${stage}-audit`],
+      ['parameter:/shop/stage', `${prefix}-${stage}-audit`],
+      ['parameter:/shop/prefix', `${prefix}-jobs`],
+    ]);
+  });
+
   it('publishes an output of a configuration whose state another reads, as what it names', () => {
     const deployment = readHcl(`
 terraform {

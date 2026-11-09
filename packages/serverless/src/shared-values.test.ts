@@ -31,3 +31,17 @@ describe('two values other deployments publish in one string (P259)', () => {
     ]);
   });
 });
+
+describe("a stream event's failure destination (P264)", () => {
+  it('hands what a stream event gives up on to the destination it names, of the kind its type says', () => {
+    const deployment = read(
+      `${PROVIDER}functions:\n  tally:\n    handler: src/tally.handler\n    events:\n      - stream:\n          type: kinesis\n          arn: arn:aws:kinesis:eu-west-1:1:stream/shop-clicks\n          destinations:\n            onFailure:\n              arn: \${cf:platform.FailedTopic}\n              type: sns\n      - stream:\n          type: kinesis\n          arn: arn:aws:kinesis:eu-west-1:1:stream/shop-views\n          destinations:\n            onFailure: arn:aws:sqs:eu-west-1:1:shop-failed\n`,
+    );
+    const failures = deployment.deliveries.filter((delivery) => delivery.by === 'destination').map((delivery) => [delivery.address, delivery.from, delivery.to]);
+    expect(failures).toEqual([
+      ['functions.tally.events[0].destinations.onFailure', { kind: 'outcome', when: 'failure', of: { delivery: 'functions.tally.events[0]' } }, { kind: 'topic', name: importedName(stackOutputKey('platform', 'FailedTopic')) }],
+      ['functions.tally.events[1].destinations.onFailure', { kind: 'outcome', when: 'failure', of: { delivery: 'functions.tally.events[1]' } }, { kind: 'queue', name: 'shop-failed' }],
+    ]);
+    expect(deployment.imports).toEqual([expect.objectContaining({ key: stackOutputKey('platform', 'FailedTopic'), kinds: ['topic'] })]);
+  });
+});

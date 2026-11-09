@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:03:29.644Z",
+  "builtAt": "2026-11-09T11:26:18.396Z",
   "configHash": "57445902addd",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1504,
       "packages": {
         "name": "cluster-port-joins-audit",
         "runtime": [
@@ -26,11 +26,11 @@
       "repo": "./billing",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 7,
-      "edges": 2,
+      "nodes": 8,
+      "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1715,
       "packages": {
         "name": "cluster-port-joins-billing",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 21,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1500,
       "packages": {
         "name": "cluster-port-joins-jobs",
         "runtime": [
@@ -64,11 +64,11 @@
       "repo": "./ledger",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 10,
-      "edges": 3,
+      "nodes": 11,
+      "edges": 4,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1743,
       "packages": {
         "name": "cluster-port-joins-ledger",
         "runtime": [
@@ -88,7 +88,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1442,
       "packages": {
         "name": "cluster-port-joins-notify",
         "runtime": [
@@ -106,7 +106,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1551,
       "packages": {
         "name": "cluster-port-joins-orders",
         "runtime": [
@@ -124,7 +124,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1511,
       "packages": {
         "name": "cluster-port-joins-search",
         "runtime": [
@@ -142,7 +142,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1469,
       "packages": {
         "name": "cluster-port-joins-shop",
         "runtime": [
@@ -161,7 +161,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1401,
       "packages": {
         "name": "cluster-port-joins-stock",
         "runtime": [
@@ -243,8 +243,8 @@
     }
   ],
   "totals": {
-    "nodes": 48,
-    "edges": 30,
+    "nodes": 50,
+    "edges": 32,
     "types": 3,
     "missed": 2,
     "sites": 2,

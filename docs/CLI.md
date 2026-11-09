@@ -3365,7 +3365,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | The project's own extraction patterns | `pattern-file-unread`, `pattern-not-expressible` (a rule refused, the part named), `pattern-ambiguous` (two rules on one call, neither read), `pattern-shadowed` (info: a written description reads the call), `pattern-unmatched` (info: a rule nothing matches) |
 | Types | `type-unresolved`, `type-generic-uninstantiated`, `type-depth-exceeded`, `di-type-unresolved`, `decorator-arg-dynamic` |
 | Injection and calls | `di-token-unknown`, `di-token-ambiguous`, `inject-token-unresolved`, `call-dynamic-receiver`, `call-module-ref`, `call-through-token`, `global-wrapper-dynamic` |
-| NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `middleware-route-dynamic`, `fails-filter-unread`, `fails-interceptor-unread` |
+| NestJS applications | `bootstrap-not-found`, `application-root-unread`, `module-controllers-unread`, `module-providers-unread`, `module-import-dynamic`, `module-import-not-installed`, `middleware-route-dynamic`, `fails-filter-unread`, `fails-interceptor-unread` |
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread` |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-socket` (info), `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread` |
@@ -7283,6 +7283,59 @@ stack's name unread rather than taking the word for it. A pipeline expression
 command in a pipeline and a script is one deployment
 (`fixtures/multi-repo-deploy-values`).
 
+#### Failure destinations of every mapping, Jinja statements, sceptre's resolvers and Terraform directives
+
+**A mapping's failure destination, wherever it is written (P264).** A
+CloudFormation or SAM `AWS::Lambda::EventSourceMapping`'s
+`DestinationConfig.OnFailure.Destination`, a SAM stream event's
+`DestinationConfig.OnFailure` (of the kind its `Type: SQS | SNS | S3` says), a
+Serverless stream event's `destinations.onFailure` (an ARN, or `{ arn, type }`)
+and the CDK's `onFailure` of a stream event source or an `EventSourceMapping`
+(`new SqsDlq(queue)`, `new SnsDlq(topic)`, `new S3OnFailureDestination(bucket)`,
+whose class says the kind) hand what the mapping gives up on to the
+destination, as Terraform's `destination_config` does. Where the mapping reads
+a value another deployment publishes and the destination is one too, the
+destination is read once per kind under each of the mapping's readings, and
+the linker keeps the one under the reading kept, as it does for Terraform
+(P261). A bucket is a destination nothing is delivered to, and is said at
+`info`.
+
+**Jinja statements and filters in sceptre's files.** Every configuration file
+and `.j2` template is rendered with `{% if %}` / `{% elif %}` / `{% else %}`,
+`{% for %}` over a list or a mapping's `items()` (with `loop`), `{% set %}`,
+`~`, `+`, comparisons, `and` / `or` / `not`, `in`, `is defined`, `a if c else b`,
+and the filters `default` (`d`), `lower`, `upper`, `trim`, `replace`, `join`,
+`int`, `string`, `title`, `capitalize`, `length` and `tojson`; `-` trims the
+space beside a tag. A condition on a value the files do not give is rendered
+both ways, up to 16 ways in all, and only what every way writes alike is read:
+a parameter the ways write differently is a value not known, naming the
+condition. A loop over a value not given, a filter, a test or a statement not
+listed here leave the file read as before - a configuration file with a
+statement is passed over, a template not read. `{{ stack_group_config.x }}` is
+the configuration of the groups above the file, merged down, as sceptre
+renders it; `sceptre --merge-vars` merges its var files key by key at every
+depth rather than replacing their top-level keys.
+
+**sceptre's other resolvers.** `!file <path>` is the contents of a file of
+the project (a `.yaml` or `.json` one read as YAML), `!stack_attr <field>`
+another field of the stack's merged configuration (`parameters.Prefix`,
+`sceptre_user_data.stage`), `!join [sep, [...]]`, `!split [sep, value]`,
+`!select [index, list]` and `!sub [format, { name: value }]` the join, split,
+pick and format of what they are handed - a stack output among the parts kept
+in place, so a name built of it and text is written by the linker once the
+output is joined - and `!no_value` leaves the parameter to the template's
+`Default`. `!rcmd` and `!cmd` run a command when the stack is launched, and
+are said as a value not known.
+
+**Terraform template directives around an import.** `%{ if }` / `%{ else }` and
+`%{ for }` in a string template, or in a file `templatefile` renders, are read
+part by part as an interpolation is: a condition the files decide renders its
+branch, a loop over a list they settle each item, with every value another
+deployment publishes inside kept in place. A condition they do not decide is
+read both ways: a name every way writes alike is read (a region chosen by
+`var.secondary` beside the name), and one the ways write differently is not -
+the value says which condition decides it (`fixtures/multi-repo-failure-values`).
+
 ### Procedures
 
 A tRPC server's ways in are not routes: each procedure is a key in a tree of
@@ -7526,6 +7579,15 @@ link's address names:
   are followed to the module each is; a condition read when the application
   runs (`process.env.MAIL`) stays `module-import-dynamic`
   (`fixtures/nest-followed-tokens`).
+- **A module of a package that is not installed** (P264). An `imports:` entry
+  whose class is imported from a package the repository has not installed
+  (`import { BullModule } from '@nestjs/bullmq'`) is no computed import: it is
+  read as the module its import names, of the package its specifier names,
+  as an installed package's module is - so the tokens a known module provides
+  (`ClientsModule.register([{ name: 'EVENTS' }])`) are provided - and said by a
+  `module-import-not-installed` row naming the package, since its class is not
+  there to read. `module-import-dynamic` is kept for an import computed when
+  the application runs.
 - **The address.** Read by the server's own address reading, the one every
   request between services gets: `process.env.ORDERS_URL`, a configuration
   service's `get('ORDERS_URL')`, a constant. A setting goes to the service that

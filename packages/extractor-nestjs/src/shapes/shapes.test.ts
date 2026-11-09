@@ -65,10 +65,11 @@ const reasons = async (builtInShapes?: boolean) =>
   (await read(builtInShapes)).unresolved.map((row) => row.reason).sort();
 
 describe('built-in shapes for a Nest service with nothing installed', () => {
-  it('reports the client module and its token as unread without them', async () => {
-    expect(await reasons(false)).toEqual(
-      expect.arrayContaining(['di-token-unknown', 'module-import-dynamic']),
-    );
+  it('reads the client module by its import alone without them, and says so (P264)', async () => {
+    const rows = await reasons(false);
+    expect(rows).toEqual(expect.arrayContaining(['module-import-not-installed', 'type-unresolved']));
+    expect(rows).not.toContain('module-import-dynamic');
+    expect(rows).not.toContain('di-token-unknown');
   });
 
   it('resolves the registered client token and the stream it answers with', async () => {

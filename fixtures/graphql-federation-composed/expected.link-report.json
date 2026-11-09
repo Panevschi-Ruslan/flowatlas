@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-05T22:21:37.706Z",
+  "builtAt": "2026-11-09T11:26:48.976Z",
   "configHash": "7c9b844b735a",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 5,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 941,
       "packages": {
         "name": "composed-customers",
         "runtime": [
@@ -28,11 +28,11 @@
       "repo": "./gateway",
       "type": "nestjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 3,
-      "edges": 0,
+      "nodes": 4,
+      "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 1127,
       "packages": {
         "name": "composed-gateway",
         "runtime": [
@@ -55,7 +55,7 @@
       "edges": 1,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 923,
       "packages": {
         "name": "composed-kiosk",
         "runtime": [
@@ -75,7 +75,7 @@
       "edges": 6,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 947,
       "packages": {
         "name": "composed-orders",
         "runtime": [
@@ -96,7 +96,7 @@
       "edges": 0,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 14
+      "durationMs": 7
     },
     {
       "name": "web",
@@ -107,7 +107,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 0,
+      "durationMs": 904,
       "packages": {
         "name": "composed-web",
         "runtime": [
@@ -194,8 +194,8 @@
     }
   ],
   "totals": {
-    "nodes": 33,
-    "edges": 29,
+    "nodes": 34,
+    "edges": 30,
     "types": 2,
     "missed": 6,
     "sites": 6,

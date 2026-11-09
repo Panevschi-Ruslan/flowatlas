@@ -55,7 +55,8 @@ export interface ModuleInfo {
   dynamicProviders?: ProviderRegistration[];
   exports: string[];
   /** Modules imported, resolved where possible. */
-  imports: Array<{ id: string; declaration?: ClassDeclaration; kind: ModuleKind; name: string }>;
+  /** `stated`: known by its import alone, its package not installed (P264). */
+  imports: Array<{ id: string; declaration?: ClassDeclaration; kind: ModuleKind; name: string; stated?: true }>;
 }
 
 /** Modules of the repository, plus the provider registrations they declare. */
