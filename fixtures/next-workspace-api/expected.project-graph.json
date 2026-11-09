@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T12:58:59.867Z",
+  "builtAt": "2026-11-09T16:50:32.762Z",
   "services": [
     {
       "name": "web",
@@ -25,8 +25,7 @@
         "adapter": "nextjs-routes",
         "registration": "pages/api",
         "middlewareRead": true,
-        "handlerVia": "unread",
-        "handlerBodyRead": false
+        "handlerVia": "call"
       }
     },
     {
@@ -44,8 +43,7 @@
         "adapter": "nextjs-routes",
         "registration": "pages/api",
         "middlewareRead": true,
-        "handlerVia": "unread",
-        "handlerBodyRead": false
+        "handlerVia": "call"
       }
     },
     {
@@ -193,22 +191,57 @@
       }
     },
     {
-      "id": "http_out:web#lib/request.ts:7:26",
+      "id": "http_out:web#components/Session.tsx:4:24",
       "type": "http_out",
-      "label": "GET ?",
+      "label": "POST /api/session/login",
       "repo": "web",
-      "file": "lib/request.ts",
-      "line": 7,
+      "file": "components/Session.tsx",
+      "line": 4,
       "meta": {
-        "method": "GET",
-        "url": null,
-        "path": null,
+        "method": "POST",
+        "url": "/api/session/login",
+        "path": "/api/session/login",
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "headerKeys": [
-          "content-type"
-        ]
+        "originless": true,
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "http_out:web#components/Session.tsx:5:24",
+      "type": "http_out",
+      "label": "GET /api/session/me",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 5,
+      "meta": {
+        "method": "GET",
+        "url": "/api/session/me",
+        "path": "/api/session/me",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "originless": true,
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "http_out:web#components/Session.tsx:6:25",
+      "type": "http_out",
+      "label": "POST /api/session/logout",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 6,
+      "meta": {
+        "method": "POST",
+        "url": "/api/session/logout",
+        "path": "/api/session/logout",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "originless": true,
+        "targetService": "web"
       }
     },
     {
@@ -429,6 +462,25 @@
       }
     },
     {
+      "id": "web#../../packages/api/src/createNextApiHandler.ts:createNextApiHandler",
+      "type": "function",
+      "label": "createNextApiHandler",
+      "repo": "web",
+      "file": "../../packages/api/src/createNextApiHandler.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "router",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
       "id": "web#../../packages/api/src/routers/catalog/_router.ts:shop.catalog.search@4",
       "type": "function",
       "label": "shop.catalog.search@4",
@@ -579,6 +631,28 @@
   ],
   "edges": [
     {
+      "from": "entry:web:http:ALL:/api/trpc/catalog/:param",
+      "to": "web#../../packages/api/src/createNextApiHandler.ts:createNextApiHandler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../../packages/api/src/createNextApiHandler.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:web:http:ALL:/api/trpc/orders/:param",
+      "to": "web#../../packages/api/src/createNextApiHandler.ts:createNextApiHandler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../../packages/api/src/createNextApiHandler.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
       "from": "entry:web:http:GET:/api/session/me",
       "to": "web#app/api/session/me/route.ts:GET",
       "type": "handles",
@@ -637,6 +711,42 @@
       "confidence": "static",
       "file": "../../packages/api/src/routers/orders/_router.ts",
       "line": 5
+    },
+    {
+      "from": "http_out:web#components/Session.tsx:4:24",
+      "to": "entry:web:http:POST:/api/session/login",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "components/Session.tsx",
+      "line": 4,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "http_out:web#components/Session.tsx:5:24",
+      "to": "entry:web:http:GET:/api/session/me",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "components/Session.tsx",
+      "line": 5,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "http_out:web#components/Session.tsx:6:25",
+      "to": "entry:web:http:POST:/api/session/logout",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "components/Session.tsx",
+      "line": 6,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "web"
+      }
     },
     {
       "from": "ui_action:web#components/Orders.tsx:9:13",
@@ -777,6 +887,30 @@
     },
     {
       "from": "web#components/Session.tsx:Session",
+      "to": "http_out:web#components/Session.tsx:4:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 4
+    },
+    {
+      "from": "web#components/Session.tsx:Session",
+      "to": "http_out:web#components/Session.tsx:5:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 5
+    },
+    {
+      "from": "web#components/Session.tsx:Session",
+      "to": "http_out:web#components/Session.tsx:6:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 6
+    },
+    {
+      "from": "web#components/Session.tsx:Session",
       "to": "ui_api_call:web#components/Session.tsx:4:24@7:26",
       "type": "calls",
       "confidence": "static",
@@ -812,18 +946,30 @@
       "returns": "unknown",
       "file": "components/Session.tsx",
       "line": 4
-    },
-    {
-      "from": "web#lib/request.ts:send",
-      "to": "http_out:web#lib/request.ts:7:26",
-      "type": "calls",
-      "confidence": "heuristic",
-      "file": "lib/request.ts",
-      "line": 7
     }
   ],
   "types": {},
   "unresolved": [
+    {
+      "file": "../../packages/api/src/createNextApiHandler.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "AnyRouter",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@trpc/server"
+      },
+      "service": "web"
+    },
+    {
+      "file": "../../packages/api/src/createNextApiHandler.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
     {
       "file": "components/Orders.tsx",
       "line": 4,
@@ -838,34 +984,6 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
-      "service": "web"
-    },
-    {
-      "file": "lib/request.ts",
-      "line": 7,
-      "reason": "dynamic-http-url",
-      "hint": "The address is built at run time. Annotate the call with the service and route it reaches.",
-      "symbol": "fetch(path, {\n    method,\n    headers: { 'content-type': 'application/json' },\n ",
-      "service": "web"
-    },
-    {
-      "file": "pages/api/trpc/catalog/[trpc].ts",
-      "line": 4,
-      "reason": "route-handler-unread",
-      "message": "ALL /api/trpc/catalog/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/catalog/:param.",
-      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
-      "symbol": "ALL /api/trpc/catalog/:param",
-      "adapter": "nextjs-routes",
-      "service": "web"
-    },
-    {
-      "file": "pages/api/trpc/orders/[trpc].ts",
-      "line": 4,
-      "reason": "route-handler-unread",
-      "message": "ALL /api/trpc/orders/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/orders/:param.",
-      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
-      "symbol": "ALL /api/trpc/orders/:param",
-      "adapter": "nextjs-routes",
       "service": "web"
     }
   ]

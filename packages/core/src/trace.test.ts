@@ -15,6 +15,8 @@ import {
   verbParameterOf,
   verbsAtCallers,
   literalChoices,
+  memberBehind,
+  splitAtParameter,
   returnedExpression,
   rootSettingAddress,
   rootSettingKey,
@@ -571,5 +573,46 @@ describe('an argument a caller leaves out', () => {
     expect(of(0)).toEqual(["''", "'/1'"]);
     // No default: a caller that hands nothing hands nothing worth following.
     expect(of(1)).toEqual([]);
+  });
+});
+
+/**
+ * A wrapper that takes its request as one object and its members out where the
+ * parameter is written (P269): `({ url = '', method = 'GET' }) => fetch(url,
+ * { method })`. The address and the verb are each a member of what a caller
+ * hands it, and the default where the caller's object writes none.
+ */
+describe('a member a wrapper takes out of the object it is handed', () => {
+  const source = `
+    declare function fetch(url: string, init?: { method?: string }): Promise<unknown>;
+    declare const elsewhere: { url: string };
+    const request = ({ url = '', method = 'GET' }: { url?: string; method?: string }) => fetch(\`\${url}?x=1\`, { method });
+    const list = () => request({ url: '/api/basket' });
+    const add = () => request({ url: '/api/basket', method: 'POST' });
+    const bare = () => request({});
+    const passed = (options: { url: string; method?: string }) => request(options);
+    const outer = () => passed({ url: '/api/outer', method: 'DELETE' });
+    const unknown = () => request(elsewhere);
+  `;
+  const fetchCall = (file: SourceFile): CallExpression =>
+    file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'fetch')!;
+
+  it('splits the address at the member and finds each caller\'s, through a wrapper that hands the object on', () => {
+    const file = parse(source);
+    const split = splitAtParameter(fetchCall(file).getArguments()[0]!, { readSetting: () => null })!;
+    expect([split.member?.key, split.before, split.after]).toEqual(['url', '', '?x=1']);
+    const verb = optionVerbOf(fetchCall(file).getArguments()[1]!.asKindOrThrow(SyntaxKind.ObjectLiteralExpression).getProperty('method'))!;
+    expect([verb.key, verb.otherwise]).toEqual(['method', 'GET']);
+    const said = forwardedFrom(split.parameter, undefined, split.member)
+      .calls.map((each) => `${each.argument.getText()} ${optionVerbAlong(verb, each.hops) ?? 'unread'}`)
+      .sort();
+    // `bare` hands an object with no `url`: the default. `unknown` hands one
+    // nobody here wrote, and is not a caller this can draw on.
+    expect(said).toEqual(["'' GET", "'/api/basket' GET", "'/api/basket' POST", "'/api/outer' DELETE"]);
+  });
+
+  it('is a member only of a parameter, not of a value destructured anywhere else', () => {
+    const file = parse(`const { url } = { url: '/x' }; export const u = url;`);
+    expect(memberBehind(file.getDescendantsOfKind(SyntaxKind.Identifier).at(-1)!)).toBeUndefined();
   });
 });

@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>227 fixtures</span>
-    <span>593 snapshot files</span>
+    <span>229 fixtures</span>
+    <span>599 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -370,7 +370,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, wired in Terraform <span class="count" data-total="25">25</span></h2>
+    <h2>Serverless, wired in Terraform <span class="count" data-total="26">26</span></h2>
     <ul>
       <li class="fixture" data-search="eventbridge-terraform serverless, wired in terraform a lending library's circulation service: lambda functions behind an http api that talk to each other over an eventbridge bus.">
         <div class="head">
@@ -395,6 +395,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>Lambda handlers kept in <code>functions/</code>, beside the code they share in <code>src/</code>, which is how a serverless project commonly lays itself out (R170).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="lambda-graphql-handler serverless, wired in terraform a catalog served by a graphql server made into a lambda function, and a scheduled function that sends it an operation (p269).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/lambda-graphql-handler">lambda-graphql-handler</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A catalog served by a GraphQL server made into a Lambda function, and a scheduled function that sends it an operation (P269).</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="lambda-namespace-handlers serverless, wired in terraform the circulation desk of a lending library as lambda functions behind a rest api and two sqs queues, written the way a project that keeps its logic apart from its entry points often is: `src/operations` holds the functions, and each module under `src/handlers` re-exports some of them, in one of the ways a module can (r168).">
         <div class="head">
@@ -1341,7 +1349,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Next.js and Medusa <span class="count" data-total="9">9</span></h2>
+    <h2>Next.js and Medusa <span class="count" data-total="10">10</span></h2>
     <ul>
       <li class="fixture" data-search="medusa-fs-router next.js and medusa a repository whose routes are declared by where its files are, read by the reading every file-system router in this tool shares — medusa v2 in miniature.">
         <div class="head">
@@ -1414,6 +1422,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A Next.js application whose API lives in a workspace package beside it (R179): a tRPC tree split into per-feature routers, served a feature at a time, and a browser wrapper whose verb is a member of the options its callers hand in.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="next-wrapped-pages next.js and medusa a next.js storefront whose `pages/api` files all end the same way, `export default withtracing(handler)`, and whose browser makes every request through one function that takes the request as an object (p269).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/next-wrapped-pages">next-wrapped-pages</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A Next.js storefront whose <code>pages/api</code> files all end the same way, <code>export default withTracing(handler)</code>, and whose browser makes every request through one function that takes the request as an object (P269).</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
     </ul>
   </section>

@@ -670,6 +670,15 @@ handed in the place the factory passes on (R180). Guards on a
 resolver stand in front of its fields as on a controller. The endpoint the
 server answers at (`path` of `GraphQLModule`, `/` for a standalone Apollo
 Server, `/graphql` otherwise) is an ordinary `POST` route carrying the schema.
+A server made into a function a platform invokes - `new ApolloServer({
+resolvers, typeDefs }).createHandler()` from Apollo Server's Lambda, Azure
+Functions, Cloud Functions or micro package, or a server handed to
+`startServerAndCreateLambdaHandler` - answers at no path of its own: a
+deployed function whose handler it is reads as the server (`handlerVia:
+graphql`), and the route the deployment puts in front of that function is the
+endpoint, carrying the schema (P269). A map put together from another map's
+members (`Query: { ...orderResolvers.Query }`) and a resolver handed by its
+name (`{ author }`) are read.
 
 A client's operation is a request to that endpoint, joined to a service by its
 address as every request is, and then each field it selects is joined to that
@@ -4636,6 +4645,22 @@ read it, along the calls the address was followed out through; a request whose
 address is settled where it is written and whose options are still a parameter
 there is not followed further out for its verb.
 
+**A request handed in as one object** (P269) is read at each caller too: a
+wrapper that takes the members it needs out where its parameter is written,
+``({ url = '', method = 'GET', body }: Options) => fetch(`${url}?…`, { method
+})``, is called as ``request({ url: `${basePath}/orders`, method: 'POST' })``,
+and each caller's address is the `url` it writes and its verb the `method` it
+writes or the pattern's default. A caller that hands the object on from a
+parameter of its own is followed further out; an object nothing here wrote, or
+one spreading another that may carry the member, leaves the request at the
+wrapper. A caller written in a method of an object a function hands back
+(`const Api = () => ({ list() { return request(…) } })`) is that function's,
+in the server reader as in the browser reader; a body annotated with
+`@CallsService` or `@flowatlas-calls` keeps its requests, which the annotation
+answers. A name taken out of the settings where it is declared - `const {
+ORDERS_URL = '' } = process.env`, `import.meta.env`, or a settings root - is
+that setting read, with its default.
+
 **Two APIs at one address are two entries.** Where two APIs (REST, HTTP or
 WebSocket) or two load balancers of one deployment serve the same method and
 path, each route is keyed with its API's name, `GET:/status@api:library-loans-api`;
@@ -6630,9 +6655,15 @@ A call handed two or more functions — `firstOf(fromCache, fromTable)` — is n
 wrapper of any of them, because which one runs is not in the call, and stays a
 `function-handler-unread` row naming the call (`fixtures/lambda-wrapped-handlers`).
 The Express, Fastify, Koa and Hono reader follows a route's handler by the same
-rule. The file-system routers (Next.js, Medusa) read a verb exported as a
-wrapper's value as that whole call, so where the function sits among the
-arguments never mattered to them.
+rule, and so do the file-system routers (P269): a verb export - or the pages
+router's default export, `export default withTracing(handler)` - that is a call
+of wrappers handed a function this repository declares is read as that
+function, with each wrapper in front of it as middleware, in the order they run;
+a function written in place inside the wrappers is pointed at where it is
+written; a landing through a wrapper nobody installed is `heuristic` with
+`wrapperUnread`. A pages router file's way in answers the verbs its handler
+compares the request's method to (`switch (method)`, `req.method !== 'POST'`)
+and `ALL` where it compares none (`fixtures/next-wrapped-pages`).
 
 **Every route is an `http` entry onto the same handler.** A REST API's path is
 built from its `aws_api_gateway_resource` tree, `{loanId}` read as a parameter

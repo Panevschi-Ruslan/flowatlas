@@ -8,6 +8,37 @@ only one of them moved.
 
 ### Added
 
+- **A handler behind its wrapper, a request handed in as one object, and a
+  GraphQL server made into a Lambda (P269).** A `pages/api` default export
+  that is a call of wrappers - the repository's own or a package's -
+  handed a function, `export default withTracing(handler)`, is read as that
+  function with the wrappers drawn in front of it as middleware, and answers
+  the verbs the function compares the request's method to (`switch (method)`,
+  `req.method !== 'POST'`) instead of `ALL`; one written in place inside the
+  wrapper is pointed at where it is written, a factory of the repository is
+  the handler as for a verb export, and a package's handler built from values
+  is the `route-handler-unread` row that says so. The app router, Remix,
+  SvelteKit and Medusa readers land a verb export built by wrappers round a
+  declared function on that function the same way, and a landing through a
+  wrapper nobody installed is `heuristic` with `wrapperUnread`. A wrapper that
+  takes its request as one object and takes its members out where the
+  parameter is written, `({ url = '', method = 'GET' }) => fetch(url, {
+  method })`, has each caller's request read at the caller, its address and
+  its verb the members the caller writes or the defaults the pattern writes,
+  in the browser and server readers alike, and a caller written in a method
+  of an object a function hands back is attributed to that function on the
+  server side too. A name taken out of the environment where it is declared,
+  `const { SHIPPING_URL = '' } = process.env` (or `import.meta.env`, or a
+  settings root), is that setting read, with its default. A Lambda whose
+  handler is a GraphQL server made into a function -
+  `new ApolloServer({ resolvers, typeDefs }).createHandler()`, or a server
+  handed to `startServerAndCreateLambdaHandler` - is read as that server
+  (`handlerVia: graphql`), the route in front of it is its endpoint with its
+  schema and no `/graphql` is invented, Apollo Server's Lambda, Azure
+  Functions, Cloud Functions and micro packages are read for resolvers, and
+  a resolver map put together from another map's members
+  (`...orderResolvers.Query`) or handed a resolver by its name (`{ author }`)
+  is read.
 - **Every way a cluster is installed and a server asks itself (P263).** A
   `helmfile.yaml` installs its releases in each environment it declares (or
   the one `helmfile -e` names), rendered over the environment's values; a

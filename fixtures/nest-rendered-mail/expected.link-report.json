@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T20:09:27.448Z",
+  "builtAt": "2026-11-09T16:50:28.182Z",
   "configHash": "168204fe61cf",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 4,
-      "durationMs": 886,
+      "durationMs": 980,
       "packages": {
         "name": "@rendered-mail/api",
         "runtime": [
@@ -72,12 +72,12 @@
     },
     {
       "service": "api",
-      "file": "../../packages/sdk/src/http.ts",
-      "line": 3,
+      "file": "../../packages/sdk/src/index.ts",
+      "line": 7,
       "reason": "unknown-base-url-env",
       "message": "no service declares PLATFORM_URL",
       "hint": "Add PLATFORM_URL to services[].baseUrlEnv of whichever service answers it.",
-      "symbol": "http_out:api#../../packages/sdk/src/http.ts:3:3"
+      "symbol": "http_out:api#../../packages/sdk/src/index.ts:7:10"
     }
   ],
   "totals": {

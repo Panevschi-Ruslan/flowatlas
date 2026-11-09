@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T20:09:27.448Z",
+  "builtAt": "2026-11-09T16:50:28.182Z",
   "services": [
     {
       "name": "api",
@@ -240,16 +240,16 @@
       }
     },
     {
-      "id": "http_out:api#../../packages/sdk/src/http.ts:3:3",
+      "id": "http_out:api#../../packages/sdk/src/index.ts:7:10",
       "type": "http_out",
-      "label": "GET /${…}",
+      "label": "GET /customers/:param",
       "repo": "api",
-      "file": "../../packages/sdk/src/http.ts",
-      "line": 3,
+      "file": "../../packages/sdk/src/index.ts",
+      "line": 7,
       "meta": {
         "method": "GET",
-        "url": "${PLATFORM_URL}${…}",
-        "path": "/${…}",
+        "url": "${PLATFORM_URL}/customers/:param",
+        "path": "/customers/:param",
         "baseUrlEnv": "PLATFORM_URL",
         "responseType": null,
         "bodyType": null
@@ -346,14 +346,6 @@
       "line": 3
     },
     {
-      "from": "api#../../packages/sdk/src/http.ts:request",
-      "to": "http_out:api#../../packages/sdk/src/http.ts:3:3",
-      "type": "calls",
-      "confidence": "static",
-      "file": "../../packages/sdk/src/http.ts",
-      "line": 3
-    },
-    {
       "from": "api#../../packages/sdk/src/index.ts:lookupCustomer",
       "to": "api#../../packages/sdk/src/http.ts:request",
       "type": "calls",
@@ -362,6 +354,14 @@
         "string"
       ],
       "returns": "Response",
+      "file": "../../packages/sdk/src/index.ts",
+      "line": 7
+    },
+    {
+      "from": "api#../../packages/sdk/src/index.ts:lookupCustomer",
+      "to": "http_out:api#../../packages/sdk/src/index.ts:7:10",
+      "type": "calls",
+      "confidence": "static",
       "file": "../../packages/sdk/src/index.ts",
       "line": 7
     },
@@ -435,12 +435,12 @@
     },
     {
       "service": "api",
-      "file": "../../packages/sdk/src/http.ts",
-      "line": 3,
+      "file": "../../packages/sdk/src/index.ts",
+      "line": 7,
       "reason": "unknown-base-url-env",
       "message": "no service declares PLATFORM_URL",
       "hint": "Add PLATFORM_URL to services[].baseUrlEnv of whichever service answers it.",
-      "symbol": "http_out:api#../../packages/sdk/src/http.ts:3:3"
+      "symbol": "http_out:api#../../packages/sdk/src/index.ts:7:10"
     },
     {
       "file": "../../packages/ui/src/index.tsx",

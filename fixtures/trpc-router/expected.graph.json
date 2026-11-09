@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "trpc-router",
-  "generatedAt": "2026-11-08T17:08:39.069Z",
+  "generatedAt": "2026-11-09T16:50:42.530Z",
   "nodes": [
     {
       "id": "entry:trpc-router:http:ALL:/api/trpc/:param",
@@ -18,8 +18,7 @@
         "adapter": "nextjs-routes",
         "registration": "pages/api",
         "middlewareRead": true,
-        "handlerVia": "unread",
-        "handlerBodyRead": false
+        "handlerVia": "call"
       }
     },
     {
@@ -37,8 +36,7 @@
         "adapter": "nextjs-routes",
         "registration": "pages/api",
         "middlewareRead": true,
-        "handlerVia": "unread",
-        "handlerBodyRead": false
+        "handlerVia": "call"
       }
     },
     {
@@ -241,6 +239,25 @@
       }
     },
     {
+      "id": "trpc-router#src/server/next-adapter.ts:createNextApiHandler",
+      "type": "function",
+      "label": "createNextApiHandler",
+      "repo": "trpc-router",
+      "file": "src/server/next-adapter.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "router",
+              "type": "type:@trpc/server#Router"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
+    },
+    {
       "id": "trpc-router#src/server/orders-store.ts:listOrders",
       "type": "function",
       "label": "listOrders",
@@ -389,6 +406,28 @@
   ],
   "edges": [
     {
+      "from": "entry:trpc-router:http:ALL:/api/trpc/:param",
+      "to": "trpc-router#src/server/next-adapter.ts:createNextApiHandler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/next-adapter.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:trpc-router:http:ALL:/api/trpc/reports/:param",
+      "to": "trpc-router#src/server/next-adapter.ts:createNextApiHandler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server/next-adapter.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
       "from": "entry:trpc-router:rpc:orders.create",
       "to": "trpc-router#src/server/orders-store.ts:storeOrder",
       "type": "handles",
@@ -495,7 +534,18 @@
       "returns": "{sku:string;quantity:number;id:'ord-2'}"
     }
   ],
-  "types": {},
+  "types": {
+    "type:@trpc/server#Router": {
+      "name": "Router",
+      "kind": "external",
+      "declaredIn": "@trpc/server",
+      "structuralHash": "f6b8c8e1879befd4",
+      "meta": {
+        "declKind": "external",
+        "package": "@trpc/server"
+      }
+    }
+  },
   "unresolved": [
     {
       "file": "src/client/orders-panel.ts",
@@ -512,15 +562,6 @@
       "symbol": "any"
     },
     {
-      "file": "src/pages/api/trpc/[trpc].ts",
-      "line": 4,
-      "reason": "route-handler-unread",
-      "message": "ALL /api/trpc/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/:param.",
-      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
-      "symbol": "ALL /api/trpc/:param",
-      "adapter": "nextjs-routes"
-    },
-    {
       "file": "src/pages/api/trpc/reports/[trpc].ts",
       "line": 4,
       "reason": "procedure-router-unread",
@@ -528,15 +569,6 @@
       "hint": "Import the tree from a file inside this service, or add the package it comes from to sharedPackages, so the ways in it serves can be read.",
       "symbol": "reportsRouterFor('daily')",
       "adapter": "trpc-procedures"
-    },
-    {
-      "file": "src/pages/api/trpc/reports/[trpc].ts",
-      "line": 4,
-      "reason": "route-handler-unread",
-      "message": "ALL /api/trpc/reports/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/reports/:param.",
-      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
-      "symbol": "ALL /api/trpc/reports/:param",
-      "adapter": "nextjs-routes"
     },
     {
       "file": "src/server/reports-factory.ts",

@@ -1,0 +1,1690 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T16:44:41.936Z",
+  "services": [
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:storefront:http:ALL:/api/catalog",
+      "type": "entry",
+      "label": "ALL /api/catalog",
+      "repo": "storefront",
+      "file": "pages/api/catalog/index.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/catalog",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:storefront:http:ALL:/api/health",
+      "type": "entry",
+      "label": "ALL /api/health",
+      "repo": "storefront",
+      "file": "pages/api/health.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/health",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:storefront:http:ALL:/api/session",
+      "type": "entry",
+      "label": "ALL /api/session",
+      "repo": "storefront",
+      "file": "pages/api/session.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/session",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "unread",
+        "handlerBodyRead": false
+      }
+    },
+    {
+      "id": "entry:storefront:http:DELETE:/api/basket",
+      "type": "entry",
+      "label": "DELETE /api/basket",
+      "repo": "storefront",
+      "file": "pages/api/basket.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/api/basket",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "wrapped"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/api/basket",
+      "type": "entry",
+      "label": "GET /api/basket",
+      "repo": "storefront",
+      "file": "pages/api/basket.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/basket",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "wrapped"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/api/reviews",
+      "type": "entry",
+      "label": "GET /api/reviews",
+      "repo": "storefront",
+      "file": "pages/api/reviews.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reviews",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "wrapped",
+        "wrapperUnread": "withMetrics comes from metrics-kit, which is not installed, so whether it runs the function it is handed was not read"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/api/stores",
+      "type": "entry",
+      "label": "GET /api/stores",
+      "repo": "storefront",
+      "file": "app/api/stores/route.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/stores",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "wrapped"
+      }
+    },
+    {
+      "id": "entry:storefront:http:POST:/api/basket",
+      "type": "entry",
+      "label": "POST /api/basket",
+      "repo": "storefront",
+      "file": "pages/api/basket.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/basket",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "wrapped"
+      }
+    },
+    {
+      "id": "entry:storefront:http:POST:/api/checkout",
+      "type": "entry",
+      "label": "POST /api/checkout",
+      "repo": "storefront",
+      "file": "pages/api/checkout.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/checkout",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "wrapped"
+      }
+    },
+    {
+      "id": "http_out:storefront#gateways/api.gateway.ts:13:12",
+      "type": "http_out",
+      "label": "GET /api/basket",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 13,
+      "meta": {
+        "method": "GET",
+        "url": "/api/basket",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": "type:storefront#BasketItem[]",
+        "bodyType": null,
+        "originless": true,
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "http_out:storefront#gateways/api.gateway.ts:16:12",
+      "type": "http_out",
+      "label": "POST /api/basket",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 16,
+      "meta": {
+        "method": "POST",
+        "url": "/api/basket",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": "type:storefront#BasketItem[]",
+        "bodyType": null,
+        "originless": true,
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "http_out:storefront#gateways/api.gateway.ts:19:12",
+      "type": "http_out",
+      "label": "DELETE /api/basket",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 19,
+      "meta": {
+        "method": "DELETE",
+        "url": "/api/basket",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": "void",
+        "bodyType": null,
+        "originless": true,
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "http_out:storefront#gateways/api.gateway.ts:22:12",
+      "type": "http_out",
+      "label": "POST /api/checkout",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 22,
+      "meta": {
+        "method": "POST",
+        "url": "/api/checkout",
+        "path": "/api/checkout",
+        "baseUrlEnv": null,
+        "responseType": "{placed:boolean}",
+        "bodyType": null,
+        "originless": true,
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "http_out:storefront#gateways/api.gateway.ts:25:12",
+      "type": "http_out",
+      "label": "GET /api/catalog",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 25,
+      "meta": {
+        "method": "GET",
+        "url": "/api/catalog",
+        "path": "/api/catalog",
+        "baseUrlEnv": null,
+        "responseType": "{id:string;name:string}[]",
+        "bodyType": null,
+        "originless": true,
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "http_out:storefront#gateways/api.gateway.ts:28:12",
+      "type": "http_out",
+      "label": "GET /api/stores",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 28,
+      "meta": {
+        "method": "GET",
+        "url": "/api/stores",
+        "path": "/api/stores",
+        "baseUrlEnv": null,
+        "responseType": "{id:string;city:string}[]",
+        "bodyType": null,
+        "originless": true,
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "http_out:storefront#gateways/shipping.gateway.ts:11:26",
+      "type": "http_out",
+      "label": "POST /quote",
+      "repo": "storefront",
+      "file": "gateways/shipping.gateway.ts",
+      "line": 11,
+      "meta": {
+        "method": "POST",
+        "url": "${SHIPPING_URL}/quote",
+        "path": "/quote",
+        "baseUrlEnv": "SHIPPING_URL",
+        "responseType": null,
+        "bodyType": "{items:type:storefront#BasketItem[]}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "items"
+        ],
+        "headerKeys": [
+          "content-type"
+        ]
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 17,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "storefront#app/api/stores/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "storefront",
+      "file": "app/api/stores/route.ts",
+      "line": 10
+    },
+    {
+      "id": "storefront#app/api/stores/route.ts:readStores",
+      "type": "function",
+      "label": "readStores",
+      "repo": "storefront",
+      "file": "app/api/stores/route.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/api/stores/route.ts:withTiming",
+      "type": "middleware",
+      "label": "withTiming",
+      "repo": "storefront",
+      "file": "app/api/stores/route.ts",
+      "line": 10,
+      "kind": "function"
+    },
+    {
+      "id": "storefront#gateways/api.gateway.ts:Api",
+      "type": "function",
+      "label": "Api",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "object"
+        }
+      }
+    },
+    {
+      "id": "storefront#gateways/shipping.gateway.ts:quoteShipping",
+      "type": "function",
+      "label": "quoteShipping",
+      "repo": "storefront",
+      "file": "gateways/shipping.gateway.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "items",
+              "type": "type:storefront#BasketItem[]"
+            }
+          ],
+          "returns": "{cost:number}"
+        }
+      }
+    },
+    {
+      "id": "storefront#lib/basket-store.ts:addToBasket",
+      "type": "function",
+      "label": "addToBasket",
+      "repo": "storefront",
+      "file": "lib/basket-store.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sessionId",
+              "type": "string"
+            },
+            {
+              "name": "item",
+              "type": "type:storefront#BasketItem"
+            }
+          ],
+          "returns": "type:storefront#BasketItem[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#lib/basket-store.ts:emptyBasket",
+      "type": "function",
+      "label": "emptyBasket",
+      "repo": "storefront",
+      "file": "lib/basket-store.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sessionId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#lib/basket-store.ts:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "storefront",
+      "file": "lib/basket-store.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string;name:string}[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#lib/basket-store.ts:listStores",
+      "type": "function",
+      "label": "listStores",
+      "repo": "storefront",
+      "file": "lib/basket-store.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string;city:string}[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#lib/basket-store.ts:makeProbe",
+      "type": "function",
+      "label": "makeProbe",
+      "repo": "storefront",
+      "file": "lib/basket-store.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "{name:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
+    },
+    {
+      "id": "storefront#lib/basket-store.ts:readBasket",
+      "type": "function",
+      "label": "readBasket",
+      "repo": "storefront",
+      "file": "lib/basket-store.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sessionId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:storefront#BasketItem[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#lib/request.ts:request",
+      "type": "function",
+      "label": "request",
+      "repo": "storefront",
+      "file": "lib/request.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ url = '', method = 'GET', body, queryParams = {} }",
+              "type": "type:storefront#RequestOptions"
+            }
+          ],
+          "returns": "T"
+        }
+      }
+    },
+    {
+      "id": "storefront#lib/with-tracing.ts:withTiming",
+      "type": "function",
+      "label": "withTiming",
+      "repo": "storefront",
+      "file": "lib/with-tracing.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "fn",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
+    },
+    {
+      "id": "storefront#pages/api/basket.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "storefront",
+      "file": "pages/api/basket.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ method, body, query }",
+              "type": "type:storefront#ApiRequest"
+            },
+            {
+              "name": "response",
+              "type": "type:storefront#ApiResponse"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#pages/api/basket.ts:withTracing",
+      "type": "middleware",
+      "label": "withTracing",
+      "repo": "storefront",
+      "file": "pages/api/basket.ts",
+      "line": 33,
+      "kind": "function"
+    },
+    {
+      "id": "storefront#pages/api/catalog/index.ts:ALL /api/catalog@6",
+      "type": "function",
+      "label": "ALL /api/catalog@6",
+      "repo": "storefront",
+      "file": "pages/api/catalog/index.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_request",
+              "type": "type:storefront#ApiRequest"
+            },
+            {
+              "name": "response",
+              "type": "type:storefront#ApiResponse"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#pages/api/catalog/index.ts:withTracing",
+      "type": "middleware",
+      "label": "withTracing",
+      "repo": "storefront",
+      "file": "pages/api/catalog/index.ts",
+      "line": 6,
+      "kind": "function"
+    },
+    {
+      "id": "storefront#pages/api/checkout.ts:placeOrder",
+      "type": "function",
+      "label": "placeOrder",
+      "repo": "storefront",
+      "file": "pages/api/checkout.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:storefront#ApiRequest"
+            },
+            {
+              "name": "response",
+              "type": "type:storefront#ApiResponse"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#pages/api/checkout.ts:withSession",
+      "type": "middleware",
+      "label": "withSession",
+      "repo": "storefront",
+      "file": "pages/api/checkout.ts",
+      "line": 13,
+      "kind": "function"
+    },
+    {
+      "id": "storefront#pages/api/checkout.ts:withTracing",
+      "type": "middleware",
+      "label": "withTracing",
+      "repo": "storefront",
+      "file": "pages/api/checkout.ts",
+      "line": 13,
+      "kind": "function"
+    },
+    {
+      "id": "storefront#pages/api/reviews.ts:listReviews",
+      "type": "function",
+      "label": "listReviews",
+      "repo": "storefront",
+      "file": "pages/api/reviews.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:storefront#ApiRequest"
+            },
+            {
+              "name": "response",
+              "type": "type:storefront#ApiResponse"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#pages/api/reviews.ts:withMetrics",
+      "type": "middleware",
+      "label": "withMetrics",
+      "repo": "storefront",
+      "file": "pages/api/reviews.ts",
+      "line": 11,
+      "kind": "function"
+    },
+    {
+      "id": "ui_api_call:storefront#gateways/api.gateway.ts:13:12@15:26",
+      "type": "ui_api_call",
+      "label": "GET /api/basket",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/basket?${…}",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "literal",
+        "queryUnread": true,
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "request",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#gateways/api.gateway.ts:16:12@15:26",
+      "type": "ui_api_call",
+      "label": "POST /api/basket",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/basket?${…}",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "literal",
+        "queryUnread": true,
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "request",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#gateways/api.gateway.ts:19:12@15:26",
+      "type": "ui_api_call",
+      "label": "DELETE /api/basket",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "/api/basket?${…}",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "literal",
+        "queryUnread": true,
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "request",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#gateways/api.gateway.ts:22:12@15:26",
+      "type": "ui_api_call",
+      "label": "POST /api/checkout",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/checkout?${…}",
+        "path": "/api/checkout",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "literal",
+        "queryUnread": true,
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "request",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#gateways/api.gateway.ts:25:12@15:26",
+      "type": "ui_api_call",
+      "label": "GET /api/catalog",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/catalog?${…}",
+        "path": "/api/catalog",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "literal",
+        "queryUnread": true,
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "request",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#gateways/api.gateway.ts:28:12@15:26",
+      "type": "ui_api_call",
+      "label": "GET /api/stores",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/stores?${…}",
+        "path": "/api/stores",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "literal",
+        "queryUnread": true,
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "request",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#gateways/shipping.gateway.ts:11:26",
+      "type": "ui_api_call",
+      "label": "POST /quote",
+      "repo": "storefront",
+      "file": "gateways/shipping.gateway.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${SHIPPING_URL}/quote",
+        "path": "/quote",
+        "baseUrlEnv": "SHIPPING_URL",
+        "responseType": null,
+        "bodyType": "{items:type:storefront#BasketItem[]}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "items"
+        ],
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "template-env"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:storefront:http:ALL:/api/catalog",
+      "to": "storefront#pages/api/catalog/index.ts:ALL /api/catalog@6",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string;name:string}[]",
+      "file": "pages/api/catalog/index.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:storefront:http:ALL:/api/catalog",
+      "to": "storefront#pages/api/catalog/index.ts:withTracing",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "pages/api/catalog/index.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withTracing"
+      }
+    },
+    {
+      "from": "entry:storefront:http:ALL:/api/health",
+      "to": "storefront#lib/basket-store.ts:makeProbe",
+      "type": "handles",
+      "confidence": "static",
+      "file": "lib/basket-store.ts",
+      "line": 29,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:storefront:http:DELETE:/api/basket",
+      "to": "storefront#pages/api/basket.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+      "file": "pages/api/basket.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "body": "{item:type:storefront#BasketItem}",
+        "claimed": [
+          "body"
+        ],
+        "failures": {
+          "405": "string"
+        }
+      }
+    },
+    {
+      "from": "entry:storefront:http:DELETE:/api/basket",
+      "to": "storefront#pages/api/basket.ts:withTracing",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "pages/api/basket.ts",
+      "line": 33,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withTracing"
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/api/basket",
+      "to": "storefront#pages/api/basket.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+      "file": "pages/api/basket.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "body": "{item:type:storefront#BasketItem}",
+        "claimed": [
+          "body"
+        ],
+        "failures": {
+          "405": "string"
+        }
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/api/basket",
+      "to": "storefront#pages/api/basket.ts:withTracing",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "pages/api/basket.ts",
+      "line": 33,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withTracing"
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/api/reviews",
+      "to": "storefront#pages/api/reviews.ts:listReviews",
+      "type": "handles",
+      "confidence": "heuristic",
+      "file": "pages/api/reviews.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "failures": {
+          "405": "string"
+        }
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/api/reviews",
+      "to": "storefront#pages/api/reviews.ts:withMetrics",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "pages/api/reviews.ts",
+      "line": 11,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withMetrics"
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/api/stores",
+      "to": "storefront#app/api/stores/route.ts:readStores",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string;city:string}[]",
+      "file": "app/api/stores/route.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/api/stores",
+      "to": "storefront#app/api/stores/route.ts:withTiming",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "app/api/stores/route.ts",
+      "line": 10,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withTiming"
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/api/basket",
+      "to": "storefront#pages/api/basket.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string|type:storefront#BasketItem[]|{items:type:storefront#BasketItem[];shipping:{cost:number}}",
+      "file": "pages/api/basket.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "body": "{item:type:storefront#BasketItem}",
+        "claimed": [
+          "body"
+        ],
+        "failures": {
+          "405": "string"
+        }
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/api/basket",
+      "to": "storefront#pages/api/basket.ts:withTracing",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "pages/api/basket.ts",
+      "line": 33,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withTracing"
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/api/checkout",
+      "to": "storefront#pages/api/checkout.ts:placeOrder",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{placed:boolean}",
+      "file": "pages/api/checkout.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "failures": {
+          "405": "string"
+        }
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/api/checkout",
+      "to": "storefront#pages/api/checkout.ts:withSession",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "pages/api/checkout.ts",
+      "line": 13,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withSession"
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/api/checkout",
+      "to": "storefront#pages/api/checkout.ts:withTracing",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "pages/api/checkout.ts",
+      "line": 13,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withTracing"
+      }
+    },
+    {
+      "from": "http_out:storefront#gateways/api.gateway.ts:13:12",
+      "to": "entry:storefront:http:GET:/api/basket",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "gateways/api.gateway.ts",
+      "line": 13,
+      "returns": "type:storefront#BasketItem[]",
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "http_out:storefront#gateways/api.gateway.ts:16:12",
+      "to": "entry:storefront:http:POST:/api/basket",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "gateways/api.gateway.ts",
+      "line": 16,
+      "returns": "type:storefront#BasketItem[]",
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "http_out:storefront#gateways/api.gateway.ts:19:12",
+      "to": "entry:storefront:http:DELETE:/api/basket",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "gateways/api.gateway.ts",
+      "line": 19,
+      "returns": "void",
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "http_out:storefront#gateways/api.gateway.ts:22:12",
+      "to": "entry:storefront:http:POST:/api/checkout",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "gateways/api.gateway.ts",
+      "line": 22,
+      "returns": "{placed:boolean}",
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "http_out:storefront#gateways/api.gateway.ts:25:12",
+      "to": "entry:storefront:http:ALL:/api/catalog",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "gateways/api.gateway.ts",
+      "line": 25,
+      "returns": "{id:string;name:string}[]",
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "http_out:storefront#gateways/api.gateway.ts:28:12",
+      "to": "entry:storefront:http:GET:/api/stores",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "gateways/api.gateway.ts",
+      "line": 28,
+      "returns": "{id:string;city:string}[]",
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "storefront#app/api/stores/route.ts:GET",
+      "to": "storefront#lib/with-tracing.ts:withTiming",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "app/api/stores/route.ts",
+      "line": 10
+    },
+    {
+      "from": "storefront#app/api/stores/route.ts:readStores",
+      "to": "storefront#lib/basket-store.ts:listStores",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{id:string;city:string}[]",
+      "file": "app/api/stores/route.ts",
+      "line": 5
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "http_out:storefront#gateways/api.gateway.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 13
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "http_out:storefront#gateways/api.gateway.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 16
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "http_out:storefront#gateways/api.gateway.ts:19:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 19
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "http_out:storefront#gateways/api.gateway.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 22
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "http_out:storefront#gateways/api.gateway.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 25
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "http_out:storefront#gateways/api.gateway.ts:28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 28
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "storefront#lib/request.ts:request",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:storefront#RequestOptions"
+      ],
+      "returns": "T",
+      "file": "gateways/api.gateway.ts",
+      "line": 13
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "ui_api_call:storefront#gateways/api.gateway.ts:13:12@15:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 13
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "ui_api_call:storefront#gateways/api.gateway.ts:16:12@15:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 16
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "ui_api_call:storefront#gateways/api.gateway.ts:19:12@15:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 19
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "ui_api_call:storefront#gateways/api.gateway.ts:22:12@15:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 22
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "ui_api_call:storefront#gateways/api.gateway.ts:25:12@15:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 25
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api",
+      "to": "ui_api_call:storefront#gateways/api.gateway.ts:28:12@15:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 28
+    },
+    {
+      "from": "storefront#gateways/shipping.gateway.ts:quoteShipping",
+      "to": "http_out:storefront#gateways/shipping.gateway.ts:11:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/shipping.gateway.ts",
+      "line": 11
+    },
+    {
+      "from": "storefront#gateways/shipping.gateway.ts:quoteShipping",
+      "to": "ui_api_call:storefront#gateways/shipping.gateway.ts:11:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/shipping.gateway.ts",
+      "line": 11
+    },
+    {
+      "from": "storefront#lib/basket-store.ts:addToBasket",
+      "to": "storefront#lib/basket-store.ts:readBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:storefront#BasketItem[]",
+      "file": "lib/basket-store.ts",
+      "line": 12
+    },
+    {
+      "from": "storefront#pages/api/basket.ts:handler",
+      "to": "storefront#gateways/shipping.gateway.ts:quoteShipping",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:storefront#BasketItem[]"
+      ],
+      "returns": "{cost:number}",
+      "file": "pages/api/basket.ts",
+      "line": 16
+    },
+    {
+      "from": "storefront#pages/api/basket.ts:handler",
+      "to": "storefront#lib/basket-store.ts:addToBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:storefront#BasketItem"
+      ],
+      "returns": "type:storefront#BasketItem[]",
+      "file": "pages/api/basket.ts",
+      "line": 21
+    },
+    {
+      "from": "storefront#pages/api/basket.ts:handler",
+      "to": "storefront#lib/basket-store.ts:emptyBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "pages/api/basket.ts",
+      "line": 24
+    },
+    {
+      "from": "storefront#pages/api/basket.ts:handler",
+      "to": "storefront#lib/basket-store.ts:readBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:storefront#BasketItem[]",
+      "file": "pages/api/basket.ts",
+      "line": 15
+    },
+    {
+      "from": "storefront#pages/api/catalog/index.ts:ALL /api/catalog@6",
+      "to": "storefront#lib/basket-store.ts:listProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{id:string;name:string}[]",
+      "file": "pages/api/catalog/index.ts",
+      "line": 7
+    },
+    {
+      "from": "storefront#pages/api/checkout.ts:placeOrder",
+      "to": "storefront#lib/basket-store.ts:emptyBasket",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "pages/api/checkout.ts",
+      "line": 8
+    },
+    {
+      "from": "ui_api_call:storefront#gateways/api.gateway.ts:13:12@15:26",
+      "to": "entry:storefront:http:GET:/api/basket",
+      "type": "hits",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 13,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#gateways/api.gateway.ts:16:12@15:26",
+      "to": "entry:storefront:http:POST:/api/basket",
+      "type": "hits",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 16,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#gateways/api.gateway.ts:19:12@15:26",
+      "to": "entry:storefront:http:DELETE:/api/basket",
+      "type": "hits",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 19,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#gateways/api.gateway.ts:22:12@15:26",
+      "to": "entry:storefront:http:POST:/api/checkout",
+      "type": "hits",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 22,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#gateways/api.gateway.ts:25:12@15:26",
+      "to": "entry:storefront:http:ALL:/api/catalog",
+      "type": "hits",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 25,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#gateways/api.gateway.ts:28:12@15:26",
+      "to": "entry:storefront:http:GET:/api/stores",
+      "type": "hits",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 28,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "storefront"
+      }
+    }
+  ],
+  "types": {
+    "type:storefront#ApiRequest": {
+      "name": "ApiRequest",
+      "kind": "object",
+      "declaredIn": "storefront#lib/api-types.ts",
+      "structuralHash": "0763c449db025628",
+      "fields": [
+        {
+          "name": "method",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "headers",
+          "type": "object",
+          "optional": false
+        },
+        {
+          "name": "query",
+          "type": "object",
+          "optional": false
+        },
+        {
+          "name": "body",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:storefront#ApiResponse": {
+      "name": "ApiResponse",
+      "kind": "object",
+      "declaredIn": "storefront#lib/api-types.ts",
+      "structuralHash": "1414ae038fec1299",
+      "fields": [
+        {
+          "name": "statusCode",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:storefront#BasketItem": {
+      "name": "BasketItem",
+      "kind": "object",
+      "declaredIn": "storefront#lib/basket-store.ts",
+      "structuralHash": "2aab36dd5a253c89",
+      "fields": [
+        {
+          "name": "productId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:storefront#RequestOptions": {
+      "name": "RequestOptions",
+      "kind": "object",
+      "declaredIn": "storefront#lib/request.ts",
+      "structuralHash": "6ee099524b58c54f",
+      "fields": [
+        {
+          "name": "url",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "method",
+          "type": "'DELETE'|'GET'|'POST'|'PUT'",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "body",
+          "type": "object",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "queryParams",
+          "type": "object",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "storefront",
+      "file": "gateways/shipping.gateway.ts",
+      "line": 11,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /quote",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /quote */.",
+      "symbol": "ui_api_call:storefront#gateways/shipping.gateway.ts:11:26"
+    },
+    {
+      "file": "lib/basket-store.ts",
+      "line": 30,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 19,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "makeProbe -> response.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "interface-type",
+            "sites": 19,
+            "samples": [
+              {
+                "file": "lib/basket-store.ts",
+                "line": 30,
+                "symbol": "makeProbe -> response.json"
+              },
+              {
+                "file": "pages/api/basket.ts",
+                "line": 17,
+                "symbol": "handler -> response.status(200).json"
+              },
+              {
+                "file": "pages/api/basket.ts",
+                "line": 17,
+                "symbol": "handler -> response.status"
+              }
+            ],
+            "files": [
+              "pages/api/catalog/index.ts",
+              "pages/api/checkout.ts",
+              "pages/api/reviews.ts"
+            ]
+          }
+        ]
+      },
+      "service": "storefront"
+    },
+    {
+      "file": "lib/request.ts",
+      "line": 14,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "storefront"
+    },
+    {
+      "file": "pages/api/session.ts",
+      "line": 6,
+      "reason": "route-handler-unread",
+      "message": "ALL /api/session is the value a call handed back, and neither the function called nor anything handed to it is declared in this repository, so the way in has no handler that could be read. It answers at /api/session.",
+      "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
+      "symbol": "ALL /api/session",
+      "adapter": "nextjs-routes",
+      "service": "storefront"
+    }
+  ]
+}

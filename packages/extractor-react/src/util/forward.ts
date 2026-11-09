@@ -1,6 +1,6 @@
 import { callSitesOf as callSitesOfFunction, evaluateExpression, wasRead, type NamedFunction } from '@flowatlas/core';
-import type { CallExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
-import { Node } from 'ts-morph';
+import type { CallExpression, Node as TsNode, ObjectLiteralExpression, ParameterDeclaration } from 'ts-morph';
+import { Node, VariableDeclarationKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { analyzeApiUrl, type ApiUrl, type Bindings } from './url.js';
@@ -39,6 +39,79 @@ const FORWARD_DEPTH = 3;
 
 const isRead = (address: ApiUrl): boolean => address.path !== null && wasRead(address.path);
 
+/**
+ * The parameter a name was declared in: the parameter itself, or a member taken
+ * out of it where it is written - `({ url = '', method = 'GET' }: Options)`,
+ * which is how a wrapper that takes its request as one object is commonly
+ * written (P269).
+ */
+const parameterOf = (declaration: TsNode): TsNode | undefined => {
+  let at: TsNode | undefined = declaration;
+  while (at !== undefined && Node.isBindingElement(at)) at = at.getParent()?.getParent();
+  return at !== undefined && Node.isParameterDeclaration(at) ? at : undefined;
+};
+
+/** The object a caller writes for an options parameter: in place, or held by a `const` it names. */
+const objectHandedAs = (argument: TsNode): ObjectLiteralExpression | undefined => {
+  let value: TsNode | undefined = argument;
+  for (let step = 0; value !== undefined && step < 4; step += 1) {
+    if (Node.isParenthesizedExpression(value) || Node.isAsExpression(value) || Node.isSatisfiesExpression(value)) {
+      value = value.getExpression();
+      continue;
+    }
+    if (Node.isObjectLiteralExpression(value)) return value;
+    if (!Node.isIdentifier(value)) return undefined;
+    const declaration: TsNode | undefined = value.getSymbol()?.getDeclarations()[0];
+    value =
+      declaration !== undefined &&
+      Node.isVariableDeclaration(declaration) &&
+      declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const
+        ? declaration.getInitializer()
+        : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * What a caller hands each member a parameter takes out of its object, where it
+ * takes them out where it is written (P269).
+ *
+ * `request({ url: `${basePath}/cart`, method: 'POST' })` into `({ url = '',
+ * method = 'GET' }) => fetch(url, { method })`: `url` is what the caller wrote
+ * under `url`, and a member the caller leaves out holds the default the wrapper
+ * writes - only a constant one, as for a parameter left out. An object that
+ * spreads another may carry any member, so a member it does not write is left
+ * unbound rather than given the default.
+ */
+const membersBound = (parameter: ParameterDeclaration, argument: TsNode | undefined, values: Map<TsNode, TsNode>): void => {
+  const pattern = parameter.getNameNode();
+  if (!Node.isObjectBindingPattern(pattern)) return;
+  const object = argument === undefined ? undefined : objectHandedAs(argument);
+  // Handed something that is not an object written here: what it holds is not
+  // written anywhere this can read, so nothing is bound.
+  if (argument !== undefined && object === undefined) return;
+  const spreads = object?.getProperties().some((property) => Node.isSpreadAssignment(property)) === true;
+  for (const element of pattern.getElements()) {
+    if (element.getDotDotDotToken() !== undefined || !Node.isIdentifier(element.getNameNode())) continue;
+    const key = element.getPropertyNameNode()?.getText() ?? element.getName();
+    const property = object?.getProperty(key);
+    const written = property === undefined
+      ? undefined
+      : Node.isPropertyAssignment(property)
+        ? property.getInitializer()
+        : Node.isShorthandPropertyAssignment(property)
+          ? property.getNameNode()
+          : undefined;
+    if (written !== undefined) {
+      values.set(element, written);
+      continue;
+    }
+    if (property !== undefined || spreads) continue;
+    const fallback = element.getInitializer();
+    if (fallback !== undefined && evaluateExpression(fallback).resolved) values.set(element, fallback);
+  }
+};
+
 /** The parameters of a function, however the function was written. */
 const parametersOf = (fn: NamedFunction): ParameterDeclaration[] => {
   const declaration = fn.declaration;
@@ -67,7 +140,9 @@ const readsParameter = (value: TsNode, fn: NamedFunction): boolean => {
   const named = (node: TsNode): boolean => {
     if (!Node.isIdentifier(node)) return false;
     const declaration = node.getSymbol()?.getDeclarations()[0];
-    return declaration !== undefined && parameters.has(declaration);
+    if (declaration === undefined) return false;
+    const parameter = parameterOf(declaration);
+    return parameter !== undefined && parameters.has(parameter);
   };
   if (named(value)) return true;
   let found = false;
@@ -99,6 +174,7 @@ const bindingsAt = (fn: NamedFunction, call: CallExpression): Bindings => {
   const args = call.getArguments();
   parametersOf(fn).forEach((parameter, index) => {
     const argument = args[index];
+    membersBound(parameter, argument, values);
     if (argument !== undefined) {
       values.set(parameter, argument);
       return;

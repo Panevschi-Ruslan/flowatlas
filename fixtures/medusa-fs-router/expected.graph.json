@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "medusa-fs-router",
-  "generatedAt": "2026-10-08T18:55:38.667Z",
+  "generatedAt": "2026-11-09T16:50:26.682Z",
   "nodes": [
     {
       "id": "entry:medusa-fs-router:http:GET:/admin/orders",
@@ -206,6 +206,15 @@
           "returns": "void"
         }
       }
+    },
+    {
+      "id": "medusa-fs-router#src/api/admin/orders/route.ts:withAdmin",
+      "type": "middleware",
+      "label": "withAdmin",
+      "repo": "medusa-fs-router",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 17,
+      "kind": "function"
     },
     {
       "id": "medusa-fs-router#src/api/middlewares.ts:authenticate",
@@ -501,6 +510,20 @@
         "scope": "prefix",
         "layer": "middleware",
         "source": "defineMiddlewares"
+      }
+    },
+    {
+      "from": "entry:medusa-fs-router:http:POST:/admin/orders",
+      "to": "medusa-fs-router#src/api/admin/orders/route.ts:withAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 17,
+      "meta": {
+        "order": 2,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withAdmin"
       }
     },
     {

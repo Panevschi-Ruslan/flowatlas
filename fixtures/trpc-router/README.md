@@ -48,10 +48,12 @@ written under a computed key, so it has no address either. Two rows —
 `procedure-router-unread` naming the file, and `procedure-key-dynamic` naming the
 member — and no entry point invented for either.
 
-Both files also keep their `route-handler-unread` row from the file-system reader,
-and they should: a `pages/api` file whose default export is a call really does
-have no readable handler. What changed is that the row is no longer the only thing
-said about a quarter of the API.
+Both files' default export is a call of `createNextApiHandler`, a factory of this
+repository handed the tree, so the file-system reader points each `ALL` way in at
+that factory (`handlerVia: call`), as it does a verb export a factory built
+(R153, and P269 for the older router's default export). It used to be a
+`route-handler-unread` row; what the tree is made of is still said by the rows
+above.
 
 ## The unread branch
 

@@ -50,6 +50,8 @@ import {
   precedenceOf,
   precedenceRows,
   withdrawDescribedCalls,
+  jsDocCallsMarkers,
+  wasRead,
   type BuiltQuery,
   type GraphEdge,
   type GraphNode,
@@ -1772,11 +1774,40 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   };
 
   /** The method node a call sits inside, when it sits inside one this repo owns. */
-  const ownerOf = (site: TsNode): Holder | undefined => {
+  /**
+   * The bodies this pass reads, by the node each one is, so that a caller of a
+   * wrapper written in a function rather than a method has a holder too: a
+   * module of functions calling `request({ url })` is how most code that is
+   * not a class makes its requests (P269). Read once, the first time a caller
+   * is asked for.
+   */
+  let bodies: Map<TsNode, Holder> | undefined;
+  const bodyHolding = (site: TsNode): Holder | undefined => {
+    bodies ??= new Map([...scopesOf(ctx)].map((scope) => [scope.body, scope] as const));
+    for (let at = site.getParent(); at !== undefined && !Node.isSourceFile(at); at = at.getParent()) {
+      const holder = bodies.get(at);
+      if (holder !== undefined) return holder;
+    }
+    return undefined;
+  };
+
+  /**
+   * The holder of a caller a request is credited to. `functions` lets a caller
+   * outside a class method be one: asked only for a request whose address is
+   * not read where it is made, which is the browser reader's rule for the same
+   * question - a request read in place, `/api/things/${id}`, stays where it is
+   * read in both readers, and one read only at its callers, `${url}?…`, goes
+   * to them in both (P269).
+   */
+  const ownerOf = (site: TsNode, functions = false): Holder | undefined => {
     // However that method was written: the loop below reads a field-method's
     // body, so asking only for a declared one here would drop what it found.
     const declaration = enclosingMethod(site);
-    if (declaration === undefined) return undefined;
+    // A method of an object rather than of a class is a function's body like
+    // any other, held by whatever the walk below holds it under.
+    if (declaration === undefined || !Node.isClassLikeDeclarationBase(declaration.getParent())) {
+      return functions ? bodyHolding(site) : undefined;
+    }
     const methodId = ctx.methodIdOf(declaration);
     if (methodId === undefined || !ctx.builder.has(methodId)) return undefined;
     return {
@@ -2101,6 +2132,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     }
   };
 
+  /** Whether a body carries `@CallsService` or `@flowatlas-calls`, which say where its requests go. */
+  const annotatedCalls = (holder: Holder): boolean => {
+    const scope = holder as Partial<Scope>;
+    const declaration = scope.method ?? scope.fn?.declaration;
+    if (declaration === undefined) return false;
+    const decorated = Node.isMethodDeclaration(declaration) && declaration.getDecorators().some((decorator) => decorator.getName() === 'CallsService');
+    return decorated || jsDocCallsMarkers(declaration).length > 0;
+  };
+
   const emitHttp = (call: CallExpression, holder: Holder): boolean => {
     const recognised = recogniseHttp(call);
     if (recognised === null) return false;
@@ -2114,7 +2154,11 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // belongs to whoever asked for it; recording it here instead would leave
     // one dead end standing in for every caller.
     const here = analyzeUrl(urlArg, { whole: true });
-    const split = isReadable(urlArg) ? undefined : splitAtParameterIn(urlArg, settingReader);
+    // An annotation on the body says where its requests go, and it says it of
+    // this body: a request it holds stays here for the annotation to answer,
+    // whoever calls it (P269).
+    const annotated = annotatedCalls(holder);
+    const split = annotated || isReadable(urlArg) ? undefined : splitAtParameterIn(urlArg, settingReader);
     const through = { ...(recognised.binding === undefined ? {} : { binding: recognised.binding }), ...(recognised.client === undefined ? {} : { client: recognised.client }) };
     const stated = statedVerbOf(call, recognised.method, request?.init);
     const verbParameter = stated === undefined ? verbParameterAt(call, request?.init) : undefined;
@@ -2136,10 +2180,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       // A caller is drawn on only where its argument leaves the address at
       // least as sure as the request states it here: `bot${token}` with a
       // token nobody can read stays the helper's static request.
-      const forwarding = forwardNoWorse(forwardedFrom(split.parameter), {
+      const forwarding = forwardNoWorse(forwardedFrom(split.parameter, undefined, split.member), {
         here: { owner: holder, info: here },
         at: (hop) => {
-          const owner = ownerOf(hop.site);
+          const owner = ownerOf(hop.site, here.path === null || !wasRead(here.path));
           if (owner === undefined || !Node.isCallExpression(hop.site)) return undefined;
           return { owner, info: composeAddress(analyzeUrl(hop.argument), split) };
         },
@@ -2179,7 +2223,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     // or none at all, leaves the request here with its verb unread. Where the
     // address could not be read either, a verb per caller would only be more
     // requests nothing can join, and the one request stays here, unread.
-    if (verbParameter !== undefined && here.path === null) {
+    if (verbParameter !== undefined && (here.path === null || annotated)) {
       recordHttp(call, here, null, holder, { init: request?.init, ...through });
       return true;
     }

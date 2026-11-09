@@ -1,4 +1,5 @@
 import type {
+  BindingElement,
   CallExpression,
   FunctionDeclaration,
   Identifier,
@@ -1604,6 +1605,45 @@ export const parameterBehind = (value: TsNode, budget = BUDGET): ParameterDeclar
 };
 
 /**
+ * A member a function takes out of one of its parameters where the parameter is
+ * written: `({ url = '', method = 'GET' }: Options) => fetch(url, { method })`
+ * (P269). What a caller hands it is the member of the object it hands, or the
+ * default where that object writes none.
+ */
+export interface ParameterMember {
+  readonly parameter: ParameterDeclaration;
+  /** The member of the object handed in. */
+  readonly key: string;
+  /** What it holds where the object writes no such member, when the pattern writes one. */
+  readonly fallback?: TsNode;
+}
+
+/** The parameter member a value is, when it is a name taken out of a parameter's object where it is written. */
+export const memberBehind = (value: TsNode): ParameterMember | undefined => {
+  const node = unwrap(value);
+  if (!Node.isIdentifier(node)) return undefined;
+  const element = node.getSymbol()?.getDeclarations()[0];
+  if (element === undefined || !Node.isBindingElement(element) || element.getDotDotDotToken() !== undefined) return undefined;
+  const pattern = element.getParent();
+  const parameter = pattern?.getParent();
+  if (!Node.isObjectBindingPattern(pattern) || parameter === undefined || !Node.isParameterDeclaration(parameter)) return undefined;
+  const fallback = element.getInitializer();
+  return {
+    parameter,
+    key: element.getPropertyNameNode()?.getText() ?? element.getName(),
+    ...(fallback === undefined ? {} : { fallback }),
+  };
+};
+
+/** A parameter a value is, or a member taken out of one: what a caller decides it by. */
+const handedBy = (value: TsNode, budget: number): { parameter: ParameterDeclaration; member?: ParameterMember } | undefined => {
+  const parameter = parameterBehind(value, budget);
+  if (parameter !== undefined) return { parameter };
+  const member = memberBehind(value);
+  return member === undefined ? undefined : { parameter: member.parameter, member };
+};
+
+/**
  * An address whose middle is filled in by whoever makes the request.
  *
  * A shared client writes `${this.baseUrl}${path}` once: the base is settled
@@ -1612,6 +1652,8 @@ export const parameterBehind = (value: TsNode, budget = BUDGET): ParameterDeclar
  */
 export interface SplitAddress {
   parameter: ParameterDeclaration;
+  /** The member of the parameter the caller decides, where the function takes it out of an object (P269). */
+  member?: ParameterMember;
   /** Settings key the fixed half is rooted at, when it is rooted at one. */
   baseUrlEnv: string | null;
   /** What the code falls back to where that setting is not set, when it writes one (P77). */
@@ -1635,9 +1677,9 @@ export const splitAtParameter = (
   const budget = options.budget ?? BUDGET;
   const node = deref(value, budget);
 
-  // The whole address is the parameter.
-  const whole = parameterBehind(node, budget);
-  if (whole !== undefined) return { parameter: whole, baseUrlEnv: null, before: '', after: '' };
+  // The whole address is the parameter, or a member of it.
+  const whole = handedBy(node, budget);
+  if (whole !== undefined) return { ...whole, baseUrlEnv: null, before: '', after: '' };
 
   if (!Node.isTemplateExpression(node)) return undefined;
 
@@ -1654,7 +1696,7 @@ export const splitAtParameter = (
   if (
     text === '' &&
     first !== undefined &&
-    parameterBehind(first.getExpression(), budget) === undefined
+    handedBy(first.getExpression(), budget) === undefined
   ) {
     const literal = evaluateExpression(first.getExpression());
     if (!(literal.resolved && typeof literal.value === 'string')) {
@@ -1671,11 +1713,11 @@ export const splitAtParameter = (
     const span = spans[index];
     if (span === undefined) continue;
     const literal = span.getLiteral().getLiteralText();
-    const parameter = parameterBehind(span.getExpression(), budget);
+    const handed = handedBy(span.getExpression(), budget);
 
-    if (parameter !== undefined) {
+    if (handed !== undefined) {
       if (split !== undefined) return undefined;
-      split = { parameter, baseUrlEnv, ...(otherwise === undefined ? {} : { otherwise }), before: text, after: literal };
+      split = { ...handed, baseUrlEnv, ...(otherwise === undefined ? {} : { otherwise }), before: text, after: literal };
       text = '';
       continue;
     }
@@ -1732,7 +1774,7 @@ export interface Forwarded {
  * followed; a call through the interface both implement may run either, and is
  * not followed either, but it is said to be there.
  */
-export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forwarded => {
+export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4, member?: ParameterMember): Forwarded => {
   const out: Forwarded = { calls: [], undecided: false };
   if (budget <= 0) return out;
   const holder = forwarderOf(parameter);
@@ -1744,12 +1786,23 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forw
     // A caller that leaves the argument out hands the parameter its default,
     // which is written in the helper and read there (P91). One that leaves
     // out a parameter with no default hands it nothing worth following.
-    const argument = call.getArguments()[index] ?? parameter.getInitializer();
-    if (argument === undefined) continue;
+    const handed = call.getArguments()[index] ?? parameter.getInitializer();
     if (dispatchAt(call, holder) === 'undecided') {
-      out.undecided = true;
+      if (handed !== undefined || member?.fallback !== undefined) out.undecided = true;
       continue;
     }
+    if (member !== undefined && handed !== undefined) {
+      // The caller hands on an options object of its own: its callers decide the member.
+      const passed = parameterBehind(handed, budget);
+      if (passed !== undefined && passed !== parameter) {
+        const outer = forwardedFrom(passed, budget - 1, { ...member, parameter: passed });
+        out.calls.push(...outer.calls.map((each) => ({ ...each, hops: [call, ...each.hops] })));
+        out.undecided ||= outer.undecided;
+        continue;
+      }
+    }
+    const argument = member === undefined ? handed : memberHanded(handed, member);
+    if (argument === undefined) continue;
 
     // A caller that is itself forwarding is not where the address is decided.
     // If nothing calls it either, the whole chain is unused and this hop stands
@@ -1764,6 +1817,24 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forw
     out.calls.push({ site: call, argument, hops: [call] });
   }
   return out;
+};
+
+/**
+ * What one caller hands a parameter member (P269): the member of the object it
+ * writes, or the member's default where it hands nothing or an object without
+ * it. An object that spreads another may carry it, and one not written where
+ * it is handed carries what nobody here wrote: neither is followed.
+ */
+const memberHanded = (handed: TsNode | undefined, member: ParameterMember): TsNode | undefined => {
+  if (handed === undefined) return member.fallback;
+  const object = objectWrittenAs(unwrap(handed));
+  if (object === undefined) return undefined;
+  const property = object.getProperty(member.key);
+  if (property === undefined) {
+    return object.getProperties().some((each) => Node.isSpreadAssignment(each)) ? undefined : member.fallback;
+  }
+  if (Node.isPropertyAssignment(property)) return property.getInitializer();
+  return Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : undefined;
 };
 
 /**
@@ -1976,6 +2047,7 @@ export const optionVerbOf = (written: TsNode | undefined): OptionVerb | undefine
       ? written.getInitializer()
       : written;
   for (let step = 0; value !== undefined && step < OPTION_VERB_STEPS; step += 1) {
+    if (Node.isBindingElement(value)) return memberVerbOf(value);
     if (Node.isVariableDeclaration(value)) {
       value = isConst(value) ? value.getInitializer() : undefined;
       continue;
@@ -1997,6 +2069,23 @@ export const optionVerbOf = (written: TsNode | undefined): OptionVerb | undefine
     return { parameter: declaration, key: member.getName(), otherwise };
   }
   return undefined;
+};
+
+/**
+ * The member a parameter takes out of its options where it is written, with the
+ * verb it defaults to (P269): `({ url, method = 'GET' }: Options) => fetch(url,
+ * { method })`, the same fact as `options.method || 'GET'` spelled in the
+ * parameter list.
+ */
+const memberVerbOf = (element: BindingElement): OptionVerb | undefined => {
+  const pattern = element.getParent();
+  const parameter = pattern?.getParent();
+  if (!Node.isObjectBindingPattern(pattern) || parameter === undefined || !Node.isParameterDeclaration(parameter)) return undefined;
+  if (element.getDotDotDotToken() !== undefined) return undefined;
+  const fallback = element.getInitializer();
+  const otherwise = fallback === undefined ? null : verbSpelledBy(fallback);
+  if (otherwise === null) return undefined;
+  return { parameter, key: element.getPropertyNameNode()?.getText() ?? element.getName(), otherwise };
 };
 
 /** The object a value is written as, in place or held by a `const` it names. */
@@ -2086,7 +2175,7 @@ export const isReadable = (value: TsNode): boolean => {
   if (Node.isTemplateExpression(node)) {
     return node
       .getTemplateSpans()
-      .every((span) => parameterBehind(span.getExpression()) === undefined);
+      .every((span) => parameterBehind(span.getExpression()) === undefined && memberBehind(span.getExpression()) === undefined);
   }
   // `deref` leaves a name that can be reassigned alone, and what it was first
   // given is not what it holds here.

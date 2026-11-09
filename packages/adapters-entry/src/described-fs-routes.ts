@@ -205,9 +205,12 @@ export const fsEntries = (
       label: application === undefined ? label : `${label} (${application})`,
       key,
       ...(handler === undefined ? {} : { handler }),
+      ...(verb.wrapperUnread === undefined ? {} : { handlerConfidence: 'heuristic' as const }),
       ...(own === undefined ? {} : { request: own }),
       file: verb.at.reached.file,
       line: verb.at.reached.line,
+      // What the export was built through, in front of the handler (P269).
+      ...(verb.wrapping === undefined ? {} : { wrapping: verb.wrapping }),
       meta: {
         method: verb.method,
         path: verb.path,
@@ -218,6 +221,7 @@ export const fsEntries = (
         ...(application === undefined ? {} : { application }),
         handlerVia: verb.handlerVia,
         ...(verb.bodyRead ? {} : { handlerBodyRead: false }),
+        ...(verb.wrapperUnread === undefined ? {} : { wrapperUnread: verb.wrapperUnread }),
         ...reachMeta(verb.at),
       },
     };

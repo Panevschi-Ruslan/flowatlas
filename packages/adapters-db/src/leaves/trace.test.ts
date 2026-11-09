@@ -4,6 +4,7 @@ import { forwardNoWorse } from '@flowatlas/core';
 import {
   forwardedFrom,
   isReadable,
+  rootConfigAddress,
   rootConfigKey,
   settingReader,
   splitAtParameterIn,
@@ -38,6 +39,23 @@ const fetchCall = (file: SourceFile): CallExpression => {
 const address = (file: SourceFile) => fetchCall(file).getArguments()[0]!;
 
 describe('following a value back to a settings key', () => {
+  // `const { SHIPPING_URL = '' } = process.env` is the read, spelled where the
+  // name is declared rather than at each use (P269).
+  it('reads a name taken out of the environment where it is declared, with its default', () => {
+    const file = parse(`
+      const { SHIPPING_URL = 'http://shipping:8080', OTHER: renamed } = process.env;
+      export const quote = () => fetch(\`\${SHIPPING_URL}/quote\`);
+      export const other = () => renamed;
+    `);
+    expect(rootConfigKey(address(file))).toBe('SHIPPING_URL');
+    expect(rootConfigAddress(address(file))).toEqual({ key: 'SHIPPING_URL', prefix: '/quote', otherwise: 'http://shipping:8080' });
+    const renamed = file.getDescendantsOfKind(SyntaxKind.Identifier).at(-1)!;
+    expect(rootConfigKey(renamed)).toBe('OTHER');
+    // Taken out of anything else, it is no setting.
+    const plain = parse(`const { url } = { url: '/x' }; export const go = () => fetch(\`\${url}/y\`);`);
+    expect(rootConfigKey(address(plain))).toBeNull();
+  });
+
   it('reads one written where it is used', () => {
     const file = parse(`
       class C {

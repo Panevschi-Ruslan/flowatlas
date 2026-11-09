@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T16:44:41.936Z",
+  "configHash": "a451ad759c33",
+  "services": [
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 46,
+      "edges": 40,
+      "types": 4,
+      "unresolved": 3,
+      "durationMs": 1075,
+      "packages": {
+        "name": "next-wrapped-pages-storefront",
+        "runtime": [
+          "auth-kit",
+          "metrics-kit",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 7,
+    "linked": 6,
+    "byMarker": 0,
+    "unknownEnv": 1,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 7,
+    "resolved": 6,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 9,
+    "called": 6,
+    "uncalled": [
+      "entry:storefront:http:ALL:/api/health",
+      "entry:storefront:http:ALL:/api/session",
+      "entry:storefront:http:GET:/api/reviews"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "storefront",
+      "file": "gateways/shipping.gateway.ts",
+      "line": 11,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /quote",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /quote */.",
+      "symbol": "ui_api_call:storefront#gateways/shipping.gateway.ts:11:26"
+    }
+  ],
+  "totals": {
+    "nodes": 46,
+    "edges": 52,
+    "types": 4,
+    "missed": 4,
+    "sites": 22,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 4
+  }
+}

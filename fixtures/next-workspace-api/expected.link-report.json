@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T12:53:32.410Z",
+  "builtAt": "2026-11-09T16:50:32.762Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./apps/web",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 29,
-      "edges": 18,
+      "nodes": 32,
+      "edges": 22,
       "types": 0,
-      "unresolved": 5,
-      "durationMs": 821,
+      "unresolved": 4,
+      "durationMs": 1008,
       "packages": {
         "name": "@shop/web",
         "runtime": [
@@ -27,14 +27,14 @@
     }
   ],
   "httpOut": {
-    "total": 1,
-    "linked": 0,
+    "total": 3,
+    "linked": 3,
     "byMarker": 0,
     "unknownEnv": 0,
     "noRoute": 0,
     "ambiguous": 0,
     "external": 0,
-    "dynamic": 1
+    "dynamic": 0
   },
   "ui": {
     "total": 6,
@@ -60,13 +60,13 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 29,
-    "edges": 24,
+    "nodes": 32,
+    "edges": 31,
     "types": 0,
-    "missed": 5,
-    "sites": 5,
+    "missed": 4,
+    "sites": 4,
     "notes": 0,
     "findings": 0,
-    "unresolved": 5
+    "unresolved": 4
   }
 }

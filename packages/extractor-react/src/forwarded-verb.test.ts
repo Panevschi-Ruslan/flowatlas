@@ -111,3 +111,44 @@ describe('a verb read out of the options a wrapper is handed, or its default (R1
     expect(graph.unresolved.map((row) => row.reason)).toContain('api-method-dynamic');
   });
 });
+
+describe('a request handed in as one object whose members the wrapper takes out where its parameter is written (P269)', () => {
+  const REQUEST = `
+    interface Options { url: string; method?: 'GET' | 'POST' | 'DELETE'; body?: object; queryParams?: Record<string, string> }
+    const request = async <T>({ url = '', method = 'GET', body, queryParams = {} }: Options): Promise<T> => {
+      const response = await fetch(\`\${url}?\${new URLSearchParams(queryParams).toString()}\`, { method, body: JSON.stringify(body) });
+      return (await response.json()) as T;
+    };
+    export default request;
+  `;
+
+  it('reads the address and the verb at each caller, the verb defaulting to what the pattern writes', () => {
+    const graph = read({
+      '/src/request.ts': REQUEST,
+      '/src/api.ts': `
+        import request from './request';
+        const basePath = '/api';
+        const Api = () => ({
+          basket() { return request({ url: \`\${basePath}/basket\`, queryParams: { sessionId: 's' } }); },
+          add() { return request({ url: \`\${basePath}/basket\`, method: 'POST', body: {} }); },
+          empty() { return request({ url: \`\${basePath}/basket\`, method: 'DELETE' }); },
+        });
+        export default Api();
+      `,
+    });
+    expect(labels(graph)).toEqual(['DELETE /api/basket', 'GET /api/basket', 'POST /api/basket']);
+  });
+
+  it('leaves the request at the wrapper where a caller hands an object nothing here wrote', () => {
+    const graph = read({
+      '/src/request.ts': REQUEST,
+      '/src/api.ts': `
+        import request from './request';
+        declare const options: { url: string };
+        export const fetchIt = () => request(options);
+      `,
+    });
+    expect(labels(graph).every((label) => !label.includes('/api'))).toBe(true);
+    expect(labels(graph)).toHaveLength(1);
+  });
+});

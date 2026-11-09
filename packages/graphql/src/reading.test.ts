@@ -4,7 +4,7 @@ import { graphqlCallOf } from './calls.js';
 import { documentOf, lineInFile, type DocumentReading } from './documents.js';
 import { operationMeta, type MetaField } from './meta.js';
 import { operationsOf } from './operations.js';
-import { readGraphqlServer } from './servers.js';
+import { graphqlServerHandled, readGraphqlServer } from './servers.js';
 
 /** A project of these files; a `.graphql` file is only on its file system, as it is beside real code. */
 const project = (files: Record<string, string>): Project => {
@@ -316,5 +316,54 @@ describe('what a server declares (P232)', () => {
   it('says a subgraph is one', () => {
     const made = project({ 'index.ts': 'const typeDefs = gql`type Order @key(fields: "id") { id: ID! } type Query { orders: [Order!]! }`;\nnew ApolloServer({ schema: buildSubgraphSchema({ typeDefs, resolvers: { Query: { orders: () => [] } } }) });' });
     expect(readGraphqlServer(made.getSourceFiles(), { schemaFiles: [], dependencies: new Set() }).federated).toBe(true);
+  });
+});
+
+describe('a server made into a function a platform invokes (P269)', () => {
+  const files = {
+    'books.ts': 'export const bookResolvers = { Query: { book: async () => null, books: () => [] }, Mutation: { addBook: async () => null } };',
+    'authors.ts': 'const author = async () => null;\nexport const authorResolvers = { Query: { author } };',
+    'resolvers.ts': [
+      "import { bookResolvers } from './books';",
+      "import { authorResolvers } from './authors';",
+      'export const resolvers = { Query: { ...bookResolvers.Query, ...authorResolvers.Query }, Mutation: { ...bookResolvers.Mutation } };',
+    ].join('\n'),
+    'index.ts': [
+      "import { ApolloServer, gql } from 'apollo-server-lambda';",
+      "import { resolvers } from './resolvers';",
+      'const typeDefs = gql`type Query { book: String books: [String] author: String } type Mutation { addBook: String }`;',
+      'export const server = new ApolloServer({ resolvers, typeDefs }).createHandler();',
+    ].join('\n'),
+  };
+
+  it('reads a map put together a type at a time out of other maps, and a resolver handed by its name', () => {
+    const reading = readGraphqlServer(project(files).getSourceFiles(), { schemaFiles: [], dependencies: new Set(['apollo-server-lambda']) });
+    expect(reading.fields.map((field) => `${field.type}.${field.field}`).sort()).toEqual(['Mutation.addBook', 'Query.author', 'Query.book', 'Query.books']);
+  });
+
+  it('says the server answers at no path of its own, and which server a handler export is', () => {
+    const made = project(files);
+    const reading = readGraphqlServer(made.getSourceFiles(), { schemaFiles: [], dependencies: new Set(['apollo-server-lambda']) });
+    expect(reading.asFunction).toBe(true);
+    const exported = made.getSourceFile('index.ts')?.getVariableDeclaration('server')?.getInitializer();
+    expect(graphqlServerHandled(exported)?.getText()).toBe('new ApolloServer({ resolvers, typeDefs })');
+    // A server listening on a path of its own is not one.
+    const listening = project({ 'index.ts': "const server = new ApolloServer({ typeDefs: gql`type Query { a: String }` });\napp.use('/graphql', expressMiddleware(server));" });
+    expect(readGraphqlServer(listening.getSourceFiles(), { schemaFiles: [], dependencies: new Set() }).asFunction).toBe(false);
+  });
+
+  it('reads the server handed to the integration that makes it a Lambda handler', () => {
+    const made = project({
+      'index.ts': [
+        "import { ApolloServer } from '@apollo/server';",
+        "import { startServerAndCreateLambdaHandler, handlers } from '@as-integrations/aws-lambda';",
+        'const server = new ApolloServer({ typeDefs: `type Query { a: String }` });',
+        'export const graphqlHandler = startServerAndCreateLambdaHandler(server, handlers.createAPIGatewayProxyEventRequestHandler());',
+        'export const other = startServerAndCreateLambdaHandler(makeServer(), handlers.createAPIGatewayProxyEventRequestHandler());',
+      ].join('\n'),
+    });
+    const file = made.getSourceFile('index.ts');
+    expect(graphqlServerHandled(file?.getVariableDeclaration('graphqlHandler')?.getInitializer())).toBeDefined();
+    expect(graphqlServerHandled(file?.getVariableDeclaration('other')?.getInitializer())).toBeUndefined();
   });
 });

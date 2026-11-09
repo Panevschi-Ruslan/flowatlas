@@ -95,6 +95,13 @@ export interface ServerReading {
   readonly typeResolvers: readonly string[];
   /** Type definitions that could not be read, and why. */
   readonly unread: ReadonlyArray<{ readonly at: TsNode; readonly why: string }>;
+  /**
+   * True where the server is made into a function a platform invokes and
+   * answers at no path of its own: `new ApolloServer(…).createHandler()` as a
+   * Lambda's handler (P269). Its endpoint is whatever route the deployment
+   * puts in front of that function, which is the deployment's to say.
+   */
+  readonly asFunction: boolean;
 }
 
 const DECORATOR_PACKAGES = ['@nestjs/graphql', 'type-graphql'];
@@ -422,6 +429,14 @@ const resolverObjects = (value: TsNode | undefined, depth = 0): ObjectLiteralExp
   if (Node.isArrayLiteralExpression(value)) return value.getElements().flatMap((element) => resolverObjects(Node.isSpreadElement(element) ? element.getExpression() : element, depth + 1));
   if (Node.isCallExpression(value)) return value.getArguments().flatMap((argument) => resolverObjects(argument, depth + 1));
   if (Node.isAsExpression(value) || Node.isSatisfiesExpression(value) || Node.isParenthesizedExpression(value)) return resolverObjects(value.getExpression(), depth + 1);
+  // `...orderResolvers.Query`: the member of a map another module keeps, one type at a time (P269).
+  if (Node.isPropertyAccessExpression(value)) {
+    const name = value.getName();
+    return resolverObjects(value.getExpression(), depth + 1).flatMap((object) => {
+      const property = object.getProperty(name);
+      return property !== undefined && Node.isPropertyAssignment(property) ? resolverObjects(property.getInitializer(), depth + 1) : [];
+    });
+  }
   if (Node.isIdentifier(value)) {
     const symbol = value.getSymbol();
     return ((symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []).flatMap((declaration) =>
@@ -442,7 +457,9 @@ const mapHandler = (property: TsNode, name: string): { fn: TsNode; name: string 
     return inner === undefined ? undefined : mapHandler(inner, name);
   }
   if (Node.isIdentifier(value)) {
-    const symbol = value.getSymbol();
+    // `{ author }` names a binding as well as declaring a property, and the
+    // binding is the function (P269).
+    const symbol = Node.isShorthandPropertyAssignment(property) ? property.getValueSymbol() : value.getSymbol();
     for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
       if (Node.isFunctionDeclaration(declaration)) return { fn: declaration, name: declaration.getName() ?? name };
       if (Node.isVariableDeclaration(declaration)) {
@@ -569,15 +586,51 @@ const schemaFiles = (files: readonly string[]): Array<Document | undefined> =>
     }
   });
 
+/** The methods that make a server into a function a platform invokes: Apollo Server's Lambda, Azure Functions, Cloud Functions and micro integrations. */
+const HANDLER_METHODS: ReadonlySet<string> = new Set(['createHandler']);
+
+/** The calls a server is handed to, to be made into such a function: Apollo Server 4's Lambda integration. */
+const HANDLER_CALLS: ReadonlySet<string> = new Set(['startServerAndCreateLambdaHandler']);
+
+/** Whether a value is a GraphQL server made here: `new ApolloServer(…)`, written in place or held by a name. */
+const isServerMade = (value: TsNode | undefined): boolean => {
+  const made = followed(value);
+  return made !== undefined && Node.isNewExpression(made) && /(?:^|\.)ApolloServer$/.test(made.getExpression().getText());
+};
+
+/**
+ * The server a function is made from, where a value is a GraphQL server made
+ * into a function a platform invokes (P269): `new ApolloServer({ resolvers,
+ * typeDefs }).createHandler()`, `server.createHandler()`, and
+ * `startServerAndCreateLambdaHandler(server, …)`. A Lambda whose handler is one
+ * of these answers every field the server's resolvers answer, at whatever route
+ * is put in front of it.
+ */
+export const graphqlServerHandled = (value: TsNode | undefined): TsNode | undefined => {
+  const node = followed(value);
+  if (node === undefined || !Node.isCallExpression(node)) return undefined;
+  const callee = node.getExpression();
+  if (Node.isPropertyAccessExpression(callee) && HANDLER_METHODS.has(callee.getName())) {
+    const server = callee.getExpression();
+    return isServerMade(server) ? followed(server) : undefined;
+  }
+  const name = callee.getText().replace(/^.*\./, '');
+  if (!HANDLER_CALLS.has(name)) return undefined;
+  const [server] = node.getArguments();
+  return isServerMade(server) ? followed(server) : undefined;
+};
+
 /** The path the server answers at: written in its options, or its library's own default. */
-const endpointOf = (sources: readonly SourceFile[]): { path: string; at?: TsNode } => {
+const endpointOf = (sources: readonly SourceFile[]): { path: string; at?: TsNode; asFunction: boolean } => {
   let standalone = false;
+  let handled = false;
   let written: string | undefined;
   let at: TsNode | undefined;
   for (const sourceFile of sources) {
     sourceFile.forEachDescendant((node) => {
       if (Node.isNewExpression(node) && node.getExpression().getText().endsWith('ApolloServer')) at ??= node;
       if (!Node.isCallExpression(node)) return;
+      if (graphqlServerHandled(node) !== undefined) handled = true;
       const callee = node.getExpression().getText();
       if (callee.endsWith('startStandaloneServer')) standalone = true;
       const options = node.getArguments().find((argument): argument is ObjectLiteralExpression => Node.isObjectLiteralExpression(argument));
@@ -592,7 +645,13 @@ const endpointOf = (sources: readonly SourceFile[]): { path: string; at?: TsNode
       }
     });
   }
-  return { path: written ?? (standalone ? '/' : '/graphql'), ...(at === undefined ? {} : { at }) };
+  return {
+    path: written ?? (standalone ? '/' : '/graphql'),
+    ...(at === undefined ? {} : { at }),
+    // Made into a function and served nowhere this code writes: the route in
+    // front of the function is the endpoint (P269).
+    asFunction: handled && written === undefined && !standalone,
+  };
 };
 
 /** Apollo Server's standalone server listens here unless told otherwise. */
@@ -687,6 +746,7 @@ export const readGraphqlServer = (
     listen: listenPortsOf(sources),
     typeResolvers: [...typeResolvers].sort(),
     unread,
+    asFunction: endpoint.asFunction,
   };
 };
 

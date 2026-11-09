@@ -158,7 +158,9 @@ export const entriesPass = definePass('entries', (ctx: ReactExtractContext) => {
           from: entry.id,
           to: handler.id,
           type: 'handles',
-          confidence: 'static',
+          // A landing through a wrapper nothing of which was read is a guess,
+          // whichever extractor draws it (P269).
+          confidence: entry.handlerConfidence ?? 'static',
           file: handler.file,
           line: handler.line,
           ...requestOf(ctx, entry, handler),

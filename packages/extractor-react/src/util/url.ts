@@ -6,6 +6,7 @@ import {
   returnedExpression,
   rootSettingAddress,
   settingKeyIn,
+  takenMember,
   UNREAD_SPAN,
   type SettingBehind,
 } from '@flowatlas/core';
@@ -44,7 +45,13 @@ const BUNDLER_ROOTS = ['process', 'import.meta', 'globalThis.process'] as const;
  * core's own reader does for the other front end.
  */
 export const settingKeyOf = (node: TsNode): string | null => {
-  if (!Node.isPropertyAccessExpression(node)) return null;
+  // `const { VITE_API_URL } = import.meta.env`: the member read where it is declared (P269).
+  const taken = takenMember(node);
+  if (taken !== undefined && Node.isPropertyAccessExpression(taken.from) && taken.from.getName() === 'env') {
+    const root = taken.from.getExpression().getText();
+    if ((BUNDLER_ROOTS as readonly string[]).includes(root)) return taken.key;
+  }
+  if (!Node.isPropertyAccessExpression(node)) return settingKeyIn(node, ENV_ROOTS);
   const inner = node.getExpression();
   if (Node.isPropertyAccessExpression(inner) && inner.getName() === 'env') {
     // The root is written rather than resolved: `import.meta` is a meta

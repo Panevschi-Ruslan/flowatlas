@@ -618,7 +618,7 @@ export {
 } from './static-value.js';
 export type { StaticValue } from './static-value.js';
 
-export { resolveStaticString, settingKeyIn } from './static-string.js';
+export { resolveStaticString, settingKeyIn, takenMember, type TakenMember } from './static-string.js';
 export type {
   SettingBehind,
   StaticString,
@@ -706,6 +706,7 @@ export {
   isReadable,
   optionVerbAlong,
   optionVerbOf,
+  memberBehind,
   parameterBehind,
   readsParameterOf,
   remembersParametersOf,
@@ -729,6 +730,7 @@ export type {
   Forwarding,
   ForwardReader,
   OptionVerb,
+  ParameterMember,
   RootSettingOptions,
   SettingAddress,
   SplitAddress,

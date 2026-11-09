@@ -54,7 +54,7 @@ export { clientEndpointIn, fetchedDocument, fetchedQuery, graphqlCallOf, handedT
 export { callAddressOf, clientAddressOf, pageClientIn } from './clients.js';
 export type { ClientAddress } from './clients.js';
 export type { GraphqlCall, GraphqlLibrary } from './calls.js';
-export { listenPortsOf, readGraphqlServer, REFERENCE_FIELD } from './servers.js';
+export { graphqlServerHandled, listenPortsOf, readGraphqlServer, REFERENCE_FIELD } from './servers.js';
 export type { ListenPort, ResolvedField, ServerReading } from './servers.js';
 export { serves } from './endpoints.js';
 export type { ServedEndpoint } from './endpoints.js';

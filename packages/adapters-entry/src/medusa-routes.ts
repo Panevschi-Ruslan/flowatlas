@@ -25,7 +25,7 @@ import {
   type FsRouteVerb,
 } from './fs-routes.js';
 import { MEDUSA_REQUEST, readingOf } from './request-readings.js';
-import { arrayElements, fileOfNode, handlerOfFunction, repoSources, unwrapValue } from './shared.js';
+import { arrayElements, fileOfNode, handlerOfFunction, inlineHandlerOf, repoSources, unwrapValue } from './shared.js';
 
 const ADAPTER = 'medusa-routes';
 
@@ -351,16 +351,19 @@ export const medusaRoutesAdapter: EntryAdapter = {
       const id = makeEntryId(ctx.repo, 'http', key, application);
       if (seen.has(id)) return;
       seen.add(id);
-      const gate = gateOf(verb.method, verb.path);
+      // The middleware list runs first, then whatever the export was built
+      // through (P269).
+      const gate = [...gateOf(verb.method, verb.path), ...(verb.wrapping ?? [])];
+      const label = `${verb.method} ${verb.path}`;
+      const handler =
+        verb.handler !== undefined ? handlerOfFunction(verb.handler, ctx) : inlineHandlerOf(verb.inline, label, ctx);
       entries.push({
         id,
         kind: 'http',
-        label:
-          application === undefined
-            ? `${verb.method} ${verb.path}`
-            : `${verb.method} ${verb.path} (${application})`,
+        label: application === undefined ? label : `${label} (${application})`,
         key,
-        ...(verb.handler === undefined ? {} : { handler: handlerOfFunction(verb.handler, ctx) }),
+        ...(handler === undefined ? {} : { handler }),
+        ...(verb.wrapperUnread === undefined ? {} : { handlerConfidence: 'heuristic' as const }),
         request: REQUEST,
         // The route file is what the node points at, because the address is read
         // from where that file is; where the verb was written is recorded beside
@@ -385,6 +388,7 @@ export const medusaRoutesAdapter: EntryAdapter = {
           // read off the first. `handlerVia` says whether a function was named;
           // this says whether there is code behind the name (R94).
           ...(verb.bodyRead ? {} : { handlerBodyRead: false }),
+          ...(verb.wrapperUnread === undefined ? {} : { wrapperUnread: verb.wrapperUnread }),
           ...reachMeta(verb.at),
         },
       });

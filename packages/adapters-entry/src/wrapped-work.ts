@@ -1,4 +1,12 @@
-import { boundDeclaration, originOfValue, type Confidence, type Origin } from '@flowatlas/core';
+import {
+  boundDeclaration,
+  originOfValue,
+  startLineOf,
+  type Confidence,
+  type EntryWrapping,
+  type ExtractContext,
+  type Origin,
+} from '@flowatlas/core';
 import {
   Node,
   VariableDeclarationKind,
@@ -10,7 +18,7 @@ import {
   type Node as TsNode,
   type ParameterDeclaration,
 } from 'ts-morph';
-import { isWrittenFunction, packageOfCall, repoFunctionOf, unwrapValue } from './shared.js';
+import { fileOfNode, isWrittenFunction, packageOfCall, repoFunctionOf, unwrapValue } from './shared.js';
 
 /**
  * A call that wraps one function, and how far that is known.
@@ -381,4 +389,115 @@ export const unwrapWork = (start: TsNode): Unwrapped => {
 export const evidenceOf = (through: readonly Wrapped[]): Evidence => {
   const reasons = through.flatMap((step) => (step.why === undefined ? [] : [step.why]));
   return reasons.length === 0 ? STATIC : heuristic(reasons.join('; '));
+};
+
+/** A node as written, short enough to be a label. */
+export const label = (node: TsNode): string => {
+  const text = node.getText().replace(/\s+/g, ' ');
+  return text.length > 80 ? `${text.slice(0, 77)}...` : text;
+};
+
+/**
+ * A function this repository declares, or one written in place, when the node
+ * stands for one.
+ */
+const workIn = (node: TsNode): TsNode | undefined => {
+  const value = unwrapValue(node);
+  if (isWrittenFunction(value)) return value;
+  if (repoFunctionOf(value) !== undefined) return value;
+  return undefined;
+};
+
+/** What taking the wrappers off a handler export found. */
+export interface Chain {
+  inner?: TsNode;
+  wrapping: EntryWrapping[];
+  /** The wrappers taken off, for how far the landing can be trusted. */
+  through: Wrapped[];
+  /** The call the reading stopped at without finding a function, for the row. */
+  stopped?: CallExpression;
+}
+
+/**
+ * The function a handler export wraps, and the chain in front of it.
+ *
+ * `middy(createLoan).use(jsonBodyParser()).use(httpErrorHandler())` and
+ * `withLogging(traced('createLoan', createLoan))` are the two shapes: a chain of
+ * method calls on an engine, whose arguments are middleware and whose engine is
+ * not, and wrappers called one inside another, each of which is middleware
+ * itself. A wrapper is whatever `wrappedBy` says it is - a call handed exactly
+ * one function, wherever it sits among the arguments - which is the rule the
+ * HTTP readers follow a handler by too, so no library is named here (R109,
+ * R167). A name bound to a wrapped value is read through:
+ * `middy(createLoanLogic)` with `const createLoanLogic = traced(…)`. A method
+ * call that is handed the function itself - `middy().use(x).handler(fn)` -
+ * names the function and nothing in front of it.
+ */
+export const unwrapChain = (start: TsNode, ctx: ExtractContext): Chain => {
+  // In the order things run: outside in. A chain of methods is read from its
+  // last call back to its engine, so its middleware is gathered back to front
+  // and placed when the engine is reached - before any wrapper inside it, which
+  // runs nearer the function: `middy(traced('x', fn)).use(a)` runs `a`, then
+  // `traced`, then `fn`.
+  const ordered: EntryWrapping[] = [];
+  let chained: EntryWrapping[] = [];
+  const through: Wrapped[] = [];
+  let inner: TsNode | undefined;
+  let stopped: CallExpression | undefined;
+  let expression = unwrapValue(start);
+  let viaMethods = false;
+  const wrapping = (node: TsNode, source: string, kind: string): EntryWrapping => ({
+    label: label(node),
+    layer: 'middleware',
+    scope: 'route',
+    source,
+    file: fileOfNode(node, ctx),
+    line: startLineOf(node),
+    kind,
+  });
+  for (let depth = 0; depth < 16 && Node.isCallExpression(expression); depth += 1) {
+    const callee = expression.getExpression();
+    const args = expression.getArguments();
+    if (Node.isPropertyAccessExpression(callee) && Node.isCallExpression(unwrapValue(callee.getExpression()))) {
+      viaMethods = true;
+      const method = callee.getName();
+      const written: EntryWrapping[] = [];
+      for (const arg of args) {
+        const work = workIn(arg);
+        if (work !== undefined && inner === undefined) {
+          inner = work;
+          continue;
+        }
+        written.push(wrapping(arg, method, Node.isCallExpression(arg) ? 'call' : 'function'));
+      }
+      chained.unshift(...written);
+      expression = unwrapValue(callee.getExpression());
+      continue;
+    }
+    const wrapped = wrappedBy(expression);
+    if (wrapped === undefined) {
+      stopped = expression;
+      break;
+    }
+    through.push(wrapped);
+    // The engine a chain of methods hangs from is not middleware; a wrapper
+    // called on its own is.
+    if (!viaMethods) ordered.push(wrapping(callee, label(callee), 'function'));
+    ordered.push(...chained);
+    chained = [];
+    viaMethods = false;
+    const work = workIn(wrapped.argument);
+    if (work !== undefined) {
+      inner ??= work;
+      break;
+    }
+    const next = unwrapValue(wrapped.argument);
+    expression = Node.isCallExpression(next) ? next : (boundCall(next) ?? next);
+  }
+  return {
+    ...(inner === undefined ? {} : { inner }),
+    wrapping: [...ordered, ...chained],
+    through,
+    ...(inner === undefined && stopped !== undefined ? { stopped } : {}),
+  };
 };

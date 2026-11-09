@@ -82,6 +82,40 @@ const sharedPackageOf = (
   );
 };
 
+/** A name taken out of an object where it is declared, and what it was taken out of. */
+export interface TakenMember {
+  /** What the pattern destructures: `process.env` in `const { ORDERS_URL = '' } = process.env`. */
+  readonly from: TsNode;
+  /** The member the name is: its own spelling, or the property it renames. */
+  readonly key: string;
+  /** The default it holds where the object has no such member, when it writes one. */
+  readonly fallback?: TsNode;
+}
+
+/**
+ * The member a name stands for, when it was taken out of an object where it is
+ * declared: `const { SHIPPING_URL = '' } = process.env` declares `SHIPPING_URL`
+ * as the member of `process.env` it reads, which is a settings read spelled in
+ * the declaration rather than at each use (P269). Only a name written directly in
+ * a `const`'s own pattern: one nested deeper is a member of a member.
+ */
+export const takenMember = (name: TsNode): TakenMember | undefined => {
+  if (!Node.isIdentifier(name)) return undefined;
+  const element = name.getSymbol()?.getDeclarations()[0];
+  if (element === undefined || !Node.isBindingElement(element) || element.getDotDotDotToken() !== undefined) return undefined;
+  const pattern = element.getParent();
+  const declaration = pattern?.getParent();
+  if (!Node.isObjectBindingPattern(pattern) || declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
+  const from = declaration.getInitializer();
+  if (from === undefined) return undefined;
+  const fallback = element.getInitializer();
+  return {
+    from,
+    key: element.getPropertyNameNode()?.getText() ?? element.getName(),
+    ...(fallback === undefined ? {} : { fallback }),
+  };
+};
+
 /**
  * The settings key an expression reads, when it reads one.
  *
@@ -89,7 +123,15 @@ const sharedPackageOf = (
  * root, because that is how the key is written in the configuration too.
  */
 export const settingKeyIn = (expr: TsNode, roots: readonly string[]): string | null => {
-  if (roots.length === 0 || !Node.isPropertyAccessExpression(expr)) return null;
+  if (roots.length === 0) return null;
+  // `const { apiUrl } = environment`: the member of a root, taken out where it is declared (P269).
+  const taken = takenMember(expr);
+  if (taken !== undefined) {
+    const holder = Node.isPropertyAccessExpression(taken.from) ? settingKeyIn(taken.from, roots) : null;
+    if (holder !== null) return `${holder}.${taken.key}`;
+    return rootSpellings(taken.from).some((spelling) => roots.includes(spelling)) ? taken.key : null;
+  }
+  if (!Node.isPropertyAccessExpression(expr)) return null;
   const parts: string[] = [];
   let current: TsNode = expr;
   while (Node.isPropertyAccessExpression(current)) {

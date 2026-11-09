@@ -61,6 +61,12 @@ export const GRAPHQL_SERVER_PACKAGES = [
   '@apollo/server',
   'apollo-server',
   'apollo-server-express',
+  // Apollo Server's integrations that make it a function a platform invokes (P269).
+  'apollo-server-lambda',
+  'apollo-server-azure-functions',
+  'apollo-server-cloud-functions',
+  'apollo-server-micro',
+  '@as-integrations/aws-lambda',
   'graphql-yoga',
   'mercurius',
   'graphql-http',
@@ -218,6 +224,36 @@ const schemaServedAt = (reading: ServerReading, servedHere: (field: ResolvedFiel
   return { ...reading.schema, types };
 };
 
+/** What a server reads as in these sources, read once per repository for every reader that asks (P269). */
+const readings = new WeakMap<ExtractContext, ServerReading>();
+
+const readingOf = (ctx: ExtractContext): ServerReading => {
+  const known = readings.get(ctx);
+  if (known !== undefined) return known;
+  const reading = readGraphqlServer([...repoSources(ctx)], {
+    schemaFiles: filesUnder(ctx.repoDir, /\.(graphql|gql)$/),
+    dependencies: new Set(Object.keys(allDependencies(ctx.pkg))),
+    repoDir: ctx.repoDir,
+    roverFiles: filesUnder(ctx.repoDir, ROVER_FILES),
+  });
+  readings.set(ctx, reading);
+  return reading;
+};
+
+/**
+ * What an endpoint of a server made in these sources serves (P269): the schema,
+ * and that it is one subgraph where it is. A route a deployment puts in front of
+ * a function the server was made into carries this, as the server's own
+ * endpoint does, and the fields a request to it selects are joined to the
+ * resolvers here.
+ */
+export const graphqlServedMeta = (ctx: ExtractContext): Record<string, unknown> => {
+  const reading = readingOf(ctx);
+  const listen = reading.listen.map((port) => placedPort(port, ctx.repoDir));
+  const subgraph = reading.federation === undefined ? undefined : { federation: reading.federation, ...(reading.typeResolvers.length === 0 ? {} : { typeResolvers: reading.typeResolvers }) };
+  return { endpoint: true, schema: reading.schema, ...(subgraph === undefined ? {} : { subgraph }), ...(listen.length === 0 ? {} : { listen }) };
+};
+
 export const graphqlResolversAdapter: EntryAdapter = {
   name: 'graphql-resolvers',
   detect: (pkg) => hasAnyDependency(pkg, GRAPHQL_SERVER_PACKAGES),
@@ -226,13 +262,7 @@ export const graphqlResolversAdapter: EntryAdapter = {
   listens: (ctx) => listenPortsOf([...repoSources(ctx)]).map((port) => placedPort(port, ctx.repoDir)),
 
   extractEntries(ctx: ExtractContext): EntryNode[] {
-    const sources = [...repoSources(ctx)];
-    const reading = readGraphqlServer(sources, {
-      schemaFiles: filesUnder(ctx.repoDir, /\.(graphql|gql)$/),
-      dependencies: new Set(Object.keys(allDependencies(ctx.pkg))),
-      repoDir: ctx.repoDir,
-      roverFiles: filesUnder(ctx.repoDir, ROVER_FILES),
-    });
+    const reading = readingOf(ctx);
     if (reading.fields.length === 0 && Object.keys(reading.schema.types).length === 0 && reading.gateway === undefined) return [];
     const entries: EntryNode[] = [];
     // Every endpoint the server serves (P266): a NestJS server's each
@@ -345,6 +375,10 @@ export const graphqlResolversAdapter: EntryAdapter = {
             };
       // POST: what every client sends; a GET the server also answers is no way in anything here uses.
       const key = makeHttpEntryKey('POST', endpoint.path);
+      // A server made into a function a platform invokes answers at the route a
+      // deployment puts in front of it, which that reader draws (P269); a
+      // `/graphql` here would be an address nothing serves.
+      if (reading.asFunction && gateway === undefined) continue;
       entries.push({
         id,
         kind: 'http',
