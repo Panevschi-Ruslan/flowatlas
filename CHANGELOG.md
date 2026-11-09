@@ -8,6 +8,25 @@ only one of them moved.
 
 ### Added
 
+- **The coverage harness measures whether a join is right, and reads a
+  system split across repositories (P278).** A target may carry hand labels,
+  `scripts/coverage/labels/<target>.json` (gitignored; the format is
+  `labels.example.json`): call sites written from the source with the way in
+  each reaches, `none` for a call that leaves the system, or `unread-ok` where
+  a row is the right answer. Its report gains *Against the hand labels* - per
+  kind, right, right and also elsewhere, wrong, missed, falsely joined and
+  sites not found, with precision and recall, and every label that was not
+  right listed by file and line with what was expected and what was got; a
+  label whose text moved is followed and says so, one whose file or text is
+  gone is reported, never dropped. A target may also be several repositories
+  (`repositories`, each with its `repository`, `commit`, `read` and `types`
+  and the directory it is cloned to), cloned side by side and linked as one
+  project, with the counting rule's extent, the read gate, I14 and `--pin`
+  working per repository and a report section *Across repositories* counting
+  the requests and messages each one sends that land in another. A report of
+  one repository without labels is unchanged. The harness is not part of the
+  published packages.
+
 - **A handler behind its wrapper, a request handed in as one object, and a
   GraphQL server made into a Lambda (P269).** A `pages/api` default export
   that is a call of wrappers - the repository's own or a package's -

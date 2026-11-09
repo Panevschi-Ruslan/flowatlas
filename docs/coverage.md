@@ -165,6 +165,61 @@ Node and edge totals are deliberately absent. They move whenever any reader
 learns to record one more thing, which would make every report in the directory
 a diff with no news in it.
 
+## Whether a join is right: the hand labels
+
+Every figure above counts what was found and what joined. A join to the wrong
+way in counts exactly as a join to the right one does, so a reader that learned
+to match a request onto the nearest route with a similar path would raise every
+figure and lower the truth. Only a key written by somebody who read the code can
+tell the two apart.
+
+A target may have one: `scripts/coverage/labels/<target>.json`, gitignored like
+the list of targets because it names other people's files.
+[`scripts/coverage/labels.example.json`](../scripts/coverage/labels.example.json)
+shows the format. Each label is a call site - a file, the line its call starts
+on, optionally a column and a piece of the line's text - and the answer: the way
+in it reaches (`http POST /api/cart`, `graphql Mutation.placeOrder`,
+`rpc orders.get`, `channel mail` with a job name), `none` for a call that leaves
+the system and must join nothing, or `unread-ok` for one nothing can know
+statically, where a row is the right answer. Write the labels from the source,
+before looking at what the graph says: a key copied from the tool's output
+agrees with the tool and measures nothing.
+
+A report of a target with labels gains a section, *Against the hand labels*: per
+kind of label, how many came out right, right and also joined elsewhere, wrong,
+missed, falsely joined and not found, with precision (the right joins over every
+join made at a labelled site) and recall (the labels whose way in was reached
+over those expecting one), and then every label that was not right, by file and
+line, with what was expected and what was got. A label whose text has moved is
+followed to the nearest line still holding it, and says so; one whose file or
+text is gone is listed as a site not found rather than dropped, because a key
+that quietly shrinks measures less every run. `scripts/coverage/labels.mjs`
+holds the rules, and the labels are judged again by `coverage:render`.
+
+The section is a finding, not a gate: a wrong join is a reader to fix, and a
+run that failed on one would get its labels deleted instead.
+
+## A system split across repositories
+
+A front end in one repository and its back end in another, or services each in
+a repository of its own, is one target written with `repositories` in place of
+`repository`, `commit`, `read` and `types`. Each entry has those four and a
+`name`, the directory its clone gets under the target's, so the repositories sit
+side by side and every read directory of every one of them is linked as one
+project - which is the only way a request in one can join the way in another
+serves. `--pin` pins each of them.
+
+Everything else speaks one spelling of a path: relative to the target's
+directory, so for such a target a path starts with the repository's `name`. The
+counting rule counts each repository over its own extent, worked out inside its
+own clone, because a workspace never reaches into the checkout beside it; the
+read gate, its exemptions and baseline, the hand labels and I14 use the same
+paths. The report names every repository with its commit and adds a section,
+*Across repositories*: per repository, its services, files, ways in and the
+counting rule's route sites, the requests it sends and how many joined a way in
+**of another repository**, and the messages it sends that another repository
+consumes. A report of one repository gains neither section.
+
 ## The read gate
 
 Every measurement is also an assertion, held in

@@ -65,13 +65,24 @@
  */
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { byFamily, isSourceFile, measureSites } from './counting-rule.mjs';
 import { extentOfTarget } from './extent.mjs';
-import { figuresFrom } from './figures.mjs';
+import { byRepository, figuresFrom } from './figures.mjs';
+import { judgeLabels, readLabels } from './labels.mjs';
 import { clonePaths, readGate } from './read-gate.mjs';
 import { renderReport } from './report.mjs';
+import {
+  TargetError,
+  inTarget,
+  isMultiRepository,
+  pinRepository,
+  readRootsOf,
+  repositoriesOf,
+  typesOf,
+  unpinnedOf,
+} from './targets.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CLI = join(ROOT, 'packages', 'cli', 'bin', 'flowatlas.js');
@@ -85,6 +96,12 @@ const CLI = join(ROOT, 'packages', 'cli', 'bin', 'flowatlas.js');
 const TARGETS = join(ROOT, 'scripts', 'coverage', 'targets.local.json');
 const TARGETS_EXAMPLE = join(ROOT, 'scripts', 'coverage', 'targets.example.json');
 const REPORTS = join(ROOT, 'scripts', 'coverage', 'reports');
+/**
+ * The hand labels, one file per target, gitignored like the list of targets
+ * and for the same reason: they name other people's files. `labels.mjs` says
+ * what a label is and `labels.example.json` shows one.
+ */
+const LABELS = join(ROOT, 'scripts', 'coverage', 'labels');
 
 /**
  * Where clones live.
@@ -240,26 +257,46 @@ const tail = (text, lines = 6) =>
  * back to it: it is one round trip, it costs one commit of history, and it
  * cannot drift the way `clone --depth 1` of a moving branch does.
  */
-const clone = async (target, log) => {
-  const dir = join(CACHE, 'repos', target.name);
-  const url = `https://github.com/${target.repository}.git`;
+const cloneOne = async (dir, repository, commit, log) => {
+  const url = `https://github.com/${repository}.git`;
   if (existsSync(join(dir, '.git'))) {
     const head = await run(['git', 'rev-parse', 'HEAD'], { cwd: dir });
-    if (head.stdout.trim() === target.commit) return dir;
+    if (head.stdout.trim() === commit) return dir;
     rmSync(dir, { recursive: true, force: true });
   }
   mkdirSync(dir, { recursive: true });
-  log(`cloning ${target.repository} at ${target.commit.slice(0, 12)}`);
+  log(`cloning ${repository} at ${commit.slice(0, 12)}`);
   await run(['git', 'init', '-q'], { cwd: dir });
   await run(['git', 'remote', 'add', 'origin', url], { cwd: dir });
-  const fetched = await run(['git', 'fetch', '-q', '--depth', '1', 'origin', target.commit], {
+  const fetched = await run(['git', 'fetch', '-q', '--depth', '1', 'origin', commit], {
     cwd: dir,
     timeoutMs: 30 * 60 * 1000,
   });
-  if (fetched.code !== 0) throw new Error(`fetch failed for ${target.name}: ${tail(fetched.stderr)}`);
+  if (fetched.code !== 0) throw new Error(`fetch failed for ${repository}: ${tail(fetched.stderr)}`);
   const out = await run(['git', 'checkout', '-q', 'FETCH_HEAD'], { cwd: dir });
-  if (out.code !== 0) throw new Error(`checkout failed for ${target.name}: ${tail(out.stderr)}`);
+  if (out.code !== 0) throw new Error(`checkout failed for ${repository}: ${tail(out.stderr)}`);
   return dir;
+};
+
+/**
+ * Every repository of a target cloned where it belongs, and the target's
+ * directory: the clone itself for a target of one repository, and the
+ * directory the clones sit side by side in for a target of several.
+ *
+ * A directory that was one clone and is now asked to hold several - the list
+ * turned a target of one repository into a target of many - is removed first:
+ * a clone with other clones inside it is a working tree whose `git clean`
+ * would delete them.
+ */
+const clone = async (target, log) => {
+  const root = join(CACHE, 'repos', target.name);
+  if (isMultiRepository(target) && existsSync(join(root, '.git'))) {
+    rmSync(root, { recursive: true, force: true });
+  }
+  for (const repo of repositoriesOf(target)) {
+    await cloneOne(join(root, repo.dir), repo.repository, repo.commit, log);
+  }
+  return root;
 };
 
 /**
@@ -271,16 +308,19 @@ const clone = async (target, log) => {
  * So the fresh state is established rather than assumed, every time, and costs
  * one `git clean` on a clone that was already clean.
  */
-const freshen = async (dir) => {
-  await run(['git', 'clean', '-xdff', '-q'], { cwd: dir, timeoutMs: 10 * 60 * 1000 });
-  await run(['git', 'checkout', '-q', '--', '.'], { cwd: dir });
+const freshen = async (root, target) => {
+  for (const repo of repositoriesOf(target)) {
+    const dir = join(root, repo.dir);
+    await run(['git', 'clean', '-xdff', '-q'], { cwd: dir, timeoutMs: 10 * 60 * 1000 });
+    await run(['git', 'checkout', '-q', '--', '.'], { cwd: dir });
+  }
 };
 
-/** Today's commit on the default branch, for `--pin`. */
-const headOf = async (target) => {
-  const url = `https://github.com/${target.repository}.git`;
+/** Today's commit on the default branch of one repository, for `--pin`. */
+const headOf = async (repository) => {
+  const url = `https://github.com/${repository}.git`;
   const out = await run(['git', 'ls-remote', url, 'HEAD'], { cwd: ROOT });
-  if (out.code !== 0) throw new Error(`could not reach ${target.repository}`);
+  if (out.code !== 0) throw new Error(`could not reach ${repository}`);
   return out.stdout.trim().split(/\s+/)[0];
 };
 
@@ -342,11 +382,15 @@ const installPlan = (cloneDir, readRoot) => {
 const install = async (cloneDir, target, log) => {
   const plans = [];
   const seen = new Set();
-  for (const readRoot of target.read) {
-    const plan = installPlan(cloneDir, readRoot);
-    if (plan === undefined || seen.has(plan.dir)) continue;
-    seen.add(plan.dir);
-    plans.push(plan);
+  // Each repository of a system is installed by its own lockfile: it is a
+  // checkout of its own and never a member of its neighbour's workspace.
+  for (const repo of repositoriesOf(target)) {
+    for (const readRoot of repo.read) {
+      const plan = installPlan(join(cloneDir, repo.dir), readRoot);
+      if (plan === undefined || seen.has(plan.dir)) continue;
+      seen.add(plan.dir);
+      plans.push(plan);
+    }
   }
   const results = [];
   for (const plan of plans) {
@@ -421,10 +465,32 @@ const install = async (cloneDir, target, log) => {
  * state are invisible and the denominator is the same in both states. That is
  * what makes the two reports comparable to each other as well as to the tool.
  */
-const groundTruth = async (cloneDir, readRoots) => {
-  const extent = extentOfTarget(cloneDir, readRoots);
-  const listed = await run(['git', 'ls-files', '-z', '--', ...extent.dirs], { cwd: cloneDir });
-  const paths = listed.stdout.split('\0').filter((path) => path !== '' && isSourceFile(path));
+const groundTruth = async (cloneDir, target) => {
+  // One repository at a time, each against its own clone: a workspace never
+  // reaches across into a neighbouring repository, so the extent of a read
+  // directory is worked out where its manifests are, and every path is then
+  // spelled relative to the target's directory (`targets.mjs`).
+  const paths = [];
+  const extent = [];
+  const perRepository = [];
+  for (const repo of repositoriesOf(target)) {
+    const dir = join(cloneDir, repo.dir);
+    const own = extentOfTarget(dir, repo.read);
+    const listed = await run(['git', 'ls-files', '-z', '--', ...own.dirs], { cwd: dir });
+    const mine = listed.stdout
+      .split('\0')
+      .filter((path) => path !== '' && isSourceFile(path))
+      .map((path) => inTarget(repo, path));
+    paths.push(...mine);
+    perRepository.push({ dir: repo.dir, files: mine.length });
+    for (const { readRoot, root, dirs } of own.perRoot) {
+      extent.push({
+        readRoot: inTarget(repo, readRoot),
+        workspace: root === null ? null : inTarget(repo, root),
+        declared: dirs.slice(1).map((path) => inTarget(repo, path)),
+      });
+    }
+  }
   const files = [];
   for (const path of paths) {
     try {
@@ -435,19 +501,27 @@ const groundTruth = async (cloneDir, readRoots) => {
     }
   }
   const { byProbe, perFile } = measureSites(files);
-  return {
-    truth: {
-      files: paths.length,
-      sites: byProbe,
-      families: byFamily(byProbe),
-      extent: extent.perRoot.map(({ readRoot, root, dirs }) => ({
-        readRoot,
-        workspace: root,
-        declared: dirs.slice(1),
-      })),
-    },
-    perFile,
+  const truth = {
+    files: paths.length,
+    sites: byProbe,
+    families: byFamily(byProbe),
+    extent,
   };
+  // Per repository only where there is more than one, so a report of one
+  // repository is the report it always was.
+  if (isMultiRepository(target)) {
+    truth.repositories = perRepository.map(({ dir, files: count }) => {
+      const families = {};
+      for (const [path, found] of perFile) {
+        if (!path.startsWith(`${dir}/`)) continue;
+        for (const [family, sites] of Object.entries(found)) {
+          families[family] = (families[family] ?? 0) + sites;
+        }
+      }
+      return { dir, files: count, families };
+    });
+  }
+  return { truth, perFile };
 };
 
 /**
@@ -475,11 +549,14 @@ const groundTruth = async (cloneDir, readRoots) => {
  * a state assumed costs a report nobody can trust. It clears the extent and not
  * only the read root, since a declared package is somewhere a build may write.
  */
-const forget = (cloneDir, readRoots, workspace) => {
+const forget = (cloneDir, target, workspace) => {
   rmSync(workspace, { recursive: true, force: true });
-  const { dirs } = extentOfTarget(cloneDir, readRoots);
-  for (const dir of ['.', ...dirs, ...readRoots]) {
-    rmSync(join(cloneDir, dir, OUTPUT), { recursive: true, force: true });
+  for (const repo of repositoriesOf(target)) {
+    const dir = join(cloneDir, repo.dir);
+    const { dirs } = extentOfTarget(dir, repo.read);
+    for (const path of ['.', ...dirs, ...repo.read]) {
+      rmSync(join(dir, path, OUTPUT), { recursive: true, force: true });
+    }
   }
 };
 
@@ -499,9 +576,9 @@ const flowatlas = (args, cwd, timeoutMs) => run([process.execPath, CLI, ...args]
  */
 const configure = (config, target, cloneDir) => {
   const parsed = JSON.parse(readFileSync(config, 'utf8'));
-  const declared = target.types ?? {};
+  const declared = typesOf(target);
   const services = parsed.services.map((service) => {
-    const readRoot = target.read.find(
+    const readRoot = readRootsOf(target).find(
       (path) => resolve(dirname(config), service.repo) === resolve(join(cloneDir, path)),
     );
     const type = (readRoot === undefined ? undefined : declared[readRoot]) ?? service.type;
@@ -528,10 +605,10 @@ const configure = (config, target, cloneDir) => {
  */
 const measure = async (target, cloneDir, state, log, timeoutMs) => {
   const workspace = join(CACHE, 'work', `${target.name}.${state}`);
-  forget(cloneDir, target.read, workspace);
+  forget(cloneDir, target, workspace);
   mkdirSync(workspace, { recursive: true });
   const config = join(workspace, 'flowatlas.config.json');
-  const roots = target.read.map((readRoot) => join(cloneDir, readRoot));
+  const roots = readRootsOf(target).map((readRoot) => join(cloneDir, readRoot));
 
   const linked = await flowatlas(['link', ...roots, '--config', config, '--no-mcp'], workspace, timeoutMs);
   log(`link exit ${linked.code}`);
@@ -657,6 +734,39 @@ const whyGateFails = (result) => {
   return said.length === 0 ? undefined : said.join('; ');
 };
 
+/**
+ * The target's hand labels judged against this graph, or nothing where the
+ * target has no label file (P278).
+ *
+ * Not a gate: a wrong join is a finding for a reader ticket, and a harness
+ * that failed the run on one would get its labels deleted rather than its
+ * readers fixed. The report prints every one of them instead.
+ */
+const againstLabels = (target, cloneDir, services, graph) => {
+  const file = join(LABELS, `${target.name}.json`);
+  if (graph === undefined || !existsSync(file)) return undefined;
+  const where = relative(ROOT, file);
+  const labels = readLabels(readFileSync(file, 'utf8'), where);
+  const inside = resolve(cloneDir);
+  const readSource = (path) => {
+    const at = resolve(inside, path);
+    // A label is about a file of the target, and nothing else is read for it.
+    if (!at.startsWith(`${inside}${sep}`)) return undefined;
+    try {
+      return readFileSync(at, 'utf8');
+    } catch {
+      return undefined;
+    }
+  };
+  return { file: where, ...judgeLabels({ labels, graph, toPath: clonePaths(services), readSource }) };
+};
+
+/** The per-repository figures of a target of several repositories, or nothing for one. */
+const acrossRepositories = (target, services, graph) =>
+  graph === undefined || !isMultiRepository(target)
+    ? undefined
+    : byRepository({ graph, services, dirs: repositoriesOf(target).map((repo) => repo.dir) });
+
 // ------------------------------------------------------------------ command
 
 /**
@@ -689,7 +799,7 @@ const render = async (chosen) => {
       console.log(`[${target.name}] no clone in the cache; skipped`);
       continue;
     }
-    const { truth, perFile } = await groundTruth(cloneDir, target.read);
+    const { truth, perFile } = await groundTruth(cloneDir, target);
     for (const state of ['fresh', 'with-deps']) {
       const workspace = join(CACHE, 'work', `${target.name}.${state}`);
       const kept = join(workspace, 'measured.json');
@@ -697,10 +807,15 @@ const render = async (chosen) => {
       const measured = JSON.parse(readFileSync(kept, 'utf8'));
       const graphPath = join(workspace, OUTPUT, 'project-graph.json');
       const graph = existsSync(graphPath) ? JSON.parse(readFileSync(graphPath, 'utf8')) : undefined;
+      const services = measured.services ?? [];
+      // The labels are judged again, as the denominators are counted again:
+      // a label written or corrected since the build is what a re-render is for.
       const result = {
         ...measured,
         truth,
-        gate: gate(target, state, measured.services ?? [], perFile, graph),
+        gate: gate(target, state, services, perFile, graph),
+        labels: againstLabels(target, cloneDir, services, graph),
+        repositories: acrossRepositories(target, services, graph),
       };
       console.log(`[${target.name}] re-rendered ${relative(ROOT, publish(target, state, workspace, result))}`);
       const why = whyGateFails(result.gate);
@@ -795,10 +910,19 @@ const parseArgs = (argv) => {
 const toolVersion = () =>
   JSON.parse(readFileSync(join(ROOT, 'packages', 'cli', 'package.json'), 'utf8')).version;
 
+/**
+ * Every repository of every target pinned to the head of its default branch.
+ * A target of several repositories pins each of them: a system is measured at
+ * one commit of every part of it, never at a part that moved since.
+ */
 const pin = async (list) => {
   for (const target of list.targets) {
-    target.commit = await headOf(target);
-    console.log(`${target.name.padEnd(12)} ${target.commit}`);
+    for (const repo of repositoriesOf(target)) {
+      const commit = await headOf(repo.repository);
+      pinRepository(target, repo, commit);
+      const name = repo.dir === '.' ? target.name : `${target.name}/${repo.dir}`;
+      console.log(`${name.padEnd(12)} ${commit}`);
+    }
   }
   writeFileSync(TARGETS, `${JSON.stringify(list, null, 2)}\n`, 'utf8');
 };
@@ -895,11 +1019,17 @@ const main = async () => {
       `no target matched. The targets are: ${list.targets.map((t) => t.name).join(', ')}`,
     );
   }
-  const unpinned = chosen.filter((target) => target.commit === null);
+  // Every repository of every chosen target, and a malformed list of
+  // repositories refused here rather than half cloned.
+  let unpinned;
+  try {
+    unpinned = chosen.flatMap(unpinnedOf);
+  } catch (cause) {
+    if (cause instanceof TargetError) throw new UsageError(cause.message);
+    throw cause;
+  }
   if (unpinned.length > 0) {
-    throw new Error(
-      `not pinned: ${unpinned.map((t) => t.name).join(', ')}. Run with --pin first.`,
-    );
+    throw new Error(`not pinned: ${unpinned.join(', ')}. Run with --pin first.`);
   }
 
   mkdirSync(REPORTS, { recursive: true });
@@ -914,9 +1044,9 @@ const main = async () => {
     const log = (line) => console.log(`[${target.name}] ${line}`);
     try {
       const cloneDir = await clone(target, log);
-      if (!options.install) await freshen(cloneDir);
+      if (!options.install) await freshen(cloneDir, target);
       const installs = options.install ? await install(cloneDir, target, log) : [];
-      const { truth, perFile } = await groundTruth(cloneDir, target.read);
+      const { truth, perFile } = await groundTruth(cloneDir, target);
       const { workspace, graph, ...measured } = await measure(
         target,
         cloneDir,
@@ -937,7 +1067,23 @@ const main = async () => {
           `read gate ok against its baseline: ${checked.known.length} known file(s) still unread, ${checked.blind} kind(s) of failure it cannot see`,
         );
       }
-      const result = { target, state, version, truth, installs, ...measured, gate: checked };
+      const result = {
+        target,
+        state,
+        version,
+        truth,
+        installs,
+        ...measured,
+        gate: checked,
+        labels: againstLabels(target, cloneDir, measured.services, graph),
+        repositories: acrossRepositories(target, measured.services, graph),
+      };
+      if (result.labels !== undefined) {
+        const { total } = result.labels;
+        log(
+          `hand labels: ${total.right} right, ${total.ambiguous} also elsewhere, ${total.wrong} wrong, ${total.missed} missed, ${total.falsely} falsely joined, ${total.drifted} not found`,
+        );
+      }
       log(`wrote ${relative(ROOT, publish(target, state, workspace, result))}`);
     } catch (cause) {
       // Only the harness's own failures land here: a crashed build is a

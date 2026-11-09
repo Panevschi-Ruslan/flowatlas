@@ -20,6 +20,7 @@
  */
 import { FAMILIES, PROBES } from './counting-rule.mjs';
 import { BLIND } from './read-gate.mjs';
+import { isMultiRepository, readRootsOf, repositoriesOf } from './targets.mjs';
 
 const GIB = 1024 ** 3;
 
@@ -148,6 +149,22 @@ const PARTIAL = {
   'with-deps': '',
 };
 
+/**
+ * Where the source came from: one repository and its commit, or - for a
+ * system split across several (P278) - each of them, at the directory its
+ * clone was given, with its own commit.
+ */
+const provenance = (target) =>
+  isMultiRepository(target)
+    ? repositoriesOf(target).map((repo) => [
+        `repository \`${repo.dir}\``,
+        `\`${repo.repository}\` at \`${repo.commit}\``,
+      ])
+    : [
+        ['repository', `\`${target.repository}\``],
+        ['commit', `\`${target.commit}\``],
+      ];
+
 const heading = ({ target, state, version, truth, services }) => `
 # ${target.name} - ${STATES[state]}
 
@@ -157,9 +174,8 @@ ${PARTIAL[state] === '' ? '' : `\n${PARTIAL[state]}`}
 ${table(
   ['', ''],
   [
-    ['repository', `\`${target.repository}\``],
-    ['commit', `\`${target.commit}\``],
-    ['read', target.read.map((path) => `\`${path}\``).join(', ')],
+    ...provenance(target),
+    ['read', readRootsOf(target).map((path) => `\`${path}\``).join(', ')],
     [
       'read by',
       services.length === 0
@@ -316,6 +332,111 @@ ${table(
   ],
 )}
 ${requestsAgainstRule(figures, truth)}`;
+
+/**
+ * A system split across repositories, one row per repository (P278).
+ *
+ * Printed only for a target of several repositories, so the report of one
+ * repository is the report it always was. The last column of each half is
+ * the one the target exists for: how much of what a repository sends lands in
+ * another one.
+ */
+const across = ({ repositories, truth }) => {
+  if (repositories === undefined) return '';
+  const files = new Map((truth.repositories ?? []).map((row) => [row.dir, row]));
+  return `
+## Across repositories
+
+One row per repository of the system. A request is one the graph recorded
+(\`ui_api_call\` or \`http_out\`), joined when it reached a way in; a message is a
+producer, reaching another repository when a service there consumes its channel.
+The denominators beside them are the counting rule's, over that repository's files.
+
+${table(
+  ['repository', 'services', 'source files', 'ways in', 'route sites', 'requests', 'joined', '…to another repository', 'messages', '…to another repository'],
+  repositories.map((row) => [
+    `\`${row.dir}\``,
+    row.services.length === 0 ? 'none' : row.services.map((name) => `\`${name}\``).join(', '),
+    String(files.get(row.dir)?.files ?? 0),
+    String(row.waysIn),
+    String(files.get(row.dir)?.families.routes ?? 0),
+    String(row.requests),
+    String(row.joined),
+    String(row.joinedElsewhere),
+    String(row.messages),
+    String(row.messagesElsewhere),
+  ]),
+)}
+`;
+};
+
+const percent = (value) => (value === null ? 'n/a' : `${Math.round(value * 100)}%`);
+
+const LABEL_WORDS = {
+  right: 'right',
+  ambiguous: 'right, and also joined elsewhere',
+  wrong: 'wrong',
+  missed: 'missed',
+  falsely: 'falsely joined',
+  drifted: 'site not found',
+};
+
+const expectOf = (row) =>
+  `${Array.isArray(row.expect) ? row.expect.join(' + ') : row.expect}${row.job === undefined ? '' : ` (job ${row.job})`}`;
+
+const siteOf = (row) =>
+  `\`${row.file}:${row.line}\`${row.movedFrom === undefined ? '' : ` (labelled at ${row.movedFrom})`}`;
+
+/**
+ * The joins against a key somebody wrote by hand (P278).
+ *
+ * Printed only where the target has a label file. Every label that did not
+ * come out right is listed by name: these are few by construction, each is a
+ * bug or a label to correct, and a count of them would say which reader to
+ * look at without saying where.
+ */
+const labelled = ({ labels }) => {
+  if (labels === undefined) return '';
+  const cells = (row) => [
+    String(row.labels),
+    String(row.right),
+    String(row.ambiguous),
+    String(row.wrong),
+    String(row.missed),
+    String(row.falsely),
+    String(row.drifted),
+    percent(row.precision),
+    percent(row.recall),
+  ];
+  const listed = ['wrong', 'ambiguous', 'falsely', 'missed', 'drifted']
+    .map((outcome) => {
+      const rows = labels.rows.filter((row) => row.outcome === outcome);
+      if (rows.length === 0) return '';
+      return `\n### ${LABEL_WORDS[outcome][0].toUpperCase()}${LABEL_WORDS[outcome].slice(1)}\n\n${table(
+        ['site', 'kind', 'expected', 'got'],
+        rows.map((row) => [siteOf(row), row.kind, `\`${expectOf(row)}\``, row.got.replaceAll('|', '\\|')]),
+      )}\n`;
+    })
+    .join('');
+  return `
+## Against the hand labels
+
+${labels.total.labels} call sites in \`${labels.file}\`, each labelled from the source with
+the way in it reaches, \`none\` for a call outside the system that must join
+nothing, or \`unread-ok\` for one nothing can know statically, where a row is the
+right answer. Precision is the right joins over every join made at a labelled
+site; recall is the labels whose way in was reached over those expecting one.
+\`scripts/coverage/labels.mjs\` says how a site is found and compared.
+
+${table(
+  ['kind', 'labels', 'right', 'also elsewhere', 'wrong', 'missed', 'falsely joined', 'site not found', 'precision', 'recall'],
+  [
+    ...labels.byKind.map((row) => [row.kind, ...cells(row)]),
+    ['**all**', ...cells(labels.total)],
+  ],
+)}
+${listed}`;
+};
 
 const storage = ({ figures, truth }) => `
 ## Storage and screens
@@ -549,6 +670,8 @@ const SECTIONS = [
   install,
   ways,
   joins,
+  across,
+  labelled,
   storage,
   unresolved,
   readGateSection,
@@ -557,7 +680,7 @@ const SECTIONS = [
 ];
 
 /** Sections that need a graph, and are therefore left out when there is none. */
-const NEEDS_GRAPH = new Set([ways, joins, storage, unresolved]);
+const NEEDS_GRAPH = new Set([ways, joins, across, labelled, storage, unresolved]);
 
 export const renderReport = (result) => {
   const parts = SECTIONS.filter(

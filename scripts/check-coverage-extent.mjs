@@ -38,6 +38,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { extentOf } from './coverage/extent.mjs';
+import { repositoriesOf } from './coverage/targets.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const FIXTURES = join(ROOT, 'fixtures');
@@ -121,9 +122,14 @@ const clonedTargets = () => {
   if (!existsSync(repos) || !existsSync(targets)) return found;
   const list = JSON.parse(readFileSync(targets, 'utf8'));
   for (const target of list.targets) {
-    const clone = join(repos, target.name);
-    if (!existsSync(join(clone, '.git'))) continue;
-    for (const readRoot of target.read) found.push({ tree: clone, dir: join(clone, readRoot) });
+    // Each repository of a system is its own tree (P278): a workspace never
+    // reaches from one clone into the one beside it, so each read directory
+    // is asked about inside the clone it belongs to.
+    for (const repo of repositoriesOf(target)) {
+      const clone = join(repos, target.name, repo.dir);
+      if (!existsSync(join(clone, '.git'))) continue;
+      for (const readRoot of repo.read) found.push({ tree: clone, dir: join(clone, readRoot) });
+    }
   }
   return found;
 };
