@@ -105,14 +105,17 @@ const asPaths = (dirs, from) =>
 /**
  * The service directories of any coverage clone that is on this machine.
  *
- * Read from `targets.json`, which is the same list the harness measures, so
- * nothing here is a second place to keep a list of directories.
+ * Read from `targets.local.json`, which is the same list the harness measures,
+ * so nothing here is a second place to keep a list of directories. The list is
+ * gitignored: with clones in the cache and no list beside them there is nothing
+ * to say which directories were read, so none are checked.
  */
 const clonedTargets = () => {
   const found = [];
   const repos = join(ROOT, '.coverage-cache', 'repos');
-  if (!existsSync(repos)) return found;
-  const list = JSON.parse(readFileSync(join(ROOT, 'scripts', 'coverage', 'targets.json'), 'utf8'));
+  const targets = join(ROOT, 'scripts', 'coverage', 'targets.local.json');
+  if (!existsSync(repos) || !existsSync(targets)) return found;
+  const list = JSON.parse(readFileSync(targets, 'utf8'));
   for (const target of list.targets) {
     const clone = join(repos, target.name);
     if (!existsSync(join(clone, '.git'))) continue;
