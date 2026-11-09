@@ -229,6 +229,92 @@ describe('a Prisma client whose generated code does not exist', () => {
     ).toBeNull();
   });
 
+  /**
+   * The same trace through a bare specifier the project's compiler options
+   * place in the repository (P270): `src/generated/prisma/client` under
+   * `baseUrl`, or an alias under `paths`.
+   */
+  const placedClientIn = (specifier: string, compilerOptions: { baseUrl: string; paths?: Record<string, string[]> }): TsNode => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions });
+    project.getFileSystem().writeFileSync('/app/prisma/schema.prisma', SCHEMA.replace('./generated/prisma', '../src/generated/prisma'));
+    project.createSourceFile(
+      '/app/src/db.service.ts',
+      `
+        import { PrismaClient } from '${specifier}';
+        export class DbService extends PrismaClient {}
+      `,
+    );
+    const file = project.createSourceFile(
+      '/app/src/orders.service.ts',
+      `
+        import { DbService } from './db.service';
+        export class OrdersService {
+          constructor(private readonly db: DbService) {}
+          all() { return this.db.order.findMany(); }
+        }
+      `,
+    );
+    for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const callee = call.getExpression();
+      if (Node.isPropertyAccessExpression(callee) && Node.isPropertyAccessExpression(callee.getExpression())) {
+        return callee.getExpression().asKindOrThrow(SyntaxKind.PropertyAccessExpression).getExpression();
+      }
+    }
+    throw new Error('the source must hold a call through a delegate');
+  };
+
+  it('reads a generated client imported by the path baseUrl places it at', () => {
+    const origin = statedOrigin(placedClientIn('src/generated/prisma/client', { baseUrl: '/app' }));
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('reads a generated client imported through a paths alias', () => {
+    const origin = statedOrigin(
+      placedClientIn('@db/client', { baseUrl: '/app', paths: { '@db/*': ['src/generated/prisma/*'] } }),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('reads a client kept by a function of the repository that writes its return type', () => {
+    const origin = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        let shared: PrismaClient | undefined;
+        function sharedClient(): PrismaClient {
+          shared ??= new PrismaClient();
+          return shared;
+        }
+        const loadClient = async (): Promise<PrismaClient> => sharedClient();
+        export const all = async () => {
+          const db = sharedClient();
+          const later = await loadClient();
+          return [db.order.findMany(), later.order.count()];
+        };
+      `),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('does not read a call of a function that writes no return type', () => {
+    expect(
+      statedOrigin(
+        clientIn(`
+          import { PrismaClient } from '@prisma/client';
+          function sharedClient() { return new PrismaClient(); }
+          export const all = () => {
+            const db = sharedClient();
+            return db.order.findMany();
+          };
+        `),
+      ),
+    ).toBeNull();
+  });
+
+  it('keeps a bare specifier a package where nothing the schema generates is under baseUrl', () => {
+    const origin = statedOrigin(placedClientIn('src/zod/client', { baseUrl: '/app' }));
+    expect(origin?.package).not.toBe('@prisma/client');
+  });
+
   it('does not read a value named prisma that nothing traces to a client', () => {
     expect(
       statedOrigin(

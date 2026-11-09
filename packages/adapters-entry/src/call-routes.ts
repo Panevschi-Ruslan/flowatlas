@@ -1288,9 +1288,44 @@ const pathIndex = (site: AppCall, dialect: RouteDialect): number =>
   (dialect.verbArgument !== undefined && site.method === dialect.verbArgument ? 1 : 0) +
   dialect.pathAt;
 
+/**
+ * A route declared with its verbs as a list, at positions the dialect names:
+ * koa-router's `router.register('jobs.:interval', ['get', 'post'], [validate,
+ * run])` (P270). The handlers are a list or one function; the last answers the
+ * request and the ones before it are that route's middleware, as they are
+ * written between the path and the handler of a verb call.
+ */
+const listedRouteOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Route | undefined => {
+  const shape = dialect.verbList;
+  if (shape === undefined || site.method !== shape.method) return undefined;
+  const verbs = verbsArg(site.args[shape.verbsAt]);
+  const paths = pathsArg(site.args[shape.pathAt]);
+  const written = site.args[shape.handlersAt];
+  if (verbs === undefined || paths === undefined || written === undefined) return undefined;
+  const list = unwrap(written);
+  const handlers = Node.isArrayLiteralExpression(list) ? list.getElements() : [written];
+  const last = handlers[handlers.length - 1];
+  if (last === undefined || Node.isSpreadElement(last)) return undefined;
+  return {
+    verbs,
+    paths,
+    middleware: handlers.slice(0, -1).map((argument) => label(argument)),
+    answer: answered(site, throughWrapper(last), verbs, paths, ctx),
+  };
+};
+
+/** Whether a call is the dialect's list form, which declares a route as a verb call does. */
+const isListedCall = (site: AppCall, dialect: RouteDialect): boolean =>
+  dialect.verbList !== undefined &&
+  site.method === dialect.verbList.method &&
+  site.args.length > Math.max(dialect.verbList.pathAt, dialect.verbList.verbsAt, dialect.verbList.handlersAt);
+
 const routeOf = (site: AppCall, dialect: RouteDialect, ctx: ExtractContext): Route | undefined => {
   const asObject = objectRouteOf(site, dialect, ctx);
   if (asObject !== undefined) return asObject;
+  if (dialect.verbList !== undefined && site.method === dialect.verbList.method) {
+    return listedRouteOf(site, dialect, ctx);
+  }
 
   const byArgument = dialect.verbArgument !== undefined && site.method === dialect.verbArgument;
   const verb = dialect.verbs.get(site.method);
@@ -1805,12 +1840,28 @@ const reportUnreadable = (ctx: ExtractContext, site: AppCall, dialect: RouteDial
     site.method === dialect.routeObject.method &&
     site.args[0] !== undefined &&
     Node.isObjectLiteralExpression(unwrap(site.args[0] as TsNode));
-  if (!dialect.verbs.has(site.method) && !byArgument && !asObject) return;
-  const pathAt = pathIndex(site, dialect);
-  if (!asObject && site.args.length < pathAt + 2) return;
+  const listed = isListedCall(site, dialect);
+  if (!dialect.verbs.has(site.method) && !byArgument && !asObject && !listed) return;
+  const pathAt = listed ? (dialect.verbList?.pathAt ?? 0) : pathIndex(site, dialect);
+  if (!asObject && !listed && site.args.length < pathAt + 2) return;
   const written = asObject
     ? propertyOf(site.args[0], dialect.routeObject?.pathKey ?? '')
     : site.args[pathAt];
+
+  // The list form's address read and its verbs not: the verbs are the half missing.
+  const verbsWritten = listed ? site.args[dialect.verbList?.verbsAt ?? 1] : undefined;
+  if (listed && pathsArg(written) !== undefined && verbsArg(verbsWritten) === undefined) {
+    ctx.builder.addUnresolved({
+      file: site.site.file,
+      line: site.site.line,
+      reason: 'route-verb-unread',
+      message: `${label(site.receiver)}.${site.method}(${label(written)}) is handed its verbs as ${label(verbsWritten)}, which is decided at run time, so no way in was drawn for it.`,
+      hint: "Write the verbs as a list of strings, ['get', 'post'], so the route can be named and joined to what asks for it.",
+      symbol: `${label(site.receiver)}.${site.method}(${label(written)})`,
+      adapter: dialect.name,
+    });
+    return;
+  }
 
   ctx.builder.addUnresolved({
     file: site.site.file,

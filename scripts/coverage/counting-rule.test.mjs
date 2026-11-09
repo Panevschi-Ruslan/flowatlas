@@ -113,6 +113,41 @@ describe('a route a Nuxt module adds (P251)', () => {
   });
 });
 
+describe('a route file Nitro serves, by what it default-exports (P270)', () => {
+  it('counts an event handler, an h3 factory of one, and a function written in place that takes the event', () => {
+    assert.deepEqual(sitesIn('server/api/orders.get.ts', 'export default defineEventHandler(async (event) => ({}));\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/api/stock.ts', 'export default defineCachedEventHandler<Stock>(() => load(), { maxAge: 60 });\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/routes/health.ts', 'export default eventHandler(() => "ok");\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/routes/legacy.ts', 'export default fromNodeMiddleware((req, res) => res.end());\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/api/ping.ts', 'export default async (event) => "pong";\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/api/pong.ts', 'export default function (event) { return "ping"; }\n'), { routes: 1 });
+  });
+
+  it('does not count a middleware factory or a router another framework keeps under `server/routes`', () => {
+    const factory = 'export default function paging() {\n  return async function pagingMiddleware(ctx, next) { await next(); };\n}\n';
+    assert.deepEqual(sitesIn('server/routes/api/middleware/paging.ts', factory), {});
+    assert.deepEqual(sitesIn('server/routes/api/index.ts', 'const api = new Koa();\nexport default api;\n'), {});
+  });
+});
+
+describe("koa-router's `register`, a route with its verbs as a list (P270)", () => {
+  it('counts a registration given an address and a list of verbs, on one line or across several', () => {
+    const text = [
+      "router.register('jobs.:interval', ['get', 'post'], [validate(schema), runJobs]);",
+      'router.register(',
+      '  "maintenance.sweep",',
+      '  ["get", "post"],',
+      '  [validate(schema), runJobs]',
+      ');',
+    ].join('\n');
+    assert.deepEqual(sitesIn('server/routes/api/jobs/jobs.ts', text), { routes: 2 });
+  });
+
+  it("does not count a plugin system's `register`, which takes a plugin and its options", () => {
+    assert.deepEqual(sitesIn('src/app.ts', "app.register(ordersPlugin, { prefix: '/orders' });\nrouter.register(routes);\n"), {});
+  });
+});
+
 describe("a task Nitro runs by its name (P258)", () => {
   it('counts a file of `server/tasks` that defines one, at any depth, and not a helper beside it', () => {
     assert.deepEqual(sitesIn('server/tasks/db/migrate.ts', 'export default defineTask({ run() { return {}; } });\n'), { routes: 1 });

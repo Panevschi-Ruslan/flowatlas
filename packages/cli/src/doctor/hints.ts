@@ -414,10 +414,14 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Its types match and its routes do not. Check verbs, verbArgument, pathArg and handlerArg on that description.',
   'entry-http-routes-unplaced': () =>
     'Routes were read and only some of them could be placed at an address, so the ways in recorded for that service are a part of what it serves rather than the whole of it. The rows above name each application whose base could not be read.',
+  'mcp-name-dynamic': () =>
+    'An MCP server registers a tool, a prompt or a resource under a name decided at run time - usually a loop over a registry of them - so what a client may ask the server for is not drawn. Register each under a name written as text.',
   'route-registry-unread': () =>
     'One mount installs every application in a collection, and nothing here puts an application into that collection, so however many routes it installs are missing. Put them in a list, or register each on the application it is mounted on with a literal path.',
 
   // Trees of procedures (adapters-entry/procedure-routers)
+  'procedure-unmounted': () =>
+    'A tree of ways in, or one way in, is declared where no tree holds it, no mount serves it and nothing names it, so no request reaches it and it is not drawn. Informational: it is a branch somebody unhooked or never added. Add it to the tree the service serves, or delete it.',
   'procedure-router-unread': () =>
     'This file serves a whole tree of ways in and the tree is assembled somewhere that was not read, so none of them is in the graph. Import the tree from inside this service, or add the package it comes from to sharedPackages.',
   'procedure-branch-unread': () =>
@@ -904,6 +908,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'orphan-update-decorator': ['bot handler outside an update class', 'bot handlers outside an update class'],
   'procedure-call-mismatch': ['procedure called as the wrong kind', 'procedures called as the wrong kind'],
   'procedure-link-unserved': ['procedure sent where nothing answers', 'procedures sent where nothing answers'],
+  'procedure-unmounted': ['procedure declared where nothing serves it', 'procedures declared where nothing serves them'],
   'network-port-unreachable': ['request to a port the network does not reach', 'requests to a port the network does not reach'],
   'server-request-without-origin': ['server request with no host', 'server requests with no host'],
   's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],

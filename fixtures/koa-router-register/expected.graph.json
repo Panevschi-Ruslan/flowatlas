@@ -1,0 +1,415 @@
+{
+  "schemaVersion": 7,
+  "repo": "koa-router-register",
+  "generatedAt": "2026-11-09T18:03:03.456Z",
+  "nodes": [
+    {
+      "id": "entry:koa-router-register:http:GET:/api/jobs.:interval",
+      "type": "entry",
+      "label": "GET /api/jobs.:interval",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/jobs.:interval",
+        "rawPath": "/api/jobs.:interval",
+        "adapter": "koa-routes",
+        "registration": "router.register",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:koa-router-register:http:GET:/api/maintenance.sweep",
+      "type": "entry",
+      "label": "GET /api/maintenance.sweep",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/maintenance.sweep",
+        "rawPath": "/api/maintenance.sweep",
+        "adapter": "koa-routes",
+        "registration": "router.register",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:koa-router-register:http:POST:/api/jobs.:interval",
+      "type": "entry",
+      "label": "POST /api/jobs.:interval",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/jobs.:interval",
+        "rawPath": "/api/jobs.:interval",
+        "adapter": "koa-routes",
+        "registration": "router.register",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:koa-router-register:http:POST:/api/maintenance.sweep",
+      "type": "entry",
+      "label": "POST /api/maintenance.sweep",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/maintenance.sweep",
+        "rawPath": "/api/maintenance.sweep",
+        "adapter": "koa-routes",
+        "registration": "router.register",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:koa-router-register:http:POST:/api/products.list",
+      "type": "entry",
+      "label": "POST /api/products.list",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/products/products.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/products.list",
+        "rawPath": "/api/products.list",
+        "adapter": "koa-routes",
+        "registration": "router.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "koa-router-register#server/routes/api/index.ts:envelope()",
+      "type": "middleware",
+      "label": "envelope()",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/index.ts",
+      "line": 12,
+      "kind": "function"
+    },
+    {
+      "id": "koa-router-register#server/routes/api/jobs/jobs.ts:runJobs",
+      "type": "function",
+      "label": "runJobs",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "koa-router-register#server/routes/api/jobs/jobs.ts:validate",
+      "type": "middleware",
+      "label": "validate",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 24,
+      "kind": "function"
+    },
+    {
+      "id": "koa-router-register#server/routes/api/products/products.ts:POST products.list@8",
+      "type": "function",
+      "label": "POST products.list@8",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/products/products.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "koa-router-register#server/routes/api/products/products.ts:paging()",
+      "type": "middleware",
+      "label": "paging()",
+      "repo": "koa-router-register",
+      "file": "server/routes/api/products/products.ts",
+      "line": 8,
+      "kind": "function"
+    },
+    {
+      "id": "repo:koa-router-register",
+      "type": "repo",
+      "label": "koa-router-register",
+      "repo": "koa-router-register",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "koa-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "server/main.ts",
+            "line": 9
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:koa-router-register:http:GET:/api/jobs.:interval",
+      "to": "koa-router-register#server/routes/api/index.ts:envelope()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/routes/api/index.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "api.use"
+      }
+    },
+    {
+      "from": "entry:koa-router-register:http:GET:/api/jobs.:interval",
+      "to": "koa-router-register#server/routes/api/jobs/jobs.ts:runJobs",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 15,
+      "meta": {
+        "requestRead": true,
+        "params": "{interval:string}"
+      },
+      "returns": "{interval:string;ran:boolean}"
+    },
+    {
+      "from": "entry:koa-router-register:http:GET:/api/jobs.:interval",
+      "to": "koa-router-register#server/routes/api/jobs/jobs.ts:validate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 24,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "router.register"
+      }
+    },
+    {
+      "from": "entry:koa-router-register:http:GET:/api/maintenance.sweep",
+      "to": "koa-router-register#server/routes/api/index.ts:envelope()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/routes/api/index.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "api.use"
+      }
+    },
+    {
+      "from": "entry:koa-router-register:http:GET:/api/maintenance.sweep",
+      "to": "koa-router-register#server/routes/api/jobs/jobs.ts:runJobs",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 15,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{interval:string;ran:boolean}"
+    },
+    {
+      "from": "entry:koa-router-register:http:GET:/api/maintenance.sweep",
+      "to": "koa-router-register#server/routes/api/jobs/jobs.ts:validate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 27,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "router.register"
+      }
+    },
+    {
+      "from": "entry:koa-router-register:http:POST:/api/jobs.:interval",
+      "to": "koa-router-register#server/routes/api/index.ts:envelope()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/routes/api/index.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "api.use"
+      }
+    },
+    {
+      "from": "entry:koa-router-register:http:POST:/api/jobs.:interval",
+      "to": "koa-router-register#server/routes/api/jobs/jobs.ts:runJobs",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 15,
+      "meta": {
+        "requestRead": true,
+        "params": "{interval:string}"
+      },
+      "returns": "{interval:string;ran:boolean}"
+    },
+    {
+      "from": "entry:koa-router-register:http:POST:/api/jobs.:interval",
+      "to": "koa-router-register#server/routes/api/jobs/jobs.ts:validate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 24,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "router.register"
+      }
+    },
+    {
+      "from": "entry:koa-router-register:http:POST:/api/maintenance.sweep",
+      "to": "koa-router-register#server/routes/api/index.ts:envelope()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/routes/api/index.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "api.use"
+      }
+    },
+    {
+      "from": "entry:koa-router-register:http:POST:/api/maintenance.sweep",
+      "to": "koa-router-register#server/routes/api/jobs/jobs.ts:runJobs",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 15,
+      "meta": {
+        "requestRead": true
+      },
+      "returns": "{interval:string;ran:boolean}"
+    },
+    {
+      "from": "entry:koa-router-register:http:POST:/api/maintenance.sweep",
+      "to": "koa-router-register#server/routes/api/jobs/jobs.ts:validate",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 27,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "router.register"
+      }
+    },
+    {
+      "from": "entry:koa-router-register:http:POST:/api/products.list",
+      "to": "koa-router-register#server/routes/api/index.ts:envelope()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/routes/api/index.ts",
+      "line": 12,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "api.use"
+      }
+    },
+    {
+      "from": "entry:koa-router-register:http:POST:/api/products.list",
+      "to": "koa-router-register#server/routes/api/products/products.ts:POST products.list@8",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/routes/api/products/products.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:koa-router-register:http:POST:/api/products.list",
+      "to": "koa-router-register#server/routes/api/products/products.ts:paging()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server/routes/api/products/products.ts",
+      "line": 8,
+      "meta": {
+        "order": 1,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "router.post"
+      }
+    }
+  ],
+  "types": {
+    "type:koa#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "koa",
+      "structuralHash": "002a3105e543026c",
+      "meta": {
+        "declKind": "external",
+        "package": "koa"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "server/routes/api/jobs/jobs.ts",
+      "line": 31,
+      "reason": "route-verb-unread",
+      "message": "router.register('jobs.manual') is handed its verbs as verbs, which is decided at run time, so no way in was drawn for it.",
+      "hint": "Write the verbs as a list of strings, ['get', 'post'], so the route can be named and joined to what asks for it.",
+      "symbol": "router.register('jobs.manual')",
+      "adapter": "koa-routes"
+    }
+  ]
+}

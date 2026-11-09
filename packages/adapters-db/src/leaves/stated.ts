@@ -74,16 +74,24 @@ import { besidePath } from './prisma-schema.js';
  *
  * `new PrismaClient()` names its class as plainly as an annotation does, and
  * `x as PrismaClient` is an annotation written after the value. A call states
- * nothing: `const db = makeDb()` says what function ran, not what came back,
- * and following it is the checker's work. A fallback - `cached ?? new Client()`,
- * the ordinary way a client is kept across reloads - states its type on the
- * side that constructs, since the other side is the same value remembered.
+ * nothing of itself: `const db = makeDb()` says what function ran, not what
+ * came back. What does state it is the function, where it is this
+ * repository's and writes its return type - `function sharedDb(): DbService`,
+ * the ordinary way one instance is kept for code outside the container (P270)
+ * - and that annotation is read as the value's; a function that writes none is
+ * the checker's work. A fallback - `cached ?? new Client()`, the ordinary way a
+ * client is kept across reloads - states its type on the side that constructs,
+ * since the other side is the same value remembered.
  */
 const constructedBy = (initializer: TsNode | undefined): TsNode | undefined => {
   if (initializer === undefined) return undefined;
   if (Node.isParenthesizedExpression(initializer)) return constructedBy(initializer.getExpression());
   if (Node.isAsExpression(initializer)) return initializer.getTypeNode();
   if (Node.isNewExpression(initializer)) return initializer.getExpression();
+  if (Node.isCallExpression(initializer)) return returnTypeWritten(initializer, false);
+  if (Node.isAwaitExpression(initializer) && Node.isCallExpression(initializer.getExpression())) {
+    return returnTypeWritten(initializer.getExpression(), true);
+  }
   if (Node.isBinaryExpression(initializer)) {
     const operator = initializer.getOperatorToken().getKind();
     if (operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken) {
@@ -91,6 +99,29 @@ const constructedBy = (initializer: TsNode | undefined): TsNode | undefined => {
     }
   }
   return undefined;
+};
+
+/**
+ * The return type a function of this repository writes, for a call of it by
+ * name. Awaited, a written `Promise<T>` is `T`. A function of a package, or one
+ * that writes no return type, states nothing here.
+ */
+const returnTypeWritten = (call: TsNode, awaited: boolean): TsNode | undefined => {
+  if (!Node.isCallExpression(call)) return undefined;
+  const callee = call.getExpression();
+  if (!Node.isIdentifier(callee)) return undefined;
+  const symbol = callee.getSymbol();
+  const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+  if (declaration === undefined || declaration.getSourceFile().getFilePath().includes('/node_modules/')) return undefined;
+  const fn = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
+  if (fn === undefined || !(Node.isFunctionDeclaration(fn) || Node.isArrowFunction(fn) || Node.isFunctionExpression(fn))) {
+    return undefined;
+  }
+  const written = fn.getReturnTypeNode();
+  if (!awaited || written === undefined || !Node.isTypeReference(written) || written.getTypeName().getText() !== 'Promise') {
+    return written;
+  }
+  return written.getTypeArguments()[0];
 };
 
 /**
@@ -445,10 +476,60 @@ const referenced = (reference: ModuleReference, hops: number): Step => {
         ? undefined
         : workspaceEntry(specifier, from);
   if (local !== undefined) return exported(local, name, hops + 1);
+  // A bare specifier the project's own compiler options place in the
+  // repository (P270): `src/generated/prisma/client` under `baseUrl: "./"`, or
+  // `@db/client` under a `paths` entry. It reads like a package, and the
+  // compiler would look for it beside the project's files first; asked of the
+  // generators before it is taken for one, so a client `prisma generate` writes
+  // there is the generating library's client on the schema's word.
+  const placed = pkg === undefined ? [] : projectPathsOf(specifier, from);
+  const generated = generatedAt(from, placed);
+  if (generated !== null) return generated;
   if (pkg !== undefined) return { package: pkg, site: from };
-  const target = besidePath(dirname(from.getFilePath()), specifier);
-  const generator = generatedModules.find((entry) => entry.generates(from, target));
-  return generator === undefined ? null : { package: generator.package, site: from };
+  return generatedAt(from, [besidePath(dirname(from.getFilePath()), specifier)]);
+};
+
+/** The generating library whose client one of these module paths is, or nothing. */
+const generatedAt = (from: SourceFile, targets: readonly string[]): Step => {
+  for (const target of targets) {
+    const generator = generatedModules.find((entry) => entry.generates(from, target));
+    if (generator !== undefined) return { package: generator.package, site: from };
+  }
+  return null;
+};
+
+/**
+ * Where the compiler would look for a bare specifier inside the project, by
+ * the options the project was read with: each `paths` pattern it matches, with
+ * its `*` filled, and the specifier under `baseUrl`. Relative entries are
+ * relative to `baseUrl`, or to the configuration that declared them where it
+ * has none, which is what the compiler records as `pathsBasePath`.
+ */
+const projectPathsOf = (specifier: string, from: SourceFile): string[] => {
+  const options = from.getProject().getCompilerOptions();
+  const base =
+    typeof options.baseUrl === 'string'
+      ? options.baseUrl
+      : typeof options['pathsBasePath'] === 'string'
+        ? (options['pathsBasePath'] as string)
+        : undefined;
+  if (base === undefined) return [];
+  const found: string[] = [];
+  for (const [pattern, targets] of Object.entries(options.paths ?? {})) {
+    const star = pattern.indexOf('*');
+    const filled =
+      star < 0
+        ? specifier === pattern
+          ? ''
+          : undefined
+        : specifier.startsWith(pattern.slice(0, star)) && specifier.endsWith(pattern.slice(star + 1))
+          ? specifier.slice(star, specifier.length - (pattern.length - star - 1))
+          : undefined;
+    if (filled === undefined) continue;
+    for (const target of targets) found.push(besidePath(base, target.replace('*', filled)));
+  }
+  if (typeof options.baseUrl === 'string') found.push(besidePath(options.baseUrl, specifier));
+  return found;
 };
 
 /**

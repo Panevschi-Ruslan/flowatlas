@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:50:32.762Z",
+  "builtAt": "2026-11-09T18:19:12.932Z",
   "services": [
     {
       "name": "web",
@@ -251,12 +251,12 @@
       "repo": "web",
       "meta": {
         "stats": {
-          "files": 15,
-          "filesRead": 15,
+          "files": 17,
+          "filesRead": 17,
           "filesUnreadable": 0,
           "classes": 0,
           "skippedExternalCalls": {},
-          "functions": 12,
+          "functions": 14,
           "components": 2,
           "hooks": 0
         },
@@ -968,6 +968,44 @@
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "../../packages/api/src/routers/coupons/_router.ts",
+      "line": 8,
+      "reason": "procedure-unmounted",
+      "level": "info",
+      "sites": 2,
+      "message": "couponsRouter is a tree of 2 members that no tree holds, no mount serves and nothing names, so no request reaches any of them and none is drawn.",
+      "hint": "Add it to the tree the service serves, or delete it.",
+      "symbol": "couponsRouter",
+      "adapter": "trpc-procedures",
+      "meta": {
+        "causes": [
+          {
+            "cause": "procedure-alone",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "../../packages/api/src/routers/orders/procedures/totals.ts",
+                "line": 7,
+                "symbol": "orderTotals"
+              }
+            ]
+          },
+          {
+            "cause": "tree-unmounted",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "../../packages/api/src/routers/coupons/_router.ts",
+                "line": 8,
+                "symbol": "couponsRouter"
+              }
+            ]
+          }
+        ]
+      },
       "service": "web"
     },
     {

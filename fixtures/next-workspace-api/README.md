@@ -39,3 +39,16 @@ browser wrapper whose verb is a member of the options its callers hand in.
   joined to its route. Before R179 the verb was unread (`api-method-dynamic`)
   and none of the three joined; before P91 it was read as `GET`, which was
   wrong for two of them.
+
+## What nothing serves (P270)
+
+- `packages/api/src/routers/coupons/_router.ts` assembles `couponsRouter`
+  (`redeem`, `list`), and no tree holds it, no file serves it and nothing
+  imports it. `routers/orders/procedures/totals.ts` declares `orderTotals =
+  procedure.query(...)` on its own, and the orders tree declares its members
+  inline and never names it. Neither is a way in any request reaches, so
+  neither is drawn; both are named by one `procedure-unmounted` row (info,
+  a finding), folded with a cause for each - `tree-unmounted` and
+  `procedure-alone` - so each file is named. Before P270 the tree was set
+  aside as one imported only for its type and the procedure was skipped, and
+  both files were silent.

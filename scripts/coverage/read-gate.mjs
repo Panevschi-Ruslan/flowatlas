@@ -126,6 +126,8 @@ const GATED = {
       'route-verb-unread',
       'route-mount-unread',
       'route-registry-unread',
+      // An MCP server's tool, prompt or resource registered under a computed name (P270).
+      'mcp-name-dynamic',
       'route-file-not-served',
       'route-module-not-found',
       'route-claimed-twice',
@@ -163,6 +165,8 @@ const GATED = {
       'entry-procedures-description-inactive',
       'procedure-prefix-unread',
       'procedure-contract-unread',
+      // A tree or a way in nothing serves, declared and left (P270).
+      'procedure-unmounted',
       // A route a lower layer of the application serves, which the higher one's
       // takes the place of (P243).
       'framework-layer-overridden',

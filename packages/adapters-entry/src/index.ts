@@ -21,6 +21,8 @@ import { nestjsMicroserviceAdapter } from './nestjs-microservice.js';
 import { nestjsScheduleAdapter } from './nestjs-schedule.js';
 import { nestjsTelegrafAdapter } from './nestjs-telegraf/index.js';
 import { telegrafCallsAdapter } from './telegraf-calls.js';
+import { tanstackStartAdapter } from './server-functions.js';
+import { mcpServerAdapter } from './mcp-servers.js';
 
 export const PACKAGE_NAME = '@flowatlas/adapters-entry';
 
@@ -49,6 +51,8 @@ export const entryAdapters: readonly EntryAdapter[] = [
   telegrafCallsAdapter,
   trpcProceduresAdapter,
   orpcProceduresAdapter,
+  tanstackStartAdapter,
+  mcpServerAdapter,
   entryRegistriesAdapter,
   configuredRoutesAdapter,
   configuredProceduresAdapter,
@@ -101,6 +105,8 @@ export type {
 export { dialectOf, EXPRESS, FASTIFY, HONO, KOA, ROUTE_DIALECTS } from './route-dialects.js';
 export type { ActionBuilder } from './action-builders.js';
 export { ACTION_BUILDERS, NEXT_SAFE_ACTION, ZSA } from './action-builders.js';
+export { tanstackStartAdapter } from './server-functions.js';
+export { mcpServerAdapter } from './mcp-servers.js';
 export { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 export {
   fsAddressSpace,

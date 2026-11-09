@@ -166,6 +166,8 @@ const FINDINGS: readonly string[] = [
   'procedure-call-mismatch',
   // A client's link sent where no mount of its protocol answers (P58)
   'procedure-link-unserved',
+  // A tree or a way in declared where no tree holds it and nothing names it (P270)
+  'procedure-unmounted',
   // A request on a container's or a cluster's network to a port only the machine or the containers have (P257)
   'network-port-unreachable',
   // A server's own request with no host, made by a client with no origin to resolve it against (P263)
@@ -247,6 +249,8 @@ const GAPS: readonly string[] = [
   'route-module-not-found',
   'route-verb-unread',
   'route-registry-unread',
+  // A tool, prompt or resource an MCP server registers under a name decided at run time (P270)
+  'mcp-name-dynamic',
   'registry-key-dynamic',
   'registry-handler-anonymous',
   'entry-registry-unconfigured',
@@ -526,6 +530,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
       'orphan-update-decorator',
       'procedure-call-mismatch',
       'procedure-link-unserved',
+      'procedure-unmounted',
       'network-port-unreachable',
       'server-request-without-origin',
       'workflow-definition-invalid',

@@ -62,6 +62,30 @@ only one of them moved.
   job named after its handler is one job at both ends. An instance whose
   queue cannot be read is a `channel-dynamic` row at the caller naming it.
 - **Every way a cluster is installed and a server asks itself (P263).** A
+- **Ways in reached by a name, and ways in nothing serves (P270).** A
+  TanStack Start server function - `export const placeOrder =
+  createServerFn({ method: 'POST' }).middleware([...]).handler(fn)` from
+  `@tanstack/react-start`, `solid-start` or `start` - is an `rpc` way in keyed
+  `serverfn:<file>#<name>`, sent with the verb its options write (`GET` where
+  they write none), its middleware in front of it, and reached by import: each
+  call of the export is a `calls` edge to it, as a Next server action's is. A
+  chain nothing names is a `server-action-unread` row. An MCP server's tools,
+  prompts and resources - `registerTool`, `tool`, `registerPrompt`, `prompt`,
+  `registerResource`, `resource` on an `McpServer` of
+  `@modelcontextprotocol/sdk` or `@modelcontextprotocol/server`, recognised by
+  its type or by `new McpServer(...)` and the annotation where nothing is
+  installed - are `rpc` ways in keyed `mcp:<kind>:<name>`, handled by the
+  function each is handed; one registered under a name decided at run time is
+  the new `mcp-name-dynamic` row. koa-router's `router.register(path, ['get',
+  'post'], [middleware, handler])` declares a route per verb, the last handler
+  answering and the ones before it in front (a route description's new
+  `verbList` field says where such a method keeps the three); verbs decided at
+  run time are `route-verb-unread`. A tRPC or oRPC tree a workspace package
+  assembles that no tree holds, no mount serves and nothing names, and a way
+  in declared on its own (`export const stats = authed.query(...)`) that no
+  tree holds and nothing names, are the finding `procedure-unmounted` (info),
+  one row per service with the files of each in its causes, where before both
+  were set aside without a word. A
   `helmfile.yaml` installs its releases in each environment it declares (or
   the one `helmfile -e` names), rendered over the environment's values; a
   chart renders its dependencies (`file://` charts and `charts/`) inside its
@@ -993,6 +1017,24 @@ only one of them moved.
   queue is named is refused as `channel-dynamic` rather than drawn, while a
   transport that matches records - `@MessagePattern({ cmd: 'sum' })` - keeps
   them as patterns.
+- **A Prisma client generated where the tsconfig's `baseUrl` or `paths` place
+  it is read with nothing installed (P270).** `import { PrismaClient } from
+  'src/generated/prisma/client'` under `baseUrl: "./"`, with the schema's
+  generator writing there, was taken for a package called `src`, so a NestJS
+  service whose `PrismaService extends PrismaClient` read none of its queries
+  and none of its models. A bare specifier the project's compiler options
+  place inside the repository is now asked of the schema before it is taken
+  for a package. A value held from a call of the repository's own function
+  that writes its return type - `const prisma = sharedPrisma()`, `function
+  sharedPrisma(): PrismaService` - is read as that type, awaited `Promise<T>`
+  as `T`.
+- **The coverage harness's counting rule no longer counts a middleware factory
+  under `server/routes` as a Nitro route file (P270).** The `nitro-route-file`
+  probe counts a file there that default-exports an event handler (h3's
+  factories, or a function written in place that takes the event) rather than
+  anything at all, so a Koa server keeping its routes and their middleware
+  under that directory is no longer measured against routes it does not have;
+  `registered-route-call` counts koa-router's `register(path, [verbs], ...)`.
 - **A tRPC root a workspace package holds is read where the service serves
   the trees under it (R179).** Since P256 a root kept in a package beside the
   service was read only where the service mounted that root itself, so an

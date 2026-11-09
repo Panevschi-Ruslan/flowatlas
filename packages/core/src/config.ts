@@ -789,6 +789,20 @@ export const entryHttpSchema = z.strictObject({
   verbs: z.record(z.string().min(1), z.string().min(1)).optional(),
   /** A method taking the verb as its first argument. */
   verbArgument: z.string().min(1).optional(),
+  /**
+   * A method taking the address, a list of verbs and a list of handlers, each
+   * at a position of its own: koa-router's `register(path, ['get', 'post'],
+   * [validate, handler])` (P270). The last of the handlers answers the request
+   * and the ones before it are that route's middleware.
+   */
+  verbList: z
+    .strictObject({
+      method: z.string().min(1),
+      pathArg: z.number().int().min(0).default(0),
+      verbsArg: z.number().int().min(0).default(1),
+      handlersArg: z.number().int().min(0).default(2),
+    })
+    .optional(),
   /** A method returning the same application with a prefix in front of it. */
   prefixMethod: z.string().min(1).optional(),
   /**

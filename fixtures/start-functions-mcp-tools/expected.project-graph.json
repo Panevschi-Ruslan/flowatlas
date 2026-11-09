@@ -1,0 +1,576 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T17:50:50.948Z",
+  "services": [
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "assistant",
+      "repo": "./assistant",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "assistant#src/server.ts:prompt summarise_order@39",
+      "type": "function",
+      "label": "prompt summarise_order@39",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ orderId }",
+              "type": "{orderId:unknown}"
+            }
+          ],
+          "returns": "{messages:{role:'user';content:{type:'text';text:string}}[]}"
+        }
+      }
+    },
+    {
+      "id": "assistant#src/server.ts:resource catalog@42",
+      "type": "function",
+      "label": "resource catalog@42",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "uri",
+              "type": "URL"
+            }
+          ],
+          "returns": "{contents:{uri:string;text:string}[]}"
+        }
+      }
+    },
+    {
+      "id": "assistant#src/server.ts:tool cancel_order@33",
+      "type": "function",
+      "label": "tool cancel_order@33",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ orderId }",
+              "type": "{orderId:string}"
+            }
+          ],
+          "returns": "{content:{type:'text';text:string}[]}"
+        }
+      }
+    },
+    {
+      "id": "assistant#src/server.ts:tool find_products@12",
+      "type": "function",
+      "label": "tool find_products@12",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ query }",
+              "type": "{query:unknown}"
+            }
+          ],
+          "returns": "{content:{type:'text';text:string}[]}"
+        }
+      }
+    },
+    {
+      "id": "assistant#src/stock.ts:lookupStock",
+      "type": "function",
+      "label": "lookupStock",
+      "repo": "assistant",
+      "file": "src/stock.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ sku }",
+              "type": "{sku:string}"
+            }
+          ],
+          "returns": "{content:{type:'text';text:string}[]}"
+        }
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:prompt:summarise_order",
+      "type": "entry",
+      "label": "prompt summarise_order",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 36,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:prompt:summarise_order",
+        "prompt": "summarise_order",
+        "primitive": "prompt",
+        "adapter": "mcp-server",
+        "registration": "McpServer.registerPrompt",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:resource:catalog",
+      "type": "entry",
+      "label": "resource catalog",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 42,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:resource:catalog",
+        "resource": "catalog",
+        "primitive": "resource",
+        "adapter": "mcp-server",
+        "registration": "McpServer.registerResource",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:tool:cancel_order",
+      "type": "entry",
+      "label": "tool cancel_order",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 30,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:tool:cancel_order",
+        "tool": "cancel_order",
+        "primitive": "tool",
+        "adapter": "mcp-server",
+        "registration": "McpServer.registerTool",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:tool:find_products",
+      "type": "entry",
+      "label": "tool find_products",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 9,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:tool:find_products",
+        "tool": "find_products",
+        "primitive": "tool",
+        "adapter": "mcp-server",
+        "registration": "McpServer.registerTool",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:assistant:rpc:mcp:tool:stock_level",
+      "type": "entry",
+      "label": "tool stock_level",
+      "repo": "assistant",
+      "file": "src/server.ts",
+      "line": 16,
+      "kind": "rpc",
+      "meta": {
+        "key": "mcp:tool:stock_level",
+        "tool": "stock_level",
+        "primitive": "tool",
+        "adapter": "mcp-server",
+        "registration": "McpServer.tool",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#archiveOrders",
+      "type": "entry",
+      "label": "server function archiveOrders",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 23,
+      "kind": "rpc",
+      "meta": {
+        "serverFunction": "archiveOrders",
+        "method": "POST",
+        "adapter": "tanstack-start",
+        "registration": "createServerFn().handler",
+        "exported": false,
+        "viaImport": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#listOrders",
+      "type": "entry",
+      "label": "server function listOrders",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 10,
+      "kind": "rpc",
+      "meta": {
+        "serverFunction": "listOrders",
+        "method": "GET",
+        "adapter": "tanstack-start",
+        "registration": "createServerFn().handler",
+        "exported": true,
+        "viaImport": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#placeOrder",
+      "type": "entry",
+      "label": "server function placeOrder",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 13,
+      "kind": "rpc",
+      "meta": {
+        "serverFunction": "placeOrder",
+        "method": "POST",
+        "adapter": "tanstack-start",
+        "registration": "createServerFn().handler",
+        "exported": true,
+        "viaImport": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "repo:assistant",
+      "type": "repo",
+      "label": "assistant",
+      "repo": "assistant",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "mcp-server"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 6,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "tanstack-start"
+          ]
+        }
+      }
+    },
+    {
+      "id": "storefront#app/routes/orders.tsx:OrdersPage",
+      "type": "ui_component",
+      "label": "OrdersPage",
+      "repo": "storefront",
+      "file": "app/routes/orders.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/server/orders.functions.ts:archiveOldOrders",
+      "type": "function",
+      "label": "archiveOldOrders",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{archived:number}"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/server/orders.functions.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 10
+    },
+    {
+      "id": "storefront#app/server/orders.functions.ts:placeOrder",
+      "type": "function",
+      "label": "placeOrder",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 13
+    },
+    {
+      "id": "storefront#app/server/orders.functions.ts:requireSession",
+      "type": "middleware",
+      "label": "requireSession",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 14,
+      "kind": "function"
+    },
+    {
+      "id": "storefront#app/server/orders.functions.ts:server function listOrders@10",
+      "type": "function",
+      "label": "server function listOrders@10",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string;total:number}[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#app/server/orders.functions.ts:server function placeOrder@16",
+      "type": "function",
+      "label": "server function placeOrder@16",
+      "repo": "storefront",
+      "file": "app/server/orders.functions.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ data }",
+              "type": "object"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "ui_action:storefront#app/routes/orders.tsx:18:15",
+      "type": "ui_action",
+      "label": "onClick={order}",
+      "repo": "storefront",
+      "file": "app/routes/orders.tsx",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "order",
+        "component": "storefront#app/routes/orders.tsx:OrdersPage",
+        "handlerVia": "enclosing"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:assistant:rpc:mcp:prompt:summarise_order",
+      "to": "assistant#src/server.ts:prompt summarise_order@39",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 39
+    },
+    {
+      "from": "entry:assistant:rpc:mcp:resource:catalog",
+      "to": "assistant#src/server.ts:resource catalog@42",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 42
+    },
+    {
+      "from": "entry:assistant:rpc:mcp:tool:cancel_order",
+      "to": "assistant#src/server.ts:tool cancel_order@33",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 33
+    },
+    {
+      "from": "entry:assistant:rpc:mcp:tool:find_products",
+      "to": "assistant#src/server.ts:tool find_products@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 12
+    },
+    {
+      "from": "entry:assistant:rpc:mcp:tool:stock_level",
+      "to": "assistant#src/stock.ts:lookupStock",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stock.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#archiveOrders",
+      "to": "storefront#app/server/orders.functions.ts:archiveOldOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/server/orders.functions.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#listOrders",
+      "to": "storefront#app/server/orders.functions.ts:server function listOrders@10",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/server/orders.functions.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#placeOrder",
+      "to": "storefront#app/server/orders.functions.ts:requireSession",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "app/server/orders.functions.ts",
+      "line": 14,
+      "meta": {
+        "order": 0,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "createServerFn().middleware"
+      }
+    },
+    {
+      "from": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#placeOrder",
+      "to": "storefront#app/server/orders.functions.ts:server function placeOrder@16",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/server/orders.functions.ts",
+      "line": 16
+    },
+    {
+      "from": "storefront#app/routes/orders.tsx:OrdersPage",
+      "to": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/orders.tsx",
+      "line": 9
+    },
+    {
+      "from": "storefront#app/routes/orders.tsx:OrdersPage",
+      "to": "entry:storefront:rpc:serverfn:app/server/orders.functions.ts#placeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/orders.tsx",
+      "line": 13
+    },
+    {
+      "from": "storefront#app/routes/orders.tsx:OrdersPage",
+      "to": "storefront#app/server/orders.functions.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/orders.tsx",
+      "line": 9
+    },
+    {
+      "from": "storefront#app/routes/orders.tsx:OrdersPage",
+      "to": "storefront#app/server/orders.functions.ts:placeOrder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/routes/orders.tsx",
+      "line": 13
+    },
+    {
+      "from": "ui_action:storefront#app/routes/orders.tsx:18:15",
+      "to": "storefront#app/routes/orders.tsx:OrdersPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/orders.tsx",
+      "line": 18
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/server.ts",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "zod"
+      },
+      "service": "assistant"
+    },
+    {
+      "file": "src/server.ts",
+      "line": 38,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "zod"
+      },
+      "service": "assistant"
+    },
+    {
+      "file": "src/server.ts",
+      "line": 55,
+      "reason": "mcp-name-dynamic",
+      "message": "server.registerTool(tool.name, ...) registers a tool under a name decided at run time, so no way in was drawn for it and nothing says which tools the server offers.",
+      "hint": "Register each tool under a name written as text, so a client's request for it can be named and followed.",
+      "symbol": "registerTool(tool.name)",
+      "adapter": "mcp-server",
+      "service": "assistant"
+    },
+    {
+      "file": "app/routes/orders.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "storefront"
+    },
+    {
+      "file": "app/server/orders.functions.ts",
+      "line": 29,
+      "reason": "server-action-unread",
+      "message": "A server function is made here and is not the whole value of a variable, so nothing names what the browser imports and calls.",
+      "hint": "Declare it as `export const name = createServerFn(...).handler(async (...) => ...)`, so the boundary can be named and joined to its callers.",
+      "symbol": "createServerFn(...).handler",
+      "adapter": "tanstack-start",
+      "service": "storefront"
+    }
+  ]
+}

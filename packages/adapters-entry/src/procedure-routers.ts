@@ -978,6 +978,18 @@ class Forest {
     return [...this.#trees].filter((tree) => !this.#referenced.has(tree));
   }
 
+  /**
+   * Every value any candidate holds as a member, followed to its declaration:
+   * a procedure declared on its own and named in a tree is one of these (P270).
+   */
+  memberValues(): Set<TsNode> {
+    const values = new Set<TsNode>();
+    for (const tree of this.#candidates.values()) {
+      for (const member of tree.members) values.add(valueOf(member, this.#dialect));
+    }
+    return values;
+  }
+
   /** How many calls looked like a tree, and how many turned out to be one. */
   get candidates(): number {
     // Calls only: a plain literal is a candidate of every repository that has
@@ -1769,6 +1781,7 @@ export const procedureRoutersAdapter = (
 
     const standIns = new Map<string, string[]>();
     let importedTrees = 0;
+    const setAside: Tree[] = [];
     const roots = forest.roots().filter((root) => {
       const named = [...lazilyUnread].filter((written) => standsFor(root, written));
       for (const written of named) standIns.set(written, [...(standIns.get(written) ?? []), root.site.file].sort());
@@ -1778,9 +1791,16 @@ export const procedureRoutersAdapter = (
       // procedures are the server's ways in, not this service's. Served
       // nowhere means neither it nor any tree it holds is mounted here (R179).
       const imported = outsideService(root.site.file) && !servedWithin(root);
-      if (imported) importedTrees += 1;
+      if (imported) {
+        importedTrees += 1;
+        if (named.length === 0) setAside.push(root);
+      }
       return named.length === 0 && !imported;
     });
+    // What was declared and is served by nothing at all (P270): a tree set
+    // aside above that nothing names, and a way in declared on its own that no
+    // tree holds and nothing names either.
+    reportNeverMounted(ctx, sources, setAside, forest, dialect);
     for (const root of roots) {
       walk(root, '', new Set([root]), { guards: [], errors: [], routePrefix: '', mounts: [] });
     }
@@ -1823,6 +1843,108 @@ const reportUnmounted = (
       hint: MOUNT_HINT,
       symbol: mount.named,
       adapter: dialect.name,
+    });
+  }
+};
+
+/** The name a value is declared under, where it is the whole initialiser of one variable. */
+const declaredNameOf = (value: TsNode): TsNode | undefined => {
+  let at: TsNode = value;
+  for (let parent = at.getParent(); parent !== undefined; at = parent, parent = parent.getParent()) {
+    if (Node.isVariableDeclaration(parent)) {
+      const initializer = parent.getInitializer();
+      return initializer !== undefined && unwrapValue(initializer) === unwrapValue(value) ? parent.getNameNode() : undefined;
+    }
+    if (!(Node.isAsExpression(parent) || Node.isSatisfiesExpression(parent) || Node.isParenthesizedExpression(parent))) return undefined;
+  }
+  return undefined;
+};
+
+/**
+ * Whether anything in the files read names a declaration other than the
+ * declaration itself: an import, a re-export, a member written as a shorthand,
+ * a `typeof`, a call. Asked of every identifier spelled like it, in the files
+ * whose text holds the word at all, and an identifier the checker cannot say
+ * the meaning of is taken as naming it, so a doubt keeps the declaration
+ * quiet. A key of an object that happens to be spelled the same - `stats:
+ * authed.query(...)` beside `export const stats` in another file - is a
+ * different thing and does not count.
+ */
+const namedElsewhere = (name: TsNode, sources: readonly SourceFile[]): boolean => {
+  const target = name.getSymbol();
+  if (target === undefined) return true;
+  const spelled = name.getText();
+  const word = new RegExp(`(?<![\\w$])${spelled.replace(/\$/g, '\\$')}(?![\\w$])`);
+  for (const sourceFile of sources) {
+    if (!word.test(sourceFile.getFullText())) continue;
+    for (const identifier of sourceFile.getDescendantsOfKind(SyntaxKind.Identifier)) {
+      if (identifier === name || identifier.getText() !== spelled) continue;
+      const parent = identifier.getParent();
+      const symbol =
+        parent !== undefined && Node.isShorthandPropertyAssignment(parent) ? parent.getValueSymbol() : identifier.getSymbol();
+      if (symbol === undefined) return true;
+      if (symbol === target || symbol.getAliasedSymbol() === target) return true;
+    }
+  }
+  return false;
+};
+
+/**
+ * Ways in declared where nothing serves them (P270).
+ *
+ * Two shapes, and both are code a reader would otherwise take for part of the
+ * API. A tree a package of the workspace assembles that no tree holds, no
+ * mount serves and nothing anywhere names - not the client's type, not a
+ * re-export - is a branch somebody unhooked and left. And a way in declared
+ * on its own, `export const stats = authed.query(...)`, that no tree holds and
+ * nothing names is one somebody wrote beside the tree and never added to it.
+ * Neither is answered by any request, so neither is drawn; each is named here
+ * so its file says why. A finding about the code rather than a gap in the
+ * reading, and informational, because deleting it and mounting it are both
+ * fine answers.
+ */
+const reportNeverMounted = (
+  ctx: ExtractContext,
+  sources: readonly SourceFile[],
+  setAside: readonly Tree[],
+  forest: Forest,
+  dialect: ProcedureDialect,
+): void => {
+  const held = forest.memberValues();
+  const candidates: Array<{ name: TsNode; site: Site; tree?: Tree }> = [];
+  for (const tree of setAside) {
+    const name = declaredNameOf(tree.call);
+    if (name !== undefined && Node.isIdentifier(name)) candidates.push({ name, site: tree.site, tree });
+  }
+  for (const sourceFile of sources) {
+    for (const declaration of sourceFile.getVariableDeclarations()) {
+      const initializer = declaration.getInitializer();
+      const name = declaration.getNameNode();
+      if (initializer === undefined || !Node.isIdentifier(name)) continue;
+      const value = unwrapValue(initializer);
+      if (held.has(value) || endingOf(value, dialect) === undefined) continue;
+      candidates.push({ name, site: siteOf(value, ctx) });
+    }
+  }
+  for (const { name, site, tree } of candidates) {
+    const spelled = name.getText();
+    if (namedElsewhere(name, sources)) continue;
+    const ways = tree === undefined ? 0 : tree.members.length;
+    ctx.builder.addUnresolved({
+      file: site.file,
+      line: site.line,
+      reason: 'procedure-unmounted',
+      level: 'info',
+      message:
+        tree === undefined
+          ? `${spelled} is a way in declared on its own: no tree holds it and nothing names it, so no request reaches it and it is not drawn.`
+          : `${spelled} is a tree of ${ways} member${ways === 1 ? '' : 's'} that no tree holds, no mount serves and nothing names, so no request reaches any of them and none is drawn.`,
+      hint: 'Add it to the tree the service serves, or delete it.',
+      symbol: spelled,
+      adapter: dialect.name,
+      // Folded below `action` to one row per service, each kind of place with
+      // the files it was found in, so every file is named still (P251).
+      meta: { cause: tree === undefined ? 'procedure-alone' : 'tree-unmounted' },
     });
   }
 };

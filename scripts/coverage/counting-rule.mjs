@@ -185,8 +185,14 @@ export const PROBES = [
     // rule that demanded a literal would have called them something else.
     // The whitespace is permissive because the address is very often on the
     // line after the call.
+    //
+    // koa-router writes the verbs as a list beside the address as well:
+    // `router.register('jobs.:interval', ['get', 'post'], [validate, run])` is
+    // the method every verb method calls, and is one declaration of its own
+    // (P270). Counted where the second argument is a list, which is what tells
+    // it from a plugin system's `app.register(plugin, { prefix })`.
     pattern:
-      /\b[\w$]*(?:app|router)\s*\.\s*(?:get|post|put|patch|delete|options|head|all)\s*\(\s*(?:['"`/[]|[A-Za-z_$][\w$.]*\s*,)/gi,
+      /\b[\w$]*(?:app|router)\s*\.\s*(?:(?:get|post|put|patch|delete|options|head|all)\s*\(\s*(?:['"`/[]|[A-Za-z_$][\w$.]*\s*,)|register\s*\(\s*(?:'[^'\n]*'|"[^"\n]*"|`[^`\n]*`|\[[^\]]*\]|[A-Za-z_$][\w$.]*)\s*,\s*\[)/gi,
   },
   {
     name: 'exported-verb-handler',
@@ -313,12 +319,21 @@ export const PROBES = [
     pattern: /\baddServerHandler\s*\(\s*\{[^}]*?\broute\s*:/g,
   },
   {
+    // A handler is what the file default-exports, and what makes one is h3's
+    // own factories - `defineEventHandler`, `eventHandler`, the cached, lazy
+    // and socket ones, `fromNodeMiddleware` - or a function written in place
+    // that is handed the event. Any default export used to count, and a
+    // server of another framework that keeps its routes under `server/routes`
+    // had every middleware factory beside them (`export default function
+    // paging()`) and every router it exports counted as a file a router
+    // serves (P270). A factory taking nothing is not handed an event.
     name: 'nitro-route-file',
     family: 'routes',
     scope: 'file',
-    what: 'a file under `server/api` or `server/routes` that default-exports a handler',
+    what: 'a file under `server/api` or `server/routes` that default-exports an event handler (`defineEventHandler(...)` and the other h3 factories, or a function written in place that takes the event)',
     path: /(^|\/)server\/(?:api|routes)\/.+\.[cm]?[jt]s$/,
-    contains: /export\s+default\b/,
+    contains:
+      /export\s+default\s+(?:(?:define[A-Za-z]*Handler|eventHandler|lazyEventHandler|fromNodeMiddleware|fromWebHandler)\s*[(<]|(?:async\s+)?(?:\(\s*[A-Za-z_$[{]|[A-Za-z_$][\w$]*\s*=>)|(?:async\s+)?function\s*[\w$]*\s*\(\s*[A-Za-z_$[{])/,
   },
   {
     // A task Nitro runs by its name is a way in of its own (P258): the name

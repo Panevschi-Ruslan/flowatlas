@@ -786,7 +786,9 @@ prove, and the path is given so you can run it.
   chain (`fixtures/express-chained-app`); a list of paths
   (`fixtures/express-path-array`); a mount through a published helper
   (`fixtures/koa-mount-helper`); one mount over a registry of applications that
-  plugins fill (`fixtures/koa-plugin-registry`); a named handler handed to a
+  plugins fill (`fixtures/koa-plugin-registry`); koa-router's
+  `register(path, ['get', 'post'], [...])` (`fixtures/koa-router-register`); a
+  named handler handed to a
   wrapper the repository wrote (`fixtures/express-wrapped-handler`); and an
   application recognised from what the source states when the framework's types
   are not installed, marked `heuristic` (`fixtures/express-not-installed`). A
@@ -865,10 +867,16 @@ prove, and the path is given so you can run it.
   to no page is said (`fixtures/nuxt-navigation`). A verb a helper built, aliased or re-exported is
   read as the handler it names (`fixtures/next-reexport`,
   `fixtures/next-hollow`), and a server action built by `next-safe-action` or
-  `zsa` is a boundary with its callers (`fixtures/next-actions`).
+  `zsa` is a boundary with its callers (`fixtures/next-actions`). A TanStack
+  Start server function, `createServerFn(...).handler(fn)`, is one too, with
+  its verb and its middleware, and an MCP server's tools, prompts and resources
+  are ways in by the names they are registered under
+  (`fixtures/start-functions-mcp-tools`).
 - **Procedures.** A tRPC tree is read on the server as one way in per procedure,
   addressed by the dotted path its callers write, with the guards inherited
-  through the procedure it was built from (`fixtures/trpc-router`), and the
+  through the procedure it was built from (`fixtures/trpc-router`); a tree or a
+  procedure declared where nothing serves or names it is said
+  (`fixtures/next-workspace-api`); and the
   client's `trpc.orders.list.useQuery(…)` is a request joined to it
   (`fixtures/trpc-join`). An oRPC router is read by the same walk: a plain
   object or `os.router(…)` with the guards it installs, a contract-first
@@ -933,7 +941,9 @@ prove, and the path is given so you can run it.
   named in the rows it produces until you name it in the configuration
   (`fixtures/nest-workspace-wrapper`). A Prisma client that was never generated
   is followed through the import that binds it, and a model is mapped to its
-  table by the schema's `@@map` (`fixtures/prisma-not-generated`). Knex reached
+  table by the schema's `@@map` (`fixtures/prisma-not-generated`), imported by
+  the path the tsconfig's `baseUrl` or `paths` place it at too
+  (`fixtures/nest-prisma-base-url`). Knex reached
   through an ORM manager's `getKnex()` is read as knex
   (`fixtures/nest-mikro-orm-knex`), and so is the SQL handed to `knex.raw`
   (`fixtures/nest-knex-raw`) or, when written out whole, to TypeORM's `query`

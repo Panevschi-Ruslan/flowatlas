@@ -564,3 +564,42 @@ describe("a procedure's input, as a caller hands it (P247)", () => {
     expect(input?.type.getText()).toContain('page?: number');
   });
 });
+
+describe('ways in declared where nothing serves them (P270)', () => {
+  it('names a way in declared on its own that no tree holds and nothing names', () => {
+    const found = read({
+      '/server/root.ts': `
+        import { router, procedure } from './trpc';
+        import { stats } from './stats';
+        // A member spelled like the one declared alone is its own way in, not a mention of it.
+        export const appRouter = router({ ping: procedure.query(() => 'pong'), stats, orderTotals: procedure.query(() => 2) });
+      `,
+      '/server/stats.ts': `
+        import { procedure } from './trpc';
+        export const stats = procedure.query(() => 1);
+      `,
+      '/server/totals.ts': `
+        import { procedure } from './trpc';
+        export const orderTotals = procedure.query(() => 0);
+      `,
+    });
+    expect(found.entries.map((entry) => entry.key).sort()).toEqual(['orderTotals', 'ping', 'stats']);
+    const rows = found.unresolved.filter((row) => row.reason === 'procedure-unmounted');
+    expect(rows.map((row) => [row.file, row.symbol, row.level])).toEqual([['server/totals.ts', 'orderTotals', 'info']]);
+  });
+
+  it('does not name one anything else mentions, a type taken from it included', () => {
+    const found = read({
+      '/server/root.ts': `
+        import { router, procedure } from './trpc';
+        export const appRouter = router({ ping: procedure.query(() => 'pong') });
+      `,
+      '/server/totals.ts': `
+        import { procedure } from './trpc';
+        export const orderTotals = procedure.query(() => 0);
+        export type OrderTotals = typeof orderTotals;
+      `,
+    });
+    expect(found.unresolved.filter((row) => row.reason === 'procedure-unmounted')).toEqual([]);
+  });
+});

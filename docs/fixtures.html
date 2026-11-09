@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>230 fixtures</span>
-    <span>600 snapshot files</span>
+    <span>233 fixtures</span>
+    <span>604 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -197,7 +197,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Data layers <span class="count" data-total="21">21</span></h2>
+    <h2>Data layers <span class="count" data-total="22">22</span></h2>
     <ul>
       <li class="fixture" data-search="db-not-installed data layers a repository whose data libraries are declared and **not installed**, which is what a stranger's clone is.">
         <div class="head">
@@ -293,6 +293,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>The table name comes from the property the call was made on, not from a type argument, which is what the <code>receiver-prop</code> override exists for.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="nest-prisma-base-url data layers a nestjs service whose prisma client was **never generated** and is imported by the path the tsconfig's `baseurl` places it at (p270): `import { prismaclient } from 'src/generated/prisma/client'`.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-prisma-base-url">nest-prisma-base-url</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A NestJS service whose Prisma client was <strong>never generated</strong> and is imported by the path the tsconfig's <code>baseUrl</code> places it at (P270): <code>import { PrismaClient } from 'src/generated/prisma/client'</code>.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="nest-prisma-wrapper data layers an orm reached only through a workspace package: nothing in `src` imports `@prisma/client`, and every query goes through `@acme/db`, which configures one client and re-exports it.">
@@ -1248,7 +1256,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Express, Fastify, Koa and Hono <span class="count" data-total="13">13</span></h2>
+    <h2>Express, Fastify, Koa and Hono <span class="count" data-total="14">14</span></h2>
     <ul>
       <li class="fixture" data-search="express-chained-app express, fastify, koa and hono an application declared by a chain, which is how a video platform declares its one application and what cost a video platform every route it has.">
         <div class="head">
@@ -1344,6 +1352,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>One directory that is honestly both halves: a Koa server under <code>src/server</code>, a React screen under <code>src/web</code>, and one <code>package.json</code> declaring both.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="koa-router-register express, fastify, koa and hono a koa server that keeps its routes under `server/routes` - the directory a nitro server serves files from - and registers one of them with koa-router's `register` (p270).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/koa-router-register">koa-router-register</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A Koa server that keeps its routes under <code>server/routes</code> - the directory a Nitro server serves files from - and registers one of them with koa-router's <code>register</code> (P270).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="koa-service express, fastify, koa and hono one koa service, read by the same table row as express and fastify.">
@@ -1553,7 +1569,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="53">53</span></h2>
+    <h2>Everything else <span class="count" data-total="54">54</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1898,6 +1914,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A lending library's returns service whose code names a queue, a topic and a bus by a variable of its environment with a default beside it: <code>process.env.RETURNS_QUEUE_URL ?? '&lt;url&gt;'</code>, <code>?? ITEM_RETURNED_TOPIC</code> and <code>process.env.EVENT_BUS_NAME || 'library-events'</code> (R175).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="start-functions-mcp-tools everything else two kinds of way in a caller reaches by a name rather than an address (p270): the server functions of a tanstack start application, which its browser code imports and calls, and the tools, prompts and resources of an mcp server, which a client asks for by the name each was registered under.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/start-functions-mcp-tools">start-functions-mcp-tools</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>Two kinds of way in a caller reaches by a name rather than an address (P270): the server functions of a TanStack Start application, which its browser code imports and calls, and the tools, prompts and resources of an MCP server, which a client asks for by the name each was registered under.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="svelte-components everything else a sveltekit application whose buttons are in `.svelte` components (p233).">
         <div class="head">
