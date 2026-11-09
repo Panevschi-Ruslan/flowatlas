@@ -869,6 +869,21 @@ only one of them moved.
 
 ### Fixed
 
+- **A tRPC root a workspace package holds is read where the service serves
+  the trees under it (R179).** Since P256 a root kept in a package beside the
+  service was read only where the service mounted that root itself, so an
+  application that serves the root a feature at a time - a handler file per
+  feature, `createNextApiHandler(ordersRouter)`, and nothing mounting the
+  root - lost every procedure as a tree imported only for its type, and every
+  call to one read `procedure-not-found`. A service now reads a package's root
+  where it mounts the root or any tree the root holds; a client that only
+  imports the type still reads none.
+- **A verb read out of the options a wrapper is handed is read at each caller
+  (R179).** `const method = options?.method || 'POST'` into `fetch(url, {
+  method, ...options })` was read as `GET` before P91 and as unread since; the
+  browser and server readers now credit each caller with the default where it
+  hands no options or options without `method`, and with the verb its options
+  write where they write one.
 - **`build --watch` hears a change made the moment it says it is watching
   (R178).** On macOS a directory watch is not listening when it starts: every
   watch a process holds is one stream of events, and starting one restarts the

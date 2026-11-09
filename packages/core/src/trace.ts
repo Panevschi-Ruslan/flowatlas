@@ -1887,6 +1887,18 @@ export const argumentAlong = (
   parameter: ParameterDeclaration,
   hops: readonly CallExpression[],
 ): TsNode | null | undefined => {
+  const handed = handedAlong(parameter, hops);
+  return handed === LEFT_OUT ? null : handed;
+};
+
+/** An argument a caller leaves out, where the parameter has no default to stand in. */
+const LEFT_OUT = Symbol('left out');
+
+/** {@link argumentAlong}, telling an argument left out from one nothing can read (R179). */
+const handedAlong = (
+  parameter: ParameterDeclaration,
+  hops: readonly CallExpression[],
+): TsNode | null | undefined | typeof LEFT_OUT => {
   let current = parameter;
   let handed: TsNode | undefined;
   for (const hop of hops) {
@@ -1894,7 +1906,7 @@ export const argumentAlong = (
     if (holder === undefined) return null;
     if (calledName(hop) !== nameOf(holder)) continue;
     const argument = handedTo(hop, current);
-    if (argument === undefined) return null;
+    if (argument === undefined) return LEFT_OUT;
     handed = argument;
     const further = parameterBehind(argument);
     if (further === undefined) return argument;
@@ -1924,6 +1936,102 @@ export const verbAlong = (
   const verb = verbSpelledBy(handed);
   if (verb !== null) return verb;
   return parameterBehind(handed) === undefined ? null : undefined;
+};
+
+/**
+ * A verb a request reads out of a member of an options parameter, falling
+ * back to one it writes (R179): `const method = options?.method || 'POST'`
+ * into `fetch(url, { method, ... })`, in a wrapper its callers hand the
+ * options to - or leave them out. The verb is only real at each caller, as a
+ * verb handed in as a parameter of its own is (P91), and the default is part
+ * of what the wrapper says.
+ */
+export interface OptionVerb {
+  /** The options parameter. */
+  parameter: ParameterDeclaration;
+  /** The member of it the verb is read from: `method`. */
+  key: string;
+  /** The verb sent where a caller's options do not write one. */
+  otherwise: string;
+}
+
+/** How many names a verb is followed through to the expression that reads it. */
+const OPTION_VERB_STEPS = 4;
+
+/** Whether a declaration is a `const`, whose value is the one it was given. */
+const isConst = (declaration: VariableDeclaration): boolean =>
+  declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const;
+
+/**
+ * The options member and the default a verb is read from, where it is read
+ * that way (R179): `options?.method || 'POST'` or `options.method ?? 'POST'`,
+ * written where the request writes its verb or held by a `const` it names -
+ * `{ method }` names one. Nothing for anything else, a parameter of its own
+ * included, which {@link verbParameterOf} answers.
+ */
+export const optionVerbOf = (written: TsNode | undefined): OptionVerb | undefined => {
+  let value: TsNode | undefined = Node.isShorthandPropertyAssignment(written)
+    ? written.getValueSymbol()?.getDeclarations()[0]
+    : Node.isPropertyAssignment(written)
+      ? written.getInitializer()
+      : written;
+  for (let step = 0; value !== undefined && step < OPTION_VERB_STEPS; step += 1) {
+    if (Node.isVariableDeclaration(value)) {
+      value = isConst(value) ? value.getInitializer() : undefined;
+      continue;
+    }
+    const node = unwrap(value);
+    if (Node.isIdentifier(node)) {
+      value = node.getSymbol()?.getDeclarations()[0];
+      continue;
+    }
+    if (!Node.isBinaryExpression(node)) return undefined;
+    const operator = node.getOperatorToken().getKind();
+    if (operator !== SyntaxKind.BarBarToken && operator !== SyntaxKind.QuestionQuestionToken) return undefined;
+    const otherwise = verbSpelledBy(node.getRight());
+    const member = unwrap(node.getLeft());
+    if (otherwise === null || !Node.isPropertyAccessExpression(member)) return undefined;
+    const holder = unwrap(member.getExpression());
+    const declaration = Node.isIdentifier(holder) ? holder.getSymbol()?.getDeclarations()[0] : undefined;
+    if (declaration === undefined || !Node.isParameterDeclaration(declaration)) return undefined;
+    return { parameter: declaration, key: member.getName(), otherwise };
+  }
+  return undefined;
+};
+
+/** The object a value is written as, in place or held by a `const` it names. */
+const objectWrittenAs = (value: TsNode): ObjectLiteralExpression | undefined => {
+  const declaration = Node.isIdentifier(value) ? value.getSymbol()?.getDeclarations()[0] : undefined;
+  const held = declaration !== undefined && Node.isVariableDeclaration(declaration) && isConst(declaration) ? declaration.getInitializer() : undefined;
+  const object = writtenObjectLiteral(value) ?? writtenObjectLiteral(held);
+  return object !== undefined && Node.isObjectLiteralExpression(object) ? object : undefined;
+};
+
+/**
+ * The verb one caller sends through an {@link OptionVerb}, read along the
+ * calls the request's address was followed out through (R179): the default
+ * where the caller leaves the options out, hands `undefined` or an object
+ * that writes no such member, the member's verb where it writes one. `null`
+ * where the options, or the member, are something nothing can read - an
+ * object spreading another may carry the member - and `undefined` where the
+ * calls run out with the options still a parameter, as {@link verbAlong}.
+ */
+export const optionVerbAlong = (source: OptionVerb, hops: readonly CallExpression[]): string | null | undefined => {
+  const handed = handedAlong(source.parameter, hops);
+  if (handed === undefined || handed === null) return handed;
+  if (handed === LEFT_OUT) return source.otherwise;
+  const value = unwrap(handed);
+  if (Node.isIdentifier(value) && value.getText() === 'undefined') return source.otherwise;
+  const object = objectWrittenAs(value);
+  if (object === undefined) return parameterBehind(value) === undefined ? null : undefined;
+  const property = object.getProperty(source.key);
+  if (property === undefined) return object.getProperties().some((each) => Node.isSpreadAssignment(each)) ? null : source.otherwise;
+  const verb = Node.isPropertyAssignment(property)
+    ? property.getInitializer()
+    : Node.isShorthandPropertyAssignment(property)
+      ? property.getNameNode()
+      : undefined;
+  return verb === undefined ? null : verbSpelledBy(verb);
 };
 
 /**

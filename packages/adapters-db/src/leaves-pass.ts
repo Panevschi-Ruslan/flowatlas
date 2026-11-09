@@ -19,6 +19,9 @@ import {
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
+  optionVerbAlong,
+  optionVerbOf,
+  type OptionVerb,
   narrowUnionByLiteral,
   writtenBodyOutward,
   writtenKeysOf,
@@ -1625,6 +1628,18 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
   };
 
   /**
+   * The options member a request's verb is read from with a default, when it
+   * is read that way (R179): `const method = options?.method || 'POST'` into
+   * `fetch(url, { method })`, decided at each caller as a verb parameter is.
+   */
+  const optionVerbAt = (call: CallExpression, init: TsNode | undefined): OptionVerb | undefined => {
+    const written = init === undefined ? call.getArguments()[1] : init;
+    const settings = written === undefined ? undefined : deref(written);
+    if (settings === undefined || !Node.isObjectLiteralExpression(settings)) return undefined;
+    return optionVerbOf(settings.getProperty('method'));
+  };
+
+  /**
    * The binding a worker's request goes through, when it goes through one
    * (P91): `env.CATALOG.fetch(input, init)`, `this.env.CATALOG.fetch(…)`,
    * `c.env.CATALOG.fetch(…)`. A binding is a property of the environment the
@@ -2103,6 +2118,15 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
     const through = { ...(recognised.binding === undefined ? {} : { binding: recognised.binding }), ...(recognised.client === undefined ? {} : { client: recognised.client }) };
     const stated = statedVerbOf(call, recognised.method, request?.init);
     const verbParameter = stated === undefined ? verbParameterAt(call, request?.init) : undefined;
+    const optionVerb = stated === undefined && verbParameter === undefined ? optionVerbAt(call, request?.init) : undefined;
+    // The verb a caller decides along the calls the address came out through:
+    // one it hands in, or one its options write or leave to the default (R179).
+    const verbAlongHops = (hops: readonly CallExpression[]): string | null | undefined =>
+      verbParameter !== undefined
+        ? verbAlong(verbParameter, hops)
+        : optionVerb !== undefined
+          ? optionVerbAlong(optionVerb, hops)
+          : undefined;
     // The body a wrapper is handed, read at each caller along the same calls
     // as the address and the verb (P128).
     const bodyParameter = bodyParameterOf(call, request?.init);
@@ -2127,7 +2151,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         // then its name, only stand in for a verb the request leaves open.
         // Read along the calls the address came out through, so the verb and
         // the address are the same caller's (P91).
-        const along = verbParameter === undefined ? undefined : verbAlong(verbParameter, hops);
+        const along = verbAlongHops(hops);
         const verb = stated?.verb ?? (along === undefined ? (verbOfSite(site) ?? recognised.method) : along);
         // Where the caller is the one handing the verb in, its arguments are
         // the wrapper's - a verb, a path, a body - and its second is not the
@@ -2136,7 +2160,7 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
         // caller's are that wrapper's, and its second is (P91). Either way a
         // body the request's settings take from a parameter is read along
         // the hops instead (P128).
-        const handedHere = along !== undefined && verbAlong(verbParameter as ParameterDeclaration, hops.slice(0, -1)) === undefined;
+        const handedHere = along !== undefined && verbAlongHops(hops.slice(0, -1)) === undefined;
         recordHttp(site, reading.info, verb, reading.owner, {
           readsSite: stated?.settings !== true && !handedHere,
           ...through,

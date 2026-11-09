@@ -9,6 +9,8 @@ import {
   forwardNoWorse,
   parameterBehind,
   argumentAlong,
+  optionVerbAlong,
+  optionVerbOf,
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
@@ -447,6 +449,69 @@ describe('the verb a wrapper is handed', () => {
       "this.api.req('POST', '/items') POST",
       "this.api.req(HttpVerb.Delete, '/items/1') DELETE",
       "this.api.req(verb, '/items/2') unread",
+    ]);
+  });
+});
+
+/**
+ * A verb read out of a member of the options a wrapper is handed, with a
+ * default it falls back to (R179): left out, handed `undefined`, handed an
+ * object with no such member, one that writes it, one held by a `const`, and
+ * one spreading another that may carry it.
+ */
+describe('the verb an options member gives, or its default', () => {
+  const source = `
+    declare function fetch(url: string, init?: { method?: string }): Promise<unknown>;
+    declare const more: { method?: string };
+    const READ = { method: 'GET' };
+    const send = async (url: string, body?: unknown, options?: { method?: string }) => {
+      const method = options?.method || 'POST';
+      return fetch(url, { method, ...options });
+    };
+    const create = () => send('/api/orders', {});
+    const me = () => send('/api/orders/me', {}, { method: 'GET' });
+    const drop = () => send('/api/orders/1', undefined, { method: 'delete' });
+    const quiet = () => send('/api/orders/2', {}, undefined);
+    const tagged = () => send('/api/orders/3', {}, { cache: 'no-store' } as { method?: string });
+    const held = () => send('/api/orders/4', {}, READ);
+    const spread = () => send('/api/orders/5', {}, { ...more });
+    const along = (options?: { method?: string }) => send('/api/orders/6', {}, options);
+    const outer = () => along({ method: 'PUT' });
+  `;
+  const fetchCall = (file: SourceFile): CallExpression =>
+    file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'fetch')!;
+  const optionVerb = (file: SourceFile) => {
+    const options = fetchCall(file).getArguments()[1]!.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    return optionVerbOf(options.getProperty('method'))!;
+  };
+
+  it('finds the member and the default a `{ method }` names through its const', () => {
+    const found = optionVerb(parse(source));
+    expect([found.parameter.getName(), found.key, found.otherwise]).toEqual(['options', 'method', 'POST']);
+    // A parameter of its own is the other reading's, and a default that is no verb is nothing.
+    expect(optionVerbOf(parse(`const f = (method: string) => method;`).getDescendantsOfKind(SyntaxKind.Identifier).at(-1))).toBeUndefined();
+    const notVerb = parse(`const f = (o?: { m?: string }) => { const m = o?.m ?? 'fast'; return m; };`);
+    expect(optionVerbOf(notVerb.getDescendantsOfKind(SyntaxKind.Identifier).at(-1))).toBeUndefined();
+  });
+
+  it('reads each caller along the calls the address was followed out through', () => {
+    const file = parse(source);
+    const found = optionVerb(file);
+    const path = parameterBehind(fetchCall(file).getArguments()[0]!)!;
+    const said = forwardedFrom(path)
+      .calls.map((each) => `${each.site.getText()} ${optionVerbAlong(found, each.hops) ?? 'unread'}`)
+      .sort();
+    // The address of the sixth is settled where it is written, so its options
+    // are still a parameter there and the verb is not read further out.
+    expect(said).toEqual([
+      "send('/api/orders', {}) POST",
+      "send('/api/orders/1', undefined, { method: 'delete' }) DELETE",
+      "send('/api/orders/2', {}, undefined) POST",
+      "send('/api/orders/3', {}, { cache: 'no-store' } as { method?: string }) POST",
+      "send('/api/orders/4', {}, READ) GET",
+      "send('/api/orders/5', {}, { ...more }) unread",
+      "send('/api/orders/6', {}, options) unread",
+      "send('/api/orders/me', {}, { method: 'GET' }) GET",
     ]);
   });
 });

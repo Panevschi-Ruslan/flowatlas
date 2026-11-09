@@ -4536,6 +4536,18 @@ something nothing can read keeps the request with its verb unread, an
 parameter a caller leaves out is its default: `url(suffix = '')` called as
 `url()` is the base path.
 
+**A verb read out of the options a wrapper is handed** (R179) is read at each
+caller the same way: `send(path, payload?, init?)` sending `fetch(path, { method,
+...init })` with `const method = init?.method || 'POST'` (or `??`, or the
+expression written in place) sends `POST` where a caller hands no options,
+`undefined` or an object writing no `method`, and the verb an object writes
+where it writes one (in place or held by a `const`). Options nothing can read,
+or an object spreading another that may carry the member, keep the verb unread
+with an `api-method-dynamic` row. The browser reader and the server reader both
+read it, along the calls the address was followed out through; a request whose
+address is settled where it is written and whose options are still a parameter
+there is not followed further out for its verb.
+
 **Two APIs at one address are two entries.** Where two APIs (REST, HTTP or
 WebSocket) or two load balancers of one deployment serve the same method and
 path, each route is keyed with its API's name, `GET:/status@api:library-loans-api`;
@@ -7609,7 +7621,13 @@ service that mounts it, and of no service that only imports it for its type:
 a browser application whose client is `createTRPCClient<AppRouter>`, with
 `AppRouter` exported by the package the server mounts, holds the package in
 its extent and reads no procedures from it. Its calls join the server's
-procedures by their links, and are compared through the shared type.
+procedures by their links, and are compared through the shared type. A service
+mounts a package's tree where it mounts the tree or any tree it holds (R179): a
+Next.js application that serves a root a feature at a time, a file per feature
+(`pages/api/trpc/orders/[trpc].ts` is `createNextApiHandler(ordersRouter)`),
+and never the root itself, reads the root's ways in, named from the root as its
+client writes them (`shop.orders.list`), each `served` by its feature's file
+(`fixtures/next-workspace-api`).
 
 **A server's client** of another service's tree is read the same way, by the
 same reader (`fixtures/rpc-server-to-server`). A NestJS, Express, Hono or plain

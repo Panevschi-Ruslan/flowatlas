@@ -77,3 +77,37 @@ describe('an argument a caller leaves out (P91)', () => {
     expect(labels(graph)).toEqual(['GET /api/items', 'GET /api/items/:param']);
   });
 });
+
+describe('a verb read out of the options a wrapper is handed, or its default (R179)', () => {
+  it('is the default where a caller leaves the options out, and what they write where they write one', () => {
+    const graph = read({
+      '/src/request.ts': `
+        export const send = async (path: string, payload?: unknown, init?: RequestInit) => {
+          const method = init?.method || 'POST';
+          return fetch(path, { method, body: JSON.stringify(payload), ...init });
+        };
+      `,
+      '/src/orders.ts': `
+        import { send } from './request';
+        const base = import.meta.env.VITE_API_URL;
+        export const place = (order: unknown) => send(\`\${base}/api/orders\`, order);
+        export const list = () => send(\`\${base}/api/orders\`, undefined, { method: 'GET' });
+        export const archive = () => send(\`\${base}/api/orders/archive\`);
+      `,
+    });
+    expect(labels(graph)).toEqual(['GET /api/orders', 'POST /api/orders', 'POST /api/orders/archive']);
+    expect(graph.unresolved.map((row) => row.reason)).not.toContain('api-method-dynamic');
+  });
+
+  it('is unread where a caller hands options nothing can read', () => {
+    const graph = read({
+      '/src/api.ts': `
+        const send = (url: string, options?: RequestInit) => fetch(url, { method: options?.method ?? 'POST' });
+        declare const init: RequestInit;
+        export const save = () => send('/api/orders', init);
+      `,
+    });
+    expect(labels(graph)).toEqual(['? /api/orders']);
+    expect(graph.unresolved.map((row) => row.reason)).toContain('api-method-dynamic');
+  });
+});

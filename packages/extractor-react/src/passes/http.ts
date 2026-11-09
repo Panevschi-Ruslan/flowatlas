@@ -6,6 +6,8 @@ import {
   makeExternalApiId,
   isPlatformProvided,
   makeLeafId,
+  optionVerbAlong,
+  optionVerbOf,
   requestBodyOf,
   requestVerbOf,
   resolveTypeOrigin,
@@ -140,9 +142,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const read = requestVerbOf(call, { ...PLATFORM_FETCH, optionsAt: shape.optionsAt ?? PLATFORM_FETCH.optionsAt });
     if (read !== null || chain.length === 0) return read;
     // A verb the wrapper is handed, read at the caller its address was read
-    // at, along the same calls (P91).
-    const parameter = verbParameterOf(verbWrittenIn(call, shape));
-    return parameter === undefined ? null : (verbAlong(parameter, chain) ?? null);
+    // at, along the same calls (P91); or a member of the options it is
+    // handed, with the default it falls back to (R179).
+    const written = verbWrittenIn(call, shape);
+    const parameter = verbParameterOf(written);
+    if (parameter !== undefined) return verbAlong(parameter, chain) ?? null;
+    const option = optionVerbOf(written);
+    return option === undefined ? null : (optionVerbAlong(option, chain) ?? null);
   };
 
   /** Where a call writes its verb, when it writes one in its options. */

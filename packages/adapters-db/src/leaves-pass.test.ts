@@ -339,6 +339,10 @@ describe('a request forwarded to its callers', () => {
         'Restocker.restock -> PATCH /items/:param/stock @ api.example.com',
         'Restocker.reserve -> POST /items/reservations @ api.example.com',
         'Restocker.settle -> ? /items/settlement @ api.example.com',
+        // A member of the options the caller hands in, or the default where
+        // it hands none (R179).
+        'Ordering.place -> POST /orders @ api.example.com',
+        'Ordering.cancel -> DELETE /orders/:param @ api.example.com',
       ].sort(),
     );
   });
@@ -349,8 +353,9 @@ describe('a request forwarded to its callers', () => {
       .filter((node) => node.type === 'http_out' && node.meta?.path !== '/items/reservations')
       .map((node) => node.meta?.bodyType ?? null);
     // The caller's second argument is `reason`, or the settings it hands
-    // over, or the path beside the verb it hands in; none is a body.
-    expect(bodies).toEqual([null, null, null, null, null, null, null]);
+    // over, or the path beside the verb it hands in, or the options it hands
+    // in; none is a body.
+    expect(bodies).toEqual([null, null, null, null, null, null, null, null, null]);
   });
 
   it('reads the body a wrapper is handed at the caller that hands it (P128)', async () => {

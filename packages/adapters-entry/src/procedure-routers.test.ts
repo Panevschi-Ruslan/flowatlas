@@ -483,6 +483,55 @@ describe('where a tRPC tree is served (P247)', () => {
     expect(trpcProceduresAdapter.extractEntries(server).map((entry) => entry.key)).toEqual(['ping']);
   });
 
+  it("reads a workspace package's root as this service's ways in where the service mounts the trees it holds, each in a file of its own (R179)", () => {
+    const tree = {
+      '/packages/api/src/routers/orders/_router.ts': `
+        import { procedure, router } from '../../../../../server/trpc';
+        export const ordersRouter = router({ list: procedure.query(() => []) });
+      `,
+      '/packages/api/src/routers/catalog/_router.ts': `
+        import { procedure, router } from '../../../../../server/trpc';
+        export const catalogRouter = router({ get: procedure.query(() => ({})) });
+      `,
+      '/packages/api/src/routers/_app.ts': `
+        import { router } from '../../../../server/trpc';
+        import { ordersRouter } from './orders/_router';
+        import { catalogRouter } from './catalog/_router';
+        export const shopRouter = router({ orders: ordersRouter, catalog: catalogRouter });
+        export const appRouter = router({ shop: shopRouter });
+        export type AppRouter = typeof appRouter;
+      `,
+      '/packages/api/src/handler.ts': `
+        import { createNextApiHandler as handlerOf } from '@trpc/server/adapters/next';
+        export const createNextApiHandler = (router: unknown) => handlerOf({ router });
+      `,
+    };
+    // Only the per-feature trees are mounted, never the root they make up.
+    const web = {
+      ...contextFor(
+        {
+          ...tree,
+          '/apps/web/pages/api/trpc/orders/[trpc].ts': `
+            import { createNextApiHandler } from '../../../../../../packages/api/src/handler';
+            import { ordersRouter } from '../../../../../../packages/api/src/routers/orders/_router';
+            export default createNextApiHandler(ordersRouter);
+          `,
+        },
+        { '@trpc/server': '^11.0.0' },
+        [],
+      ),
+      repoDir: '/apps/web',
+    };
+    const entries = trpcProceduresAdapter.extractEntries(web);
+    // Named from the root, as the client typed from it writes them; one branch
+    // mounted is enough for the root to be this service's.
+    expect(entries.map((entry) => entry.key).sort()).toEqual(['shop.catalog.get', 'shop.orders.list']);
+    const served = (key: string): unknown => entries.find((entry) => entry.key === key)?.meta?.['served'];
+    expect(served('shop.orders.list')).toEqual(['pages/api/trpc/orders/[trpc].ts']);
+    expect(served('shop.catalog.get')).toBeUndefined();
+    expect(web.builder.build().unresolved).toEqual([]);
+  });
+
   it('says so where the address cannot be read, and draws the mount with none', () => {
     const found = read({
       '/server/root.ts': ROOT,

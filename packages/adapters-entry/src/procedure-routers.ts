@@ -1748,6 +1748,25 @@ export const procedureRoutersAdapter = (
       }
     };
     for (const root of forest.roots()) look(root);
+
+    /**
+     * Whether this service serves a tree, or any tree it holds at any depth
+     * (R179). A root a workspace package assembles out of per-feature trees is
+     * mounted nowhere itself where the service hangs each feature's tree in a
+     * handler file of its own (`createNextApiHandler(ordersRouter)` under
+     * `pages/api/trpc/orders`): the root is the address space every caller
+     * writes - `orders.list`, the client typed from it - and the mounts below it
+     * are what serve it, so its ways in are this service's.
+     */
+    const servedWithin = (tree: Tree, seen: Set<Tree> = new Set()): boolean => {
+      if ((mountsOf.get(tree) ?? []).length > 0) return true;
+      seen.add(tree);
+      return tree.members.some((member) => {
+        const nested = forest.at(valueOf(member, dialect));
+        return nested !== undefined && !seen.has(nested) && servedWithin(nested, seen);
+      });
+    };
+
     const standIns = new Map<string, string[]>();
     let importedTrees = 0;
     const roots = forest.roots().filter((root) => {
@@ -1756,8 +1775,9 @@ export const procedureRoutersAdapter = (
       // A tree a package of the workspace holds, which this service imports
       // for its type and serves nowhere (P256): a client typed
       // `createTRPCClient<AppRouter>` from the package the server mounts. Its
-      // procedures are the server's ways in, not this service's.
-      const imported = outsideService(root.site.file) && (mountsOf.get(root) ?? []).length === 0;
+      // procedures are the server's ways in, not this service's. Served
+      // nowhere means neither it nor any tree it holds is mounted here (R179).
+      const imported = outsideService(root.site.file) && !servedWithin(root);
       if (imported) importedTrees += 1;
       return named.length === 0 && !imported;
     });
