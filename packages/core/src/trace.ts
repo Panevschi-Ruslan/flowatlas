@@ -963,7 +963,12 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
   }
 
   if (Node.isIdentifier(node)) {
-    const declaration = node.getSymbol()?.getDeclarations()[0];
+    const symbol = node.getSymbol();
+    let declaration = symbol?.getDeclarations()[0];
+    // A constant imported from another module of the repository is the one it declares (P275).
+    if (declaration !== undefined && (Node.isImportSpecifier(declaration) || Node.isImportClause(declaration))) {
+      declaration = symbol?.getAliasedSymbol()?.getDeclarations()[0];
+    }
     if (declaration === undefined) return null;
     if (Node.isParameterDeclaration(declaration)) {
       const bound = scope.bound.get(declaration);

@@ -74,7 +74,7 @@ const optionObjects = (node: TsNode | undefined, depth = 0): ObjectLiteralExpres
 };
 
 /** Whether an expression is a document this can read: what tells `client.query(doc)` from `db.query(sql)`. */
-const isDocument = (expression: TsNode | undefined): boolean => expression !== undefined && documentOf(expression).kind === 'read';
+const isReadDocument = (expression: TsNode | undefined): boolean => expression !== undefined && documentOf(expression).kind === 'read';
 
 /** The address a `new GraphQLClient(url)` the receiver was made by names. */
 const constructedWith = (receiver: TsNode, className: string): TsNode | undefined => {
@@ -86,8 +86,16 @@ const constructedWith = (receiver: TsNode, className: string): TsNode | undefine
   return undefined;
 };
 
-/** What a call sends, when it sends a GraphQL operation. */
-export const graphqlCallOf = (call: CallExpression): GraphqlCall | undefined => {
+/**
+ * What a call sends, when it sends a GraphQL operation.
+ *
+ * A method whose name alone does not say GraphQL (`client.mutation(doc)`,
+ * `client.query(doc)`) is one where its document is read; `handed` lets a
+ * reader take one whose document is a value it will read elsewhere - the
+ * parameter of a helper, read at each of its callers (P275).
+ */
+export const graphqlCallOf = (call: CallExpression, handed?: (expression: TsNode) => boolean): GraphqlCall | undefined => {
+  const isDocument = (expression: TsNode | undefined): boolean => isReadDocument(expression) || (expression !== undefined && handed?.(expression) === true);
   const callee = call.getExpression();
   if (Node.isIdentifier(callee)) {
     const imported = importOf(callee);
@@ -108,6 +116,8 @@ export const graphqlCallOf = (call: CallExpression): GraphqlCall | undefined => 
       const document = options === undefined ? call.getArguments()[0] : property(options, 'query');
       return { library: 'urql', document, ...(name === 'useSubscription' ? { transport: 'ws' as const } : {}) };
     }
+    // urql's `createRequest(doc, variables)`, which a helper hands `client.executeQuery` (P275).
+    if (name === 'createRequest' && (module === 'urql' || module.startsWith('@urql/'))) return { library: 'urql', document: call.getArguments()[0] };
     if (name === 'request' && module === 'graphql-request') {
       const options = objectAt(call, 0);
       if (options !== undefined) return { library: 'graphql-request', document: property(options, 'document'), ...(property(options, 'url') === undefined ? {} : { endpoint: property(options, 'url') as TsNode }) };
@@ -152,7 +162,7 @@ export const fetchedQuery = (call: CallExpression): TsNode | undefined => {
 /** The document a `fetch` sends, where its body is `JSON.stringify({ query })` written in place. */
 export const fetchedDocument = (call: CallExpression): TsNode | undefined => {
   const query = fetchedQuery(call);
-  return isDocument(query) ? query : undefined;
+  return isReadDocument(query) ? query : undefined;
 };
 
 /**

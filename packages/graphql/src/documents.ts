@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 import type { FileSystemHost, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { tryParse, type Document } from './parse.js';
+import { codegenDocument } from './codegen.js';
 import { fragmentsOf, type HandedFragment, type Written } from './operations.js';
 
 /**
@@ -173,7 +174,7 @@ const IMPORT_LINE = /^#import\s+["']([^"']+)["']/gm;
  * A `.graphql` file, read through the project's file system, with the
  * fragments of every file it `#import`s. Its offsets are its own, from 0.
  */
-const graphqlFile = (files: FileSystemHost, path: string, depth: number): DocumentReading | undefined => {
+export const graphqlFile = (files: FileSystemHost, path: string, depth: number): DocumentReading | undefined => {
   let text: string;
   try {
     text = files.readFileSync(path, 'utf-8');
@@ -275,6 +276,12 @@ export const documentOf = (expression: TsNode | undefined, depth = 0): DocumentR
         // A `.graphql` file beside the importing one, as the loaders hand it to the code.
         const holder = Node.isImportClause(declaration) ? declaration.getParent() : declaration.getImportDeclaration();
         const specifier = Node.isImportDeclaration(holder) ? holder.getModuleSpecifierValue() : '';
+        // A `…Document` codegen writes into a module nobody committed: the operation of its documents (P275).
+        if (Node.isImportSpecifier(declaration) && Node.isImportDeclaration(holder) && holder.getModuleSpecifierSourceFile() === undefined && !/\.(graphql|gql)$/.test(specifier)) {
+          const generated = codegenDocument(value.getProject(), value.getSourceFile().getFilePath(), specifier, declaration.getName());
+          if (generated !== undefined) return generated;
+          continue;
+        }
         if (!/\.(graphql|gql)$/.test(specifier) || !specifier.startsWith('.')) continue;
         const file = graphqlFile(value.getProject().getFileSystem(), posix.join(value.getSourceFile().getDirectoryPath(), specifier), depth + 1);
         if (file?.kind === 'read') return { ...file, document: importedDocument(file.document, Node.isImportClause(declaration) ? 'default' : declaration.getName()) };

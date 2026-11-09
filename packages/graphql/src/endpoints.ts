@@ -41,6 +41,11 @@ export interface ServedEndpoint {
   readonly include?: ReadonlySet<ClassDeclaration>;
   /** The tag the module's options name, which the resolvers it serves carry. */
   readonly scope?: string;
+  /**
+   * Where the library gives a resolver tagged with none of the scopes this
+   * one: the scopes every endpoint names, and the patch that says so (P275).
+   */
+  readonly untagged?: { readonly scopes: readonly string[]; readonly from: string };
   /** Why fields no resolver declares may still be answered here. */
   readonly open?: string;
   /** What of the module could not be read, and why. */
@@ -205,15 +210,16 @@ const providedUnder = (roots: readonly ClassDeclaration[], modules: ReadonlyMap<
 };
 
 /** The `KEY = value` pairs `SetMetadata` writes in a decorator, or in the body of one of the repository's own. */
-const metadataSetBy = (decorator: Decorator): string[] => {
-  const found: string[] = [];
+const metadataSetBy = (decorator: Decorator): Array<{ key?: string; value: string }> => {
+  const found: Array<{ key?: string; value: string }> = [];
   const read = (call: TsNode, depth: number): void => {
     if (!Node.isCallExpression(call) || depth > 3) return;
     const callee = call.getExpression();
     if (callee.getText() === 'SetMetadata') {
       const [key, value] = call.getArguments();
       const written = stringValue(value);
-      if (written !== undefined && key !== undefined) found.push(written);
+      const named = stringValue(key);
+      if (written !== undefined && key !== undefined) found.push({ ...(named === undefined ? {} : { key: named }), value: written });
       return;
     }
     const fn = functionOf(callee);
@@ -227,7 +233,53 @@ const metadataSetBy = (decorator: Decorator): string[] => {
 };
 
 /** The values a resolver class is tagged with by `SetMetadata`, directly or through its own decorator. */
-export const tagsOfClass = (declaration: ClassDeclaration): string[] => [...new Set(declaration.getDecorators().flatMap(metadataSetBy))].sort();
+export const tagsOfClass = (declaration: ClassDeclaration): string[] => [...new Set(declaration.getDecorators().flatMap(metadataSetBy).map((pair) => pair.value))].sort();
+
+/** The keys a resolver class is tagged under by `SetMetadata`, where they read as strings. */
+export const tagKeysOfClass = (declaration: ClassDeclaration): string[] =>
+  [...new Set(declaration.getDecorators().flatMap(metadataSetBy).flatMap((pair) => (pair.key === undefined ? [] : [pair.key])))].sort();
+
+/** `Reflect.getMetadata(KEY, target) || 'scope'` on a line a patch adds: the scope a resolver with no tag is given. */
+const DEFAULTED = /Reflect\.getMetadata\(\s*([A-Za-z_$][\w$]*|'[^']*'|"[^"]*")\s*,[^)]*\)\s*(?:\|\||\?\?)\s*(['"])([^'"]+)\2/;
+
+/**
+ * The scope a patched GraphQL library gives a resolver tagged with none
+ * (P275), where a patch the repository commits to it says so plainly: a line
+ * it adds reading the tag with `Reflect.getMetadata(KEY, …) || 'scope'`,
+ * whose key - written there, or a constant the patch declares - is one the
+ * repository's resolvers are tagged under, and whose scope is one of their
+ * tags. Patches that disagree say nothing.
+ */
+export const untaggedScopeIn = (
+  patches: ReadonlyArray<{ readonly path: string; readonly text: string }>,
+  keys: ReadonlySet<string>,
+  tags: ReadonlySet<string>,
+): { scope: string; from: string } | undefined => {
+  const found = new Map<string, string>();
+  for (const patch of patches) {
+    const lines = patch.text.split('\n');
+    const constant = (name: string): string | undefined => {
+      for (const line of lines) {
+        if (!line.startsWith('+') && !line.startsWith(' ')) continue;
+        const declared = new RegExp(`\\b(?:const|let|var)\\s+${name.replace(/\$/g, '\\$')}\\s*=\\s*(['"])([^'"]+)\\1`).exec(line);
+        if (declared !== null) return declared[2];
+      }
+      return undefined;
+    };
+    for (const line of lines) {
+      if (!line.startsWith('+') || line.startsWith('+++')) continue;
+      const matched = DEFAULTED.exec(line);
+      if (matched === null) continue;
+      const written = matched[1] as string;
+      const key = /^['"]/.test(written) ? written.slice(1, -1) : constant(written);
+      const scope = matched[3] as string;
+      if (key !== undefined && keys.has(key) && tags.has(scope) && !found.has(scope)) found.set(scope, patch.path);
+    }
+  }
+  if (found.size !== 1) return undefined;
+  const [[scope, from]] = [...found] as [[string, string]];
+  return { scope, from };
+};
 
 /** What in a plugin the repository writes makes the server answer without its schema. */
 const ANSWERS_ITSELF = /\b(endResponse|setResultAndStopExecution|setSchema)\s*\(/;
@@ -252,7 +304,7 @@ const openReason = (options: ObjectLiteralExpression): string | undefined => {
 };
 
 /** Every endpoint a NestJS server's `GraphQLModule.forRoot*` calls serve, in the order of the files. */
-export const nestEndpointsIn = (sources: readonly SourceFile[], tags: ReadonlySet<string>): ServedEndpoint[] => {
+export const nestEndpointsIn = (sources: readonly SourceFile[], tags: ReadonlySet<string>, untagged?: { readonly scope: string; readonly from: string }): ServedEndpoint[] => {
   let modules: Map<ClassDeclaration, ModuleReading> | undefined;
   const endpoints: ServedEndpoint[] = [];
   for (const sourceFile of sources) {
@@ -291,7 +343,10 @@ export const nestEndpointsIn = (sources: readonly SourceFile[], tags: ReadonlySe
       endpoints.push({ path, at: node, ...(include === undefined ? {} : { include }), ...(scope === undefined ? {} : { scope }), ...(open === undefined ? {} : { open }), unread });
     });
   }
-  return endpoints;
+  if (untagged === undefined) return endpoints;
+  // The endpoint whose scope the library gives a resolver with none serves those too.
+  const scopes = [...new Set(endpoints.flatMap((endpoint) => (endpoint.scope === undefined ? [] : [endpoint.scope])))].sort();
+  return endpoints.map((endpoint) => (endpoint.scope === untagged.scope ? { ...endpoint, untagged: { scopes, from: untagged.from } } : endpoint));
 };
 
 /**
@@ -305,7 +360,7 @@ export const nestEndpointsIn = (sources: readonly SourceFile[], tags: ReadonlySe
  * endpoint's that filters by neither.
  */
 export const serves = (endpoint: ServedEndpoint, resolver: ClassDeclaration | undefined, tags: readonly string[]): boolean => {
-  if (endpoint.scope !== undefined) return tags.includes(endpoint.scope);
+  if (endpoint.scope !== undefined) return tags.includes(endpoint.scope) || (endpoint.untagged !== undefined && !tags.some((tag) => endpoint.untagged?.scopes.includes(tag)));
   if (resolver === undefined) return endpoint.include === undefined;
   return endpoint.include === undefined || endpoint.include.has(resolver);
 };

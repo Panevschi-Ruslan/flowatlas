@@ -33,6 +33,7 @@ import {
   type UnreadDetail,
 } from '@flowatlas/graphql';
 import { Node } from 'ts-morph';
+import { libraryPatches } from './library-patches.js';
 import { fileOfNode, handlerOf, handlerOfFunction, inlineHandlerOf, repoSources } from './shared.js';
 
 /**
@@ -235,6 +236,7 @@ const readingOf = (ctx: ExtractContext): ServerReading => {
     dependencies: new Set(Object.keys(allDependencies(ctx.pkg))),
     repoDir: ctx.repoDir,
     roverFiles: filesUnder(ctx.repoDir, ROVER_FILES),
+    patches: libraryPatches(ctx.repoDir, GRAPHQL_SERVER_PACKAGES.filter((name) => hasAnyDependency(ctx.pkg, [name]))),
   });
   readings.set(ctx, reading);
   return reading;
@@ -293,7 +295,7 @@ export const graphqlResolversAdapter: EntryAdapter = {
           reason: 'graphql-endpoint-unread',
           level: 'action',
           message: `${plain} is answered here, and no endpoint of ${ctx.repo} was read to serve it: ${served.map((each) => `${each.path}${each.scope === undefined ? '' : ` serves resolvers tagged ${each.scope}`}${each.include === undefined ? '' : ' serves the modules it includes'}`).join('; ')}`,
-          hint: 'Tag the resolver with the scope of the schema that serves it, or include its module in that schema\'s options.',
+          hint: 'Tag the resolver with the scope of the schema that serves it, or include its module in that schema\'s options. Where a patch of the GraphQL library gives an untagged resolver a scope, commit the patch where the package manager applies it (a `patch:` dependency, `pnpm.patchedDependencies` or `patches/`) with `Reflect.getMetadata(KEY, …) || \'scope\'` on a line it adds.',
           symbol: plain,
           adapter: 'graphql-resolvers',
         });

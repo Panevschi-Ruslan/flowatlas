@@ -5,7 +5,7 @@ import { listenAt, listenCallsIn, portIn, type ListenAt } from '@flowatlas/core'
 import { documentOf } from './documents.js';
 import { isSupergraph } from './federation.js';
 import { followed, readGraphqlGateway, type GatewayReading } from './gateway.js';
-import { nestEndpointsIn, tagsOfClass, type ServedEndpoint } from './endpoints.js';
+import { nestEndpointsIn, tagKeysOfClass, tagsOfClass, untaggedScopeIn, type ServedEndpoint } from './endpoints.js';
 import { tryParse, type AppliedDirective, type Document } from './parse.js';
 import { fieldFederationOf, mergeSchemas, schemaOf, typeFederationOf, type FieldFederation, type SchemaField, type SchemaSummary, type TypeFederation } from './schema.js';
 
@@ -700,7 +700,14 @@ const federationIn = (sources: readonly SourceFile[], schema: SchemaSummary, dep
 /** Everything a GraphQL server in these files declares. */
 export const readGraphqlServer = (
   sources: readonly SourceFile[],
-  options: { readonly schemaFiles: readonly string[]; readonly dependencies: ReadonlySet<string>; readonly repoDir?: string; readonly roverFiles?: readonly string[] },
+  options: {
+    readonly schemaFiles: readonly string[];
+    readonly dependencies: ReadonlySet<string>;
+    readonly repoDir?: string;
+    readonly roverFiles?: readonly string[];
+    /** Patches the repository commits to its GraphQL server library (P275). */
+    readonly patches?: ReadonlyArray<{ readonly path: string; readonly text: string }>;
+  },
 ): ServerReading => {
   const unread: Array<{ at: TsNode; why: string }> = [];
   const codeFirst = codeFirstTypes(sources);
@@ -731,7 +738,11 @@ export const readGraphqlServer = (
     return { ...field, ...(field.returns === undefined ? { returns: declared.type } : {}), ...(field.args === undefined && declared.args !== undefined ? { args: declared.args } : {}) };
   });
   const endpoint = endpointOf(sources);
-  const endpoints = nestEndpointsIn(sources, new Set(decorated.flatMap((field) => field.tags ?? [])));
+  const tags = new Set(decorated.flatMap((field) => field.tags ?? []));
+  // A resolver tagged with none goes where a patch of the library says (P275).
+  const keys = options.patches === undefined || options.patches.length === 0 ? new Set<string>() : new Set(sources.flatMap((sourceFile) => sourceFile.getClasses()).flatMap(tagKeysOfClass));
+  const untagged = keys.size === 0 ? undefined : untaggedScopeIn(options.patches ?? [], keys, tags);
+  const endpoints = nestEndpointsIn(sources, tags, untagged);
   const gateway = readGraphqlGateway(sources, { repoDir: options.repoDir ?? '', supergraphs, rover: options.roverFiles ?? [] });
   const federation = gateway === undefined ? federationIn(sources, schema, options.dependencies) : undefined;
   return {

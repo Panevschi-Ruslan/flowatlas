@@ -1,0 +1,2314 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:42:48.130Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#src/pages/SettingsPage.tsx:SettingsPage",
+      "type": "ui_component",
+      "label": "SettingsPage",
+      "repo": "admin",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "module",
+      "label": "GraphQLModule",
+      "repo": "api",
+      "file": "node_modules/@nestjs/graphql",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "external": true
+      }
+    },
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "CatalogResolver",
+          "PreferencesResolver",
+          "ShippingResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/catalog/catalog.resolver.ts:CatalogResolver",
+      "type": "provider",
+      "label": "CatalogResolver",
+      "repo": "api",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 17,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/catalog/catalog.resolver.ts:CatalogResolver.product",
+      "type": "method",
+      "label": "CatalogResolver.product",
+      "repo": "api",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Product"
+        }
+      }
+    },
+    {
+      "id": "api#src/catalog/catalog.resolver.ts:CatalogResolver.productChanged",
+      "type": "method",
+      "label": "CatalogResolver.productChanged",
+      "repo": "api",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Product"
+        }
+      }
+    },
+    {
+      "id": "api#src/catalog/catalog.resolver.ts:CatalogResolver.products",
+      "type": "method",
+      "label": "CatalogResolver.products",
+      "repo": "api",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "first",
+              "type": "number",
+              "optional": true
+            }
+          ],
+          "returns": "type:api#Product[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/catalog/catalog.resolver.ts:CatalogResolver.renameProduct",
+      "type": "method",
+      "label": "CatalogResolver.renameProduct",
+      "repo": "api",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Product"
+        }
+      }
+    },
+    {
+      "id": "api#src/preferences/preferences.resolver.ts:PreferencesResolver",
+      "type": "provider",
+      "label": "PreferencesResolver",
+      "repo": "api",
+      "file": "src/preferences/preferences.resolver.ts",
+      "line": 13,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/preferences/preferences.resolver.ts:PreferencesResolver.preferences",
+      "type": "method",
+      "label": "PreferencesResolver.preferences",
+      "repo": "api",
+      "file": "src/preferences/preferences.resolver.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Preferences"
+        }
+      }
+    },
+    {
+      "id": "api#src/preferences/preferences.resolver.ts:PreferencesResolver.toggleSMTP",
+      "type": "method",
+      "label": "PreferencesResolver.toggleSMTP",
+      "repo": "api",
+      "file": "src/preferences/preferences.resolver.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "enabled",
+              "type": "boolean"
+            }
+          ],
+          "returns": "type:api#Preferences"
+        }
+      }
+    },
+    {
+      "id": "api#src/preferences/shipping.resolver.ts:ShippingResolver",
+      "type": "provider",
+      "label": "ShippingResolver",
+      "repo": "api",
+      "file": "src/preferences/shipping.resolver.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/preferences/shipping.resolver.ts:ShippingResolver.shippingZones",
+      "type": "method",
+      "label": "ShippingResolver.shippingZones",
+      "repo": "api",
+      "file": "src/preferences/shipping.resolver.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#ShippingZone[]"
+        }
+      }
+    },
+    {
+      "id": "entry:api:graphql:Mutation.renameProduct@/graphql",
+      "type": "entry",
+      "label": "Mutation.renameProduct@/graphql",
+      "repo": "api",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 29,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "renameProduct",
+        "returns": "Product!",
+        "args": {
+          "id": {
+            "type": "String!",
+            "required": true
+          },
+          "title": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "endpoint": "/graphql",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Mutation.toggleSMTP@/settings",
+      "type": "entry",
+      "label": "Mutation.toggleSMTP@/settings",
+      "repo": "api",
+      "file": "src/preferences/preferences.resolver.ts",
+      "line": 20,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "toggleSMTP",
+        "returns": "Preferences!",
+        "args": {
+          "enabled": {
+            "type": "Boolean!",
+            "required": true
+          }
+        },
+        "endpoint": "/settings",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.preferences@/settings",
+      "type": "entry",
+      "label": "Query.preferences@/settings",
+      "repo": "api",
+      "file": "src/preferences/preferences.resolver.ts",
+      "line": 15,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "preferences",
+        "returns": "Preferences!",
+        "endpoint": "/settings",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.product@/graphql",
+      "type": "entry",
+      "label": "Query.product@/graphql",
+      "repo": "api",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 24,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "product",
+        "returns": "Product!",
+        "args": {
+          "id": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "endpoint": "/graphql",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.products@/graphql",
+      "type": "entry",
+      "label": "Query.products@/graphql",
+      "repo": "api",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 19,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "products",
+        "returns": "[Product!]!",
+        "args": {
+          "first": {
+            "type": "Float",
+            "required": false
+          }
+        },
+        "endpoint": "/graphql",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.shippingZones@/settings",
+      "type": "entry",
+      "label": "Query.shippingZones@/settings",
+      "repo": "api",
+      "file": "src/preferences/shipping.resolver.ts",
+      "line": 13,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "shippingZones",
+        "returns": "[ShippingZone!]!",
+        "endpoint": "/settings",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Subscription.productChanged@/graphql",
+      "type": "entry",
+      "label": "Subscription.productChanged@/graphql",
+      "repo": "api",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 34,
+      "kind": "graphql",
+      "meta": {
+        "type": "Subscription",
+        "name": "productChanged",
+        "returns": "Product!",
+        "endpoint": "/graphql",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/graphql",
+      "type": "entry",
+      "label": "POST /graphql",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Product": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  },
+                  "price": {
+                    "type": "Float!"
+                  }
+                }
+              },
+              "Preferences": {
+                "kind": "object",
+                "fields": {
+                  "currency": {
+                    "type": "String!"
+                  },
+                  "smtpEnabled": {
+                    "type": "Boolean!"
+                  }
+                }
+              },
+              "ShippingZone": {
+                "kind": "object",
+                "fields": {
+                  "code": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "products": {
+                    "type": "[Product!]!",
+                    "args": {
+                      "first": {
+                        "type": "Float",
+                        "required": false
+                      }
+                    }
+                  },
+                  "product": {
+                    "type": "Product!",
+                    "args": {
+                      "id": {
+                        "type": "String!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "renameProduct": {
+                    "type": "Product!",
+                    "args": {
+                      "id": {
+                        "type": "String!",
+                        "required": true
+                      },
+                      "title": {
+                        "type": "String!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              },
+              "Subscription": {
+                "kind": "object",
+                "fields": {
+                  "productChanged": {
+                    "type": "Product!"
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 7
+            }
+          ],
+          "fieldsAt": "/graphql"
+        }
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/settings",
+      "type": "entry",
+      "label": "POST /settings",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/settings",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Product": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  },
+                  "price": {
+                    "type": "Float!"
+                  }
+                }
+              },
+              "Preferences": {
+                "kind": "object",
+                "fields": {
+                  "currency": {
+                    "type": "String!"
+                  },
+                  "smtpEnabled": {
+                    "type": "Boolean!"
+                  }
+                }
+              },
+              "ShippingZone": {
+                "kind": "object",
+                "fields": {
+                  "code": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "preferences": {
+                    "type": "Preferences!"
+                  },
+                  "shippingZones": {
+                    "type": "[ShippingZone!]!"
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "toggleSMTP": {
+                    "type": "Preferences!",
+                    "args": {
+                      "enabled": {
+                        "type": "Boolean!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              },
+              "Subscription": {
+                "kind": "object",
+                "fields": {}
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 7
+            }
+          ],
+          "fieldsAt": "/settings"
+        }
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 7,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "functions": 12,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_action:admin#src/pages/SettingsPage.tsx:13:13",
+      "type": "ui_action",
+      "label": "onClick={() => void toggle({ enabled: !preferences.data?.preferences.smtpEnabled })}",
+      "repo": "admin",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => void toggle({ enabled: !preferences.data?.preferences.smtpEnabled })",
+        "component": "admin#src/pages/SettingsPage.tsx:SettingsPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/pages/ProductPage.tsx:17:15",
+      "type": "ui_action",
+      "label": "onClick={() => void load()}",
+      "repo": "web",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => void load()",
+        "component": "web#src/pages/ProductPage.tsx:ProductPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/pages/ProductPage.tsx:18:15",
+      "type": "ui_action",
+      "label": "onClick={() => void renameProduct(id, 'cup')}",
+      "repo": "web",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => void renameProduct(id, 'cup')",
+        "component": "web#src/pages/ProductPage.tsx:ProductPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/pages/ProductPage.tsx:19:15",
+      "type": "ui_action",
+      "label": "onClick={() => void rename({ id, title: 'bowl' })}",
+      "repo": "web",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => void rename({ id, title: 'bowl' })",
+        "component": "web#src/pages/ProductPage.tsx:ProductPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/pages/SettingsPage.tsx:10:22",
+      "type": "ui_api_call",
+      "label": "mutation ToggleSMTP /settings",
+      "repo": "admin",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/settings",
+        "path": "/settings",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "template-env",
+        "graphql": {
+          "operation": "mutation",
+          "name": "ToggleSMTP",
+          "fields": [
+            {
+              "field": "toggleSMTP",
+              "arguments": [
+                "enabled"
+              ],
+              "line": 2,
+              "selections": [
+                {
+                  "field": "smtpEnabled",
+                  "line": 3
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "enabled",
+              "type": "Boolean!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/gql/ToggleSMTP.graphql",
+            "line": 1
+          },
+          "library": "urql"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/pages/SettingsPage.tsx:11:21",
+      "type": "ui_api_call",
+      "label": "POST /settings",
+      "repo": "admin",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/settings",
+        "path": "/settings",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/pages/SettingsPage.tsx:8:25",
+      "type": "ui_api_call",
+      "label": "query Preferences /settings",
+      "repo": "admin",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/settings",
+        "path": "/settings",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Preferences",
+          "fields": [
+            {
+              "field": "preferences",
+              "line": 2,
+              "selections": [
+                {
+                  "field": "currency",
+                  "line": 3
+                },
+                {
+                  "field": "smtpEnabled",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/gql/Preferences.graphql",
+            "line": 1
+          },
+          "library": "urql"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/pages/SettingsPage.tsx:9:19",
+      "type": "ui_api_call",
+      "label": "query ShippingZones /settings",
+      "repo": "admin",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_API_URL}/settings",
+        "path": "/settings",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "ShippingZones",
+          "fields": [
+            {
+              "field": "shippingZones",
+              "line": 9,
+              "selections": [
+                {
+                  "field": "code",
+                  "line": 10
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/gql/Preferences.graphql",
+            "line": 8
+          },
+          "library": "urql"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/backend/catalog.ts:11:36@20:30",
+      "type": "ui_api_call",
+      "label": "subscription ProductChanged /graphql",
+      "repo": "web",
+      "file": "src/backend/catalog.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${SERVER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "SERVER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "template-env",
+        "through": "runSubscription",
+        "graphql": {
+          "operation": "subscription",
+          "name": "ProductChanged",
+          "fields": [
+            {
+              "field": "productChanged",
+              "line": 2,
+              "selections": [
+                {
+                  "field": "id",
+                  "on": "Product",
+                  "file": "src/backend/gql/fragments/ProductFields.graphql",
+                  "line": 2
+                },
+                {
+                  "field": "title",
+                  "on": "Product",
+                  "file": "src/backend/gql/fragments/ProductFields.graphql",
+                  "line": 3
+                },
+                {
+                  "field": "price",
+                  "on": "Product",
+                  "file": "src/backend/gql/fragments/ProductFields.graphql",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/backend/gql/queries/ProductChanged.graphql",
+            "line": 1
+          },
+          "library": "urql",
+          "transport": "ws"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/backend/catalog.ts:5:49@14:19",
+      "type": "ui_api_call",
+      "label": "query Products /graphql",
+      "repo": "web",
+      "file": "src/backend/catalog.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${SERVER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "SERVER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "template-env",
+        "through": "runQuery",
+        "graphql": {
+          "operation": "query",
+          "name": "Products",
+          "fields": [
+            {
+              "field": "products",
+              "arguments": [
+                "first"
+              ],
+              "line": 2,
+              "selections": [
+                {
+                  "field": "id",
+                  "on": "Product",
+                  "file": "src/backend/gql/fragments/ProductFields.graphql",
+                  "line": 2
+                },
+                {
+                  "field": "title",
+                  "on": "Product",
+                  "file": "src/backend/gql/fragments/ProductFields.graphql",
+                  "line": 3
+                },
+                {
+                  "field": "price",
+                  "on": "Product",
+                  "file": "src/backend/gql/fragments/ProductFields.graphql",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "first",
+              "type": "Int",
+              "required": false
+            }
+          ],
+          "document": {
+            "file": "src/backend/gql/queries/Products.graphql",
+            "line": 1
+          },
+          "library": "urql"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/backend/catalog.ts:7:43@14:19",
+      "type": "ui_api_call",
+      "label": "query Product /graphql",
+      "repo": "web",
+      "file": "src/backend/catalog.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${SERVER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "SERVER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "template-env",
+        "through": "runQuery",
+        "graphql": {
+          "operation": "query",
+          "name": "Product",
+          "fields": [
+            {
+              "field": "product",
+              "arguments": [
+                "id"
+              ],
+              "line": 2,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 3
+                },
+                {
+                  "field": "title",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "String!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/backend/gql/queries/Product.graphql",
+            "line": 1
+          },
+          "library": "urql"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/backend/catalog.ts:9:61@24:3",
+      "type": "ui_api_call",
+      "label": "mutation RenameProduct /graphql",
+      "repo": "web",
+      "file": "src/backend/catalog.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${SERVER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "SERVER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "template-env",
+        "through": "runMutation",
+        "graphql": {
+          "operation": "mutation",
+          "name": "RenameProduct",
+          "fields": [
+            {
+              "field": "renameProduct",
+              "arguments": [
+                "id",
+                "title"
+              ],
+              "line": 2,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 3
+                },
+                {
+                  "field": "title",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "String!",
+              "required": true
+            },
+            {
+              "name": "title",
+              "type": "String!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/backend/gql/mutations/RenameProduct.graphql",
+            "line": 1
+          },
+          "library": "urql"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/backend/search.ts:7:84",
+      "type": "ui_api_call",
+      "label": "query Products /graphql",
+      "repo": "web",
+      "file": "src/backend/search.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${SERVER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "SERVER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "Products",
+          "fields": [
+            {
+              "field": "products",
+              "arguments": [
+                "first"
+              ],
+              "line": 2,
+              "selections": [
+                {
+                  "field": "id",
+                  "on": "Product",
+                  "file": "src/backend/gql/fragments/ProductFields.graphql",
+                  "line": 2
+                },
+                {
+                  "field": "title",
+                  "on": "Product",
+                  "file": "src/backend/gql/fragments/ProductFields.graphql",
+                  "line": 3
+                },
+                {
+                  "field": "price",
+                  "on": "Product",
+                  "file": "src/backend/gql/fragments/ProductFields.graphql",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "first",
+              "type": "Int",
+              "required": false
+            }
+          ],
+          "document": {
+            "file": "src/backend/gql/queries/Products.graphql",
+            "line": 1
+          },
+          "library": "urql"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages/ProductPage.tsx:8:22",
+      "type": "ui_api_call",
+      "label": "mutation RenameProduct /graphql",
+      "repo": "web",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${SERVER_URL}/graphql",
+        "path": "/graphql",
+        "baseUrlEnv": "SERVER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "template-env",
+        "graphql": {
+          "operation": "mutation",
+          "name": "RenameProduct",
+          "fields": [
+            {
+              "field": "renameProduct",
+              "arguments": [
+                "id",
+                "title"
+              ],
+              "line": 2,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 3
+                },
+                {
+                  "field": "title",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "String!",
+              "required": true
+            },
+            {
+              "name": "title",
+              "type": "String!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/backend/gql/mutations/RenameProduct.graphql",
+            "line": 1
+          },
+          "library": "urql"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "web#src/backend/catalog.ts:getProduct",
+      "type": "function",
+      "label": "getProduct",
+      "repo": "web",
+      "file": "src/backend/catalog.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/catalog.ts:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "web",
+      "file": "src/backend/catalog.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "first",
+              "type": "number",
+              "optional": true
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/catalog.ts:renameProduct",
+      "type": "function",
+      "label": "renameProduct",
+      "repo": "web",
+      "file": "src/backend/catalog.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/catalog.ts:runNamed",
+      "type": "function",
+      "label": "runNamed",
+      "repo": "web",
+      "file": "src/backend/catalog.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "documents",
+              "type": "object"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/catalog.ts:watchProducts",
+      "type": "function",
+      "label": "watchProducts",
+      "repo": "web",
+      "file": "src/backend/catalog.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/client.ts:runMutation",
+      "type": "function",
+      "label": "runMutation",
+      "repo": "web",
+      "file": "src/backend/client.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "mutation",
+              "type": "unknown"
+            },
+            {
+              "name": "variables",
+              "type": "V"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/client.ts:runQuery",
+      "type": "function",
+      "label": "runQuery",
+      "repo": "web",
+      "file": "src/backend/client.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "args",
+              "type": "{query:unknown;variables:V}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/client.ts:runSubscription",
+      "type": "function",
+      "label": "runSubscription",
+      "repo": "web",
+      "file": "src/backend/client.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ query, variables }",
+              "type": "{query:unknown;variables:V}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/search.ts:searchProducts",
+      "type": "function",
+      "label": "searchProducts",
+      "repo": "web",
+      "file": "src/backend/search.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "first",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/search.ts:searchWith",
+      "type": "function",
+      "label": "searchWith",
+      "repo": "web",
+      "file": "src/backend/search.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ client, first }",
+              "type": "{client:unknown;first:number}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/pages/ProductPage.tsx:ProductPage",
+      "type": "ui_component",
+      "label": "ProductPage",
+      "repo": "web",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ id }",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "admin#src/pages/SettingsPage.tsx:SettingsPage",
+      "to": "ui_api_call:admin#src/pages/SettingsPage.tsx:10:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 10
+    },
+    {
+      "from": "admin#src/pages/SettingsPage.tsx:SettingsPage",
+      "to": "ui_api_call:admin#src/pages/SettingsPage.tsx:11:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 11
+    },
+    {
+      "from": "admin#src/pages/SettingsPage.tsx:SettingsPage",
+      "to": "ui_api_call:admin#src/pages/SettingsPage.tsx:8:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 8
+    },
+    {
+      "from": "admin#src/pages/SettingsPage.tsx:SettingsPage",
+      "to": "ui_api_call:admin#src/pages/SettingsPage.tsx:9:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 9
+    },
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "entry:api:graphql:Mutation.renameProduct@/graphql",
+      "to": "api#src/catalog/catalog.resolver.ts:CatalogResolver.renameProduct",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "type:api#Product",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 29
+    },
+    {
+      "from": "entry:api:graphql:Mutation.toggleSMTP@/settings",
+      "to": "api#src/preferences/preferences.resolver.ts:PreferencesResolver.toggleSMTP",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "boolean"
+      ],
+      "returns": "type:api#Preferences",
+      "file": "src/preferences/preferences.resolver.ts",
+      "line": 20
+    },
+    {
+      "from": "entry:api:graphql:Query.preferences@/settings",
+      "to": "api#src/preferences/preferences.resolver.ts:PreferencesResolver.preferences",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#Preferences",
+      "file": "src/preferences/preferences.resolver.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:api:graphql:Query.product@/graphql",
+      "to": "api#src/catalog/catalog.resolver.ts:CatalogResolver.product",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Product",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 24
+    },
+    {
+      "from": "entry:api:graphql:Query.products@/graphql",
+      "to": "api#src/catalog/catalog.resolver.ts:CatalogResolver.products",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "type:api#Product[]",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:api:graphql:Query.shippingZones@/settings",
+      "to": "api#src/preferences/shipping.resolver.ts:ShippingResolver.shippingZones",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#ShippingZone[]",
+      "file": "src/preferences/shipping.resolver.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:api:graphql:Subscription.productChanged@/graphql",
+      "to": "api#src/catalog/catalog.resolver.ts:CatalogResolver.productChanged",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#Product",
+      "file": "src/catalog/catalog.resolver.ts",
+      "line": 34
+    },
+    {
+      "from": "ui_action:admin#src/pages/SettingsPage.tsx:13:13",
+      "to": "admin#src/pages/SettingsPage.tsx:SettingsPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 13
+    },
+    {
+      "from": "ui_action:web#src/pages/ProductPage.tsx:17:15",
+      "to": "web#src/pages/ProductPage.tsx:ProductPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 17
+    },
+    {
+      "from": "ui_action:web#src/pages/ProductPage.tsx:18:15",
+      "to": "web#src/pages/ProductPage.tsx:ProductPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 18
+    },
+    {
+      "from": "ui_action:web#src/pages/ProductPage.tsx:19:15",
+      "to": "web#src/pages/ProductPage.tsx:ProductPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 19
+    },
+    {
+      "from": "ui_api_call:admin#src/pages/SettingsPage.tsx:10:22",
+      "to": "entry:api:graphql:Mutation.toggleSMTP@/settings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/gql/ToggleSMTP.graphql",
+      "line": 2,
+      "meta": {
+        "graphql": {
+          "operation": "ToggleSMTP",
+          "field": "Mutation.toggleSMTP"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/pages/SettingsPage.tsx:10:22",
+      "to": "entry:api:http:POST:/settings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 10,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/pages/SettingsPage.tsx:11:21",
+      "to": "entry:api:http:POST:/settings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 11,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/pages/SettingsPage.tsx:8:25",
+      "to": "entry:api:graphql:Query.preferences@/settings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/gql/Preferences.graphql",
+      "line": 2,
+      "meta": {
+        "graphql": {
+          "operation": "Preferences",
+          "field": "Query.preferences"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/pages/SettingsPage.tsx:8:25",
+      "to": "entry:api:http:POST:/settings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 8,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/pages/SettingsPage.tsx:9:19",
+      "to": "entry:api:graphql:Query.shippingZones@/settings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/gql/Preferences.graphql",
+      "line": 9,
+      "meta": {
+        "graphql": {
+          "operation": "ShippingZones",
+          "field": "Query.shippingZones"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/pages/SettingsPage.tsx:9:19",
+      "to": "entry:api:http:POST:/settings",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 9,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/catalog.ts:11:36@20:30",
+      "to": "entry:api:graphql:Subscription.productChanged@/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/gql/queries/ProductChanged.graphql",
+      "line": 2,
+      "meta": {
+        "graphql": {
+          "operation": "ProductChanged",
+          "field": "Subscription.productChanged"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/catalog.ts:11:36@20:30",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/catalog.ts",
+      "line": 11,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/catalog.ts:5:49@14:19",
+      "to": "entry:api:graphql:Query.products@/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/gql/queries/Products.graphql",
+      "line": 2,
+      "meta": {
+        "graphql": {
+          "operation": "Products",
+          "field": "Query.products"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/catalog.ts:5:49@14:19",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/catalog.ts",
+      "line": 5,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/catalog.ts:7:43@14:19",
+      "to": "entry:api:graphql:Query.product@/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/gql/queries/Product.graphql",
+      "line": 2,
+      "meta": {
+        "graphql": {
+          "operation": "Product",
+          "field": "Query.product"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/catalog.ts:7:43@14:19",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/catalog.ts",
+      "line": 7,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/catalog.ts:9:61@24:3",
+      "to": "entry:api:graphql:Mutation.renameProduct@/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/gql/mutations/RenameProduct.graphql",
+      "line": 2,
+      "meta": {
+        "graphql": {
+          "operation": "RenameProduct",
+          "field": "Mutation.renameProduct"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/catalog.ts:9:61@24:3",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/catalog.ts",
+      "line": 9,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/search.ts:7:84",
+      "to": "entry:api:graphql:Query.products@/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/gql/queries/Products.graphql",
+      "line": 2,
+      "meta": {
+        "graphql": {
+          "operation": "Products",
+          "field": "Query.products"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/search.ts:7:84",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/search.ts",
+      "line": 7,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages/ProductPage.tsx:8:22",
+      "to": "entry:api:graphql:Mutation.renameProduct@/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/backend/gql/mutations/RenameProduct.graphql",
+      "line": 2,
+      "meta": {
+        "graphql": {
+          "operation": "RenameProduct",
+          "field": "Mutation.renameProduct"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages/ProductPage.tsx:8:22",
+      "to": "entry:api:http:POST:/graphql",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 8,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "web#src/backend/catalog.ts:getProduct",
+      "to": "ui_api_call:web#src/backend/catalog.ts:7:43@14:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/backend/catalog.ts",
+      "line": 7
+    },
+    {
+      "from": "web#src/backend/catalog.ts:getProduct",
+      "to": "web#src/backend/client.ts:runQuery",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{query:unknown;variables:V}"
+      ],
+      "returns": "unknown",
+      "file": "src/backend/catalog.ts",
+      "line": 7
+    },
+    {
+      "from": "web#src/backend/catalog.ts:listProducts",
+      "to": "ui_api_call:web#src/backend/catalog.ts:5:49@14:19",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/backend/catalog.ts",
+      "line": 5
+    },
+    {
+      "from": "web#src/backend/catalog.ts:listProducts",
+      "to": "web#src/backend/client.ts:runQuery",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{query:unknown;variables:V}"
+      ],
+      "returns": "unknown",
+      "file": "src/backend/catalog.ts",
+      "line": 5
+    },
+    {
+      "from": "web#src/backend/catalog.ts:renameProduct",
+      "to": "ui_api_call:web#src/backend/catalog.ts:9:61@24:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/backend/catalog.ts",
+      "line": 9
+    },
+    {
+      "from": "web#src/backend/catalog.ts:renameProduct",
+      "to": "web#src/backend/client.ts:runMutation",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown",
+        "V"
+      ],
+      "returns": "unknown",
+      "file": "src/backend/catalog.ts",
+      "line": 9
+    },
+    {
+      "from": "web#src/backend/catalog.ts:runNamed",
+      "to": "web#src/backend/client.ts:runQuery",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{query:unknown;variables:V}"
+      ],
+      "returns": "unknown",
+      "file": "src/backend/catalog.ts",
+      "line": 14
+    },
+    {
+      "from": "web#src/backend/catalog.ts:watchProducts",
+      "to": "ui_api_call:web#src/backend/catalog.ts:11:36@20:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/backend/catalog.ts",
+      "line": 11
+    },
+    {
+      "from": "web#src/backend/catalog.ts:watchProducts",
+      "to": "web#src/backend/client.ts:runSubscription",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{query:unknown;variables:V}"
+      ],
+      "returns": "unknown",
+      "file": "src/backend/catalog.ts",
+      "line": 11
+    },
+    {
+      "from": "web#src/backend/search.ts:searchProducts",
+      "to": "web#src/backend/search.ts:searchWith",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{client:unknown;first:number}"
+      ],
+      "returns": "unknown",
+      "file": "src/backend/search.ts",
+      "line": 9
+    },
+    {
+      "from": "web#src/backend/search.ts:searchWith",
+      "to": "ui_api_call:web#src/backend/search.ts:7:84",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/backend/search.ts",
+      "line": 7
+    },
+    {
+      "from": "web#src/pages/ProductPage.tsx:ProductPage",
+      "to": "ui_api_call:web#src/pages/ProductPage.tsx:8:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 8
+    },
+    {
+      "from": "web#src/pages/ProductPage.tsx:ProductPage",
+      "to": "web#src/backend/catalog.ts:getProduct",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 11
+    },
+    {
+      "from": "web#src/pages/ProductPage.tsx:ProductPage",
+      "to": "web#src/backend/catalog.ts:listProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "unknown",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 10
+    },
+    {
+      "from": "web#src/pages/ProductPage.tsx:ProductPage",
+      "to": "web#src/backend/catalog.ts:renameProduct",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 18
+    },
+    {
+      "from": "web#src/pages/ProductPage.tsx:ProductPage",
+      "to": "web#src/backend/catalog.ts:watchProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 13
+    },
+    {
+      "from": "web#src/pages/ProductPage.tsx:ProductPage",
+      "to": "web#src/backend/search.ts:searchProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "number"
+      ],
+      "returns": "unknown",
+      "file": "src/pages/ProductPage.tsx",
+      "line": 12
+    }
+  ],
+  "types": {
+    "type:api#Preferences": {
+      "name": "Preferences",
+      "kind": "object",
+      "declaredIn": "api#src/preferences/preferences.resolver.ts",
+      "structuralHash": "87c3c7af29561b20",
+      "fields": [
+        {
+          "name": "currency",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "smtpEnabled",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:api#Product": {
+      "name": "Product",
+      "kind": "object",
+      "declaredIn": "api#src/catalog/catalog.resolver.ts",
+      "structuralHash": "291d74b05eba43c1",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "price",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:api#ShippingZone": {
+      "name": "ShippingZone",
+      "kind": "object",
+      "declaredIn": "api#src/preferences/shipping.resolver.ts",
+      "structuralHash": "b466c09a59c4b4f1",
+      "fields": [
+        {
+          "name": "code",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "admin"
+    },
+    {
+      "file": "src/pages/SettingsPage.tsx",
+      "line": 11,
+      "reason": "graphql-document-dynamic",
+      "level": "action",
+      "message": "MissingDocument is generated by GraphQL codegen into ./gql/graphql, which is not committed, and no operation named Missing is in the .graphql files of its package",
+      "hint": "Write the document as a gql template or a .graphql file, so the fields it asks for can be joined.",
+      "symbol": "useQuery",
+      "service": "admin"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 11,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 12,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/backend/catalog.ts",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/catalog.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/catalog.ts",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/catalog.ts",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/catalog.ts",
+      "line": 14,
+      "reason": "graphql-document-dynamic",
+      "level": "action",
+      "message": "the document is not written where it is used",
+      "hint": "Hand runQuery a document written as a gql template, a .graphql file or a codegen document, so the fields it asks for can be joined.",
+      "symbol": "runQuery",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/catalog.ts",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/client.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "TypedDocumentNode<T, V>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@urql/core"
+      },
+      "service": "web"
+    },
+    {
+      "file": "src/backend/client.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "sites": 2,
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "V",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/client.ts",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/client.ts",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/client.ts",
+      "line": 23,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "TypedDocumentNode<T, V>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@urql/core"
+      },
+      "service": "web"
+    },
+    {
+      "file": "src/backend/client.ts",
+      "line": 23,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/search.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Client",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@urql/core"
+      },
+      "service": "web"
+    },
+    {
+      "file": "src/backend/search.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/search.ts",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/pages/ProductPage.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    }
+  ]
+}

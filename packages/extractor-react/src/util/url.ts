@@ -36,6 +36,35 @@ export const ENV_ROOTS = ['environment', 'env', 'config', 'useRuntimeConfig().pu
  */
 const BUNDLER_ROOTS = ['process', 'import.meta', 'globalThis.process'] as const;
 
+/** What a page is served with: the global objects a runtime settings object hangs from. */
+const PAGE_GLOBALS = new Set(['window', 'globalThis', 'self']);
+
+/**
+ * The names a settings object injected into the page at run time is given
+ * (P275): `window._env_`, `window.__ENV__`, `window.env`, `globalThis.__RUNTIME_CONFIG__`,
+ * written by an entrypoint script from the container's environment so one
+ * build serves every deployment.
+ */
+const RUNTIME_SETTINGS = /^_*(env|runtime_?env|runtime_?config|app_?config|config)_*$/i;
+
+/**
+ * The key a runtime settings object is read at: `window._env_?.SERVER_URL`
+ * answers `SERVER_URL`, the path after the object as a hand-written settings
+ * object answers. A cast round the global (`(window as any)._env_`) is taken off.
+ */
+const runtimeSettingKey = (node: TsNode): string | null => {
+  if (!Node.isPropertyAccessExpression(node)) return null;
+  const parts: string[] = [];
+  let current: TsNode = node;
+  while (Node.isPropertyAccessExpression(current)) {
+    parts.unshift(current.getName());
+    current = current.getExpression();
+    while (Node.isParenthesizedExpression(current) || Node.isAsExpression(current) || Node.isNonNullExpression(current)) current = current.getExpression();
+  }
+  if (!Node.isIdentifier(current) || !PAGE_GLOBALS.has(current.getText()) || parts.length < 2) return null;
+  return RUNTIME_SETTINGS.test(parts[0] as string) ? parts.slice(1).join('.') : null;
+};
+
 /**
  * The settings key an expression reads, when it reads one.
  *
@@ -52,6 +81,8 @@ export const settingKeyOf = (node: TsNode): string | null => {
     if ((BUNDLER_ROOTS as readonly string[]).includes(root)) return taken.key;
   }
   if (!Node.isPropertyAccessExpression(node)) return settingKeyIn(node, ENV_ROOTS);
+  const runtime = runtimeSettingKey(node);
+  if (runtime !== null) return runtime;
   const inner = node.getExpression();
   if (Node.isPropertyAccessExpression(inner) && inner.getName() === 'env') {
     // The root is written rather than resolved: `import.meta` is a meta

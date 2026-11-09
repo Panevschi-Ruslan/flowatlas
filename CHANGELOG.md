@@ -48,6 +48,26 @@ only one of them moved.
   is a part and not a template, and a template its undecided conditions render
   differently is not read. `fixtures/cluster-templating-joins` and
   `fixtures/multi-repo-jinja-files` show each case.
+- **Codegen documents nobody commits, operations sent through helpers, and a
+  schema a library patch chooses (P275).** A `…Document` imported from a
+  module the repository does not commit - one its GraphQL Code Generator
+  configuration generates, or one named like a codegen output - is the
+  operation of that name (PascalCase, with or without its type after it) in
+  the documents the configuration lists, or in every `.graphql` file of the
+  package, with the fragments of all of them; a name none holds is still
+  `graphql-document-dynamic`, naming where it looked. A call whose document
+  is a parameter of the repository's own helper, or a member of one
+  (`runQuery({ query })` over urql's `createRequest`, `runMutation(doc)` over
+  `client.mutation`, through Vue's `reactive`), is the operation each caller
+  hands, drawn at the caller with `through`; a caller handing an unreadable
+  document is a row at that caller. A client a helper is handed is the one
+  its callers agree on, and a client whose whole address is a setting is
+  rooted at that key. `window._env_?.X` (and `window.__ENV__`,
+  `globalThis.env`, `__RUNTIME_CONFIG__`) is a settings root, read through a
+  constant imported from another module. A resolver with no scope is served
+  by the schema a committed patch of the GraphQL library gives it, where a
+  line the patch adds reads `Reflect.getMetadata(KEY, …) || 'scope'`
+  (`fixtures/graphql-codegen-helpers`).
 - **A handler behind its wrapper, a request handed in as one object, and a
   GraphQL server made into a Lambda (P269).** A `pages/api` default export
   that is a call of wrappers - the repository's own or a package's -

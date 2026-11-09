@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:42:48.130Z",
+  "configHash": "888f1a8c1f16",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 7,
+      "edges": 5,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 3477,
+      "packages": {
+        "name": "graphql-codegen-helpers-admin",
+        "runtime": [
+          "@urql/vue",
+          "graphql",
+          "react",
+          "urql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 22,
+      "edges": 8,
+      "types": 3,
+      "unresolved": 2,
+      "durationMs": 4303,
+      "packages": {
+        "name": "graphql-codegen-helpers-api",
+        "runtime": [
+          "@graphql-yoga/nestjs",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/graphql",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 21,
+      "edges": 20,
+      "types": 0,
+      "unresolved": 16,
+      "durationMs": 3638,
+      "packages": {
+        "name": "graphql-codegen-helpers-web",
+        "runtime": [
+          "@urql/core",
+          "graphql",
+          "react",
+          "urql"
+        ],
+        "dev": [
+          "@graphql-codegen/cli",
+          "@graphql-codegen/typed-document-node"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 10,
+    "resolved": 10,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 2,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 3,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 50,
+    "edges": 52,
+    "types": 3,
+    "missed": 20,
+    "sites": 21,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 20
+  }
+}

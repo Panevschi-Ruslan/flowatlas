@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:45:31.031Z",
+  "builtAt": "2026-11-09T21:42:59.903Z",
   "services": [
     {
       "name": "api",
@@ -2063,7 +2063,7 @@
       "reason": "graphql-endpoint-unread",
       "level": "action",
       "message": "Query.ordersToday is answered here, and no endpoint of api was read to serve it: /graphql serves resolvers tagged store; /admin serves the modules it includes; /settings serves resolvers tagged settings",
-      "hint": "Tag the resolver with the scope of the schema that serves it, or include its module in that schema's options.",
+      "hint": "Tag the resolver with the scope of the schema that serves it, or include its module in that schema's options. Where a patch of the GraphQL library gives an untagged resolver a scope, commit the patch where the package manager applies it (a `patch:` dependency, `pnpm.patchedDependencies` or `patches/`) with `Reflect.getMetadata(KEY, …) || 'scope'` on a line it adds.",
       "symbol": "Query.ordersToday",
       "adapter": "graphql-resolvers",
       "service": "api"

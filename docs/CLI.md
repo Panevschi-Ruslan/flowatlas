@@ -740,6 +740,40 @@ ends with the read rest, `heuristic` (`meta.via: 'graphql-path'`); two are
 read with the document each caller hands it, and a value interpolated inside
 a string of a document no longer makes it unread (`fixtures/graphql-endpoints`).
 
+**Codegen documents nobody commits, helpers, and a schema a library patch
+chooses (P275).** A `…Document` imported from a module that is not in the
+repository - one a GraphQL Code Generator configuration generates, or one
+named like a codegen output (`graphql`, `generated`, `gql`) - is the
+operation of that name in the documents the configuration lists (the file
+the package's scripts hand `graphql-codegen --config`, or `codegen.*`,
+`.graphqlrc*`, `graphql.config.*` in the package or a workspace above it),
+or in every `.graphql` / `.gql` file of the package where none is found:
+the name in PascalCase, with or without the operation's type after it
+(`ToggleSMTP` is `ToggleSmtpDocument`, `Orders` may be `OrdersQueryDocument`),
+with the fragments of every listed file; a name no operation holds stays
+`graphql-document-dynamic`, naming the documents looked in. A call whose
+document is a parameter of the repository's own helper, or a member of one
+(`runQuery({ query, variables })` calling urql's `createRequest(args.query)`,
+`runMutation(doc)` calling `client.mutation(doc)`, `({ query }) =>
+client.executeSubscription(createRequest(query))`, through a `const` holding
+Vue's `reactive(options)`), is the operation each caller hands, drawn at the
+caller with `meta.through` naming the helper; a caller handing a document
+this cannot read is a `graphql-document-dynamic` row at that caller. A client
+a helper is handed is the one every caller hands, where they agree. A
+client made with an address that is a setting and nothing else
+(`createClient({ url: import.meta.env.VITE_GQL_URL })`) is rooted at that
+key at `/graphql`, so `apiTarget` or the value the key is given decides who
+answers. A settings object injected into the page at run time
+(`window._env_?.SERVER_URL`, `window.__ENV__`, `globalThis.env`,
+`__RUNTIME_CONFIG__`) is a settings root like `import.meta.env`, read
+through a constant another module exports. On the server, a resolver tagged
+with none of the scopes is served by the endpoint whose scope a patch the
+repository commits to its GraphQL library gives it - Yarn's `patch:`
+protocol, `pnpm.patchedDependencies` or `patches/<lib>+<version>.patch` -
+where a line the patch adds reads the tag as `Reflect.getMetadata(KEY, …) ||
+'scope'`, the key one the resolvers are tagged under and the scope one of
+their tags (`fixtures/graphql-codegen-helpers`).
+
 **GraphQL federation (P241).** A request to a federation gateway is planned
 the way the router plans it, statically, so `flow` from a screen reaches the
 resolvers of every subgraph and `impact` on a subgraph's field reaches the

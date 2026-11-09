@@ -1,0 +1,12 @@
+{
+  "name": "graphql-codegen-helpers-api",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@graphql-yoga/nestjs": "^3.7.0",
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/core": "^10.4.0",
+    "@nestjs/graphql": "patch:@nestjs/graphql@npm%3A12.2.0#./patches/nestjs-graphql-npm-12.2.0.patch",
+    "graphql": "^16.9.0"
+  }
+}

@@ -306,3 +306,138 @@ export const requestsOf = (
 
   return outward(owner, undefined, 0, new Set([owner.id]), site.call, []);
 };
+
+/** A value a function was handed, read at one of its callers (P275). */
+export interface HandedAtCaller {
+  /** The call that hands it: the outermost one it was followed out to. */
+  readonly call: CallExpression;
+  /** The function that call is written in, where the repository declares one. */
+  readonly caller: IndexedFunction | undefined;
+  /** What the caller hands, where it hands something this can point at. */
+  readonly value: TsNode | undefined;
+  /** The calls followed out through, innermost first. */
+  readonly calls: readonly CallExpression[];
+  /** The function the value is used in, innermost. */
+  readonly through: string;
+}
+
+/**
+ * Functions of a reactivity library that answer the object they are handed:
+ * `const args = reactive(options)` reads `args.query` as `options.query`.
+ */
+const SAME_OBJECT = new Set(['reactive', 'readonly', 'shallowReactive', 'shallowReadonly', 'toRaw', 'markRaw']);
+const SAME_OBJECT_FROM = /^(vue|@vue\/(reactivity|runtime-core|composition-api))$/;
+
+const unwrapped = (node: TsNode): TsNode => {
+  let at = node;
+  while (Node.isParenthesizedExpression(at) || Node.isAsExpression(at) || Node.isSatisfiesExpression(at) || Node.isNonNullExpression(at)) at = at.getExpression();
+  return at;
+};
+
+/** Whether a callee is one of {@link SAME_OBJECT}, imported from its library. */
+const answersWhatItIsHanded = (callee: TsNode): boolean => {
+  if (!Node.isIdentifier(callee)) return false;
+  for (const declaration of callee.getSymbol()?.getDeclarations() ?? []) {
+    if (!Node.isImportSpecifier(declaration)) continue;
+    return SAME_OBJECT.has(declaration.getName()) && SAME_OBJECT_FROM.test(declaration.getImportDeclaration().getModuleSpecifierValue());
+  }
+  return false;
+};
+
+/**
+ * The parameter a value is, or the member of one it reads: `doc`, `args.query`,
+ * `({ query })`'s `query`, through a `const` that names it or holds what a
+ * reactivity function made of it.
+ */
+const parameterRead = (value: TsNode, depth = 0): { parameter: ParameterDeclaration; member?: string } | undefined => {
+  if (depth > 4) return undefined;
+  const at = unwrapped(value);
+  if (Node.isPropertyAccessExpression(at)) {
+    const inner = parameterRead(at.getExpression(), depth + 1);
+    return inner !== undefined && inner.member === undefined ? { parameter: inner.parameter, member: at.getName() } : undefined;
+  }
+  if (!Node.isIdentifier(at)) return undefined;
+  const holder = at.getParent();
+  const symbol = holder !== undefined && Node.isShorthandPropertyAssignment(holder) ? holder.getValueSymbol() : at.getSymbol();
+  const declaration = symbol?.getDeclarations()[0];
+  if (declaration === undefined) return undefined;
+  if (Node.isParameterDeclaration(declaration)) return Node.isIdentifier(declaration.getNameNode()) ? { parameter: declaration } : undefined;
+  if (Node.isBindingElement(declaration)) {
+    const pattern = declaration.getParent();
+    const parameter = pattern?.getParent();
+    if (!Node.isObjectBindingPattern(pattern) || parameter === undefined || !Node.isParameterDeclaration(parameter) || declaration.getDotDotDotToken() !== undefined) return undefined;
+    return { parameter, member: declaration.getPropertyNameNode()?.getText() ?? declaration.getName() };
+  }
+  if (!Node.isVariableDeclaration(declaration) || declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) return undefined;
+  const initializer = declaration.getInitializer();
+  if (initializer === undefined) return undefined;
+  const held = unwrapped(initializer);
+  if (Node.isIdentifier(held) || Node.isPropertyAccessExpression(held)) return parameterRead(held, depth + 1);
+  if (Node.isCallExpression(held) && held.getArguments().length === 1 && answersWhatItIsHanded(held.getExpression())) return parameterRead(held.getArguments()[0] as TsNode, depth + 1);
+  return undefined;
+};
+
+/** The indexed function a parameter belongs to: a declaration, or the `const` an arrow or a function expression is held by. */
+const functionOfParameter = (ctx: ReactExtractContext, parameter: ParameterDeclaration): IndexedFunction | undefined => {
+  const fn = parameter.getParent();
+  if (Node.isFunctionDeclaration(fn)) return ctx.functions.get(fn);
+  if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn)) return undefined;
+  let holder: TsNode | undefined = fn.getParent();
+  while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder))) holder = holder.getParent();
+  return holder !== undefined && (Node.isVariableDeclaration(holder) || Node.isPropertyAssignment(holder)) ? ctx.functions.get(holder) : undefined;
+};
+
+/** What one caller hands for a parameter, or for the member of it a function reads. */
+const handedFor = (call: CallExpression, index: number, member: string | undefined): TsNode | undefined => {
+  const argument = call.getArguments()[index];
+  if (argument === undefined || member === undefined) return argument;
+  const object = objectHandedAs(argument);
+  const property = object?.getProperty(member);
+  if (property === undefined) return undefined;
+  if (Node.isPropertyAssignment(property)) return property.getInitializer();
+  if (Node.isShorthandPropertyAssignment(property)) return property.getNameNode();
+  return undefined;
+};
+
+/**
+ * What each caller of the function a value is used in hands for it, where the
+ * value is one of that function's parameters or a member of one (P275):
+ * `runQuery({ query: OrdersDocument })` hands `args.query` in
+ * `createRequest(args.query)` the document `OrdersDocument`. Followed out
+ * again where what a caller hands is its own parameter, as far as
+ * {@link FORWARD_DEPTH} calls; `settled` says a value needs no further
+ * following. Undefined where the value is not a parameter of a function this
+ * repository declares.
+ */
+export const handedOutward = (
+  ctx: ReactExtractContext,
+  value: TsNode,
+  settled: (value: TsNode) => boolean,
+): HandedAtCaller[] | undefined => {
+  const outward = (at: TsNode, depth: number, chain: readonly CallExpression[], seen: ReadonlySet<string>, innermost?: string): HandedAtCaller[] | undefined => {
+    const read = parameterRead(at);
+    if (read === undefined) return undefined;
+    const fn = functionOfParameter(ctx, read.parameter);
+    if (fn === undefined || seen.has(fn.id)) return undefined;
+    const index = parametersOf(fn.fn).indexOf(read.parameter);
+    if (index === -1) return undefined;
+    const found: HandedAtCaller[] = [];
+    for (const call of callSitesOf(fn.fn)) {
+      const caller = enclosingIndexed(ctx, call);
+      const handed = handedFor(call, index, read.member);
+      const calls = [...chain, call];
+      const further =
+        handed === undefined || settled(handed) || depth + 1 >= FORWARD_DEPTH ? undefined : outward(handed, depth + 1, calls, new Set([...seen, fn.id]), innermost ?? fn.name);
+      if (further !== undefined && further.length > 0) found.push(...further);
+      else found.push({ call, caller, value: handed, calls, through: innermost ?? fn.name });
+    }
+    return found;
+  };
+  return outward(value, 0, [], new Set());
+};
+
+/** Whether a value is a parameter of a function this repository declares, or a member of one: what {@link handedOutward} follows. */
+export const isHandedParameter = (ctx: ReactExtractContext, value: TsNode): boolean => {
+  const read = parameterRead(value);
+  return read !== undefined && functionOfParameter(ctx, read.parameter) !== undefined;
+};

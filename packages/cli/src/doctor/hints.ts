@@ -389,11 +389,11 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'graphql-field-no-resolver': () =>
     'The operation asks the service for a field its schema has and no resolver of it answers, so the request stops at the endpoint; or, where the server answers some requests by code of its own before its schema, a field no resolver declares, which only that code may answer. Resolve the field, or correct the operation.',
   'graphql-endpoint-unread': () =>
-    'A GraphQL module\'s options, its path, or which of a server\'s several schemas serves a resolver could not be read, so the endpoint stands at the library\'s default path or the resolver at none. Write the options as an object (in place, answered by useFactory, or by the class\'s createGqlOptions()), the path as a literal, constant or enum member, and include the resolver\'s module or tag it with the schema\'s scope.',
+    'A GraphQL module\'s options, its path, or which of a server\'s several schemas serves a resolver could not be read, so the endpoint stands at the library\'s default path or the resolver at none. Write the options as an object (in place, answered by useFactory, or by the class\'s createGqlOptions()), the path as a literal, constant or enum member, and include the resolver\'s module or tag it with the schema\'s scope - or, where a patch of the library gives an untagged resolver its scope, commit that patch where the package manager applies it.',
   'graphql-client-unread': () =>
     'The call hands its operation a GraphQL client this could not follow to the address it is made with, so the request is recorded with no address and joins no endpoint. Make the client with its uri written where it is made (new ApolloClient({ uri }), a factory handed { uri }), or hand it through a context provider whose value is one.',
   'graphql-document-dynamic': () =>
-    'The GraphQL document is built at run time or is not written where it is used, so the fields it asks for cannot be joined. Write it as a gql template, a graphql() call or a .graphql file.',
+    'The GraphQL document is built at run time or is not written where it is used, so the fields it asks for cannot be joined. Write it as a gql template, a graphql() call or a .graphql file; a codegen document is read from the operation of its name in the documents its configuration lists, and a helper\'s from what each caller hands it.',
   'graphql-document-not-parsed': () =>
     'The document is not valid GraphQL, so nothing it asks for is joined; the server would refuse it too.',
   'graphql-fragment-not-read': () =>

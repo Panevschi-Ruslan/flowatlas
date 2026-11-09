@@ -1,0 +1,12 @@
+query Preferences {
+  preferences {
+    currency
+    smtpEnabled
+  }
+}
+
+query ShippingZones {
+  shippingZones {
+    code
+  }
+}
