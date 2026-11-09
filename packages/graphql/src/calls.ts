@@ -20,6 +20,11 @@ export interface GraphqlCall {
   readonly endpoint?: TsNode;
   /** A subscription goes over a socket. */
   readonly transport?: 'ws';
+  /**
+   * The client the call is made with, where it says (P266): one it hands
+   * itself (`{ client }`, `named`), or the one it is a method of.
+   */
+  readonly client?: { readonly node: TsNode; readonly named: boolean };
 }
 
 const APOLLO_HOOKS = new Set(['useQuery', 'useLazyQuery', 'useSuspenseQuery', 'useBackgroundQuery', 'useMutation', 'useSubscription', 'useReadQuery']);
@@ -50,6 +55,24 @@ const objectAt = (call: CallExpression, index: number): ObjectLiteralExpression 
   return argument !== undefined && Node.isObjectLiteralExpression(argument) ? argument : undefined;
 };
 
+/**
+ * The object literals a hook's options may be (P266): written in place,
+ * through a `const`, or either side of a condition
+ * (`ids.length === 0 ? skipToken : { client }`).
+ */
+const optionObjects = (node: TsNode | undefined, depth = 0): ObjectLiteralExpression[] => {
+  if (node === undefined || depth > 4) return [];
+  if (Node.isObjectLiteralExpression(node)) return [node];
+  if (Node.isParenthesizedExpression(node) || Node.isAsExpression(node) || Node.isSatisfiesExpression(node)) return optionObjects(node.getExpression(), depth + 1);
+  if (Node.isConditionalExpression(node)) return [...optionObjects(node.getWhenTrue(), depth + 1), ...optionObjects(node.getWhenFalse(), depth + 1)];
+  if (Node.isIdentifier(node)) {
+    for (const declaration of node.getSymbol()?.getDeclarations() ?? []) {
+      if (Node.isVariableDeclaration(declaration)) return optionObjects(declaration.getInitializer(), depth + 1);
+    }
+  }
+  return [];
+};
+
 /** Whether an expression is a document this can read: what tells `client.query(doc)` from `db.query(sql)`. */
 const isDocument = (expression: TsNode | undefined): boolean => expression !== undefined && documentOf(expression).kind === 'read';
 
@@ -77,7 +100,8 @@ export const graphqlCallOf = (call: CallExpression): GraphqlCall | undefined => 
     }
     if (module === undefined) return undefined;
     if (APOLLO_HOOKS.has(name) && module.startsWith('@apollo/client')) {
-      return { library: 'apollo', document: call.getArguments()[0], ...(name === 'useSubscription' ? { transport: 'ws' as const } : {}) };
+      const client = optionObjects(call.getArguments()[1]).map((options) => property(options, 'client')).find((found) => found !== undefined);
+      return { library: 'apollo', document: call.getArguments()[0], ...(name === 'useSubscription' ? { transport: 'ws' as const } : {}), ...(client === undefined ? {} : { client: { node: client, named: true } }) };
     }
     if (URQL_HOOKS.has(name) && (module === 'urql' || module.startsWith('@urql/'))) {
       const options = objectAt(call, 0);
@@ -97,11 +121,12 @@ export const graphqlCallOf = (call: CallExpression): GraphqlCall | undefined => 
   const receiver = callee.getExpression();
   const angular = /apollo$/i.test(receiver.getText()) || receiver.getType().getText().endsWith('Apollo');
   const options = objectAt(call, 0);
+  const made = angular ? {} : { client: { node: receiver, named: false } };
   if (options !== undefined && ['query', 'watchQuery', 'subscribe'].includes(method) && isDocument(property(options, 'query'))) {
-    return { library: angular ? 'apollo-angular' : 'apollo', document: property(options, 'query'), ...(method === 'subscribe' ? { transport: 'ws' as const } : {}) };
+    return { library: angular ? 'apollo-angular' : 'apollo', document: property(options, 'query'), ...(method === 'subscribe' ? { transport: 'ws' as const } : {}), ...made };
   }
   if (options !== undefined && method === 'mutate' && isDocument(property(options, 'mutation'))) {
-    return { library: angular ? 'apollo-angular' : 'apollo', document: property(options, 'mutation') };
+    return { library: angular ? 'apollo-angular' : 'apollo', document: property(options, 'mutation'), ...made };
   }
   const first = call.getArguments()[0];
   if (['query', 'mutation', 'subscription'].includes(method) && isDocument(first)) {
@@ -114,15 +139,44 @@ export const graphqlCallOf = (call: CallExpression): GraphqlCall | undefined => 
   return undefined;
 };
 
-/** The document a `fetch` sends, where its body is `JSON.stringify({ query })` written in place. */
-export const fetchedDocument = (call: CallExpression): TsNode | undefined => {
+/** What a `fetch` sends as `query`, where its body is `JSON.stringify({ query })` written in place: a document or not. */
+export const fetchedQuery = (call: CallExpression): TsNode | undefined => {
   const init = objectAt(call, 1);
   const body = init === undefined ? undefined : property(init, 'body');
   if (body === undefined || !Node.isCallExpression(body) || body.getExpression().getText() !== 'JSON.stringify') return undefined;
   const [payload] = body.getArguments();
   if (payload === undefined || !Node.isObjectLiteralExpression(payload)) return undefined;
-  const query = property(payload, 'query');
+  return property(payload, 'query');
+};
+
+/** The document a `fetch` sends, where its body is `JSON.stringify({ query })` written in place. */
+export const fetchedDocument = (call: CallExpression): TsNode | undefined => {
+  const query = fetchedQuery(call);
   return isDocument(query) ? query : undefined;
+};
+
+/**
+ * What a parameter was handed, along the calls a request was followed out
+ * through, innermost first (P266): `graphqlRequest('/settings', QUERY)`
+ * hands its `query` parameter the document its `fetch` sends. Undefined
+ * where a step is not a parameter or the call hands nothing in its place.
+ */
+export const handedThrough = (value: TsNode, calls: readonly CallExpression[]): TsNode | undefined => {
+  let at: TsNode = value;
+  for (const call of calls) {
+    if (!Node.isIdentifier(at)) return at;
+    // `{ query }` names the binding, not the property.
+    const holder = at.getParent();
+    const symbol = holder !== undefined && Node.isShorthandPropertyAssignment(holder) ? holder.getValueSymbol() : at.getSymbol();
+    const declaration = symbol?.getDeclarations()[0];
+    if (declaration === undefined || !Node.isParameterDeclaration(declaration)) return at;
+    const owner = declaration.getParent();
+    const index = (owner as { getParameters?: () => TsNode[] }).getParameters?.().indexOf(declaration) ?? -1;
+    const argument = index === -1 ? undefined : call.getArguments()[index];
+    if (argument === undefined) return undefined;
+    at = argument;
+  }
+  return at;
 };
 
 /**

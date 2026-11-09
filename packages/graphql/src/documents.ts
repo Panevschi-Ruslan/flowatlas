@@ -81,11 +81,21 @@ const templateText = (template: TsNode): { text: string; offset: number; holes: 
     const holeEnd = after.getStart() + 1 - start;
     text += raw.slice(at, holeStart) + ' '.repeat(holeEnd - holeStart);
     at = holeEnd;
-    holes.push(span.getExpression());
+    // A value written inside a string of the document - `email: "${email}"` -
+    // is a value, which the document's shape does not depend on (P266).
+    if (!insideString(text)) holes.push(span.getExpression());
     before = after;
   }
   text += raw.slice(at);
   return { text, offset: start, holes };
+};
+
+/** Whether the end of a document's text so far is inside a string: an odd count of unescaped quotes on its last line. */
+const insideString = (text: string): boolean => {
+  const line = text.slice(text.lastIndexOf('\n') + 1);
+  let quotes = 0;
+  for (let at = 0; at < line.length; at += 1) if (line[at] === '"' && line[at - 1] !== '\\') quotes += 1;
+  return quotes % 2 === 1;
 };
 
 /** An object literal, past a cast. */

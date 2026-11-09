@@ -558,7 +558,7 @@ export type {
 } from './stand-ins.js';
 export { RXJS_DECLARATION_SHAPE, RXJS_SHAPE } from './rxjs-shape.js';
 
-export { isTestDirectory, isTestFile } from './test-files.js';
+export { isTestDirectory, isTestFile, isTestName } from './test-files.js';
 
 export { docsAbove, jsDocCallsIn, jsDocCallsMarkers, namesGivenTo, takesNames, type JsDocCall } from './markers.js';
 export type { MarkerNames, RecordedMarker, RefusedArg } from './markers.js';

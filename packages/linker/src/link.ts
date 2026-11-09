@@ -535,6 +535,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
   const guessed =
     call.meta?.['guessed'] === true ||
     outcome.via === 'unique-route' ||
+    outcome.via === 'graphql-path' ||
     outcome.via === 'proxy' ||
     outcome.via === 'ingress' ||
     outcome.hostFromFiles === true ||

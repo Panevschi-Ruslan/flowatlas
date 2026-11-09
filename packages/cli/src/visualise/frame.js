@@ -522,6 +522,8 @@ export const PAGE_WORDS = Object.freeze({
     'target-route-not-found': 'route not found on the target',
     'graphql-field-no-resolver': 'no resolver for the field',
     'graphql-document-dynamic': 'document built at run time',
+    'graphql-endpoint-unread': 'GraphQL endpoint not read',
+    'graphql-client-unread': 'GraphQL client not followed',
     'graphql-document-not-parsed': 'document is not GraphQL',
     'graphql-fragment-not-read': 'fragment not read',
     'template-not-found': 'template not found',

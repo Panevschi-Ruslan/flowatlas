@@ -700,6 +700,37 @@ by its schema: `{ "document": { "kind": "graphql", "path": "catalog.graphql" } }
 gives the same root entries, `declared` (`fixtures/graphql-gateway`,
 `fixtures/graphql-declared`).
 
+**Several GraphQL endpoints, and the client each operation is sent with
+(P266).** A NestJS server that imports `GraphQLModule.forRoot*` more than once
+serves each at its own path: the options are read in place, from a
+`useFactory` answering an object or a `useClass`'s `createGqlOptions()`, and
+`path` as any string (a template, a constant, an enum member). Which resolvers
+each serves is read from a scope the module's options name that its resolvers
+are tagged with (`SetMetadata(KEY, 'settings')` in the repository's own
+resolver decorator), or else from the modules its `include` names and what
+they import. Where the endpoints serve different resolvers, each field is an
+entry of its schema, keyed by the path (`Query.me@/settings`), so the same
+field of two schemas is two ways in and an operation joins only the one its
+endpoint serves; a resolver no endpoint was read to serve, and options or a
+path not read, are `graphql-endpoint-unread`. A plugin of the repository's
+that answers a request itself (`endResponse`, `setResultAndStopExecution`,
+`setSchema`, and no `onResponse` keeping answers) or a `transformSchema`
+marks the endpoint's schema as not all there is (`meta.graphql.open`): a root
+field it lacks is a `graphql-field-no-resolver` note rather than
+`graphql-field-unknown`. On the client, an operation is sent with the client
+it names (`{ client }` in a hook's options, written in place, through a
+`const` or either side of a condition; the client it is a method of),
+followed to where it is made - `new ApolloClient({ uri })` or its `HttpLink`,
+a factory handed `{ uri }` or the default its body writes, a hook answering
+`useContext` to the value its `.Provider` hands down - and otherwise with the
+page's, the one `<ApolloProvider client>` is handed; a client named and not
+followed is `graphql-client-unread`. An operation whose address's opening was
+not read (`${SERVER_URL}/settings`) joins the one GraphQL endpoint whose path
+ends with the read rest, `heuristic` (`meta.via: 'graphql-path'`); two are
+`ambiguous-route-target`. A helper that posts `JSON.stringify({ query })` is
+read with the document each caller hands it, and a value interpolated inside
+a string of a document no longer makes it unread (`fixtures/graphql-endpoints`).
+
 **GraphQL federation (P241).** A request to a federation gateway is planned
 the way the router plans it, statically, so `flow` from a screen reaches the
 resolvers of every subgraph and `impact` on a subgraph's field reaches the

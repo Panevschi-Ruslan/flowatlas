@@ -35,7 +35,7 @@ export const graphqlFindings = (lookup: GraphLookup): ContractFinding[] => {
     const call = lookup.node(edge.from);
     const endpoint = lookup.node(edge.to);
     const operation = call?.meta?.[GRAPHQL_META] as GraphqlCallMeta | undefined;
-    const served = endpoint?.meta?.[GRAPHQL_META] as { endpoint?: boolean; schema?: SchemaSummary; gateway?: unknown } | undefined;
+    const served = endpoint?.meta?.[GRAPHQL_META] as { endpoint?: boolean; schema?: SchemaSummary; gateway?: unknown; open?: string } | undefined;
     // A gateway's own route to a subgraph carries no operation (P241).
     if (call === undefined || endpoint === undefined || operation === undefined || !Array.isArray(operation.fields) || served?.endpoint !== true || served.schema === undefined) continue;
     const composed = served.gateway !== undefined;
@@ -70,6 +70,8 @@ export const graphqlFindings = (lookup: GraphLookup): ContractFinding[] => {
         const owner = field.on ?? type;
         const path = above === '' ? (field.alias ?? field.field) : `${above}.${field.alias ?? field.field}`;
         const declared = schema.types[owner]?.fields?.[field.field];
+        // A root field a server that answers some requests itself may answer is the linker's row, not an error (P266).
+        if (schema.types[owner] !== undefined && declared === undefined && served.open !== undefined && depth === 0) continue;
         if (schema.types[owner] !== undefined && declared === undefined) {
           const none = composed ? `no subgraph ${endpoint.repo} composes has ${owner}.${field.field}; the router refuses the whole operation` : `${endpoint.repo}'s ${owner} has no such field; the server refuses the whole operation`;
           findings.push(finding('graphql-field-unknown', path, owner, `${named} selects ${owner}.${field.field} at ${at(field)}, and ${none}`, 'missing_required', 'response', field.field, null));

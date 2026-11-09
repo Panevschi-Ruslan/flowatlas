@@ -298,6 +298,10 @@ const GAPS: readonly string[] = [
   'graphql-document-dynamic',
   'graphql-document-not-parsed',
   'graphql-fragment-not-read',
+  // A GraphQL client a call names that could not be followed to its address (P266)
+  'graphql-client-unread',
+  // A GraphQL endpoint's options or path, or which of them serves a resolver, not read (P266)
+  'graphql-endpoint-unread',
   // A subgraph a gateway names whose address reaches no service (P241)
   'graphql-subgraph-not-joined',
   // An argument the router fills from a context no type above the field sets (P245)

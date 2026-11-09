@@ -6,6 +6,7 @@ import {
   makeExternalApiId,
   isPlatformProvided,
   makeLeafId,
+  normalizeFilePath,
   optionVerbAlong,
   optionVerbOf,
   requestBodyOf,
@@ -29,6 +30,7 @@ import {
   type DescribedRequest,
   type TypeOrigin,
 } from '@flowatlas/core';
+import { documentOf, fetchedQuery, GRAPHQL_META, handedThrough, operationMeta, operationsOf } from '@flowatlas/graphql';
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import {
@@ -381,6 +383,29 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     return client === OFETCH && Node.isPropertyAccessExpression(callee) && callee.getName() === 'raw';
   };
 
+  /** The operation a `fetch` in a helper sends, read from the document its caller hands it; reported where it cannot be read. */
+  const handedOperation = (network: CallExpression, request: ReadRequest, site: RequestSite, line: number): Record<string, unknown> | undefined => {
+    const query = fetchedQuery(network);
+    if (query === undefined) return undefined;
+    const handed = handedThrough(query, request.calls);
+    if (handed === undefined) return undefined;
+    const reading = documentOf(handed);
+    if (reading.kind !== 'read') {
+      ctx.report({
+        file: site.file,
+        line,
+        reason: reading.kind === 'invalid' ? 'graphql-document-not-parsed' : 'graphql-document-dynamic',
+        level: 'action',
+        message: reading.why,
+        hint: 'Hand the helper a document written as a gql template, a string or a .graphql file, so the fields it asks for can be joined.',
+        symbol: request.through ?? network.getExpression().getText(),
+      });
+      return undefined;
+    }
+    const [operation] = operationsOf(reading.document, reading.fragments);
+    return operation === undefined ? undefined : { ...operationMeta(operation, reading, (path) => normalizeFilePath(path, ctx.repoDir), 'fetch', undefined) };
+  };
+
   const record = (found: FoundCall, request: ReadRequest, handedIn?: string | null): void => {
     const { call: network, client, shape } = found;
     const { site } = request;
@@ -425,6 +450,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     // The headers the caller reads off the answer, where the request is made where it is read (P265).
     const answerHeaders = site.call === network && found.described === undefined && answersWithResponse(client, network) ? responseHeadersRead(network, 'promise') : undefined;
     const application = applicationOfFile(ctx.meta, site.file);
+    // A GraphQL operation a helper of the repository's posts, with the
+    // document its caller hands it (P266): read where the caller writes it.
+    const operation = client === FETCH && request.depth > 0 ? handedOperation(network, request, site, at.line) : undefined;
 
     ctx.builder.addNode({
       id,
@@ -478,6 +506,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         ...(address.host === null ? {} : { host: address.host }),
         ...(address.guessed ? { guessed: true } : {}),
         ...(request.through === undefined ? {} : { through: request.through }),
+        ...(operation === undefined ? {} : { [GRAPHQL_META]: operation }),
       },
     });
     ctx.builder.addEdge({

@@ -60,7 +60,7 @@ export interface UiIndex {
  * `marker` is an annotation naming the service, `@flowatlas-calls catalog GET
  * /items`, which outranks all of them (P127).
  */
-export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'proxy' | 'ingress' | 'same-service' | 'unique-route';
+export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'proxy' | 'ingress' | 'same-service' | 'unique-route' | 'graphql-path';
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -488,6 +488,48 @@ const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
   byUniqueRoute,
 ];
 
+/** The clients that send nothing but GraphQL operations. */
+const GRAPHQL_CLIENTS = new Set(['apollo', 'urql', 'graphql-request', 'apollo-angular']);
+
+/** An address whose opening was not read and whose rest was: `/${…}/settings`. */
+const UNREAD_BASE = /^\/\$\{…\}((?:\/[^/]+)+)$/;
+
+/**
+ * A GraphQL operation sent under a base nothing read (P266).
+ *
+ * `${SERVER_URL}/settings`, where the server's address is decided where the
+ * page is served, is a request the address alone cannot join. What it sends
+ * says more: it is an operation, and only a GraphQL endpoint answers one. So
+ * the read rest of the address is asked of every endpoint of every service -
+ * of the one its settings key names, where it names one - and the one whose
+ * path ends with it answers; two are a row naming both, and none leaves the
+ * address partly read. Never a route that is not an endpoint, and never an
+ * address with a hole after its opening.
+ */
+const byGraphqlPath = (call: GraphNode, path: string, index: UiIndex): UiOutcome | undefined => {
+  // An operation: one whose document was read, or one a GraphQL client sends whatever its document.
+  const operation = call.meta?.['graphql'] !== undefined || GRAPHQL_CLIENTS.has(String(call.meta?.['client']));
+  if (!operation || call.meta?.['method'] !== 'POST') return undefined;
+  const tail = UNREAD_BASE.exec(path)?.[1];
+  if (tail === undefined || !wasRead(tail)) return undefined;
+  const env = call.meta?.['baseUrlEnv'];
+  const named = typeof env === 'string' ? index.targetOf(call.repo, env) : undefined;
+  const services = named === undefined ? index.services() : [named];
+  const found = services.flatMap((service) =>
+    (index.routesOf(service) ?? [])
+      .filter((route) => {
+        const served = route.meta?.['graphql'] as { endpoint?: boolean } | undefined;
+        const at = route.meta?.['path'];
+        return served?.endpoint === true && route.meta?.['method'] === 'POST' && typeof at === 'string' && (at === tail || at.endsWith(tail));
+      })
+      .map((entry) => ({ service, entry })),
+  );
+  const [only] = found;
+  if (found.length === 1 && only !== undefined) return { kind: 'linked', via: 'graphql-path', entry: only.entry, targetService: only.service, runnersUp: [] };
+  if (found.length > 1) return { kind: 'ambiguous', method: 'POST', path, candidates: found.map(({ service, entry }) => `${service} at ${String(entry.meta?.['path'])}`).sort(cmp) };
+  return undefined;
+};
+
 /**
  * Decides which route a request made in the browser reaches.
  *
@@ -505,7 +547,7 @@ export const resolveUiCall = (call: GraphNode, index: UiIndex): UiOutcome => {
   // follow became an edge marked `static`. It is counted apart from an address
   // that was wholly unreadable, because this one is often a helper the tool
   // could learn to follow, and that is worth being able to measure.
-  if (!wasRead(path)) return { kind: 'dynamic', reason: 'api-path-partly-read' };
+  if (!wasRead(path)) return byGraphqlPath(call, path, index) ?? { kind: 'dynamic', reason: 'api-path-partly-read' };
   if (typeof method !== 'string') return { kind: 'dynamic', reason: 'api-method-dynamic' };
 
   const ask: Ask = { call, method, path, env: typeof env === 'string' ? env : undefined, index };

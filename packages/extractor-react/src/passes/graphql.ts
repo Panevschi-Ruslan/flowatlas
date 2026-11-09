@@ -1,5 +1,6 @@
 import { forEachCall, makeLeafId, normalizeFilePath, siteOf } from '@flowatlas/core';
-import { clientEndpointIn, documentOf, GRAPHQL_META, graphqlCallOf, operationMeta, operationsOf, type GraphqlCall } from '@flowatlas/graphql';
+import { callAddressOf, documentOf, GRAPHQL_META, graphqlCallOf, operationMeta, operationsOf, pageClientIn, type GraphqlCall } from '@flowatlas/graphql';
+import type { Node as TsNode, SourceFile } from 'ts-morph';
 import type { CallExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -19,21 +20,24 @@ import { definePass } from './types.js';
  * A document this cannot read is a row, never a guess at what it asks.
  */
 
-/** The address the application's client is made with, read once per repository. */
-const endpointOf = (ctx: ReactExtractContext): (() => ApiUrl | undefined) => {
-  let known: ApiUrl | undefined | null = null;
-  return () => {
-    if (known !== null) return known;
-    const written = clientEndpointIn(ctx.project.getSourceFiles().filter((file) => !file.getFilePath().includes('/node_modules/')));
-    known = written === undefined ? undefined : analyzeApiUrl(written, { sharedPackages: ctx.config.sharedPackages });
-    return known;
+/** The repository's files, and the address the client the page is wrapped in is made with, read once per repository (P266). */
+const clientsOf = (ctx: ReactExtractContext): { sources: () => SourceFile[]; page: () => TsNode | undefined } => {
+  let sources: SourceFile[] | undefined;
+  let page: TsNode | undefined | null = null;
+  const files = (): SourceFile[] => (sources ??= ctx.project.getSourceFiles().filter((file) => !file.getFilePath().includes('/node_modules/')));
+  return {
+    sources: files,
+    page: () => {
+      if (page === null) page = pageClientIn(files());
+      return page;
+    },
   };
 };
 
 const DEFAULT_ENDPOINT = '/graphql';
 
 export const graphqlPass = definePass('graphql', (ctx: ReactExtractContext) => {
-  const clientEndpoint = endpointOf(ctx);
+  const clients = clientsOf(ctx);
   // A call read once, and every function it is written in drawn to it.
   const drawn = new Map<CallExpression, string>();
 
@@ -79,12 +83,25 @@ export const graphqlPass = definePass('graphql', (ctx: ReactExtractContext) => {
       if (graphql !== undefined) existing.meta = { ...existing.meta, [GRAPHQL_META]: graphql };
       return id;
     }
-    const address = found.endpoint === undefined ? clientEndpoint() : analyzeApiUrl(found.endpoint, { sharedPackages: ctx.config.sharedPackages });
-    const path = address?.path ?? DEFAULT_ENDPOINT;
+    // The client it is sent with: the address it names, the client it names, or the page's (P266).
+    const chosen = callAddressOf(found, clients.sources(), clients.page);
+    if (chosen.kind === 'unread') {
+      ctx.report({
+        file,
+        line: at.line,
+        reason: 'graphql-client-unread',
+        level: 'action',
+        message: `the operation is sent with a client this could not follow to its address: ${chosen.why}`,
+        hint: 'Make the client with its uri written where it is made, or hand it down through a context provider whose value is one, so the endpoint the operation reaches can be read.',
+        symbol: call.getExpression().getText(),
+      });
+    }
+    const address: ApiUrl | undefined = chosen.kind === 'address' && chosen.node !== undefined ? analyzeApiUrl(chosen.node, { sharedPackages: ctx.config.sharedPackages }) : undefined;
+    const path = chosen.kind === 'unread' ? null : (address?.path ?? DEFAULT_ENDPOINT);
     ctx.builder.addNode({
       id,
       type: 'ui_api_call',
-      label: `${graphql === undefined ? 'POST' : `${graphql['operation'] as string}${graphql['name'] === undefined ? '' : ` ${graphql['name'] as string}`}`} ${path}`,
+      label: `${graphql === undefined ? 'POST' : `${graphql['operation'] as string}${graphql['name'] === undefined ? '' : ` ${graphql['name'] as string}`}`} ${path ?? '?'}`,
       repo: ctx.repo,
       file,
       line: at.line,

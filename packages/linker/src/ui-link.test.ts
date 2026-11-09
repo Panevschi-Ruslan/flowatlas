@@ -308,3 +308,50 @@ describe('a request behind the part of a route nobody read', () => {
     expect(uiFindingFor(outcome)?.message).toBe('no configured service serves POST /v1/invoices');
   });
 });
+
+/** A GraphQL endpoint of one service: a route carrying a schema. */
+const endpoint = (repo: string, path: string): GraphNode => {
+  const made = route(repo, 'POST', path);
+  return { ...made, meta: { ...made.meta, graphql: { endpoint: true } } };
+};
+
+/**
+ * A GraphQL operation sent under a base nothing read (P266): the read rest of
+ * its address is asked of the services' GraphQL endpoints, and of nothing else.
+ */
+describe('an operation sent under a base nothing read', () => {
+  const operation = (path: string, meta: Record<string, unknown> = {}): GraphNode =>
+    uiCall('web', 'POST', path, { graphql: { operation: 'query', fields: [] }, ...meta });
+
+  it('reaches the one endpoint whose path the read rest names', () => {
+    const index = indexOf({ api: [endpoint('api', '/graphql'), endpoint('api', '/settings'), route('api', 'POST', '/uploads')] });
+    const outcome = resolveUiCall(operation('/${…}/settings'), index);
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'graphql-path', targetService: 'api' });
+    expect(outcome.kind === 'linked' && outcome.entry.id).toBe('entry:api:http:POST:/settings');
+  });
+
+  it('names both where two endpoints end with it', () => {
+    const index = indexOf({ api: [endpoint('api', '/graphql')], legacy: [endpoint('legacy', '/v1/graphql')] });
+    const outcome = resolveUiCall(operation('/${…}/graphql'), index);
+    expect(outcome.kind).toBe('ambiguous');
+    expect(uiFindingFor(outcome)?.message).toBe('api at /graphql and legacy at /v1/graphql both answer POST /${…}/graphql');
+  });
+
+  it('asks only the service its settings key names, where it names one', () => {
+    const index = indexOf({ api: [endpoint('api', '/graphql')], legacy: [endpoint('legacy', '/graphql')] }, { 'web\0API_URL': 'legacy' });
+    const outcome = resolveUiCall(operation('/${…}/graphql', { baseUrlEnv: 'API_URL' }), index);
+    expect(outcome).toMatchObject({ kind: 'linked', targetService: 'legacy' });
+  });
+
+  it('is still partly read for a route that is no endpoint, a request that sends no operation, or a hole after the opening', () => {
+    const index = indexOf({ api: [endpoint('api', '/graphql'), route('api', 'POST', '/uploads')] });
+    expect(resolveUiCall(operation('/${…}/uploads'), index)).toEqual({ kind: 'dynamic', reason: 'api-path-partly-read' });
+    expect(resolveUiCall(uiCall('web', 'POST', '/${…}/graphql'), index)).toEqual({ kind: 'dynamic', reason: 'api-path-partly-read' });
+    expect(resolveUiCall(operation('/${…}/${…}/graphql'), index)).toEqual({ kind: 'dynamic', reason: 'api-path-partly-read' });
+  });
+
+  it('takes a request a GraphQL client sends for an operation, whose document was not read', () => {
+    const index = indexOf({ api: [endpoint('api', '/graphql')] });
+    expect(resolveUiCall(uiCall('web', 'POST', '/${…}/graphql', { client: 'apollo' }), index)).toMatchObject({ kind: 'linked', via: 'graphql-path' });
+  });
+});

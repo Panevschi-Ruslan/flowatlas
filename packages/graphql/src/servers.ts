@@ -5,6 +5,7 @@ import { listenAt, listenCallsIn, portIn, type ListenAt } from '@flowatlas/core'
 import { documentOf } from './documents.js';
 import { isSupergraph } from './federation.js';
 import { followed, readGraphqlGateway, type GatewayReading } from './gateway.js';
+import { nestEndpointsIn, tagsOfClass, type ServedEndpoint } from './endpoints.js';
 import { tryParse, type AppliedDirective, type Document } from './parse.js';
 import { fieldFederationOf, mergeSchemas, schemaOf, typeFederationOf, type FieldFederation, type SchemaField, type SchemaSummary, type TypeFederation } from './schema.js';
 
@@ -45,6 +46,9 @@ export interface ResolvedField {
   readonly reference?: true;
   /** What `@Directive(...)` on a code-first resolver method says of its field (P241). */
   readonly federation?: FieldFederation;
+  /** The class a decorated resolver is, and the values `SetMetadata` tags it with, for which endpoint serves it (P266). */
+  readonly resolver?: ClassDeclaration;
+  readonly tags?: readonly string[];
 }
 
 /**
@@ -67,6 +71,12 @@ export interface ServerReading {
   /** The path the server answers at, and where the server is made, when it is in these files. */
   readonly endpoint: string;
   readonly endpointAt?: TsNode;
+  /**
+   * Every endpoint a NestJS server's `GraphQLModule.forRoot*` calls serve,
+   * with which resolvers each serves (P266); empty for any other server,
+   * which serves `endpoint` alone.
+   */
+  readonly endpoints: readonly ServedEndpoint[];
   /** One subgraph of a federated graph. */
   readonly federated: boolean;
   /** The federation version it is a subgraph of, when it is one. */
@@ -362,6 +372,7 @@ const decoratedFields = (sources: readonly SourceFile[], names: ReadonlyMap<stri
       if (resolver === undefined) continue;
       const of = typeArgument(resolver.argument);
       const parent = of === undefined ? undefined : (names.get(of.name) ?? of.name);
+      const tags = tagsOfClass(declaration);
       for (const method of declaration.getMethods()) {
         const root = graphqlDecorator(method, [...ROOTS.keys()]);
         const field = root === undefined ? graphqlDecorator(method, FIELD_DECORATORS) : undefined;
@@ -391,6 +402,8 @@ const decoratedFields = (sources: readonly SourceFile[], names: ReadonlyMap<stri
           ...(Object.keys(args).length === 0 ? {} : { args }),
           ...(reference ? { reference: true as const } : {}),
           ...(federation === undefined ? {} : { federation }),
+          resolver: declaration,
+          ...(tags.length === 0 ? {} : { tags }),
         });
       }
     }
@@ -659,6 +672,7 @@ export const readGraphqlServer = (
     return { ...field, ...(field.returns === undefined ? { returns: declared.type } : {}), ...(field.args === undefined && declared.args !== undefined ? { args: declared.args } : {}) };
   });
   const endpoint = endpointOf(sources);
+  const endpoints = nestEndpointsIn(sources, new Set(decorated.flatMap((field) => field.tags ?? [])));
   const gateway = readGraphqlGateway(sources, { repoDir: options.repoDir ?? '', supergraphs, rover: options.roverFiles ?? [] });
   const federation = gateway === undefined ? federationIn(sources, schema, options.dependencies) : undefined;
   return {
@@ -666,6 +680,7 @@ export const readGraphqlServer = (
     schema: federation === undefined ? schema : { ...schema, federation },
     endpoint: endpoint.path,
     ...(endpoint.at === undefined ? {} : { endpointAt: endpoint.at }),
+    endpoints,
     federated: federation !== undefined,
     ...(federation === undefined ? {} : { federation }),
     ...(gateway === undefined ? {} : { gateway }),

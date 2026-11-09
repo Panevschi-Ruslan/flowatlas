@@ -72,6 +72,30 @@ only one of them moved.
   error, a name the output does not declare a warning (`header-not-declared`),
   one the HTTP layer writes not compared. New fixture `nuxt-navigation`;
   `rpc-shared-types` extended.
+- **Several GraphQL endpoints, and the client each operation is sent with
+  (P266).** A NestJS server's every `GraphQLModule.forRoot*` is an endpoint of
+  its own, its options read in place, from a `useFactory` or from a
+  `useClass`'s `createGqlOptions()`, and its `path` as any string (a template,
+  a constant, an enum member; one not read keeps `/graphql` with a
+  `graphql-endpoint-unread` row). Which resolvers each serves is the scope its
+  options name that the repository's resolver decorator tags them with
+  (`SetMetadata`), or else the modules its `include` names with what they
+  import; where endpoints serve different resolvers each field is keyed by its
+  path (`Query.me@/settings`), each endpoint carries only its root fields
+  (`meta.graphql.fieldsAt`), and an operation joins only its endpoint's. A
+  plugin of the repository's that answers a request itself makes a missing
+  root field a `graphql-field-no-resolver` note, not `graphql-field-unknown`
+  (`meta.graphql.open`). An Apollo operation is sent with the client it names
+  (`{ client }`, the client it is a method of), followed through
+  `new ApolloClient({ uri | link })`, a factory handed `{ uri }` or the
+  default it writes, and `useContext` to its provider's `value`, and otherwise
+  with the one `<ApolloProvider client>` is handed (`graphql-client-unread`
+  where a named client is not followed). An operation whose address's opening
+  was not read joins the one endpoint whose path ends with the rest,
+  `heuristic` (`via: graphql-path`); two are `ambiguous-route-target`. A
+  helper posting `JSON.stringify({ query })` is read with the document each
+  caller hands it, and a value inside a string of a document is a value. New
+  fixture `graphql-endpoints`.
 
 - **The front end's and the RPC readers' last open names (P262).** An
   `addRouteMiddleware` at the top of `app.vue`'s setup, or of a composable

@@ -1,6 +1,6 @@
 import { forEachCall, makeLeafId, normalizeFilePath } from '@flowatlas/core';
 import { definePass, scopesOf, type NestExtractContext, type NestExtractorPass } from '@flowatlas/extractor-nestjs';
-import { clientEndpointIn, documentOf, GRAPHQL_META, graphqlCallOf, operationMeta, operationsOf } from '@flowatlas/graphql';
+import { callAddressOf, documentOf, GRAPHQL_META, graphqlCallOf, operationMeta, operationsOf, pageClientIn } from '@flowatlas/graphql';
 import type { CallExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { analyzeUrl } from './leaves/url.js';
@@ -15,8 +15,8 @@ import { analyzeUrl } from './leaves/url.js';
  */
 export const graphqlCallsPass: NestExtractorPass = definePass('graphql-calls', (ctx: NestExtractContext) => {
   const sources = ctx.project.getSourceFiles().filter((file) => !file.getFilePath().includes('/node_modules/'));
-  let made: ReturnType<typeof clientEndpointIn> | null = null;
-  const clientEndpoint = () => (made === null ? (made = clientEndpointIn(sources)) : made);
+  let made: ReturnType<typeof pageClientIn> | null = null;
+  const clientEndpoint = () => (made === null ? (made = pageClientIn(sources)) : made);
 
   for (const scope of scopesOf(ctx)) {
     forEachCall(scope.body, (node) => {
@@ -47,14 +47,27 @@ export const graphqlCallsPass: NestExtractorPass = definePass('graphql-calls', (
         if (graphql !== undefined) existing.meta = { ...existing.meta, [GRAPHQL_META]: graphql };
         return;
       }
-      const written = found.endpoint ?? clientEndpoint();
+      // The client it is sent with: the address it names, the client it names, or the application's (P266).
+      const chosen = callAddressOf(found, sources, clientEndpoint);
+      if (chosen.kind === 'unread') {
+        ctx.builder.addUnresolved({
+          file: scope.file,
+          line: site.line,
+          reason: 'graphql-client-unread',
+          level: 'action',
+          message: `the operation is sent with a client this could not follow to its address: ${chosen.why}`,
+          hint: 'Make the client with its uri written where it is made, so the endpoint the operation reaches can be read.',
+          symbol: call.getExpression().getText().slice(0, 60),
+        });
+      }
+      const written = chosen.kind === 'address' ? chosen.node : undefined;
       const info = written === undefined ? undefined : analyzeUrl(written);
-      const path = info?.path ?? '/graphql';
+      const path = chosen.kind === 'unread' ? null : (info?.path ?? '/graphql');
       scope.ensure();
       ctx.builder.addNode({
         id,
         type: 'http_out',
-        label: `${graphql === undefined ? 'POST' : `${graphql.operation}${graphql.name === undefined ? '' : ` ${graphql.name}`}`} ${path}`,
+        label: `${graphql === undefined ? 'POST' : `${graphql.operation}${graphql.name === undefined ? '' : ` ${graphql.name}`}`} ${path ?? '?'}`,
         repo: ctx.repo,
         file: scope.file,
         line: site.line,

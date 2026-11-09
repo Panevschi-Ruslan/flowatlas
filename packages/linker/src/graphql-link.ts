@@ -31,7 +31,7 @@ export const joinGraphqlFields = (nodes: ReadonlyMap<string, GraphNode>, edges: 
     const call = nodes.get(edge.from);
     const endpoint = nodes.get(edge.to);
     const operation = call?.meta?.[GRAPHQL_META] as GraphqlCallMeta | undefined;
-    const served = endpoint?.meta?.[GRAPHQL_META] as { endpoint?: boolean; schema?: SchemaSummary; gateway?: GatewayMeta } | undefined;
+    const served = endpoint?.meta?.[GRAPHQL_META] as { endpoint?: boolean; schema?: SchemaSummary; gateway?: GatewayMeta; fieldsAt?: string; open?: string } | undefined;
     // A gateway's own route to a subgraph carries no operation.
     if (call === undefined || endpoint === undefined || operation === undefined || !Array.isArray(operation.fields) || served?.endpoint !== true) continue;
     const plan = plans.get(endpoint.id);
@@ -45,17 +45,21 @@ export const joinGraphqlFields = (nodes: ReadonlyMap<string, GraphNode>, edges: 
     const service = endpoint.repo;
     const rootType = schema?.roots[operation.operation] ?? (operation.operation === 'query' ? 'Query' : operation.operation === 'mutation' ? 'Mutation' : 'Subscription');
     const named = operation.name ?? operation.operation;
+    // A server that serves several schemas keys each one's fields by its path (P266).
+    const keyed = served.fieldsAt === undefined ? '' : `@${served.fieldsAt}`;
 
     const join = (type: string, field: GraphqlCallMeta['fields'][number], depth: number): void => {
       if (depth > 32 || field.field === '__typename') return;
       const owner = field.on ?? type;
-      const entryId = makeEntryId(service, 'graphql', `${owner}.${field.field}`);
-      const entry = nodes.get(entryId);
+      const entryId = makeEntryId(service, 'graphql', `${owner}.${field.field}${keyed}`);
+      const own = nodes.get(entryId) === undefined && keyed !== '' ? makeEntryId(service, 'graphql', `${owner}.${field.field}`) : entryId;
+      // A field resolver below the root is any schema's of the server: its type is shared.
+      const entry = nodes.get(entryId) ?? (depth > 0 ? nodes.get(own) : undefined);
       const declared = schema?.types[owner]?.fields?.[field.field];
       if (entry !== undefined) {
         const joined: GraphEdge = {
           from: call.id,
-          to: entryId,
+          to: entry.id,
           type: edge.type,
           confidence: edge.confidence,
           ...(call.file === undefined ? {} : { file: field.file ?? operation.document.file }),
@@ -74,6 +78,19 @@ export const joinGraphqlFields = (nodes: ReadonlyMap<string, GraphNode>, edges: 
           level: 'action',
           message: `${named} asks ${service} for ${owner}.${field.field}, which no resolver of ${service} answers`,
           hint: 'Resolve the field in the service, or correct the operation; the request stops at the endpoint.',
+          symbol: call.id,
+        });
+      } else if (depth === 0 && served.open !== undefined) {
+        // A field the schema read does not have, at a server that answers
+        // some requests itself (P266): said, not called unknown.
+        rows.push({
+          service: call.repo,
+          file: field.file ?? operation.document.file,
+          line: field.line,
+          reason: 'graphql-field-no-resolver',
+          level: 'info',
+          message: `${named} asks ${service} at ${String(endpoint.meta?.['path'] ?? '')} for ${owner}.${field.field}, which no resolver of ${service} declares; ${served.open}, which may answer it`,
+          hint: 'Resolve the field in the service if it is meant to be one, or correct the operation; a field only the server\'s own code answers is not read.',
           symbol: call.id,
         });
       }
