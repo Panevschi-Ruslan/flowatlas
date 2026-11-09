@@ -490,8 +490,14 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
 const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked' }>, baseUrl?: FoundValue): GraphEdge => {
   const params = call.meta?.['bodyType'];
   const returns = call.meta?.['responseType'];
+  // An API's address whose id is written out is taken as the deployment's own
+  // API by its region and stage, which the id may not be (P268).
   const joinedAs =
-    outcome.hostFromFiles === true ? 'heuristic' : baseUrl?.deployed === true ? 'static' : JOINED_AS[outcome.via](call);
+    outcome.hostFromFiles === true || baseUrl?.apiPath !== undefined
+      ? 'heuristic'
+      : baseUrl?.deployed === true
+        ? 'static'
+        : JOINED_AS[outcome.via](call);
   return {
     from: call.id,
     to: outcome.entry.id,

@@ -5,6 +5,7 @@ import {
   FileReading,
   importsInName,
   isRecord,
+  ParameterValue,
   readOutputs,
   readParameters,
   readResources,
@@ -296,7 +297,10 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   for (const [name, value] of Object.entries(config.parameters)) if (config.from[name] === 'option') given[name] = { value, from: 'option' };
   const region = config.region ?? files.region ?? options.parent?.region;
   const stackName = options.parent === undefined ? (config.stackName ?? files.stackName) : undefined;
+  // A SAM template is one to a directory, as the CLI finds it; plain templates are often several, each kept apart by its name.
+  const scope = options.parent?.scope ?? (dialect === 'cloudformation' ? `${file.replace(/\.[^./]+$/, '')}.` : dir === '.' ? '' : `${dir}/`);
   const resolver = new Resolver({
+    scope,
     document: written,
     given,
     pseudo: {
@@ -307,8 +311,6 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
     },
     configFile: config.file ?? 'samconfig.toml',
   });
-  // A SAM template is one to a directory, as the CLI finds it; plain templates are often several, each kept apart by its name.
-  const scope = options.parent?.scope ?? (dialect === 'cloudformation' ? `${file.replace(/\.[^./]+$/, '')}.` : dir === '.' ? '' : `${dir}/`);
   const row = (path: readonly PathStep[], symbol: string, rest: Omit<Unresolved, 'file' | 'line' | 'symbol'>): void => {
     for (let depth = path.length; depth >= 0; depth -= 1) {
       const at = document.at(path.slice(0, depth));
@@ -376,7 +378,7 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
     (logicalId) => {
       // A function by its logical id, as `functionNamed` asks behind a NUL.
       const own = functions.get(logicalId.startsWith('\u0000') ? logicalId.slice(1) : logicalId);
-      if (own !== undefined) return typeof own.name === 'string' ? { kind: 'function', name: own.name, function: own.index, ...(own.generated ? { generated: true } : {}) } : own.name;
+      if (own !== undefined) return typeof own.name === 'string' ? { kind: 'function', name: own.name, function: own.index, ...(own.generated ? { generated: true } : {}), ...(own.parameter === undefined ? {} : { parameter: own.parameter }) } : own.name;
       // The URL the transform declares for a function, `<function>Url`: its own address (P54).
       const url = logicalId.endsWith('Url') ? functions.get(logicalId.slice(0, -'Url'.length)) : undefined;
       if (url !== undefined) return typeof url.name === 'string' ? { kind: 'url', name: url.name } : url.name;
@@ -416,13 +418,27 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
     const properties = resource.type === 'AWS::Serverless::Function' ? withGlobals(globals['Function'], resource.properties) : resource.properties;
     const declares = SAM_KINDS.get(resource.type) as Declares;
     const nameWritten = properties[declares.name];
-    const generated = nameWritten === undefined || nameWritten === null;
-    const name = generated ? generatedName(resource.address) : (() => {
-      const text = template.text(nameWritten);
-      return typeof text === 'string' ? text : new Unread(text.text, text.variable);
-    })();
+    const unnamed = nameWritten === undefined || nameWritten === null;
+    const text = unnamed ? undefined : template.text(nameWritten);
+    // Named by a parameter with no value: by the parameter, as anything else it names is (P268).
+    const parameter = text instanceof ParameterValue ? text : undefined;
+    const generated = unnamed || parameter !== undefined;
+    const name =
+      parameter !== undefined
+        ? generatedName(parameter.address)
+        : text === undefined
+          ? generatedName(resource.address)
+          : typeof text === 'string'
+            ? text
+            : new Unread(text.text, text.variable);
     functionIndex.set(logicalId, base + offset);
-    functions.set(logicalId, { resource: { ...resource, properties }, index: base + offset, name, generated });
+    functions.set(logicalId, {
+      resource: { ...resource, properties },
+      index: base + offset,
+      name,
+      generated,
+      ...(parameter === undefined ? {} : { parameter: parameter.variable as string }),
+    });
   });
   for (const fn of functions.values()) reading.functions.set(fn.resource.logicalId, fn);
 

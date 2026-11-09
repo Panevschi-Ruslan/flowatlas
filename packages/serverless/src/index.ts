@@ -10,7 +10,7 @@ export { readServiceFile, readServiceYaml, ServiceFileUnreadable, type YamlOptio
 export { COMPOSE_FILES, readCompose } from './compose.js';
 export { commandsAround, commandValue, isFilledIn, under, wordsOf, type Command, type DeployedValue } from './commands.js';
 export { Template, RESOURCE_KINDS, importsInName, intrinsicOf, type Declares, type Deployed, type Exported, type Known, type Pseudo, type Resource, type TemplateOptions } from './cloudformation.js';
-export { Variables, Unread, Imported, HOLE, DEFAULT_STAGE, DEFAULT_REGION, embeddedAt, embedding, isRecord, textOf } from './variables.js';
+export { Variables, Unread, Imported, ParameterValue, partOf, HOLE, DEFAULT_STAGE, DEFAULT_REGION, embeddedAt, embedding, isRecord, textOf } from './variables.js';
 export { readOutputs, readParameters, type ApiReference, type ImplicitOutput, type OutputApi, type OutputsOptions } from './outputs.js';
 export { EVENT_READERS } from './events.js';
 export { functionLogicalId, normalizedName } from './service.js';

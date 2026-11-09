@@ -104,6 +104,9 @@ const NOTES: readonly string[] = [
   // generates, stood in for by its declaration; a declaration under a
   // condition the files do not settle; one the program never reaches.
   'deployed-name-generated',
+  // A name a parameter with no value gives, stood in for by the parameter's
+  // declaration (P268).
+  'deployed-name-from-parameter',
   'construct-conditional',
   'construct-unreached',
   // Shared code a deployment hands its functions at run time, read as code

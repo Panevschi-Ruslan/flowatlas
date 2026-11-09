@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: An append-only ledger, its changes forwarded onto a stream and fanned out to queues.
+
+# Given when the stack is deployed, and by nothing in the repository.
+Parameters:
+  LedgerTableName:
+    Type: String
+  ChangeStreamName:
+    Type: String
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    CodeUri: src/
+    Environment:
+      Variables:
+        LEDGER_TABLE: !Ref LedgerTableName
+        CHANGE_STREAM: !Ref ChangeStreamName
+        AUDIT_QUEUE_URL: !Ref AuditQueue
+
+Resources:
+  Ledger:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref LedgerTableName
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  Changes:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: !Ref ChangeStreamName
+      ShardCount: 1
+
+  # A consumer of its own on the stream, which the fan-out reads through.
+  ChangesConsumer:
+    Type: AWS::Kinesis::StreamConsumer
+    Properties:
+      StreamARN: !GetAtt Changes.Arn
+      ConsumerName: fanout
+
+  AuditQueue:
+    Type: AWS::SQS::Queue
+
+  TeamQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: team-billing
+
+  Recorder:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: recorder.handler
+      Events:
+        Record:
+          Type: Api
+          Properties:
+            Path: /entries
+            Method: POST
+
+  Forwarder:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: forwarder.handler
+      Events:
+        Changes:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt Ledger.StreamArn
+            StartingPosition: LATEST
+
+  Fanout:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: fanout.handler
+      Events:
+        Changes:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt ChangesConsumer.ConsumerARN
+            StartingPosition: LATEST
+
+  Auditor:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: auditor.handler
+      Events:
+        Audit:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt AuditQueue.Arn
+
+  TeamWorker:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: team-worker.handler
+      Events:
+        Team:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt TeamQueue.Arn

@@ -643,6 +643,7 @@ export const environmentMeta = (fn: DeployedFunction): Record<string, unknown> =
       ...(value === undefined ? {} : { value }),
       ...(setting.names === undefined ? {} : { kind: setting.names.kind }),
       ...(setting.imported === undefined ? {} : { imported: setting.imported }),
+      ...(setting.path === undefined ? {} : { path: setting.path }),
       ...(setting.unread === undefined
         ? {}
         : {

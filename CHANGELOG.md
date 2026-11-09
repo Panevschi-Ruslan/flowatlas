@@ -96,6 +96,36 @@ only one of them moved.
   helper posting `JSON.stringify({ query })` is read with the document each
   caller hands it, and a value inside a string of a document is a value. New
   fixture `graphql-endpoints`.
+- **Events built by factories, elements of lists, and names a parameter
+  with no value gives (P268).** A send's address is read through what the
+  value it walks is made by: a member of a record of values or factories a
+  lookup chooses (`events[name](data)`, `events.Placed(data)`), a function
+  called by its name and the record it answers, its parameters bound to the
+  call's arguments, an element of a list a loop or a callback takes (`for
+  (const r of list.filter(...).map(...))`, `list.forEach((r) => ...)`), and
+  the one value a `Map` or `Set` is given and read back through `values()`.
+  Where a member is chosen by a parameter of the function the send is
+  written in, or the record is that parameter, the send is drawn at each
+  caller with the parameter bound to what it hands, wherever every caller
+  writes it; otherwise the send stays where it is and its row names the
+  parameter and the callers that hand something unread. A name read out of a
+  collection by a key worked out when the code runs (`cache.get(key)`) is a
+  `channel-dynamic` row naming the collection and the key. A SAM or
+  CloudFormation resource named by a parameter with no value is named by the
+  parameter's declaration (`${…}@Parameters.<name>`), and a value of the
+  environment that is that parameter names that resource: a table, a stream
+  or a queue joins its writers and readers within the deployment, and a
+  function so named is deployed under the stand-in rather than being
+  `function-name-unread`, said by
+  `deployed-name-from-parameter` (new reason, a note). An
+  `AWS::Kinesis::StreamConsumer`'s `ConsumerARN` is the stream it is
+  registered on. A Serverless function's environment value that is an API
+  Gateway address in the service's region and at its stage
+  (`https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`) is the
+  service's own REST API - an HTTP API's where no stage is written - and a
+  request rooted at it joins the route at `<path>`, `heuristic`, with a
+  `base-url-from-files` note saying the id is written out. New fixtures
+  `serverless-event-factories` and `sam-parameter-names`.
 
 - **The front end's and the RPC readers' last open names (P262).** An
   `addRouteMiddleware` at the top of `app.vue`'s setup, or of a composable
@@ -893,6 +923,12 @@ only one of them moved.
 
 ### Fixed
 
+- **An API Gateway address is no queue (P268).** A queue's URL is read by
+  its shape - a host and two segments - so an environment value
+  `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`, or a
+  function URL with two segments, was read as the queue `<path>`: a request
+  rooted at it said no service declared its setting. Neither is read as a
+  queue now.
 - **A tRPC root a workspace package holds is read where the service serves
   the trees under it (R179).** Since P256 a root kept in a package beside the
   service was read only where the service mounted that root itself, so an

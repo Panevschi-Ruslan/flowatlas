@@ -37,9 +37,11 @@ export {
   DEPLOYED_FORMS,
   deployedArn,
   deployedNameIn,
+  executeApiAddress,
   FUNCTION_NAME_FORMS,
   TABLE_CHANGES_FORMS,
   type DeployedName,
+  type ExecuteApiAddress,
 } from './deployed.js';
 export {
   BUCKET_CHANNEL,

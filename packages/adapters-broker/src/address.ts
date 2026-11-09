@@ -109,6 +109,13 @@ export interface AddressedElement {
   readonly parameter?: ParameterDeclaration;
   /** A one-part address as it is written, for a reader that keys on the writing. */
   readonly written?: string;
+  /**
+   * The parameter of the enclosing function that chose the member of a
+   * record the address is read from - `events[name](data)` - where nothing
+   * else stood in the way (P268): read again at each caller, with the
+   * parameter bound to what that caller hands it.
+   */
+  readonly selector?: ParameterDeclaration;
 }
 
 /**
@@ -300,6 +307,22 @@ const parameterOf = (expression: TsNode): ParameterDeclaration | undefined => {
   return parameterBehind(expression);
 };
 
+/**
+ * The parameter that chose the member an element's address is read from,
+ * where every part that stopped on such a member stopped on one chosen by the
+ * same parameter (P268). Two parameters are two callers' decisions, which one
+ * binding cannot read.
+ */
+const selectorAt = (located: readonly (readonly LocatedSlot[])[], index: number): ParameterDeclaration | undefined => {
+  const chosen = new Set(
+    located.flatMap((slots) => {
+      const slot = slotAt(slots, index);
+      return slot?.selector === undefined ? [] : [slot.selector];
+    }),
+  );
+  return chosen.size === 1 ? [...chosen][0] : undefined;
+};
+
 /** The one place a one-part address is written at an element, when it is written. */
 const writtenAt = (located: readonly (readonly LocatedSlot[])[], index: number): TsNode | undefined =>
   located.map((slots) => slotAt(slots, index)).find((slot) => slot !== undefined)?.expression;
@@ -342,12 +365,14 @@ export const readAddress = (
     const resolution = joined(readings, fallback);
     const written = parts.length === 1 ? writtenAt(located[0] ?? [], index) : undefined;
     const parameter = written === undefined || isResolved(resolution) ? undefined : parameterOf(written);
+    const selector = isResolved(resolution) ? undefined : selectorAt(located.flat(), index);
     return {
       resolution,
       ...(message === undefined ? {} : { payload: message }),
       ...(awaiting === undefined ? {} : { awaiting }),
       ...(parameter === undefined ? {} : { parameter }),
       ...(written === undefined ? {} : { written: written.getText() }),
+      ...(selector === undefined ? {} : { selector }),
     };
   });
 };

@@ -17,7 +17,7 @@ import type {
 } from '@flowatlas/core';
 import { alternativeAddress, generatedName, importedName, UNREAD_SPAN } from '@flowatlas/core';
 import { importsInName, type Deployed, type Template } from './cloudformation.js';
-import { Imported, isRecord, textOf, Unread } from './variables.js';
+import { Imported, isRecord, ParameterValue, textOf, Unread } from './variables.js';
 
 /**
  * What every part of reading one service file shares: where things are put,
@@ -84,6 +84,13 @@ export class FileReading {
     this.parts.rows.push({ ...this.siteOf(path), symbol, ...row });
   }
 
+  /**
+   * The API this deployment serves that an address written out is one of,
+   * and the path it asks for there (P268); set by a reader that knows its
+   * APIs, before any value is read.
+   */
+  ownApi: ((text: string) => { readonly name: string; readonly path: string } | undefined) | undefined;
+
   /** A row about a name the platform generates, once per declaration. */
   readonly #generated = new Set<string>();
 
@@ -91,6 +98,16 @@ export class FileReading {
     if (found.generated !== true || this.#generated.has(found.name)) return;
     this.#generated.add(found.name);
     const address = found.name.slice(UNREAD_SPAN.length + 1);
+    if (found.parameter !== undefined) {
+      // Said where the parameter is declared, which is what names it.
+      this.row(['Parameters', found.parameter], address, {
+        reason: 'deployed-name-from-parameter',
+        level: 'info',
+        message: `the ${found.kind} named by the parameter ${found.parameter} is named by where the parameter is declared, ${address}, because the files give the parameter no value; what this deployment points at it by, or hands the parameter's value to, joins to it, and nothing outside it can`,
+        hint: `Give the parameter ${found.parameter} a Default, a value in samconfig.toml's parameter_overrides, or one under services[].infra.options, and it is named by that value.`,
+      });
+      return;
+    }
     this.row(path, address, {
       reason: 'deployed-name-generated',
       level: 'info',
@@ -236,7 +253,18 @@ export class FileReading {
       if (path !== undefined) this.importsOfName(found, path, what ?? 'a value a function is deployed with');
       return { written, ...(text === undefined ? {} : { text }), names: { kind: found.kind, name: found.name } };
     }
-    if (text !== undefined) return { written, text };
+    if (text !== undefined) {
+      // An address of an API this deployment serves, by its region and stage (P268).
+      const api = this.ownApi?.(text);
+      return api === undefined ? { written, text } : { written, text, names: { kind: 'api', name: api.name }, path: api.path };
+    }
+    // The value of a parameter the files give none, which names one thing this
+    // deployment declares: that thing, by the parameter's stand-in (P268).
+    const named = value instanceof ParameterValue ? this.template.namedByParameter(value) : undefined;
+    if (named !== undefined) {
+      if (path !== undefined) this.generatedRow(named, path);
+      return { written, names: { kind: named.kind, name: named.name } };
+    }
     const because = found instanceof Unread ? found : value instanceof Unread ? value : new Unread('it is not text');
     return { written, unread: { text: because.text, ...(because.variable === undefined ? {} : { variable: because.variable }) } };
   }

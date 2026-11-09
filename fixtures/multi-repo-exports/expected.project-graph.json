@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:50:10.791Z",
+  "builtAt": "2026-11-09T16:35:43.764Z",
   "services": [
     {
       "name": "gateway",
@@ -894,7 +894,7 @@
               {
                 "environment": "AUDIT_QUEUE_URL",
                 "forms": [
-                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
                   "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
                 ]
               }
@@ -926,7 +926,7 @@
               {
                 "environment": "PLACED_QUEUE_URL",
                 "forms": [
-                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
                   "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
                 ]
               }

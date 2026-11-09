@@ -9,7 +9,7 @@ import {
   type FlowatlasConfig,
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { Node, VariableDeclarationKind } from 'ts-morph';
 import { environmentReadOf } from './environment.js';
 
 /**
@@ -54,6 +54,11 @@ export interface UnresolvedChannel {
    * deployment, and sends to `<url>` from a function deployed without it.
    */
   readonly otherwise?: string;
+  /**
+   * For `channel-dynamic`, where the name is read out of a collection by a key
+   * the code works out when it runs (P268): `cache.get(queueNameOf(event))`.
+   */
+  readonly lookup?: { readonly collection: string; readonly key: string };
 }
 
 export type ChannelResolution = ResolvedChannel | UnresolvedChannel;
@@ -286,6 +291,12 @@ export const resolveChannelName = (
     }
   }
 
+  // A name looked up in a collection by a key worked out when the code runs:
+  // the collection is filled at run time - from a listing of the account, a
+  // cache - and which name it hands back is nowhere in the source (P268).
+  const lookup = lookupOf(expr);
+  if (lookup !== undefined) return { unresolved: 'channel-dynamic', text, lookup };
+
   // A name of a constant the checker could not follow is worth telling apart
   // from a value decided at run time. A parameter or a `let` is a name too, and
   // reporting one as an unreadable constant sent the reader off to move a
@@ -295,6 +306,38 @@ export const resolveChannelName = (
     return { unresolved: 'channel-const-unresolved', text };
   }
   return { unresolved: 'channel-dynamic', text };
+};
+
+/** How many `const` bindings are followed to the lookup a name is the answer of. */
+const MOST_BINDINGS = 4;
+
+/**
+ * The collection and the key a name is read out of, where it is the answer
+ * of `collection.get(key)` - written there, or bound to a `const` - and the
+ * key is not a value the source settles (P268).
+ */
+const lookupOf = (expr: TsNode): { collection: string; key: string } | undefined => {
+  let current: TsNode | undefined = expr;
+  for (let step = 0; current !== undefined && step < MOST_BINDINGS; step += 1) {
+    if (Node.isCallExpression(current)) {
+      const callee = current.getExpression();
+      const [key, ...rest] = current.getArguments();
+      if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'get' || key === undefined || rest.length > 0) return undefined;
+      return evaluateExpression(key).resolved ? undefined : { collection: callee.getExpression().getText(), key: key.getText() };
+    }
+    if (Node.isParenthesizedExpression(current) || Node.isAsExpression(current) || Node.isNonNullExpression(current)) {
+      current = current.getExpression();
+      continue;
+    }
+    const declaration: TsNode | undefined = Node.isIdentifier(current) ? current.getSymbol()?.getDeclarations()[0] : undefined;
+    current =
+      declaration !== undefined &&
+      Node.isVariableDeclaration(declaration) &&
+      declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const
+        ? declaration.getInitializer()
+        : undefined;
+  }
+  return undefined;
 };
 
 export const isResolved = (resolution: ChannelResolution): resolution is ResolvedChannel =>

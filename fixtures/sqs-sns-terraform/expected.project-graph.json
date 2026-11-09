@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T03:51:08.549Z",
+  "builtAt": "2026-11-09T16:41:16.635Z",
   "services": [
     {
       "name": "returns",
@@ -680,7 +680,7 @@
               {
                 "environment": "RETURNS_QUEUE_URL",
                 "forms": [
-                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
                   "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
                 ]
               }
@@ -758,7 +758,7 @@
               {
                 "environment": "AUDIT_QUEUE_URL",
                 "forms": [
-                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
                   "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
                 ]
               }

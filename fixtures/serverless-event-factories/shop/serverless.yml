@@ -1,0 +1,87 @@
+service: shop
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-west-1'}
+
+custom:
+  account: 123456789012
+  bus: arn:aws:events:${self:provider.region}:${self:custom.account}:event-bus/shop-events
+  # Written down by hand once the API was first deployed.
+  apiId: a1b2c3d4e5
+  ledgerUrl: https://${self:custom.apiId}.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}/ledger
+
+functions:
+  placeOrder:
+    handler: src/orders/place.handler
+    events:
+      - http:
+          path: orders
+          method: POST
+
+  shipOrder:
+    handler: src/orders/ship.handler
+    events:
+      - http:
+          path: orders/{id}/ship
+          method: POST
+
+  resendOrder:
+    handler: src/orders/ship.resend
+
+  replay:
+    handler: src/orders/replay.handler
+
+  reserveStock:
+    handler: src/stock/reserve.handler
+    events:
+      - eventBridge:
+          eventBus: ${self:custom.bus}
+          pattern:
+            source:
+              - shop.orders
+            detail-type:
+              - OrderPlaced
+    environment:
+      LEDGER_URL: ${self:custom.ledgerUrl}
+
+  ledger:
+    handler: src/stock/ledger.handler
+    events:
+      - http:
+          path: ledger
+          method: POST
+
+  refund:
+    handler: src/payments/refund.handler
+    events:
+      - http:
+          path: refunds
+          method: POST
+
+  notify:
+    handler: src/notices/notify.handler
+    events:
+      - eventBridge:
+          eventBus: ${self:custom.bus}
+          pattern:
+            source:
+              - shop.shipping
+            detail-type:
+              - OrderShipped
+      - eventBridge:
+          eventBus: ${self:custom.bus}
+          pattern:
+            source:
+              - shop.stock
+            detail-type:
+              - StockReserved
+      - eventBridge:
+          eventBus: ${self:custom.bus}
+          pattern:
+            source:
+              - shop.payments
+            detail-type:
+              - RefundIssued

@@ -1,6 +1,6 @@
 import { deployedArn, deployedNameIn } from '@flowatlas/aws';
 import { exportKey, generatedName, importedName, parameterKey, type DeployedKind, type PathStep } from '@flowatlas/core';
-import { EMBEDDED, embeddedAt, embedding, HOLE, Imported, isRecord, textOf, Unread } from './variables.js';
+import { EMBEDDED, embeddedAt, embedding, HOLE, Imported, isRecord, ParameterValue, textOf, Unread } from './variables.js';
 
 /**
  * CloudFormation's vocabulary: resources by type, and the intrinsic functions
@@ -31,6 +31,11 @@ export interface Deployed {
   readonly changes?: boolean;
   /** The name is a stand-in for one the platform generates. */
   readonly generated?: boolean;
+  /**
+   * The stand-in is for the value of this parameter, which the files give
+   * none (P268): named by the parameter's declaration rather than its own.
+   */
+  readonly parameter?: string;
   /**
    * The name is the stand-in of a value another deployment publishes, by its
    * key: an ARN or a URL written around an import of the name (P253).
@@ -218,6 +223,12 @@ export class Template {
       const target = this.deployedOf(resource.properties['TargetFunctionArn']);
       return target === undefined || target instanceof Unread ? target : target.kind === 'function' ? { kind: 'url', name: target.name } : undefined;
     }
+    // A consumer registered on a stream for its own throughput reads that
+    // stream: a mapping from its ARN is a mapping from the stream (P268).
+    if (resource.type === 'AWS::Kinesis::StreamConsumer') {
+      const stream = this.deployedOf(resource.properties['StreamARN']);
+      return stream === undefined || stream instanceof Unread || stream.kind === 'stream' ? stream : undefined;
+    }
     const declares = this.kinds.get(resource.type);
     if (declares === undefined) return undefined;
     const index = declares.kind === 'function' ? this.#options.functionOf?.(logicalId) : undefined;
@@ -228,7 +239,32 @@ export class Template {
     }
     const name = this.text(written);
     if (typeof name === 'string') return { kind: declares.kind, name, ...own };
+    // Named by a parameter with no value: the parameter's value, whatever it
+    // is, and the same wherever the parameter is written (P268).
+    if (name instanceof ParameterValue) {
+      return { kind: declares.kind, name: generatedName(name.address), generated: true, parameter: name.variable as string, ...own };
+    }
     return new Unread(`the ${declares.name} of ${resource.address}: ${name.text}`, name.variable);
+  }
+
+  /**
+   * The one thing the template declares whose name is the whole value of a
+   * parameter the files give none, for a value that is that parameter (P268):
+   * a function deployed with `!Ref StreamName` is handed the name of the
+   * stream whose `Name` is `!Ref StreamName`. Two of different kinds named by
+   * it leave the value's kind to whoever reads it, and nothing is said.
+   */
+  namedByParameter(value: ParameterValue): Deployed | undefined {
+    const found: Deployed[] = [];
+    for (const resource of this.resources.values()) {
+      const declares = this.kinds.get(resource.type);
+      const written = declares === undefined ? undefined : resource.properties[declares.name];
+      if (!(written instanceof ParameterValue) || written.address !== value.address) continue;
+      const named = this.named(resource.logicalId);
+      if (named !== undefined && !(named instanceof Unread)) found.push(named);
+    }
+    const [only, ...rest] = found;
+    return only !== undefined && rest.every((other) => other.kind === only.kind) ? only : undefined;
   }
 
   /** What an attribute of a resource names: the caller's answer where it has one, else the resource. */

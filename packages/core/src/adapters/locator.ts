@@ -8,6 +8,7 @@ import {
   type NewExpression,
   type Node as TsNode,
   type ObjectLiteralExpression,
+  type ParameterDeclaration,
 } from 'ts-morph';
 import { classMembersOf } from '../di/class-members.js';
 import { functionOf, methodNamedOn } from '../di/member-call.js';
@@ -159,8 +160,29 @@ export type LocatedSlot =
        * names itself, as text, and is no expression of anything (P55).
        */
       readonly key?: string;
+      /**
+       * Where the walk stopped at a member of a record of values or factories
+       * chosen by a parameter of the function the call is written in -
+       * `events[name](data)` - or at a record that parameter is, that
+       * parameter (P268). Which record is decided by whoever calls the
+       * function, and a reader that follows the parameter out to each caller
+       * reads the slot again there, with the parameter
+       * {@link LocatorContext.bound bound} to what that caller hands it.
+       */
+      readonly selector?: ParameterDeclaration;
+      /** The parameters the walk bound on its way here, which what is left of the path is read with. */
+      readonly bound?: Bindings;
     }
   | undefined;
+
+/**
+ * Values handed to parameters, by the parameter's declaration: what a caller
+ * passes a function the walk reads inside, and what a factory the walk steps
+ * into is called with (P268).
+ */
+export type Bindings = ReadonlyMap<TsNode, TsNode>;
+
+const NO_BINDINGS: Bindings = new Map();
 
 /**
  * Whether a method name is one of the library's own operations.
@@ -188,6 +210,12 @@ export interface LocatorContext {
   readonly typeDeclaration?: TsNode | undefined;
   /** Declaration that provided the receiver — a parameter, when there is one. */
   readonly providerDeclaration?: TsNode | undefined;
+  /**
+   * What parameters of the function the call is written in are handed, by a
+   * caller the reader followed one out to (P268): a member chosen by one of
+   * them is then the member that caller chooses.
+   */
+  readonly bound?: Bindings;
 }
 
 /**
@@ -529,13 +557,8 @@ const stopped = (expression: TsNode): LocatedSlot => ({ expression, reached: fal
  * value is still the one written, whatever the binding says its type is.
  */
 const constValue = (node: TsNode): TsNode | undefined => {
-  if (!Node.isIdentifier(node)) return undefined;
-  const parent = node.getParent();
-  const symbol =
-    parent !== undefined && Node.isShorthandPropertyAssignment(parent)
-      ? parent.getValueSymbol()
-      : node.getSymbol();
-  const declaration = symbol?.getDeclarations()[0];
+  // An imported `const` is the one its module declares (P268).
+  const declaration = declarationNamed(node);
   if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
   if (declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) {
     return undefined;
@@ -543,16 +566,8 @@ const constValue = (node: TsNode): TsNode | undefined => {
   return declaration.getInitializer();
 };
 
-/**
- * What a value is written as, past what does not change it.
- *
- * Parentheses and the assertions TypeScript lets a value carry say nothing about
- * the value, and a `const` names the value it was bound to once and for good.
- * Asked only of the records and lists a path walks through: the name at the end
- * of a path is handed over as it is written, because whether it is a literal, a
- * constant or a member of a shared enum is a fact its reader wants to know.
- */
-const writtenValue = (node: TsNode): TsNode => {
+/** Parentheses and the assertions TypeScript lets a value carry, which say nothing about the value. */
+const peeled = (node: TsNode): TsNode => {
   let current = node;
   for (let depth = 0; depth < MOST_LINKS; depth += 1) {
     if (
@@ -565,9 +580,308 @@ const writtenValue = (node: TsNode): TsNode => {
       current = current.getExpression();
       continue;
     }
-    const bound = constValue(current);
-    if (bound === undefined) return current;
-    current = bound;
+    return current;
+  }
+  return current;
+};
+
+/** The declaration a name stands for: the variable a shorthand property copies, past an import. */
+const declarationNamed = (node: TsNode): TsNode | undefined => {
+  if (!Node.isIdentifier(node)) return undefined;
+  const parent = node.getParent();
+  const symbol =
+    parent !== undefined && Node.isShorthandPropertyAssignment(parent) ? parent.getValueSymbol() : node.getSymbol();
+  const declaration = symbol?.getDeclarations()[0];
+  if (declaration !== undefined && Node.isImportSpecifier(declaration)) {
+    return symbol?.getAliasedSymbol()?.getDeclarations()[0];
+  }
+  return declaration;
+};
+
+/** What a parameter is handed, where the walk knows: by a caller, or by the call of a factory it stepped into. */
+const handedValue = (node: TsNode, bound: Bindings): TsNode | undefined => {
+  if (bound.size === 0) return undefined;
+  const declaration = declarationNamed(node);
+  return declaration === undefined ? undefined : bound.get(declaration);
+};
+
+/** A value as the walk followed it, and the parameters bound on the way. */
+interface Followed {
+  readonly value: TsNode;
+  readonly bound: Bindings;
+  /** The parameter a member was chosen by, where nothing bound it (P268). */
+  readonly selector?: ParameterDeclaration;
+}
+
+/** How deep the walk goes into the values a value is made of before it gives up. */
+const MOST_NESTED = 8;
+
+/** Whether a declaration is a `const`, whose value is the one it was given. */
+const isConstDeclaration = (declaration: TsNode): boolean =>
+  Node.isVariableDeclaration(declaration) &&
+  declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const;
+
+/** The one value a function answers with: its expression body, or the one `return` of its own it writes. */
+const answerOf = (fn: TsNode): TsNode | undefined => {
+  if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn) && !Node.isFunctionDeclaration(fn) && !Node.isMethodDeclaration(fn)) {
+    return undefined;
+  }
+  const body = fn.getBody();
+  if (body === undefined) return undefined;
+  if (!Node.isBlock(body)) return body;
+  const returns = body
+    .getDescendantsOfKind(SyntaxKind.ReturnStatement)
+    .filter((statement) => statement.getFirstAncestor((ancestor) => Node.isFunctionLikeDeclaration(ancestor) || Node.isFunctionExpression(ancestor) || Node.isArrowFunction(ancestor)) === fn);
+  const [only, ...rest] = returns;
+  return only === undefined || rest.length > 0 ? undefined : only.getExpression();
+};
+
+/**
+ * What a function called with these arguments answers, its parameters bound
+ * to them: a factory of the record a call sends - `events.OrderPlaced(data)`,
+ * `entryFor(order)` - read as the record it builds (P268). A function of a
+ * declaration file has no body to read.
+ */
+const calledAnswer = (fn: TsNode, written: readonly TsNode[], bound: Bindings, depth: number): Followed | undefined => {
+  const target = followValue(fn, bound, depth + 1).value;
+  if (target.getSourceFile().isDeclarationFile()) return undefined;
+  const answer = answerOf(target);
+  if (answer === undefined || !Node.isFunctionLikeDeclaration(target)) return undefined;
+  const handed = new Map(bound);
+  target.getParameters().forEach((parameter, index) => {
+    const argument = written[index] ?? parameter.getInitializer();
+    if (argument !== undefined) handed.set(parameter, argument);
+  });
+  return { value: answer, bound: handed };
+};
+
+/**
+ * What a record written out holds under one key, as a value: a property's
+ * value, a shorthand's name, a method itself. Nothing past a spread or a
+ * computed key met first, which may be where the key comes from.
+ */
+const memberOf = (record: ObjectLiteralExpression, key: string): TsNode | undefined => {
+  const properties = record.getProperties();
+  for (let index = properties.length - 1; index >= 0; index -= 1) {
+    const property = properties[index];
+    if (property === undefined || Node.isSpreadAssignment(property)) return undefined;
+    const nameNode = property.getNameNode();
+    if (Node.isComputedPropertyName(nameNode)) return undefined;
+    if (keyOf(nameNode.getText()) !== key) continue;
+    if (Node.isPropertyAssignment(property)) return property.getInitializer();
+    if (Node.isShorthandPropertyAssignment(property)) return property.getNameNode();
+    return Node.isMethodDeclaration(property) ? property : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * The member of a record written out that a lookup chooses, and what it
+ * answers where it is called (P268): `events[name](data)`, `events.Placed(data)`,
+ * `QUEUES[kind]`, and a function called by its name. The key is read where it
+ * is written, or from what a caller handed the parameter it is; one that is a
+ * parameter nobody bound is the `selector` a reader follows out to each caller.
+ */
+const chosenMember = (node: TsNode, bound: Bindings, depth: number): Followed | { selector: ParameterDeclaration } | undefined => {
+  const called = Node.isCallExpression(node);
+  const callee = called ? peeled(node.getExpression()) : node;
+  const written = called ? node.getArguments() : [];
+  if (called && Node.isIdentifier(callee)) {
+    const declaration = declarationNamed(callee);
+    if (declaration === undefined) return undefined;
+    if (Node.isFunctionDeclaration(declaration)) return calledAnswer(declaration, written, bound, depth);
+    return isConstDeclaration(declaration) ? calledAnswer(callee, written, bound, depth) : undefined;
+  }
+  let key: string;
+  let record: TsNode;
+  if (Node.isPropertyAccessExpression(callee)) {
+    record = callee.getExpression();
+    key = callee.getName();
+  } else if (Node.isElementAccessExpression(callee)) {
+    record = callee.getExpression();
+    const argument = callee.getArgumentExpression();
+    if (argument === undefined) return undefined;
+    const said = followValue(argument, bound, depth + 1).value;
+    const value = evaluateExpression(said);
+    if (value.resolved && (typeof value.value === 'string' || typeof value.value === 'number')) key = String(value.value);
+    else {
+      const declaration = declarationNamed(said);
+      return declaration !== undefined && Node.isParameterDeclaration(declaration) ? { selector: declaration } : undefined;
+    }
+  } else {
+    return undefined;
+  }
+  const holder = followValue(record, bound, depth + 1);
+  if (!Node.isObjectLiteralExpression(holder.value)) return undefined;
+  const member = memberOf(holder.value, key);
+  if (member === undefined) return undefined;
+  return called ? calledAnswer(member, written, holder.bound, depth) : { value: member, bound: holder.bound };
+};
+
+/** The methods of a list that hand each element of it, as it is, to a callback. */
+const ITERATING = new Set(['forEach', 'map', 'flatMap', 'filter', 'find', 'findLast', 'some', 'every']);
+
+/** The methods of a list whose answer holds elements of it, as they are. */
+const KEEPING = new Set(['filter', 'slice', 'reverse', 'sort', 'toSorted', 'toReversed']);
+
+/**
+ * The values a `Map` or a `Set` bound once to a `const` is given: the second
+ * argument of each `set` on it, or the argument of each `add` (P268).
+ */
+const heldIn = (collection: TsNode): TsNode[] | undefined => {
+  const declaration = declarationNamed(collection);
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration) || !isConstDeclaration(declaration)) return undefined;
+  const made = declaration.getInitializer();
+  if (made === undefined || !Node.isNewExpression(made)) return undefined;
+  const kind = constructedName(made);
+  const adds = kind === 'Map' ? { method: 'set', index: 1 } : kind === 'Set' ? { method: 'add', index: 0 } : undefined;
+  const nameNode = declaration.getNameNode();
+  if (adds === undefined || !Node.isIdentifier(nameNode)) return undefined;
+  const values: TsNode[] = [];
+  for (const reference of nameNode.findReferencesAsNodes()) {
+    const access = reference.getParent();
+    if (access === undefined || !Node.isPropertyAccessExpression(access) || access.getExpression() !== reference || access.getName() !== adds.method) continue;
+    const call = access.getParent();
+    if (call === undefined || !Node.isCallExpression(call) || call.getExpression() !== access) continue;
+    const value = call.getArguments()[adds.index];
+    if (value !== undefined) values.push(value);
+  }
+  return values;
+};
+
+/**
+ * The one element a list holds, as it is written: a list of one, an element
+ * of a list some others were taken out of, what the callback of a `map`
+ * answers, the one value a `Map` or a `Set` is given (P268). Several elements
+ * are several addresses, which one value cannot stand for.
+ */
+const elementWithin = (list: TsNode, bound: Bindings, depth: number): Followed | undefined => {
+  if (depth > MOST_NESTED) return undefined;
+  const followed = followValue(list, bound, depth + 1);
+  const value = followed.value;
+  if (Node.isArrayLiteralExpression(value)) {
+    const [only, ...rest] = value.getElements();
+    if (only === undefined || rest.length > 0) return undefined;
+    return Node.isSpreadElement(only) ? elementWithin(only.getExpression(), followed.bound, depth + 1) : { value: only, bound: followed.bound };
+  }
+  if (!Node.isCallExpression(value)) return undefined;
+  const callee = peeled(value.getExpression());
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const method = callee.getName();
+  const receiver = callee.getExpression();
+  if (method === 'from' && receiver.getText() === 'Array') {
+    const [source] = value.getArguments();
+    return source === undefined ? undefined : elementWithin(source, followed.bound, depth + 1);
+  }
+  if (KEEPING.has(method)) return elementWithin(receiver, followed.bound, depth + 1);
+  if (method === 'values' && value.getArguments().length === 0) {
+    const [only, ...rest] = heldIn(peeled(receiver)) ?? [];
+    return only === undefined || rest.length > 0 ? undefined : { value: only, bound: followed.bound };
+  }
+  if (method === 'map') {
+    const [callback] = value.getArguments();
+    if (callback === undefined) return undefined;
+    const element = elementWithin(receiver, followed.bound, depth + 1);
+    return calledAnswer(callback, element === undefined ? [] : [element.value], element?.bound ?? followed.bound, depth);
+  }
+  return undefined;
+};
+
+/**
+ * The element a name stands for, where it is one: `for (const record of
+ * records)`, or the first parameter of a callback a list hands each element
+ * to - `records.forEach((record) => ...)` (P268).
+ */
+const elementNamed = (node: TsNode, bound: Bindings, depth: number): Followed | undefined => {
+  const declaration = declarationNamed(node);
+  if (declaration === undefined) return undefined;
+  if (Node.isVariableDeclaration(declaration)) {
+    const list = declaration.getParent();
+    const loop = list?.getParent();
+    if (
+      !Node.isIdentifier(declaration.getNameNode()) ||
+      list === undefined ||
+      loop === undefined ||
+      !Node.isVariableDeclarationList(list) ||
+      !Node.isForOfStatement(loop) ||
+      list.getDeclarationKind() !== VariableDeclarationKind.Const
+    ) {
+      return undefined;
+    }
+    return elementWithin(loop.getExpression(), bound, depth + 1);
+  }
+  if (!Node.isParameterDeclaration(declaration) || !Node.isIdentifier(declaration.getNameNode())) return undefined;
+  const fn = declaration.getParent();
+  if (!(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn)) || fn.getParameters()[0] !== declaration) return undefined;
+  const call = fn.getParent();
+  if (call === undefined || !Node.isCallExpression(call) || call.getArguments()[0] !== fn) return undefined;
+  const callee = peeled(call.getExpression());
+  if (!Node.isPropertyAccessExpression(callee) || !ITERATING.has(callee.getName())) return undefined;
+  return elementWithin(callee.getExpression(), bound, depth + 1);
+};
+
+/**
+ * What a value is written as, past what does not change it.
+ *
+ * Parentheses and the assertions TypeScript lets a value carry say nothing about
+ * the value, and a `const` names the value it was bound to once and for good.
+ * Asked only of the records and lists a path walks through: the name at the end
+ * of a path is handed over as it is written, because whether it is a literal, a
+ * constant or a member of a shared enum is a fact its reader wants to know.
+ *
+ * Followed further, to what the value is made by (P268): a parameter to what
+ * its caller or a factory's call handed it, an element of a list to the one
+ * value the list is written with, a member a lookup chooses to that member,
+ * and a factory called to the record it answers with. A member chosen by a
+ * parameter nothing bound stops the walk, and says which parameter.
+ */
+const followValue = (node: TsNode, bound: Bindings = NO_BINDINGS, depth = 0): Followed => {
+  let current = peeled(node);
+  let held = bound;
+  if (depth > MOST_NESTED) return { value: current, bound: held };
+  for (let link = 0; link < MOST_LINKS; link += 1) {
+    current = peeled(current);
+    const handed = handedValue(current, held);
+    if (handed !== undefined) {
+      current = handed;
+      continue;
+    }
+    const constant = constValue(current);
+    if (constant !== undefined) {
+      current = constant;
+      continue;
+    }
+    const element = elementNamed(current, held, depth);
+    if (element !== undefined) {
+      current = element.value;
+      held = element.bound;
+      continue;
+    }
+    const chosen = chosenMember(current, held, depth);
+    if (chosen === undefined) {
+      // A record or a list the function is handed whole is its caller's to
+      // write, and is read at each caller as a member chosen by one is.
+      const declaration = declarationNamed(current);
+      const handedIn = declaration !== undefined && Node.isParameterDeclaration(declaration) ? declaration : undefined;
+      return { value: current, bound: held, ...(handedIn === undefined ? {} : { selector: handedIn }) };
+    }
+    if ('selector' in chosen) return { value: current, bound: held, selector: chosen.selector };
+    current = chosen.value;
+    held = chosen.bound;
+  }
+  return { value: current, bound: held };
+};
+
+/**
+ * The name at the end of a path, past a parameter the walk bound: what the
+ * caller or the factory's call handed it, as written there (P268).
+ */
+const settled = (expression: TsNode, bound: Bindings): TsNode => {
+  let current = expression;
+  for (let link = 0; link < MOST_LINKS; link += 1) {
+    const handed = handedValue(peeled(current), bound);
+    if (handed === undefined) return current;
+    current = handed;
   }
   return current;
 };
@@ -624,20 +938,28 @@ const writtenKey = (property: TsNode): LocatedSlot => {
   return Node.isStringLiteral(name) || Node.isNoSubstitutionTemplateLiteral(name) ? { expression: name, reached: true } : stopped(name);
 };
 
+/** A slot carrying the parameters bound on the way to it, where any were. */
+const carrying = (slot: LocatedSlot, bound: Bindings): LocatedSlot =>
+  slot === undefined || bound.size === 0 ? slot : { ...slot, bound };
+
 /** One step into what a slot holds. */
-const stepInto = (expression: TsNode, step: string): LocatedSlot[] => {
-  const value = writtenValue(expression);
+const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlot[] => {
+  const followed = followValue(expression, bound);
+  const { value } = followed;
+  const halt = (): LocatedSlot[] => [
+    { expression, reached: false, ...(followed.selector === undefined ? {} : { selector: followed.selector }) },
+  ];
   if (step === EVERY_ELEMENT) {
-    if (!Node.isArrayLiteralExpression(value)) return [stopped(expression)];
+    if (!Node.isArrayLiteralExpression(value)) return halt();
     return value
       .getElements()
       .map((element) =>
-        Node.isSpreadElement(element) ? stopped(element) : { expression: element, reached: true },
+        carrying(Node.isSpreadElement(element) ? stopped(element) : { expression: element, reached: true }, followed.bound),
       );
   }
-  if (!Node.isObjectLiteralExpression(value)) return [stopped(expression)];
-  if (step === EVERY_KEY) return value.getProperties().map(writtenKey);
-  return [writtenProperty(value, step)];
+  if (!Node.isObjectLiteralExpression(value)) return halt();
+  if (step === EVERY_KEY) return value.getProperties().map((property) => carrying(writtenKey(property), followed.bound));
+  return [carrying(writtenProperty(value, step), followed.bound)];
 };
 
 /**
@@ -650,14 +972,17 @@ const stepInto = (expression: TsNode, step: string): LocatedSlot[] => {
  * element, and dropping them would shift every later element onto the wrong
  * index of a sibling path walked over the same list.
  */
-const walkPath = (start: TsNode, path: readonly string[]): LocatedSlot[] => {
-  let slots: LocatedSlot[] = [{ expression: start, reached: true }];
+const walkPath = (start: TsNode, path: readonly string[], bound: Bindings = NO_BINDINGS): LocatedSlot[] => {
+  let slots: LocatedSlot[] = [carrying({ expression: start, reached: true }, bound)];
   for (const step of path) {
     slots = slots.flatMap((slot) =>
-      slot === undefined || !slot.reached ? [slot] : stepInto(slot.expression, step),
+      slot === undefined || !slot.reached ? [slot] : stepInto(slot.expression, step, slot.bound ?? NO_BINDINGS),
     );
   }
-  return slots;
+  // A name a parameter the walk bound holds is what that parameter was handed.
+  return slots.map((slot) =>
+    slot === undefined || !slot.reached || slot.bound === undefined ? slot : { ...slot, expression: settled(slot.expression, slot.bound) },
+  );
 };
 
 /** The name a `new` expression constructs, as written: `X` in `new X()` and in `new sdk.X()`. */
@@ -677,16 +1002,23 @@ const constructedName = (construction: NewExpression): string | undefined => {
  * cannot see: the call is of the described shape, and its address is not
  * written here.
  */
-const instanceArgument = (site: LocatorSite, className: string): TsNode | undefined => {
+const instanceArgument = (
+  site: LocatorSite,
+  className: string,
+  bound: Bindings = NO_BINDINGS,
+): { readonly instance: TsNode; readonly bound: Bindings } | undefined => {
   const written = argumentsOf(site);
   for (const argument of written) {
-    const value = writtenValue(argument);
-    if (Node.isNewExpression(value) && constructedName(value) === className) return value;
+    const followed = followValue(argument, bound);
+    if (Node.isNewExpression(followed.value) && constructedName(followed.value) === className) {
+      return { instance: followed.value, bound: followed.bound };
+    }
   }
-  return written.find(
+  const instance = written.find(
     (argument) =>
       argument.getType().getSymbol()?.getName() === className || annotatedName(argument) === className,
   );
+  return instance === undefined ? undefined : { instance, bound };
 };
 
 /**
@@ -914,24 +1246,25 @@ const resolvers: LocatorResolvers = {
     one(classPropertyValue(context.typeDeclaration, locator.key)),
   'provider-decorator': (_site, locator, context) =>
     one(decoratorArgument(context.providerDeclaration, locator.decorator, locator.index)),
-  'argument-path': (site, locator) => {
+  'argument-path': (site, locator, context) => {
     const argument = argumentsOf(site)[locator.index];
-    return argument === undefined ? [] : walkPath(argument, locator.path);
+    return argument === undefined ? [] : walkPath(argument, locator.path, context.bound);
   },
-  'constructed-argument-path': (site, locator) => {
-    const instance = instanceArgument(site, locator.class);
-    if (instance === undefined) return [];
+  'constructed-argument-path': (site, locator, context) => {
+    const found = instanceArgument(site, locator.class, context.bound);
+    if (found === undefined) return [];
+    const { instance, bound } = found;
     if (!Node.isNewExpression(instance)) return [stopped(instance)];
     const input = instance.getArguments()[locator.index ?? 0];
-    return input === undefined ? [undefined] : walkPath(input, locator.path);
+    return input === undefined ? [undefined] : walkPath(input, locator.path, bound);
   },
-  'receiver-constructed-path': (site, locator) => {
+  'receiver-constructed-path': (site, locator, context) => {
     const receiver = receiverOf(site);
     if (receiver === undefined) return [];
-    const made = writtenValue(receiver);
-    if (!Node.isNewExpression(made) || constructedName(made) !== locator.class) return [stopped(receiver)];
-    const input = made.getArguments()[locator.index ?? 0];
-    return input === undefined ? [undefined] : walkPath(input, locator.path);
+    const made = followValue(receiver, context.bound);
+    if (!Node.isNewExpression(made.value) || constructedName(made.value) !== locator.class) return [stopped(receiver)];
+    const input = made.value.getArguments()[locator.index ?? 0];
+    return input === undefined ? [undefined] : walkPath(input, locator.path, made.bound);
   },
   'origin-call-argument': (site, locator) => {
     const producer = Node.isCallExpression(site) ? producingCall(site, locator.call) : undefined;

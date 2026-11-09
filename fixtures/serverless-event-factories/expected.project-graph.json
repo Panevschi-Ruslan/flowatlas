@@ -1,0 +1,1348 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T16:40:31.478Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/shop-events/shop.orders/OrderPlaced",
+      "type": "channel",
+      "label": "eventbridge/shop-events/shop.orders/OrderPlaced",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 40,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/shop-events/shop.payments/RefundIssued",
+      "type": "channel",
+      "label": "eventbridge/shop-events/shop.payments/RefundIssued",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 81,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/shop-events/shop.shipping/OrderShipped",
+      "type": "channel",
+      "label": "eventbridge/shop-events/shop.shipping/OrderShipped",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 67,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:eventbridge/shop-events/shop.stock/StockReserved",
+      "type": "channel",
+      "label": "eventbridge/shop-events/shop.stock/StockReserved",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 74,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:shop#serverless.yml:functions.notify.events[0]",
+      "type": "consumer",
+      "label": "rule functions.notify.events[0]",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 67,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "functions.notify.events[0]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:shop#serverless.yml:functions.notify.events[1]",
+      "type": "consumer",
+      "label": "rule functions.notify.events[1]",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 74,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "functions.notify.events[1]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:shop#serverless.yml:functions.notify.events[2]",
+      "type": "consumer",
+      "label": "rule functions.notify.events[2]",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 81,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "functions.notify.events[2]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "consumer:shop#serverless.yml:functions.reserveStock.events[0]",
+      "type": "consumer",
+      "label": "rule functions.reserveStock.events[0]",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 40,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "functions.reserveStock.events[0]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/ledger",
+      "type": "entry",
+      "label": "POST /ledger",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 53,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/ledger",
+        "rawPath": "ledger",
+        "deployedBy": "serverless",
+        "api": "dev-shop",
+        "function": "shop-dev-ledger",
+        "declaredAs": "functions.ledger.events[0]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "orders",
+        "deployedBy": "serverless",
+        "api": "dev-shop",
+        "function": "shop-dev-placeOrder",
+        "declaredAs": "functions.placeOrder.events[0]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders/:param/ship",
+      "type": "entry",
+      "label": "POST /orders/:param/ship",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/ship",
+        "rawPath": "orders/{id}/ship",
+        "deployedBy": "serverless",
+        "api": "dev-shop",
+        "function": "shop-dev-shipOrder",
+        "declaredAs": "functions.shipOrder.events[0]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/refunds",
+      "type": "entry",
+      "label": "POST /refunds",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 60,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/refunds",
+        "rawPath": "refunds",
+        "deployedBy": "serverless",
+        "api": "dev-shop",
+        "function": "shop-dev-refund",
+        "declaredAs": "functions.refund.events[0]",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-dev-ledger",
+      "type": "entry",
+      "label": "shop-dev-ledger",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 50,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-dev-ledger",
+        "deployedBy": "serverless",
+        "name": "shop-dev-ledger",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.ledger",
+        "stageFrom": "file",
+        "handler": "src/stock/ledger.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{body:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-dev-notify",
+      "type": "entry",
+      "label": "shop-dev-notify",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 64,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-dev-notify",
+        "deployedBy": "serverless",
+        "name": "shop-dev-notify",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.notify",
+        "stageFrom": "file",
+        "handler": "src/notices/notify.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{detail-type:string;detail:{orderId:string}}",
+          "detail": "{orderId:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-dev-placeOrder",
+      "type": "entry",
+      "label": "shop-dev-placeOrder",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 17,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-dev-placeOrder",
+        "deployedBy": "serverless",
+        "name": "shop-dev-placeOrder",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.placeOrder",
+        "stageFrom": "file",
+        "handler": "src/orders/place.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{body:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-dev-refund",
+      "type": "entry",
+      "label": "shop-dev-refund",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 57,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-dev-refund",
+        "deployedBy": "serverless",
+        "name": "shop-dev-refund",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.refund",
+        "stageFrom": "file",
+        "handler": "src/payments/refund.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{body:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-dev-replay",
+      "type": "entry",
+      "label": "shop-dev-replay",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 34,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-dev-replay",
+        "deployedBy": "serverless",
+        "name": "shop-dev-replay",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.replay",
+        "stageFrom": "file",
+        "handler": "src/orders/replay.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{name:'OrderPlaced'|'OrderShipped'|'StockReserved';data:object}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-dev-resendOrder",
+      "type": "entry",
+      "label": "shop-dev-resendOrder",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 31,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-dev-resendOrder",
+        "deployedBy": "serverless",
+        "name": "shop-dev-resendOrder",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.resendOrder",
+        "stageFrom": "file",
+        "handler": "src/orders/ship.resend",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{orderId:string;total:number}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-dev-reserveStock",
+      "type": "entry",
+      "label": "shop-dev-reserveStock",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-dev-reserveStock",
+        "deployedBy": "serverless",
+        "name": "shop-dev-reserveStock",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.reserveStock",
+        "stageFrom": "file",
+        "handler": "src/stock/reserve.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "LEDGER_URL": {
+            "written": "\"https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com/dev/ledger\"",
+            "value": "dev-shop",
+            "kind": "api",
+            "path": "/ledger"
+          }
+        },
+        "reads": {
+          "": "{detail:{orderId:string;items:string[]}}",
+          "detail": "{orderId:string;items:string[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:shop-dev-shipOrder",
+      "type": "entry",
+      "label": "shop-dev-shipOrder",
+      "repo": "shop",
+      "file": "serverless.yml",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-dev-shipOrder",
+        "deployedBy": "serverless",
+        "name": "shop-dev-shipOrder",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.shipOrder",
+        "stageFrom": "file",
+        "handler": "src/orders/ship.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{pathParameters:{id:string};body:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "http_out:shop#src/stock/reserve.ts:6:9",
+      "type": "http_out",
+      "label": "POST ",
+      "repo": "shop",
+      "file": "src/stock/reserve.ts",
+      "line": 6,
+      "meta": {
+        "method": "POST",
+        "url": "${LEDGER_URL}",
+        "path": "",
+        "baseUrlEnv": "LEDGER_URL",
+        "responseType": null,
+        "bodyType": "{orderId:string;items:string[]}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "items",
+          "orderId"
+        ],
+        "headerKeys": [
+          "content-type"
+        ],
+        "baseUrl": "dev-shop",
+        "baseUrlFrom": "the environment shop-dev-reserveStock is deployed with",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "producer:shop#src/common/emit.ts:10:10",
+      "type": "producer",
+      "label": "event ?",
+      "repo": "shop",
+      "file": "src/common/emit.ts",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "unresolved",
+        "method": "send",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/place.ts:5:9",
+      "type": "producer",
+      "label": "event eventbridge/shop-events/shop.orders/OrderPlaced",
+      "repo": "shop",
+      "file": "src/orders/place.ts",
+      "line": 5,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/ship.ts:11:76",
+      "type": "producer",
+      "label": "event eventbridge/shop-events/shop.orders/OrderPlaced",
+      "repo": "shop",
+      "file": "src/orders/ship.ts",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:shop#src/orders/ship.ts:6:9",
+      "type": "producer",
+      "label": "event eventbridge/shop-events/shop.shipping/OrderShipped",
+      "repo": "shop",
+      "file": "src/orders/ship.ts",
+      "line": 6,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:shop#src/payments/refund.ts:8:9",
+      "type": "producer",
+      "label": "event eventbridge/shop-events/shop.payments/RefundIssued",
+      "repo": "shop",
+      "file": "src/payments/refund.ts",
+      "line": 8,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:shop#src/stock/reserve.ts:11:9",
+      "type": "producer",
+      "label": "event eventbridge/shop-events/shop.stock/StockReserved",
+      "repo": "shop",
+      "file": "src/stock/reserve.ts",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "literal",
+        "method": "send",
+        "batch": true
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:sls-shop-dev-ServiceEndpoint",
+              "stack:shop-dev#ServiceEndpoint"
+            ],
+            "address": "Outputs.ServiceEndpoint",
+            "file": "serverless.yml",
+            "line": 3,
+            "kind": "api",
+            "value": "dev-shop",
+            "deployedBy": "serverless"
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop#src/common/emit.ts:emit",
+      "type": "function",
+      "label": "emit",
+      "repo": "shop",
+      "file": "src/common/emit.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "'OrderPlaced'|'OrderShipped'|'StockReserved'"
+            },
+            {
+              "name": "data",
+              "type": "object"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/common/emit.ts:putEntry",
+      "type": "function",
+      "label": "putEntry",
+      "repo": "shop",
+      "file": "src/common/emit.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "entry",
+              "type": "{EventBusName:string;Source:'shop.orders';DetailType:'OrderPlaced';Detail:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/common/events.ts:events.OrderPlaced",
+      "type": "function",
+      "label": "events.OrderPlaced",
+      "repo": "shop",
+      "file": "src/common/events.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "object"
+            }
+          ],
+          "returns": "{EventBusName:string;Source:'shop.orders';DetailType:'OrderPlaced';Detail:string}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/common/events.ts:refundIssued",
+      "type": "function",
+      "label": "refundIssued",
+      "repo": "shop",
+      "file": "src/common/events.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            },
+            {
+              "name": "amount",
+              "type": "number"
+            }
+          ],
+          "returns": "{EventBusName:string;Source:'shop.payments';DetailType:'RefundIssued';Detail:string}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/notices/notify.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/notices/notify.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{detail-type:string;detail:{orderId:string}}"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "notice for {orderId}: {}",
+            "at": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop#src/orders/place.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/orders/place.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{body:string}"
+            }
+          ],
+          "returns": "{statusCode:201;body:string}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders/replay.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/orders/replay.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{name:'OrderPlaced'|'OrderShipped'|'StockReserved';data:object}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders/ship.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/orders/ship.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{pathParameters:{id:string};body:string}"
+            }
+          ],
+          "returns": "{statusCode:202;body:''}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders/ship.ts:resend",
+      "type": "function",
+      "label": "resend",
+      "repo": "shop",
+      "file": "src/orders/ship.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{orderId:string;total:number}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/payments/refund.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/payments/refund.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{body:string}"
+            }
+          ],
+          "returns": "{statusCode:202;body:''}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/stock/ledger.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/stock/ledger.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{body:string}"
+            }
+          ],
+          "returns": "{statusCode:200;body:string}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/stock/reserve.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/stock/reserve.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{detail:{orderId:string;items:string[]}}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:eventbridge/shop-events/shop.orders/OrderPlaced",
+      "to": "consumer:shop#serverless.yml:functions.reserveStock.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 40,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:eventbridge/shop-events/shop.payments/RefundIssued",
+      "to": "consumer:shop#serverless.yml:functions.notify.events[2]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 81,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:eventbridge/shop-events/shop.shipping/OrderShipped",
+      "to": "consumer:shop#serverless.yml:functions.notify.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 67,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:eventbridge/shop-events/shop.stock/StockReserved",
+      "to": "consumer:shop#serverless.yml:functions.notify.events[1]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 74,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "consumer:shop#serverless.yml:functions.notify.events[0]",
+      "to": "entry:shop:invoke:shop-dev-notify",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 67,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:shop#serverless.yml:functions.notify.events[1]",
+      "to": "entry:shop:invoke:shop-dev-notify",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 74,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:shop#serverless.yml:functions.notify.events[2]",
+      "to": "entry:shop:invoke:shop-dev-notify",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 81,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:shop#serverless.yml:functions.reserveStock.events[0]",
+      "to": "entry:shop:invoke:shop-dev-reserveStock",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 40,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/ledger",
+      "to": "shop#src/stock/ledger.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{recorded:number}",
+      "file": "src/stock/ledger.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true,
+        "body": "{orderId:string;items:string[]}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders",
+      "to": "shop#src/orders/place.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string}",
+      "file": "src/orders/place.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true,
+        "body": "{id:string;total:number}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders/:param/ship",
+      "to": "shop#src/orders/ship.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/ship.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "body": "{carrier:string}",
+        "params": "{id:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/refunds",
+      "to": "shop#src/payments/refund.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/payments/refund.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "body": "{orderId:string;amount:number}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:invoke:shop-dev-ledger",
+      "to": "shop#src/stock/ledger.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stock/ledger.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:shop:invoke:shop-dev-notify",
+      "to": "shop#src/notices/notify.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/notices/notify.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:shop:invoke:shop-dev-placeOrder",
+      "to": "shop#src/orders/place.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/place.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:shop:invoke:shop-dev-refund",
+      "to": "shop#src/payments/refund.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/payments/refund.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:shop:invoke:shop-dev-replay",
+      "to": "shop#src/orders/replay.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/replay.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:shop:invoke:shop-dev-resendOrder",
+      "to": "shop#src/orders/ship.ts:resend",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/ship.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:shop:invoke:shop-dev-reserveStock",
+      "to": "shop#src/stock/reserve.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/stock/reserve.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:shop:invoke:shop-dev-shipOrder",
+      "to": "shop#src/orders/ship.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders/ship.ts",
+      "line": 4
+    },
+    {
+      "from": "http_out:shop#src/stock/reserve.ts:6:9",
+      "to": "entry:shop:http:POST:/ledger",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/stock/reserve.ts",
+      "line": 6,
+      "params": [
+        "{orderId:string;items:string[]}"
+      ],
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "shop",
+        "baseUrl": "dev-shop",
+        "baseUrlFrom": "the environment shop-dev-reserveStock is deployed with"
+      }
+    },
+    {
+      "from": "producer:shop#src/orders/place.ts:5:9",
+      "to": "channel:eventbridge/shop-events/shop.orders/OrderPlaced",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{orderId:unknown;total:unknown}"
+      ],
+      "file": "src/orders/place.ts",
+      "line": 5
+    },
+    {
+      "from": "producer:shop#src/orders/ship.ts:11:76",
+      "to": "channel:eventbridge/shop-events/shop.orders/OrderPlaced",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{orderId:unknown;total:unknown}"
+      ],
+      "file": "src/orders/ship.ts",
+      "line": 11
+    },
+    {
+      "from": "producer:shop#src/orders/ship.ts:6:9",
+      "to": "channel:eventbridge/shop-events/shop.shipping/OrderShipped",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{orderId:unknown;carrier:unknown}"
+      ],
+      "file": "src/orders/ship.ts",
+      "line": 6
+    },
+    {
+      "from": "producer:shop#src/payments/refund.ts:8:9",
+      "to": "channel:eventbridge/shop-events/shop.payments/RefundIssued",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{orderId:string;amount:number}"
+      ],
+      "file": "src/payments/refund.ts",
+      "line": 8
+    },
+    {
+      "from": "producer:shop#src/stock/reserve.ts:11:9",
+      "to": "channel:eventbridge/shop-events/shop.stock/StockReserved",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{orderId:unknown;items:unknown}"
+      ],
+      "file": "src/stock/reserve.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#src/common/emit.ts:emit",
+      "to": "producer:shop#src/common/emit.ts:10:10",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/common/emit.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#src/orders/place.ts:handler",
+      "to": "producer:shop#src/orders/place.ts:5:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/place.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#src/orders/place.ts:handler",
+      "to": "shop#src/common/emit.ts:emit",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "'OrderPlaced'|'OrderShipped'|'StockReserved'",
+        "object"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/place.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#src/orders/replay.ts:handler",
+      "to": "shop#src/common/emit.ts:emit",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "'OrderPlaced'|'OrderShipped'|'StockReserved'",
+        "object"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/replay.ts",
+      "line": 6
+    },
+    {
+      "from": "shop#src/orders/ship.ts:handler",
+      "to": "producer:shop#src/orders/ship.ts:6:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/ship.ts",
+      "line": 6
+    },
+    {
+      "from": "shop#src/orders/ship.ts:handler",
+      "to": "shop#src/common/emit.ts:emit",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "'OrderPlaced'|'OrderShipped'|'StockReserved'",
+        "object"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/ship.ts",
+      "line": 6
+    },
+    {
+      "from": "shop#src/orders/ship.ts:resend",
+      "to": "producer:shop#src/orders/ship.ts:11:76",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders/ship.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#src/orders/ship.ts:resend",
+      "to": "shop#src/common/emit.ts:putEntry",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{EventBusName:string;Source:'shop.orders';DetailType:'OrderPlaced';Detail:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/orders/ship.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#src/orders/ship.ts:resend",
+      "to": "shop#src/common/events.ts:events.OrderPlaced",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "{EventBusName:string;Source:'shop.orders';DetailType:'OrderPlaced';Detail:string}",
+      "file": "src/orders/ship.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#src/payments/refund.ts:handler",
+      "to": "producer:shop#src/payments/refund.ts:8:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/payments/refund.ts",
+      "line": 8
+    },
+    {
+      "from": "shop#src/payments/refund.ts:handler",
+      "to": "shop#src/common/events.ts:refundIssued",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "{EventBusName:string;Source:'shop.payments';DetailType:'RefundIssued';Detail:string}",
+      "file": "src/payments/refund.ts",
+      "line": 8
+    },
+    {
+      "from": "shop#src/stock/reserve.ts:handler",
+      "to": "http_out:shop#src/stock/reserve.ts:6:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/stock/reserve.ts",
+      "line": 6
+    },
+    {
+      "from": "shop#src/stock/reserve.ts:handler",
+      "to": "producer:shop#src/stock/reserve.ts:11:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/stock/reserve.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#src/stock/reserve.ts:handler",
+      "to": "shop#src/common/emit.ts:emit",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "'OrderPlaced'|'OrderShipped'|'StockReserved'",
+        "object"
+      ],
+      "returns": "unknown",
+      "file": "src/stock/reserve.ts",
+      "line": 11
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/common/emit.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "src/common/emit.ts",
+      "line": 8,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The method is chosen at run time; nothing static to point at.",
+      "symbol": "emit -> events[name]",
+      "meta": {
+        "cause": "dynamic-member"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "src/common/emit.ts",
+      "line": 10,
+      "reason": "channel-const-unresolved",
+      "message": "emit -> entry",
+      "hint": "What this sends to is chosen by the parameter name, which each caller decides; it is read where a caller writes it, and here replay.ts:6 hands event.name. Hand it a name the code states, or annotate emit with the channels it may use.",
+      "symbol": "producer:shop#src/common/emit.ts:10:10",
+      "service": "shop"
+    },
+    {
+      "file": "src/common/emit.ts",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "src/orders/ship.ts",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "service": "shop",
+      "file": "src/stock/reserve.ts",
+      "line": 6,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "LEDGER_URL is \"https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com/dev/ledger\" in the environment shop-dev-reserveStock is deployed with: an API Gateway address in the region and at the stage shop serves its API dev-shop at, whose id is written out rather than read from the deployment, so it is taken as that API and the request as one for /ledger on it",
+      "hint": "Write the value as a reference to the API - its id or its ServiceEndpoint output - and the deployment says so outright; an address of another API of the same region and stage would read the same.",
+      "symbol": "http_out:shop#src/stock/reserve.ts:6:9",
+      "meta": {
+        "variable": "LEDGER_URL",
+        "value": "dev-shop",
+        "from": "the environment shop-dev-reserveStock is deployed with"
+      }
+    }
+  ]
+}

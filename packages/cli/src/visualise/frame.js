@@ -327,6 +327,7 @@ export const PAGE_WORDS = Object.freeze({
     'decorator-arg-dynamic': 'decorator argument computed',
     'delivered-onward': 'message handed onward',
     'delivery-target-unread': 'delivery target outside the project',
+    'deployed-name-from-parameter': 'named by a parameter with no value',
     'deployed-name-generated': 'name generated at deploy time',
     'deployment-app-unread': 'deployment program not read from its start',
     'deployment-plugin-unread': 'deployment plugin not read',

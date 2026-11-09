@@ -421,6 +421,7 @@ export {
   originsOf,
 } from './adapters/locator.js';
 export type {
+  Bindings,
   IsOperation,
   LocatedSlot,
   LocatorContext,

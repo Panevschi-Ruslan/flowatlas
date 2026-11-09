@@ -1,5 +1,5 @@
 import { join, posix } from 'node:path';
-import { destinationOf } from '@flowatlas/aws';
+import { destinationOf, executeApiAddress } from '@flowatlas/aws';
 import { type DeployedFunction, type DeployedHandler, type DeployedKind, type DeployedSetting, type PathStep, type PositionedDocument } from '@flowatlas/core';
 import { intrinsicOf, Template, type Deployed } from './cloudformation.js';
 import { readServiceFile, ServiceFileUnreadable } from './document.js';
@@ -36,6 +36,36 @@ const stateMachineLogicalId = (key: string, machine: Record<string, unknown>): s
   if (id !== undefined) return id;
   const name = textOf(machine['name']);
   return name !== undefined ? normalizedName(name.replace(/[^0-9A-Za-z]/g, '')) : `${normalizedName(key)}StepFunctionsStateMachine`;
+};
+
+/**
+ * The API of this service an address written out is one of, and the path it
+ * asks for there (P268): `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`
+ * in the service's region, at the stage it is deployed to, is its REST API
+ * where its functions declare `http` events, and one with no stage its HTTP
+ * API's default stage where they declare `httpApi`. The id is a value the
+ * platform assigns once the API is created and is not read: an address of
+ * another API of the same region and stage would read the same, which the
+ * linker says on the request it joins.
+ */
+const ownApiOf = (
+  functions: readonly (readonly [string, Record<string, unknown>])[],
+  apis: Apis,
+  stage: string | undefined,
+  region: string | undefined,
+): ((text: string) => { name: string; path: string } | undefined) => {
+  const declares = (kind: string): boolean =>
+    functions.some(([, fn]) => Array.isArray(fn['events']) && fn['events'].some((event) => isRecord(event) && event[kind] !== undefined));
+  const rest = apis.sharedRest === undefined && declares('http') ? apis.rest : undefined;
+  const http = apis.sharedHttp === undefined && declares('httpApi') ? apis.http : undefined;
+  return (text) => {
+    const address = executeApiAddress(text);
+    if (address === undefined || (region !== undefined && address.region !== region)) return undefined;
+    const [first, ...after] = address.segments;
+    if (rest !== undefined && stage !== undefined && first === stage) return { name: rest, path: `/${after.join('/')}` };
+    if (http !== undefined && first !== stage) return { name: http, path: `/${address.segments.join('/')}` };
+    return undefined;
+  };
 };
 
 /** `functions` as one mapping, written as one or as a list of them. */
@@ -166,6 +196,7 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
     ...(sharedHttp === undefined ? {} : { sharedHttp }),
   };
   const events: EventReading = { file: reading, apis };
+  reading.ownApi = ownApiOf(functions, apis, stageText, textOf(provider['region']));
 
   const providerEnvironment = isRecord(provider['environment']) ? provider['environment'] : {};
   const packaged = isRecord(resolved['package']) ? resolved['package'] : {};

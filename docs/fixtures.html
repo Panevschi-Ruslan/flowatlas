@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>225 fixtures</span>
-    <span>588 snapshot files</span>
+    <span>227 fixtures</span>
+    <span>593 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -575,7 +575,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, declared with the Serverless Framework, the CDK, SAM or CloudFormation <span class="count" data-total="11">11</span></h2>
+    <h2>Serverless, declared with the Serverless Framework, the CDK, SAM or CloudFormation <span class="count" data-total="13">13</span></h2>
     <ul>
       <li class="fixture" data-search="cdk-orders serverless, declared with the serverless framework, the cdk, sam or cloudformation the deployment of `terraform-orders`, written as an aws cdk app in typescript over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
         <div class="head">
@@ -633,6 +633,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>The deployment of <code>terraform-orders</code>, written as an AWS SAM template (<code>orders/template.yaml</code>) over the same handlers, and read as the same graph (P246; <code>scripts/deployments-agree.mjs</code>).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="sam-parameter-names serverless, declared with the serverless framework, the cdk, sam or cloudformation an append-only ledger as an aws sam template (`ledger/template.yaml`) whose table and stream are named by parameters the repository gives no value: no `default`, no `samconfig.toml`.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sam-parameter-names">sam-parameter-names</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>An append-only ledger as an AWS SAM template (<code>ledger/template.yaml</code>) whose table and stream are named by parameters the repository gives no value: no <code>Default</code>, no <code>samconfig.toml</code>.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="sam-shapes serverless, declared with the serverless framework, the cdk, sam or cloudformation the lending desk of a town library, deployed with aws sam (p246): a template (`library/template.yaml`), a template it nests (`library/notices`) and a tool rewritten by a macro (`library/tools`).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sam-shapes">sam-shapes</a>
@@ -648,6 +656,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>One repository, <code>jobs</code>, of three Serverless Framework services; a <code>serverless-compose.yml</code> deploys two of them together (P249).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="serverless-event-factories serverless, declared with the serverless framework, the cdk, sam or cloudformation a shop deployed with the serverless framework whose functions put events on one bus through one helper, `emit(name, data)`, which builds each entry with the factory of that name from a record of them (`src/common/events.ts`) and sends it.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/serverless-event-factories">serverless-event-factories</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A shop deployed with the Serverless Framework whose functions put events on one bus through one helper, <code>emit(name, data)</code>, which builds each entry with the factory of that name from a record of them (<code>src/common/events.ts</code>) and sends it.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="serverless-orders serverless, declared with the serverless framework, the cdk, sam or cloudformation the deployment of `terraform-orders`, written as a serverless framework service (`orders/serverless.yml`) over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
         <div class="head">

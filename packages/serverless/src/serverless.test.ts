@@ -289,4 +289,29 @@ describe('what P246 added to the CloudFormation a service file holds', () => {
     });
     expect(deployment.functions[0]?.environment?.['QUEUE']?.unread).toMatchObject({ variable: 'ssm:/shop/base' });
   });
+
+  it('reads an API Gateway address in its region and at its stage as its own API, and no address of one as a queue (P268)', () => {
+    const service = (events: string): string =>
+      [
+        'service: shop',
+        'provider: { name: aws, stage: dev, region: eu-west-1 }',
+        'functions:',
+        '  ledger:',
+        '    handler: src/ledger.handler',
+        `    events: [${events}]`,
+        '  caller:',
+        '    handler: src/caller.handler',
+        '    environment:',
+        '      OWN: https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com/dev/ledger',
+        '      ELSEWHERE: https://a1b2c3d4e5.execute-api.us-east-1.amazonaws.com/dev/ledger',
+        '      OTHER_STAGE: https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com/prod/ledger',
+      ].join('\n');
+    const rest = read({ 'serverless.yml': service('{ http: { path: ledger, method: POST } }') }).functions[1]?.environment ?? {};
+    expect(rest['OWN']).toMatchObject({ names: { kind: 'api', name: 'dev-shop' }, path: '/ledger' });
+    expect(rest['ELSEWHERE']).toEqual({ written: expect.any(String), text: 'https://a1b2c3d4e5.execute-api.us-east-1.amazonaws.com/dev/ledger' });
+    expect(rest['OTHER_STAGE']?.names).toBeUndefined();
+    // An HTTP API's default stage writes none: the stage is part of the path.
+    const http = read({ 'serverless.yml': service('{ httpApi: { path: /dev/ledger, method: POST } }') }).functions[1]?.environment ?? {};
+    expect(http['OTHER_STAGE']).toMatchObject({ names: { kind: 'api', name: 'dev-shop' }, path: '/prod/ledger' });
+  });
 });

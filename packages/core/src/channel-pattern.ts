@@ -38,6 +38,8 @@ export interface EnvironmentValue {
   readonly imported?: string;
   /** The service that declares what it refers to, where that is another one's: an API it publishes (P249). */
   readonly service?: string;
+  /** For an API's address, written out, the path it asks for on the API, after its stage (P268). */
+  readonly path?: string;
 }
 
 /**

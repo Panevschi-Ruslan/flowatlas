@@ -102,6 +102,12 @@ export interface DeployedSetting {
    */
   readonly names?: { readonly kind: DeployedKind | 'url' | 'api'; readonly name: string };
   /**
+   * For an address of an API this deployment serves, written out with an id
+   * the files do not tie to it (P268): the path it asks for there, after the
+   * stage.
+   */
+  readonly path?: string;
+  /**
    * The key of a value another deployment publishes, when this one is that:
    * what it names is known only once the publisher is read, which the linker
    * does (P249). `unread` then says what the value is waiting on.

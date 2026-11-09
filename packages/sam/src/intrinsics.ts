@@ -1,5 +1,5 @@
 import type { PathStep } from '@flowatlas/core';
-import { intrinsicOf, isRecord, textOf, Unread } from '@flowatlas/serverless';
+import { intrinsicOf, isRecord, ParameterValue, partOf, textOf, Unread } from '@flowatlas/serverless';
 
 /**
  * What a template settles before any of its resources is read (P246): its
@@ -37,6 +37,8 @@ export interface ResolverContext {
   readonly pseudo: Readonly<Record<string, string>>;
   /** Where the overrides of a parameter would be written, for a sentence about one with no value. */
   readonly configFile: string;
+  /** Put before the address of every parameter, to keep a nested template's apart from its parent's (P268). */
+  readonly scope?: string;
 }
 
 const LIST_TYPES = /^(CommaDelimitedList|List<)/;
@@ -67,7 +69,11 @@ export class Resolver {
       const from = given?.from ?? (text === undefined ? undefined : 'default');
       const value: Parameter['value'] =
         text === undefined
-          ? new Unread(`the parameter ${name} has no value: it has no Default, and neither ${context.configFile} nor services[].infra.options sets it`, name)
+          ? new ParameterValue(
+              `the parameter ${name} has no value: it has no Default, and neither ${context.configFile} nor services[].infra.options sets it`,
+              name,
+              `${context.scope ?? ''}Parameters.${name}`,
+            )
           : text instanceof Unread
             ? text
             : account !== undefined
@@ -188,19 +194,19 @@ export class Resolver {
       case 'Fn::Split': {
         const [delimiter, text] = Array.isArray(argument) ? argument.map(inner) : [];
         if (typeof delimiter === 'string' && typeof text === 'string') return text.split(delimiter);
-        return text instanceof Unread ? text : { 'Fn::Split': [delimiter, text] };
+        return text instanceof Unread ? partOf(text) : { 'Fn::Split': [delimiter, text] };
       }
       case 'Fn::Select': {
         const [index, list] = Array.isArray(argument) ? argument.map(inner) : [];
         const at = typeof index === 'number' ? index : typeof index === 'string' && /^\d+$/.test(index) ? Number(index) : undefined;
         if (at !== undefined && Array.isArray(list) && at < list.length) return list[at];
-        if (list instanceof Unread) return list;
+        if (list instanceof Unread) return partOf(list);
         return new Unread('Fn::Select picks from a list known only once the stack is deployed');
       }
       case 'Fn::FindInMap': {
         const [map, top, second] = Array.isArray(argument) ? argument.map(inner) : [];
         const unread = [map, top, second].find((item): item is Unread => item instanceof Unread);
-        if (unread !== undefined) return unread;
+        if (unread !== undefined) return partOf(unread);
         const mappings = isRecord(this.context.document['Mappings']) ? this.context.document['Mappings'] : {};
         const found = typeof map === 'string' && typeof top === 'string' && typeof second === 'string' && isRecord(mappings[map]) && isRecord(mappings[map][top]) ? mappings[map][top][second] : undefined;
         return found === undefined ? new Unread(`Fn::FindInMap finds nothing at ${[map, top, second].map(String).join('.')}`) : inner(found);

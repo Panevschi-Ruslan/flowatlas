@@ -30,6 +30,8 @@ export interface DeclaredFunction {
   /** Its deployed name, a stand-in where the platform generates it; unread where the files do not settle it. */
   readonly name: string | Unread;
   readonly generated: boolean;
+  /** The parameter with no value it is named by, its stand-in that parameter's (P268). */
+  readonly parameter?: string;
 }
 
 export class TemplateReading {

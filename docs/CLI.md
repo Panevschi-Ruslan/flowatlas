@@ -5737,6 +5737,22 @@ record or a list kept in a `const`. Where the list is built at run time —
 row names that expression; a key that is simply not written is *nothing written*,
 which an address part may fill with `absent`.
 
+**A path goes through what a value is made by** (P268): a record a factory
+answers - a member of a record of factories a lookup chooses
+(`events[name](data)`, `events.Placed(data)`, a method of the record) or a
+function called by its name, its parameters bound to the call's arguments; an
+element a loop or a callback takes (`for (const r of list.filter(...).map(cb))`,
+`list.forEach((r) => ...)`) where the list is written with one element or is what
+a `map` callback answers; and the one value a `const` `Map` or `Set` is given,
+read back through `values()`. A member chosen by a parameter of the function the
+call is written in, or a record that is one, is decided by each caller: the call
+is drawn at every caller with the parameter bound to what it hands, where every
+caller writes it, and otherwise stays where it is with a row naming the
+parameter and what each caller hands (`fixtures/serverless-event-factories`). A
+name looked up in a collection by a key worked out when the code runs -
+``queues.get(`team-${team}`)`` - is `channel-dynamic`, its row naming the
+collection and the key (`fixtures/sam-parameter-names`).
+
 **`constructed-argument-path` is a condition as well as a place.** A client that
 sends commands sends every kind of them through one method, and a call handed some
 other command is not a publish whose channel could not be read: the description
@@ -6958,6 +6974,15 @@ name** is named by its declaration - `sqs/${…}@resources.Resources.NoticesQueu
 service that points at it spells it that way and joins, `static`, and nothing
 outside can (`deployed-name-generated`, a note).
 
+**An API Gateway address written out** in a function's `environment` -
+`https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`, its id a value
+written down after the first deployment - is the service's own REST API where
+the region is the provider's and the stage the one it is deployed to, and its
+HTTP API where no stage is written; a request rooted at it asks for `<path>` on
+it, joined `heuristic` with a `base-url-from-files` note, because an address of
+another API of the same region and stage would read the same (P268). An address
+of API Gateway or of a function URL is never read as a queue.
+
 The `serverless-step-functions` plugin's `stepFunctions.stateMachines` are
 workflows: the definition is the file's own value, each state drawn at its
 line, and `Fn::GetAtt` of a function by its key or its logical id fills the
@@ -7052,6 +7077,18 @@ under each function, API and state machine as the transform merges it. A
 resource whose condition is settled false is not read; one under a condition
 nothing settles is read, and what reaches it is drawn `heuristic`
 (`construct-conditional`, a note).
+
+**A name a parameter gives that has no value** - no `Default`, nothing in
+`samconfig.toml`, a parameter file or the options - is the same value
+wherever the parameter is written whole, so a function, a queue, a topic, a
+bus, a table or a stream named `!Ref <Parameter>` is named by the parameter's declaration,
+`kinesis/${…}@Parameters.ChangeStreamName`, and a function deployed with
+`!Ref <Parameter>` in its environment is handed that resource: the code that
+sends to it and the mapping that reads it join, and nothing outside the
+deployment can (`deployed-name-from-parameter`, a note; P268). A part of the
+value - `Fn::Select` of `Fn::Split` of it - is not the parameter. An
+`AWS::Kinesis::StreamConsumer` is the stream its `StreamARN` names, so a
+`Kinesis` event on its `ConsumerARN` reads that stream.
 
 **Functions** - `AWS::Serverless::Function` and a plain `AWS::Lambda::Function`
 - are named `FunctionName`, or by their declaration where the platform names

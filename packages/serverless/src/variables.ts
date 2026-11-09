@@ -68,6 +68,28 @@ export class Imported extends Unread {
   }
 }
 
+/**
+ * The value of a parameter of a template the files give none, written as the
+ * whole of a value (P268): unread like any value the files do not hold, and
+ * still one value, the same wherever the parameter is written. A resource
+ * named by it is named by the parameter's declaration (`address`), and a
+ * value of the environment that is the parameter names that resource, as a
+ * resource with no name of its own is named by its own declaration (P57).
+ */
+export class ParameterValue extends Unread {
+  constructor(
+    text: string,
+    parameter: string,
+    /** Where the parameter is declared: `Parameters.<name>`, under the template's scope. */
+    readonly address: string,
+  ) {
+    super(text, parameter);
+  }
+}
+
+/** A value as it is when it is only part of another: a parameter's value no longer stands for the parameter. */
+export const partOf = (value: Unread): Unread => (value instanceof ParameterValue ? new Unread(value.text, value.variable) : value);
+
 /** Where a value another deployment publishes is written inside a string being built, until it is known what the string is. */
 export const EMBEDDED = '\u0004';
 

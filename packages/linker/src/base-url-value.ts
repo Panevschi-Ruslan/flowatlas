@@ -51,6 +51,13 @@ export interface FoundValue {
   readonly unmatched?: readonly string[];
   /** The service the value is an address of, where the deployment says so: an API another service publishes (P249). */
   readonly service?: string;
+  /**
+   * For an address of an API the caller's own deployment serves, written out
+   * with an id the files do not tie to it (P268): the path it asks for on the
+   * API, after its stage, and the address as it is written.
+   */
+  readonly apiPath?: string;
+  readonly written?: string;
 }
 
 /** What the values of a setting say a request's base address is. */
@@ -108,6 +115,12 @@ const deployedValues = (variable: string, runners: readonly GraphNode[]): FoundV
     // An API another service publishes, imported by its name: that service (P249).
     if (set?.kind === 'api' && set.service !== undefined && set.value !== undefined) {
       return [{ variable, value: set.value, from: `the environment ${fn.label} is deployed with`, deployed: true, service: set.service }];
+    }
+    // An address of an API the function's own deployment serves (P268): its service.
+    if (set?.kind === 'api' && set.path !== undefined && set.value !== undefined) {
+      return [
+        { variable, value: set.value, from: `the environment ${fn.label} is deployed with`, deployed: true, service: fn.repo, apiPath: set.path, written: set.written },
+      ];
     }
     // A reference to something deployed is a function URL or a queue, which
     // their own joins answer; only a value the files settle as text is an address.

@@ -20,8 +20,10 @@ import { nameInForms, type DeployedKind } from '@flowatlas/core';
 export const DEPLOYED_FORMS: { readonly [K in DeployedKind]: readonly string[] } = {
   function: ['^arn:[^:]+:lambda:[^:]*:[^:]*:function:([^:]+)(?::[^:]+)?$'],
   workflow: ['^arn:[^:]+:states:[^:]*:[^:]*:stateMachine:([^:]+)(?::[^:]+)?$'],
-  // The regional endpoint, the legacy one and a local emulator's alike.
-  queue: ['^https?://[^/]+/[^/]+/([^/?#]+)/?$', '^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$'],
+  // The regional endpoint, the legacy one and a local emulator's alike; never
+  // an API Gateway's address or a function's own, whose path is a route of
+  // it and no account and queue (P268).
+  queue: ['^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$', '^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$'],
   topic: ['^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$'],
   bus: ['^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$'],
   table: ['^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)$'],
@@ -42,6 +44,25 @@ export const FUNCTION_NAME_FORMS: readonly string[] = [
   '^(?:[^:]+:)?function:([^:]+)(?::[^:]+)?$',
   '^([^:]+):[^:]+$',
 ];
+
+/** An API Gateway address written out: the API's id, its region, and every segment of the path after the host. */
+export interface ExecuteApiAddress {
+  readonly id: string;
+  readonly region: string;
+  readonly segments: readonly string[];
+}
+
+/**
+ * What an address API Gateway serves an API at says (P268):
+ * `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`, the stage
+ * left in the segments, because an HTTP API's default stage writes none.
+ */
+export const executeApiAddress = (text: string): ExecuteApiAddress | undefined => {
+  const found = /^https:\/\/([a-z0-9]+)\.execute-api\.([a-z0-9-]+)\.amazonaws\.com(?:\/([^?#]*))?$/.exec(text.trim());
+  if (found === null) return undefined;
+  const [, id, region, path] = found as unknown as [string, string, string, string | undefined];
+  return { id, region, segments: (path ?? '').split('/').filter((segment) => segment !== '') };
+};
 
 /** A table's stream of changes, which is named by the table it belongs to. */
 export const TABLE_CHANGES_FORMS: readonly string[] = ['^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)/stream/.+$'];

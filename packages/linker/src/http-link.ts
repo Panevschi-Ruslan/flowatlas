@@ -276,7 +276,16 @@ export const baseUrlTakenFinding = (found: FoundValue, target: string): Finding 
           `, so it is taken as ${target}, the one service it is named after`,
         hint: `Only the setting's name chose the service. Add ${found.variable} to services[].baseUrlEnv of ${target} to say so outright, or of the service it really is.`,
       }
-    : {
+    : found.apiPath !== undefined
+      ? {
+          reason: 'base-url-from-files',
+          level: 'info',
+          message:
+            `${found.variable} is ${found.written ?? 'an address'} in ${whereFound(found)}: an API Gateway address in the region and at the stage ${target} serves its API ${found.value} at, ` +
+            `whose id is written out rather than read from the deployment, so it is taken as that API and the request as one for ${found.apiPath} on it`,
+          hint: `Write the value as a reference to the API - its id or its ServiceEndpoint output - and the deployment says so outright; an address of another API of the same region and stage would read the same.`,
+        }
+      : {
         reason: 'base-url-from-files',
         level: 'info',
         message:
@@ -785,6 +794,8 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
 /** The path a value found for a setting carries beyond its host, when it carries one (P91). */
 export const pathOfValue = (found: FoundValue): string | undefined => {
   if (found.byName === true) return undefined;
+  // An API's address names the API, and the path after its stage (P268).
+  if (found.apiPath !== undefined) return found.apiPath === '/' ? undefined : found.apiPath;
   try {
     const path = new URL(found.value).pathname;
     return path === '' || path === '/' ? undefined : path;

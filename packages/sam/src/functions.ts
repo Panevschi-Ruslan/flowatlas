@@ -154,7 +154,8 @@ export const readFunction = (reading: TemplateReading, site: FunctionSite): void
   if (isRecord(variables)) for (const name of Object.keys(variables).sort()) environment[name] = reading.file.settingOf(variables[name], [...path, 'Properties', 'Environment', 'Variables', name], `the value of ${name} ${resource.address} is deployed with`);
   const deployed: DeployedFunction = {
     ...reading.file.siteOf(path),
-    ...(typeof fn.name === 'string' && !fn.generated ? { name: fn.name } : {}),
+    // A name a parameter gives is the parameter's stand-in, which is what it is invoked by (P268).
+    ...(typeof fn.name === 'string' && (!fn.generated || fn.parameter !== undefined) ? { name: fn.name } : {}),
     address: resource.address,
     ...(handler === undefined ? {} : { handler }),
     ...(runtime === undefined ? {} : { runtime }),
@@ -162,12 +163,14 @@ export const readFunction = (reading: TemplateReading, site: FunctionSite): void
     meta: {
       declaredAs: resource.address,
       logicalId: resource.logicalId,
-      ...(fn.generated ? { nameGenerated: true } : {}),
+      ...(fn.generated && fn.parameter === undefined ? { nameGenerated: true } : {}),
       ...(fn.name instanceof Unread ? { nameUnread: fn.name.text } : {}),
       ...reading.conditionOf(resource.logicalId),
     },
   };
-  if (fn.generated) reading.file.generatedRow({ kind: 'function', name: fn.name as string, generated: true }, path);
+  if (fn.generated) {
+    reading.file.generatedRow({ kind: 'function', name: fn.name as string, generated: true, ...(fn.parameter === undefined ? {} : { parameter: fn.parameter }) }, path);
+  }
   reading.file.parts.functions.push(deployed);
 };
 

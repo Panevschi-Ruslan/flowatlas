@@ -403,6 +403,47 @@ describe('events', () => {
     expect(deployment.streams).toEqual([expect.objectContaining({ of: 'table', name: 'shop-orders' }), expect.objectContaining({ of: 'stream', name: 'shop-s' })]);
   });
 
+  it('names what a parameter with no value names by the parameter, and reads a stream through a consumer of its own (P268)', () => {
+    const deployment = read({
+      'template.yaml': template(
+        [
+          'Table: { Type: AWS::DynamoDB::Table, Properties: { TableName: !Ref LedgerName, StreamSpecification: { StreamViewType: NEW_IMAGE } } }',
+          'Stream: { Type: AWS::Kinesis::Stream, Properties: { Name: !Ref StreamName } }',
+          'Consumer: { Type: AWS::Kinesis::StreamConsumer, Properties: { StreamARN: !GetAtt Stream.Arn, ConsumerName: fanout } }',
+          'Fn:',
+          '  Type: AWS::Serverless::Function',
+          '  Properties:',
+          '    Handler: fn.handler',
+          '    Environment: { Variables: { STREAM: !Ref StreamName, FIRST: !Select [0, !Split [",", !Ref StreamName]] } }',
+          '    Events:',
+          '      D: { Type: DynamoDB, Properties: { Stream: !GetAtt Table.StreamArn } }',
+          '      K: { Type: Kinesis, Properties: { Stream: !GetAtt Consumer.ConsumerARN } }',
+          'Worker: { Type: AWS::Serverless::Function, Properties: { FunctionName: !Ref WorkerName, Handler: worker.handler } }',
+        ].join('\n'),
+        'Parameters:\n  LedgerName: { Type: String }\n  StreamName: { Type: String }\n  WorkerName: { Type: String }\n',
+      ),
+    });
+    // A function too, invoked by the parameter's stand-in.
+    expect(deployment.functions[1]?.name).toBe(generatedName('Parameters.WorkerName'));
+    expect(reasons(deployment)).not.toContain('function-name-unread');
+    const ledger = generatedName('Parameters.LedgerName');
+    const stream = generatedName('Parameters.StreamName');
+    expect(deployment.deliveries.map((delivery) => delivery.from)).toEqual([
+      { kind: 'changes', of: 'table', name: ledger },
+      { kind: 'changes', of: 'stream', name: stream },
+    ]);
+    const [fn] = deployment.functions;
+    expect(fn?.environment?.['STREAM']).toMatchObject({ names: { kind: 'stream', name: stream } });
+    // A part of the parameter's value is no longer the parameter.
+    expect(fn?.environment?.['FIRST']?.names).toBeUndefined();
+    expect(deployment.rows.filter((row) => row.reason === 'deployed-name-from-parameter').map((row) => row.symbol).sort()).toEqual([
+      'Parameters.LedgerName',
+      'Parameters.StreamName',
+      'Parameters.WorkerName',
+    ]);
+    expect(reasons(deployment)).not.toContain('subscription-source-unread');
+  });
+
   it('hangs routes from the API an event names, the implicit one taking the stack name, with the guards it is behind', () => {
     const deployment = read(
       {

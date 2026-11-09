@@ -9,6 +9,9 @@ import {
   evaluateExpression,
   findDecorators,
   forEachCall,
+  type Forwarded,
+  forwardedFrom,
+  forwardNoWorse,
   getDecorator,
   isEntryKind,
   makeChannelId,
@@ -39,7 +42,7 @@ import {
 // of any extractor, so it names none, and the Angular reader that borrows its
 // name resolution no longer inherits the Nest one through it.
 import { scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/extract-scopes';
-import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
+import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode, ParameterDeclaration } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern, type SubscriberPattern } from './adapters/index.js';
 import { createStarterAdapter } from './adapters/starters.js';
@@ -64,6 +67,17 @@ import { isStartPattern, startReader } from './starts.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
   lineAndColumnAt(node.getSourceFile(), node.getStart());
+
+/**
+ * A publish drawn at a caller of the function it is written in (P268): the
+ * call that decides which member of a record the address is read from, the
+ * body that call is written in, and the address read with the caller's value.
+ */
+interface CallerReading {
+  readonly site: CallExpression;
+  readonly holder: Holder;
+  readonly elements: readonly AddressedElement[];
+}
 
 /** What a call is made on: the receiver of a method, or the function itself. */
 const receiverOf = (call: CallExpression): TsNode => {
@@ -120,6 +134,32 @@ export const brokerSpecsFor = (ctx: PassContext): BrokerSpec[] => {
   ];
 };
 
+/** How many callers a row names before it counts the rest. */
+const CALLERS_NAMED = 3;
+
+/**
+ * What a row says of an address a parameter decides that is still read
+ * where it is written (P268): which parameter, and the callers that leave it
+ * unread - each with what it hands - or that may run another function.
+ */
+const decidedByHint = (
+  parameter: ParameterDeclaration,
+  forwarded: Forwarded,
+  drawn: ReadonlySet<TsNode>,
+): string => {
+  const left = forwarded.calls.filter((hop) => !drawn.has(hop.site));
+  const named = left
+    .slice(0, CALLERS_NAMED)
+    .map((hop) => `${hop.site.getSourceFile().getBaseName()}:${hop.site.getStartLineNumber()} hands ${hop.argument.getText().slice(0, 60)}`);
+  const more = left.length > CALLERS_NAMED ? ` and ${left.length - CALLERS_NAMED} more` : '';
+  const why = [
+    ...(named.length === 0 ? [] : [`${named.join(', ')}${more}`]),
+    ...(forwarded.undecided ? ['a call that may run another function hands it'] : []),
+    ...(forwarded.calls.length === 0 && !forwarded.undecided ? ['nothing calls the function'] : []),
+  ].join('; ');
+  return `What this sends to is chosen by the parameter ${parameter.getName()}, which each caller decides; it is read where a caller writes it, and here ${why}.`;
+};
+
 /**
  * Publishing, receiving, and the channels in between.
  *
@@ -164,16 +204,23 @@ export const extractBrokers = (ctx: PassContext): void => {
     file: string,
     line: number,
     site: RowSite,
+    decidedBy?: string,
   ): void => {
     if (isResolved(resolution)) return;
+    const { lookup } = resolution;
     ctx.report({
       file,
       line,
       reason: resolution.unresolved,
       hint:
-        resolution.variable === undefined
-          ? `The channel name cannot be read here. Annotate ${site.named} with the channel it uses.`
-          : environmentHint(resolution.variable),
+        resolution.variable !== undefined
+          ? environmentHint(resolution.variable)
+          : decidedBy !== undefined
+            ? `${decidedBy} Hand it a name the code states, or annotate ${site.named} with the channels it may use.`
+            : lookup !== undefined
+            ? `${resolution.text} is looked up in ${lookup.collection} by ${lookup.key}, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere. ` +
+              `Send to an address the code or the deployment states, or annotate ${site.named} with the channels it may use.`
+            : `The channel name cannot be read here. Annotate ${site.named} with the channel it uses.`,
       ...rowAbout(site, resolution.text),
       ...(resolution.variable === undefined ? {} : { meta: { variable: resolution.variable } }),
     });
@@ -256,28 +303,61 @@ export const extractBrokers = (ctx: PassContext): void => {
     holder: Holder,
     owner: ClassDeclaration | undefined,
     evidence: ReceiverEvidence,
+    caller?: CallerReading,
   ): boolean => {
-    const { id: methodId, file } = holder;
+    const { id: methodId, file } = caller?.holder ?? holder;
     const args = call.getArguments();
-    const { line, column } = lineColOf(call);
+    const { line, column } = lineColOf(caller?.site ?? call);
     const callee = call.getExpression();
     const receiver = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
-
-    // One element per address the call is sent to: one for an ordinary publish,
-    // one per entry for a call that sends a list of them.
-    const elements = readAddress(
-      call,
-      addressOf(pattern),
-      pattern.payload,
-      contextOf(receiver, owner),
-      ctx.config,
+    const fallback =
       // A receiver that is the channel and names nothing readable is best shown
       // as the receiver: `queue.add(job)` says nothing, and `queue` is the thing
       // a reader has to go and look at.
       pattern.channel !== undefined && pattern.address === undefined
         ? receiver.getText()
-        : call.getText().slice(0, 60),
-    );
+        : call.getText().slice(0, 60);
+
+    // One element per address the call is sent to: one for an ordinary publish,
+    // one per entry for a call that sends a list of them.
+    const elements =
+      caller?.elements ?? readAddress(call, addressOf(pattern), pattern.payload, contextOf(receiver, owner), ctx.config, fallback);
+
+    // An address read from a record a parameter chooses, or that is one, is
+    // decided by each caller of the function the call is written in (P268):
+    // drawn there, read with the parameter bound to what that caller hands
+    // it, wherever every caller reads it in full.
+    const [selector, ...others] = new Set(elements.flatMap((element) => (element.selector === undefined ? [] : [element.selector])));
+    /** What the row says where the callers leave the address unread. */
+    let decidedBy: string | undefined;
+    if (caller === undefined && selector !== undefined && others.length === 0) {
+      // A caller that reads no more than the call does decides nothing anyone
+      // can name: the call keeps its own producer and its row, as it does
+      // for a caller that may run another function (R158).
+      const here = { holder, elements };
+      const sureness = (reading: typeof here): number =>
+        reading === here ? 0 : reading.elements.every((element) => isResolved(element.resolution)) ? 1 : -1;
+      const forwarded = forwardedFrom(selector);
+      const forwarding = forwardNoWorse<{ holder: Holder; elements: readonly AddressedElement[] }>(forwarded, {
+        here,
+        at: (hop) => {
+          const owned = holderAt(hop.site);
+          if (owned === undefined) return undefined;
+          const bound = new Map<TsNode, TsNode>([[selector, hop.argument]]);
+          return {
+            holder: owned,
+            elements: readAddress(call, addressOf(pattern), pattern.payload, { ...contextOf(receiver, owner), bound }, ctx.config, fallback),
+          };
+        },
+        sureness,
+      });
+      for (const { site, reading } of forwarding.callers) {
+        if (!Node.isCallExpression(site)) continue;
+        emitProducer(call, pattern, spec, holder, owner, evidence, { site, holder: reading.holder, elements: reading.elements });
+      }
+      if (!forwarding.here) return true;
+      decidedBy = decidedByHint(selector, forwarded, new Set(forwarding.callers.map((each) => each.site)));
+    }
 
     // Values the description keeps as written beside the address: the key a
     // write to a bucket names, which a notification of the bucket filters on
@@ -416,7 +496,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     // The body is now known to hold a publish, which is the point at which it
     // earns a node: `ensure` is deferred precisely so that the thousands of
     // functions in a repository that publish nothing stay out of the graph.
-    holder.ensure();
+    (caller?.holder ?? holder).ensure();
     ctx.builder.addNode({
       id: producerId,
       type: 'producer',
@@ -472,7 +552,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         const key = JSON.stringify(element.resolution);
         if (reported.has(key)) continue;
         reported.add(key);
-        reportChannel(element.resolution, file, line, site);
+        reportChannel(element.resolution, file, line, site, decidedBy);
       }
     }
     if (channelName === null) return true;

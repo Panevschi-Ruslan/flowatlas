@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T18:33:35.590Z",
+  "builtAt": "2026-11-09T16:39:43.082Z",
   "services": [
     {
       "name": "orders",
@@ -1438,7 +1438,7 @@
               {
                 "environment": "ORDERS_QUEUE_URL",
                 "forms": [
-                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
                   "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
                 ]
               }

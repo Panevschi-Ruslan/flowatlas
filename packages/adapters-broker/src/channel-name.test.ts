@@ -92,7 +92,14 @@ export class Publisher {
   fromFallbackEmpty() { return process.env.ORDER_TOPIC ?? '' }
   fromTwoVariables() { return process.env.ORDER_TOPIC ?? process.env.OTHER_TOPIC ?? 'orders' }
   fromDestructuredDefault() { return BUS }
+  // A name looked up in a collection the code fills when it runs (P268).
+  fromLookup(team: string) {
+    const url = QUEUES.get(\`team-\${team}\`);
+    return url;
+  }
+  fromWrittenLookup() { return QUEUES.get('team-billing') }
 }
+declare const QUEUES: Map<string, string>;
 declare const process: { env: Record<string, string | undefined> };
 const ENV_TOPIC = (process.env.ORDER_TOPIC as string) ?? 'orders';
 const { RETURNS_QUEUE_URL } = process.env;
@@ -138,6 +145,20 @@ describe('resolving which channel a call addresses', () => {
     if (expression === undefined) throw new Error(`no return in ${methodName}`);
     return resolveChannelName(expression, config);
   };
+
+  describe('a name looked up in a collection (P268)', () => {
+    it('says which collection, and the key worked out when the code runs', () => {
+      expect(ofReturn('fromLookup')).toEqual({
+        unresolved: 'channel-dynamic',
+        text: 'url',
+        lookup: { collection: 'QUEUES', key: '`team-${team}`' },
+      });
+    });
+
+    it('says nothing of a lookup by a key the source writes', () => {
+      expect(of('fromWrittenLookup')).not.toHaveProperty('lookup');
+    });
+  });
 
   describe('a list of channels (R40)', () => {
     it('reads an array const out of a shared package, where only the type has the values', () => {

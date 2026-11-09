@@ -612,6 +612,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Something is declared once per element of a collection the files do not settle, so neither how many there are nor their names are known; one is read in their place. Write the collection out, or as a constant, and each is read under its own name.',
   'deployed-name-generated': () =>
     'The platform names this when it is deployed, so no file holds its name. It is named by where it is declared, which everything in the same deployment joins to; nothing outside it can. Give it a name of its own if other repositories reach it.',
+  'deployed-name-from-parameter': () =>
+    'A function, a queue, a stream, a table or a bus is named by a parameter of the template the files give no value. The value is the same wherever the parameter is written, so it is named by where the parameter is declared: everything in the deployment that points at it, or is handed the parameter, joins to it; nothing outside it can. Give the parameter a Default, a value in samconfig.toml, or one under services[].infra.options, and it is named by that value.',
   'construct-conditional': () =>
     'This is declared under a condition the files do not settle. It is read as declared, and what reaches it is drawn heuristic. Set the value the condition reads under services[].infra.options, or in the files.',
   'construct-unreached': () =>
