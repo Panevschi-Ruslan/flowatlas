@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:27:47.455Z",
+  "builtAt": "2026-11-09T21:41:49.005Z",
   "configHash": "4f646bdd07da",
   "services": [
     {
@@ -11,8 +11,8 @@
       "nodes": 55,
       "edges": 51,
       "types": 14,
-      "unresolved": 7,
-      "durationMs": 523,
+      "unresolved": 6,
+      "durationMs": 1733,
       "packages": {
         "name": "library-loans",
         "runtime": [
@@ -79,10 +79,10 @@
     "nodes": 55,
     "edges": 51,
     "types": 14,
-    "missed": 7,
-    "sites": 7,
+    "missed": 6,
+    "sites": 6,
     "notes": 0,
     "findings": 0,
-    "unresolved": 7
+    "unresolved": 6
   }
 }

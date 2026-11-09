@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:48:04.647Z",
+  "configHash": "7cf4ce18d325",
+  "services": [
+    {
+      "name": "mailer",
+      "repo": "./mailer",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 14,
+      "edges": 9,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 1586,
+      "packages": {
+        "name": "mailer",
+        "runtime": [
+          "@nestjs/bull",
+          "@nestjs/bullmq",
+          "@nestjs/common",
+          "@nestjs/core",
+          "bull",
+          "bullmq"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 26,
+      "edges": 22,
+      "types": 0,
+      "unresolved": 12,
+      "durationMs": 1837,
+      "packages": {
+        "name": "shop",
+        "runtime": [
+          "@nestjs/bullmq",
+          "@nestjs/common",
+          "@nestjs/core",
+          "bullmq"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 5,
+    "called": 0,
+    "uncalled": [
+      "entry:shop:http:POST:/orders/image",
+      "entry:shop:http:POST:/orders/invoice",
+      "entry:shop:http:POST:/orders/pair",
+      "entry:shop:http:POST:/orders/receipts",
+      "entry:shop:http:POST:/orders/welcome"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 27,
+      "reason": "job-no-handler",
+      "level": "info",
+      "message": "the call at src/mail/mail-queue.service.ts:27 adds the job send-digest to mail-queue, and none of its 2 handler(s) takes that job",
+      "hint": "Every handler of this queue names the one job it takes, and none names this one, so nothing runs it. Add a handler for it, or add it under the name a handler takes. Nothing to fix if a handler is in a repository the configuration does not name.",
+      "symbol": "producer:shop#src/mail/mail-queue.service.ts:27:12",
+      "meta": {
+        "job": "send-digest",
+        "queue": "mail-queue",
+        "handled": [
+          "send-receipt",
+          "send-welcome"
+        ]
+      }
+    },
+    {
+      "service": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 21,
+      "reason": "job-no-handler",
+      "level": "info",
+      "message": "the call at src/mail/orders.controller.ts:21 adds the job send-invoice to mail-queue, and none of its 2 handler(s) takes that job",
+      "hint": "Every handler of this queue names the one job it takes, and none names this one, so nothing runs it. Add a handler for it, or add it under the name a handler takes. Nothing to fix if a handler is in a repository the configuration does not name.",
+      "symbol": "producer:shop#src/mail/orders.controller.ts:21:12",
+      "meta": {
+        "job": "send-invoice",
+        "queue": "mail-queue",
+        "handled": [
+          "send-receipt",
+          "send-welcome"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 38,
+    "edges": 31,
+    "types": 0,
+    "missed": 15,
+    "sites": 15,
+    "notes": 0,
+    "findings": 2,
+    "unresolved": 15
+  }
+}

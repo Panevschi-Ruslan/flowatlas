@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:43:31.798Z",
+  "builtAt": "2026-11-09T21:54:24.248Z",
   "services": [
     {
       "name": "ledger",
@@ -623,7 +623,8 @@
                   "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
                 ]
               }
-            ]
+            ],
+            "payload": "string"
           }
         ],
         "channelKind": "queue",
@@ -999,6 +1000,9 @@
       "confidence": "heuristic",
       "file": "src/fanout.ts",
       "line": 40,
+      "params": [
+        "string"
+      ],
       "meta": {
         "via": "environment",
         "variables": [

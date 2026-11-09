@@ -36,6 +36,7 @@ import {
 import { joinDeployments } from './deployment-link.js';
 import { joinImports } from './import-link.js';
 import { keepWhereDeclared } from './declared-link.js';
+import { jobsWithoutHandler } from './job-link.js';
 import { completeFromEnvironment, reachedBy } from './environment-link.js';
 import { functionUrlsOf } from './function-url-link.js';
 import { mergeGraphs } from './merge.js';
@@ -882,6 +883,8 @@ export const linkGraphs = (
   found.push(...joinChannelPatterns(nodes, edges));
   // What a consumer takes of its channel, asked of every publish onto it (P52).
   found.push(...matchTakenPublishes(nodes, edges));
+  // A job added to a queue whose every handler names another (P271).
+  found.push(...jobsWithoutHandler(nodes, edges));
   const httpOut = emptyHttpOut();
   const ui = emptyUi();
   /** Requests that joined nothing and may still reach a route (P91). */

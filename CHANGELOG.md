@@ -68,6 +68,27 @@ only one of them moved.
   by the schema a committed patch of the GraphQL library gives it, where a
   line the patch adds reads `Reflect.getMetadata(KEY, …) || 'scope'`
   (`fixtures/graphql-codegen-helpers`).
+- **Workers made by a construction, a job named further out than its queue,
+  and a job no handler takes (P271).** BullMQ's `new Worker(name, processor)`
+  is a consumer wherever it is written, and the older library's
+  `queue.process('job', handler)` one that names its job. A worker made with a
+  name the code hands in is read once per queue the name stands for: out to
+  each caller of the function it is a parameter of, and through each loop it
+  is a variable of - `for…of` / `for…in`, `forEach` / `map`, over a record's
+  keys, values or entries, an enum, a list written out and its spreads - so a
+  worker per key of a record of handlers is a consumer per key, its handler
+  the member of the record the processor looks it up in by that name
+  (`handlers[name](job)`, in the processor or a function it runs); a list the
+  code does not write out is a `channel-dynamic` row saying so. A job name a
+  caller further out than the queue decides is followed out the way the queue
+  is, and so is one whose queue is read where the broker is called; the
+  entries of `addBulk` name their jobs, a list the layer maps
+  (`jobs.map((data) => ({ name, data }))`) included, several names kept as
+  `jobNames`. Once every repository is merged, a job added to a queue whose
+  every handler names another job is the finding `job-no-handler` (info); a
+  queue with a handler that takes every job is not asked about, and neither is
+  a handler of a job nothing adds.
+
 - **A handler behind its wrapper, a request handed in as one object, and a
   GraphQL server made into a Lambda (P269).** A `pages/api` default export
   that is a call of wrappers - the repository's own or a package's -

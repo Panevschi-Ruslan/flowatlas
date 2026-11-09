@@ -179,6 +179,8 @@ const FINDINGS: readonly string[] = [
   's3-write-matches-nothing',
   'stream-no-writer',
   'subscription-matches-nothing',
+  // A job added to a queue whose every handler names another (P271)
+  'job-no-handler',
 ];
 
 // The reader could not follow something. Listed rather than left to the
@@ -540,6 +542,7 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
       's3-write-matches-nothing',
       'stream-no-writer',
       'subscription-matches-nothing',
+      'job-no-handler',
       // A status traffic answered that no failure declares (P106): an
       // exception nobody mapped to the status it should answer.
       'failure-seen-undeclared',

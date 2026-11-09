@@ -594,6 +594,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Something that is not a rule on a bus - a schedule, a queue, a pipe - puts what it takes on a bus, and which events those are is not named, so no channel on that bus is drawn. A rule that takes its events by name or by a pattern carries them on. Nothing to fix unless that bus has subscribers you expect to see.',
   'bucket-notification-unread': () =>
     'A notification of a bucket is not read: the bucket it is of, a target block the files do not settle (a dynamic block over what is known only once deployed), its events or a key filter. Write it so the files settle it - a literal, or a reference to the bucket, function, queue or topic the configuration declares.',
+  'job-no-handler': () =>
+    'A call adds a job to a queue under a name, and every handler of that queue names another job, so nothing runs it. Add a handler for it, or add it under the name a handler takes. Nothing to fix if its handler is in a repository the configuration does not name.',
   's3-write-matches-nothing': () =>
     'A write to a bucket fires an event that none of the bucket\'s notifications takes, by its events or by the start and end of the key. Nothing to fix if the write is meant to notify nobody; otherwise the notification\'s events or filters are not the ones meant.',
   'query-in-loop': () =>
@@ -915,6 +917,7 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'server-request-without-origin': ['server request with no host', 'server requests with no host'],
   'release-need-undefined': ['release needing one nothing declares', 'releases needing one nothing declares'],
   's3-write-matches-nothing': ['bucket write no notification takes', 'bucket writes no notification takes'],
+  'job-no-handler': ['job no handler of its queue takes', 'jobs no handler of their queue takes'],
   'stream-no-writer': ['stream nothing writes to', 'streams nothing writes to'],
   'subscription-matches-nothing': ['rule nothing published matches', 'rules nothing published matches'],
   'failure-seen-undeclared': ['status seen that the code does not declare', 'statuses seen that the code does not declare'],

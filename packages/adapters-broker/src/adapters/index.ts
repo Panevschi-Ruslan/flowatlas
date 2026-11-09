@@ -133,10 +133,13 @@ const bullmq: BrokerSpec = {
       kind: 'job',
       receiverPackages: ['bullmq', 'bull', '@nestjs/bullmq', '@nestjs/bull'],
     },
+    // Each entry names its own job, often in a list the layer maps from its
+    // own: `addBulk(jobs.map(({ data }) => ({ name, data })))` (P271).
     {
       method: 'addBulk',
       channelArg: -1,
       channel: QUEUE_OF_RECEIVER,
+      name: [{ kind: 'argument-path', index: 0, path: ['*', 'name'] }],
       payloadArg: 0,
       kind: 'job',
       receiverPackages: ['bullmq', 'bull', '@nestjs/bullmq', '@nestjs/bull'],
@@ -169,6 +172,33 @@ const bullmq: BrokerSpec = {
       decorator: 'Processor',
       classDecorator: 'Processor',
       channel: QUEUE_OF_CLASS,
+      payloadPath: JOB_ENVELOPE,
+      kind: 'job',
+    },
+  ],
+  subscriberPatterns: [
+    // A worker made where it is needed: `new Worker('mail', async (job) => …)`,
+    // or one per queue in a loop over a record of handlers (P271). It takes
+    // every job of its queue, so it names none.
+    {
+      method: 'Worker',
+      constructs: 'Worker',
+      channelArg: 0,
+      handlerArg: 1,
+      receiverPackages: ['bullmq'],
+      payloadPath: JOB_ENVELOPE,
+      kind: 'job',
+    },
+    // The older library's worker is a call on the queue itself:
+    // `queue.process('send-email', 5, handler)`, every argument but the handler
+    // optional, the job named where the first is a string (P271).
+    {
+      method: 'process',
+      channelArg: -1,
+      channel: QUEUE_OF_RECEIVER,
+      handlerArg: -1,
+      nameArg: 0,
+      receiverPackages: ['bull'],
       payloadPath: JOB_ENVELOPE,
       kind: 'job',
     },

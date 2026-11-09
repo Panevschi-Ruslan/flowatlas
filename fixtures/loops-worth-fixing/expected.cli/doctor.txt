@@ -1,11 +1,7 @@
-unresolved: total=2 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 2 to act on · missed: 2 · notes: 4 · findings: 3
+unresolved: 0 to act on · missed: 0 · notes: 4 · findings: 3
   3 findings: 3 likely N+1s
-  payload-type-unknown: 2 rows
-    The message is not written out where the description says it is, so nothing describes what travels on this channel.
-      parcels/src/parcels/export.ts:15  sqs/parcel-exports
-      parcels/src/parcels/export.ts:27  sqs/parcel-exports
   query-in-loop (note): 4 rows
     Nothing to fix: a write that changes a row only in the state it expects, or a send to one recipient, has no batch form. If one of them has one after all, use it and the loop is no longer listed.
       parcels/src/parcels/dispatch.ts:13  A `for-of` loop runs 1 database query once per item, each a conditional write or a send to one recipient: per item on purpose.  (1 way in)
@@ -25,8 +21,5 @@ desync: none
 
 contracts: no errors, 0 excused, 2 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 2 now, +2)
+baseline: missing (0 accepted, 0 now, +0)
   no baseline at <root>/fixtures/loops-worth-fixing/flowatlas.baseline.json; run flowatlas doctor --accept to write one
-  payload-type-unknown: 0 → 2 (+2)
-  new (1):
-    parcels|src/parcels/export.ts|sqs/parcel-exports|payload-type-unknown

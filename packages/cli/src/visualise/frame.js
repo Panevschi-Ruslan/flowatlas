@@ -506,6 +506,7 @@ export const PAGE_WORDS = Object.freeze({
     'rule-matches-nothing': 'architecture rule names nothing',
     'rule-over-partial-read': 'architecture rule over a partial read',
     's3-write-matches-nothing': 'bucket write notifies nothing',
+    'job-no-handler': 'job no handler takes',
     'seen-not-in-code': 'seen at run time, not in code',
     'sender-forwards': 'message forwarded',
     'server-action-unread': 'server action not read',

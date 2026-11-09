@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>236 fixtures</span>
-    <span>613 snapshot files</span>
+    <span>238 fixtures</span>
+    <span>616 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -761,7 +761,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Several repositories <span class="count" data-total="19">19</span></h2>
+    <h2>Several repositories <span class="count" data-total="20">20</span></h2>
     <ul>
       <li class="fixture" data-search="ground-truth several repositories two repositories holding the shapes the other fixtures never write down, and one thing none of them has: **a recording is not its authority**.">
         <div class="head">
@@ -882,6 +882,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A sceptre project whose Jinja names other files of the repository, read as sceptre's Jinja reads them (P273): a stack configuration that imports a macro from a file beside it and includes a part, and a template that extends a base template and imports a macro that writes the function.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="multi-repo-jobs several repositories a shop that adds jobs to two queues through a layer of its own, and a mailer that handles them (p271).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/multi-repo-jobs">multi-repo-jobs</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>A shop that adds jobs to two queues through a layer of its own, and a mailer that handles them (P271).</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="multi-repo-plumbing several repositories three services whose every method logs, counts and reads through a shared helper, so a walk that expands each helper once per caller spends its whole budget on plumbing before a request reaches the service it ends in (p92).">
         <div class="head">
@@ -1264,7 +1272,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Express, Fastify, Koa and Hono <span class="count" data-total="14">14</span></h2>
+    <h2>Express, Fastify, Koa and Hono <span class="count" data-total="15">15</span></h2>
     <ul>
       <li class="fixture" data-search="express-chained-app express, fastify, koa and hono an application declared by a chain, which is how a video platform declares its one application and what cost a video platform every route it has.">
         <div class="head">
@@ -1280,6 +1288,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A repository whose routes are declared by where its files are, with Express underneath — Medusa v2 in miniature.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="express-job-workers express, fastify, koa and hono a shop's express server that runs its background work on bullmq, with nothing installed: its workers are made by a construction, `new worker(name, processor)`, rather than declared by a decorator (p271).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/express-job-workers">express-job-workers</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A shop's Express server that runs its background work on BullMQ, with nothing installed: its workers are made by a construction, <code>new Worker(name, processor)</code>, rather than declared by a decorator (P271).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="express-not-installed express, fastify, koa and hono an express service whose framework is declared and **not installed**, which is what a stranger's clone is.">

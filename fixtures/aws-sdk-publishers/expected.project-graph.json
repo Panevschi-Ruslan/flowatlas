@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:32:30.201Z",
+  "builtAt": "2026-11-09T21:41:49.005Z",
   "services": [
     {
       "name": "loans",
@@ -1535,6 +1535,9 @@
       "to": "channel:sqs/library-returns",
       "type": "emits",
       "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem"
+      ],
       "file": "api/returns/returns-queue.ts",
       "line": 30
     },
@@ -1839,14 +1842,6 @@
       "meta": {
         "variable": "AUDIT_BUS_NAME"
       },
-      "service": "loans"
-    },
-    {
-      "file": "api/returns/returns-queue.ts",
-      "line": 30,
-      "reason": "payload-type-unknown",
-      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
-      "symbol": "sqs/library-returns",
       "service": "loans"
     },
     {

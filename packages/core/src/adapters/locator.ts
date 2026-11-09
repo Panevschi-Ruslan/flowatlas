@@ -972,6 +972,22 @@ const writtenKey = (property: TsNode): LocatedSlot => {
 const carrying = (slot: LocatedSlot, bound: Bindings): LocatedSlot =>
   slot === undefined || bound.size === 0 ? slot : { ...slot, bound };
 
+/** What the callback of `list.map(cb)` answers, its parameters left as they are. */
+const mappedElement = (value: TsNode, bound: Bindings): Followed | undefined => {
+  if (!Node.isCallExpression(value)) return undefined;
+  const callee = peeled(value.getExpression());
+  if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'map') return undefined;
+  const [callback] = value.getArguments();
+  if (callback === undefined || !(Node.isArrowFunction(callback) || Node.isFunctionExpression(callback))) return undefined;
+  const answer = answerOf(callback);
+  // Only an element written out: one that is the list's own element as it
+  // came is no more written here than the list is.
+  const written = answer === undefined ? undefined : peeled(answer);
+  return written !== undefined && (Node.isObjectLiteralExpression(written) || Node.isArrayLiteralExpression(written))
+    ? { value: written, bound }
+    : undefined;
+};
+
 /** One step into what a slot holds. */
 const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlot[] => {
   const followed = followValue(expression, bound);
@@ -980,6 +996,10 @@ const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlo
     { expression, reached: false, ...(followed.selector === undefined ? {} : { selector: followed.selector }) },
   ];
   if (step === EVERY_ELEMENT) {
+    // A list made by mapping another, `jobs.map(({ data }) => ({ name, data }))`:
+    // every element is what the callback answers, read once for all of them (P271).
+    const mapped = mappedElement(value, followed.bound);
+    if (mapped !== undefined) return [carrying({ expression: mapped.value, reached: true }, mapped.bound)];
     if (!Node.isArrayLiteralExpression(value)) return halt();
     return value
       .getElements()

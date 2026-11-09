@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-09T16:39:53.630Z",
+  "generatedAt": "2026-11-09T21:54:26.581Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -26,9 +26,9 @@
       },
       "edgeKey": "producer:ledger#src/fanout.ts:40:11|emits|consumer:ledger#template.yaml:Resources.Auditor.Events.Audit",
       "direction": "payload",
-      "reason": "no-type-on-sender",
-      "message": "ledger#src/fanout.ts:handler declares no type for what it sends",
-      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+      "reason": "message-unparsed",
+      "message": "ledger#src/auditor.ts:handler does not parse the text at Records[].body of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
     },
     {
       "edge": {

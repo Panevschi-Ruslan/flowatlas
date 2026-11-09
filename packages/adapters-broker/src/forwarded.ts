@@ -479,7 +479,10 @@ export interface ForwardedPublish {
  * another implementation of the method instead is followed, and said to be:
  * a queue the caller names is the queue whichever runs.
  */
-export const forwardedPublish = (values: readonly (Held | undefined)[], di: DiMap): ForwardedPublish => {
+export const forwardedPublish = (values: readonly (Held | undefined)[], di: DiMap, deciding = 1): ForwardedPublish => {
+  /** The value a site waits on: the address while it waits, then the job (P271). */
+  const decider = (current: readonly (Held | undefined)[]): Held | undefined =>
+    current.slice(0, deciding).find((value): value is Held => value !== undefined && waits(value));
   const sites: ForwardedSite[] = [];
   let short = false;
   const walk = (
@@ -492,7 +495,7 @@ export const forwardedPublish = (values: readonly (Held | undefined)[], di: DiMa
       short = true;
       return;
     }
-    const [address] = current;
+    const address = decider(current);
     const holder = address === undefined ? undefined : holderAt(address, address.expression);
     if (holder === undefined || hops.length >= MOST_HOPS) {
       if (hops.length === 0) short = true;
@@ -501,14 +504,20 @@ export const forwardedPublish = (values: readonly (Held | undefined)[], di: DiMa
     }
     const callers = callSitesOf(holder).filter((caller) => !hops.includes(caller));
     if (callers.length === 0 && hops.length === 0) short = true;
+    // The queue was decided at the last call and only the job waits on a
+    // function nothing calls: drawn there, its job unread (P271).
+    if (callers.length === 0 && hops.length > 0 && address !== current[0]) {
+      sites.push({ site: hops.at(-1) as CallExpression, values: current, hops, through, undecided });
+    }
     for (const caller of callers) {
       const maybe = Node.isMethodDeclaration(holder) || Node.isPropertyDeclaration(holder) ? dispatchOf(caller, holder) === 'undecided' : false;
       const next = current.map((value) => (value === undefined ? undefined : stepped(value, caller, holder, di)));
       const path = [...hops, caller];
       const named = [...through, labelOf(holder)];
-      // The address decides where the publish is drawn: once it is written,
-      // a job or a message still waiting is read as the caller hands it.
-      if (next[0] !== undefined && waits(next[0])) walk(next, path, named, undecided || maybe);
+      // The address decides where the publish is drawn, and then the job
+      // where it is decided further out (P271): once both are written, a
+      // message still waiting is read as the caller hands it.
+      if (decider(next) !== undefined) walk(next, path, named, undecided || maybe);
       else sites.push({ site: caller, values: next, hops: path, through: named, undecided: undecided || maybe });
     }
   };

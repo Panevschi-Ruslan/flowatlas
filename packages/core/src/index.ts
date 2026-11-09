@@ -752,6 +752,8 @@ export type { ReadAddress } from './under-base.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
 export { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';
 export { BOUNDED_BY, boundedLoopOf, isMigrationFile } from './bounded-loop.js';
+export { loopOver, loopVariableOf, recordEntriesOf } from './loop-elements.js';
+export type { RecordEntries, LoopElement, LoopReading, TakenElement } from './loop-elements.js';
 export { rankByReach, waysInOf } from './model/row-reach.js';
 export type { BoundedBy, BoundedLoop, BoundedLoopOptions, MigrationMarks } from './bounded-loop.js';
 export { lineAndColumnAt, startLineOf } from './line-numbers.js';
