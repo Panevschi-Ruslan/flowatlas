@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:40:54.537Z",
+  "configHash": "7f536a683122",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 31,
+      "edges": 25,
+      "types": 1,
+      "unresolved": 4,
+      "durationMs": 1014,
+      "packages": {
+        "name": "shop",
+        "runtime": [
+          "@aws-sdk/client-dynamodb"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 3,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 0,
+    "uncalled": [
+      "entry:shop:http:POST:/orders",
+      "entry:shop:http:PUT:/carts"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 31,
+    "edges": 26,
+    "types": 1,
+    "missed": 3,
+    "sites": 4,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

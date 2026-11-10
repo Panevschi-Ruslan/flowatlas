@@ -1,0 +1,961 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:40:54.537Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:dynamodb/shop-audit",
+      "type": "channel",
+      "label": "dynamodb/shop-audit",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 25,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb"
+        ],
+        "declaredBy": "Resources.AuditTable",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:dynamodb/shop-carts",
+      "type": "channel",
+      "label": "dynamodb/shop-carts",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 39,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb"
+        ],
+        "declaredBy": "Resources.CartsTable",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:dynamodb/shop-orders",
+      "type": "channel",
+      "label": "dynamodb/shop-orders",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 11,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-dynamodb"
+        ],
+        "declaredBy": "Resources.OrdersTable",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:shop#template.yaml:Resources.AuditChanged.Events.Audit",
+      "type": "consumer",
+      "label": "mapping Resources.AuditChanged.Events.Audit",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 96,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "Resources.AuditChanged.Events.Audit",
+        "deployedBy": "sam"
+      }
+    },
+    {
+      "id": "consumer:shop#template.yaml:Resources.CartChanged.Events.Carts",
+      "type": "consumer",
+      "label": "mapping Resources.CartChanged.Events.Carts",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 107,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "Resources.CartChanged.Events.Carts",
+        "deployedBy": "sam"
+      }
+    },
+    {
+      "id": "consumer:shop#template.yaml:Resources.OrderChanged.Events.Orders",
+      "type": "consumer",
+      "label": "mapping Resources.OrderChanged.Events.Orders",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 85,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "by": "mapping",
+        "declaredAs": "Resources.OrderChanged.Events.Orders",
+        "deployedBy": "sam"
+      }
+    },
+    {
+      "id": "entry:shop:event:dynamodb/shop-audit",
+      "type": "entry",
+      "label": "event dynamodb/shop-audit",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 96,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/shop-audit",
+        "by": "mapping",
+        "declaredAs": "Resources.AuditChanged.Events.Audit",
+        "deployedBy": "sam",
+        "changesOf": "table",
+        "name": "shop-audit",
+        "function": "Resources.AuditChanged",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:event:dynamodb/shop-carts",
+      "type": "entry",
+      "label": "event dynamodb/shop-carts",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 107,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/shop-carts",
+        "by": "mapping",
+        "declaredAs": "Resources.CartChanged.Events.Carts",
+        "deployedBy": "sam",
+        "changesOf": "table",
+        "name": "shop-carts",
+        "function": "Resources.CartChanged",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:event:dynamodb/shop-orders",
+      "type": "entry",
+      "label": "event dynamodb/shop-orders",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 85,
+      "kind": "event",
+      "meta": {
+        "key": "dynamodb/shop-orders",
+        "by": "mapping",
+        "declaredAs": "Resources.OrderChanged.Events.Orders",
+        "deployedBy": "sam",
+        "changesOf": "table",
+        "name": "shop-orders",
+        "function": "Resources.OrderChanged",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 62,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "deployedBy": "sam",
+        "function": "Resources.PlaceOrder",
+        "declaredAs": "Resources.PlaceOrder.Events.Place",
+        "stage": "Prod",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:http:PUT:/carts",
+      "type": "entry",
+      "label": "PUT /carts",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 74,
+      "kind": "http",
+      "meta": {
+        "method": "PUT",
+        "path": "/carts",
+        "rawPath": "/carts",
+        "deployedBy": "sam",
+        "function": "Resources.SaveCart",
+        "declaredAs": "Resources.SaveCart.Events.Save",
+        "stage": "Prod",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:${…}@Resources.AuditChanged",
+      "type": "entry",
+      "label": "Resources.AuditChanged (name generated when deployed)",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 91,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.AuditChanged",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.AuditChanged",
+        "logicalId": "AuditChanged",
+        "nameGenerated": true,
+        "handler": "audit-changed.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{Records:{eventName:string}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:${…}@Resources.CartChanged",
+      "type": "entry",
+      "label": "Resources.CartChanged (name generated when deployed)",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 102,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.CartChanged",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.CartChanged",
+        "logicalId": "CartChanged",
+        "nameGenerated": true,
+        "handler": "cart-changed.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{Records:{eventName:string}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:${…}@Resources.OrderChanged",
+      "type": "entry",
+      "label": "Resources.OrderChanged (name generated when deployed)",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 80,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.OrderChanged",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.OrderChanged",
+        "logicalId": "OrderChanged",
+        "nameGenerated": true,
+        "handler": "order-changed.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{Records:{eventName:string}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:${…}@Resources.PlaceOrder",
+      "type": "entry",
+      "label": "Resources.PlaceOrder (name generated when deployed)",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 54,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.PlaceOrder",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.PlaceOrder",
+        "logicalId": "PlaceOrder",
+        "nameGenerated": true,
+        "handler": "place-order.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "ORDERS_TABLE": {
+            "written": "!Ref OrdersTable",
+            "value": "shop-orders",
+            "kind": "table"
+          }
+        },
+        "reads": {
+          "": "{body:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:shop:invoke:${…}@Resources.SaveCart",
+      "type": "entry",
+      "label": "Resources.SaveCart (name generated when deployed)",
+      "repo": "shop",
+      "file": "template.yaml",
+      "line": 69,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.SaveCart",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.SaveCart",
+        "logicalId": "SaveCart",
+        "nameGenerated": true,
+        "handler": "save-cart.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{body:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "producer:shop#src/orders.ts:15:12",
+      "type": "producer",
+      "label": "write dynamodb/shop-orders",
+      "repo": "shop",
+      "file": "src/orders.ts",
+      "line": 15,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "dynamodb",
+              {
+                "environment": "ORDERS_TABLE",
+                "forms": [
+                  "^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)$"
+                ]
+              }
+            ],
+            "payload": "{id:{S:string};body:{S:string}}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "heuristic",
+        "whereDeclared": true,
+        "through": [
+          "Repository.save"
+        ]
+      }
+    },
+    {
+      "id": "producer:shop#src/place-order.ts:9:9",
+      "type": "producer",
+      "label": "write dynamodb/shop-audit",
+      "repo": "shop",
+      "file": "src/place-order.ts",
+      "line": 9,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "channelVia": "literal",
+        "method": "send",
+        "whereDeclared": true,
+        "through": [
+          "Repository.save"
+        ]
+      }
+    },
+    {
+      "id": "producer:shop#src/save-cart.ts:5:9",
+      "type": "producer",
+      "label": "write dynamodb/shop-carts",
+      "repo": "shop",
+      "file": "src/save-cart.ts",
+      "line": 5,
+      "kind": "write",
+      "meta": {
+        "kind": "write",
+        "adapter": "aws-dynamodb",
+        "channelVia": "literal",
+        "method": "send",
+        "whereDeclared": true,
+        "through": [
+          "Store.put"
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 5,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "shop#src/audit-changed.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/audit-changed.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{eventName:string}[]}"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop#src/cart-changed.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/cart-changed.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{eventName:string}[]}"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop#src/order-changed.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/order-changed.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{eventName:string}[]}"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "shop#src/orders.ts:OrdersRepository",
+      "type": "provider",
+      "label": "OrdersRepository",
+      "repo": "shop",
+      "file": "src/orders.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "shop#src/orders.ts:OrdersRepository.place",
+      "type": "method",
+      "label": "OrdersRepository.place",
+      "repo": "shop",
+      "file": "src/orders.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "order",
+              "type": "type:shop#Order"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/place-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/place-order.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{body:string}"
+            }
+          ],
+          "returns": "{statusCode:201;body:string}"
+        }
+      }
+    },
+    {
+      "id": "shop#src/repository.ts:Repository",
+      "type": "provider",
+      "label": "Repository",
+      "repo": "shop",
+      "file": "src/repository.ts",
+      "line": 6,
+      "kind": "injectable"
+    },
+    {
+      "id": "shop#src/repository.ts:Repository.save",
+      "type": "method",
+      "label": "Repository.save",
+      "repo": "shop",
+      "file": "src/repository.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/repository.ts:Store",
+      "type": "provider",
+      "label": "Store",
+      "repo": "shop",
+      "file": "src/repository.ts",
+      "line": 15,
+      "kind": "injectable"
+    },
+    {
+      "id": "shop#src/repository.ts:Store.put",
+      "type": "method",
+      "label": "Store.put",
+      "repo": "shop",
+      "file": "src/repository.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "T"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#src/save-cart.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "shop",
+      "file": "src/save-cart.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{body:string}"
+            }
+          ],
+          "returns": "{statusCode:204}"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:dynamodb/shop-audit",
+      "to": "consumer:shop#template.yaml:Resources.AuditChanged.Events.Audit",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 96,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:dynamodb/shop-carts",
+      "to": "consumer:shop#template.yaml:Resources.CartChanged.Events.Carts",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 107,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:dynamodb/shop-orders",
+      "to": "consumer:shop#template.yaml:Resources.OrderChanged.Events.Orders",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 85,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:shop#template.yaml:Resources.AuditChanged.Events.Audit",
+      "to": "entry:shop:event:dynamodb/shop-audit",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 96,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:shop#template.yaml:Resources.CartChanged.Events.Carts",
+      "to": "entry:shop:event:dynamodb/shop-carts",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 107,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:shop#template.yaml:Resources.OrderChanged.Events.Orders",
+      "to": "entry:shop:event:dynamodb/shop-orders",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 85,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:shop:event:dynamodb/shop-audit",
+      "to": "shop#src/audit-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/audit-changed.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:shop:event:dynamodb/shop-carts",
+      "to": "shop#src/cart-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/cart-changed.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:shop:event:dynamodb/shop-orders",
+      "to": "shop#src/order-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/order-changed.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:shop:http:POST:/orders",
+      "to": "shop#src/place-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:shop#Order",
+      "file": "src/place-order.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true,
+        "body": "type:shop#Order",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:http:PUT:/carts",
+      "to": "shop#src/save-cart.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/save-cart.ts",
+      "line": 3,
+      "meta": {
+        "requestRead": true,
+        "body": "{id:string;items:string[]}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:shop:invoke:${…}@Resources.AuditChanged",
+      "to": "shop#src/audit-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/audit-changed.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:shop:invoke:${…}@Resources.CartChanged",
+      "to": "shop#src/cart-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/cart-changed.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:shop:invoke:${…}@Resources.OrderChanged",
+      "to": "shop#src/order-changed.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/order-changed.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:shop:invoke:${…}@Resources.PlaceOrder",
+      "to": "shop#src/place-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/place-order.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:shop:invoke:${…}@Resources.SaveCart",
+      "to": "shop#src/save-cart.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/save-cart.ts",
+      "line": 3
+    },
+    {
+      "from": "producer:shop#src/orders.ts:15:12",
+      "to": "channel:dynamodb/shop-orders",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/orders.ts",
+      "line": 15,
+      "params": [
+        "{id:{S:string};body:{S:string}}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ORDERS_TABLE"
+        ],
+        "functions": [
+          "Resources.PlaceOrder (name generated when deployed)"
+        ]
+      }
+    },
+    {
+      "from": "producer:shop#src/place-order.ts:9:9",
+      "to": "channel:dynamodb/shop-audit",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{id:{S:string};body:{S:string}}"
+      ],
+      "file": "src/place-order.ts",
+      "line": 9
+    },
+    {
+      "from": "producer:shop#src/save-cart.ts:5:9",
+      "to": "channel:dynamodb/shop-carts",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{id:{S:string}}"
+      ],
+      "file": "src/save-cart.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#src/orders.ts:OrdersRepository.place",
+      "to": "producer:shop#src/orders.ts:15:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/orders.ts",
+      "line": 15
+    },
+    {
+      "from": "shop#src/orders.ts:OrdersRepository.place",
+      "to": "shop#src/repository.ts:Repository.save",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/orders.ts",
+      "line": 15
+    },
+    {
+      "from": "shop#src/place-order.ts:handler",
+      "to": "producer:shop#src/place-order.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/place-order.ts",
+      "line": 9
+    },
+    {
+      "from": "shop#src/place-order.ts:handler",
+      "to": "shop#src/orders.ts:OrdersRepository.place",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "type:shop#Order"
+      ],
+      "returns": "void",
+      "file": "src/place-order.ts",
+      "line": 8
+    },
+    {
+      "from": "shop#src/place-order.ts:handler",
+      "to": "shop#src/repository.ts:Repository.save",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/place-order.ts",
+      "line": 9
+    },
+    {
+      "from": "shop#src/save-cart.ts:handler",
+      "to": "producer:shop#src/save-cart.ts:5:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/save-cart.ts",
+      "line": 5
+    },
+    {
+      "from": "shop#src/save-cart.ts:handler",
+      "to": "shop#src/repository.ts:Store.put",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "T"
+      ],
+      "returns": "void",
+      "file": "src/save-cart.ts",
+      "line": 5
+    }
+  ],
+  "types": {
+    "type:shop#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "shop#src/orders.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/repository.ts",
+      "line": 6,
+      "reason": "db-layer-unread",
+      "message": "Repository reads as a data layer, and nothing was read through it.",
+      "hint": "Add \"Repository\" to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.",
+      "symbol": "Repository",
+      "adapter": "local-base",
+      "service": "shop"
+    },
+    {
+      "file": "src/repository.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "sites": 2,
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "service": "shop"
+    },
+    {
+      "file": "src/repository.ts",
+      "line": 15,
+      "reason": "db-layer-unread",
+      "message": "Store reads as a data layer, and nothing was read through it.",
+      "hint": "Add \"Store\" to adapters.db.localBaseClasses in flowatlas.config.json, so calls through it are recorded as data access.",
+      "symbol": "Store",
+      "adapter": "local-base",
+      "service": "shop"
+    },
+    {
+      "file": "template.yaml",
+      "line": 54,
+      "reason": "deployed-name-generated",
+      "level": "info",
+      "sites": 5,
+      "message": "Resources.PlaceOrder is a function with no name of its own, so it is named by where it is declared; what this file points at it by joins to it, and nothing outside this deployment can",
+      "hint": "Give it a name of its own where other repositories reach it.",
+      "symbol": "entry:shop:invoke:${…}@Resources.PlaceOrder",
+      "adapter": "aws-lambda",
+      "service": "shop"
+    }
+  ]
+}

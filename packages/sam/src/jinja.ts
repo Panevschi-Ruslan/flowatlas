@@ -25,6 +25,15 @@
  * replaces). `{% raw %}`, `{% with %}`, `{% filter %}` and a `{% set %}`
  * block are run as Jinja runs them.
  *
+ * And the rest of what templates commonly write (P289): `loop.cycle(...)`,
+ * `loop.revindex`, `previtem` / `nextitem`; several names set at once
+ * (`{% set a, b = x, y %}`) and tuples; what a macro is handed past its
+ * parameters as `varargs` and `kwargs`; `range` and `dict`; the methods of a
+ * text (`lower()`, `split()`, `replace()`, `format()`, ...) and of a mapping
+ * (`get()`, `keys()`, `values()`); and the filters `first`, `last`, `list`,
+ * `unique`, `sort`, `reverse`, `float`, `abs`, `round`, `min`, `max`, `sum`,
+ * `map`, `items`, `dictsort`, `format`, `indent`, `safe`, `escape`, `center`.
+ *
  * What the files do not give is not made up. An expression whose value they
  * do not give is kept, by a stand-in, as an expression not rendered; a
  * condition on such a value is not decided, and the text is rendered every
@@ -113,7 +122,15 @@ class Unknown {
   constructor(readonly written: string) {}
 }
 
-type JinjaValue = string | number | boolean | null | readonly JinjaValue[] | { readonly [key: string]: JinjaValue } | Undefined | Unknown | Pairs | Macro;
+type JinjaValue = string | number | boolean | null | readonly JinjaValue[] | { readonly [key: string]: JinjaValue } | Undefined | Unknown | Pairs | Macro | Builtin;
+
+/** A function Jinja gives a template (P289): `loop.cycle`, `range`, `dict`, a method of a text, a list or a mapping; called with what it is handed. */
+class Builtin {
+  constructor(
+    readonly name: string,
+    readonly call: (positional: readonly JinjaValue[], named: ReadonlyMap<string, JinjaValue>) => JinjaValue,
+  ) {}
+}
 
 /** What `mapping.items()` is: the pairs of a mapping, iterated as such. */
 class Pairs {
@@ -199,7 +216,7 @@ type Expression =
   | { readonly kind: 'name'; readonly name: string }
   | { readonly kind: 'member'; readonly of: Expression; readonly key: Expression }
   | { readonly kind: 'call'; readonly of: Expression; readonly args: readonly Argument[] }
-  | { readonly kind: 'filter'; readonly of: Expression; readonly name: string; readonly args: readonly Expression[] }
+  | { readonly kind: 'filter'; readonly of: Expression; readonly name: string; readonly args: readonly Expression[]; readonly named?: readonly (readonly [string, Expression])[] }
   | { readonly kind: 'list'; readonly items: readonly Expression[] }
   | { readonly kind: 'dict'; readonly entries: readonly (readonly [Expression, Expression])[] }
   | { readonly kind: 'unary'; readonly operator: 'not' | '-'; readonly of: Expression }
@@ -330,8 +347,10 @@ class ExpressionParser {
       } else if (this.take('(')) of = { kind: 'call', of, args: this.arguments() };
       else if (this.take('|')) {
         const name = this.next();
-        // A filter's keyword argument is read by its place: `default(x, boolean=true)`.
-        of = { kind: 'filter', of, name, args: this.take('(') ? this.arguments().map((each) => each.value) : [] };
+        // A filter's keyword argument is read by its place, `default(x, boolean=true)`, and by its name (P289): `map(attribute='name')`.
+        const args = this.take('(') ? this.arguments() : [];
+        const named = args.flatMap((each): (readonly [string, Expression])[] => (each.name === undefined ? [] : [[each.name, each.value]]));
+        of = { kind: 'filter', of, name, args: args.map((each) => each.value), ...(named.length === 0 ? {} : { named }) };
       } else return of;
     }
   }
@@ -391,9 +410,20 @@ class ExpressionParser {
     if (token === 'false' || token === 'False') return { kind: 'literal', value: false };
     if (token === 'none' || token === 'None') return { kind: 'literal', value: null };
     if (token === '(') {
+      if (this.take(')')) return { kind: 'list', items: [] };
       const inner = this.expression();
+      if (this.peek() !== ',') {
+        this.expect(')');
+        return inner;
+      }
+      // A tuple, read as the list it is iterated and unpacked as (P289).
+      const items = [inner];
+      while (this.take(',')) {
+        if (this.peek() === ')') break;
+        items.push(this.expression());
+      }
       this.expect(')');
-      return inner;
+      return { kind: 'list', items };
     }
     if (token === '[') {
       const items: Expression[] = [];
@@ -424,6 +454,20 @@ class ExpressionParser {
   }
 }
 
+/** An expression, or several written with commas between them as a tuple without its parentheses (P289). */
+const parseTuple = (text: string): Expression => {
+  const parser = new ExpressionParser(tokensOf(text));
+  const first = parser.expression();
+  if (parser.done) return first;
+  const items = [first];
+  while (parser.take(',')) {
+    if (parser.done) break;
+    items.push(parser.expression());
+  }
+  if (!parser.done) throw new NotRead('more after an expression');
+  return { kind: 'list', items };
+};
+
 const parseExpression = (text: string): Expression => {
   const parser = new ExpressionParser(tokensOf(text));
   const expression = parser.expression();
@@ -449,6 +493,8 @@ type NodeOf =
   | { readonly kind: 'if'; readonly branches: readonly { readonly test: Expression; readonly written: string; readonly body: readonly Node[] }[]; readonly otherwise: readonly Node[] }
   | { readonly kind: 'for'; readonly names: readonly string[]; readonly over: Expression; readonly written: string; readonly body: readonly Node[]; readonly otherwise: readonly Node[] }
   | { readonly kind: 'set'; readonly name: string; readonly value: Expression }
+  // P289: several names set at once, unpacking what the value holds.
+  | { readonly kind: 'set-many'; readonly names: readonly string[]; readonly value: Expression; readonly written: string }
   // P273: a set block, its text through the filters written (\`HELD\` the text).
   | { readonly kind: 'set-block'; readonly name: string; readonly filtered: Expression; readonly written: string; readonly body: readonly Node[] }
   | { readonly kind: 'macro'; readonly name: string; readonly parameters: readonly Parameter[]; readonly body: readonly Node[] }
@@ -577,6 +623,12 @@ const parseTemplate = (text: string, own = true): Node[] => {
         continue;
       }
       if (word === 'set') {
+        // Several names set at once, from a tuple or a list (P289): `{% set host, port = 'db', 5432 %}`.
+        const many = /^([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)+)\s*,?\s*=\s*([\s\S]+)$/.exec(rest);
+        if (many !== null) {
+          body.push(place({ kind: 'set-many', names: (many[1] as string).split(',').map((name) => name.trim()), value: parseTuple(many[2] as string), written: piece.written }));
+          continue;
+        }
         const match = /^([A-Za-z_]\w*)\s*=\s*([\s\S]+)$/.exec(rest);
         if (match !== null) {
           body.push(place({ kind: 'set', name: match[1] as string, value: parseExpression(match[2] as string) }));
@@ -664,9 +716,11 @@ const parseTemplate = (text: string, own = true): Node[] => {
 // --------------------------------------------------------------- rendering
 
 /** The common filters, on values the files settle; any other filter is not known. */
-const FILTERS: ReadonlyMap<string, (value: JinjaValue, args: readonly JinjaValue[]) => JinjaValue> = new Map<string, (value: JinjaValue, args: readonly JinjaValue[]) => JinjaValue>([
+type Filter = (value: JinjaValue, args: readonly JinjaValue[], named: ReadonlyMap<string, JinjaValue>) => JinjaValue;
+
+const FILTERS: ReadonlyMap<string, Filter> = new Map<string, Filter>([
   ['default', (value, [fallback = '', boolean]) => (value instanceof Undefined || (boolean === true && truth(value) === false) ? fallback : value)],
-  ['d', (value, args) => (FILTERS.get('default') as (value: JinjaValue, args: readonly JinjaValue[]) => JinjaValue)(value, args)],
+  ['d', (value, args, named) => (FILTERS.get('default') as Filter)(value, args, named)],
   ['lower', (value) => textual(value, (text) => text.toLowerCase())],
   ['upper', (value) => textual(value, (text) => text.toUpperCase())],
   ['trim', (value) => textual(value, (text) => text.trim())],
@@ -694,8 +748,180 @@ const FILTERS: ReadonlyMap<string, (value: JinjaValue, args: readonly JinjaValue
     },
   ],
   ['length', (value) => (typeof value === 'string' || Array.isArray(value) ? value.length : isRecord(value) ? Object.keys(value).length : new Unknown('length'))],
-  ['tojson', (value) => (holdsUnsettled(value) || value instanceof Pairs || value instanceof Macro ? new Unknown('tojson') : json(value))],
+  ['tojson', (value) => (holdsUnsettled(value) || value instanceof Pairs || value instanceof Macro || value instanceof Builtin ? new Unknown('tojson') : json(value))],
+  // P289: the rest of Jinja's common filters, on values the files settle.
+  ['count', (value, args, named) => (FILTERS.get('length') as Filter)(value, args, named)],
+  ['first', (value) => (Array.isArray(value) ? ((value as JinjaValue[])[0] ?? new Undefined('first')) : typeof value === 'string' ? (value[0] ?? new Undefined('first')) : new Unknown('first'))],
+  ['last', (value) => (Array.isArray(value) ? ((value as JinjaValue[]).at(-1) ?? new Undefined('last')) : typeof value === 'string' ? (value.at(-1) ?? new Undefined('last')) : new Unknown('last'))],
+  ['list', (value) => listOf(value) ?? new Unknown('list')],
+  ['reverse', (value) => (typeof value === 'string' ? [...value].reverse().join('') : (listOf(value)?.slice().reverse() ?? new Unknown('reverse')))],
+  ['unique', (value) => {
+    const items = listOf(value);
+    return items === undefined ? new Unknown('unique') : items.filter((item, index) => items.findIndex((other) => same(other, item)) === index);
+  }],
+  ['sort', (value, [reverse = false], named) => {
+    const items = listOf(value);
+    if (items === undefined || !items.every((item) => typeof item === 'string' || typeof item === 'number')) return new Unknown('sort');
+    const sorted = [...(items as (string | number)[])].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    return truth(named.get('reverse') ?? reverse) === true ? sorted.reverse() : sorted;
+  }],
+  ['float', (value, [fallback = 0]) => (isUnsettled(value) ? new Unknown('float') : typeof value === 'number' ? value : typeof value === 'string' && /^\s*-?\d+(?:\.\d+)?\s*$/.test(value) ? Number(value) : fallback)],
+  ['abs', (value) => (typeof value === 'number' ? Math.abs(value) : new Unknown('abs'))],
+  ['round', (value, [precision = 0]) => (typeof value === 'number' && typeof precision === 'number' ? Math.round(value * 10 ** precision) / 10 ** precision : new Unknown('round'))],
+  ['min', (value) => extreme(value, (a, b) => a < b)],
+  ['max', (value) => extreme(value, (a, b) => a > b)],
+  ['sum', (value) => {
+    const items = listOf(value);
+    return items !== undefined && items.every((item) => typeof item === 'number') ? (items as number[]).reduce((a, b) => a + b, 0) : new Unknown('sum');
+  }],
+  ['map', (value, args, named) => {
+    const items = listOf(value);
+    if (items === undefined) return new Unknown('map');
+    const attribute = named.get('attribute');
+    if (typeof attribute === 'string') return items.map((item) => attributeOf(item, attribute, named.get('default')));
+    const [name] = args;
+    const filter = typeof name === 'string' ? FILTERS.get(name) : undefined;
+    return filter === undefined ? new Unknown('map') : items.map((item) => filter(item, args.slice(1), new Map()));
+  }],
+  ['items', (value) => (isRecord(value) ? Object.entries(value as Record<string, JinjaValue>).map(([key, item]) => [key, item]) : new Unknown('items'))],
+  ['dictsort', (value) => (isRecord(value) ? Object.keys(value).sort().map((key) => [key, (value as Record<string, JinjaValue>)[key] as JinjaValue]) : new Unknown('dictsort'))],
+  ['format', (value, args) => {
+    if (typeof value !== 'string') return new Unknown('format');
+    let index = 0;
+    let missing = false;
+    const out = value.replace(/%[sd%]/g, (spec) => {
+      if (spec === '%%') return '%';
+      const text = rendered(args[index++] as JinjaValue);
+      if (text === undefined) missing = true;
+      return text ?? '';
+    });
+    return missing ? new Unknown('format') : out;
+  }],
+  ['indent', (value, [width = 4, first = false]) => (typeof width === 'number' ? textual(value, (text) => text.split('\n').map((line, index) => (index === 0 && first !== true) || line === '' ? line : ' '.repeat(width) + line).join('\n')) : new Unknown('indent'))],
+  ['safe', (value) => value],
+  ['escape', (value) => textual(value, (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&#34;').replace(/'/g, '&#39;'))],
+  ['e', (value, args, named) => (FILTERS.get('escape') as Filter)(value, args, named)],
+  ['center', (value, [width = 80]) => (typeof width === 'number' ? textual(value, (text) => {
+    const pad = Math.max(0, width - text.length);
+    return ' '.repeat(Math.floor(pad / 2)) + text + ' '.repeat(pad - Math.floor(pad / 2));
+  }) : new Unknown('center'))],
 ]);
+
+/** The items of a list, a text's characters or a mapping's keys, as Jinja iterates them; `undefined` where it is none of these. */
+function listOf(value: JinjaValue): JinjaValue[] | undefined {
+  if (Array.isArray(value)) return [...(value as JinjaValue[])];
+  if (typeof value === 'string') return [...value];
+  if (isRecord(value)) return Object.keys(value);
+  if (value instanceof Pairs) return value.pairs.map(([key, item]) => [key, item]);
+  return undefined;
+}
+
+/** The least or the greatest of a list of numbers or texts. */
+function extreme(value: JinjaValue, before: (a: string | number, b: string | number) => boolean): JinjaValue {
+  const items = listOf(value);
+  if (items === undefined || items.length === 0 || !(items.every((item) => typeof item === 'number') || items.every((item) => typeof item === 'string'))) return new Unknown('min or max');
+  return (items as (string | number)[]).reduce((best, item) => (before(item, best) ? item : best));
+}
+
+/** A member of a value by a dotted name, as `map(attribute=...)` reads one. */
+function attributeOf(item: JinjaValue, attribute: string, fallback: JinjaValue | undefined): JinjaValue {
+  let at: JinjaValue = item;
+  for (const key of attribute.split('.')) {
+    if (isRecord(at)) at = (at as Record<string, JinjaValue>)[key] ?? new Undefined(key);
+    else if (Array.isArray(at) && /^\d+$/.test(key)) at = (at as JinjaValue[])[Number(key)] ?? new Undefined(key);
+    else return isUnsettled(at) ? at : new Undefined(key);
+  }
+  return at instanceof Undefined && fallback !== undefined ? fallback : at;
+}
+
+/** The functions Jinja gives every template (P289): `range` and `dict`. */
+const GLOBALS: ReadonlyMap<string, Builtin> = new Map([
+  [
+    'range',
+    new Builtin('range', (args) => {
+      if (!args.every((arg) => typeof arg === 'number')) return new Unknown('range');
+      const [a, b, step = 1] = args as number[];
+      const [from, to] = b === undefined ? [0, a ?? 0] : [a ?? 0, b];
+      if (step === 0 || Math.abs((to - from) / step) > 256) return new Unknown('range');
+      const out: number[] = [];
+      for (let at = from; step > 0 ? at < to : at > to; at += step) out.push(at);
+      return out;
+    }),
+  ],
+  ['dict', new Builtin('dict', (args, named) => (args.length === 0 ? Object.fromEntries(named) : isRecord(args[0]) ? { ...(args[0] as Record<string, JinjaValue>), ...Object.fromEntries(named) } : new Unknown('dict')))],
+]);
+
+/** A method of a text, a list or a mapping (P289), as Python gives a template one; `undefined` where it is not one read here. */
+const methodOf = (of: JinjaValue, name: string): Builtin | undefined => {
+  if (typeof of === 'string') {
+    const text = (change: (args: readonly JinjaValue[]) => JinjaValue): Builtin => new Builtin(name, (args) => (args.some(isUnsettled) ? new Unknown(name) : change(args)));
+    switch (name) {
+      case 'lower':
+        return text(() => of.toLowerCase());
+      case 'upper':
+        return text(() => of.toUpperCase());
+      case 'strip':
+      case 'lstrip':
+      case 'rstrip':
+        return text(([chars]) => {
+          const set = typeof chars === 'string' ? chars : undefined;
+          const trims = (character: string): boolean => (set === undefined ? /\s/.test(character) : set.includes(character));
+          let start = 0;
+          let end = of.length;
+          if (name !== 'rstrip') while (start < end && trims(of[start] as string)) start += 1;
+          if (name !== 'lstrip') while (end > start && trims(of[end - 1] as string)) end -= 1;
+          return of.slice(start, end);
+        });
+      case 'replace':
+        return text(([from, to]) => (typeof from === 'string' && typeof to === 'string' ? of.split(from).join(to) : new Unknown(name)));
+      case 'split':
+        return text(([separator, most]) => {
+          const parts = typeof separator === 'string' ? of.split(separator) : of.trim().split(/\s+/).filter((part) => part !== '');
+          if (typeof most !== 'number' || most < 0 || parts.length <= most + 1) return parts;
+          return [...parts.slice(0, most), parts.slice(most).join(typeof separator === 'string' ? separator : ' ')];
+        });
+      case 'startswith':
+        return text(([prefix]) => (typeof prefix === 'string' ? of.startsWith(prefix) : new Unknown(name)));
+      case 'endswith':
+        return text(([suffix]) => (typeof suffix === 'string' ? of.endsWith(suffix) : new Unknown(name)));
+      case 'title':
+      case 'capitalize':
+        return text(() => (FILTERS.get(name) as Filter)(of, [], new Map()));
+      case 'join':
+        return text(([items]) => (FILTERS.get('join') as Filter)(items as JinjaValue, [of], new Map()));
+      case 'format':
+        return new Builtin(name, (args, named) => {
+          let index = 0;
+          let missing = false;
+          const out = of.replace(/\{\{|\}\}|\{([A-Za-z_]\w*|\d*)\}/g, (whole, key: string | undefined) => {
+            if (whole === '{{') return '{';
+            if (whole === '}}') return '}';
+            const value = key === undefined || key === '' ? args[index++] : /^\d+$/.test(key) ? args[Number(key)] : named.get(key);
+            const written = value === undefined ? undefined : rendered(value);
+            if (written === undefined) missing = true;
+            return written ?? '';
+          });
+          return missing ? new Unknown(name) : out;
+        });
+      default:
+        return undefined;
+    }
+  }
+  if (isRecord(of)) {
+    const record = of as Record<string, JinjaValue>;
+    switch (name) {
+      case 'get':
+        return new Builtin(name, ([key, fallback = null]) => (typeof key === 'string' ? (record[key] ?? fallback) : new Unknown(name)));
+      case 'keys':
+        return new Builtin(name, () => Object.keys(record));
+      case 'values':
+        return new Builtin(name, () => Object.values(record));
+      default:
+        return undefined;
+    }
+  }
+  return undefined;
+};
 
 /** A filter of text, on a value written as text. */
 function textual(value: JinjaValue, change: (text: string) => string): JinjaValue {
@@ -739,12 +965,31 @@ const macroCalled = (expression: Expression, scope: Scope): MacroCall | undefine
  * written, else undefined, as Jinja binds them - over the names bound where
  * it was defined, itself, and the caller a call block hands it.
  */
+/** The names a macro's body reads of `varargs` and `kwargs` (P289), read once per body. */
+const READS = new WeakMap<readonly Node[], ReadonlySet<string>>();
+
+const readsOf = (body: readonly Node[]): ReadonlySet<string> => {
+  let found = READS.get(body);
+  if (found === undefined) {
+    const text = JSON.stringify(body, (_key, value: unknown) => (value instanceof Macro || value instanceof Builtin || value instanceof Pairs ? undefined : value));
+    found = new Set(['varargs', 'kwargs'].filter((name) => text.includes(`"kind":"name","name":"${name}"`)));
+    READS.set(body, found);
+  }
+  return found;
+};
+
 const renderMacro = (call: MacroCall, run: Run, caller?: Macro): string[] => {
   const { macro, positional, named } = call;
   if (run.depth.value >= MOST_DEPTH) throw new NotRead('macros call each other deeper than is followed');
-  if (positional.length > macro.parameters.length) throw new NotRead(`${macro.name} is handed more than it takes`);
-  for (const name of named.keys()) if (!macro.parameters.some((each) => each.name === name)) throw new NotRead(`${macro.name} takes no ${name}`);
+  // What a macro is handed past its parameters is `varargs` and `kwargs`, where its body reads them (P289).
+  const takes = readsOf(macro.body);
+  const extra = positional.slice(macro.parameters.length);
+  const extraNamed = [...named.entries()].filter(([name]) => !macro.parameters.some((each) => each.name === name));
+  if (extra.length > 0 && !takes.has('varargs')) throw new NotRead(`${macro.name} is handed more than it takes`);
+  for (const [name] of extraNamed) if (!takes.has('kwargs')) throw new NotRead(`${macro.name} takes no ${name}`);
   const names = new Map(macro.closure);
+  names.set('varargs', extra);
+  names.set('kwargs', Object.fromEntries(extraNamed));
   names.set(macro.name, macro);
   const inner: Run = { ...run, lookup: macro.lookup };
   macro.parameters.forEach((parameter, index) => {
@@ -766,14 +1011,24 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
       return expression.value;
     case 'name': {
       const bound = scope.names.get(expression.name);
-      return bound !== undefined ? bound : fromFiles(scope.lookup(expression.name, []), expression.name);
+      if (bound !== undefined) return bound;
+      const given = fromFiles(scope.lookup(expression.name, []), expression.name);
+      // A function Jinja gives every template, where the files give nothing by its name (P289).
+      return given instanceof Undefined ? (GLOBALS.get(expression.name) ?? given) : given;
     }
     case 'member': {
       const of = evaluate(expression.of, scope);
       const key = evaluate(expression.key, scope);
       if (of instanceof Unknown || isUnsettled(key)) return new Unknown('a member');
       if (of instanceof Undefined) return new Undefined(of.written);
-      if (Array.isArray(of) && typeof key === 'number') return (of as JinjaValue[])[key] ?? new Undefined(String(key));
+      // A method of a text or a mapping, where the mapping holds nothing by its name (P289).
+      if (expression.key.kind === 'literal' && typeof key === 'string' && !(isRecord(of) && key in of)) {
+        const method = methodOf(of, key);
+        if (method !== undefined) return method;
+      }
+      if (Array.isArray(of) && typeof key === 'number') return (of as JinjaValue[]).at(key) ?? new Undefined(String(key));
+      // `parts.0`, as Jinja reads a digit after a dot: the item at that place (P289).
+      if (Array.isArray(of) && typeof key === 'string' && /^\d+$/.test(key)) return (of as JinjaValue[])[Number(key)] ?? new Undefined(key);
       if (isRecord(of) && (typeof key === 'string' || typeof key === 'number')) return (of as Record<string, JinjaValue>)[String(key)] ?? new Undefined(String(key));
       return new Undefined(String(key));
     }
@@ -790,6 +1045,21 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
         const texts = renderMacro(called, scope.run as Run);
         return texts.length === 1 ? (texts[0] as string) : new Unknown(`${called.macro.name}()`);
       }
+      // A function Jinja gives, or a method of a value (P289).
+      if (expression.of.kind === 'name' || expression.of.kind === 'member') {
+        const callee = evaluate(expression.of, scope);
+        if (callee instanceof Builtin) {
+          const positional: JinjaValue[] = [];
+          const named = new Map<string, JinjaValue>();
+          for (const arg of expression.args) {
+            const value = evaluate(arg.value, scope);
+            if (arg.name === undefined) positional.push(value);
+            else named.set(arg.name, value);
+          }
+          return callee.call(positional, named);
+        }
+        if (callee instanceof Unknown) return new Unknown(`${callee.written}()`);
+      }
       throw new NotRead('a call is not run here');
     }
     case 'filter': {
@@ -799,7 +1069,8 @@ const evaluate = (expression: Expression, scope: Scope): JinjaValue => {
       if (value instanceof Unknown) return value;
       const args = expression.args.map((arg) => evaluate(arg, scope));
       if (args.some(isUnsettled)) return new Unknown('a filter');
-      const out = filter(value, args);
+      const named = new Map((expression.named ?? []).map(([name, arg]) => [name, evaluate(arg, scope)] as const));
+      const out = filter(value, args, named);
       return out instanceof Undefined && expression.name !== 'default' && expression.name !== 'd' ? new Unknown(expression.name) : out;
     }
     case 'list':
@@ -1087,6 +1358,16 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
     }
     case 'set':
       return [{ ...way, names: new Map([...way.names, [node.name, evaluate(node.value, scope)]]) }];
+    case 'set-many': {
+      const value = evaluate(node.value, scope);
+      const items = Array.isArray(value) ? (value as JinjaValue[]) : undefined;
+      if (items === undefined || items.length !== node.names.length) {
+        // A value the files do not give leaves every name not known; one that holds another number of items is not read.
+        if (!isUnsettled(value)) throw new NotRead(`${node.written} unpacks what it does not hold`);
+        return [{ ...way, names: new Map([...way.names, ...node.names.map((name): [string, JinjaValue] => [name, new Unknown(name)])]) }];
+      }
+      return [{ ...way, names: new Map([...way.names, ...node.names.map((name, at): [string, JinjaValue] => [name, items[at] as JinjaValue])]) }];
+    }
     case 'set-block':
       return renderApart(node.body, way, run).map((text) => ({ ...way, names: new Map([...way.names, [node.name, evaluate(node.filtered, { ...scope, names: new Map([...way.names, [HELD, text]]) })]]) }));
     case 'filter-block':
@@ -1150,7 +1431,21 @@ const renderNode = (node: Node, way: Way, outer: Run): Way[] => {
         if (node.names.length === 1 && only !== undefined) bound.set(only, item);
         else if (Array.isArray(item) && item.length === node.names.length) node.names.forEach((name, at) => bound.set(name, (item as JinjaValue[])[at] as JinjaValue));
         else throw new NotRead(`${node.written} unpacks what it does not hold`);
-        bound.set('loop', { index: index + 1, index0: index, first: index === 0, last: index === items.length - 1, length: items.length });
+        // The loop's own record (P289): where it is, what is beside it, and `cycle` through the values it is handed.
+        bound.set('loop', {
+          index: index + 1,
+          index0: index,
+          revindex: items.length - index,
+          revindex0: items.length - index - 1,
+          first: index === 0,
+          last: index === items.length - 1,
+          length: items.length,
+          depth: 1,
+          depth0: 0,
+          ...(index > 0 ? { previtem: items[index - 1] as JinjaValue } : {}),
+          ...(index < items.length - 1 ? { nextitem: items[index + 1] as JinjaValue } : {}),
+          cycle: new Builtin('cycle', (args) => (args.length === 0 ? new Unknown('cycle') : (args[index % args.length] as JinjaValue))),
+        });
         // What the body binds stays in the body, as Jinja scopes a loop.
         ways = ways.flatMap((at) => renderNodes(node.body, [{ ...at, names: new Map([...at.names, ...bound]) }], run).map((done) => ({ ...done, names: at.names })));
       });

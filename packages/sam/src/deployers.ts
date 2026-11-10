@@ -25,7 +25,12 @@ export type { DeployedValue } from '@flowatlas/serverless';
  *   and `!stack_output_external <stack name>::<Output>` are the output of a
  *   stack another deployment - or this one - publishes, joined as an export
  *   is; `!environment_variable X` is X of the environment the stack is
- *   launched in.
+ *   launched in. `{{ command_path }}` is the path the command launches,
+ *   split into its parts, and the stack's own path where no command is
+ *   written; a command launches the stacks it names and every stack they
+ *   depend on (`dependencies`, and the stacks a `!stack_output` reads), as
+ *   sceptre does; `!ssm` is a parameter of the account, said by its name
+ *   (P289).
  * - **rain**: `rain deploy <template> [<stack>] --params K=V,K2=V2 --config
  *   <file>` written in a script, a recipe, a shell script or a pipeline (see
  *   `commands.ts`) beside the template or above it; the stack is named after
@@ -146,6 +151,8 @@ interface Launch {
   readonly vars: Readonly<Record<string, unknown>>;
   readonly env: Readonly<Record<string, DeployedValue>>;
   readonly varFiles: readonly string[];
+  /** The path the command names, split into its parts as sceptre gives a file `command_path` (P289): `['prod', 'orders.yaml']`. */
+  readonly commandPath: readonly string[];
 }
 
 /** A sceptre configuration file, rendered and read, its resolvers kept apart; `undefined` where it does not read. */
@@ -164,7 +171,7 @@ const readSceptreFile = (repoDir: string, project: Project, file: string, launch
   const text = textAt(repoDir, file);
   if (text === undefined) return undefined;
   const environment = Object.fromEntries(Object.entries(launch.env).filter(([, value]) => typeof value === 'string'));
-  const rendering = renderJinja(text, lookupIn({ var: launch.vars, environment_variable: environment, stack_group_config: groupConfig }), project.files.indexOf(file) + 1, { load: jinjaLoaderBeside(repoDir, file) });
+  const rendering = renderJinja(text, lookupIn({ var: launch.vars, environment_variable: environment, stack_group_config: groupConfig, command_path: launch.commandPath }), project.files.indexOf(file) + 1, { load: jinjaLoaderBeside(repoDir, file) });
   // A statement not run here decides what the file is: nothing this does not run can say.
   if ([...rendering.unrendered.values()].some((written) => written.startsWith('{%'))) return undefined;
   try {
@@ -442,6 +449,12 @@ const resolverValue = (value: Resolved, at: Resolving, depth: number): Part => {
     }
     case '!no_value':
       return NO_VALUE;
+    case '!ssm': {
+      // sceptre-ssm-resolver: `!ssm /path/to/parameter`, or `!ssm { name: /path/to/parameter, profile, region }` (P289).
+      const name = written ?? (isMapping(value.value) ? textOf(value.value['name'])?.trim() : undefined);
+      if (name === undefined || UNRENDERED.test(name)) break;
+      return new Unread(`it is the SSM parameter ${name}, which sceptre reads from the account when the stack is launched; the files do not give its value`);
+    }
     case '!rcmd':
     case '!cmd':
       return new Unread(`it is what ${value.text} prints, a command sceptre runs when the stack is launched`);
@@ -540,6 +553,8 @@ interface SceptreRun {
   readonly dirs: readonly string[];
   /** The stack or group it launches, from `config/`; `.` for the whole project. */
   readonly path: string;
+  /** The path as the command writes it (P289): what `command_path` is. */
+  readonly written: string;
   readonly varFiles: readonly string[];
   readonly vars: Readonly<Record<string, string | Unread>>;
   /** `--merge-vars`: successive var files merged key by key at every depth, not replaced at the top (P264). */
@@ -586,7 +601,7 @@ const sceptreRuns = (repoDir: string, root: string): SceptreRun[] =>
     if (subcommand === undefined || !LAUNCHES.has(subcommand) || path === undefined || isFilledIn(path)) return [];
     const dirs = command.dirs.map((from) => under(from, dir)).filter((projectDir) => projectDir === root);
     if (dirs.length === 0) return [];
-    return [{ command, dirs, path: posix.normalize(path.replace(/\.ya?ml$/, '')), varFiles: varFiles.map((file) => under(root, file)), vars, mergeVars }];
+    return [{ command, dirs, path: posix.normalize(path.replace(/\.ya?ml$/, '')), written: path, varFiles: varFiles.map((file) => under(root, file)), vars, mergeVars }];
   });
 
 /** Whether a run launches a stack: the whole project, the stack's group or one above it, or the stack. */
@@ -620,17 +635,51 @@ const readVarFile = (repoDir: string, file: string): Record<string, unknown> | u
  * written, one with no command. The var files the configuration names
  * (`infra.vars`) apply over each, as the last `--var-file` would.
  */
-const launchesOf = (repoDir: string, runs: readonly SceptreRun[], stackPath: string, named: readonly Record<string, unknown>[]): Launch[] => {
+const launchesOf = (repoDir: string, runs: readonly SceptreRun[], stackPath: string, stackFile: string, named: readonly Record<string, unknown>[], launched: (run: SceptreRun) => ReadonlySet<string>): Launch[] => {
   const over = Object.assign({}, ...named) as Record<string, unknown>;
-  const covering = runs.filter((run) => launches(run, stackPath));
-  if (covering.length === 0) return [{ vars: over, env: {}, varFiles: [] }];
-  return covering.map((run) => {
-    const files = run.varFiles.map((file) => readVarFile(repoDir, file) ?? {});
-    const fromFiles = run.mergeVars ? files.reduce<Record<string, unknown>>((into, file) => mergedDeeply(into, file), {}) : (Object.assign({}, ...files) as Record<string, unknown>);
-    // A var a shell variable fills in is not known: it is left out, and renders nothing.
-    const given = Object.fromEntries(Object.entries(run.vars).filter(([, value]) => typeof value === 'string'));
-    return { command: run.command, vars: { ...fromFiles, ...given, ...over }, env: run.command.env, varFiles: run.varFiles };
-  });
+  // A run launches a stack it names, and every stack those depend on (P289).
+  const covering = runs.filter((run) => launches(run, stackPath) || launched(run).has(stackPath));
+  if (covering.length === 0) return [{ vars: over, env: {}, varFiles: [], commandPath: stackFile.split('/') }];
+  return covering.map((run) => runLaunch(repoDir, run, over));
+};
+
+/** What a run hands the stacks it launches: its var files and vars, the configuration's over them, its environment and its path. */
+const runLaunch = (repoDir: string, run: SceptreRun, over: Readonly<Record<string, unknown>>): Launch => {
+  const files = run.varFiles.map((file) => readVarFile(repoDir, file) ?? {});
+  const fromFiles = run.mergeVars ? files.reduce<Record<string, unknown>>((into, file) => mergedDeeply(into, file), {}) : (Object.assign({}, ...files) as Record<string, unknown>);
+  // A var a shell variable fills in is not known: it is left out, and renders nothing.
+  const given = Object.fromEntries(Object.entries(run.vars).filter(([, value]) => typeof value === 'string'));
+  return { command: run.command, vars: { ...fromFiles, ...given, ...over }, env: run.command.env, varFiles: run.varFiles, commandPath: run.written === '.' ? [] : run.written.split('/').filter((part) => part !== '') };
+};
+
+/**
+ * The stacks a stack depends on (P289), by their path from `config/`: the
+ * `dependencies` its configuration and its groups' write, and every stack
+ * whose output a `!stack_output` of it reads, as sceptre launches them first.
+ */
+const dependenciesOf = (stack: Stack): string[] => {
+  const out = new Set<string>();
+  const listed = (value: unknown): void => {
+    for (const each of Array.isArray(value) ? value : []) {
+      const path = plainOf(each);
+      if (path !== undefined) out.add(posix.normalize(path.replace(/\.ya?ml$/, '')));
+    }
+  };
+  listed(stack.settings['dependencies']);
+  listed(stack.own.value['dependencies']);
+  const outputs = (value: unknown, depth = 0): void => {
+    if (depth > 8) return;
+    if (value instanceof Resolved) {
+      const named = value.tag === '!stack_output' ? outputNamed(value.value) : undefined;
+      if (named !== undefined) out.add(posix.normalize(named.stack.replace(/\.ya?ml$/, '')));
+      return;
+    }
+    if (Array.isArray(value)) for (const item of value) outputs(item, depth + 1);
+    else if (isMapping(value)) for (const item of Object.values(value)) outputs(item, depth + 1);
+  };
+  outputs(stack.parameters);
+  outputs(stack.userData);
+  return [...out];
 };
 
 /** The deployments of a template by sceptre stacks of the project it is in, once per command that launches each. */
@@ -648,11 +697,34 @@ const sceptreDeployers = (repoDir: string, template: string, vars: readonly stri
     return value !== undefined && parameterless(value);
   });
   const named = namedFiles.map((file) => readVarFile(repoDir, file) ?? {});
+  const over = Object.assign({}, ...named) as Record<string, unknown>;
+  const stackFiles = files.filter((file) => !GROUP_FILE.test(file));
+  const pathOf = (file: string): string => file.slice(configDir.length + 1).replace(/\.ya?ml$/, '');
+  // What each run launches: the stacks it names, then what they depend on, all the way down (P289).
+  const closures = new Map<SceptreRun, ReadonlySet<string>>();
+  const launched = (run: SceptreRun): ReadonlySet<string> => {
+    const known = closures.get(run);
+    if (known !== undefined) return known;
+    const launch = runLaunch(repoDir, run, over);
+    const out = new Set(stackFiles.map(pathOf).filter((path) => launches(run, path)));
+    const queue = [...out];
+    while (queue.length > 0) {
+      const path = queue.shift() as string;
+      const file = stackFiles.find((each) => pathOf(each) === path);
+      const stack = file === undefined ? undefined : stackOf(repoDir, project, file, launch);
+      for (const dependency of stack === undefined ? [] : dependenciesOf(stack)) {
+        if (out.has(dependency) || !stackFiles.some((each) => pathOf(each) === dependency)) continue;
+        out.add(dependency);
+        queue.push(dependency);
+      }
+    }
+    closures.set(run, out);
+    return out;
+  };
   const found: Deployer[] = [];
-  for (const file of files) {
-    if (GROUP_FILE.test(file)) continue;
-    const path = file.slice(configDir.length + 1).replace(/\.ya?ml$/, '');
-    for (const launch of launchesOf(repoDir, runs, path, named)) {
+  for (const file of stackFiles) {
+    const path = pathOf(file);
+    for (const launch of launchesOf(repoDir, runs, path, file.slice(configDir.length + 1), named, launched)) {
       const stack = stackOf(repoDir, project, file, launch);
       if (stack === undefined || sceptreTemplate(root, stack.own.value) !== template) continue;
       /** The name another stack of the project is launched under, by its path from `config/`, under the same launch. */

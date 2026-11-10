@@ -232,3 +232,60 @@ export const b = () => billing.add({ name: 'invoice', data: {} });
     expect(out.sites[0]?.through).toEqual(['Client.add', 'QueueBase.add']);
   });
 });
+
+describe('a table a repository base class is handed by the class extending it (P289)', () => {
+  const REPOSITORY = `
+declare class Client { put(input: { TableName: string; Item: unknown }): Promise<void> }
+class Repository {
+  private readonly client = new Client();
+  constructor(private readonly table: string) {}
+  save(item: unknown) { return this.client.put({ TableName: this.table, Item: item }); }
+}
+class OrdersRepository extends Repository {
+  constructor() { super('orders'); }
+  place(order: unknown) { return this.save(order); }
+}
+class NamedRepository extends Repository {}
+class AuditRepository extends Repository {
+  constructor(name: string) { super(name); }
+}
+abstract class Store {
+  protected abstract readonly table: string;
+  write(item: unknown) { return new Client().put({ TableName: this.table, Item: item }); }
+}
+class CartStore extends Store { protected readonly table = 'carts'; }
+`;
+  const walkedFrom = (source: string, method: string) => {
+    const file = new Project({ useInMemoryFileSystem: true }).createSourceFile('repo.ts', REPOSITORY + source);
+    const put = file
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .find((call) => call.getText().includes('.put(') && call.getFirstAncestorByKind(SyntaxKind.MethodDeclaration)?.getName() === method) as CallExpression;
+    const table = put.getFirstDescendantByKindOrThrow(SyntaxKind.ObjectLiteralExpression).getPropertyOrThrow('TableName').getLastChildOrThrow();
+    return forwardedPublish([heldAt(table)], diOf(file));
+  };
+
+  it("reads the table a subclass hands up in super(...), from its own methods and from an instance of it however it is had", () => {
+    const out = walkedFrom(
+      `
+new OrdersRepository().place({});
+new NamedRepository('stock').save({});
+new AuditRepository('audit').save({});
+class Checkout {
+  constructor(private readonly orders: OrdersRepository) {}
+  run() { return this.orders.save({}); }
+}`,
+      'save',
+    );
+    expect(out.sites.map((site) => `${site.values.map(show).join(' ')} at ${site.site.getText()}`)).toEqual([
+      "written:'orders' at this.save(order)",
+      "written:'stock' at new NamedRepository('stock').save({})",
+      "written:'audit' at new AuditRepository('audit').save({})",
+      "written:'orders' at this.orders.save({})",
+    ]);
+  });
+
+  it('reads a field a base only declares as what the class extending it initialises it to', () => {
+    const out = walkedFrom('new CartStore().write({});', 'write');
+    expect(out.sites.map((site) => site.values.map(show).join(' '))).toEqual(["written:'carts'"]);
+  });
+});

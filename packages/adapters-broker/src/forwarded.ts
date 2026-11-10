@@ -50,8 +50,13 @@ export type Held =
   | { readonly kind: 'written'; readonly expression: TsNode; readonly choices?: readonly TsNode[] }
   /** A parameter, or a property of one: decided by whoever calls its function. */
   | { readonly kind: 'parameter'; readonly parameter: ParameterDeclaration; readonly path: readonly string[]; readonly expression: TsNode }
-  /** A field the instance was constructed with: decided by whoever built the instance. */
-  | { readonly kind: 'field'; readonly owner: ClassDeclaration; readonly index: number; readonly expression: TsNode }
+  /**
+   * A field the instance was constructed with: decided by whoever built the
+   * instance. `index` is the constructor's argument it is set from; -1 for a
+   * field the class only declares, which a class extending it initialises
+   * (P289), read by `name`.
+   */
+  | { readonly kind: 'field'; readonly owner: ClassDeclaration; readonly index: number; readonly name?: string; readonly expression: TsNode }
   /**
    * What the instance was set up with by a call of another of its methods:
    * `this.queue = new Queue(name)` in `open(name)`, read in `add` (P286).
@@ -141,6 +146,36 @@ export const fieldIndex = (owner: ClassDeclaration, name: string): number | unde
   return elsewhere ? undefined : index;
 };
 
+/**
+ * Whether a class declares a field it never sets (P289): `protected abstract
+ * readonly table: string`, or one written with no value that nothing in the
+ * class assigns - which only a class extending it decides.
+ */
+const declaredOnly = (owner: ClassDeclaration, name: string): boolean => {
+  const declared = owner.getProperty(name);
+  if (declared === undefined || declared.isStatic() || declared.getInitializer() !== undefined) return false;
+  let assigned = false;
+  owner.forEachDescendant((node) => {
+    if (!Node.isBinaryExpression(node) || node.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return;
+    const left = node.getLeft();
+    if (Node.isPropertyAccessExpression(left) && Node.isThisExpression(left.getExpression()) && left.getName() === name) assigned = true;
+  });
+  return !assigned;
+};
+
+/** A field read in a class that does not declare it, from the class above it that keeps it, as this class decides it (P289). */
+const inheritedField = (cls: ClassDeclaration, name: string, expression: TsNode): Held | undefined => {
+  if (cls.getProperty(name) !== undefined || cls.getConstructors().some((constructor) => constructor.getParameters().some((parameter) => parameter.getName() === name && parameter.isParameterProperty()))) return undefined;
+  let base = cls.getBaseClass();
+  for (let depth = 0; base !== undefined && depth < 8; depth += 1) {
+    const index = fieldIndex(base, name) ?? (declaredOnly(base, name) ? -1 : undefined);
+    if (index !== undefined) return heldThroughSuper(cls, base, index, expression, name);
+    if (base.getProperty(name) !== undefined) return undefined;
+    base = base.getBaseClass();
+  }
+  return undefined;
+};
+
 /** What a value written at an expression is, for the walk. */
 export const heldAt = (expression: TsNode): Held => {
   const node = unwrapped(expression);
@@ -156,9 +191,12 @@ export const heldAt = (expression: TsNode): Held => {
     const target = unwrapped(node.getExpression());
     if (Node.isThisExpression(target)) {
       const owner = node.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
-      const index = owner === undefined ? undefined : fieldIndex(owner, node.getName());
-      if (owner !== undefined && index !== undefined) return { kind: 'field', owner, index, expression };
-      return { kind: 'written', expression };
+      const name = node.getName();
+      const index = owner === undefined ? undefined : (fieldIndex(owner, name) ?? (declaredOnly(owner, name) ? -1 : undefined));
+      if (owner !== undefined && index !== undefined) return { kind: 'field', owner, index, name, expression };
+      // A field a class it extends keeps, as this class decides it (P289).
+      const inherited = owner === undefined ? undefined : inheritedField(owner, name, expression);
+      return inherited ?? { kind: 'written', expression };
     }
     const inner = heldAt(target);
     if (inner.kind === 'parameter') return { ...inner, path: [...inner.path, node.getName()], expression };
@@ -335,7 +373,7 @@ const superCallOf = (cls: ClassDeclaration): CallExpression | undefined =>
  * takes as its own constructor's argument is what its instance was built
  * with; undefined where `cls` does not extend `owner`.
  */
-const heldThroughSuper = (cls: ClassDeclaration, owner: ClassDeclaration, index: number, expression: TsNode): Held | undefined => {
+const heldThroughSuper = (cls: ClassDeclaration, owner: ClassDeclaration, index: number, expression: TsNode, name?: string): Held | undefined => {
   const lineage: ClassDeclaration[] = [];
   let current: ClassDeclaration | undefined = cls;
   while (current !== undefined && current !== owner && lineage.length < 8) {
@@ -343,6 +381,11 @@ const heldThroughSuper = (cls: ClassDeclaration, owner: ClassDeclaration, index:
     current = current.getBaseClass();
   }
   if (current !== owner) return undefined;
+  // A field the owner only declares is what the nearest class to `cls` initialises it to (P289).
+  if (index < 0) {
+    const initial = name === undefined ? undefined : [...lineage].reverse().map((each) => each.getProperty(name)?.getInitializer()).find((each) => each !== undefined);
+    return initial === undefined ? { kind: 'field', owner: cls, index, ...(name === undefined ? {} : { name }), expression } : heldAt(initial);
+  }
   let at = index;
   let holder = owner;
   for (const each of lineage) {
@@ -364,7 +407,7 @@ const heldThroughSuper = (cls: ClassDeclaration, owner: ClassDeclaration, index:
     }
     return held.kind === 'written' ? held : { kind: 'unread', expression: handed, why: `${handed.getText().slice(0, 60)} is not written where ${each.getName() ?? 'the class'} hands it to its base class.` };
   }
-  return { kind: 'field', owner: holder, index: at, expression };
+  return { kind: 'field', owner: holder, index: at, ...(name === undefined ? {} : { name }), expression };
 };
 
 /** The class a receiver is an instance of, as its type says. */
@@ -435,8 +478,10 @@ const receiverOf = (call: CallExpression): TsNode | undefined => {
 /** The construction a binding was initialised with, where it was: `const queue = new JobQueue(...)`. */
 const constructionOf = (receiver: TsNode, owner: ClassDeclaration): TsNode[] | undefined => {
   const declaration = Node.isIdentifier(receiver) || Node.isPropertyAccessExpression(receiver) ? receiver.getSymbol()?.getDeclarations()[0] : undefined;
-  const initial =
-    declaration !== undefined && (Node.isVariableDeclaration(declaration) || Node.isPropertyDeclaration(declaration))
+  // A `new` written where the call is made on it as readily (P289).
+  const initial = Node.isNewExpression(unwrapped(receiver))
+    ? unwrapped(receiver)
+    : declaration !== undefined && (Node.isVariableDeclaration(declaration) || Node.isPropertyDeclaration(declaration))
       ? declaration.getInitializer()
       : undefined;
   if (initial === undefined) return undefined;
@@ -445,6 +490,7 @@ const constructionOf = (receiver: TsNode, owner: ClassDeclaration): TsNode[] | u
   if (!Node.isNewExpression(made)) return undefined;
   const callee = made.getExpression();
   const name = Node.isIdentifier(callee) ? callee.getText() : Node.isPropertyAccessExpression(callee) ? callee.getName() : undefined;
+  // A class extending the owner is read through what it hands `super(...)` first (`instanceValue`).
   return name === owner.getName() ? made.getArguments() : undefined;
 };
 
@@ -600,18 +646,19 @@ const providedArgument = (token: TsNode, bindings: Bindings, owner: ClassDeclara
 };
 
 /** What the instance a call is made on was constructed with at `index`. */
-const instanceValue = (receiver: TsNode, owner: ClassDeclaration, index: number, di: DiMap, depth = 0): Held => {
+const instanceValue = (receiver: TsNode, owner: ClassDeclaration, index: number, di: DiMap, depth = 0, name?: string): Held => {
   // An instance of a class extending the owner holds what that class hands
   // its base (P286), or what it was itself built with.
   const typed = classOfReceiver(receiver);
   if (typed !== undefined && typed !== owner && depth < 4) {
-    const through = heldThroughSuper(typed, owner, index, receiver);
-    if (through?.kind === 'field' && through.owner !== owner) return instanceValue(receiver, through.owner, through.index, di, depth + 1);
+    const through = heldThroughSuper(typed, owner, index, receiver, name);
+    if (through?.kind === 'field' && through.owner !== owner) return instanceValue(receiver, through.owner, through.index, di, depth + 1, name);
     if (through !== undefined && through.kind !== 'field') return through;
   }
   const made = constructionOf(receiver, owner);
   if (made !== undefined) {
-    const argument = made[index];
+    const argument = index < 0 ? undefined : made[index];
+    if (index < 0) return { kind: 'unread', expression: receiver, why: `${receiver.getText().slice(0, 60)} is an instance of ${owner.getName() ?? 'a class'}, which does not set ${name ?? 'the field'}.` };
     return argument === undefined
       ? { kind: 'unread', expression: receiver, why: `${receiver.getText()} is constructed without the value its queue is.` }
       : heldAt(argument);
@@ -656,11 +703,11 @@ const stepped = (value: Held, call: CallExpression, holder: Forwarder, di: DiMap
       // field, now waiting on whoever calls that method - unless that method
       // is a subclass's, whose constructor decides it (P286).
       const cls = call.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
-      const decided = value.kind === 'field' && cls !== undefined && cls !== value.owner ? heldThroughSuper(cls, value.owner, value.index, call) : undefined;
+      const decided = value.kind === 'field' && cls !== undefined && cls !== value.owner ? heldThroughSuper(cls, value.owner, value.index, call, value.name) : undefined;
       return decided ?? { ...value, expression: call };
     }
     if (value.kind === 'set') return setOn(receiver as TsNode, value, call);
-    return instanceValue(receiver as TsNode, value.owner, value.index, di);
+    return instanceValue(receiver as TsNode, value.owner, value.index, di, 0, value.name);
   }
   const position = positionOf(value.parameter);
   const argument: TsNode | undefined = call.getArguments()[position] ?? value.parameter.getInitializer();

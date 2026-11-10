@@ -124,6 +124,13 @@ const listOf = (value: Value): Value[] => (Array.isArray(value) ? value : value 
 /** The class a value was built by, without its module: `SqsEventSource`. */
 const builtBy = (value: Value): string | undefined => (value instanceof Built ? value.what.slice(value.what.indexOf('.') + 1) : undefined);
 
+/** The statements a `PolicyDocument` is made with (P289). */
+const documentStatements = (document: Value): Value[] => {
+  if (!(document instanceof Built) || builtBy(document) !== 'PolicyDocument') return [];
+  const props = document.args[0];
+  return props instanceof ObjectValue ? listOf(props.get('statements')) : [];
+};
+
 /** An event pattern of the CDK, as the JSON the template holds: `detailType` is `detail-type`, a `Match` is a content filter. */
 const patternJson = (value: Value): unknown => {
   if (value instanceof Built && value.what.startsWith('aws-events.Match.')) {
@@ -596,12 +603,18 @@ export class AppDeployment {
    * each grant a construct of the app gives it - `queue.grantSendMessages(fn)`,
    * `table.grantWriteData(fn.role)` - on that construct, and each statement
    * added to its role (`addToRolePolicy`, `initialPolicy`) on the resources
-   * it names.
+   * it names. A role it is handed (`role: orderRole`) carries its grants to
+   * it (P289): what is granted to the role, the statements added to it
+   * (`addToPolicy`, `addToPrincipalPolicy`, `Grant.addToPrincipal`), its
+   * `inlinePolicies`, and every `Policy` attached to it.
    */
   #grants(fn: Construct): DeployedGrant[] {
     const out: DeployedGrant[] = [];
+    const written = prop(fn, 'role');
+    const role = written instanceof Construct ? written : undefined;
+    const holders = role === undefined ? [fn] : [fn, role];
     const isFn = (grantee: Value): boolean =>
-      grantee === fn || (grantee instanceof Attribute && grantee.construct === fn && (grantee.name === 'role' || grantee.name === 'grantPrincipal'));
+      holders.some((holder) => grantee === holder || (grantee instanceof Attribute && grantee.construct === holder && (grantee.name === 'role' || grantee.name === 'grantPrincipal')));
     for (const construct of this.constructs) {
       for (const [method, calls] of construct.added) {
         if (!WRITE_GRANTS.has(method)) continue;
@@ -616,6 +629,16 @@ export class AppDeployment {
       }
     }
     const statements = [...fn.addedBy('addToRolePolicy').map(({ args }) => args[0]), ...listOf(prop(fn, 'initialPolicy'))];
+    if (role !== undefined) {
+      for (const method of ['addToPolicy', 'addToPrincipalPolicy', 'addToRolePolicy']) statements.push(...role.addedBy(method).map(({ args }) => args[0]));
+      const inline = prop(role, 'inlinePolicies');
+      for (const document of inline instanceof ObjectValue ? inline.entries.values() : []) statements.push(...documentStatements(document));
+      for (const policy of this.constructs.filter((construct) => construct.type === 'aws-iam.Policy')) {
+        const attached = listOf(prop(policy, 'roles')).includes(role) || policy.addedBy('attachToRole').some(({ args }) => args[0] === role) || role.addedBy('attachInlinePolicy').some(({ args }) => args[0] === policy);
+        if (!attached) continue;
+        statements.push(...listOf(prop(policy, 'statements')), ...policy.addedBy('addStatements').flatMap(({ args }) => args), ...documentStatements(prop(policy, 'document')));
+      }
+    }
     for (const statement of statements) {
       if (!(statement instanceof Built) || builtBy(statement) !== 'PolicyStatement') continue;
       const props = statement.args[0];

@@ -23,6 +23,14 @@ import { mergedValues, renderingsOver, setValue, UNKNOWN_VALUE } from './helm.js
  * each base read before the part that names it, its environments, values and
  * releases first; and a release's `needs` is kept as what it is installed
  * after.
+ *
+ * Its sub-helmfiles (`helmfiles:`) are read as helmfile reads them (P289):
+ * each its own state, read in the environment of the helmfile naming it, with
+ * the state values the entry gives and the releases its selectors keep. A
+ * release takes what the release templates it inherits write (`templates:`
+ * and `inherit:`, or a YAML merge key), and its fields written as templates of
+ * the release (`{{ .Release.Name }}`) are rendered with it. `helmDefaults`
+ * says how helm is run, not what is installed, and is not read.
  */
 
 /** Where a helmfile is kept beside the commands that run it. */
@@ -72,7 +80,127 @@ export interface HelmfileReading {
   readonly releases?: readonly string[];
   /** What else a command keeping releases by name keeps (P273): what they need (`--include-needs`), and what that needs (`--include-transitive-needs`). */
   readonly needs?: 'none' | 'direct' | 'transitive';
+  /** Label selectors (P289): `tier=api,name!=cache`; a release any of them matches is kept, with `releases` too. */
+  readonly selectors?: readonly string[];
+  /** State values written inline (P289): what a sub-helmfile entry's `values` gives, over the environment's. */
+  readonly stateValues?: readonly Readonly<Record<string, unknown>>[];
 }
+
+/** How deep sub-helmfiles are followed; deeper is a row. */
+const MOST_SUB_HELMFILES = 4;
+
+/** The labels a release is selected by: its own, the helmfile's `commonLabels`, and its name, namespace and chart (P289). */
+const labelsOf = (release: Record<string, unknown>, common: Readonly<Record<string, string>>): Record<string, string> => {
+  const own = isRecord(release['labels']) ? textsOf(release['labels']) : {};
+  return {
+    ...common,
+    ...own,
+    ...(typeof release['name'] === 'string' ? { name: release['name'] } : {}),
+    ...(typeof release['namespace'] === 'string' ? { namespace: release['namespace'] } : {}),
+    ...(typeof release['chart'] === 'string' ? { chart: release['chart'] } : {}),
+  };
+};
+
+/** The members of a mapping written as text, a number or a boolean, as text. */
+const textsOf = (value: Record<string, unknown>): Record<string, string> =>
+  Object.fromEntries(Object.entries(value).flatMap(([key, item]) => (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean' ? [[key, String(item)]] : [])));
+
+/** Whether a release's labels pass one selector: each `k=v` and `k!=v` of it (P289). */
+const selectorMatches = (selector: string, labels: Readonly<Record<string, string>>): boolean =>
+  selector
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part !== '')
+    .every((part) => {
+      const not = /^([^!=]+)!=(.*)$/.exec(part);
+      if (not !== null) return labels[(not[1] as string).trim()] !== (not[2] as string).trim();
+      const is = /^([^!=]+)==?(.*)$/.exec(part);
+      return is !== null && labels[(is[1] as string).trim()] === (is[2] as string).trim();
+    });
+
+/** The keys of a release whose lists helmfile appends a template's to, the template's first (P289). */
+const APPENDED = new Set(['values', 'set', 'secrets', 'needs']);
+
+/** A key of a release written over what was there: a list of {@link APPENDED} after the one before it, anything else replacing it. */
+const writtenOver = (into: Record<string, unknown>, key: string, value: unknown): void => {
+  const before = into[key];
+  into[key] = APPENDED.has(key) && Array.isArray(before) && Array.isArray(value) ? [...before, ...value] : value;
+};
+
+/**
+ * A release with the release templates it inherits (P289): each `inherit`
+ * entry's template, its `except` keys left out, under the release's own keys.
+ * A template no part of the helmfile declares is said.
+ */
+const inherited = (release: Record<string, unknown>, templates: ReadonlyMap<string, Record<string, unknown>>): { release: Record<string, unknown>; missing: string[] } => {
+  const written = release['inherit'];
+  const entries = Array.isArray(written) ? written : written === undefined ? [] : [written];
+  if (entries.length === 0) return { release, missing: [] };
+  const out: Record<string, unknown> = {};
+  const missing: string[] = [];
+  for (const entry of entries) {
+    const name = typeof entry === 'string' ? entry : isRecord(entry) && typeof entry['template'] === 'string' ? entry['template'] : undefined;
+    const template = name === undefined ? undefined : templates.get(name);
+    if (template === undefined) {
+      missing.push(name ?? JSON.stringify(entry));
+      continue;
+    }
+    const except = new Set(isRecord(entry) && Array.isArray(entry['except']) ? entry['except'].map(String) : []);
+    for (const [key, value] of Object.entries(template)) if (!except.has(key)) writtenOver(out, key, value);
+  }
+  for (const [key, value] of Object.entries(release)) if (key !== 'inherit') writtenOver(out, key, value);
+  return { release: out, missing };
+};
+
+/**
+ * A release's fields written as templates of the release (P289), each
+ * rendered with the release - `.Release.Name`, `.Release.Namespace`,
+ * `.Release.Labels`, the environment and its values - as helmfile renders a
+ * release template's fields. A field that does not render one way is kept as
+ * written, and said.
+ */
+const releaseRendered = (release: Record<string, unknown>, root: Record<string, unknown>, unread: (why: string) => void): Record<string, unknown> => {
+  const render = (value: unknown): unknown => {
+    if (typeof value === 'string') {
+      if (!value.includes('{{')) return value;
+      const rendered = renderingsOver(value, root);
+      if (rendered.kind === 'rendered' && rendered.ways.length === 1) return rendered.ways[0]?.text;
+      unread(`${value} does not render one way with the release`);
+      return value;
+    }
+    if (Array.isArray(value)) return value.map(render);
+    if (isRecord(value)) return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, render(item)]));
+    return value;
+  };
+  return Object.fromEntries(Object.entries(release).map(([key, value]) => [key, key === 'name' ? value : render(value)]));
+};
+
+/** A segment of a path written with `*`, as a pattern of names. */
+const segmentPattern = (segment: string): RegExp => new RegExp(`^${segment.split('*').map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^/]*')}$`);
+
+/** The files a sub-helmfile's `path` names (P289): a path, or one with `*` in its segments, every match sorted. */
+const pathsMatching = (dir: string, written: string): string[] => {
+  if (!written.includes('*')) return existsSync(resolve(dir, written)) ? [resolve(dir, written)] : [];
+  let found = [dir];
+  for (const segment of written.split(/[\\/]/).filter((part) => part !== '' && part !== '.')) {
+    if (!segment.includes('*')) {
+      found = found.map((each) => join(each, segment));
+      continue;
+    }
+    const pattern = segmentPattern(segment);
+    found = found.flatMap((each) => {
+      try {
+        return readdirSync(each)
+          .filter((name) => pattern.test(name))
+          .sort()
+          .map((name) => join(each, name));
+      } catch {
+        return [];
+      }
+    });
+  }
+  return found.filter((each) => existsSync(each));
+};
 
 /** A part of a helmfile, as text, and the line of the file it starts on. */
 interface Part {
@@ -236,6 +364,8 @@ interface Declared {
   readonly values: Record<string, unknown>;
   /** What it needs, as written: `name`, `namespace/name` or `context/namespace/name`. */
   readonly needs: readonly string[];
+  /** The labels it is selected by (P289). */
+  readonly labels: Readonly<Record<string, string>>;
 }
 
 /** The release a `needs` entry names among those declared: by its name, and its namespace where the entry writes one. */
@@ -255,7 +385,13 @@ const needed = (need: string, declared: readonly Declared[]): Declared | undefin
  * what that needs in turn), and a need no release of the helmfile is, is the
  * finding `release-need-undefined`, as helmfile refuses to apply it.
  */
-export const readHelmfile = (path: string, label: (path: string) => string, reading: HelmfileReading = {}): { installs: ChartInstall[]; rows: ManifestRow[] } => {
+export const readHelmfile = (
+  path: string,
+  label: (path: string) => string,
+  reading: HelmfileReading = {},
+  /** The helmfiles naming this one as a sub-helmfile, outermost first (P289). */
+  within: readonly string[] = [],
+): { installs: ChartInstall[]; rows: ManifestRow[] } => {
   if (readText(path) === undefined) return { installs: [], rows: [] };
   const dir = dirname(path);
   const declared = declaredEnvironments(path, dir, label);
@@ -280,10 +416,15 @@ export const readHelmfile = (path: string, label: (path: string) => string, read
     const root = (): Record<string, unknown> => ({ Environment: { Name: environment, Values: values, KubeContext: UNKNOWN_VALUE }, Values: values, StateValues: values, Namespace: UNKNOWN_VALUE });
     const stated = (): void => {
       for (const each of reading.stateFiles ?? []) values = mergedValues(values, valuesFile(each, root()) ?? {});
+      for (const each of reading.stateValues ?? []) values = mergedValues(values, each as Record<string, unknown>);
       for (const each of reading.stateSets ?? []) values = setValue(values, each);
     };
     stated();
     const releases: Declared[] = [];
+    // What the parts declare for the releases after them (P289): release templates, common labels, sub-helmfiles.
+    const templates = new Map<string, Record<string, unknown>>();
+    let common: Record<string, string> = {};
+    const subs: Array<{ entry: unknown; file: string; line: number; values: Record<string, unknown> }> = [];
     layersOf(
       path,
       dir,
@@ -300,11 +441,25 @@ export const readHelmfile = (path: string, label: (path: string) => string, read
         }
         // A command's state values are written over the environment's.
         if (own !== undefined) stated();
-        (Array.isArray(value['releases']) ? value['releases'] : []).forEach((release, index) => {
-          if (!isRecord(release) || typeof release['name'] !== 'string') return;
-          const namespace = typeof release['namespace'] === 'string' ? release['namespace'] : undefined;
+        if (isRecord(value['templates'])) for (const [name, template] of Object.entries(value['templates'])) if (isRecord(template)) templates.set(name, template);
+        if (isRecord(value['commonLabels'])) common = { ...common, ...textsOf(value['commonLabels']) };
+        (Array.isArray(value['helmfiles']) ? value['helmfiles'] : []).forEach((entry, index) => {
+          subs.push({ entry, file, line: lineOf(document.at(['helmfiles', index])?.line ?? 1), values });
+        });
+        (Array.isArray(value['releases']) ? value['releases'] : []).forEach((written, index) => {
+          if (!isRecord(written) || typeof written['name'] !== 'string') return;
+          const line = lineOf(document.at(['releases', index])?.line ?? 1);
+          const { release: merged, missing } = inherited(written, templates);
+          for (const name of missing) unreadRow(file, line, `the release ${written['name']} inherits the template ${name}, which no part of the helmfile declares`, [written['name']]);
+          // A release template's fields are rendered with the release (P289).
+          const name = written['name'];
+          const namespace = typeof merged['namespace'] === 'string' && !merged['namespace'].includes('{{') ? merged['namespace'] : undefined;
+          const labels = labelsOf(merged, common);
+          const releaseRoot = { ...root(), Release: { Name: name, Namespace: namespace ?? UNKNOWN_VALUE, Labels: labels, Chart: typeof merged['chart'] === 'string' ? merged['chart'] : UNKNOWN_VALUE, KubeContext: UNKNOWN_VALUE } };
+          const release = releaseRendered(merged, releaseRoot, (why) => unreadRow(file, line, why, [name]));
+          const renderedNamespace = typeof release['namespace'] === 'string' ? release['namespace'] : undefined;
           const needs = (Array.isArray(release['needs']) ? release['needs'] : []).filter((each): each is string => typeof each === 'string');
-          releases.push({ name: release['name'], ...(namespace === undefined ? {} : { namespace }), release, file, line: lineOf(document.at(['releases', index])?.line ?? 1), values, needs });
+          releases.push({ name, ...(renderedNamespace === undefined ? {} : { namespace: renderedNamespace }), release, file, line, values, needs, labels: labelsOf(release, common) });
         });
       },
       (file, line, why) => unreadRow(file, line, why, []),
@@ -324,8 +479,11 @@ export const readHelmfile = (path: string, label: (path: string) => string, read
         });
       }
     }
-    // The releases a command keeps, and with --include-needs what they need.
-    const kept = new Set(reading.releases ?? []);
+    // The releases a command keeps - by name, or by the labels its selectors ask (P289) - and with --include-needs what they need.
+    const selectors = reading.selectors ?? [];
+    const named = new Set(reading.releases ?? []);
+    const selecting = selectors.length > 0 || named.size > 0;
+    const kept = new Set(selecting ? releases.filter((each) => named.has(each.name) || selectors.some((selector) => selectorMatches(selector, each.labels))).map((each) => each.name) : []);
     if (kept.size > 0 && reading.needs !== undefined && reading.needs !== 'none') {
       const queue = releases.filter((each) => kept.has(each.name));
       while (queue.length > 0) {
@@ -338,16 +496,54 @@ export const readHelmfile = (path: string, label: (path: string) => string, read
         }
       }
     }
+    // Sub-helmfiles first, as helmfile applies them (P289): each its own state, in this environment.
+    for (const sub of subs) {
+      const entry = isRecord(sub.entry) ? sub.entry : { path: sub.entry };
+      const written = entry['path'];
+      if (typeof written !== 'string' || /^[a-z][\w+.-]*::|^(?:git|https?):/i.test(written)) {
+        unreadRow(sub.file, sub.line, `the sub-helmfile ${String(written)} is not a file of the project`, []);
+        continue;
+      }
+      if (written.includes('{{')) {
+        unreadRow(sub.file, sub.line, `the sub-helmfile ${written} is named by a template`, []);
+        continue;
+      }
+      const found = pathsMatching(dir, written).flatMap((each) => (helmfilesIn(each).length > 0 ? helmfilesIn(each) : [each]));
+      if (found.length === 0) {
+        unreadRow(sub.file, sub.line, `the sub-helmfile ${written} is not in the project`, []);
+        continue;
+      }
+      const given = (Array.isArray(entry['values']) ? entry['values'] : []).flatMap((each): Array<Record<string, unknown>> => {
+        if (isRecord(each)) return [each];
+        if (typeof each !== 'string') return [];
+        const read = valuesFile(pathFrom(dir, each), root());
+        return read === undefined ? [] : [read];
+      });
+      const own = Array.isArray(entry['selectors']) ? entry['selectors'].filter((each): each is string => typeof each === 'string') : undefined;
+      // Without selectors of its own, a sub-helmfile is read with the command's.
+      const chosen: HelmfileReading = own === undefined || entry['selectorsInherited'] === true
+        ? { ...(reading.releases === undefined ? {} : { releases: reading.releases }), ...(reading.selectors === undefined ? {} : { selectors: reading.selectors }) }
+        : { selectors: own };
+      for (const each of found) {
+        if (within.length >= MOST_SUB_HELMFILES || within.includes(each) || each === path) {
+          unreadRow(sub.file, sub.line, `the sub-helmfile ${label(each)} is ${within.includes(each) || each === path ? 'one of the helmfiles naming it' : 'nested deeper than is followed'}`, []);
+          continue;
+        }
+        const read = readHelmfile(each, label, { environments: [environment], stateValues: given, ...chosen, ...(reading.needs === undefined ? {} : { needs: reading.needs }) }, [...within, path]);
+        for (const install of read.installs) installs.push(install);
+        for (const row of read.rows) if (!rows.some((seen) => seen.file === row.file && seen.line === row.line && seen.message === row.message)) rows.push(row);
+      }
+    }
     for (const each of releases) {
       const { release, name, namespace, file, line } = each;
       const chart = typeof release['chart'] === 'string' ? release['chart'] : undefined;
       if (chart === undefined) continue;
-      if (kept.size > 0 && !kept.has(name)) continue;
+      if (selecting && !kept.has(name)) continue;
       if (release['installed'] === false || (typeof release['condition'] === 'string' && conditionFalse(each.values, release['condition']))) continue;
       const chartDir = pathFrom(dir, chart);
       // A chart of a repository (`bitnami/redis`) is no directory of the project's.
       if (!existsSync(join(chartDir, 'Chart.yaml'))) continue;
-      const releaseRoot = { Environment: { Name: environment, Values: each.values, KubeContext: UNKNOWN_VALUE }, Values: each.values, StateValues: each.values, Namespace: UNKNOWN_VALUE, Release: { Name: name, Namespace: namespace ?? UNKNOWN_VALUE } };
+      const releaseRoot = { Environment: { Name: environment, Values: each.values, KubeContext: UNKNOWN_VALUE }, Values: each.values, StateValues: each.values, Namespace: UNKNOWN_VALUE, Release: { Name: name, Namespace: namespace ?? UNKNOWN_VALUE, Labels: each.labels } };
       const given = (Array.isArray(release['values']) ? release['values'] : []).flatMap((written): Array<string | Record<string, unknown>> => {
         if (isRecord(written)) return [written];
         if (typeof written !== 'string') return [];

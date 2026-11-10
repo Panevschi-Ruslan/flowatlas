@@ -52,3 +52,30 @@ describe('what a CDK function is granted', () => {
     ]);
   });
 });
+
+describe('what a CDK function is granted through its role and Grant.addToPrincipal (P289)', () => {
+  it("reads the grants and statements of a role it is handed, its inline policies and policies attached to it, and Grant.addToPrincipal", () => {
+    const deployment = stack(`
+    const role = new iam.Role(this, 'MoveRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      inlinePolicies: { publish: new iam.PolicyDocument({ statements: [new iam.PolicyStatement({ actions: ['sns:Publish'], resources: ['arn:aws:sns:eu-west-1:111122223333:stock-notices'] })] }) },
+    });
+    const move = new lambda.Function(this, 'Move', { functionName: 'stock-move', runtime: lambda.Runtime.NODEJS_20_X, code: lambda.Code.fromAsset(path.join(__dirname, '..', 'src')), handler: 'move.handler', role });
+    const restock = new sqs.Queue(this, 'Restock', { queueName: 'stock-restock' });
+    const writeOff = new sqs.Queue(this, 'WriteOff', { queueName: 'stock-write-off' });
+    const audit = new sqs.Queue(this, 'Audit', { queueName: 'stock-audit' });
+    const later = new sqs.Queue(this, 'Later', { queueName: 'stock-later' });
+    restock.grantSendMessages(role);
+    role.addToPolicy(new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [writeOff.queueArn] }));
+    new iam.Policy(this, 'AuditPolicy', { roles: [role], statements: [new iam.PolicyStatement({ actions: ['sqs:SendMessage'], resources: [audit.queueArn] })] });
+    iam.Grant.addToPrincipal({ grantee: move, actions: ['sqs:SendMessage'], resourceArns: [later.queueArn] });`);
+    const grants = (deployment.functions[0]?.grants ?? []).map(({ kind, name, by }) => `${kind} ${name ?? '?'} ${by}`);
+    expect(grants).toEqual([
+      'queue stock-restock grantSendMessages',
+      'queue stock-later PolicyStatement',
+      'queue stock-write-off PolicyStatement',
+      'topic stock-notices PolicyStatement',
+      'queue stock-audit PolicyStatement',
+    ]);
+  });
+});

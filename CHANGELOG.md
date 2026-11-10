@@ -53,6 +53,32 @@ only one of them moved.
   guard's `createUrlTree` / `parseUrl` (a `function` node, `meta.redirects`)
   are read. A call in a member of an object a factory hands back, where the
   factory does more, is held by the member alone.
+- **Deployment templating P273 and P272 left open (P289).** A helmfile's
+  sub-helmfiles (`helmfiles:`, a path or a `*` pattern, with the `values` and
+  `selectors` an entry gives, the command's selectors where it gives none) are
+  read in its environment; a release takes the release templates it inherits
+  (`templates:` and `inherit:`, `except` honoured) and the mapping a YAML merge
+  key names (`<<: *default`, now merged by every YAML reader), its fields
+  written as templates of the release rendered with it; `-l` selects by any
+  label. A chart's packed dependencies (`charts/<name>-<version>.tgz`) are
+  rendered in its release, their files said inside the archive, and what a
+  dependency hands up through `import-values` is in the parent's values. A
+  kustomization's `configurations:` rename the fields their `nameReference`s
+  name (an `HTTPRoute`'s `backendRefs`, say) with the name prefix and add
+  `varReference` fields vars are substituted in; a generator's `files` are
+  keys of the config map. sceptre's Jinja runs `loop.cycle`, `revindex`,
+  `previtem` / `nextitem`, tuple `set`, a macro's `varargs` / `kwargs`,
+  `range`, `dict`, the methods of a text and a mapping and the rest of the
+  common filters; a command launches the stacks the stacks it names depend on
+  (`dependencies`, and every `!stack_output` read); `command_path` is the path
+  launched; `!ssm` is said by the parameter it names. A table or a queue
+  written through a repository base class is decided by the class extending
+  it - what its constructor hands `super(...)`, what builds it, or what it
+  initialises a field the base only declares to - and drawn where that is
+  decided, `dynamodb/<table>` as readily as a one-part address. A CDK function
+  handed a role (`role:`) carries the role's grants, statements, inline
+  policies and attached `Policy`s, and `Grant.addToPrincipal` adds to the
+  grantee's.
 
 - **The coverage harness measures whether a join is right, and reads a
   system split across repositories (P278).** A target may carry hand labels,

@@ -412,19 +412,23 @@ export const readAddress = (
 };
 
 /**
- * A one-part address read where a caller wrote it: the argument the caller
- * passed for the parameter the address is, read as the address would have been.
+ * An address read where a caller wrote it: the argument the caller passed
+ * for the parameter its one open part is, read as the address would have
+ * been, its literal parts as written (P289: `dynamodb/<table>`, not only a
+ * one-part address).
  */
 export const readWritten = (
   expression: TsNode,
-  part: AddressPart,
+  part: AddressPart | readonly AddressPart[],
   config: Pick<FlowatlasConfig, 'sharedPackages'>,
 ): AddressedElement => {
-  const readings = [readPart(part, [[{ expression, reached: true }]], 0, config, expression.getText().slice(0, 60))];
-  const awaiting = awaitingOf([part], readings);
-  const grantable = isResolved(readings[0] as ChannelResolution) ? undefined : grantableOf([part], readings);
+  const parts: readonly AddressPart[] = Array.isArray(part) ? part : [part as AddressPart];
+  const text = expression.getText().slice(0, 60);
+  const readings = parts.map((each) => readPart(each, 'literal' in each ? [] : [[{ expression, reached: true }]], 0, config, text));
+  const awaiting = awaitingOf(parts, readings);
+  const grantable = readings.every((reading) => isResolved(reading)) ? undefined : grantableOf(parts, readings);
   return {
-    resolution: joined(readings, expression.getText().slice(0, 60)),
+    resolution: joined(readings, text),
     ...(awaiting === undefined ? {} : { awaiting }),
     ...(grantable === undefined ? {} : { grantable }),
     written: expression.getText(),

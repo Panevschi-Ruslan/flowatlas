@@ -268,6 +268,8 @@ export interface HelmfileRun {
   readonly stateFiles: readonly string[];
   /** The release names `-l name=…` keeps; empty for every release. */
   readonly releases: readonly string[];
+  /** Every selector `-l` writes, as written (P289): `tier=api,name!=cache`; a release any of them matches is kept. */
+  readonly selectors: readonly string[];
   /** What else keeping releases by name keeps (P273): `--include-needs`, `--include-transitive-needs`. */
   readonly needs: 'none' | 'direct' | 'transitive';
   readonly line: number;
@@ -306,6 +308,7 @@ export const readHelmfileRuns = (commands: readonly CommandAt[]): HelmfileRun[] 
       stateSets: valued('--state-values-set').flatMap((each) => each.split(',')).filter((each) => !each.includes('$')),
       stateFiles: valued('--state-values-file').filter((each) => !each.includes('$')),
       releases,
+      selectors: valued('-l', '--selector').filter((each) => !each.includes('$')),
       needs: rest.includes('--include-transitive-needs') ? 'transitive' : rest.includes('--include-needs') ? 'direct' : 'none',
       line,
       file,

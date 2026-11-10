@@ -1,5 +1,6 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { gzipSync } from 'node:zlib';
 import { dirname, join, posix, relative, sep } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { commandsAround } from '@flowatlas/serverless';
@@ -707,5 +708,233 @@ describe('helmfile bases and needs, and kustomize vars (P273)', () => {
     expect(read.rows?.map((row) => `${row.reason} ${row.file}:${row.line} ${row.message}`)).toEqual([
       'manifest-unread k8s/base/kustomization.yaml:3 k8s/base/kustomization.yaml declares the var GONE, which is not substituted: Service/gone is not built',
     ]);
+  });
+});
+
+/** A packed chart as helm packs one (P289): a gzipped tar of the chart's folder, each file under `<name>/`. */
+const packed = (files: Record<string, string>): Buffer => {
+  const blocks: Buffer[] = [];
+  for (const [name, text] of Object.entries(files)) {
+    const body = Buffer.from(text, 'utf8');
+    const header = Buffer.alloc(512, 0);
+    header.write(name, 0, 100, 'utf8');
+    header.write('0000644\0', 100, 8, 'ascii');
+    header.write('0000000\0', 108, 8, 'ascii');
+    header.write('0000000\0', 116, 8, 'ascii');
+    header.write(`${body.length.toString(8).padStart(11, '0')}\0`, 124, 12, 'ascii');
+    header.write('00000000000\0', 136, 12, 'ascii');
+    header.write('0', 156, 1, 'ascii');
+    header.write('ustar\0', 257, 6, 'ascii');
+    header.write('00', 263, 2, 'ascii');
+    header.fill(' ', 148, 156);
+    let sum = 0;
+    for (const byte of header) sum += byte;
+    header.write(`${sum.toString(8).padStart(6, '0')}\0 `, 148, 8, 'ascii');
+    blocks.push(header, body, Buffer.alloc((512 - (body.length % 512)) % 512, 0));
+  }
+  blocks.push(Buffer.alloc(1024, 0));
+  return gzipSync(Buffer.concat(blocks));
+};
+
+describe('sub-helmfiles, release templates, packed charts and kustomize configurations (P289)', () => {
+  const chart = (name: string, port: number): Record<string, string> => ({
+    [`deploy/charts/${name}/Chart.yaml`]: `apiVersion: v2\nname: ${name}\nversion: 0.1.0\n`,
+    [`deploy/charts/${name}/values.yaml`]: 'port: 80\n',
+    [`deploy/charts/${name}/templates/service.yaml`]: SERVICE(name, 0, port).replace('port: 0', 'port: {{ .Values.port }}').replace(`name: ${name}`, 'name: {{ .Release.Name }}'),
+  });
+  const label = (dir: string) => (path: string): string => relative(join(dir, 'deploy'), path).split(sep).join(posix.sep);
+  const said = (installs: readonly ChartInstall[]): string[] =>
+    installs.map((each) => `${each.environment} ${each.release}${each.namespace === undefined ? '' : `@${each.namespace}`} ${each.file}:${each.line} ${JSON.stringify(each.values)}`);
+
+  it('reads sub-helmfiles in the environment of the helmfile naming them, with the values and selectors each entry gives', () => {
+    const dir = project({
+      ...chart('orders', 3000),
+      ...chart('stock', 3100),
+      'deploy/helmfile.yaml': lines(
+        'environments:',
+        '  production:',
+        '    values:',
+        '      - region: eu',
+        '---',
+        'helmfiles:',
+        '  - path: apps/*/helmfile.yaml',
+        '    values:',
+        '      - port: 8443',
+        '  - path: apps/stock/helmfile.yaml',
+        '    selectors:',
+        '      - tier=backend',
+        '  - path: git::https://example.test/infra.git@helmfile.yaml',
+        '  - apps/missing.yaml',
+      ),
+      'deploy/apps/orders/helmfile.yaml': lines(
+        'environments:',
+        '  production: {}',
+        '---',
+        'releases:',
+        '  - name: orders',
+        '    chart: ../../charts/orders',
+        '    values:',
+        '      - port: {{ .Values.port | default 80 }}',
+      ),
+      'deploy/apps/stock/helmfile.yaml': lines(
+        'environments:',
+        '  production: {}',
+        '---',
+        'releases:',
+        '  - name: stock',
+        '    chart: ../../charts/stock',
+        '    labels: { tier: backend }',
+        '  - name: stock-admin',
+        '    chart: ../../charts/stock',
+        '    labels: { tier: admin }',
+      ),
+    });
+    const read = readHelmfile(join(dir, 'deploy/helmfile.yaml'), label(dir));
+    expect(said(read.installs)).toEqual([
+      'production orders apps/orders/helmfile.yaml:5 [{"port":8443}]',
+      'production stock apps/stock/helmfile.yaml:5 []',
+      'production stock-admin apps/stock/helmfile.yaml:8 []',
+      'production stock apps/stock/helmfile.yaml:5 []',
+    ]);
+    expect(read.rows.map((row) => `${row.file}:${row.line} ${row.message}`)).toEqual([
+      'helmfile.yaml:13 helmfile.yaml is not read from line 13: the sub-helmfile git::https://example.test/infra.git@helmfile.yaml is not a file of the project',
+      'helmfile.yaml:14 helmfile.yaml is not read from line 14: the sub-helmfile apps/missing.yaml is not in the project',
+    ]);
+    // A command's selectors reach a sub-helmfile that writes none of its own; one that writes its own is read with those.
+    const kept = readHelmfile(join(dir, 'deploy/helmfile.yaml'), label(dir), { environments: ['production'], selectors: ['tier=admin'] });
+    expect(said(kept.installs)).toEqual(['production stock-admin apps/stock/helmfile.yaml:8 []', 'production stock apps/stock/helmfile.yaml:5 []']);
+  });
+
+  it('gives a release the release templates it inherits and the mapping a merge key names, its fields rendered with the release', () => {
+    const dir = project({
+      ...chart('orders', 3000),
+      ...chart('stock', 3100),
+      'deploy/values/orders.yaml': 'port: 8081\n',
+      'deploy/values/stock.yaml': 'port: 8082\n',
+      'deploy/helmfile.yaml': lines(
+        'helmDefaults:',
+        '  wait: true',
+        'templates:',
+        '  default: &default',
+        '    namespace: shop',
+        '    values:',
+        '      - values/{{`{{ .Release.Name }}`}}.yaml',
+        '  backend:',
+        '    chart: ./charts/{{`{{ .Release.Name }}`}}',
+        '    namespace: backend',
+        'releases:',
+        '  - name: orders',
+        '    <<: *default',
+        '    chart: ./charts/orders',
+        '  - name: stock',
+        '    inherit:',
+        '      - template: default',
+        '      - template: backend',
+        '        except: [namespace]',
+        '  - name: gone',
+        '    inherit: [{ template: missing }]',
+        '    chart: ./charts/orders',
+      ),
+    });
+    const read = readHelmfile(join(dir, 'deploy/helmfile.yaml'), label(dir));
+    expect(read.installs.map((each) => `${each.release}@${each.namespace} ${each.chart.slice(dir.length).split(sep).join(posix.sep)} ${each.values.map((value) => (typeof value === 'string' ? value.slice(dir.length).split(sep).join(posix.sep) : JSON.stringify(value))).join(',')}`)).toEqual([
+      'orders@shop /deploy/charts/orders /deploy/values/orders.yaml',
+      'stock@shop /deploy/charts/stock /deploy/values/stock.yaml',
+      'gone@undefined /deploy/charts/orders ',
+    ]);
+    expect(read.rows.map((row) => `${row.file}:${row.line} ${row.message}`)).toEqual([
+      'helmfile.yaml:20 helmfile.yaml is not read from line 20: the release gone inherits the template missing, which no part of the helmfile declares',
+    ]);
+  });
+
+  it("renders a packed dependency in its parent's release, and the values it hands its parent through import-values", () => {
+    const dir = project({
+      'deploy/charts/shop/Chart.yaml': lines(
+        'apiVersion: v2',
+        'name: shop',
+        'version: 0.1.0',
+        'dependencies:',
+        '  - name: cache',
+        '    version: 1.2.3',
+        '    repository: https://charts.example.test',
+        '    import-values:',
+        '      - ports',
+        '      - child: service',
+        '        parent: cacheService',
+      ),
+      'deploy/charts/shop/values.yaml': 'cache:\n  service:\n    port: 6380\n',
+      'deploy/charts/shop/templates/web.yaml': SERVICE('web', 0, 3000).replace('port: 0', 'port: {{ .Values.webPort }}').replace('  selector:', '  annotations:\n    cache-port: "{{ .Values.cacheService.port }}"\n  selector:'),
+    });
+    mkdirSync(join(dir, 'deploy/charts/shop/charts'));
+    writeFileSync(
+      join(dir, 'deploy/charts/shop/charts/cache-1.2.3.tgz'),
+      packed({
+        'cache/Chart.yaml': 'apiVersion: v2\nname: cache\nversion: 1.2.3\n',
+        'cache/values.yaml': 'service:\n  port: 6379\nexports:\n  ports:\n    webPort: 8080\n',
+        'cache/templates/service.yaml': SERVICE('cache', 0, 6379).replace('port: 0', 'port: {{ .Values.service.port }}').replace('name: cache', 'name: {{ .Release.Name }}-cache'),
+      }),
+    );
+    const read = readManifestsUnder(join(dir, 'deploy'));
+    expect(read.services.map((each) => `${each.name} ${each.ports.map((port) => `${port.port}:${port.target}`).join(',')} ${each.file}`)).toEqual([
+      'web 8080:3000 charts/shop/templates/web.yaml',
+      'shop-cache 6380:6379 charts/shop/charts/cache-1.2.3.tgz/cache/templates/service.yaml',
+    ]);
+  });
+
+  it("renames the fields a kustomization's configurations say name a resource, substitutes vars in the fields they add, and generates a key per file", () => {
+    const dir = project({
+      'web/k8s/base/kustomization.yaml': lines(
+        'resources:',
+        '  - web.yaml',
+        'configurations:',
+        '  - kustomizeconfig.yaml',
+        'configMapGenerator:',
+        '  - name: web',
+        '    files:',
+        '      - settings.json',
+        '      - upstream=upstream.txt',
+        'vars:',
+        '  - name: ORDERS_SERVICE',
+        '    objref: { kind: Service, name: orders, apiVersion: v1 }',
+      ),
+      'web/k8s/base/kustomizeconfig.yaml': lines(
+        'nameReference:',
+        '  - kind: Service',
+        '    fieldSpecs:',
+        '      - kind: HTTPRoute',
+        '        path: spec/rules/backendRefs/name',
+        'varReference:',
+        '  - kind: HTTPRoute',
+        '    path: spec/hostnames',
+      ),
+      'web/k8s/base/settings.json': '{"cache":"redis"}',
+      'web/k8s/base/upstream.txt': 'http://orders:8080',
+      'web/k8s/base/web.yaml': [
+        DEPLOYMENT('web', 4000, ['          env:', '            - name: UPSTREAM', '              valueFrom:', '                configMapKeyRef:', '                  name: web', '                  key: upstream']),
+        SERVICE('orders', 8080, 3000),
+        lines(
+          'apiVersion: gateway.networking.k8s.io/v1',
+          'kind: HTTPRoute',
+          'metadata:',
+          '  name: edge',
+          'spec:',
+          '  hostnames:',
+          '    - $(ORDERS_SERVICE).example.test',
+          '  rules:',
+          '    - matches:',
+          '        - path: { type: PathPrefix, value: /orders }',
+          '      backendRefs:',
+          '        - name: orders',
+          '          port: 8080',
+        ),
+      ].join('\n---\n'),
+      'web/k8s/overlays/production/kustomization.yaml': lines('resources:', '  - ../../base', 'namePrefix: shop-'),
+    });
+    const read = readManifestsUnder(join(dir, 'web'));
+    expect(read.ingresses?.map((each) => `${each.hosts.join(',')} ${each.paths.map((path) => `${path.path}>${path.backends.map((backend) => backend.name).join(',')}`).join(' ')}`)).toEqual([
+      'shop-orders.example.test /orders>shop-orders',
+    ]);
+    expect(read.workloads[0]?.containers[0]?.environment).toEqual([{ name: 'UPSTREAM', raw: 'http://orders:8080' }]);
+    expect(read.rows ?? []).toEqual([]);
   });
 });

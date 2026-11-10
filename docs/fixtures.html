@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>251 fixtures</span>
-    <span>650 snapshot files</span>
+    <span>257 fixtures</span>
+    <span>664 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -599,7 +599,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, declared with the Serverless Framework, the CDK, SAM or CloudFormation <span class="count" data-total="17">17</span></h2>
+    <h2>Serverless, declared with the Serverless Framework, the CDK, SAM or CloudFormation <span class="count" data-total="18">18</span></h2>
     <ul>
       <li class="fixture" data-search="cdk-grants serverless, declared with the serverless framework, the cdk, sam or cloudformation a shop's stock moves as a cdk app (`stock/lib/stock-stack.ts`): a function that sends where its code decides when it runs, allowed only where the app grants it (p272).">
         <div class="head">
@@ -687,6 +687,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A shop's relay as an AWS SAM template (<code>relay/template.yaml</code>), its functions sending where their code decides when they run - a queue found by listing the account, a topic or a stream or a function registered at run time - and each allowed to send only where its policies say (P272).</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="sam-repository-tables serverless, declared with the serverless framework, the cdk, sam or cloudformation a shop as an aws sam template (`shop/template.yaml`) whose functions write their tables through a repository base class of its own, each table named by the class that extends it (p289).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sam-repository-tables">sam-repository-tables</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A shop as an AWS SAM template (<code>shop/template.yaml</code>) whose functions write their tables through a repository base class of its own, each table named by the class that extends it (P289).</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="sam-shapes serverless, declared with the serverless framework, the cdk, sam or cloudformation the lending desk of a town library, deployed with aws sam (p246): a template (`library/template.yaml`), a template it nests (`library/notices`) and a tool rewritten by a macro (`library/tools`).">
@@ -966,8 +974,16 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Workspaces and monorepos <span class="count" data-total="4">4</span></h2>
+    <h2>Workspaces and monorepos <span class="count" data-total="5">5</span></h2>
     <ul>
+      <li class="fixture" data-search="workspace-env-greedy-sides workspaces and monorepos three shapes read since p283.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/workspace-env-greedy-sides">workspace-env-greedy-sides</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>Three shapes read since P283.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="workspace-leaf workspaces and monorepos a package inside a workspace, declaring nothing of its own.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/workspace-leaf">workspace-leaf</a>
@@ -1649,7 +1665,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="62">62</span></h2>
+    <h2>Everything else <span class="count" data-total="66">66</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1747,6 +1763,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>Five front ends, one per router, each navigating between its own screens (P276), with the server half of the Next application reading a route whose work is behind an object a factory hands back, the wrapper in front of it, and a client's default headers.</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="front-end-route-helpers everything else routes and navigations written the ways p276 left unread (p288): a path a helper of the repository hands back, a screen a lazy loader's object holds, two applications in one service with pages at the same addresses, a navigation in a template's own handler, sveltekit's plain links, angular's template navigations and functional guards, and a factory that does more than hand back its object of functions.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/front-end-route-helpers">front-end-route-helpers</a>
+          <span class="kind">6 services</span>
+        </div>
+        <p>Routes and navigations written the ways P276 left unread (P288): a path a helper of the repository hands back, a screen a lazy loader's object holds, two applications in one service with pages at the same addresses, a navigation in a template's own handler, SvelteKit's plain links, Angular's template navigations and functional guards, and a factory that does more than hand back its object of functions.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="graphql-codegen-helpers everything else a nestjs server serving two graphql schemas, the second by default for a resolver with no scope as a patch the repository commits to its graphql library says, and two front ends sending operations whose `…document` constants graphql codegen generates into a module nobody commits (p275).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/graphql-codegen-helpers">graphql-codegen-helpers</a>
@@ -1835,6 +1859,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>Whether a field using <code>@requires</code> carries the scopes the fields it requires ask, read by which scopes imply which (P261), as <code>graphql-requires-auth</code> reads <code>@authenticated</code> (P256).</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="grpc-contract-messages everything else what a grpc call sends compared with the message its contract declares, the services a package hands a server, and a server that disagrees with its contract (p287).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/grpc-contract-messages">grpc-contract-messages</a>
+          <span class="kind">3 services</span>
+        </div>
+        <p>What a gRPC call sends compared with the message its contract declares, the services a package hands a server, and a server that disagrees with its contract (P287).</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="grpc-shared-contract everything else grpc services and their callers, one contract shared by all of them (p274): `proto/shop.proto` at the top of the project declares `shop.cartservice`, `shop.paymentservice`, `shop.catalogservice` and `shop.shippingservice`.">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/grpc-shared-contract">grpc-shared-contract</a>
@@ -1850,6 +1882,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A bookshop of three services whose wrappers are its own and come from packages nobody here installed (P121): <code>catalog</code> publishes through <code>ShopBus.emit({ topic, data })</code> and calls <code>stock</code> through <code>ApiClient.call('POST', url, body)</code>, <code>stock</code> handles through <code>ShopBus.on('book.added', handler)</code>, and the React <code>storefront</code> requests through <code>useApi().send({ method, path })</code>.</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.mcp</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="job-queue-layers everything else a shop's express server whose bullmq queues sit behind layers of its own, with nothing installed (p286): a base class keeps each queue's topic from what the class extending it hands `super(...)`, a client opens the queue in one method and adds to it in another, job records are built by functions further in, and a flow adds a tree of jobs on several queues at once.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/job-queue-layers">job-queue-layers</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A shop's Express server whose BullMQ queues sit behind layers of its own, with nothing installed (P286): a base class keeps each queue's topic from what the class extending it hands <code>super(...)</code>, a client opens the queue in one method and adds to it in another, job records are built by functions further in, and a flow adds a tree of jobs on several queues at once.</p>
+        <p class="snapshots"><code>expected.graph.json</code></p>
       </li>
       <li class="fixture" data-search="listen-port-joins everything else nine services run on one machine, and the requests between them name each other by port: `http://localhost:3001/orders`, `http://127.0.0.1:3003/products`, `http://0.0.0.0:3002/stock/abc-1`.">
         <div class="head">
@@ -2001,6 +2041,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">5 services</span>
         </div>
         <p>What a request carries and what it is answered with, read from four frameworks whose handlers do not say so in their signature, and compared with an Angular client that calls two of them.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="rewrite-branches-composed-sends everything else what p280, p281 and p275 left open (p285), read together.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/rewrite-branches-composed-sends">rewrite-branches-composed-sends</a>
+          <span class="kind">3 services</span>
+        </div>
+        <p>What P280, P281 and P275 left open (P285), read together.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="rpc-contracts everything else what a call through an orpc or trpc client hands a procedure and reads back, compared with what the procedure declares (p247), and the rest of the procedure-client reader: a trpc tree's mount, a client injected by a token, an angular client, and a client of a repository that is not here.">

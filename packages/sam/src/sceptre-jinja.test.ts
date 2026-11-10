@@ -221,3 +221,54 @@ describe('a sceptre project whose files include and import others (P273)', () =>
     expect(names(deployment)).toEqual([]);
   });
 });
+
+describe('the rest of what Jinja templates commonly write, and sceptre dependencies, command_path and !ssm (P289)', () => {
+  const render = (text: string, roots: Record<string, unknown> = {}) => renderJinja(text, lookupIn(roots));
+
+  it("runs a loop's cycle, its place from the end and what is beside it", () => {
+    const text = "{% for q in var.queues %}{{ loop.cycle('a', 'b') }}{{ loop.revindex }}{% if not loop.first %}<{{ loop.previtem }}{% endif %}{% if loop.last %}.{% endif %} {% endfor %}";
+    expect(render(text, { var: { queues: ['jobs', 'audit', 'mail'] } }).text).toBe('a3 b2<jobs a1<audit. ');
+  });
+
+  it('sets several names at once from a tuple, and unpacks a list of pairs', () => {
+    expect(render("{% set host, port = 'db', 5432 %}{{ host }}:{{ port }}").text).toBe('db:5432');
+    expect(render('{% set a, b = var.pair %}{{ b }}-{{ a }}{% for k, v in [(1, 2)] %} {{ k + v }}{% endfor %}', { var: { pair: ['x', 'y'] } }).text).toBe('y-x 3');
+  });
+
+  it('hands a macro what is past its parameters as varargs and kwargs, and refuses it where the body reads neither', () => {
+    const text = "{% macro tags(name) %}{{ name }}{% for v in varargs %}+{{ v }}{% endfor %}{% for k, v in kwargs.items() %} {{ k }}={{ v }}{% endfor %}{% endmacro %}{{ tags('shop', 'a', 'b', team='orders') }}";
+    expect(render(text).text).toBe('shop+a+b team=orders');
+    // Handed more than it takes, the text is not run: its statements are kept, as P261 kept them.
+    expect([...render("{% macro one(a) %}{{ a }}{% endmacro %}{{ one('x', 'y') }}").unrendered.values()]).toContain("{{ one('x', 'y') }}");
+  });
+
+  it('runs the filters, methods and functions a template commonly uses', () => {
+    const roots = { var: { stage: 'Prod-EU', queues: ['b', 'a', 'b'], sizes: [3, 1, 2], items: [{ name: 'jobs' }, { name: 'audit' }], tags: { team: 'shop' } } };
+    expect(render("{{ var.stage.lower().replace('-', '_') }} {{ var.stage.split('-')[1] }} {{ var.stage.startswith('Prod') }} {{ '{}-{}'.format('a', 1) }} {{ '-'.join(var.queues | unique | sort) }}", roots).text).toBe('prod_eu EU True a-1 a-b');
+    expect(render("{{ var.queues | first }}{{ var.queues | last }} {{ var.sizes | max }} {{ var.sizes | sum }} {{ var.items | map(attribute='name') | join(',') }} {{ var.tags.get('team') }} {{ var.tags.get('gone', 'none') }} {{ '%s-%s' | format('x', 2) }}", roots).text).toBe('bb 3 6 jobs,audit shop none x-2');
+    expect(render("{% for i in range(3) %}{{ i }}{% endfor %} {{ dict(a=1).a }} {{ var.stage | default('x', true) | lower }} {{ '' | default('empty', true) }} {{ '7' | int + 1 }} {{ 2.5 | round }}", roots).text).toBe('012 1 prod-eu empty 8 3');
+  });
+
+  it('launches the stacks a stack a command launches depends on, with that command', () => {
+    const queue = "template_path: stack.yaml\nparameters:\n  Prefix: '{{ var.prefix }}'\n  Stage: prod\n";
+    const app = 'template_path: other.yaml\ndependencies:\n  - prod/queue.yaml\n';
+    const make = { Makefile: 'deploy:\n\tsceptre --var prefix=shop launch -y prod/app.yaml\n' };
+    expect(names(read(sceptre({ 'prod/queue.yaml': queue, 'prod/app.yaml': app }, make)))).toEqual(['shop-prod-fn']);
+    // A stack whose output another reads is launched before it, as a dependency.
+    const reading = 'template_path: other.yaml\nparameters:\n  Queue: !stack_output prod/queue.yaml::QueueUrl\n';
+    expect(names(read(sceptre({ 'prod/queue.yaml': queue, 'prod/app.yaml': reading }, make)))).toEqual(['shop-prod-fn']);
+    expect(names(read(sceptre({ 'prod/queue.yaml': queue, 'prod/app.yaml': 'template_path: other.yaml\n' }, make)))).toEqual([undefined]);
+  });
+
+  it('renders command_path as the path the command launches, the stack’s own where none is written', () => {
+    const stack = "template_path: stack.yaml\nparameters:\n  Prefix: shop\n  Stage: '{{ command_path.0 }}'\n";
+    expect(names(read(sceptre({ 'prod/stack.yaml': stack }, launched('--var x=y'))))).toEqual(['shop-prod-fn']);
+    expect(names(read(sceptre({ 'live/stack.yaml': stack })))).toEqual(['shop-live-fn']);
+  });
+
+  it('says an SSM parameter by its name, whose value the files do not give', () => {
+    const deployment = read(sceptre({ 'prod/stack.yaml': 'template_path: stack.yaml\nparameters:\n  Prefix: !ssm /shop/prefix\n  Stage: prod\n' }));
+    expect(names(deployment)).toEqual([undefined]);
+    expect(deployment.rows.find((row) => row.reason === 'function-name-unread')?.message).toContain('the SSM parameter /shop/prefix');
+  });
+});

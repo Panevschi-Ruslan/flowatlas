@@ -545,6 +545,14 @@ export class Interpreter {
       if (receiver.module === 'path') return pathCall(name, args);
       const imported = importedConstruct(receiver, name, args, site, frame, this.constructs);
       if (imported !== undefined) return imported;
+      // `Grant.addToPrincipal({ grantee, actions, resourceArns })` adds a statement to the grantee's role (P289).
+      if (receiver.key === 'aws-iam.Grant' && GRANT_TO_PRINCIPAL.has(name) && args[0] instanceof ObjectValue) {
+        const options = args[0];
+        const grantee = options.get('grantee');
+        const holder = grantee instanceof Construct ? grantee : grantee instanceof Attribute && (grantee.name === 'role' || grantee.name === 'grantPrincipal') ? grantee.construct : undefined;
+        const statement = new Built('aws-iam.PolicyStatement', [new ObjectValue([['actions', options.get('actions')], ['resources', options.get('resourceArns')]])], site);
+        holder?.add('addToRolePolicy', [statement], site, frame.conditional);
+      }
       return staticCall(receiver.member(name), args, site);
     }
     if (receiver instanceof NodeHandle) {
@@ -750,6 +758,9 @@ export class Interpreter {
     this.#fields(cls, self, frame);
   }
 }
+
+/** The calls of `Grant` that add a statement to a grantee's role (P289). */
+const GRANT_TO_PRINCIPAL = new Set(['addToPrincipal', 'addToPrincipalOrResource', 'addToPrincipalAndResource']);
 
 /** The parameters of the account a value is read from by name. */
 const PARAMETERS = new Set(['aws-ssm.StringParameter', 'aws-ssm.StringListParameter']);

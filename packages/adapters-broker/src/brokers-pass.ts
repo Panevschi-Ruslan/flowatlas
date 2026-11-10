@@ -438,8 +438,11 @@ export const extractBrokers = (ctx: PassContext): void => {
     const carried = messageAt(call, pattern, context);
     const job = named === undefined ? undefined : heldAtSite(named, call);
     const message = carried === undefined ? undefined : heldAtSite(carried, call);
-    const [part, ...more] = addressOf(pattern);
-    const addresses = part === undefined || more.length > 0 || 'literal' in part ? undefined : addressesWaiting(call, part.at, elements, context);
+    // The one part of the address not written as a literal: a queue, or the table of `dynamodb/<table>` (P289).
+    const parts = addressOf(pattern);
+    const open = parts.filter((each) => !('literal' in each));
+    const [part] = open;
+    const addresses = part === undefined || open.length !== 1 || 'literal' in part ? undefined : addressesWaiting(call, part.at, elements, context);
     if (addresses === undefined) {
       // The queue read here and the job decided further out (P271): drawn
       // where each caller names the job, on the queue read here.
@@ -468,7 +471,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         // An element read where the call is written stays as it was read there.
         if (queue === undefined) return elements[index] === undefined ? [] : [elements[index] as AddressedElement];
         if (queue.kind === 'written' && part !== undefined) {
-          return (queue.choices ?? [queue.expression]).map((each) => readWritten(each, part, ctx.config));
+          return (queue.choices ?? [queue.expression]).map((each) => readWritten(each, parts, ctx.config));
         }
         return [
           {

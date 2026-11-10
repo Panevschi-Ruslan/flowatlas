@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: A shop whose functions write their tables through a repository base class each table's class extends.
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    CodeUri: src/
+
+Resources:
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: shop-orders
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  AuditTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: shop-audit
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  CartsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: shop-carts
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  # Places an order and audits it, each through a repository of its own.
+  PlaceOrder:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: place-order.handler
+      Environment:
+        Variables:
+          ORDERS_TABLE: !Ref OrdersTable
+      Events:
+        Place:
+          Type: Api
+          Properties:
+            Path: /orders
+            Method: post
+
+  # Keeps a cart through a store that only declares its table.
+  SaveCart:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: save-cart.handler
+      Events:
+        Save:
+          Type: Api
+          Properties:
+            Path: /carts
+            Method: put
+
+  OrderChanged:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: order-changed.handler
+      Events:
+        Orders:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt OrdersTable.StreamArn
+            StartingPosition: LATEST
+
+  AuditChanged:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: audit-changed.handler
+      Events:
+        Audit:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt AuditTable.StreamArn
+            StartingPosition: LATEST
+
+  CartChanged:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: cart-changed.handler
+      Events:
+        Carts:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt CartsTable.StreamArn
+            StartingPosition: LATEST

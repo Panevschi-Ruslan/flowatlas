@@ -1,4 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { readYaml, type PositionedDocument } from '@flowatlas/core';
 import { interpolated } from './compose.js';
@@ -896,11 +897,47 @@ const varFieldsOf = (value: Located): Array<{ holder: Record<string | number, un
   return out;
 };
 
+/** A field a kustomize configuration names (P289): the kind it is in, where it says one, and its path, `spec/rules/backendRefs/name`. */
+interface FieldSpec {
+  readonly kind?: string;
+  readonly path: readonly string[];
+}
+
+/** A configuration's `nameReference` (P289): the fields of other resources that name a resource of `kind`. */
+interface NameReference {
+  readonly kind: string;
+  readonly fields: readonly FieldSpec[];
+}
+
+const fieldSpecsOf = (written: unknown): FieldSpec[] =>
+  (Array.isArray(written) ? written : []).filter(isRecord).flatMap((spec) => {
+    const path = text(spec['path']);
+    const kind = text(spec['kind']);
+    return path === undefined ? [] : [{ ...(kind === undefined ? {} : { kind }), path: path.split('/').filter((step) => step !== '') }];
+  });
+
+const specApplies = (spec: FieldSpec, value: Record<string, unknown>): boolean => spec.kind === undefined || text(value['kind']) === spec.kind;
+
+/** Every text at a kustomize field path (P289), each as its holder and key: a list on the way is every item of it, as kustomize walks one. */
+const stringsAtPath = (value: unknown, path: readonly string[]): Array<{ holder: Record<string | number, unknown>; key: string | number }> => {
+  const [step, ...rest] = path;
+  if (step === undefined) return [];
+  if (Array.isArray(value)) return value.flatMap((item) => stringsAtPath(item, path));
+  if (!isRecord(value) || !(step in value)) return [];
+  const at = value[step];
+  if (rest.length > 0) return stringsAtPath(at, rest);
+  if (typeof at === 'string') return [{ holder: value as Record<string | number, unknown>, key: step }];
+  return Array.isArray(at) ? at.flatMap((item, index) => (typeof item === 'string' ? [{ holder: at as unknown as Record<string | number, unknown>, key: index }] : [])) : [];
+};
+
 /** Builds a kustomization as the tool that applies it does, for what a manifest's facts are read from. */
 class Builder {
   readonly rows: ManifestRow[] = [];
   /** The vars the kustomizations of one build declare, its bases' included (P273). */
   #vars: DeclaredVar[] = [];
+  /** The name and var reference fields the kustomizations of one build add (`configurations:`, P289), its bases' included. */
+  #nameReferences: NameReference[] = [];
+  #varReferences: FieldSpec[] = [];
 
   constructor(
     private readonly root: string,
@@ -924,7 +961,11 @@ class Builder {
     if (kustomization === undefined || seen.has(dir) || seen.size > 12) return [];
     // Vars are declared anywhere in the tree and substituted once the whole of it is built, as kustomize does.
     const top = seen.size === 0;
-    if (top) this.#vars = [];
+    if (top) {
+      this.#vars = [];
+      this.#nameReferences = [];
+      this.#varReferences = [];
+    }
     const inner = new Set([...seen, dir]);
     const value = kustomization.value;
     const at = (key: string): Where => ({ file: this.label(kustomization.file), line: lineOfKey(kustomization.text, key) });
@@ -949,8 +990,12 @@ class Builder {
       ...(text(value['namePrefix']) === undefined ? {} : { prefix: text(value['namePrefix']) as string }),
       ...(text(value['nameSuffix']) === undefined ? {} : { suffix: text(value['nameSuffix']) as string }),
     };
+    this.configure(kustomization, at);
     const services = new Set(resources.filter((each) => text(each.value['kind']) === 'Service').flatMap((each) => [...each.names]));
+    // The name each resource had before this level renamed it, for the fields its configurations say name it (P289).
+    const before = new Map(resources.map((resource) => [resource, text(isRecord(resource.value['metadata']) ? resource.value['metadata']['name'] : undefined)]));
     for (const resource of resources) kustomizedResource(resource, given, services);
+    this.renameReferences(resources, before);
     // Replacements are the last transformer kustomize applies.
     this.replace(kustomization, resources, at);
     for (const entry of (Array.isArray(value['vars']) ? value['vars'] : []).filter(isRecord)) {
@@ -961,6 +1006,63 @@ class Builder {
     }
     if (top) this.substitute(resources);
     return resources;
+  }
+
+  /**
+   * The fields a kustomization's `configurations:` files add (P289): each
+   * `nameReference` - the fields of other kinds that name a resource of its
+   * kind, renamed with it - and each `varReference`, a field vars are
+   * substituted in. A file not read is a row.
+   */
+  private configure(kustomization: Kustomization, at: (key: string) => Where): void {
+    const written = kustomization.value['configurations'];
+    for (const each of Array.isArray(written) ? written : []) {
+      const name = text(each);
+      if (name === undefined) continue;
+      const path = resolve(kustomization.dir, name);
+      const documents = existsSync(path) ? this.readPatch(path) : [];
+      if (documents.length === 0) {
+        const where = at('configurations');
+        this.rows.push(row('manifest-unread', where, `${where.file} adds the configuration ${name}, which is ${existsSync(path) ? 'not read' : 'not in the project'}`, UNREAD_HINT, []));
+        continue;
+      }
+      for (const document of documents.filter(isRecord)) {
+        for (const reference of (Array.isArray(document['nameReference']) ? document['nameReference'] : []).filter(isRecord)) {
+          const kind = text(reference['kind']);
+          if (kind === undefined) continue;
+          this.#nameReferences.push({ kind, fields: fieldSpecsOf(reference['fieldSpecs']) });
+        }
+        this.#varReferences.push(...fieldSpecsOf(document['varReference']));
+      }
+    }
+  }
+
+  /**
+   * The fields a configuration says name a resource (P289), renamed as this
+   * level renamed the resource they name: a text there that was the name of a
+   * resource of the kind referred to, before the prefix or suffix, is its name
+   * after.
+   */
+  private renameReferences(resources: readonly Resource[], before: ReadonlyMap<Resource, string | undefined>): void {
+    for (const reference of this.#nameReferences) {
+      const renamed = new Map<string, string>();
+      for (const resource of resources) {
+        if (text(resource.value['kind']) !== reference.kind) continue;
+        const old = before.get(resource);
+        const now = text(isRecord(resource.value['metadata']) ? resource.value['metadata']['name'] : undefined);
+        if (old !== undefined && now !== undefined && old !== now) renamed.set(old, now);
+      }
+      if (renamed.size === 0) continue;
+      for (const resource of resources) {
+        for (const spec of reference.fields) {
+          if (!specApplies(spec, resource.value)) continue;
+          for (const { holder, key } of stringsAtPath(resource.value, spec.path)) {
+            const now = renamed.get(holder[key] as string);
+            if (now !== undefined) holder[key] = now;
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -997,7 +1099,8 @@ class Builder {
     }
     if (values.size === 0) return;
     for (const resource of resources) {
-      for (const { holder, key } of varFieldsOf(resource.value)) {
+      const configured = this.#varReferences.filter((spec) => specApplies(spec, resource.value)).flatMap((spec) => stringsAtPath(resource.value, spec.path));
+      for (const { holder, key } of [...varFieldsOf(resource.value), ...configured]) {
         holder[key] = (holder[key] as string).replace(VAR_REFERENCE, (whole, name: string) => values.get(name) ?? whole);
       }
     }
@@ -1008,8 +1111,9 @@ class Builder {
    * `configMapGenerator` / `secretGenerator` entry, its `literals` and the
    * keys of its `envs` (`env`) files, each key said at the file that writes
    * it; `behavior: merge` or `replace` changes the one of its name the bases
-   * build. A generator's `files` are file contents, not an environment, and
-   * are not read.
+   * build. A generator's `files` are keys too (P289): each file's whole text
+   * under its name, or under the key written before it (`key=path`), said at
+   * the file's first line.
    */
   private generate(kustomization: Kustomization, resources: Resource[], at: (key: string) => Where): void {
     const value = kustomization.value;
@@ -1038,6 +1142,18 @@ class Builder {
             data[assignment[1] as string] = (assignment[2] as string).trim().replace(/^(['"])(.*)\1$/, '$2');
             keysAt[assignment[1] as string] = { file: this.label(path), line: index + 1 };
           });
+        }
+        for (const written of Array.isArray(entry['files']) ? entry['files'] : []) {
+          const named = text(written);
+          if (named === undefined) continue;
+          const equals = named.indexOf('=');
+          const file = equals > 0 ? named.slice(equals + 1) : named;
+          const path = resolve(kustomization.dir, file);
+          const source = readText(path);
+          if (source === undefined) continue;
+          const key = equals > 0 ? named.slice(0, equals) : basename(path);
+          data[key] = source;
+          keysAt[key] = { file: this.label(path), line: 1 };
         }
         Object.defineProperty(data, KEYS_AT, { value: keysAt, enumerable: false, writable: true });
         located(data, where);
@@ -1247,12 +1363,96 @@ export interface ManifestChoice {
   readonly environmentOf?: (word: string) => string;
 }
 
+/** The files of each packed chart read so far, by the archive's absolute path: each file's text by its path inside the archive (P289). */
+const PACKED = new Map<string, ReadonlyMap<string, string> | null>();
+
+/** How large a packed chart is read, unpacked; larger is not read. */
+const MOST_PACKED_BYTES = 32 * 1024 * 1024;
+
+/**
+ * The files of a packed chart (`charts/<name>-<version>.tgz`), as helm reads
+ * one (P289): a gzipped tar of the chart's folder. Regular files only, their
+ * names as the archive writes them (a long name by its pax or GNU header);
+ * `undefined` where it does not unpack.
+ */
+export const packedFiles = (archive: string): ReadonlyMap<string, string> | undefined => {
+  const cached = PACKED.get(archive);
+  if (cached !== undefined) return cached ?? undefined;
+  let files: Map<string, string> | null = null;
+  try {
+    const data = gunzipSync(readFileSync(archive), { maxOutputLength: MOST_PACKED_BYTES });
+    files = new Map();
+    let at = 0;
+    let longName: string | undefined;
+    while (at + 512 <= data.length) {
+      const header = data.subarray(at, at + 512);
+      if (header.every((byte) => byte === 0)) break;
+      const field = (from: number, length: number): string => header.subarray(from, from + length).toString('utf8').replace(/\0.*$/s, '');
+      const size = Number.parseInt(field(124, 12).trim() || '0', 8);
+      const type = field(156, 1);
+      const prefix = field(345, 155);
+      const name = longName ?? (prefix === '' ? field(0, 100) : `${prefix}/${field(0, 100)}`);
+      longName = undefined;
+      const body = data.subarray(at + 512, at + 512 + size);
+      if (type === 'x') {
+        const path = /(?:^|\n)\d+ path=([^\n]*)\n/.exec(body.toString('utf8'))?.[1];
+        if (path !== undefined) longName = path;
+      } else if (type === 'L') longName = body.toString('utf8').replace(/\0.*$/s, '');
+      else if (type === '0' || type === '' || type === '7') files.set(name.replace(/^\.\//, ''), body.toString('utf8'));
+      at += 512 + Math.ceil(size / 512) * 512;
+    }
+  } catch {
+    files = null;
+  }
+  PACKED.set(archive, files);
+  return files ?? undefined;
+};
+
+/** The archive a path is inside, and its path in the archive, where it is one of a packed chart's (`…/charts/redis-1.2.3.tgz/redis/values.yaml`). */
+const insidePacked = (path: string): { archive: string; inner: string } | undefined => {
+  const at = path.search(/\.tgz(?:[\\/]|$)/);
+  if (at < 0) return undefined;
+  const archive = path.slice(0, at + 4);
+  return { archive, inner: path.slice(at + 5).split(sep).join('/') };
+};
+
 const readText = (path: string): string | undefined => {
+  const packed = insidePacked(path);
+  if (packed !== undefined) return packedFiles(packed.archive)?.get(packed.inner);
   try {
     return readFileSync(path, 'utf8');
   } catch {
     return undefined;
   }
+};
+
+/** Whether a chart's file is there, in a folder or in a packed chart (P289). */
+const chartFileExists = (path: string): boolean => {
+  const packed = insidePacked(path);
+  if (packed === undefined) return existsSync(path);
+  return packedFiles(packed.archive)?.has(packed.inner) === true;
+};
+
+/** The names a chart's folder holds, in a folder or in a packed chart (P289), sorted. */
+const chartEntries = (dir: string): string[] => {
+  const packed = insidePacked(dir);
+  if (packed === undefined) {
+    try {
+      return readdirSync(dir).sort();
+    } catch {
+      return [];
+    }
+  }
+  const prefix = packed.inner === '' ? '' : `${packed.inner}/`;
+  const names = new Set<string>();
+  for (const path of packedFiles(packed.archive)?.keys() ?? []) if (path.startsWith(prefix)) names.add(path.slice(prefix.length).split('/')[0] as string);
+  return [...names].sort();
+};
+
+/** The chart a packed archive holds: the folder inside it with a `Chart.yaml` (P289). */
+const packedChart = (archive: string): string | undefined => {
+  const top = [...(packedFiles(archive)?.keys() ?? [])].map((path) => path.split('/')).find((parts) => parts.length === 2 && parts[1] === 'Chart.yaml');
+  return top === undefined ? undefined : join(archive, top[0] as string);
 };
 
 const yamlValue = (path: string): Record<string, unknown> => {
@@ -1331,14 +1531,33 @@ interface Subchart {
   readonly key: string;
   readonly condition?: string;
   readonly tags: readonly string[];
+  /** The values it hands its parent (P289): each `import-values` entry, the child's path and the parent's (`.` its root). */
+  readonly imports: readonly { readonly child: string; readonly parent: string }[];
 }
+
+/** What a dependency's `import-values` hands its parent (P289): `data` is the child's `exports.data` at the parent's root; `{ child, parent }` a path to a path. */
+const importsOf = (written: unknown): Subchart['imports'] =>
+  (Array.isArray(written) ? written : []).flatMap((entry) => {
+    if (text(entry) !== undefined) return [{ child: `exports.${text(entry) as string}`, parent: '.' }];
+    if (!isRecord(entry) || text(entry['child']) === undefined) return [];
+    return [{ child: text(entry['child']) as string, parent: text(entry['parent']) ?? '.' }];
+  });
+
+/** The packed archive of a dependency in `charts/`: `<name>-<version>.tgz`, or the one `<name>-*.tgz` there is (P289). */
+const packedDependency = (dir: string, name: string, version: string | undefined): string | undefined => {
+  const archives = chartEntries(join(dir, 'charts')).filter((entry) => entry.endsWith('.tgz') && entry.startsWith(`${name}-`));
+  const exact = version === undefined ? undefined : archives.find((entry) => entry === `${name}-${version}.tgz`);
+  const chosen = exact ?? (archives.length === 1 ? archives[0] : undefined);
+  return chosen === undefined ? undefined : packedChart(join(dir, 'charts', chosen));
+};
 
 /**
  * The charts a chart depends on that are in the project (P263): each
  * `dependencies` entry (of `Chart.yaml`, or an older `requirements.yaml`)
- * with a `file://` repository or unpacked in `charts/`, and every other chart
- * unpacked in `charts/`, which the tool that installs it renders too. A
- * packed (`.tgz`) or a repository's chart is not in the project.
+ * with a `file://` repository, unpacked in `charts/` or packed there as
+ * `<name>-<version>.tgz` (P289), and every other chart unpacked or packed in
+ * `charts/`, which the tool that installs it renders too. A repository's
+ * chart nothing has fetched into the project is not in it.
  */
 export const subchartsOf = (dir: string): Subchart[] => {
   const meta = yamlValue(join(dir, 'Chart.yaml'));
@@ -1348,22 +1567,17 @@ export const subchartsOf = (dir: string): Subchart[] => {
     const name = text(dependency['name']);
     if (name === undefined) continue;
     const repository = text(dependency['repository']) ?? '';
-    const path = repository.startsWith('file://') ? resolve(dir, repository.slice('file://'.length)) : join(dir, 'charts', name);
-    if (!existsSync(join(path, 'Chart.yaml'))) continue;
+    const unpacked = repository.startsWith('file://') ? resolve(dir, repository.slice('file://'.length)) : join(dir, 'charts', name);
+    const path = chartFileExists(join(unpacked, 'Chart.yaml')) ? unpacked : packedDependency(dir, name, text(dependency['version']));
+    if (path === undefined) continue;
     const condition = text(dependency['condition']);
     const tags = (Array.isArray(dependency['tags']) ? dependency['tags'] : []).flatMap((tag) => (text(tag) === undefined ? [] : [text(tag) as string]));
-    out.push({ dir: path, key: text(dependency['alias']) ?? name, ...(condition === undefined ? {} : { condition }), tags });
+    out.push({ dir: path, key: text(dependency['alias']) ?? name, ...(condition === undefined ? {} : { condition }), tags, imports: importsOf(dependency['import-values']) });
   }
-  let unpacked: string[];
-  try {
-    unpacked = readdirSync(join(dir, 'charts')).sort();
-  } catch {
-    unpacked = [];
-  }
-  for (const name of unpacked) {
-    const path = join(dir, 'charts', name);
-    if (out.some((each) => each.dir === path) || !existsSync(join(path, 'Chart.yaml'))) continue;
-    out.push({ dir: path, key: chartMetaOf(path).name ?? name, tags: [] });
+  for (const name of chartEntries(join(dir, 'charts'))) {
+    const path = name.endsWith('.tgz') ? packedChart(join(dir, 'charts', name)) : join(dir, 'charts', name);
+    if (path === undefined || out.some((each) => each.dir === path || (insidePacked(path) !== undefined && insidePacked(each.dir)?.archive === insidePacked(path)?.archive)) || !chartFileExists(join(path, 'Chart.yaml'))) continue;
+    out.push({ dir: path, key: chartMetaOf(path).name ?? name, tags: [], imports: [] });
   }
   return out;
 };
@@ -1371,40 +1585,52 @@ export const subchartsOf = (dir: string): Subchart[] => {
 /** How deep a chart's dependencies are followed. */
 const CHART_DEPTH = 4;
 
+/** The value at a dotted path of values. */
+const valueAtPath = (values: Record<string, unknown>, path: string): unknown => path.split('.').filter((key) => key !== '').reduce<unknown>((value, key) => (isRecord(value) ? value[key] : undefined), values);
+
 /** Whether a dependency is left out by the values: its condition's first path the values set is false, or every tag it names is. */
 const leftOut = (values: Record<string, unknown>, sub: Subchart): boolean => {
-  const at = (path: string): unknown => path.split('.').reduce<unknown>((value, key) => (isRecord(value) ? value[key] : undefined), values);
   for (const path of (sub.condition ?? '').split(',').map((each) => each.trim()).filter((each) => each !== '')) {
-    const set = at(path);
+    const set = valueAtPath(values, path);
     if (typeof set === 'boolean') return !set;
   }
   const tags = isRecord(values['tags']) ? values['tags'] : {};
   return sub.tags.length > 0 && sub.tags.every((tag) => tags[tag] === false);
 };
 
-/** The chart and every chart it renders inside its release, with the values each is given. */
+/**
+ * The chart and every chart it renders inside its release, with the values
+ * each is given. What a dependency's `import-values` hands up is merged under
+ * the parent's own values (P289), the parent's winning, as helm imports them.
+ */
 const chartTree = (dir: string, reading: ChartReading, depth = 0): Array<{ dir: string; reading: ChartReading }> => {
   if (depth > CHART_DEPTH) return [];
-  const out = [{ dir, reading }];
   const parent = reading.context.values;
+  const below: Array<{ dir: string; reading: ChartReading }> = [];
+  let imported: Record<string, unknown> = {};
   for (const sub of subchartsOf(dir)) {
     if (leftOut(parent, sub)) continue;
     const own = yamlValue(join(sub.dir, 'values.yaml'));
     const given = isRecord(parent[sub.key]) ? (parent[sub.key] as Record<string, unknown>) : {};
     const global = mergedValues(isRecord(own['global']) ? own['global'] : {}, isRecord(parent['global']) ? parent['global'] : {});
     const values = mergedValues(mergedValues(own, given), Object.keys(global).length === 0 ? {} : { global });
-    out.push(...chartTree(sub.dir, { ...reading, context: { values, release: reading.context.release, chart: chartMetaOf(sub.dir) } }, depth + 1));
+    for (const each of sub.imports) {
+      const handed = valueAtPath(values, each.child);
+      if (handed === undefined) continue;
+      const at = each.parent.split('.').filter((key) => key !== '');
+      if (at.length === 0 && !isRecord(handed)) continue;
+      let nested: unknown = handed;
+      for (const key of [...at].reverse()) nested = { [key]: nested };
+      imported = mergedValues(imported, nested as Record<string, unknown>);
+    }
+    below.push({ dir: sub.dir, reading: { ...reading, context: { values, release: reading.context.release, chart: chartMetaOf(sub.dir) } } });
   }
-  return out;
+  const values = Object.keys(imported).length === 0 ? parent : mergedValues(imported, parent);
+  const own = values === parent ? reading : { ...reading, context: { ...reading.context, values } };
+  return [{ dir, reading: own }, ...below.flatMap((each) => chartTree(each.dir, each.reading, depth + 1))];
 };
 
-const templatesOf = (dir: string): string[] => {
-  try {
-    return readdirSync(join(dir, 'templates')).sort();
-  } catch {
-    return [];
-  }
-};
+const templatesOf = (dir: string): string[] => chartEntries(join(dir, 'templates'));
 
 /**
  * Every template of a chart, and of every chart it depends on (P263),
