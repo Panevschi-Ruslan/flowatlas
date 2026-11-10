@@ -139,6 +139,48 @@ describe('the endpoints a NestJS server serves (P266)', () => {
     expect(servedBy(made)).toEqual({ 'Query.products': ['/store-api'], 'Query.staff': ['/office'] });
   });
 
+  it("reads a value the repository's configuration writes for a documented setting over its default (P285)", () => {
+    const files = (config: string, extra: Record<string, string> = {}): Record<string, string> => ({
+      'settings.ts': [
+        'export interface ApiOptions {',
+        "  /** @default 'catalog-api'\n   */",
+        '  catalogPath?: string;',
+        '}',
+        'export interface AppConfig { apiOptions: ApiOptions }',
+        'export class ConfigService { get apiOptions(): Required<ApiOptions> { return {} as any; } }',
+      ].join('\n'),
+      'app-config.ts': config,
+      'app.module.ts': [
+        "import { GraphQLModule, Query, Resolver } from '@nestjs/graphql';",
+        "import { ConfigService } from './settings';",
+        '@Resolver() export class Catalog { @Query(() => String) products() { return ""; } }',
+        '@Module({ imports: [GraphQLModule.forRootAsync({ useFactory: (config: ConfigService) => ({ path: config.apiOptions.catalogPath }), inject: [ConfigService] })] })',
+        'export class AppModule {}',
+      ].join('\n'),
+      ...extra,
+    });
+    const written = read(project(files("import type { AppConfig } from './settings';\nexport const config: AppConfig = { apiOptions: { catalogPath: 'shop-graphql' } };", {
+      // A test's own configuration is not the application's.
+      'app.e2e-spec.ts': "import type { AppConfig } from './settings';\nexport const testConfig: AppConfig = { apiOptions: { catalogPath: 'test-api' } };",
+    }))).endpoints;
+    expect(written.map((each) => each.path)).toEqual(['/shop-graphql']);
+    expect(written[0]?.defaulted?.[0]).toContain("read as 'shop-graphql', the value app-config.ts writes for it over the default 'catalog-api'");
+    // The same value as the default, a value of an object of another type, and none: the default.
+    for (const config of [
+      "import type { AppConfig } from './settings';\nexport const config: AppConfig = { apiOptions: { catalogPath: 'catalog-api' } };",
+      "export const other = { apiOptions: { catalogPath: 'elsewhere' } };",
+      'export {};',
+    ]) {
+      const endpoints = read(project(files(config))).endpoints;
+      expect(endpoints.map((each) => each.path), config).toEqual(['/catalog-api']);
+      expect(endpoints[0]?.defaulted?.[0], config).toContain('the default its declaration documents');
+    }
+    // Two values the application writes: the default, with both named.
+    const two = read(project(files("import type { AppConfig } from './settings';\nexport const a: AppConfig = { apiOptions: { catalogPath: 'one' } };\nexport const b: AppConfig = { apiOptions: { catalogPath: 'two' } };"))).endpoints;
+    expect(two.map((each) => each.path)).toEqual(['/catalog-api']);
+    expect(two[0]?.defaulted?.[0]).toContain("the repository writes 2 values for it ('one' in app-config.ts, 'two' in app-config.ts)");
+  });
+
   it('says a path written as code, and keeps the library default', () => {
     const made = project({
       'app.module.ts': [

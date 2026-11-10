@@ -1,7 +1,8 @@
 import { forEachCall } from '@flowatlas/core';
 import type { ClassDeclaration, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { BASE_FIELDS, localClient, VERB_CALLS, type RequestClient } from '../clients.js';
+import { BASE_FIELDS, localClient, VERB_CALLS, type InstanceRuns, type RequestClient } from '../clients.js';
+import { rewriteKey } from './request-rewrite.js';
 import { isSomewhere, type ApiUrl } from './url.js';
 
 /**
@@ -50,11 +51,22 @@ export interface ClassReading {
   address(node: TsNode): ApiUrl;
   /**
    * The base each request a body makes through a client already described goes
-   * out under, or null for one with none (P239): a class holding
-   * `axios.create({ baseURL })` in a field and wrapping its verbs keeps its base
-   * there, not in a field of its own.
+   * out under, or null for a request made some other way (P239): a class
+   * holding `axios.create({ baseURL })` in a field and wrapping its verbs keeps
+   * its base there, not in a field of its own.
    */
-  basesIn?(body: TsNode): ReadonlyArray<ApiUrl | null>;
+  basesIn?(body: TsNode): ReadonlyArray<ReachedBase | null>;
+}
+
+/**
+ * The base a request through an instance goes out under, and what the
+ * instance runs before it where that depends on the request's own address or
+ * was not read (P285): a rewrite under a test of the address is applied to
+ * each request the class is called with, not folded into one base.
+ */
+export interface ReachedBase {
+  readonly base: ApiUrl | undefined;
+  readonly runs?: InstanceRuns;
 }
 
 /** What reading a local class made of it. */
@@ -191,12 +203,28 @@ const baseOf = (chain: readonly ClassDeclaration[], reading: ClassReading): ApiU
  * (P239). One member writing to the network any other way, or two bases, is no
  * base: the class then does not put one opening in front of every path.
  */
-const reachedBaseOf = (chain: readonly ClassDeclaration[], reading: ClassReading): ApiUrl | undefined => {
+const reachedBaseOf = (chain: readonly ClassDeclaration[], reading: ClassReading): ReachedBase | undefined => {
   if (reading.basesIn === undefined) return undefined;
   const bases = chain.flatMap((cls) => [...memberBodiesOf(cls).values()].flatMap((body) => reading.basesIn?.(body) ?? []));
   const [first] = bases;
-  if (first === undefined || first === null) return undefined;
-  return bases.every((base) => base !== null && base.url === first.url) ? first : undefined;
+  if (first === undefined || first === null || (first.base === undefined && first.runs === undefined)) return undefined;
+  const same = bases.every((each) => each !== null && each.base?.url === first.base?.url && runsKey(each.runs) === runsKey(first.runs));
+  return same ? first : undefined;
+};
+
+/** What an instance runs before each request, as a key two instances that run the same thing share. */
+const runsKey = (runs: InstanceRuns | undefined): string => {
+  const at = (node: TsNode): string => `${node.getSourceFile().getFilePath()}:${node.getStart()}`;
+  if (runs?.rewriteUnread !== undefined) return `unread@${at(runs.rewriteUnread.at)}`;
+  if (runs?.rewrite !== undefined) return `${rewriteKey(runs.rewrite)}@${at(runs.rewrite.at)}`;
+  return '';
+};
+
+/** The client a class is read as, with the base it holds or the one the instance it writes through is made with. */
+const clientOfClass = (typeName: string, verbs: readonly string[], chain: readonly ClassDeclaration[], reading: ClassReading): RequestClient => {
+  const own = baseOf(chain, reading);
+  const reached = own === undefined ? reachedBaseOf(chain, reading) : undefined;
+  return localClient(typeName, verbs, own ?? reached?.base, reached?.runs);
 };
 
 /** Every class in an extends chain, the one written first. */
@@ -256,7 +284,7 @@ export const localClientOf = (
     const answered = verbs.size > 0 ? [...verbs.keys()] : Object.keys(VERB_CALLS);
     return {
       kind: 'client',
-      client: localClient(typeName, answered, baseOf(chain, reading) ?? reachedBaseOf(chain, reading)),
+      client: clientOfClass(typeName, answered, chain, reading),
       via: 'declared',
     };
   }
@@ -274,7 +302,7 @@ export const localClientOf = (
   if (proved.length > 0) {
     return {
       kind: 'client',
-      client: localClient(typeName, proved, baseOf(chain, reading) ?? reachedBaseOf(chain, reading)),
+      client: clientOfClass(typeName, proved, chain, reading),
       via: 'recognised',
     };
   }

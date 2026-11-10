@@ -1,0 +1,1917 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:22:43.760Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "module",
+      "label": "GraphQLModule",
+      "repo": "api",
+      "file": "node_modules/@nestjs/graphql",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "external": true
+      }
+    },
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "AdminController",
+          "ShopController",
+          "ExportsController",
+          "CatalogController"
+        ],
+        "providers": [
+          "ConfigService",
+          "StoreResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/config/settings.ts:ConfigService",
+      "type": "provider",
+      "label": "ConfigService",
+      "repo": "api",
+      "file": "src/config/settings.ts",
+      "line": 18,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/config/settings.ts:ConfigService.load",
+      "type": "method",
+      "label": "ConfigService.load",
+      "repo": "api",
+      "file": "src/config/settings.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "config",
+              "type": "type:api#AppConfig"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/main.ts:start",
+      "type": "function",
+      "label": "start",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/rest/admin.controller.ts:AdminController",
+      "type": "provider",
+      "label": "AdminController",
+      "repo": "api",
+      "file": "src/rest/admin.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/rest/admin.controller.ts:AdminController.users",
+      "type": "method",
+      "label": "AdminController.users",
+      "repo": "api",
+      "file": "src/rest/admin.controller.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/rest/catalog.controller.ts:CatalogController",
+      "type": "provider",
+      "label": "CatalogController",
+      "repo": "api",
+      "file": "src/rest/catalog.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/rest/catalog.controller.ts:CatalogController.item",
+      "type": "method",
+      "label": "CatalogController.item",
+      "repo": "api",
+      "file": "src/rest/catalog.controller.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string}"
+        }
+      }
+    },
+    {
+      "id": "api#src/rest/exports.controller.ts:ExportsController",
+      "type": "provider",
+      "label": "ExportsController",
+      "repo": "api",
+      "file": "src/rest/exports.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/rest/exports.controller.ts:ExportsController.orders",
+      "type": "method",
+      "label": "ExportsController.orders",
+      "repo": "api",
+      "file": "src/rest/exports.controller.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "api#src/rest/shop.controller.ts:ShopController",
+      "type": "provider",
+      "label": "ShopController",
+      "repo": "api",
+      "file": "src/rest/shop.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/rest/shop.controller.ts:ShopController.orders",
+      "type": "method",
+      "label": "ShopController.orders",
+      "repo": "api",
+      "file": "src/rest/shop.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/rest/shop.controller.ts:ShopController.products",
+      "type": "method",
+      "label": "ShopController.products",
+      "repo": "api",
+      "file": "src/rest/shop.controller.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/store/store.resolver.ts:StoreResolver",
+      "type": "provider",
+      "label": "StoreResolver",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 21,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/store/store.resolver.ts:StoreResolver.order",
+      "type": "method",
+      "label": "StoreResolver.order",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Order"
+        }
+      }
+    },
+    {
+      "id": "api#src/store/store.resolver.ts:StoreResolver.orders",
+      "type": "method",
+      "label": "StoreResolver.orders",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Order[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/store/store.resolver.ts:StoreResolver.signIn",
+      "type": "method",
+      "label": "StoreResolver.signIn",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "email",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Shopper"
+        }
+      }
+    },
+    {
+      "id": "config_key:api#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 7,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:worker#CATALOG_URL",
+      "type": "config_key",
+      "label": "CATALOG_URL",
+      "repo": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 7,
+      "meta": {
+        "key": "CATALOG_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:worker#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "worker",
+      "file": "src/main.ts",
+      "line": 7,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:worker#RATES_URL",
+      "type": "config_key",
+      "label": "RATES_URL",
+      "repo": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 8,
+      "meta": {
+        "key": "RATES_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Mutation.signIn",
+      "type": "entry",
+      "label": "Mutation.signIn",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 33,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "signIn",
+        "returns": "Shopper!",
+        "args": {
+          "email": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.order",
+      "type": "entry",
+      "label": "Query.order",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 28,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "order",
+        "returns": "Order!",
+        "args": {
+          "id": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.orders",
+      "type": "entry",
+      "label": "Query.orders",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 23,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "orders",
+        "returns": "[Order!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/catalog/items/:param",
+      "type": "entry",
+      "label": "GET /api/catalog/items/:param",
+      "repo": "api",
+      "file": "src/rest/catalog.controller.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/catalog/items/:param",
+        "rawPath": "/api/catalog/items/:id",
+        "controller": "CatalogController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/exports/orders.csv",
+      "type": "entry",
+      "label": "GET /exports/orders.csv",
+      "repo": "api",
+      "file": "src/rest/exports.controller.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/exports/orders.csv",
+        "rawPath": "/exports/orders.csv",
+        "controller": "ExportsController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/office-rest/admin/users",
+      "type": "entry",
+      "label": "GET /office-rest/admin/users",
+      "repo": "api",
+      "file": "src/rest/admin.controller.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/office-rest/admin/users",
+        "rawPath": "/office-rest/admin/users",
+        "controller": "AdminController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/store-rest/orders",
+      "type": "entry",
+      "label": "GET /store-rest/orders",
+      "repo": "api",
+      "file": "src/rest/shop.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/store-rest/orders",
+        "rawPath": "/store-rest/orders",
+        "controller": "ShopController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/store-rest/products",
+      "type": "entry",
+      "label": "GET /store-rest/products",
+      "repo": "api",
+      "file": "src/rest/shop.controller.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/store-rest/products",
+        "rawPath": "/store-rest/products",
+        "controller": "ShopController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/shop-graphql",
+      "type": "entry",
+      "label": "POST /shop-graphql",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/shop-graphql",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Order": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "total": {
+                    "type": "Float!"
+                  }
+                }
+              },
+              "Shopper": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "orders": {
+                    "type": "[Order!]!"
+                  },
+                  "order": {
+                    "type": "Order!",
+                    "args": {
+                      "id": {
+                        "type": "String!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "signIn": {
+                    "type": "Shopper!",
+                    "args": {
+                      "email": {
+                        "type": "String!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 7,
+              "setting": "PORT"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "entry:worker:http:POST:/sync/:param",
+      "type": "entry",
+      "label": "POST /sync/:param",
+      "repo": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/sync/:param",
+        "rawPath": "/sync/:id",
+        "controller": "SyncController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "external_api:rates.example.test",
+      "type": "external_api",
+      "label": "rates.example.test",
+      "repo": "worker",
+      "meta": {
+        "host": "rates.example.test"
+      }
+    },
+    {
+      "id": "http_out:worker#src/sync.controller.ts:7:24",
+      "type": "http_out",
+      "label": "GET /items/:param",
+      "repo": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 7,
+      "meta": {
+        "method": "GET",
+        "url": "${CATALOG_URL}/items/${…}",
+        "path": "/items/:param",
+        "baseUrlEnv": "CATALOG_URL",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "https://catalog.example.test/api/catalog",
+        "baseUrlFrom": ".env.example",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "http_out:worker#src/sync.controller.ts:8:25",
+      "type": "http_out",
+      "label": "GET /rates",
+      "repo": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "${RATES_URL}/rates",
+        "path": "/rates",
+        "baseUrlEnv": "RATES_URL",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrl": "https://rates.example.test/v3",
+        "baseUrlFrom": ".env.example",
+        "host": "rates.example.test"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 9,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "functions": 11,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:worker",
+      "type": "repo",
+      "label": "worker",
+      "repo": "worker",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ui_action:web#src/pages/AccountPage.tsx:20:18",
+      "type": "ui_action",
+      "label": "onClick={() => void load()}",
+      "repo": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => void load()",
+        "component": "web#src/pages/AccountPage.tsx:AccountPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/backend/orders.ts:22:33@13:23",
+      "type": "ui_api_call",
+      "label": "query Orders /shop-graphql",
+      "repo": "web",
+      "file": "src/backend/orders.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/shop-graphql",
+        "path": "/shop-graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "literal",
+        "through": "runQuery",
+        "graphql": {
+          "operation": "query",
+          "name": "Orders",
+          "fields": [
+            {
+              "field": "orders",
+              "line": 7,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 8
+                },
+                {
+                  "field": "total",
+                  "line": 9
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/backend/orders.ts",
+            "line": 6
+          },
+          "library": "urql"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/backend/orders.ts:27:12@13:23",
+      "type": "ui_api_call",
+      "label": "query Order /shop-graphql",
+      "repo": "web",
+      "file": "src/backend/orders.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/shop-graphql",
+        "path": "/shop-graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "urql",
+        "client": "urql",
+        "via": "literal",
+        "through": "runQuery",
+        "graphql": {
+          "operation": "query",
+          "name": "Order",
+          "fields": [
+            {
+              "field": "order",
+              "arguments": [
+                "id"
+              ],
+              "line": 16,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 17
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "id",
+              "type": "String!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/backend/orders.ts",
+            "line": 15
+          },
+          "library": "urql"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages/AccountPage.tsx:11:11",
+      "type": "ui_api_call",
+      "label": "GET /office-rest/admin/users",
+      "repo": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/office-rest/admin/users",
+        "path": "/office-rest/admin/users",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "baseFrom": "interceptor",
+        "via": "literal",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages/AccountPage.tsx:12:11",
+      "type": "ui_api_call",
+      "label": "GET /store-rest/products",
+      "repo": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/store-rest/products",
+        "path": "/store-rest/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "baseFrom": "interceptor",
+        "via": "literal",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages/AccountPage.tsx:14:11",
+      "type": "ui_api_call",
+      "label": "GET /${…}/:param/list",
+      "repo": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${…}/:param/list",
+        "path": "/${…}/:param/list",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "baseFrom": "interceptor",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages/AccountPage.tsx:15:11",
+      "type": "ui_api_call",
+      "label": "GET /exports/orders.csv",
+      "repo": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/exports/orders.csv",
+        "path": "/exports/orders.csv",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ApiClient",
+        "baseFrom": "interceptor",
+        "localClient": "recognised",
+        "via": "literal",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages/AccountPage.tsx:16:11",
+      "type": "ui_api_call",
+      "label": "GET /store-rest/orders",
+      "repo": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/store-rest/orders",
+        "path": "/store-rest/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ApiClient",
+        "localClient": "recognised",
+        "via": "literal",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages/AccountPage.tsx:18:11",
+      "type": "ui_api_call",
+      "label": "mutation SignIn /shop-graphql",
+      "repo": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/shop-graphql",
+        "path": "/shop-graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "codegen-sdk",
+        "client": "codegen-sdk",
+        "via": "literal",
+        "graphql": {
+          "operation": "mutation",
+          "name": "SignIn",
+          "fields": [
+            {
+              "field": "signIn",
+              "arguments": [
+                "email"
+              ],
+              "line": 12,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 13
+                },
+                {
+                  "field": "email",
+                  "line": 14
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "email",
+              "type": "String!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/generated/graphql.ts",
+            "line": 11
+          },
+          "library": "codegen-sdk"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/pages/AccountPage.tsx:9:20",
+      "type": "ui_api_call",
+      "label": "query Orders /shop-graphql",
+      "repo": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/shop-graphql",
+        "path": "/shop-graphql",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "codegen-sdk",
+        "client": "codegen-sdk",
+        "via": "literal",
+        "graphql": {
+          "operation": "query",
+          "name": "Orders",
+          "fields": [
+            {
+              "field": "orders",
+              "line": 20,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 21
+                },
+                {
+                  "field": "total",
+                  "line": 22
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/generated/graphql.ts",
+            "line": 19
+          },
+          "library": "codegen-sdk"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "web#src/backend/client.ts:runQuery",
+      "type": "function",
+      "label": "runQuery",
+      "repo": "web",
+      "file": "src/backend/client.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "args",
+              "type": "{query:unknown;variables:V}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/client.ts:runQuietQuery",
+      "type": "function",
+      "label": "runQuietQuery",
+      "repo": "web",
+      "file": "src/backend/client.ts",
+      "line": 16
+    },
+    {
+      "id": "web#src/backend/orders.ts:listOrders",
+      "type": "function",
+      "label": "listOrders",
+      "repo": "web",
+      "file": "src/backend/orders.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/backend/store.ts:storeApi",
+      "type": "function",
+      "label": "storeApi",
+      "repo": "web",
+      "file": "src/backend/store.ts",
+      "line": 7
+    },
+    {
+      "id": "web#src/backend/store.ts:storeHooks",
+      "type": "function",
+      "label": "storeHooks",
+      "repo": "web",
+      "file": "src/backend/store.ts",
+      "line": 8
+    },
+    {
+      "id": "web#src/generated/graphql.ts:getSdk",
+      "type": "function",
+      "label": "getSdk",
+      "repo": "web",
+      "file": "src/generated/graphql.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "client",
+              "type": "unknown"
+            },
+            {
+              "name": "withWrapper",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+              "optional": true
+            }
+          ],
+          "returns": "object"
+        }
+      }
+    },
+    {
+      "id": "web#src/generated/graphql.ts:getSdkWithHooks",
+      "type": "function",
+      "label": "getSdkWithHooks",
+      "repo": "web",
+      "file": "src/generated/graphql.ts",
+      "line": 43,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "client",
+              "type": "unknown"
+            },
+            {
+              "name": "withWrapper",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+              "optional": true
+            }
+          ],
+          "returns": "object"
+        }
+      }
+    },
+    {
+      "id": "web#src/pages/AccountPage.tsx:AccountPage",
+      "type": "ui_component",
+      "label": "AccountPage",
+      "repo": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 8,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "worker#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "worker",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "SyncController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "worker#src/main.ts:start",
+      "type": "function",
+      "label": "start",
+      "repo": "worker",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "worker#src/sync.controller.ts:SyncController",
+      "type": "provider",
+      "label": "SyncController",
+      "repo": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "worker#src/sync.controller.ts:SyncController.sync",
+      "type": "method",
+      "label": "SyncController.sync",
+      "repo": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 12,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "api#src/main.ts:start",
+      "to": "config_key:api#PORT",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:api:graphql:Mutation.signIn",
+      "to": "api#src/store/store.resolver.ts:StoreResolver.signIn",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Shopper",
+      "file": "src/store/store.resolver.ts",
+      "line": 33
+    },
+    {
+      "from": "entry:api:graphql:Query.order",
+      "to": "api#src/store/store.resolver.ts:StoreResolver.order",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Order",
+      "file": "src/store/store.resolver.ts",
+      "line": 28
+    },
+    {
+      "from": "entry:api:graphql:Query.orders",
+      "to": "api#src/store/store.resolver.ts:StoreResolver.orders",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#Order[]",
+      "file": "src/store/store.resolver.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:api:http:GET:/api/catalog/items/:param",
+      "to": "api#src/rest/catalog.controller.ts:CatalogController.item",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string}",
+      "file": "src/rest/catalog.controller.ts",
+      "line": 5,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/exports/orders.csv",
+      "to": "api#src/rest/exports.controller.ts:ExportsController.orders",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/rest/exports.controller.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:api:http:GET:/office-rest/admin/users",
+      "to": "api#src/rest/admin.controller.ts:AdminController.users",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/rest/admin.controller.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:api:http:GET:/store-rest/orders",
+      "to": "api#src/rest/shop.controller.ts:ShopController.orders",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/rest/shop.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:api:http:GET:/store-rest/products",
+      "to": "api#src/rest/shop.controller.ts:ShopController.products",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "src/rest/shop.controller.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:worker:http:POST:/sync/:param",
+      "to": "worker#src/sync.controller.ts:SyncController.sync",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/sync.controller.ts",
+      "line": 5,
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "http_out:worker#src/sync.controller.ts:7:24",
+      "to": "entry:api:http:GET:/api/catalog/items/:param",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.controller.ts",
+      "line": 7,
+      "meta": {
+        "via": "externalValuePath",
+        "targetService": "api",
+        "baseUrl": "https://catalog.example.test/api/catalog",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "http_out:worker#src/sync.controller.ts:8:25",
+      "to": "external_api:rates.example.test",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/sync.controller.ts",
+      "line": 8,
+      "meta": {
+        "baseUrl": "https://rates.example.test/v3",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "ui_action:web#src/pages/AccountPage.tsx:20:18",
+      "to": "web#src/pages/AccountPage.tsx:AccountPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 20
+    },
+    {
+      "from": "ui_api_call:web#src/backend/orders.ts:22:33@13:23",
+      "to": "entry:api:graphql:Query.orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/backend/orders.ts",
+      "line": 7,
+      "meta": {
+        "graphql": {
+          "operation": "Orders",
+          "field": "Query.orders"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/orders.ts:22:33@13:23",
+      "to": "entry:api:http:POST:/shop-graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/backend/orders.ts",
+      "line": 22,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/orders.ts:27:12@13:23",
+      "to": "entry:api:graphql:Query.order",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/backend/orders.ts",
+      "line": 16,
+      "meta": {
+        "graphql": {
+          "operation": "Order",
+          "field": "Query.order"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/backend/orders.ts:27:12@13:23",
+      "to": "entry:api:http:POST:/shop-graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/backend/orders.ts",
+      "line": 27,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages/AccountPage.tsx:11:11",
+      "to": "entry:api:http:GET:/office-rest/admin/users",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 11,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages/AccountPage.tsx:12:11",
+      "to": "entry:api:http:GET:/store-rest/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 12,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages/AccountPage.tsx:15:11",
+      "to": "entry:api:http:GET:/exports/orders.csv",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 15,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages/AccountPage.tsx:16:11",
+      "to": "entry:api:http:GET:/store-rest/orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 16,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages/AccountPage.tsx:18:11",
+      "to": "entry:api:graphql:Mutation.signIn",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/generated/graphql.ts",
+      "line": 12,
+      "meta": {
+        "graphql": {
+          "operation": "SignIn",
+          "field": "Mutation.signIn"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages/AccountPage.tsx:18:11",
+      "to": "entry:api:http:POST:/shop-graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 18,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages/AccountPage.tsx:9:20",
+      "to": "entry:api:graphql:Query.orders",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/generated/graphql.ts",
+      "line": 20,
+      "meta": {
+        "graphql": {
+          "operation": "Orders",
+          "field": "Query.orders"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/pages/AccountPage.tsx:9:20",
+      "to": "entry:api:http:POST:/shop-graphql",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 9,
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "web#src/backend/client.ts:runQuery",
+      "to": "ui_api_call:web#src/backend/orders.ts:27:12@13:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/backend/orders.ts",
+      "line": 27
+    },
+    {
+      "from": "web#src/backend/orders.ts:listOrders",
+      "to": "ui_api_call:web#src/backend/orders.ts:22:33@13:23",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/backend/orders.ts",
+      "line": 22
+    },
+    {
+      "from": "web#src/backend/orders.ts:listOrders",
+      "to": "web#src/backend/client.ts:runQuietQuery",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/backend/orders.ts",
+      "line": 22
+    },
+    {
+      "from": "web#src/backend/store.ts:storeApi",
+      "to": "web#src/generated/graphql.ts:getSdk",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "object",
+      "file": "src/backend/store.ts",
+      "line": 7
+    },
+    {
+      "from": "web#src/backend/store.ts:storeHooks",
+      "to": "web#src/generated/graphql.ts:getSdkWithHooks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "object",
+      "file": "src/backend/store.ts",
+      "line": 8
+    },
+    {
+      "from": "web#src/generated/graphql.ts:getSdkWithHooks",
+      "to": "web#src/generated/graphql.ts:getSdk",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "unknown",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "object",
+      "file": "src/generated/graphql.ts",
+      "line": 44
+    },
+    {
+      "from": "web#src/pages/AccountPage.tsx:AccountPage",
+      "to": "ui_api_call:web#src/pages/AccountPage.tsx:11:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 11
+    },
+    {
+      "from": "web#src/pages/AccountPage.tsx:AccountPage",
+      "to": "ui_api_call:web#src/pages/AccountPage.tsx:12:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 12
+    },
+    {
+      "from": "web#src/pages/AccountPage.tsx:AccountPage",
+      "to": "ui_api_call:web#src/pages/AccountPage.tsx:14:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 14
+    },
+    {
+      "from": "web#src/pages/AccountPage.tsx:AccountPage",
+      "to": "ui_api_call:web#src/pages/AccountPage.tsx:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 15
+    },
+    {
+      "from": "web#src/pages/AccountPage.tsx:AccountPage",
+      "to": "ui_api_call:web#src/pages/AccountPage.tsx:16:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 16
+    },
+    {
+      "from": "web#src/pages/AccountPage.tsx:AccountPage",
+      "to": "ui_api_call:web#src/pages/AccountPage.tsx:18:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 18
+    },
+    {
+      "from": "web#src/pages/AccountPage.tsx:AccountPage",
+      "to": "ui_api_call:web#src/pages/AccountPage.tsx:9:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 9
+    },
+    {
+      "from": "web#src/pages/AccountPage.tsx:AccountPage",
+      "to": "web#src/backend/orders.ts:listOrders",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 17
+    },
+    {
+      "from": "worker#src/main.ts:start",
+      "to": "config_key:worker#PORT",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 7
+    },
+    {
+      "from": "worker#src/sync.controller.ts:SyncController.sync",
+      "to": "config_key:worker#CATALOG_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/sync.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "worker#src/sync.controller.ts:SyncController.sync",
+      "to": "config_key:worker#RATES_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/sync.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "worker#src/sync.controller.ts:SyncController.sync",
+      "to": "http_out:worker#src/sync.controller.ts:7:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.controller.ts",
+      "line": 7
+    },
+    {
+      "from": "worker#src/sync.controller.ts:SyncController.sync",
+      "to": "http_out:worker#src/sync.controller.ts:8:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.controller.ts",
+      "line": 8
+    }
+  ],
+  "types": {
+    "type:api#ApiOptions": {
+      "name": "ApiOptions",
+      "kind": "object",
+      "declaredIn": "api#src/config/settings.ts",
+      "structuralHash": "73d39962b63dbf91",
+      "fields": [
+        {
+          "name": "storePath",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#AppConfig": {
+      "name": "AppConfig",
+      "kind": "object",
+      "declaredIn": "api#src/config/settings.ts",
+      "structuralHash": "4e8239cf0002e45f",
+      "fields": [
+        {
+          "name": "apiOptions",
+          "type": "type:api#ApiOptions",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#Order": {
+      "name": "Order",
+      "kind": "object",
+      "declaredIn": "api#src/store/store.resolver.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:api#Shopper": {
+      "name": "Shopper",
+      "kind": "object",
+      "declaredIn": "api#src/store/store.resolver.ts",
+      "structuralHash": "f392a5918b5eac56",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 14,
+      "reason": "graphql-endpoint-unread",
+      "level": "info",
+      "message": "the GraphQL endpoint made here is read at /shop-graphql: config.apiOptions.storePath is a setting the code does not write where it is read, read as 'shop-graphql', the value app-config.ts writes for it over the default 'store-api' its declaration documents",
+      "hint": "A configuration that sets it moves the endpoint; write the path where the module is made to have it read as written.",
+      "symbol": "entry:api:http:POST:/shop-graphql",
+      "adapter": "graphql-resolvers",
+      "service": "api"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 14,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/backend/client.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "TypedDocumentNode<T, V>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@urql/core"
+      },
+      "service": "web"
+    },
+    {
+      "file": "src/backend/client.ts",
+      "line": 8,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "V",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/client.ts",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/backend/orders.ts",
+      "line": 22,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "src/generated/graphql.ts",
+      "line": 30,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "GraphQLClient",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "graphql-request"
+      },
+      "service": "web"
+    },
+    {
+      "file": "src/generated/graphql.ts",
+      "line": 43,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "GraphQLClient",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "graphql-request"
+      },
+      "service": "web"
+    },
+    {
+      "file": "src/pages/AccountPage.tsx",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 14,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…}/:param/list is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/pages/AccountPage.tsx:14:11"
+    },
+    {
+      "service": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "CATALOG_URL is https://catalog.example.test/api/catalog in .env.example, which is taken as api",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add CATALOG_URL to services[].baseUrlEnv of api to say so outright.",
+      "symbol": "http_out:worker#src/sync.controller.ts:7:24",
+      "meta": {
+        "variable": "CATALOG_URL",
+        "value": "https://catalog.example.test/api/catalog",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 8,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "RATES_URL is https://rates.example.test/v3 in .env.example, which is taken as rates.example.test",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add RATES_URL to services[].baseUrlEnv of rates.example.test to say so outright.",
+      "symbol": "http_out:worker#src/sync.controller.ts:8:25",
+      "meta": {
+        "variable": "RATES_URL",
+        "value": "https://rates.example.test/v3",
+        "from": ".env.example"
+      }
+    }
+  ]
+}

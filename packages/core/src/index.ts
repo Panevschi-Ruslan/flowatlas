@@ -762,7 +762,7 @@ export {
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
 export { isSomewhere, underBase } from './under-base.js';
-export { addressTestOf, asksAbsolute, conditionsAround, guardsAround, literalAddress, prefixOfRewrite, rewriteTestOf } from './address-rewrite.js';
+export { addressTestOf, asksAbsolute, conditionsAround, guardsAround, joinedTests, literalAddress, notTest, prefixOfRewrite, rewriteTestOf } from './address-rewrite.js';
 export type { AddressTest, Guard } from './address-rewrite.js';
 export type { ReadAddress } from './under-base.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';

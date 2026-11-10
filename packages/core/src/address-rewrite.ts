@@ -169,13 +169,13 @@ const STRING_TESTS: Readonly<Record<string, (written: string, text: string) => b
 };
 
 /** A test turned round. */
-const not = (test: AddressTest): AddressTest => (written) => {
+export const notTest = (test: AddressTest): AddressTest => (written) => {
   const answer = test(written);
   return answer === undefined ? undefined : !answer;
 };
 
 /** Tests joined: every one holds (`all`), or any one does. */
-const joined = (tests: readonly AddressTest[], all: boolean): AddressTest => (written) => {
+export const joinedTests = (tests: readonly AddressTest[], all: boolean): AddressTest => (written) => {
   const answers = tests.map((test) => test(written));
   if (answers.includes(!all)) return !all;
   return answers.includes(undefined) ? undefined : all;
@@ -192,7 +192,7 @@ export const addressTestOf = (condition: TsNode, isAddress: (node: TsNode) => bo
   const target = unwrap(condition);
   if (Node.isPrefixUnaryExpression(target) && target.getOperatorToken() === SyntaxKind.ExclamationToken) {
     const inner = addressTestOf(target.getOperand(), isAddress);
-    return inner === undefined ? undefined : not(inner);
+    return inner === undefined ? undefined : notTest(inner);
   }
   if (Node.isBinaryExpression(target)) {
     const operator = target.getOperatorToken().getKind();
@@ -200,7 +200,7 @@ export const addressTestOf = (condition: TsNode, isAddress: (node: TsNode) => bo
       const left = addressTestOf(target.getLeft(), isAddress);
       const right = addressTestOf(target.getRight(), isAddress);
       if (left === undefined || right === undefined) return undefined;
-      return joined([left, right], operator === SyntaxKind.AmpersandAmpersandToken);
+      return joinedTests([left, right], operator === SyntaxKind.AmpersandAmpersandToken);
     }
     const equal = [SyntaxKind.EqualsEqualsToken, SyntaxKind.EqualsEqualsEqualsToken].includes(operator);
     const unequal = [SyntaxKind.ExclamationEqualsToken, SyntaxKind.ExclamationEqualsEqualsToken].includes(operator);
@@ -308,7 +308,7 @@ export const rewriteTestOf = (
   for (const { condition, holds } of guards) {
     const test = holds === undefined ? undefined : addressTestOf(condition, isAddress);
     if (test === undefined) return undefined;
-    tests.push(holds ? test : not(test));
+    tests.push(holds ? test : notTest(test));
   }
-  return joined(tests, true);
+  return joinedTests(tests, true);
 };

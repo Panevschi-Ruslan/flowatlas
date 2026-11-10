@@ -1,6 +1,7 @@
 import type { CallExpression, ClassDeclaration, Decorator, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { resolveStaticString } from '@flowatlas/core';
+import { posix } from 'node:path';
+import { isTestFile, resolveStaticString } from '@flowatlas/core';
 import { followed } from './gateway.js';
 
 /**
@@ -259,6 +260,61 @@ const documentedDefault = (access: TsNode): string | undefined => {
   return undefined;
 };
 
+/** A mock or a story, by its name: `config.service.mock.ts`, `settings.stories.tsx`. */
+const NOT_THE_APPLICATION = /\.(?:mocks?|stories)\./;
+
+/**
+ * Whether a file a value is written in is the application's own, not a test's
+ * or a mock's (P285): asked of its name, and of its directories below the
+ * project's tsconfig, never of the path a clone lives at.
+ */
+const ofTheApplication = (file: SourceFile): boolean => {
+  const configFile = file.getProject().getCompilerOptions().configFilePath;
+  const path = file.getFilePath();
+  const below = typeof configFile === 'string' && path.startsWith(`${posix.dirname(configFile)}/`) ? path.slice(posix.dirname(configFile).length + 1) : file.getBaseName();
+  return !isTestFile(below) && !NOT_THE_APPLICATION.test(file.getBaseName());
+};
+
+/** A value the repository writes for a setting, and the file it is written in. */
+interface WrittenValue {
+  readonly value: string;
+  readonly file: string;
+}
+
+const writtenValues = new WeakMap<TsNode, readonly WrittenValue[]>();
+
+/**
+ * The values the repository writes as text for the member a setting is read
+ * from (P285): `apiOptions: { storePath: 'shop' }` in an object whose type is
+ * the one that declares the member, whatever function hands it on, in the
+ * application's own files. What overrides a documented default where the
+ * configuration is written, as a literal or a constant.
+ */
+const writtenFor = (access: TsNode): readonly WrittenValue[] => {
+  if (!Node.isPropertyAccessExpression(access)) return [];
+  const declarations = access.getNameNode().getSymbol()?.getDeclarations() ?? [];
+  const [first] = declarations;
+  if (first === undefined) return [];
+  const known = writtenValues.get(first);
+  if (known !== undefined) return known;
+  const name = access.getName();
+  const found: WrittenValue[] = [];
+  for (const file of access.getProject().getSourceFiles()) {
+    if (file.isInNodeModules() || file.isDeclarationFile() || !ofTheApplication(file) || !file.getFullText().includes(name)) continue;
+    for (const assignment of file.getDescendantsOfKind(SyntaxKind.PropertyAssignment)) {
+      if (assignment.getName() !== name) continue;
+      const object = assignment.getParent();
+      if (!Node.isObjectLiteralExpression(object)) continue;
+      const member = object.getContextualType()?.getProperty(name);
+      if (member === undefined || !member.getDeclarations().some((declaration) => declarations.includes(declaration))) continue;
+      const value = stringValue(assignment.getInitializer());
+      if (value !== undefined) found.push({ value, file: file.getBaseName() });
+    }
+  }
+  writtenValues.set(first, found);
+  return found;
+};
+
 /** A string read with bindings: a literal or constant, a member of an object handed in, `+` of two, or a member's documented default. */
 const stringIn = (node: TsNode | undefined, bindings: Bindings, defaulted: string[], depth = 0): string | undefined => {
   if (depth > BOUND_DEPTH) return undefined;
@@ -275,8 +331,18 @@ const stringIn = (node: TsNode | undefined, bindings: Bindings, defaulted: strin
     const member = memberIn(value.node, value.bindings, depth + 1);
     if (member !== undefined) return stringIn(member.node, member.bindings, defaulted, depth + 1);
     const documented = documentedDefault(value.node);
+    // A value the repository's configuration writes for it overrides the default (P285).
+    const written = writtenFor(value.node);
+    const values = [...new Set(written.map((each) => each.value))];
+    const [only] = values;
+    if (only !== undefined && values.length === 1 && only !== documented) {
+      const where = [...new Set(written.map((each) => each.file))].join(', ');
+      defaulted.push(`${value.node.getText()} is a setting the code does not write where it is read, read as '${only}', the value ${where} writes for it${documented === undefined ? '' : ` over the default '${documented}' its declaration documents`}`);
+      return only;
+    }
     if (documented !== undefined) {
-      defaulted.push(`${value.node.getText()} is a setting the code does not write, read as '${documented}', the default its declaration documents`);
+      const also = values.length > 1 ? `; the repository writes ${values.length} values for it (${written.map((each) => `'${each.value}' in ${each.file}`).join(', ')}) and which one runs is not read` : '';
+      defaulted.push(`${value.node.getText()} is a setting the code does not write, read as '${documented}', the default its declaration documents${also}`);
       return documented;
     }
   }

@@ -1,4 +1,4 @@
-import { asksAbsolute, conditionsAround, declarationOf, prefixOfRewrite, rewriteTestOf, underBase, UNREAD_SPAN, type AddressTest } from '@flowatlas/core';
+import { addressTestOf, asksAbsolute, conditionsAround, declarationOf, joinedTests, notTest, prefixOfRewrite, rewriteTestOf, underBase, UNREAD_SPAN, type AddressTest } from '@flowatlas/core';
 import type { ArrowFunction, FunctionDeclaration, FunctionExpression, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { ClientFactory, RequestRewrites } from '../clients.js';
@@ -54,6 +54,13 @@ export interface Rewrite {
   readonly when?: 'relative';
   /** The test of the address each request writes that the rewrite is made under, where there is one (P280). */
   readonly test?: AddressTest;
+  /**
+   * Rewrites the request's address chooses among, each under its own test
+   * (P285): the sides of a base chosen by a test of the address, or rewrites
+   * written under tests in two places. `test` is then whether any applies,
+   * and the rewrite's own kind and base are the first branch's.
+   */
+  readonly branches?: readonly Rewrite[];
 }
 
 export type RewriteReading =
@@ -373,41 +380,100 @@ export const rewritesOf = (fnNode: TsNode, factory: ClientFactory, read: BaseRea
   const handed = HANDED[rewrites.handed](fn, rewrites);
   // Who the row says runs it: the client before every request, or one call before its own (P250).
   const runs = who ?? `a function ${factory.client.name} runs before every request`;
-  return writesOf(fn, handed, factory, rewrites).map((write): RewriteReading => {
+  return writesOf(fn, handed, factory, rewrites).flatMap((write): RewriteReading[] => {
     const conditions = conditionsAround(write.at, fnNode);
     const unset = conditions.some((condition) => asksUnset(condition, handed, factory.baseKey));
     const open = conditions.filter((condition) => !asksAbsolute(condition, handed.isAddress) && !asksUnset(condition, handed, factory.baseKey));
     // A condition about the address's own form is a test each request is put to (P280).
     const test = open.length === 0 ? null : rewriteTestOf(write.at, fnNode, handed.isAddress, (condition) => asksUnset(condition, handed, factory.baseKey));
     if (test === undefined) {
-      return { kind: 'unread', at: write.at, why: `${runs} rewrites the address only when ${quoted(open[0] as TsNode)}, so which requests go out under it is not known` };
+      return [{ kind: 'unread', at: write.at, why: `${runs} rewrites the address only when ${quoted(open[0] as TsNode)}, so which requests go out under it is not known` }];
     }
-    const tested = test === null ? {} : { test };
-    const value = unwrap(write.value);
-    if (Node.isConditionalExpression(value)) {
+    const reading = readWritten(write, write.value, test, { handed, factory, read, runs, unset });
+    return reading === null ? [] : [reading];
+  });
+};
+
+/** What reading one write needs of the function it is written in. */
+interface WriteContext {
+  readonly handed: Handed;
+  readonly factory: ClientFactory;
+  readonly read: BaseReader;
+  readonly runs: string;
+  /** Whether the write sits behind a condition that asks only whether no base is set. */
+  readonly unset: boolean;
+}
+
+/** Whether a branch writes back what the request already had: `config.url`, or the base it was handed. */
+const keepsAsIs = (write: Write, value: TsNode, context: WriteContext): boolean => {
+  if (write.key === 'address') return context.handed.isAddress(value);
+  if (write.key !== 'base') return false;
+  return Node.isPropertyAccessExpression(value) && value.getName() === context.factory.baseKey && context.handed.isOptions(value.getExpression());
+};
+
+/** The key two rewrites that do the same thing share. */
+export const rewriteKey = (rewrite: Rewrite): string =>
+  rewrite.branches === undefined ? `${rewrite.kind}\0${rewrite.base.url ?? ''}` : rewrite.branches.map(rewriteKey).join('\0\0');
+
+/**
+ * Rewrites each made under its own test of the address, put together as one
+ * the request's address chooses among (P285): the branches of `url.includes('admin')
+ * ? '/admin' : '/shop'`, or rewrites written under tests in two places.
+ */
+export const branchedRewrite = (rewrites: readonly Rewrite[]): Rewrite | undefined => {
+  const branches = [...new Map(rewrites.flatMap((rewrite) => rewrite.branches ?? [rewrite]).map((branch) => [rewriteKey(branch), branch])).values()];
+  const [first] = branches;
+  if (first === undefined) return undefined;
+  if (branches.some((branch) => branch.test === undefined)) return undefined;
+  if (branches.length === 1) return first;
+  return { ...first, test: joinedTests(branches.map((branch) => branch.test as AddressTest), false), branches };
+};
+
+/**
+ * What one value a write puts reads as, under the test of the address it is
+ * written under (`null` where it is under none): a rewrite, a row, or nothing
+ * where the value writes back what the request had. A branch whose condition
+ * is a test of the address is each side under that test (P285); any other
+ * branch is a row.
+ */
+const readWritten = (write: Write, written: TsNode, test: AddressTest | null, context: WriteContext): RewriteReading | null => {
+  const { handed, factory, read, runs, unset } = context;
+  const tested = test === null ? {} : { test };
+  const value = unwrap(written);
+  if (Node.isConditionalExpression(value)) {
+    const chosen = addressTestOf(value.getCondition(), handed.isAddress);
+    if (chosen === undefined) {
       return { kind: 'unread', at: write.at, why: `${runs} writes one of two bases by a branch (${quoted(value.getCondition())}), and which one a request goes out under is not read` };
     }
-    if (write.key === 'base') {
-      const behind = fallbackIn(value, handed, factory.baseKey);
-      const base = read(behind ?? value);
-      if (base === 'unread') return { kind: 'unread', at: write.at, why: `${runs} writes ${factory.baseKey} and it could not be read` };
-      const kind = write.fallback === true || unset || behind !== undefined ? 'fallback' : 'base';
-      return { kind: 'rewrite', rewrite: { kind, base, at: write.at, ...tested } };
-    }
-    if (write.key === 'origin') {
-      const replaced = originOf(value, handed, read);
-      if (replaced?.base === 'unread') return { kind: 'unread', at: write.at, why: `${runs} replaces the request's origin, and the base it puts there could not be read` };
-      if (replaced !== undefined) return { kind: 'rewrite', rewrite: { kind: 'origin', base: replaced.base, at: write.at, ...(replaced.when === undefined ? {} : { when: replaced.when }), ...tested } };
-    }
-    const prefix = prefixOfRewrite(value, handed.isAddress, (node) => {
-      const base = read(node);
-      return base === 'unread' ? { url: null, path: null, baseUrlEnv: null, host: null, via: null, guessed: false } : base;
-    });
-    if (prefix === undefined) {
-      return { kind: 'unread', at: write.at, why: `${runs} rewrites the address, and the base it puts in front could not be read` };
-    }
-    return { kind: 'rewrite', rewrite: { kind: write.key === 'origin' ? 'origin' : 'prefix', base: prefix, at: write.at, ...tested } };
+    const under = (branch: AddressTest): AddressTest => (test === null ? branch : joinedTests([test, branch], true));
+    const sides = [readWritten(write, value.getWhenTrue(), under(chosen), context), readWritten(write, value.getWhenFalse(), under(notTest(chosen)), context)];
+    const unread = sides.find((side) => side?.kind === 'unread');
+    if (unread !== undefined) return unread;
+    const rewrites = sides.flatMap((side) => (side?.kind === 'rewrite' ? [side.rewrite] : []));
+    const rewrite = branchedRewrite(rewrites);
+    return rewrite === undefined ? null : { kind: 'rewrite', rewrite };
+  }
+  if (keepsAsIs(write, value, context)) return null;
+  if (write.key === 'base') {
+    const behind = fallbackIn(value, handed, factory.baseKey);
+    const base = read(behind ?? value);
+    if (base === 'unread') return { kind: 'unread', at: write.at, why: `${runs} writes ${factory.baseKey} and it could not be read` };
+    const kind = write.fallback === true || unset || behind !== undefined ? 'fallback' : 'base';
+    return { kind: 'rewrite', rewrite: { kind, base, at: write.at, ...tested } };
+  }
+  if (write.key === 'origin') {
+    const replaced = originOf(value, handed, read);
+    if (replaced?.base === 'unread') return { kind: 'unread', at: write.at, why: `${runs} replaces the request's origin, and the base it puts there could not be read` };
+    if (replaced !== undefined) return { kind: 'rewrite', rewrite: { kind: 'origin', base: replaced.base, at: write.at, ...(replaced.when === undefined ? {} : { when: replaced.when }), ...tested } };
+  }
+  const prefix = prefixOfRewrite(value, handed.isAddress, (node) => {
+    const base = read(node);
+    return base === 'unread' ? { url: null, path: null, baseUrlEnv: null, host: null, via: null, guessed: false } : base;
   });
+  if (prefix === undefined) {
+    return { kind: 'unread', at: write.at, why: `${runs} rewrites the address, and the base it puts in front could not be read` };
+  }
+  return { kind: 'rewrite', rewrite: { kind: write.key === 'origin' ? 'origin' : 'prefix', base: prefix, at: write.at, ...tested } };
 };
 
 /**
@@ -433,9 +499,24 @@ export const rewriteFor = (
 ): Rewrite | 'unread' | undefined => {
   if (runs === undefined) return undefined;
   if (runs.rewriteUnread !== undefined) return 'unread';
-  const { rewrite } = runs;
+  return appliedTo(runs.rewrite, written.url ?? written.path ?? '');
+};
+
+/**
+ * The rewrite an address goes out under, of one that may carry a test or
+ * branches (P285): the one branch whose test holds, none where none does, and
+ * `unread` where a test cannot tell or two branches that differ both hold.
+ */
+export const appliedTo = (rewrite: Rewrite | undefined, written: string): Rewrite | 'unread' | undefined => {
   if (rewrite?.test === undefined) return rewrite;
-  const holds = rewrite.test(written.url ?? written.path ?? '');
+  if (rewrite.branches !== undefined) {
+    const answers = rewrite.branches.map((branch) => ({ branch, holds: branch.test === undefined ? true : branch.test(written) }));
+    if (answers.some(({ holds }) => holds === undefined)) return 'unread';
+    const taken = answers.filter(({ holds }) => holds).map(({ branch }) => branch);
+    if (new Set(taken.map(rewriteKey)).size > 1) return 'unread';
+    return taken[0];
+  }
+  const holds = rewrite.test(written);
   return holds === undefined ? 'unread' : holds ? rewrite : undefined;
 };
 

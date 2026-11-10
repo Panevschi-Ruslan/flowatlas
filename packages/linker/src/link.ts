@@ -492,6 +492,9 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
   baseUrlValue: () => 'heuristic',
   // The GraphQL endpoint at the path a setting's local value names (P281): a guess, as a route found by its address alone is.
   graphqlPath: () => 'heuristic',
+  // The one service serving the path a setting's value names after a host no
+  // service is reached at (P285): a guess at whose deployment the host is.
+  externalValuePath: () => 'heuristic',
   functionUrl: (call) => {
     const path = call.meta?.['path'];
     return typeof path === 'string' && wasRead(path) ? 'static' : 'heuristic';

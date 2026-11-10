@@ -16,7 +16,19 @@
  */
 
 import { PLATFORM_FETCH } from '@flowatlas/core';
+import type { Node as TsNode } from 'ts-morph';
+import type { Rewrite } from './util/request-rewrite.js';
 import type { ApiUrl } from './util/url.js';
+
+/**
+ * What an instance runs before each request that the request's own address
+ * decides (P285): a rewrite, which may carry a test of the address, or one
+ * that could not be read.
+ */
+export interface InstanceRuns {
+  readonly rewrite?: Rewrite;
+  readonly rewriteUnread?: { readonly at: TsNode; readonly why: string };
+}
 
 /** A type whose values make requests, and the package that declares it. */
 export interface ClientType {
@@ -130,6 +142,12 @@ export interface RequestClient {
    * in a field, and that field is read where the class is (R114).
    */
   readonly base?: ApiUrl;
+  /**
+   * What the instance a client of the project's own writes through runs before
+   * each request, where it depends on the request's address or was not read
+   * (P285): applied at each call of the class, to the address that call writes.
+   */
+  readonly runs?: InstanceRuns;
   /** Verb methods on a value of one of these types: `api.post(url, body)`. */
   readonly receiver?: {
     readonly types: readonly ClientType[];
@@ -412,10 +430,12 @@ export const localClient = (
   typeName: string,
   verbs: readonly string[],
   base?: ApiUrl,
+  runs?: InstanceRuns,
 ): RequestClient => ({
   name: typeName,
   package: null,
   ...(base === undefined ? {} : { base }),
+  ...(runs === undefined ? {} : { runs }),
   receiver: {
     types: [{ package: null, typeName }],
     verbs: Object.fromEntries(

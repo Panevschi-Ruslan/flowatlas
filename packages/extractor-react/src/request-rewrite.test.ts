@@ -176,7 +176,7 @@ describe('an axios request interceptor that sets the base (P244)', () => {
 
   it('is a row, not a pick, where the base is chosen by a branch, behind a condition, or unread', () => {
     const cases = [
-      [`(config) => { config.baseURL = config.url.includes('admin') ? '/admin' : '/shop'; return config; }`, 'one of two bases by a branch'],
+      [`(config) => { config.baseURL = config.headers.admin ? '/admin' : '/shop'; return config; }`, 'one of two bases by a branch'],
       [`(config) => { if (config.method === 'post') config.baseURL = '/writes'; return config; }`, 'only when config.method'],
       [`(config) => { config.baseURL = localStorage.getItem('base'); return config; }`, 'could not be read'],
       [`(config) => { config.url = config.url.replace('/v1', '/v2'); return config; }`, 'the base it puts in front could not be read'],
@@ -212,6 +212,67 @@ describe('an axios request interceptor that sets the base (P244)', () => {
     });
     expect(addresses(graph)).toEqual(['GET https://api.example.test/v1/orders/:param']);
     expect(requests(graph)[0]?.meta).toMatchObject({ host: 'api.example.test', path: '/v1/orders/:param' });
+  });
+
+  it('applies each side of a base chosen by a test of the address to the requests on that side (P285)', () => {
+    const graph = read({
+      '/src/api.ts': AXIOS_WITH(`(config) => { config.baseURL = config.url.includes('admin') ? '/office-rest' : '/store-rest'; return config; }`, `axios.create({ baseURL: '/made' })`),
+      '/src/Panel.tsx': PANEL(`api.get('/admin/users'); api.get('/products'); api.get('/' + section + '/list');`),
+    });
+    // A request whose read part cannot answer the test is partly read, under the instance's own base.
+    expect(addresses(graph)).toEqual(['GET ${…}/made/:param/list', 'GET /office-rest/admin/users', 'GET /store-rest/products']);
+    expect(rows(graph)).toEqual([]);
+  });
+
+  it('reads a branch nested in another, inside a test, and a side that keeps the address (P285)', () => {
+    const nested = read({
+      '/src/api.ts': AXIOS_WITH(
+        `(config) => { if (!config.url.startsWith('/public')) config.baseURL = config.url.startsWith('/admin') ? '/office-rest' : config.url.endsWith('.csv') ? '/exports' : '/api'; return config; }`,
+      ),
+      '/src/Panel.tsx': PANEL(`api.get('/admin/users'); api.get('/orders.csv'); api.get('/orders'); api.get('/public/terms');`),
+    });
+    expect(addresses(nested)).toEqual(['GET /api/orders', 'GET /exports/orders.csv', 'GET /office-rest/admin/users', 'GET /public/terms']);
+    const kept = read({
+      '/src/api.ts': AXIOS_WITH(`(config) => { config.url = config.url.startsWith('/v2') ? config.url : '/v1' + config.url; return config; }`),
+      '/src/Panel.tsx': PANEL(`api.get('/v2/orders'); api.get('/orders');`),
+    });
+    expect(addresses(kept)).toEqual(['GET /v1/orders', 'GET /v2/orders']);
+    expect(rows(kept)).toEqual([]);
+  });
+
+  it('chooses among rewrites written under tests in two places, and is partly read where two that differ both hold (P285)', () => {
+    const graph = read({
+      '/src/api.ts': [
+        `import axios from 'axios';`,
+        `export const api = axios.create();`,
+        `api.interceptors.request.use((config) => { if (config.url.startsWith('/staff')) config.baseURL = '/staff-api'; else config.baseURL = '/api'; return config; });`,
+        `api.interceptors.request.use((config) => { if (config.url.endsWith('.csv')) config.baseURL = '/exports'; return config; });`,
+        '',
+      ].join('\n'),
+      '/src/Panel.tsx': PANEL(`api.get('/staff/list'); api.get('/orders'); api.get('/staff/list.csv');`),
+    });
+    // `/staff/list.csv` passes the first test and the second, and two bases that differ are not one.
+    expect(addresses(graph)).toEqual(['GET ${…}/staff/list.csv', 'GET /api/orders', 'GET /staff-api/staff/list']);
+    expect(rows(graph)).toEqual([]);
+  });
+
+  it('applies the test of a rewrite the instance a client class writes through runs, at each call of the class (P285)', () => {
+    const graph = read({
+      '/src/api.ts': [
+        `import axios from 'axios';`,
+        `const http = axios.create({ baseURL: '/made' });`,
+        `http.interceptors.request.use((config) => { if (config.url.startsWith('/api/')) config.baseURL = 'https://api.example.test'; return config; });`,
+        `class ApiService {`,
+        `  get(path: string) { return http.get(path); }`,
+        `  post(path: string, body: unknown) { return http.post(path, body); }`,
+        `}`,
+        `export const api = new ApiService();`,
+        '',
+      ].join('\n'),
+      '/src/Panel.tsx': PANEL(`api.get('/api/orders'); api.post('/health', {});`),
+    });
+    expect(addresses(graph)).toEqual(['GET https://api.example.test/api/orders', 'POST /made/health']);
+    expect(requests(graph).find((node) => node.meta?.['host'] !== undefined)?.meta).toMatchObject({ client: 'ApiService', baseFrom: 'interceptor' });
   });
 
   it('is a row where two interceptors set different bases', () => {

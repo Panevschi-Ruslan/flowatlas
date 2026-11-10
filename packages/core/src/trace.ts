@@ -1399,16 +1399,85 @@ const callOf = (reference: TsNode): CallExpression | undefined => {
  * a sibling stays, and `dispatchOf` tells the two apart for a caller that needs
  * to.
  */
-export const callSitesOf = (holder: Forwarder): CallExpression[] => {
+export const callSitesOf = (holder: Forwarder): CallExpression[] => callSitesThrough(holder, new Set());
+
+/**
+ * The functions of a library that compose functions into one, by which of
+ * the functions handed in is the one called with what the composition is
+ * called with (P285): `flow(f, g)` and Ramda's `pipe(f, g)` call `f` first,
+ * `compose(g, f)` and `flowRight(g, f)` call it last.
+ */
+const COMPOSERS: Readonly<Record<string, 'first' | 'last'>> = { flow: 'first', pipe: 'first', compose: 'last', flowRight: 'last' };
+
+/** The libraries those functions are taken from. */
+const COMPOSING_MODULES = /^(fp-ts|effect|lodash|lodash-es|lodash\.flow|lodash\.flowright|ramda|rambda)(\/|$)/;
+
+/** Libraries whose `pipe` hands a value first, not a function: `pipe(x, f)` is `f(x)`, no composition. */
+const VALUE_FIRST_PIPE = /^(fp-ts|effect)(\/|$)/;
+
+/** The module an imported name, or a namespace it is a member of, is taken from, and the name it has there. */
+const importedFrom = (callee: TsNode): { module: string; name: string } | undefined => {
+  const target = unwrap(callee);
+  const local = Node.isPropertyAccessExpression(target) ? target.getExpression() : target;
+  if (!Node.isIdentifier(local)) return undefined;
+  for (const declaration of local.getSymbol()?.getDeclarations() ?? []) {
+    const holder = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
+    if (holder === undefined) continue;
+    const module = holder.getModuleSpecifierValue();
+    if (Node.isPropertyAccessExpression(target)) {
+      // `F.flow`, `R.pipe`, `_.flow`: a member of the namespace or default import.
+      return Node.isNamespaceImport(declaration) || Node.isImportClause(declaration) ? { module, name: target.getName() } : undefined;
+    }
+    if (Node.isImportSpecifier(declaration)) return { module, name: declaration.getName() };
+    // `import flow from 'lodash/flow'`: the module is the function.
+    if (Node.isImportClause(declaration)) return { module, name: module.split('/').pop()?.replace(/^lodash\./, '') ?? '' };
+  }
+  return undefined;
+};
+
+/**
+ * The `const` a composition a function is the first one called in is held
+ * by (P285): `const runQuiet = flow(runQuery, silence)` is called with what
+ * `runQuery` is called with, so each call of `runQuiet` is a call of it.
+ */
+const composedInto = (reference: TsNode): VariableDeclaration | undefined => {
+  const parent = reference.getParent();
+  const value = parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getNameNode() === reference ? parent : reference;
+  const composition = value.getParent();
+  if (composition === undefined || !Node.isCallExpression(composition) || composition.getExpression() === value) return undefined;
+  const handed = composition.getArguments();
+  const from = importedFrom(composition.getExpression());
+  const order = from === undefined ? undefined : COMPOSERS[from.name];
+  if (from === undefined || order === undefined || !COMPOSING_MODULES.test(from.module)) return undefined;
+  if (from.name === 'pipe' && VALUE_FIRST_PIPE.test(from.module)) return undefined;
+  if ((order === 'first' ? handed[0] : handed[handed.length - 1]) !== value) return undefined;
+  let holder: TsNode | undefined = composition.getParent();
+  while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder))) holder = holder.getParent();
+  return holder !== undefined && Node.isVariableDeclaration(holder) && Node.isIdentifier(holder.getNameNode()) ? holder : undefined;
+};
+
+const callSitesThrough = (holder: Forwarder, composed: Set<Forwarder>): CallExpression[] => {
   const sites: CallExpression[] = [];
   const seen = new Set<string>();
-  for (const reference of holder.findReferencesAsNodes()) {
-    const call = callOf(reference);
-    if (call === undefined || dispatchAt(call, holder) === 'elsewhere') continue;
+  const add = (call: CallExpression): void => {
     const key = `${call.getSourceFile().getFilePath()}:${call.getStart()}`;
-    if (seen.has(key)) continue;
+    if (seen.has(key)) return;
     seen.add(key);
     sites.push(call);
+  };
+  for (const reference of holder.findReferencesAsNodes()) {
+    const call = callOf(reference);
+    if (call === undefined) {
+      // A function handed to a library's composition is called by each call of what it makes (P285).
+      const made = isClassMethod(holder) || composed.size > 4 ? undefined : composedInto(reference);
+      if (made !== undefined && !composed.has(made)) {
+        composed.add(made);
+        for (const each of callSitesThrough(made, composed)) add(each);
+      }
+      continue;
+    }
+    if (dispatchAt(call, holder) === 'elsewhere') continue;
+    add(call);
   }
   return sites;
 };

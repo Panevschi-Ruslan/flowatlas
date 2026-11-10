@@ -44,8 +44,19 @@ export interface SdkCall {
 const DEPTH = 8;
 const REQUESTER_DEPTH = 4;
 
-/** The name both plugins give the function that makes the SDK. */
+/** The name both plugins give the function that makes the SDK, as rows name it. */
 const FACTORY = 'getSdk';
+
+/**
+ * The names a module codegen writes and nobody committed exports an SDK
+ * factory under (P285): the two plugins' `getSdk`, and the SWR plugin's
+ * `getSdkWithHooks`, whose `useX` hooks send the operation `X`. A committed
+ * module is known by what its function answers, whatever it is named.
+ */
+const GENERATED_FACTORIES = new Set(['getSdk', 'getSdkWithHooks']);
+
+/** Text every module the SDK plugins write holds: what spares a repository without one the walk back from each method call. */
+const SDK_TEXT = /getSdk|Requester\b|SdkFunctionWrapper/;
 
 /** A cast, parentheses or `!` round an expression, taken off. */
 const bare = (node: TsNode | undefined): TsNode | undefined => {
@@ -91,27 +102,81 @@ const answered = (fn: TsNode): TsNode[] => {
 /** Where `getSdk` comes from: the function written in the repository, or a module codegen writes and nobody committed. */
 type Factory =
   | { readonly kind: 'committed'; readonly fn: TsNode }
-  | { readonly kind: 'generated'; readonly specifier: string; readonly importingFile: string };
+  | { readonly kind: 'generated'; readonly specifier: string; readonly importingFile: string; readonly exported: string };
 
-const factoryOf = (callee: TsNode): Factory | undefined => {
-  const value = bare(callee);
-  if (value === undefined || !Node.isIdentifier(value)) return undefined;
-  const symbol = value.getSymbol();
-  for (const declaration of symbol?.getDeclarations() ?? []) {
-    if (!Node.isImportSpecifier(declaration)) continue;
-    if (declaration.getName() !== FACTORY) return undefined;
-    const holder = declaration.getImportDeclaration();
-    const committed = functionNamed(value);
-    if (committed !== undefined) return { kind: 'committed', fn: committed };
+/** Whether a node names a parameter of a function. */
+const namesParameterOf = (node: TsNode, fn: TsNode): boolean => {
+  const parameters = new Set<TsNode>(((fn as { getParameters?: () => TsNode[] }).getParameters?.() ?? []));
+  if (parameters.size === 0) return false;
+  return [node, ...node.getDescendantsOfKind(SyntaxKind.Identifier)].some((each) => Node.isIdentifier(each) && each.getSymbol()?.getDeclarations().some((declaration) => parameters.has(declaration)) === true);
+};
+
+/**
+ * Whether a function of the repository makes an SDK, read from what it
+ * answers rather than its name (P285): an object one of whose methods sends a
+ * document through what the function is handed (`requester(SignInDocument,
+ * …)`, `client.request(SignInDocument, …)`), or that spreads an SDK another
+ * factory makes (`{ ...getSdk(client), useX }`).
+ */
+const writesSdk = (fn: TsNode, depth = 0): boolean => {
+  const known = sdkFactories.get(fn);
+  if (known !== undefined) return known;
+  sdkFactories.set(fn, false);
+  const object = methodsObject(fn);
+  const found =
+    object !== undefined &&
+    depth <= REQUESTER_DEPTH &&
+    object.getProperties().some((property) => {
+      if (Node.isSpreadAssignment(property)) return madeBy(property.getExpression(), depth + 1, new Set()) !== undefined;
+      const body = memberBody(object, property.getName());
+      if (body === undefined) return false;
+      return body
+        .getDescendantsOfKind(SyntaxKind.CallExpression)
+        .some((call) => namesParameterOf(call.getExpression(), fn) && call.getArguments().some((argument) => documentOf(argument).kind === 'read' || /Document$/.test(bare(argument)?.getText() ?? '')));
+    });
+  sdkFactories.set(fn, found);
+  return found;
+};
+const sdkFactories = new WeakMap<TsNode, boolean>();
+
+/**
+ * The name a value was exported under where it is first written, followed
+ * through the modules that re-export it under another name: `export { getSdk
+ * as createApi } from './generated/sdk'` (P285). The module that writes it,
+ * where it is one nobody committed, and the name there.
+ */
+const firstExported = (identifier: TsNode, depth = 0): { specifier: string; importingFile: string; exported: string } | undefined => {
+  if (depth > 4 || !Node.isIdentifier(identifier)) return undefined;
+  for (const declaration of identifier.getSymbol()?.getDeclarations() ?? []) {
+    const specifier = Node.isImportSpecifier(declaration) ? declaration : Node.isExportSpecifier(declaration) ? declaration : undefined;
+    if (specifier === undefined) continue;
+    const holder = Node.isImportSpecifier(specifier) ? specifier.getImportDeclaration() : specifier.getExportDeclaration();
+    const from = holder.getModuleSpecifierValue();
+    if (from === undefined) return undefined;
+    const name = specifier.getName();
+    const module = holder.getModuleSpecifierSourceFile();
     // A module codegen writes at install, which the repository does not commit.
-    if (holder.getModuleSpecifierSourceFile() === undefined || holder.getModuleSpecifierSourceFile()?.isDeclarationFile() === true) {
-      return { kind: 'generated', specifier: holder.getModuleSpecifierValue(), importingFile: value.getSourceFile().getFilePath() };
+    if (module === undefined || module.isDeclarationFile()) return { specifier: from, importingFile: identifier.getSourceFile().getFilePath(), exported: name };
+    if (module.isInNodeModules()) return undefined;
+    // A module of the repository that hands it on under a name of its own.
+    for (const exported of module.getExportDeclarations()) {
+      for (const each of exported.getNamedExports()) {
+        if ((each.getAliasNode()?.getText() ?? each.getName()) !== name) continue;
+        return firstExported(each.getAliasNode() ?? each.getNameNode(), depth + 1);
+      }
     }
     return undefined;
   }
-  if (value.getText() !== FACTORY) return undefined;
-  const local = functionNamed(value);
-  return local === undefined ? undefined : { kind: 'committed', fn: local };
+  return undefined;
+};
+
+const factoryOf = (callee: TsNode, depth = 0): Factory | undefined => {
+  const value = bare(callee);
+  if (value === undefined || !Node.isIdentifier(value)) return undefined;
+  const committed = functionNamed(value);
+  if (committed !== undefined) return writesSdk(committed, depth) ? { kind: 'committed', fn: committed } : undefined;
+  const generated = firstExported(value);
+  return generated !== undefined && GENERATED_FACTORIES.has(generated.exported) ? { kind: 'generated', ...generated } : undefined;
 };
 
 /** The `getSdk(...)` call an SDK value was made by, followed back from where it is used. */
@@ -121,7 +186,7 @@ const madeBy = (receiver: TsNode | undefined, depth: number, seen: Set<TsNode>):
   seen.add(value);
   if (Node.isCallExpression(value)) {
     const callee = value.getExpression();
-    const factory = factoryOf(callee);
+    const factory = factoryOf(callee, depth);
     if (factory !== undefined) return { call: value, factory };
     // A function of the repository that answers an SDK: `getClient().signIn(...)`.
     const fn = functionNamed(callee);
@@ -200,17 +265,56 @@ const sentDocument = (method: TsNode): TsNode | undefined => {
   return candidates.find((candidate) => /Document$/.test(bare(candidate)?.getText() ?? ''));
 };
 
+/** The name a factory is written or imported under, for a row. */
+const nameOf = (factory: Factory): string => {
+  if (factory.kind === 'generated') return factory.exported;
+  const named = (factory.fn as { getName?: () => string | undefined }).getName?.() ?? factory.fn.getParent()?.getFirstChildByKind(SyntaxKind.Identifier)?.getText();
+  return named ?? FACTORY;
+};
+
+/** A call in a method of a generated SDK of a method of another SDK: a hook's `sdk.GetOrders(variables)`. */
+const delegatedIn = (body: TsNode, depth: number): { factory: Factory; method: string } | undefined => {
+  for (const call of body.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+    const callee = call.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) continue;
+    const made = madeBy(callee.getExpression(), depth + 1, new Set());
+    if (made !== undefined) return { factory: made.factory, method: callee.getName() };
+  }
+  return undefined;
+};
+
 /** The operation a method of the SDK sends. */
-const operationOf = (factory: Factory, method: string, project: Project): { document: TsNode | undefined; reading: DocumentReading } => {
+const operationOf = (factory: Factory, method: string, project: Project, depth = 0): { document: TsNode | undefined; reading: DocumentReading } => {
+  const named = nameOf(factory);
   if (factory.kind === 'committed') {
     const object = methodsObject(factory.fn);
     const body = object === undefined ? undefined : memberBody(object, method);
-    if (body === undefined) return { document: undefined, reading: { kind: 'dynamic', why: `${method} is not a method the ${FACTORY} of the generated module writes` } };
+    if (body === undefined) {
+      // A method of an SDK it spreads: `{ ...getSdk(client), useOrders }` (P285).
+      for (const property of depth > REQUESTER_DEPTH ? [] : (object?.getProperties() ?? [])) {
+        if (!Node.isSpreadAssignment(property)) continue;
+        const made = madeBy(property.getExpression(), depth + 1, new Set());
+        if (made === undefined) continue;
+        const inner = operationOf(made.factory, method, project, depth + 1);
+        if (inner.reading.kind !== 'dynamic' || inner.document !== undefined) return inner;
+      }
+      return { document: undefined, reading: { kind: 'dynamic', why: `${method} is not a method the ${named} of the generated module writes` } };
+    }
     const document = sentDocument(body);
-    return { document, reading: document === undefined ? { kind: 'dynamic', why: `the method ${method} of ${FACTORY} sends no document this could find` } : documentOf(document) };
+    if (document !== undefined) return { document, reading: documentOf(document) };
+    // A hook that calls a method of the SDK it is made with sends that method's operation (P285).
+    const delegated = depth > REQUESTER_DEPTH ? undefined : delegatedIn(body, depth);
+    if (delegated !== undefined) return operationOf(delegated.factory, delegated.method, project, depth + 1);
+    return { document: undefined, reading: { kind: 'dynamic', why: `the method ${method} of ${named} sends no document this could find` } };
   }
-  const generated = codegenDocument(project, factory.importingFile, factory.specifier, `${method}Document`);
-  return { document: undefined, reading: generated ?? { kind: 'dynamic', why: `${FACTORY} is imported from ${factory.specifier}, which is not committed and is not a module the codegen configuration generates` } };
+  // The SWR plugin's hook `useOrders` sends the operation `Orders`.
+  const hooked = /WithHooks$/.test(factory.exported) && /^use[A-Z]/.test(method) ? [method.slice(3)] : [];
+  let generated: DocumentReading | undefined;
+  for (const name of [method, ...hooked]) {
+    generated = codegenDocument(project, factory.importingFile, factory.specifier, `${name}Document`);
+    if (generated?.kind === 'read') break;
+  }
+  return { document: undefined, reading: generated ?? { kind: 'dynamic', why: `${named} is imported from ${factory.specifier}, which is not committed and is not a module the codegen configuration generates` } };
 };
 
 /** The address a `new GraphQLClient(url)` an expression stands for is made with. */
@@ -319,9 +423,24 @@ const naming = new WeakMap<Project, boolean>();
 const namesFactory = (project: Project): boolean => {
   const known = naming.get(project);
   if (known !== undefined) return known;
-  const found = project.getSourceFiles().some((file) => !file.isInNodeModules() && file.getFullText().includes(FACTORY));
+  const found = project.getSourceFiles().some((file) => !file.isInNodeModules() && SDK_TEXT.test(file.getFullText()));
   naming.set(project, found);
   return found;
+};
+
+/**
+ * Whether a call is written in a function of a module the SDK plugins write
+ * that makes an SDK (P285): the generated module's own `client.request(Doc)`
+ * and a hook's `sdk.Orders(variables)` are each sent at every call of the
+ * method they are written in, where the SDK's address is known, and not again
+ * where they are written.
+ */
+export const writtenInSdk = (call: TsNode): boolean => {
+  if (!SDK_TEXT.test(call.getSourceFile().getFullText())) return false;
+  for (let at = call.getParent(); at !== undefined; at = at.getParent()) {
+    if ((Node.isFunctionDeclaration(at) || Node.isArrowFunction(at) || Node.isFunctionExpression(at)) && writesSdk(at)) return true;
+  }
+  return false;
 };
 
 /** The operation a call of a method of a codegen SDK sends, and where; undefined where the call is not one. */

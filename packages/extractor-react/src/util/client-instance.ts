@@ -2,7 +2,7 @@ import { declarationOf, defaultHeadersWritten, headersAHookAdds, isPlatformProvi
 import type { CallExpression, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { CLIENT_FACTORIES, type ClientFactory } from '../clients.js';
-import { functionsOf, rewritesOf, type Rewrite, type RewriteReading } from './request-rewrite.js';
+import { branchedRewrite, functionsOf, rewriteKey, rewritesOf, type Rewrite, type RewriteReading } from './request-rewrite.js';
 import { analyzeClientBase, isSomewhere, type ApiUrl, type Bindings } from './url.js';
 
 /**
@@ -578,7 +578,10 @@ export const clientInstances = (options: InstanceOptions) => {
     const unread = readings.find((reading) => reading.kind === 'unread');
     if (unread !== undefined && unread.kind === 'unread') return { ...instance, rewriteUnread: { at: unread.at, why: unread.why } };
     const rewrites = readings.flatMap((reading) => (reading.kind === 'rewrite' ? [reading.rewrite] : []));
-    const distinct = [...new Map(rewrites.map((rewrite) => [`${rewrite.kind}\0${rewrite.base.url ?? ''}`, rewrite])).values()];
+    const distinct = [...new Map(rewrites.map((rewrite) => [rewriteKey(rewrite), rewrite])).values()];
+    // Rewrites each made under a test of the address are one the address chooses among (P285).
+    const branched = distinct.length > 1 && distinct.every((rewrite) => rewrite.test !== undefined) ? branchedRewrite(distinct) : undefined;
+    if (branched !== undefined) return { ...instance, rewrite: branched };
     if (distinct.length > 1) {
       return {
         ...instance,

@@ -54,8 +54,66 @@ describe('an operation a server sends to a setting no value of which names a ser
     expect(findingFor(outcome)?.reason).toBe('graphql-field-no-resolver');
   });
 
-  it('leaves the third party a deployment alone names as it was', () => {
-    const { outcome } = resolveCall(operation('signIn'), indexWith({ kind: 'external', host: 'demo.example.com', found: deployed, values: [deployed] }));
+  it("reaches the one endpoint at the path a deployment's host alone names, as a guess (P285)", () => {
+    const { outcome, baseUrl } = resolveCall(operation('signIn'), indexWith({ kind: 'external', host: 'demo.example.com', found: deployed, values: [deployed] }));
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'externalValuePath' });
+    expect(outcome.kind === 'linked' && outcome.entry.id).toBe('entry:api:http:POST:/store-api');
+    expect(baseUrl?.from).toBe('wrangler.toml');
+  });
+
+  it('leaves the third party a deployment names as it was where nothing serves its path', () => {
+    const elsewhere = value('https://demo.example.com/graphql', 'wrangler.toml');
+    const { outcome } = resolveCall(operation('signIn'), indexWith({ kind: 'external', host: 'demo.example.com', found: elsewhere, values: [elsewhere] }));
     expect(outcome).toMatchObject({ kind: 'external', host: 'demo.example.com' });
+  });
+});
+
+/** A route a service serves. */
+const route = (service: string, method: string, path: string): GraphNode => ({
+  id: `entry:${service}:http:${method}:${path}`,
+  type: 'entry',
+  kind: 'http',
+  label: `${method} ${path}`,
+  repo: service,
+  meta: { method, path },
+});
+
+/** A request a server sends under a setting. */
+const serverRequest = (method: string, path: string): GraphNode => ({
+  id: `http_out:worker#src/sync.ts:4:3`,
+  type: 'http_out',
+  label: `${method} ${path}`,
+  repo: 'worker',
+  meta: { method, path, baseUrlEnv: 'CATALOG_URL' },
+});
+
+/**
+ * A server's request rooted at a setting whose value is a host no service is
+ * reached at, with a path after it (P285, as P280 for a browser's): tried under
+ * the value's path, a guess at whose deployment the host is.
+ */
+describe("a server's request rooted at a setting whose value is a host no service is reached at", () => {
+  const external = (text: string): BaseUrlAnswer => ({ kind: 'external', host: 'api.example.test', found: { variable: 'CATALOG_URL', value: text, from: '.env', deployed: false } });
+  const index = (answer: BaseUrlAnswer, routes: Record<string, GraphNode[]>): RouteIndex => ({
+    routesOf: (service) => routes[service] ?? [],
+    claimantsOf: () => [],
+    markerOf: () => undefined,
+    baseUrlOf: () => answer,
+    services: () => Object.keys(routes),
+  });
+
+  it("joins the one service serving the address under the value's path", () => {
+    const { outcome, baseUrl } = resolveCall(serverRequest('GET', '/products/:param'), index(external('https://api.example.test/api'), { catalog: [route('catalog', 'GET', '/api/products/:param')], worker: [] }));
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'externalValuePath' });
+    expect(outcome.kind === 'linked' && outcome.entry.id).toBe('entry:catalog:http:GET:/api/products/:param');
+    expect(baseUrl?.value).toBe('https://api.example.test/api');
+  });
+
+  it('stays a third party where two services serve it, where only the bare path is served, or where the value has no path', () => {
+    const two = { catalog: [route('catalog', 'GET', '/api/products')], search: [route('search', 'GET', '/api/products')] };
+    expect(resolveCall(serverRequest('GET', '/products'), index(external('https://api.example.test/api'), two)).outcome).toMatchObject({ kind: 'external' });
+    const bare = { catalog: [route('catalog', 'GET', '/products')] };
+    expect(resolveCall(serverRequest('GET', '/products'), index(external('https://api.example.test/api'), bare)).outcome).toMatchObject({ kind: 'external' });
+    expect(resolveCall(serverRequest('GET', '/products'), index(external('https://api.example.test'), bare)).outcome).toMatchObject({ kind: 'external' });
   });
 });

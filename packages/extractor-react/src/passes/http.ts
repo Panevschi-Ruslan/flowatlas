@@ -430,7 +430,8 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     // And a function the instance runs before every request may rewrite
     // either, after both are known: it sets the base over the call's own, or
     // where none is set, or puts one in front of the address (P244).
-    const runs = hooked ?? found.instance;
+    // A class of the project's own runs what the instance it writes through runs (P285).
+    const runs = hooked ?? found.instance ?? client.runs;
     // Under a test of the address, only where the address it writes passes;
     // and a rewrite not read leaves the opening of the address a hole (P280).
     const applied = rewriteFor(runs, request.address);
@@ -449,7 +450,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       handedIn !== undefined ? handedIn : found.described !== undefined ? found.described.verb : verbOf(network, shape, request.calls);
     const body = found.described === undefined ? bodyOf(network, client, shape) : describedBodyOf(found.described);
     const query = found.described === undefined ? queryOf(network, shape) : {};
-    const headers = found.described === undefined ? headersOf(network, shape, runs) : {};
+    const headers = found.described === undefined ? headersOf(network, shape, hooked ?? found.instance) : {};
     // The headers the caller reads off the answer, where the request is made where it is read (P265).
     const answerHeaders = site.call === network && found.described === undefined && answersWithResponse(client, network) ? responseHeadersRead(network, 'promise') : undefined;
     const application = applicationOfFile(ctx.meta, site.file);
@@ -664,9 +665,14 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       basesIn: (body) =>
         describedCallsIn(body).map((found) => {
           if (found.instance !== undefined) reportUnreadBase(found.instance);
-          // A rewrite under a test of each request's address is no one base of the instance (P280).
-          const rewrite = found.instance?.rewrite?.test === undefined ? found.instance?.rewrite : undefined;
-          return found.instance === undefined ? null : (basedBy(rewrite, found.instance.base) ?? null);
+          if (found.instance === undefined) return null;
+          // A rewrite under a test of each request's address is no one base of
+          // the instance (P280): the class carries it, and it is applied to the
+          // address each call of the class writes (P285), as is one not read.
+          const { rewrite, rewriteUnread } = found.instance;
+          if (rewriteUnread !== undefined) return { base: found.instance.base, runs: { rewriteUnread } };
+          if (rewrite?.test !== undefined) return { base: found.instance.base, runs: { rewrite } };
+          return { base: basedBy(rewrite, found.instance.base) };
         }),
     });
     readings.set(cls, reading);

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { UNREAD_SPAN } from './ids.js';
 import { resolveStaticString, settingKeyIn } from './static-string.js';
 import {
+  callSitesOf,
   constantMethodResult,
   constantPropertyValue,
   forwardedFrom,
@@ -614,5 +615,55 @@ describe('a member a wrapper takes out of the object it is handed', () => {
   it('is a member only of a parameter, not of a value destructured anywhere else', () => {
     const file = parse(`const { url } = { url: '/x' }; export const u = url;`);
     expect(memberBehind(file.getDescendantsOfKind(SyntaxKind.Identifier).at(-1)!)).toBeUndefined();
+  });
+});
+
+describe('a function a library composes into another (P285)', () => {
+  /** The calls `callSitesOf` finds of `run`, as the text of each. */
+  const sitesOfRun = (files: Record<string, string>): string[] => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    for (const [path, source] of Object.entries(files)) project.createSourceFile(path, source);
+    const run = project.getSourceFileOrThrow('run.ts').getVariableDeclarationOrThrow('run');
+    return callSitesOf(run)
+      .map((call) => call.getText())
+      .sort();
+  };
+
+  it('is called by each call of what flow, a namespace pipe or flowRight makes of it', () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'quiet.ts': [
+        `import { flow } from 'fp-ts/function';`,
+        `import * as R from 'ramda';`,
+        `import flowRight from 'lodash/flowRight';`,
+        `import { run } from './run';`,
+        `export const quiet = flow(run, (result) => result);`,
+        `export const piped = R.pipe(run, String);`,
+        `export const right = flowRight(String, run);`,
+        `export const twice = flow(quiet, String);`,
+      ].join('\n'),
+      'use.ts': [
+        `import { quiet, piped, right, twice } from './quiet';`,
+        `import { run } from './run';`,
+        `run({ query: 'a' }); quiet({ query: 'b' }); piped({ query: 'c' }); right({ query: 'd' }); twice({ query: 'e' });`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([`piped({ query: 'c' })`, `quiet({ query: 'b' })`, `right({ query: 'd' })`, `run({ query: 'a' })`, `twice({ query: 'e' })`]);
+  });
+
+  it('is not called through a value-first pipe, a function handed later, or a composer of no library', () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'other.ts': [
+        `import { pipe, flow } from 'fp-ts/function';`,
+        `import { run } from './run';`,
+        `declare const compose: (...fns: unknown[]) => (args: unknown) => unknown;`,
+        `export const applied = pipe(run, (fn) => fn);`,
+        `export const later = flow(String, run);`,
+        `export const own = compose(String, run);`,
+        `applied({ query: 'a' }); later('b'); own('c');`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([]);
   });
 });

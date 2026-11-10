@@ -99,7 +99,7 @@ export type BindingAnswer =
 /** What each way a call can end carries with it. */
 interface Details {
   linked: {
-    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host' | 'proxy' | 'ingress' | 'ownOrigin' | 'inProcess' | 'graphqlPath';
+    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host' | 'proxy' | 'ingress' | 'ownOrigin' | 'inProcess' | 'graphqlPath' | 'externalValuePath';
     entry: GraphNode;
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
@@ -604,6 +604,29 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     };
   };
 
+  /**
+   * The one service serving the request's path under the path a setting's
+   * value names after a host no service is reached at (P285), joined there;
+   * nothing where none or several serve it.
+   */
+  const underExternalValue = (found: FoundValue): Resolution | undefined => {
+    const start = pathOfValue(found);
+    if (start === undefined || typeof path !== 'string' || !wasRead(path) || !verbRead || index.services === undefined) return undefined;
+    const whole = normalizePath(`${start}/${path}`);
+    const answering = index.services().filter((service) => {
+      const routes = index.routesOf(service) ?? [];
+      const from = callerApplicationIn(service);
+      const answers = (result: RouteResult): boolean => isMatch(result) || result.reason === 'ambiguous';
+      if (answers(matchRoute(method, whole, routes, from))) return true;
+      const prefixed = withGlobalPrefix(whole, routes);
+      return prefixed !== undefined && answers(matchRoute(method, prefixed, routes, from));
+    });
+    const [only] = answering;
+    if (only === undefined || answering.length > 1) return undefined;
+    const reached = within(only, 'externalValuePath', { baseUrl: found }, whole);
+    return reached.outcome.kind === 'linked' ? reached : undefined;
+  };
+
   const single = index.markerOf(call.id);
   const markers = index.markersOf?.(call.id) ?? (single === undefined ? [] : [single]);
   const reached: Array<{ entry: GraphNode; runnersUp: readonly string[]; mountAssumed?: readonly string[]; guessed?: true }> = [];
@@ -787,6 +810,13 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   if (local?.kind === 'linked') return { outcome: { kind: 'linked', via: 'graphqlPath', entry: local.entry, runnersUp: [] }, notes, baseUrl: local.found };
   if (local?.kind === 'unserved') return { outcome: { kind: 'noRoute', targetService: local.service, method: 'POST', path: local.path, verbs: [], unread: [], unserved: local.fields }, notes };
   if (valued?.kind === 'external') {
+    // A host no service is reached at, with a path after it
+    // (`https://api.example.test/api`): the one service serving the address
+    // under that path is a guess at whose deployment the host is (P285, as
+    // P280 for a browser's request). Only under the value's path: a route
+    // the bare path matches is no evidence about a third party's host.
+    const answering = underExternalValue(valued.found);
+    if (answering !== undefined) return answering;
     return { outcome: { kind: 'external', host: valued.host }, notes, baseUrl: valued.found };
   }
   if (valued?.kind === 'unsettled') {

@@ -1,7 +1,7 @@
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import { documentOf, type DocumentReading } from './documents.js';
-import { sdkCallOf } from './sdk.js';
+import { sdkCallOf, writtenInSdk } from './sdk.js';
 
 /**
  * The calls that send a GraphQL operation (P232), in the spellings of the
@@ -134,6 +134,12 @@ const constructedWith = (receiver: TsNode, className: string): TsNode | undefine
  * parameter of a helper, read at each of its callers (P275).
  */
 export const graphqlCallOf = (call: CallExpression, handed?: (expression: TsNode) => boolean): GraphqlCall | undefined => {
+  const found = graphqlCallIn(call, handed);
+  // A send written in a method of a codegen SDK is drawn at each call of that method (P285).
+  return found === undefined || writtenInSdk(call) ? undefined : found;
+};
+
+const graphqlCallIn = (call: CallExpression, handed?: (expression: TsNode) => boolean): GraphqlCall | undefined => {
   const isDocument = (expression: TsNode | undefined): boolean => isReadDocument(expression) || (expression !== undefined && handed?.(expression) === true);
   const callee = call.getExpression();
   if (Node.isIdentifier(callee)) {

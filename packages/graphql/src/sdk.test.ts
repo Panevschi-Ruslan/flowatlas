@@ -144,3 +144,83 @@ describe('a call through an SDK GraphQL codegen writes (P281)', () => {
     expect(graphqlCallOf(callOf(made, '/shop/src/page.ts', 'cart'))).toBeUndefined();
   });
 });
+
+/** The generated module with its factory written under another name, and the SWR plugin's factory over it. */
+const RENAMED = GENERATED.replace('export function getSdk<C>', 'export function makeStoreSdk<C>');
+const WITH_HOOKS = `${GENERATED}
+declare function useSWR(key: unknown, fetcher: () => unknown): unknown;
+export function getSdkWithHooks(client: any) {
+  const sdk = getSdk(client);
+  return {
+    ...sdk,
+    useCart(key: string, variables?: {}) {
+      return useSWR(key, () => sdk.cart(variables));
+    },
+  };
+}
+`;
+
+describe('an SDK factory known by what its module exports (P285)', () => {
+  it('reads a committed factory under any name by the methods it answers, and one re-exported under another name', () => {
+    const made = project({
+      '/shop/src/generated/graphql.ts': RENAMED,
+      '/shop/src/generated/index.ts': "export { makeStoreSdk as createApi } from './graphql';",
+      '/shop/src/client.ts': `
+        import { GraphQLClient } from 'graphql-request';
+        import { createApi } from './generated';
+        export const api = createApi(new GraphQLClient('/store-api') as any);
+      `,
+      '/shop/src/page.ts': "import { api } from './client';\nexport const go = () => api.signIn({ email: 'a' });",
+    });
+    const signIn = graphqlCallOf(callOf(made, '/shop/src/page.ts', 'signIn'));
+    expect(operationOf(signIn)).toBe('mutation signIn');
+    expect(addressOf(signIn as GraphqlCall)).toBe("'/store-api'");
+  });
+
+  it('reads the SWR factory: a method of the SDK it spreads, and a hook sending that method', () => {
+    const made = project({
+      '/shop/src/generated/graphql.ts': WITH_HOOKS,
+      '/shop/src/client.ts': `
+        import { GraphQLClient } from 'graphql-request';
+        import { getSdkWithHooks } from './generated/graphql';
+        export const sdk = getSdkWithHooks(new GraphQLClient('/store-api'));
+      `,
+      '/shop/src/page.ts': "import { sdk } from './client';\nexport const a = () => sdk.signIn({ email: 'a' });\nexport const b = () => sdk.useCart('cart');",
+    });
+    expect(operationOf(graphqlCallOf(callOf(made, '/shop/src/page.ts', 'signIn')))).toBe('mutation signIn');
+    const hook = graphqlCallOf(callOf(made, '/shop/src/page.ts', 'useCart'));
+    expect(operationOf(hook)).toBe('query cart');
+    expect(addressOf(hook as GraphqlCall)).toBe("'/store-api'");
+    // The hook's own call of the SDK is sent at each call of the hook, not where it is written.
+    expect(graphqlCallOf(callOf(made, '/shop/src/generated/graphql.ts', 'cart'))).toBeUndefined();
+  });
+
+  it('reads getSdkWithHooks and getSdk re-exported under another name from a module nobody committed', () => {
+    const made = project({
+      '/app/package.json': '{}',
+      '/app/codegen.yml': "documents: 'src/**/*.graphql'\ngenerates:\n  src/generated/sdk.ts:\n    plugins:\n      - typescript-graphql-request\n      - plugin-typescript-swr\n",
+      '/app/src/orders.graphql': 'query orderList { orders { id } }',
+      '/app/src/api.ts': "export { getSdk as createOrdersApi } from './generated/sdk';",
+      '/app/src/client.ts': `
+        import { GraphQLClient } from 'graphql-request';
+        import { getSdkWithHooks } from './generated/sdk';
+        import { createOrdersApi } from './api';
+        const client = new GraphQLClient('/graphql');
+        export const hooks = getSdkWithHooks(client);
+        export const plain = createOrdersApi(client);
+      `,
+      '/app/src/page.ts': "import { hooks, plain } from './client';\nexport const a = () => hooks.useOrderList('k');\nexport const b = () => plain.orderList();",
+    });
+    expect(operationOf(graphqlCallOf(callOf(made, '/app/src/page.ts', 'useOrderList')))).toBe('query orders');
+    expect(operationOf(graphqlCallOf(callOf(made, '/app/src/page.ts', 'orderList')))).toBe('query orders');
+  });
+
+  it('is nothing for a function answering methods that send no document through what it is handed', () => {
+    const made = project({
+      '/shop/src/generated/graphql.ts': GENERATED,
+      '/shop/src/store.ts': "export const makeStore = (client: { get(key: string): unknown }) => ({ cart: () => client.get('cart') });\nexport const store = makeStore(new Map() as any);",
+      '/shop/src/page.ts': "import { store } from './store';\nexport const a = () => store.cart();",
+    });
+    expect(graphqlCallOf(callOf(made, '/shop/src/page.ts', 'cart'))).toBeUndefined();
+  });
+});
