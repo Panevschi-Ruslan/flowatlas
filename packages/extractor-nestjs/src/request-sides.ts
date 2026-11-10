@@ -35,8 +35,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { GraphNode } from './model/nodes.js';
-import type { RepoGraph } from './model/graph.js';
+import type { GraphNode, RepoGraph } from '@flowatlas/core';
 
 /** A side of the application a function runs on. */
 type Side = 'server' | 'browser';

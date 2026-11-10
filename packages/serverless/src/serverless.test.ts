@@ -147,7 +147,8 @@ describe('a service read into a deployment (P57)', () => {
   it('draws the REST, HTTP and function URL routes as Terraform keys them', () => {
     expect(deployment.routes.map((route) => [route.method, route.path, route.api, route.meta?.['key']])).toEqual([
       ['POST', '/orders', 'dev-orders', 'POST:/orders'],
-      ['ALL', '/:param', 'dev-orders', 'ALL:/:param'],
+      // httpApi '*' is the default route, its {proxy+} greedy as P283 keys it.
+      ['ALL', '/*', 'dev-orders', 'ALL:/*'],
       ['ALL', '/*', undefined, 'ALL:/*@orders-dev-place-order'],
     ]);
   });

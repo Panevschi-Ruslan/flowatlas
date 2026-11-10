@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:12:38.615Z",
+  "builtAt": "2026-11-10T20:39:50.134Z",
   "services": [
     {
       "name": "bookshop",
@@ -336,16 +336,16 @@
       }
     },
     {
-      "id": "entry:bookshop:http:GET:/plugins/:param",
+      "id": "entry:bookshop:http:GET:/plugins/*",
       "type": "entry",
-      "label": "GET /plugins/:param",
+      "label": "GET /plugins/*",
       "repo": "bookshop",
       "file": "serverless.yml",
       "line": 24,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "path": "/plugins/:param",
+        "path": "/plugins/*",
         "rawPath": "plugins/{proxy+}",
         "deployedBy": "serverless",
         "api": "dev-bookshop",
@@ -876,7 +876,7 @@
       "line": 6
     },
     {
-      "from": "entry:bookshop:http:GET:/plugins/:param",
+      "from": "entry:bookshop:http:GET:/plugins/*",
       "to": "bookshop#src/plugins/handler.ts:handler",
       "type": "handles",
       "confidence": "static",
@@ -986,6 +986,18 @@
         "via": "baseUrlEnv",
         "targetService": "bookshop"
       }
+    },
+    {
+      "from": "http_out:bookshop#src/restock/restock.ts:38:9",
+      "to": "entry:bookshop:http:GET:/plugins/*",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/restock/restock.ts",
+      "line": 38,
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "bookshop"
+      }
     }
   ],
   "types": {
@@ -1027,9 +1039,9 @@
       "service": "bookshop",
       "file": "src/restock/restock.ts",
       "line": 38,
-      "reason": "dynamic-http-url",
-      "message": "GET /plugins/:param/install${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
-      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /plugins/* in bookshop answers GET /plugins/:param/install${…}",
+      "hint": "No route of bookshop spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
       "symbol": "http_out:bookshop#src/restock/restock.ts:38:9"
     },
     {

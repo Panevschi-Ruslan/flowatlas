@@ -18,7 +18,6 @@ import {
   readResolvedPackageJson,
   closeStandIns,
   withoutOtherServicesWaysIn,
-  oneSidePerRequest,
   reportSkippedTestDirectories,
   reportPatterns,
   readPatterns,
@@ -53,6 +52,7 @@ import { typesPass } from './passes/types-pass.js';
 import type { NestExtractorPass } from './passes/types.js';
 import { NEST_SHAPES } from './shapes/index.js';
 import { wrappingCollectPass, wrappingEdgesPass } from './passes/wrapping.js';
+import { oneSidePerRequest } from './request-sides.js';
 
 export interface ExtractRepoOptions {
   /** Absolute path to the repository root. */

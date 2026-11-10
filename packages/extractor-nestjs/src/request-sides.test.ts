@@ -2,9 +2,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { RepoGraph } from './model/graph.js';
-import type { GraphEdge } from './model/edges.js';
-import type { GraphNode } from './model/nodes.js';
+import type { GraphEdge, GraphNode, RepoGraph } from '@flowatlas/core';
 import { oneSidePerRequest, SAME_CALL_META } from './request-sides.js';
 
 const temporary: string[] = [];

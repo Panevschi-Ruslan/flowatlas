@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:12:02.209Z",
+  "builtAt": "2026-11-10T20:44:21.582Z",
   "services": [
     {
       "name": "web",
@@ -182,6 +182,16 @@
         "api": "dev-files",
         "function": "files-dev-serve",
         "declaredAs": "functions.serve.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.us-east-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-files",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -201,6 +211,16 @@
         "api": "dev-files",
         "function": "files-dev-session",
         "declaredAs": "functions.session.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.us-east-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-files",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

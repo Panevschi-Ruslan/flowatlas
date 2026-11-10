@@ -10,7 +10,7 @@ import "google/protobuf/empty.proto";
 
 message PlaceOrder {
   message Line { string product_id = 1; uint32 quantity = 2; }
-  enum Speed { STANDARD = 0; EXPRESS = 1 [deprecated = true]; }
+  enum Speed { STANDARD = 0; OVERNIGHT = 1 [deprecated = true]; }
   string customer_id = 1;
   repeated Line lines = 2;
   map<string, string> labels = 3;
@@ -37,7 +37,7 @@ describe('parseProto messages (P287)', () => {
     const file = parseProto(ORDERS);
     expect(file.syntax).toBe('proto3');
     expect(file.messages.map((message) => message.fullName)).toEqual(['shop.orders.PlaceOrder.Line', 'shop.orders.PlaceOrder', 'shop.orders.Voucher']);
-    expect(file.enums).toEqual([{ name: 'Speed', fullName: 'shop.orders.PlaceOrder.Speed', values: ['STANDARD', 'EXPRESS'], line: 9 }]);
+    expect(file.enums).toEqual([{ name: 'Speed', fullName: 'shop.orders.PlaceOrder.Speed', values: ['STANDARD', 'OVERNIGHT'], line: 9 }]);
     const order = file.messages[1];
     expect(order?.fields.map((field) => [field.name, field.type, field.repeated, field.mapKey ?? null, field.label ?? null, field.oneof ?? null])).toEqual([
       ['customer_id', 'string', false, null, null, null],
@@ -94,7 +94,7 @@ describe('protoTypes (P287)', () => {
       ['placedAt', 'unknown', true, 'explicit'],
       ['voucher', 'type:orders#.shop.orders.Voucher', true, 'explicit'],
     ]);
-    expect(registry['type:orders#.shop.orders.PlaceOrder.Speed']).toMatchObject({ kind: 'union', members: ["'STANDARD'", "'EXPRESS'", 'number'] });
+    expect(registry['type:orders#.shop.orders.PlaceOrder.Speed']).toMatchObject({ kind: 'union', members: ["'STANDARD'", "'OVERNIGHT'", 'number'] });
     // A message that holds itself is registered once.
     expect(registry['type:orders#.shop.orders.Voucher']?.fields?.[1]?.type).toBe('type:orders#.shop.orders.Voucher');
     for (const entry of Object.values(registry)) expect(entry.structuralHash).toMatch(/^[0-9a-f]{16}$/);
