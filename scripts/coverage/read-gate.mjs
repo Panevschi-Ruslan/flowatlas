@@ -128,6 +128,9 @@ const GATED = {
       'route-registry-unread',
       // An MCP server's tool, prompt or resource registered under a computed name (P270).
       'mcp-name-dynamic',
+      // A gRPC service registered and not named, or named with no contract to say its methods (P274).
+      'grpc-service-unread',
+      'grpc-contract-unread',
       'route-file-not-served',
       'route-module-not-found',
       'route-claimed-twice',

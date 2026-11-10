@@ -23,6 +23,7 @@ import { nestjsTelegrafAdapter } from './nestjs-telegraf/index.js';
 import { telegrafCallsAdapter } from './telegraf-calls.js';
 import { tanstackStartAdapter } from './server-functions.js';
 import { mcpServerAdapter } from './mcp-servers.js';
+import { grpcServerAdapter } from './grpc-services.js';
 
 export const PACKAGE_NAME = '@flowatlas/adapters-entry';
 
@@ -53,6 +54,7 @@ export const entryAdapters: readonly EntryAdapter[] = [
   orpcProceduresAdapter,
   tanstackStartAdapter,
   mcpServerAdapter,
+  grpcServerAdapter,
   entryRegistriesAdapter,
   configuredRoutesAdapter,
   configuredProceduresAdapter,
@@ -107,6 +109,12 @@ export type { ActionBuilder } from './action-builders.js';
 export { ACTION_BUILDERS, NEXT_SAFE_ACTION, ZSA } from './action-builders.js';
 export { tanstackStartAdapter } from './server-functions.js';
 export { mcpServerAdapter } from './mcp-servers.js';
+export { grpcServerAdapter, grpcTransportOptions } from './grpc-services.js';
+export type { GrpcTransportOptions } from './grpc-services.js';
+export { readGrpcCalls } from './grpc-calls.js';
+export type { GrpcCallReading } from './grpc-calls.js';
+export { contractsOf } from './grpc-contracts.js';
+export type { Contract, Contracts, ContractService } from './grpc-contracts.js';
 export { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
 export {
   fsAddressSpace,

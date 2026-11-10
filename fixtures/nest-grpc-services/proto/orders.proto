@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package orders;
+
+service OrdersService {
+  rpc FindOrder (FindOrderRequest) returns (Order);
+  rpc ListOrders (ListOrdersRequest) returns (stream Order);
+  rpc StreamUpdates (stream OrderUpdate) returns (stream OrderUpdate);
+  rpc CancelOrder (FindOrderRequest) returns (Order);
+}
+
+message FindOrderRequest { string id = 1; }
+message ListOrdersRequest { string customer_id = 1; }
+message Order { string id = 1; string status = 2; }
+message OrderUpdate { string id = 1; string status = 2; }

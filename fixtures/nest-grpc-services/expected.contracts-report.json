@@ -1,0 +1,69 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-09T22:20:14.416Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:gateway#src/orders.client.ts:26:27",
+        "to": "entry:orders:rpc:grpc:orders.OrdersService/FindOrder",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:gateway#src/orders.client.ts:26:27|hits|entry:orders:rpc:grpc:orders.OrdersService/FindOrder",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:orders:rpc:grpc:orders.OrdersService/FindOrder declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/orders.client.ts:26:27",
+        "to": "entry:orders:rpc:grpc:orders.OrdersService/FindOrder",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:gateway#src/orders.client.ts:26:27|hits|entry:orders:rpc:grpc:orders.OrdersService/FindOrder",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:orders:rpc:grpc:orders.OrdersService/FindOrder answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/orders.client.ts:30:12",
+        "to": "entry:orders:rpc:grpc:orders.OrdersService/ListOrders",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:gateway#src/orders.client.ts:30:12|hits|entry:orders:rpc:grpc:orders.OrdersService/ListOrders",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:orders:rpc:grpc:orders.OrdersService/ListOrders declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/orders.client.ts:30:12",
+        "to": "entry:orders:rpc:grpc:orders.OrdersService/ListOrders",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:gateway#src/orders.client.ts:30:12|hits|entry:orders:rpc:grpc:orders.OrdersService/ListOrders",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:orders:rpc:grpc:orders.OrdersService/ListOrders answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 4,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

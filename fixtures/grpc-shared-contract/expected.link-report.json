@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:12:04.061Z",
+  "configHash": "0a68605c088b",
+  "services": [
+    {
+      "name": "cart",
+      "repo": "proto/shop.proto",
+      "type": "declared",
+      "extractor": "protobuf-document",
+      "nodes": 6,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 3
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "grpc",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 8,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1802,
+      "packages": {
+        "name": "grpc-shared-contract-catalog",
+        "runtime": [
+          "@grpc/grpc-js"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "grpc",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1602,
+      "packages": {
+        "name": "grpc-shared-contract-payments",
+        "runtime": [
+          "@grpc/grpc-js",
+          "@grpc/proto-loader",
+          "grpc-health-check"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 24,
+      "edges": 22,
+      "types": 1,
+      "unresolved": 2,
+      "durationMs": 2273,
+      "packages": {
+        "name": "grpc-shared-contract-storefront",
+        "runtime": [
+          "@grpc/grpc-js",
+          "@grpc/proto-loader",
+          "express"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 6,
+    "linked": 5,
+    "byMarker": 0,
+    "unknownEnv": 1,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 5,
+    "called": 0,
+    "uncalled": [
+      "entry:storefront:http:GET:/cart/:param",
+      "entry:storefront:http:GET:/products",
+      "entry:storefront:http:GET:/shipping/:param",
+      "entry:storefront:http:POST:/cart/:param/items",
+      "entry:storefront:http:POST:/checkout/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "storefront",
+      "file": "src/clients.ts",
+      "line": 46,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares SHIPPING_ADDR",
+      "hint": "Add SHIPPING_ADDR to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:storefront#src/clients.ts:46:35"
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients.ts",
+      "line": 46,
+      "reason": "grpc-method-unserved",
+      "message": "storefront calls shop.ShippingService (GetQuote), which ../proto/shop.proto declares and no configured service implements",
+      "hint": "The service that answers it is not read here: written in another language, or not configured. Declare it by that file - a service with \"document\": { \"kind\": \"protobuf\", \"path\": ..., \"services\": [\"shop.ShippingService\"] } - or add the repository that implements it to services[].",
+      "symbol": "http_out:storefront#src/clients.ts:46:35",
+      "meta": {
+        "grpcService": "shop.ShippingService",
+        "contract": "../proto/shop.proto",
+        "methods": [
+          "GetQuote"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 42,
+    "edges": 35,
+    "types": 1,
+    "missed": 5,
+    "sites": 11,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 5
+  }
+}

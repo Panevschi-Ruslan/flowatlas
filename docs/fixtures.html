@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>239 fixtures</span>
-    <span>619 snapshot files</span>
+    <span>241 fixtures</span>
+    <span>625 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -963,7 +963,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>NestJS <span class="count" data-total="38">38</span></h2>
+    <h2>NestJS <span class="count" data-total="39">39</span></h2>
     <ul>
       <li class="fixture" data-search="nest-addressing nestjs where a nestjs service's addresses are decided, and what it costs to read the wrong file (r89).">
         <div class="head">
@@ -1084,6 +1084,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A request whose address is completed by its caller keeps the verb and host its own code states (R161).</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="nest-grpc-services nestjs a nestjs gateway calling a nestjs grpc microservice (p274), the contract in `proto/orders.proto` (`orders.ordersservice`).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/nest-grpc-services">nest-grpc-services</a>
+          <span class="kind">2 services</span>
+        </div>
+        <p>A NestJS gateway calling a NestJS gRPC microservice (P274), the contract in <code>proto/orders.proto</code> (<code>orders.OrdersService</code>).</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="nest-guards nestjs exercises the full wrapping layer: middleware, guards, interceptors and pipes applied globally, at class level and at method level, plus a custom `@roles('admin')` metadata decorator.">
         <div class="head">
@@ -1593,7 +1601,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="57">57</span></h2>
+    <h2>Everything else <span class="count" data-total="58">58</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1762,6 +1770,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>Whether a field using <code>@requires</code> carries the scopes the fields it requires ask, read by which scopes imply which (P261), as <code>graphql-requires-auth</code> reads <code>@authenticated</code> (P256).</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="grpc-shared-contract everything else grpc services and their callers, one contract shared by all of them (p274): `proto/shop.proto` at the top of the project declares `shop.cartservice`, `shop.paymentservice`, `shop.catalogservice` and `shop.shippingservice`.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/grpc-shared-contract">grpc-shared-contract</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>gRPC services and their callers, one contract shared by all of them (P274): <code>proto/shop.proto</code> at the top of the project declares <code>shop.CartService</code>, <code>shop.PaymentService</code>, <code>shop.CatalogService</code> and <code>shop.ShippingService</code>.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="house-patterns everything else a bookshop of three services whose wrappers are its own and come from packages nobody here installed (p121): `catalog` publishes through `shopbus.emit({ topic, data })` and calls `stock` through `apiclient.call('post', url, body)`, `stock` handles through `shopbus.on('book.added', handler)`, and the react `storefront` requests through `useapi().send({ method, path })`.">
         <div class="head">

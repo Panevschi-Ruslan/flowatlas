@@ -74,10 +74,11 @@ export const readDeclaredService = async (
     );
   }
 
-  const { kind } = service.document as { kind: string };
+  const { kind, services } = service.document as { kind: string; services?: readonly string[] };
   const { graph, declared } = documentReader(kind)(raw, {
     service: service.name,
     documentPath,
+    ...(services === undefined ? {} : { services }),
     ...(options.builtAt === undefined ? {} : { generatedAt: options.builtAt }),
     readBeside: (path) => {
       try {

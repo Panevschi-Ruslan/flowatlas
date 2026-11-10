@@ -326,6 +326,8 @@ export {
   shifted,
 } from './positioned-document.js';
 export type { DefinitionFormat, PathStep, PositionedDocument } from './positioned-document.js';
+export { grpcCallKind, grpcEntryKey, parseProto, sameMethodName } from './protobuf.js';
+export type { GrpcCallKind, ProtoFile, ProtoMethod, ProtoService } from './protobuf.js';
 export { readExpressionDocument, UnreadMember } from './positioned-expression.js';
 
 export {

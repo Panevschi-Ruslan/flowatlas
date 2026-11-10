@@ -116,6 +116,35 @@ only one of them moved.
   that writes its return type, `this.factory.client()` or
   `await Registry.get().db()`, states the client's type for a call written in
   place and for a name holding its value, as a function called by name did.
+- **gRPC services and the calls made to them (P274).** The repository's
+  `.proto` files - every one from the service's directory up to the top of
+  its repository or project, a shared `proto/` directory included - are read
+  by a small tolerant parser for their package, services and methods, and
+  each method a server implements is an `rpc` way in keyed
+  `grpc:<package>.<Service>/<Method>`, with how it is called (unary, a stream
+  either way or both) and the function behind it: `server.addService(...)`
+  on `@grpc/grpc-js` or `grpc` with a service of a loaded contract
+  (`loadPackageDefinition(loadSync('shop.proto')).shop.CartService.service`),
+  a generated definition, or a generated name nobody committed that a
+  contract declares, implemented by an object of functions or an instance of
+  a class; and a NestJS controller's `@GrpcMethod`, `@GrpcStreamMethod` and
+  `@GrpcStreamCall`, its package from `transport: Transport.GRPC` options. A
+  server's calls - `new CartServiceClient(address, credentials)` generated
+  or taken from a loaded contract, through `promisify`, and NestJS's
+  `getService('CartService')` - are requests between services of kind `rpc`
+  joined to the method of the service their address names (`CART_ADDR`, a
+  host, the client options' `url`). A service written in another language is
+  declared by its contract, `document: { kind: "protobuf", path, services }`
+  (the new `services` narrows a file every service shares), and its methods
+  are ways in callers join to. New rows: `grpc-service-unread` (a service
+  registered, or a client made, that cannot be named), `grpc-contract-unread`
+  (a service no contract here declares, its methods named as written) and
+  `grpc-method-unserved` (methods a contract declares that nothing configured
+  implements, one row per caller and service). `@grpc/grpc-js` and `grpc`
+  make a repository's type `grpc`, and a service with no TypeScript among its
+  sources reads its JavaScript (`.js`, `.jsx`, `.mjs`, `.cjs`), so a plain
+  Node server is read rather than skipped. The counting rule counts
+  `addService(definition, implementation)` and the NestJS decorators.
 
 - **A handler behind its wrapper, a request handed in as one object, and a
   GraphQL server made into a Lambda (P269).** A `pages/api` default export

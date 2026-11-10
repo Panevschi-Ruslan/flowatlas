@@ -58,6 +58,8 @@ export interface KindedRow {
 // How a join or a reading was made. Every one of these sits beside an edge
 // that was drawn, or a package that was read.
 const NOTES: readonly string[] = [
+  // A gRPC service no .proto file of the repository declares, drawn from what the code writes (P274)
+  'grpc-contract-unread',
   // A call of a framework module that the options it is handed rule out (P255)
   'framework-module-skipped',
   // A feature the files use that the build's own flag turns off: Nitro's tasks (P262)
@@ -255,6 +257,8 @@ const GAPS: readonly string[] = [
   'route-registry-unread',
   // A tool, prompt or resource an MCP server registers under a name decided at run time (P270)
   'mcp-name-dynamic',
+  // A gRPC service a server registers or a client is made of that cannot be named (P274)
+  'grpc-service-unread',
   'registry-key-dynamic',
   'registry-handler-anonymous',
   'entry-registry-unconfigured',
@@ -414,6 +418,8 @@ const GAPS: readonly string[] = [
   'marker-service-unknown',
   'marker-route-not-found',
   'procedure-not-found',
+  // A gRPC method a contract of the repository declares and nothing configured implements (P274)
+  'grpc-method-unserved',
   'procedure-ambiguous',
   'duplicate-node-id',
   'reference-not-found',

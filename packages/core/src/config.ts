@@ -87,7 +87,18 @@ const serviceEntrySchema = z.strictObject({
    * keys of the reader lookup, which is where a document is actually read, and
    * an unknown one is refused there by name.
    */
-  document: z.strictObject({ kind: z.string().min(1), path: z.string().min(1) }).optional(),
+  document: z
+    .strictObject({
+      kind: z.string().min(1),
+      path: z.string().min(1),
+      /**
+       * The services of the document this one answers, where it declares
+       * several: a `.proto` file every service of a repository shares, of
+       * which this service implements one (P274). Every one where absent.
+       */
+      services: z.array(z.string().min(1)).min(1).optional(),
+    })
+    .optional(),
   /**
    * The older spelling of a document, which is `document.kind: 'openapi'`.
    *

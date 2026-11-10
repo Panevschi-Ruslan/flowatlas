@@ -910,6 +910,15 @@ prove, and the path is given so you can run it.
   service that mounts the tree; Fastify's and Hono's tRPC mounts are read; and a
   client a module's `forRoot` / `forRootAsync` builds is followed to its address
   (`fixtures/rpc-shared-types`).
+- **gRPC.** Each method a server implements is a way in keyed
+  `grpc:<package>.<Service>/<Method>`, named by the repository's `.proto`
+  files wherever they are kept: `addService` with a loaded contract, generated
+  code or a generated name nobody committed, and a NestJS controller's
+  `@GrpcMethod`. A client's calls - generated, loaded, promisified, injected or
+  NestJS's `getService` - join the service their address names, and a service
+  written in another language is declared by its contract; a plain JavaScript
+  server is read too (`fixtures/grpc-shared-contract`,
+  `fixtures/nest-grpc-services`).
 - **Applications.** Two applications in one service — a NestJS API and a worker,
   or a second Next.js application under `examples/` — serving the same path are
   two entries, and a request written inside one reaches its own

@@ -35,6 +35,12 @@ export interface ReadDocumentOptions {
    * configuration names (P241).
    */
   readBeside?: (path: string) => string | undefined;
+  /**
+   * The services of the document this service answers, where the document
+   * declares several and the service is some of them: a `.proto` file every
+   * service of the repository shares (P274). Every one where absent.
+   */
+  services?: readonly string[];
 }
 
 export interface ReadDocumentResult {

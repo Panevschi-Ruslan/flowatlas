@@ -416,6 +416,12 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Its types match and its routes do not. Check verbs, verbArgument, pathArg and handlerArg on that description.',
   'entry-http-routes-unplaced': () =>
     'Routes were read and only some of them could be placed at an address, so the ways in recorded for that service are a part of what it serves rather than the whole of it. The rows above name each application whose base could not be read.',
+  'grpc-service-unread': () =>
+    'A gRPC server registers a service, or a client is made for one, that cannot be named: no .proto file of the repository declares it, the generated code is not there to read, or its name is decided at run time. Its methods are not drawn. Keep the contract in the repository and name the service as text.',
+  'grpc-contract-unread': () =>
+    'A gRPC service is named and no .proto file of the repository declares it, so its methods are named as the code writes them and how each is called is not known. Keep the .proto file it is generated from in the repository.',
+  'grpc-method-unserved': () =>
+    'A service calls gRPC methods that a .proto file of the repository declares and that no configured service implements: the service answering them is written in another language or not configured. Declare it by the file (document kind protobuf, with the services it answers), or add the repository that implements it.',
   'mcp-name-dynamic': () =>
     'An MCP server registers a tool, a prompt or a resource under a name decided at run time - usually a loop over a registry of them - so what a client may ask the server for is not drawn, or is drawn only as far as the source states it: a name written in part as a pattern, a name a record carries from the records the repository writes. Register each under a name written as text.',
   'route-registry-unread': () =>

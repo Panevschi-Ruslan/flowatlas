@@ -148,6 +148,23 @@ describe("koa-router's `register`, a route with its verbs as a list (P270)", () 
   });
 });
 
+describe('a gRPC service a server registers (P274)', () => {
+  it('counts `addService(definition, implementation)` and a NestJS controller method answering one', () => {
+    const server = [
+      "server.addService(pkg.shop.CartService.service, { getCart });",
+      'server.addService(CatalogServiceService, new Catalog());',
+      "server.addService(load('x').Billing.service, impl);",
+    ].join('\n');
+    assert.deepEqual(sitesIn('index.js', server), { routes: 3 });
+    const controller = "@GrpcMethod('CartService', 'GetCart')\nfind() {}\n@GrpcStreamMethod('CartService')\nwatch() {}\n";
+    assert.deepEqual(sitesIn('src/cart.controller.ts', controller), { routes: 2 });
+  });
+
+  it("does not count a container's `addService(token)`", () => {
+    assert.deepEqual(sitesIn('src/container.ts', 'container.addService(Logger);\n'), {});
+  });
+});
+
 describe("a task Nitro runs by its name (P258)", () => {
   it('counts a file of `server/tasks` that defines one, at any depth, and not a helper beside it', () => {
     assert.deepEqual(sitesIn('server/tasks/db/migrate.ts', 'export default defineTask({ run() { return {}; } });\n'), { routes: 1 });

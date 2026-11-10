@@ -124,6 +124,13 @@ export const READERS: readonly ReaderRow[] = [
   ['lambda', '@types/aws-lambda', NESTJS_EXTRACTOR],
   ['lambda', 'aws-lambda', NESTJS_EXTRACTOR],
   ['lambda', '@middy/core', NESTJS_EXTRACTOR],
+  // A gRPC server written on the libraries themselves (P274). Below every
+  // framework and every function: a NestJS microservice speaking gRPC, an
+  // Express server or a front end with a gRPC client among its dependencies
+  // is that framework's, and its gRPC ways in and calls are read whichever
+  // type is written, by the adapters that detect the library.
+  ['grpc', '@grpc/grpc-js', NESTJS_EXTRACTOR],
+  ['grpc', 'grpc', NESTJS_EXTRACTOR],
   ['angular', '@angular/core', ANGULAR_EXTRACTOR],
   // A repository that is only a browser. It has no ways in for the server reader
   // to find, so reading it there would add passes with nothing to read and a

@@ -1,0 +1,11 @@
+{
+  "name": "grpc-shared-contract-payments",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.0",
+    "@grpc/proto-loader": "^0.8.0",
+    "grpc-health-check": "^2.0.0"
+  }
+}

@@ -270,6 +270,18 @@ export const PROBES = [
     pattern: /\.\s*(?:query|mutation|subscription|handler)\s*\(\s*(?:async\s*)?(?:\(|function\b|[A-Za-z_$][\w$]*\s*=>)/g,
   },
   {
+    name: 'grpc-service-registration',
+    family: 'routes',
+    scope: 'line',
+    what: 'a gRPC service a server registers - `server.addService(definition, implementation)` - or a NestJS controller method answering one (`@GrpcMethod`, `@GrpcStreamMethod`, `@GrpcStreamCall`)',
+    // Each method of the service is a way in (P274). A registration is counted
+    // once whatever the service holds, as a router mount is: what the rule can
+    // see on a line is that a service is served there, not how many methods it
+    // has. `addService(` with two arguments, so a container's
+    // `addService(token)` is not one.
+    pattern: /\.\s*addService\s*\([^,()]+(?:\([^()]*\))?[^,()]*,|@Grpc(?:Method|StreamMethod|StreamCall)\s*\(/g,
+  },
+  {
     name: 'graphql-reference-resolver',
     family: 'routes',
     scope: 'line',

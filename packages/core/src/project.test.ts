@@ -375,3 +375,41 @@ describe('the source roots of a service', () => {
   });
 });
 
+describe('a repository written in JavaScript alone (P274)', () => {
+  const repo = (files: Record<string, string | object>): string => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'flowatlas-scripts-')));
+    temporary.push(root);
+    write(root, files);
+    return root;
+  };
+  const opened = (root: string): string[] =>
+    createProject({ rootDir: root })
+      .getSourceFiles()
+      .map((file) => file.getFilePath().slice(root.length + 1))
+      .filter((file) => !file.startsWith('node_modules'))
+      .sort();
+
+  it('reads its scripts where its roots hold no TypeScript, and lists the same files', () => {
+    const root = repo({
+      'package.json': { name: 'payments', main: 'index.js' },
+      'index.js': "const { charge } = require('./charge');\nmodule.exports = { charge };\n",
+      'charge.js': 'module.exports = { charge: async () => ({}) };\n',
+      'lib/util.cjs': 'exports.x = 1;\n',
+      'vendor.min.js': 'var a=1;\n',
+      'dist/out.js': 'exports.built = 1;\n',
+    });
+    expect(opened(root)).toEqual(['charge.js', 'index.js', 'lib/util.cjs']);
+    expect(listRepoSources(root)).toEqual(['charge.js', 'index.js', 'lib/util.cjs']);
+  });
+
+  it('reads TypeScript alone where there is any, its scripts left as what it compiles to', () => {
+    const root = repo({
+      'package.json': { name: 'api' },
+      'src/main.ts': 'export const main = 1;\n',
+      'src/legacy.js': 'exports.legacy = 1;\n',
+    });
+    expect(opened(root)).toEqual(['src/main.ts']);
+    expect(listRepoSources(root)).toEqual(['src/main.ts']);
+  });
+});
+

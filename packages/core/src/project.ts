@@ -123,6 +123,35 @@ const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'build']);
 export const SOURCE_EXTENSIONS = ['.ts', '.tsx'] as const;
 
 /**
+ * The extensions a repository written in JavaScript alone keeps its code in
+ * (P274).
+ *
+ * `allowJs` is off for a TypeScript repository because its JavaScript is what
+ * it compiles to, or a configuration file beside its code. A service with no
+ * TypeScript among its sources at all - a Node server written in CommonJS,
+ * run as it is - has nothing else: its scripts are its source, and reading
+ * none of them read the service as empty. So where the roots hold no
+ * TypeScript, these are read instead, with `allowJs` on, and a repository with
+ * one TypeScript file reads exactly as it did.
+ */
+export const SCRIPT_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs'] as const;
+
+/** A script nobody wrote by hand: a bundle's minified output. */
+const MINIFIED_SUFFIX = '.min.js';
+
+/**
+ * The extensions a service's own roots are read with: TypeScript's, or a
+ * script's where no TypeScript is there (see {@link SCRIPT_EXTENSIONS}).
+ * Asked with the tests policy the reading has, recording nothing, so the
+ * reading and the build's listing answer alike.
+ */
+const ownExtensionsOf = (rootDir: string, tests: TestDirectories, roots: readonly string[]): readonly string[] => {
+  const quiet: TestDirectories = { reads: tests.reads, skipped: () => {} };
+  if (sourceFilesUnder(rootDir, quiet, roots).length > 0) return SOURCE_EXTENSIONS;
+  return sourceFilesUnder(rootDir, quiet, roots, SCRIPT_EXTENSIONS).length > 0 ? SCRIPT_EXTENSIONS : SOURCE_EXTENSIONS;
+};
+
+/**
  * Files that are compiled but say nothing about the shape of the system: a
  * declaration file, and a test ({@link isTestName}, and a directory named like
  * one unless the service names it; the one definition the
@@ -370,7 +399,7 @@ const walkSources = (
         continue;
       }
       if (!extensions.some((ext) => entry.name.endsWith(ext))) continue;
-      if (entry.name.endsWith(DECLARATION_SUFFIX) || isTestName(entry.name)) continue;
+      if (entry.name.endsWith(DECLARATION_SUFFIX) || entry.name.endsWith(MINIFIED_SUFFIX) || isTestName(entry.name)) continue;
       out.push(path);
     }
   };
@@ -1020,10 +1049,19 @@ export const createProject = (options: CreateProjectOptions): Project => {
             : {}),
         };
 
+  // A repository with no TypeScript among its own sources reads its scripts (P274).
+  const roots = sourceRootsOf(rootDir, options);
+  const ownExtensions = ownExtensionsOf(rootDir, tests, roots);
+  const scripts = ownExtensions === SCRIPT_EXTENSIONS;
+
   const project = new Project({
     ...(tsConfigFilePath === undefined ? {} : { tsConfigFilePath }),
     skipAddingFilesFromTsConfig: true,
-    compilerOptions: { ...(tsConfigFilePath === undefined ? FALLBACK_COMPILER_OPTIONS : {}), ...extraPaths },
+    compilerOptions: {
+      ...(tsConfigFilePath === undefined ? FALLBACK_COMPILER_OPTIONS : {}),
+      ...extraPaths,
+      ...(scripts ? { allowJs: true, checkJs: false } : {}),
+    },
     ...(mounts.length === 0 ? {} : { fileSystem: mountedFileSystem(mounts) }),
     // Only inside a workspace, or where a package's source stands in. A service
     // with no package of its own to alias, none to import by name and no source
@@ -1055,9 +1093,8 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // "Directory not found". The list comes from the file system and holds only
   // files that are there. It is also the list `listRepoSources` makes from the
   // same roots, so what a build stamps and what this opens are one answer (R170).
-  const roots = sourceRootsOf(rootDir, options);
   const opened: SourceFile[] = [];
-  for (const file of sourceFilesUnder(rootDir, tests, roots)) {
+  for (const file of sourceFilesUnder(rootDir, tests, roots, ownExtensions)) {
     opened.push(project.addSourceFileAtPath(join(rootDir, file)));
   }
   const builtIn = conventions.flatMap((convention) => convention.extent ?? []).map((dir) => resolve(dir));
@@ -1318,8 +1355,9 @@ export const listRepoSources = (
   // the service that calls it on disk unchanged and out of date.
   const own = sourceRootsOf(rootDir, roots);
   const extensions = [...SOURCE_EXTENSIONS, ...(roots.companions ?? [])];
+  const scripts = ownExtensionsOf(rootDir, tests, own) === SCRIPT_EXTENSIONS;
   const out = [
-    ...sourceFilesUnder(rootDir, tests, own, extensions),
+    ...sourceFilesUnder(rootDir, tests, own, scripts ? [...new Set([...SCRIPT_EXTENSIONS, ...(roots.companions ?? [])])] : extensions),
     ...membersBeyond(rootDir, own).flatMap((dir) => {
       const prefix = relative(rootDir, dir).split(sep).join('/');
       return sourceFilesUnder(dir, tests, sourceRootsOf(dir), extensions).map((file) => `${prefix}/${file}`);

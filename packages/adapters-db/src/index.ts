@@ -36,6 +36,7 @@ export type { ConfigRead, ConfigSource } from './leaves/config.js';
 export { analyzeUrl } from './leaves/url.js';
 export { graphqlCallsPass } from './graphql-calls.js';
 export { procedureCallsPass } from './procedure-calls.js';
+export { grpcCallsPass } from './grpc-calls.js';
 export type { UrlInfo } from './leaves/url.js';
 export { dataLayerOf } from './leaves/silence.js';
 export type { DataLayer } from './leaves/silence.js';

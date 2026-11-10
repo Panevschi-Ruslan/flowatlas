@@ -1,4 +1,4 @@
-import { normalizePath, type GraphNode } from '@flowatlas/core';
+import { normalizePath, type GraphNode, type Unresolved } from '@flowatlas/core';
 import type { FoundValue } from './base-url-value.js';
 import type { Finding } from './http-link.js';
 import { cmp } from './order.js';
@@ -80,7 +80,7 @@ export const isProcedureEntry = (node: GraphNode): boolean =>
  * caller's `apiTarget` or claimed by one service as its base (P58): the one
  * place a client of this family says where it sends.
  */
-export type ProcedureVia = 'same-service' | 'api-target' | 'link-url';
+export type ProcedureVia = 'same-service' | 'api-target' | 'link-url' | 'grpc-contract';
 
 interface Details {
   linked: {
@@ -235,6 +235,20 @@ export const resolveProcedureCall = (call: GraphNode, index: ProcedureIndex): Pr
   }
   if (answering.length > 1) return { kind: 'ambiguous', procedure, candidates: answering };
 
+  // A gRPC method is named in full - its package, its service, its method -
+  // by a contract both ends share, which is a namespace and not a word two
+  // trees happen to use. Sent where nothing here can read (a client a
+  // package injects, a name a registry resolves), it reaches the one
+  // configured service that implements it, as sure as a guess (P274).
+  if (procedure.startsWith('grpc:') && address === undefined) {
+    const implementing = index.services().filter((service) => service !== call.repo && index.proceduresOf(service).has(procedure));
+    const [sole] = implementing;
+    if (implementing.length === 1 && sole !== undefined) {
+      return { ...linked(index.proceduresOf(sole).get(procedure) as GraphNode, sole, 'grpc-contract'), confidence: 'heuristic' } as ProcedureOutcome;
+    }
+    if (implementing.length > 1) return { kind: 'ambiguous', procedure, candidates: implementing.sort(cmp) };
+  }
+
   const asking = [call.repo, ...targets];
   const elsewhere = index
     .services()
@@ -326,3 +340,48 @@ export const procedureFindingFor = (outcome: ProcedureOutcome, call: GraphNode):
 /** The reason an unresolved request counts under, whether or not it produced a row. */
 export const procedureReasonOf = (outcome: ProcedureOutcome, call: GraphNode): string | undefined =>
   outcome.kind === 'dynamic' ? 'procedure-path-dynamic' : procedureFindingFor(outcome, call)?.reason;
+
+/**
+ * The gRPC services a service calls that its contract declares and nothing
+ * configured implements (P274), one row per caller and service.
+ *
+ * A call of a method of `shop.CartService` carries the `.proto` file the
+ * caller found it in. Where no configured service implements the method -
+ * read from its code or declared by that file - the call joins nothing, and
+ * the address it is sent to says so on its own row. What the address cannot
+ * say is that the method is a real one, declared by a contract the
+ * repository holds: the service that answers it is written in another
+ * language, or is not configured. That is this row, once per service the
+ * caller calls, naming the methods and the file, so the fix - a service
+ * declared by that file, or the repository that implements it - is one entry.
+ */
+export const unservedContracts = (calls: readonly GraphNode[], index: Pick<ProcedureIndex, 'services' | 'proceduresOf'>): Unresolved[] => {
+  const implemented = (procedure: string): boolean => index.services().some((service) => index.proceduresOf(service).has(procedure));
+  const groups = new Map<string, { first: GraphNode; service: string; contract: string; methods: Set<string>; sites: number }>();
+  for (const call of calls) {
+    const procedure = call.meta?.['procedure'];
+    const contract = call.meta?.['contract'];
+    const service = call.meta?.['service'];
+    const method = call.meta?.['method'];
+    if (typeof procedure !== 'string' || !procedure.startsWith('grpc:') || typeof contract !== 'string' || typeof service !== 'string' || typeof method !== 'string') continue;
+    if (implemented(procedure)) continue;
+    const key = `${call.repo}\0${service}`;
+    const group = groups.get(key) ?? { first: call, service, contract, methods: new Set<string>(), sites: 0 };
+    group.methods.add(method);
+    group.sites += 1;
+    groups.set(key, group);
+  }
+  return [...groups.values()]
+    .sort((a, b) => cmp(`${a.first.repo}\0${a.service}`, `${b.first.repo}\0${b.service}`))
+    .map(({ first, service, contract, methods, sites }) => ({
+      service: first.repo,
+      file: first.file ?? '',
+      line: first.line ?? 0,
+      reason: 'grpc-method-unserved',
+      ...(sites > 1 ? { sites } : {}),
+      message: `${first.repo} calls ${service} (${[...methods].sort(cmp).join(', ')}), which ${contract} declares and no configured service implements`,
+      hint: `The service that answers it is not read here: written in another language, or not configured. Declare it by that file - a service with "document": { "kind": "protobuf", "path": ..., "services": ["${service}"] } - or add the repository that implements it to services[].`,
+      symbol: first.id,
+      meta: { grpcService: service, contract, methods: [...methods].sort(cmp) },
+    }));
+};

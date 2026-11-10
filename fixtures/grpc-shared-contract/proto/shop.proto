@@ -1,0 +1,42 @@
+// The contract every service of the shop shares.
+syntax = "proto3";
+
+package shop;
+
+import "google/protobuf/empty.proto";
+
+service CartService {
+  rpc AddItem (AddItemRequest) returns (google.protobuf.Empty) {}
+  rpc GetCart (GetCartRequest) returns (Cart) {}
+  rpc EmptyCart (EmptyCartRequest) returns (google.protobuf.Empty) {}
+}
+
+service PaymentService {
+  rpc Charge (ChargeRequest) returns (ChargeReply) {}
+}
+
+service CatalogService {
+  rpc ListProducts (ListProductsRequest) returns (ListProductsReply) {}
+  rpc GetProduct (GetProductRequest) returns (Product) {}
+  rpc WatchPrices (WatchPricesRequest) returns (stream PriceChange) {}
+}
+
+// Answered by a service nothing here configures.
+service ShippingService {
+  rpc GetQuote (QuoteRequest) returns (Quote) {}
+}
+
+message AddItemRequest { string user_id = 1; string product_id = 2; int32 quantity = 3; }
+message GetCartRequest { string user_id = 1; }
+message EmptyCartRequest { string user_id = 1; }
+message Cart { string user_id = 1; repeated string product_ids = 2; }
+message ChargeRequest { string order_id = 1; int64 amount = 2; }
+message ChargeReply { string transaction_id = 1; }
+message ListProductsRequest {}
+message ListProductsReply { repeated Product products = 1; }
+message GetProductRequest { string id = 1; }
+message Product { string id = 1; string name = 2; int64 price = 3; }
+message WatchPricesRequest { repeated string ids = 1; }
+message PriceChange { string id = 1; int64 price = 2; }
+message QuoteRequest { string zip = 1; }
+message Quote { int64 cost = 1; }

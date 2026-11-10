@@ -156,9 +156,10 @@ The type of a repository is read from its manifest: `@nestjs/core` makes it
 makes it `nextjs`, `@sveltejs/kit` makes it `sveltekit`, `@remix-run/node` or
 `@remix-run/react` makes it `remix`, `@react-router/dev` makes it `react-router`,
 `nuxt` makes it `nuxt`, `express`, `fastify` and `koa` make it each of those,
-`@angular/core` makes it `angular`, `react` makes it `react`, `vue` makes it `vue`,
+`@grpc/grpc-js` or `grpc` makes it `grpc` (a gRPC server written on the library
+itself, read for its services and its calls), `@angular/core` makes it `angular`, `react` makes it `react`, `vue` makes it `vue`,
 `svelte` makes it `svelte`, and anything else is
-written as `unknown`. Those fourteen are every type there is. Hono and Telegraf have
+written as `unknown`. Those fifteen are every type there is. Hono and Telegraf have
 no type of their own: they are frameworks the server reader finds inside a
 repository whichever server type it is given, so a repository whose only
 framework is Hono is
@@ -708,6 +709,30 @@ run time, never guessed), `graphql-document-not-parsed`,
 by its schema: `{ "document": { "kind": "graphql", "path": "catalog.graphql" } }`
 gives the same root entries, `declared` (`fixtures/graphql-gateway`,
 `fixtures/graphql-declared`).
+
+**gRPC services and the calls made to them (P274).** A gRPC way in is a
+method of a service a server implements, keyed
+`grpc:<package>.<Service>/<Method>` (`rpc`), with how it is called - `unary`,
+`server-stream`, `client-stream`, `bidi-stream` - from the contract. The
+contract is every `.proto` file from the service's directory up to the
+directory holding `.git` or this configuration, a shared `proto/` directory
+included; a contract is never a way in by itself. A server is
+`server.addService(definition, implementation)` (`@grpc/grpc-js`, `grpc`):
+the service of a loaded contract (`loadPackageDefinition(loadSync('shop.proto')).shop.CartService.service`),
+a generated definition, or a generated name a contract declares where the
+generated code is not committed; the implementation an object of functions
+or an instance of a class. A NestJS controller is read by `@GrpcMethod`,
+`@GrpcStreamMethod` and `@GrpcStreamCall`, the package from the
+`transport: Transport.GRPC` options. A call is a request between services
+of kind `rpc`: `new CartServiceClient(address, credentials)`, a client made
+from a loaded contract, `promisify(client.method)`, and NestJS
+`getService('CartService')`, joined to the service its address names (a
+setting, a host, the client options' `url`). A service written in another
+language is declared by its contract,
+`{ "document": { "kind": "protobuf", "path": "proto/shop.proto", "services": ["shop.CartService"] } }`.
+Rows: `grpc-service-unread`, `grpc-contract-unread` and
+`grpc-method-unserved` (`fixtures/grpc-shared-contract`,
+`fixtures/nest-grpc-services`).
 
 **Several GraphQL endpoints, and the client each operation is sent with
 (P266).** A NestJS server that imports `GraphQLModule.forRoot*` more than once
@@ -3539,6 +3564,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread`, `mcp-name-dynamic` (P270) |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-socket` (info), `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread`, `procedure-unmounted` (info, P270) |
+| gRPC services and calls (P274) | `grpc-service-unread` (a service registered, or a client made, that cannot be named), `grpc-contract-unread` (info: a service no `.proto` file of the repository declares, its methods named as written), `grpc-method-unserved` (a method a contract declares that nothing configured implements) |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread`, `api-client-base-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |
@@ -4552,7 +4578,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 |---|---|---|---|
 | `name` | string | required | what this service is called everywhere else |
 | `repo` | string | required unless `document` is given | path to the repository, relative to this file or absolute. A service has a `repo` or a `document`, never both |
-| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `nuxt`, `remix`, `react-router`, `express`, `fastify` or `koa` for anything with a server in it, `lambda` for functions whose ways in are declared in Terraform, `angular`, `react`, `vue` or `svelte` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
+| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `nuxt`, `remix`, `react-router`, `express`, `fastify` or `koa` for anything with a server in it, `grpc` for a gRPC server written on `@grpc/grpc-js`, `lambda` for functions whose ways in are declared in Terraform, `angular`, `react`, `vue` or `svelte` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `hosts` | string[] | `[]` | hosts this service is reached at, as `host` or `host:port` (`["orders.example.com"]`), for a base address read from a repository's files to be matched against beside the service's name |
@@ -4560,7 +4586,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 | `tags` | string[] | `[]` | names an architecture rule can select the service by: `frontend`, `edge`, `domain:payments`. A tag is a name only; nothing is inferred from it ([`rules`](#rules)) |
 | `catalog` | object | none | what a software catalogue says of the service and the code cannot, for [`export`](#flowatlas-export-backstagestructurizr): `{ "owner", "lifecycle", "system", "description", "sourceUrl" }`, every key optional. Written as given; an owner or lifecycle nobody gave is `unknown`, and nothing is guessed from the code |
 | `apiTarget` | object | `{}` | for a browser: which service each of those keys points at, as `{ "apiUrl": "admin-api" }` |
-| `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi" \| "graphql", "path": … }`, path relative to this file; a `graphql` document is SDL or an introspection result |
+| `document` | object | none | a document that *declares* this service, for an end nothing here can read: `{ "kind": "openapi" \| "asyncapi" \| "graphql" \| "protobuf", "path": … }`, path relative to this file; a `graphql` document is SDL or an introspection result; a `protobuf` one is a `.proto` file, and `"services": ["shop.CartService"]` names the services of it this one answers where it declares several |
 | `openapi` | string | none | the older spelling of `{ "kind": "openapi", "path": … }`, still read |
 | `apiDocuments` | object[] | none | API documents the repository commits by hand, each compared with the one written from the code by `contracts` and [`spec --against`](#flowatlas-spec---against-servicefile-a-committed-document-against-the-code): `[{ "kind": "openapi" \| "asyncapi", "path": …, "application"? }]`, path relative to this file. Nothing is taken from them; refused on a service a `document` declares |
 | `tsconfig` | string | found in the repository | which TypeScript configuration to parse with |

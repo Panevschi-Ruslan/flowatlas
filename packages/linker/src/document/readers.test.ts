@@ -10,7 +10,7 @@ import { DOCUMENT_KINDS, documentReader } from './readers.js';
  */
 describe('the reader for a kind of document', () => {
   it('has one for every kind it lists', () => {
-    expect(DOCUMENT_KINDS).toEqual(['asyncapi', 'graphql', 'openapi']);
+    expect(DOCUMENT_KINDS).toEqual(['asyncapi', 'graphql', 'openapi', 'protobuf']);
     for (const kind of DOCUMENT_KINDS) {
       expect(typeof documentReader(kind), kind).toBe('function');
     }

@@ -45,6 +45,7 @@ import {
   procedureFindingFor,
   procedureReasonOf,
   resolveProcedureCall,
+  unservedContracts,
   type ProcedureIndex,
   type ProcedureOutcome,
 } from './procedure-link.js';
@@ -1178,6 +1179,8 @@ export const linkGraphs = (
     // reads it.
     if (originless(call) && (!browserTwinned(call) || serverFiles.has(`${call.repo}\0${call.file ?? ''}`))) record(call, originlessFinding(call.repo, String(call.meta?.['path'])));
   }
+  // A gRPC method a contract of the repository declares and nothing configured implements (P274).
+  found.push(...unservedContracts([...nodes.values()].filter((node) => node.type === 'http_out' && node.kind === 'rpc'), procedureIndex));
 
   // A request made in a browser is joined the same way and counted apart: the
   // frontend is the one caller whose fix is a line of configuration.
