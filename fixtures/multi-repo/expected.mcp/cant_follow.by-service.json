@@ -1,14 +1,14 @@
 {
   "total": {
-    "rows": 3,
-    "sites": 3,
+    "rows": 4,
+    "sites": 4,
     "causes": 3
   },
   "causes": [
     {
       "cause": "dynamic-http-url",
       "label": "dynamic-http-url",
-      "sites": 1,
+      "sites": 2,
       "reasons": [
         "dynamic-http-url"
       ],
@@ -19,11 +19,15 @@
       "packages": [
         {
           "package": null,
-          "sites": 1,
+          "sites": 2,
           "samples": [
             {
               "loc": "src/clients/billing.client.ts:33",
               "symbol": "this.http.post<InvoiceDto>(this.registry.invoicesUrl(), {\n      orderId: order.i"
+            },
+            {
+              "loc": "src/clients/orders.client.ts:59",
+              "id": "http_out:gateway#src/clients/orders.client.ts:59:12"
             }
           ]
         }
@@ -80,6 +84,7 @@
   ],
   "packages": [],
   "next": [
+    "get_source({symbol: \"http_out:gateway#src/clients/orders.client.ts:59:12\"})",
     "describe_for_prompt({id: \"gap:gateway|src/clients/billing.client.ts|dynamic-http-url\"})",
     "cant_follow({cause: \"dynamic-http-url\"})"
   ]

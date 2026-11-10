@@ -471,8 +471,11 @@ const byUniqueRoute = (ask: Ask): UiOutcome | undefined => {
   // A setting whose value is a host no service is reached at, with a path
   // after it (`https://api.example.test/api`), puts that path in front of
   // every address written under it (P280): asked first, as the value is.
+  // Only where the setting's values agree on that path: values that put two
+  // paths in front leave the address to the route alone (P281).
   const answer = ask.env === undefined ? undefined : ask.index.baseUrlOf?.(ask.call);
-  const start = answer?.kind === 'external' ? pathOfValue(answer.found) : undefined;
+  const starts = answer?.kind === 'external' ? new Set((answer.values ?? [answer.found]).map((found) => pathOfValue(found) ?? '')) : undefined;
+  const start = answer?.kind === 'external' && starts?.size === 1 ? pathOfValue(answer.found) : undefined;
   if (start !== undefined) {
     const whole = uniqueRoute({ ...ask, path: normalizePath(`${start}/${ask.path}`) });
     if (whole?.kind === 'linked') return whole;

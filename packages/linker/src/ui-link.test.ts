@@ -390,8 +390,10 @@ describe('an operation sent to a setting no value of which names a service', () 
     expect(uiFindingFor(outcome)?.reason).toBe('graphql-field-no-resolver');
   });
 
-  it('decides nothing from a public host alone, or from local values that disagree', () => {
-    expect(resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/store-api', 'wrangler.toml')])).kind).toBe('noRoute');
+  it('reaches the one endpoint a public host\'s path names, as a guess (P280), and decides nothing from local values that disagree', () => {
+    const outcome = resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/store-api', 'wrangler.toml')]));
+    expect(outcome).toMatchObject({ kind: 'linked', targetService: 'api' });
+    expect(outcome.kind === 'linked' && outcome.entry.id).toBe('entry:api:http:POST:/store-api');
     const split = indexWith([value('http://localhost:3000/store-api', '.env'), value('http://localhost:3000/office-api', '.env.example')]);
     expect(resolveUiCall(operation('signIn'), split)).toMatchObject({ kind: 'noRoute', targetService: null });
   });

@@ -43,8 +43,8 @@ const workspace = () => {
   const config = parseConfig({
     services: [
       { name: 'api', repo: './apps/api', type: 'nestjs' },
-      { name: 'backoffice', repo: './apps/backoffice', type: 'react' },
-      { name: 'storefront', repo: './apps/storefront', type: 'react' },
+      { name: 'backoffice', repo: './apps/backoffice', type: 'frontend' },
+      { name: 'storefront', repo: './apps/storefront', type: 'frontend' },
       { name: 'billing', document: { kind: 'openapi', path: './apps/billing/openapi.yaml' } },
     ],
   });

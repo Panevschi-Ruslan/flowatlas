@@ -58,7 +58,8 @@ describe('the page a person reads first (P228)', () => {
       'billing and gateway',
       'gateway and orders',
     ]);
-    expect(run.overview.notRead.sites).toBe(9);
+    // Eleven since P279 says the two addresses built in part that join nothing.
+    expect(run.overview.notRead.sites).toBe(11);
     for (const heading of ['## Services', '## What crosses between them', '```mermaid', '## What most of it depends on', '## Worth a second look', '## What was not read', '## Checks', '## At run time', '## Questions to ask next']) {
       expect(io.stdout, heading).toContain(heading);
     }

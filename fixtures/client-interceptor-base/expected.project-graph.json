@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T14:22:31.823Z",
+  "builtAt": "2026-11-10T15:33:16.990Z",
   "services": [
     {
       "name": "orders",
@@ -1058,6 +1058,15 @@
     }
   },
   "unresolved": [
+    {
+      "service": "shop",
+      "file": "src/Items.tsx",
+      "line": 14,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…}/items is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:shop#src/Items.tsx:14:28"
+    },
     {
       "file": "src/api/legacy.ts",
       "line": 11,

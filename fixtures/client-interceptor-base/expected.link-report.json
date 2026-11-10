@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T14:22:31.823Z",
+  "builtAt": "2026-11-10T15:33:16.990Z",
   "configHash": "a2d7e328641e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1188,
+      "durationMs": 3194,
       "packages": {
         "name": "client-interceptor-base-billing",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 1174,
+      "durationMs": 3262,
       "packages": {
         "name": "client-interceptor-base-orders",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1266,
+      "durationMs": 3214,
       "packages": {
         "name": "client-interceptor-base-reports",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 15,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 981,
+      "durationMs": 2531,
       "packages": {
         "name": "client-interceptor-base-shop",
         "runtime": [
@@ -119,15 +119,25 @@
     "total": 2,
     "sharedPackage": 0
   },
-  "unresolved": [],
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "src/Items.tsx",
+      "line": 14,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…}/items is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:shop#src/Items.tsx:14:28"
+    }
+  ],
   "totals": {
     "nodes": 40,
     "edges": 29,
     "types": 2,
-    "missed": 1,
-    "sites": 1,
+    "missed": 2,
+    "sites": 2,
     "notes": 0,
     "findings": 0,
-    "unresolved": 1
+    "unresolved": 2
   }
 }

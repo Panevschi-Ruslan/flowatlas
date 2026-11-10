@@ -891,8 +891,16 @@ describe('answers that hand on the id the next question needs', () => {
     const answer = await call('describe_for_prompt', { id });
     expect(answer.id).toBe(id);
     expect(answer.markdown).toMatch(/^# Check: api-path-dynamic/);
-    expect(answer.markdown).toContain('## Where · 3');
-    expect(answer.next).toEqual(['search({query: "src/app/orders-api.service.ts", kinds: ["gaps"]})']);
+    // Four rows since P279 says the address built in part that joins nothing; the
+    // request it is on is something to ask about, so the next questions start there.
+    expect(answer.markdown).toContain('## Where · 4');
+    const site = 'ui_api_call:web#src/app/orders-api.service.ts:48:12';
+    expect(answer.next).toEqual([
+      `who_calls({symbol: "${site}"})`,
+      `impact({symbol: "${site}"})`,
+      `get_source({symbol: "${site}"})`,
+      'search({query: "src/app/orders-api.service.ts", kinds: ["gaps"]})',
+    ]);
     expect((await call('describe_for_prompt', { id: 'gap:web|src/nowhere.ts|api-path-dynamic' })).error).toMatch(/no rows answer to/);
   });
 
