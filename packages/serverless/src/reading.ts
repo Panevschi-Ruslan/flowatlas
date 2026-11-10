@@ -91,6 +91,14 @@ export class FileReading {
    */
   ownApi: ((text: string) => { readonly name: string; readonly path: string } | undefined) | undefined;
 
+  /**
+   * The API this deployment declares that a value built around it is the
+   * address of - `!Sub https://${Api}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/orders`
+   * - and the path it asks for there, after the stage (P272); set by a reader
+   * that knows its APIs, before any value is read.
+   */
+  apiOfValue: ((value: unknown) => { readonly name: string; readonly path?: string } | undefined) | undefined;
+
   /** A row about a name the platform generates, once per declaration. */
   readonly #generated = new Set<string>();
 
@@ -99,12 +107,17 @@ export class FileReading {
     this.#generated.add(found.name);
     const address = found.name.slice(UNREAD_SPAN.length + 1);
     if (found.parameter !== undefined) {
+      // A service file's `${param:...}` (P272), or a template's parameter (P268).
+      const service = found.parameter.startsWith('param:') ? found.parameter.slice('param:'.length) : undefined;
       // Said where the parameter is declared, which is what names it.
-      this.row(['Parameters', found.parameter], address, {
+      this.row(service === undefined ? ['Parameters', found.parameter] : ['params'], address, {
         reason: 'deployed-name-from-parameter',
         level: 'info',
-        message: `the ${found.kind} named by the parameter ${found.parameter} is named by where the parameter is declared, ${address}, because the files give the parameter no value; what this deployment points at it by, or hands the parameter's value to, joins to it, and nothing outside it can`,
-        hint: `Give the parameter ${found.parameter} a Default, a value in samconfig.toml's parameter_overrides, or one under services[].infra.options, and it is named by that value.`,
+        message: `the ${found.kind} named by the parameter ${service ?? found.parameter} is named by where the parameter is declared, ${address}, because the files give the parameter no value; what this deployment points at it by, or hands the parameter's value to, joins to it, and nothing outside it can`,
+        hint:
+          service === undefined
+            ? `Give the parameter ${found.parameter} a Default, a value in samconfig.toml's parameter_overrides, or one under services[].infra.options, and it is named by that value.`
+            : `Give the parameter ${service} a value under params (for the stage, or default) in the service file, or hand it in from a compose file, and it is named by that value.`,
       });
       return;
     }
@@ -248,6 +261,9 @@ export class FileReading {
       if (path !== undefined) this.importAt(imported.key, path, what ?? 'a value a function is deployed with');
       return { written, imported: imported.key, unread: { text: imported.text, ...(imported.variable === undefined ? {} : { variable: imported.variable }) } };
     }
+    // An address of an API the template declares, built around a reference to it (P272).
+    const api = this.apiOfValue?.(value);
+    if (api !== undefined) return { written, ...(text === undefined ? {} : { text }), names: { kind: 'api', name: api.name }, ...(api.path === undefined ? {} : { path: api.path, referenced: true }) };
     if (found !== undefined && !(found instanceof Unread)) {
       // An ARN or a URL built around a name other deployments publish (P253, P259).
       if (path !== undefined) this.importsOfName(found, path, what ?? 'a value a function is deployed with');

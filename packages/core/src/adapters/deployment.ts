@@ -70,7 +70,36 @@ export interface DeployedFunction {
    * set at all are two different things to tell the reader (P23).
    */
   readonly environment?: Readonly<Record<string, DeployedSetting>>;
+  /**
+   * What its deployment lets it send to, write to, invoke or start (P272):
+   * every grant read, a named one and one on everything of a kind alike,
+   * because a grant on a few things is an upper bound on where code that
+   * does not say where it sends can send, and a grant on everything bounds
+   * nothing - and the two are different things to tell a reader.
+   */
+  readonly grants?: readonly DeployedGrant[];
   readonly meta?: Record<string, unknown>;
+}
+
+/**
+ * One grant a function's deployment gives it on something it may send to,
+ * write to, invoke or start (P272): a policy template, a statement of a role
+ * it runs as, a grant of a construct.
+ *
+ * Exactly one of `name`, `any` and `unread` is set: the deployed name of the
+ * one thing granted; the resource as written where it is every one of its
+ * kind (a wildcard, as written); why the resource is not read.
+ */
+export interface DeployedGrant {
+  readonly kind: DeployedKind;
+  readonly name?: string;
+  readonly any?: string;
+  readonly unread?: string;
+  /** What grants it, for a person: a policy, a statement of one, a grant of a construct, as the deployment names it. */
+  readonly by: string;
+  /** Where it is written. */
+  readonly file: string;
+  readonly line: number;
 }
 
 /**
@@ -107,6 +136,11 @@ export interface DeployedSetting {
    * stage.
    */
   readonly path?: string;
+  /**
+   * The address of such an API is built around a reference to it, which says
+   * which API it is (P272), rather than written out with an id.
+   */
+  readonly referenced?: boolean;
   /**
    * The key of a value another deployment publishes, when this one is that:
    * what it names is known only once the publisher is read, which the linker

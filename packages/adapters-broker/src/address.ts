@@ -3,6 +3,7 @@ import {
   locatedSlots,
   nameWithin,
   type AwaitedPart,
+  type GrantablePart,
   locatorApplies,
   locatorIsCondition,
   MOST_CHOICES,
@@ -116,6 +117,12 @@ export interface AddressedElement {
    * parameter bound to what that caller hands it.
    */
   readonly selector?: ParameterDeclaration;
+  /**
+   * The address with the one part it could not read named by the kind of
+   * deployed thing that part names, where every other part is one name
+   * (P272): what a grant of the function that runs the call bounds.
+   */
+  readonly grantable?: readonly GrantablePart[];
 }
 
 /**
@@ -230,6 +237,31 @@ const awaitingOf = (
     });
   }
   return awaited.some((each) => typeof each !== 'string') ? awaited : undefined;
+};
+
+/**
+ * The address with the one part that could not be read named by what it
+ * names, where the description says (P272). Two parts unread are two
+ * unknowns, which a list of what is granted of one kind does not settle.
+ */
+const grantableOf = (
+  parts: readonly AddressPart[],
+  readings: readonly ChannelResolution[],
+): readonly GrantablePart[] | undefined => {
+  const out: GrantablePart[] = [];
+  let open = 0;
+  for (const [position, reading] of readings.entries()) {
+    const part = parts[position];
+    if (isResolved(reading)) {
+      if (reading.names.length !== 1) return undefined;
+      out.push(reading.name);
+      continue;
+    }
+    if (part === undefined || 'literal' in part || part.names === undefined) return undefined;
+    open += 1;
+    out.push({ granted: part.names });
+  }
+  return open === 1 ? out : undefined;
 };
 
 /** How many links of `const` and `JSON.stringify` are followed to the message. */
@@ -366,6 +398,7 @@ export const readAddress = (
     const written = parts.length === 1 ? writtenAt(located[0] ?? [], index) : undefined;
     const parameter = written === undefined || isResolved(resolution) ? undefined : parameterOf(written);
     const selector = isResolved(resolution) ? undefined : selectorAt(located.flat(), index);
+    const grantable = isResolved(resolution) ? undefined : grantableOf(parts, readings);
     return {
       resolution,
       ...(message === undefined ? {} : { payload: message }),
@@ -373,6 +406,7 @@ export const readAddress = (
       ...(parameter === undefined ? {} : { parameter }),
       ...(written === undefined ? {} : { written: written.getText() }),
       ...(selector === undefined ? {} : { selector }),
+      ...(grantable === undefined ? {} : { grantable }),
     };
   });
 };
@@ -388,9 +422,11 @@ export const readWritten = (
 ): AddressedElement => {
   const readings = [readPart(part, [[{ expression, reached: true }]], 0, config, expression.getText().slice(0, 60))];
   const awaiting = awaitingOf([part], readings);
+  const grantable = isResolved(readings[0] as ChannelResolution) ? undefined : grantableOf([part], readings);
   return {
     resolution: joined(readings, expression.getText().slice(0, 60)),
     ...(awaiting === undefined ? {} : { awaiting }),
+    ...(grantable === undefined ? {} : { grantable }),
     written: expression.getText(),
   };
 };

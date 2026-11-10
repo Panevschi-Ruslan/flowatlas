@@ -22,7 +22,7 @@ import {
   type Exported,
   type ResourceReader,
 } from '@flowatlas/serverless';
-import { apiLookup, apiReference, readApis } from './apis.js';
+import { apiLookup, apiReference, apiValueOf, readApis } from './apis.js';
 import { deployConfigOf, TEMPLATE_FILES, type DeployConfig } from './config.js';
 import { deployerOf, JINJA_TEMPLATE, jinjaLoaderBeside, renderedTemplate, type JinjaRendered } from './deployers.js';
 
@@ -414,6 +414,8 @@ export const readTemplate = (parts: DeploymentParts, options: TemplateReadOption
   const functionIndex = new Map<string, number>();
   const fileReading = new FileReading(parts, file, document, template, functionIndex);
   const reading = new TemplateReading(fileReading, resolver, config, dir, scope, globals, repoDir, options.loaded);
+  // An address of one of its APIs a function is deployed with is that API (P272).
+  fileReading.apiOfValue = apiValueOf(reading);
   for (const [logicalId, condition] of conditional) reading.conditional.set(logicalId, condition);
 
   // Nested templates first: what they output is what this one's resources may point at.

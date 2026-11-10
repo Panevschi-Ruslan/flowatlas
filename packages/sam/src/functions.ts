@@ -3,6 +3,7 @@ import { destinationOf } from '@flowatlas/aws';
 import type { DeployedFunction, DeployedHandler, DeployedKind, DeployedSetting, PathStep } from '@flowatlas/core';
 import { DESTINATION_KINDS, isRecord, pushFunctionUrl, textOf, Unread, type Resource } from '@flowatlas/serverless';
 import type { DeclaredFunction, TemplateReading } from './reading.js';
+import { functionGrants } from './policies.js';
 
 /**
  * The functions a template declares (P246): `AWS::Serverless::Function`, with
@@ -152,6 +153,8 @@ export const readFunction = (reading: TemplateReading, site: FunctionSite): void
   const environment: Record<string, DeployedSetting> = {};
   const variables = isRecord(properties['Environment']) ? properties['Environment']['Variables'] : undefined;
   if (isRecord(variables)) for (const name of Object.keys(variables).sort()) environment[name] = reading.file.settingOf(variables[name], [...path, 'Properties', 'Environment', 'Variables', name], `the value of ${name} ${resource.address} is deployed with`);
+  // What its policies or its role let it send to (P272).
+  const grants = functionGrants(reading, path, properties, resource.type === 'AWS::Serverless::Function');
   const deployed: DeployedFunction = {
     ...reading.file.siteOf(path),
     // A name a parameter gives is the parameter's stand-in, which is what it is invoked by (P268).
@@ -160,6 +163,7 @@ export const readFunction = (reading: TemplateReading, site: FunctionSite): void
     ...(handler === undefined ? {} : { handler }),
     ...(runtime === undefined ? {} : { runtime }),
     environment,
+    ...(grants.length === 0 ? {} : { grants }),
     meta: {
       declaredAs: resource.address,
       logicalId: resource.logicalId,

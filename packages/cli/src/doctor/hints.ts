@@ -767,6 +767,8 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'Code sends to the value of an environment variable, and a function that runs it is not deployed with that variable, so where it sends from that function is not known. Set the variable in the function\'s environment, or correct the name the code reads.',
   'environment-from-files': () =>
     'Code sends to the value of an environment variable that no function running it is deployed with, and a file at the top of the repository writes it down once: an example environment file, a container\'s environment, a deployment\'s variables. That value was used, and the edge is marked heuristic. Set the variable where the function is deployed to say so outright.',
+  'channel-from-grant': () =>
+    'Code sends to an address it decides when it runs, and every function that runs it is allowed to send only to a few queues, topics, buses, tables, streams, buckets, functions or workflows by name: it is drawn to each of them, and every edge is marked heuristic. A grant is where the function may send, not where it does. Write the address, or a value of the environment the deployment sets, and it is read instead.',
   'environment-value-unread': () =>
     'Code sends to the value of an environment variable, and the value a function is deployed with is not read. Where the variable files disagree, choose the environment under services[].infra.vars; otherwise give the value something the files settle.',
   'stream-filter-not-matched': () =>

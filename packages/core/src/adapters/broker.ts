@@ -43,6 +43,12 @@ export type AddressPart =
        */
       readonly forms?: readonly string[];
       /**
+       * The kind of deployed thing the part names, as a deployment spells it
+       * (`queue`, `topic`, `table`...), where it names one: what a grant of
+       * the function that runs the call bounds, where the part is not read (P272).
+       */
+      readonly names?: string;
+      /**
        * An element of a list that writes nothing here is no element at all,
        * rather than an address nobody could read: a condition a transaction
        * checks names a table under a kind of entry that writes nothing (P55).

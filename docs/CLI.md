@@ -3455,7 +3455,7 @@ went through at least once is counted apart from the best guesses, on its own
 line (`1 of 4 best guesses confirmed by traffic in 2h`, narrowed by `--service`
 to the guesses that service's code makes), and the row that explains the guess
 (`base-url-from-name`, `base-url-from-files`, `route-mount-assumed-empty`,
-`route-api-guessed`, `workflow-named-by-file`, `environment-from-files`, at the
+`route-api-guessed`, `workflow-named-by-file`, `environment-from-files`, `channel-from-grant`, at the
 call the join leaves from) is left out while traffic confirms it; `doctor.json`
 says the counts under `traffic` (`{ window, bestGuesses, confirmed, withdrawn
 }`). The edge keeps its confidence: the graph on disk never depends on traffic,
@@ -3586,7 +3586,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Subscribers declared in Terraform | `subscription-source-unread`, `subscription-target-unread` (info for a target of a kind nothing follows), `subscription-forward-unread` (info), `event-pattern-unread`, `subscription-matches-nothing` (info), `bucket-notification-unread`, `stream-filter-not-matched` (info), `stream-no-writer` (info), `invoker-not-read` (info), `iot-action-not-read` (info) |
 | Writes to a bucket | `s3-write-matches-nothing` (info): a write none of the bucket's notifications takes |
 | Jobs on a queue | `job-no-handler` (info, P271): a job added under a name no handler of its queue takes, where every handler names the job it takes |
-| Values a deployment gives the code | `environment-not-set`, `environment-value-unread`, `environment-from-files` |
+| Values a deployment gives the code | `environment-not-set`, `environment-value-unread`, `environment-from-files`, `channel-from-grant` (info; P272) |
 | Architecture rules (`flowatlas rules`, the `rules` section) | `rule-matches-nothing` (a side of a rule names nothing; never a pass), `rule-invalid` (a rule fails its schema; the configuration is refused), `rule-over-partial-read` (a note: the rule names a service read in part) |
 
 Three of these are worth knowing before they are met, because each is the
@@ -5849,7 +5849,41 @@ caller writes it, and otherwise stays where it is with a row naming the
 parameter and what each caller hands (`fixtures/serverless-event-factories`). A
 name looked up in a collection by a key worked out when the code runs -
 ``queues.get(`team-${team}`)`` - is `channel-dynamic`, its row naming the
-collection and the key (`fixtures/sam-parameter-names`).
+collection and the key (`fixtures/sam-parameter-names`). A list of several
+elements, and a `Map` or `Set` made with several values or given several by
+`set` and `add`, is one address per element (P272): `for (const url of [A, B])`
+sends to both, one edge each, and a list past sixteen elements or with a
+spread nothing reads stops the walk as before (`fixtures/sam-list-elements`).
+
+**Where a send goes that does not say: what its function is granted** (P272).
+A send whose address is not read - a queue's URL looked up in a cache the code
+fills by listing the account, a topic handed in - can still go only where the
+role of the function that runs it lets it. The readers of a deployment read
+what each function is granted: SAM's policy templates (`SQSSendMessagePolicy`,
+`SNSPublishMessagePolicy`, `SNSCrudPolicy`, `EventBridgePutEventsPolicy`,
+`KinesisCrudPolicy`, `DynamoDBCrudPolicy`, `DynamoDBWritePolicy`,
+`S3WritePolicy`, `S3CrudPolicy`, `S3FullAccessPolicy`, `LambdaInvokePolicy`,
+`StepFunctionsExecutionPolicy`), statements written in `Policies`, the role a
+function's `Role` names with its policies, its managed policies and every
+`AWS::IAM::Policy` that names it; a service file's `provider.iam.role`
+(statements, managed policies, or a role of the file's resources),
+`provider.iamRoleStatements` and a function's own `iamRoleStatements`; the
+`aws_iam_role` a Terraform function runs as, with `inline_policy`,
+`aws_iam_role_policy` (a `data.aws_iam_policy_document`, `jsonencode` or JSON
+text), `aws_iam_role_policy_attachment`, `aws_iam_policy_attachment` and
+`managed_policy_arns`; and a CDK construct's `grantSendMessages`,
+`grantPublish`, `grantPutEventsTo`, `grantWriteData`, `grantWrite`,
+`grantInvoke`, `grantStartExecution` and their kind, and statements added with
+`addToRolePolicy` or `initialPolicy`. Only actions that send, write, invoke or
+start count. Where every function that runs the call is granted a few things of
+the kind the unread part names, by name, the call is drawn to each,
+`heuristic`, `meta.via: "grant"`, and a `channel-from-grant` note replaces the
+row that said the address was not read, quoting it; a start reaches each
+function or workflow granted. A grant on every one of the kind - `*`, an ARN
+whose name is a wildcard, a managed full-access policy - bounds nothing:
+nothing is drawn, and the row that stays says which grant
+(`fixtures/sam-policy-grants`, `fixtures/serverless-iam-grants`,
+`fixtures/terraform-role-grants`, `fixtures/cdk-grants`).
 
 **`constructed-argument-path` is a condition as well as a place.** A client that
 sends commands sends every kind of them through one method, and a call handed some
@@ -7197,7 +7231,17 @@ sends to it and the mapping that reads it join, and nothing outside the
 deployment can (`deployed-name-from-parameter`, a note; P268). A part of the
 value - `Fn::Select` of `Fn::Split` of it - is not the parameter. An
 `AWS::Kinesis::StreamConsumer` is the stream its `StreamARN` names, so a
-`Kinesis` event on its `ConsumerARN` reads that stream.
+`Kinesis` event on its `ConsumerARN` reads that stream. A service file's
+`${param:<name>}` the files give no value, written whole, is the same value
+the same way, named `${…}@params.<name>` (P272).
+
+**An address of the template's own API** a function is deployed with -
+`!Sub https://${Api}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/orders`,
+an HTTP API's `!GetAtt Api.ApiEndpoint` - is that API, and a request rooted at
+it joins the route after the stage (P272). The reference says which API it is,
+so the join is as sure as the deployment, where an address written out with an
+id is taken by its region and stage, `heuristic`; an address at another stage,
+or the API's id alone, is not an address of it.
 
 **Functions** - `AWS::Serverless::Function` and a plain `AWS::Lambda::Function`
 - are named `FunctionName`, or by their declaration where the platform names

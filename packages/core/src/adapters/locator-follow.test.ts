@@ -114,8 +114,37 @@ for (const batch of Array.from(batches.values())) sqs.send(new SendMessageBatchC
     expect(slots(callTo(file, 'send'), QUEUE)).toEqual(["'https://sqs.eu-west-1.amazonaws.com/1/audit'"]);
   });
 
-  it('stops at a list of several elements, which one value cannot stand for', () => {
+  it('reads a list of several elements as one address per element (P272)', () => {
     const file = parse(`for (const record of [{ StreamName: 'a' }, { StreamName: 'b' }]) kinesis.send(new PutRecordCommand(record));`);
+    expect(slots(callTo(file, 'send'), STREAM)).toEqual(["'a'", "'b'"]);
+  });
+
+  it('reads a name that is an element of a list of several as each element (P272)', () => {
+    const file = parse(`const A = 'orders';
+const B = 'refunds';
+for (const name of [A, B]) kinesis.send(new PutRecordCommand({ StreamName: name }));`);
+    expect(slots(callTo(file, 'send'), STREAM)).toEqual(['A', 'B']);
+  });
+
+  it('reads every value a Map is made with and given, and a Set made with several (P272)', () => {
+    const file = parse(`const byKind = new Map([['a', 'orders'], ['b', 'refunds']]);
+byKind.set('c', 'returns');
+for (const name of byKind.values()) kinesis.send(new PutRecordCommand({ StreamName: name }));
+const names = new Set(['x', 'y']);
+names.forEach((each) => kinesis.put(new PutRecordCommand({ StreamName: each })));`);
+    expect(slots(callTo(file, 'send'), STREAM)).toEqual(["'orders'", "'refunds'", "'returns'"]);
+    expect(slots(callTo(file, 'put'), STREAM)).toEqual(["'x'", "'y'"]);
+  });
+
+  it('reads what a map callback answers for each of several elements (P272)', () => {
+    const file = parse(`const streams = ['orders', 'refunds'].map((name) => ({ StreamName: name }));
+for (const record of streams) kinesis.send(new PutRecordCommand(record));`);
+    expect(slots(callTo(file, 'send'), STREAM)).toEqual(["'orders'", "'refunds'"]);
+  });
+
+  it('stops at a list with a spread nothing reads', () => {
+    const file = parse(`declare const more: any[];
+for (const record of [{ StreamName: 'a' }, ...more]) kinesis.send(new PutRecordCommand(record));`);
     expect(slots(callTo(file, 'send'), STREAM)).toEqual(['stopped at record']);
   });
 });

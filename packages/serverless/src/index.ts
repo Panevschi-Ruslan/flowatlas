@@ -161,3 +161,4 @@ export const serverlessReader: DeploymentReader = {
     return [...new Set([...files, ...loaded.map((path) => toPosixPath(relative(repoDir, path)))])].sort();
   },
 };
+export { documentGrants, managedGrants, roleGrants, roleOf, serviceFunctionGrants, statementGrants } from './grants.js';

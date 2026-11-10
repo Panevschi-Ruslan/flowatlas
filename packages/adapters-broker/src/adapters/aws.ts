@@ -80,6 +80,8 @@ type InputPart =
       readonly or?: readonly (readonly string[])[];
       readonly absent?: string;
       readonly forms?: readonly string[];
+      /** The kind of deployed thing it names, which a grant bounds where it is not read (P272). */
+      readonly names?: string;
       readonly unwrittenIsNone?: boolean;
     };
 
@@ -152,7 +154,7 @@ const sendsTo = (target: MessageTarget['kind'], service: string): Operation[] =>
       method: operation.method,
       address: [
         { literal: service },
-        { path: named(address), ...(absent === undefined ? {} : { absent }), forms: DEPLOYED_FORMS[target] },
+        { path: named(address), ...(absent === undefined ? {} : { absent }), forms: DEPLOYED_FORMS[target], names: target },
         ...(event === undefined ? [] : [event.source, event.detailType].map((field) => ({ path: named(field) }))),
       ],
       payload: inEntry(operation.message),
@@ -169,7 +171,7 @@ const sendsTo = (target: MessageTarget['kind'], service: string): Operation[] =>
  */
 const BUCKET: readonly InputPart[] = [
   { literal: AWS_SERVICE_PREFIX.s3 },
-  { path: [BUCKET_FIELDS.bucket], forms: DEPLOYED_FORMS.bucket },
+  { path: [BUCKET_FIELDS.bucket], forms: DEPLOYED_FORMS.bucket, names: 'bucket' },
 ];
 
 const bucketWrites = (): Operation[] =>
@@ -188,7 +190,7 @@ const bucketWrites = (): Operation[] =>
 /** A bucket written through a locator of the shape of call at hand. */
 const bucketAt = (at: (path: readonly string[]) => NameLocator, receiverPackages: string[]): Pick<CallPattern, 'channelArg' | 'address' | 'payload' | 'recorded' | 'receiverPackages'> => ({
   channelArg: -1,
-  address: [{ literal: AWS_SERVICE_PREFIX.s3 }, { at: [at([BUCKET_FIELDS.bucket])], forms: DEPLOYED_FORMS.bucket }],
+  address: [{ literal: AWS_SERVICE_PREFIX.s3 }, { at: [at([BUCKET_FIELDS.bucket])], forms: DEPLOYED_FORMS.bucket, names: 'bucket' }],
   payload: [],
   recorded: { [BUCKET_FIELDS.key]: [at([BUCKET_FIELDS.key])] },
   receiverPackages,
@@ -235,6 +237,7 @@ const writesTo = ({ changes, operations }: WritingService): Operation[] =>
           path,
           ...(or.length === 0 ? {} : { or }),
           forms: DEPLOYED_FORMS[changes],
+          names: changes,
           // An entry of a list that names none - a transaction's condition check - writes nothing.
           ...(path.includes(EVERY_ELEMENT) ? { unwrittenIsNone: true } : {}),
         },
@@ -246,7 +249,7 @@ const writesTo = ({ changes, operations }: WritingService): Operation[] =>
     };
   });
 
-const STATE_MACHINE: readonly InputPart[] = [{ path: ['stateMachineArn'], forms: DEPLOYED_FORMS.workflow }];
+const STATE_MACHINE: readonly InputPart[] = [{ path: ['stateMachineArn'], forms: DEPLOYED_FORMS.workflow, names: 'workflow' }];
 
 /** A task token names a waiting run, and no workflow: where it is read, nothing is. */
 const TASK_TOKEN: readonly InputPart[] = [{ path: ['taskToken'] }];
@@ -356,7 +359,7 @@ const SERVICES: readonly Service[] = [
       {
         command: 'InvokeCommand',
         method: 'invoke',
-        address: [{ path: ['FunctionName'], forms: [...DEPLOYED_FORMS.function, ...FUNCTION_NAME_FORMS] }],
+        address: [{ path: ['FunctionName'], forms: [...DEPLOYED_FORMS.function, ...FUNCTION_NAME_FORMS], names: 'function' }],
         payload: ['Payload'],
         // Left out, the caller waits for the answer; `Event` hands the call over and returns.
         starts: { entry: 'invoke', kindAt: { path: ['InvocationType'], kinds: { Event: 'invoke-async', DryRun: 'invoke-dry-run' } } },
@@ -382,6 +385,7 @@ const addressAt = (parts: readonly InputPart[], locate: InputLocator): AddressPa
           at: [part.path, ...(part.or ?? [])].map(locate),
           ...(part.absent === undefined ? {} : { absent: part.absent }),
           ...(part.forms === undefined ? {} : { forms: part.forms }),
+          ...(part.names === undefined ? {} : { names: part.names }),
           ...(part.unwrittenIsNone === true ? { unwrittenIsNone: true } : {}),
         },
   );

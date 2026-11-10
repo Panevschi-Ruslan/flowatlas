@@ -314,6 +314,7 @@ export const PAGE_WORDS = Object.freeze({
     'channel-dynamic': 'channel name built at run time',
     'channel-from-config': 'channel name read from settings',
     'channel-from-environment': 'channel from an environment variable',
+    'channel-from-grant': 'drawn to what the function is granted',
     'channel-without-consumer': 'nothing consumes the channel',
     'channel-without-producer': 'nothing publishes to the channel',
     'construct-conditional': 'declared under an unsettled condition',

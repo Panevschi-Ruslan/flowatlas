@@ -35,7 +35,7 @@ import { serverlessReader } from '@flowatlas/serverless';
 import { terraformReader, unreadDeploymentOf } from '@flowatlas/terraform';
 import { Node, ts, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
 import { graphqlServerHandled } from '@flowatlas/graphql';
-import { drawDeliveries, drawRouteSends, environmentMeta } from './deployed-channels.js';
+import { drawDeliveries, drawRouteSends, environmentMeta, grantsMeta } from './deployed-channels.js';
 import { graphqlServedMeta } from './graphql-resolvers.js';
 import { drawDeployedWorkflows } from './deployed-workflows.js';
 import { readingOf } from './request-readings.js';
@@ -558,6 +558,7 @@ export const deployedFunctionsAdapter: EntryAdapter = {
             ...fn.meta,
             ...reading.meta,
             ...environmentMeta(fn),
+            ...grantsMeta(fn),
           },
         });
       });

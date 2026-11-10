@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: A shop's relay, each function sending where its code decides when it runs and allowed only where its policies say.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: live
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    CodeUri: src/
+
+Resources:
+  ShopApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+
+  OrdersQueue:
+    Type: AWS::SQS::Queue
+  RefundsQueue:
+    Type: AWS::SQS::Queue
+  Archive:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      Name: shop-archive
+      ShardCount: 1
+
+  # Sends each message to a queue it finds by listing the account; allowed two.
+  Dispatcher:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dispatcher.handler
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt OrdersQueue.QueueName
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt RefundsQueue.QueueName
+        - Statement:
+            - Effect: Allow
+              Action: sqs:ListQueues
+              Resource: "*"
+
+  # Publishes to a topic it is handed; allowed every topic.
+  Broadcaster:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: broadcaster.handler
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - sns:Publish
+              Resource: "*"
+
+  # Puts records on a stream it is handed, as a role the template declares.
+  Archiver:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: archiver.handler
+      Role: !GetAtt ArchiverRole.Arn
+  ArchiverRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: archive
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: [kinesis:PutRecord, kinesis:PutRecords]
+                Resource: !GetAtt Archive.Arn
+
+  # Invokes a function it is handed; allowed one.
+  Router:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: router.handler
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref PlaceOrder
+
+  # Asks the shop's own API, by an address built around it.
+  Checkout:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: checkout.handler
+      Environment:
+        Variables:
+          SHOP_API: !Sub "https://${ShopApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+
+  PlaceOrder:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: orders.place
+      Events:
+        Place:
+          Type: Api
+          Properties:
+            Path: /orders
+            Method: POST
+            RestApiId: !Ref ShopApi
+
+  OrdersWorker:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: workers.orders
+      Events:
+        Orders:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt OrdersQueue.Arn
+  RefundsWorker:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: workers.refunds
+      Events:
+        Refunds:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt RefundsQueue.Arn
+  ArchiveReader:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: workers.archive
+      Events:
+        Archived:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt Archive.Arn
+            StartingPosition: LATEST

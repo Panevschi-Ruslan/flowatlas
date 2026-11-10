@@ -40,6 +40,42 @@ export interface EnvironmentValue {
   readonly service?: string;
   /** For an API's address, written out, the path it asks for on the API, after its stage (P268). */
   readonly path?: string;
+  /** That API's address is built around a reference to it rather than written out with an id (P272). */
+  readonly referenced?: boolean;
+}
+
+/**
+ * On a node that runs code a deployment configures, what the deployment lets
+ * it send to, write to, invoke or start (P272): a list of {@link GrantValue}.
+ */
+export const GRANTS_META = 'grants';
+
+/** One grant, as the graph keeps it: the deployment's `DeployedGrant`, minus where it is written. */
+export interface GrantValue {
+  /** The kind of thing granted, as `DeployedKind` spells it. */
+  readonly kind: string;
+  readonly name?: string;
+  readonly any?: string;
+  readonly unread?: string;
+  readonly by: string;
+}
+
+/**
+ * On a producer whose address is not read, the address with the part it
+ * could not read named by the kind of deployed thing that part names (P272):
+ * a list of {@link GrantableAddress}. What the deployment of a function that
+ * runs it grants it of that kind, where it grants a few things by name, is
+ * where it can send.
+ */
+export const GRANTABLE_META = 'grantable';
+
+/** A part of an address: written in the code, or the one part it could not read, by what it names. */
+export type GrantablePart = string | { readonly granted: string };
+
+/** An address a grant may bound, and the message sent to it. */
+export interface GrantableAddress {
+  readonly parts: readonly GrantablePart[];
+  readonly payload?: string;
 }
 
 /**

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:54:24.248Z",
+  "builtAt": "2026-11-10T10:11:10.115Z",
   "services": [
     {
       "name": "ledger",
@@ -596,6 +596,18 @@
         "adapter": "aws-sqs",
         "channelVia": "unresolved",
         "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "granted": "queue"
+              }
+            ]
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic",
         "batch": true
       }
     },

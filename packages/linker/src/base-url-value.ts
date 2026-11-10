@@ -58,6 +58,8 @@ export interface FoundValue {
    */
   readonly apiPath?: string;
   readonly written?: string;
+  /** The address is built around a reference to the API, which says which API it is (P272). */
+  readonly referenced?: boolean;
 }
 
 /** What the values of a setting say a request's base address is. */
@@ -119,7 +121,7 @@ const deployedValues = (variable: string, runners: readonly GraphNode[]): FoundV
     // An address of an API the function's own deployment serves (P268): its service.
     if (set?.kind === 'api' && set.path !== undefined && set.value !== undefined) {
       return [
-        { variable, value: set.value, from: `the environment ${fn.label} is deployed with`, deployed: true, service: fn.repo, apiPath: set.path, written: set.written },
+        { variable, value: set.value, from: `the environment ${fn.label} is deployed with`, deployed: true, service: fn.repo, apiPath: set.path, written: set.written, ...(set.referenced === true ? { referenced: true } : {}) },
       ];
     }
     // A reference to something deployed is a function URL or a queue, which

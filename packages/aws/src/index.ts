@@ -57,3 +57,4 @@ export {
 export { SDK_SENDS, SDK_WRITES, type SendingService, type SendOperation, type WriteOperation, type WritingService } from './sends.js';
 export { eventFilterOf, eventPatternOf, type PatternUnread } from './event-pattern.js';
 export { cognitoTriggerKey, destinationOf, READ_PRINCIPALS, RESULT_DETAIL_TYPES } from './triggers.js';
+export { grantedIn, isWildcardResource, kindsGranted, MANAGED_WRITE_POLICIES, managedPolicyName, WRITE_ACTIONS } from './grants.js';

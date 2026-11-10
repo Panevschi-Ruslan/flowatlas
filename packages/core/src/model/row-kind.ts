@@ -94,6 +94,7 @@ const NOTES: readonly string[] = [
   'base-url-from-files',
   'base-url-from-name',
   'environment-from-files',
+  'channel-from-grant',
   // A container publishes a port its service's code is not read listening on (P254)
   'published-port-unheard',
   // A request a server's proxy forwards to a host no service of the project is reached at (P257)

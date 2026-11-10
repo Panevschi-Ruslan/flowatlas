@@ -21,6 +21,8 @@ import {
   CHANNEL_PATTERN_META,
   ENVELOPE_META,
   ENVIRONMENT_META,
+  GRANTS_META,
+  type GrantValue,
   makeChannelId,
   makeEntryId,
   makeEntryReference,
@@ -644,6 +646,7 @@ export const environmentMeta = (fn: DeployedFunction): Record<string, unknown> =
       ...(setting.names === undefined ? {} : { kind: setting.names.kind }),
       ...(setting.imported === undefined ? {} : { imported: setting.imported }),
       ...(setting.path === undefined ? {} : { path: setting.path }),
+      ...(setting.referenced === true ? { referenced: true } : {}),
       ...(setting.unread === undefined
         ? {}
         : {
@@ -654,4 +657,25 @@ export const environmentMeta = (fn: DeployedFunction): Record<string, unknown> =
     };
   }
   return { [ENVIRONMENT_META]: values };
+};
+
+/** What a function's deployment grants it, as the graph keeps it on its entry (P272). */
+export const grantsMeta = (fn: DeployedFunction): Record<string, unknown> => {
+  if (fn.grants === undefined || fn.grants.length === 0) return {};
+  const values: GrantValue[] = fn.grants.map((grant) => ({
+    kind: grant.kind,
+    ...(grant.name === undefined ? {} : { name: grant.name }),
+    ...(grant.any === undefined ? {} : { any: grant.any }),
+    ...(grant.unread === undefined ? {} : { unread: grant.unread }),
+    by: grant.by,
+  }));
+  const seen = new Set<string>();
+  return {
+    [GRANTS_META]: values.filter((value) => {
+      const key = JSON.stringify(value);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }),
+  };
 };

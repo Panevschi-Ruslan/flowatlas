@@ -1,5 +1,7 @@
 import {
   AWAITING_META,
+  GRANTABLE_META,
+  type GrantableAddress,
   GUESSED_META,
   RECORDED_META,
   WHERE_DECLARED_META,
@@ -684,6 +686,17 @@ export const extractBrokers = (ctx: PassContext): void => {
       const payload = payloadOf(element);
       return [{ parts: element.awaiting, ...(payload === undefined ? {} : { payload }) }];
     });
+    // An address not read, by what the part it could not read names: what a
+    // grant of the function that runs it bounds, where it grants a few (P272).
+    // One a value of the environment completes is the deployment's to say.
+    const grantable: GrantableAddress[] =
+      names.length > 0 || !readable
+        ? []
+        : unread.flatMap((element) => {
+            if (element.grantable === undefined || element.awaiting !== undefined) return [];
+            const payload = payloadOf(element);
+            return [{ parts: element.grantable, ...(payload === undefined ? {} : { payload }) }];
+          });
     // A receiver known only from what the source says it is constructed from
     // is what the author meant rather than what a compiler checked.
     // So is one drawn at a caller through a call that may run another
@@ -722,6 +735,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         // How far the call can be trusted once the address is complete, which
         // its edge cannot say while there is no channel to put it on.
         ...(awaiting.length === 0 ? {} : { [AWAITING_META]: awaiting, channelKind: spec.channelKind, confidence }),
+        ...(grantable.length === 0 ? {} : { [GRANTABLE_META]: grantable, channelKind: spec.channelKind, confidence }),
         // A write only some deployment makes a publish: kept or dropped by the linker.
         ...(pattern.whereDeclared === true ? { [WHERE_DECLARED_META]: true } : {}),
         // How a loop around it is read (P89): a batch, or a send with none.

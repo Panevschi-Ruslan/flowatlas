@@ -276,7 +276,14 @@ export const baseUrlTakenFinding = (found: FoundValue, target: string): Finding 
           `, so it is taken as ${target}, the one service it is named after`,
         hint: `Only the setting's name chose the service. Add ${found.variable} to services[].baseUrlEnv of ${target} to say so outright, or of the service it really is.`,
       }
-    : found.apiPath !== undefined
+    : found.apiPath !== undefined && found.referenced === true
+      ? {
+          reason: 'base-url-from-files',
+          level: 'info',
+          message: `${found.variable} is ${found.written ?? 'an address'} in ${whereFound(found)}: the address of the API ${found.value} ${target} serves, built around a reference to it, so the request is ${found.apiPath === '/' ? 'joined among its routes' : `one for ${found.apiPath} on it`}`,
+          hint: 'The value is the one the function is deployed with.',
+        }
+      : found.apiPath !== undefined
       ? {
           reason: 'base-url-from-files',
           level: 'info',

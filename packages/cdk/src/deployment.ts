@@ -8,6 +8,8 @@ import {
   destinationOf,
   eventPatternOf,
   S3_DETAIL_TYPES,
+  grantedIn,
+  kindsGranted,
   S3_EVENT_SOURCE,
 } from '@flowatlas/aws';
 import {
@@ -28,6 +30,7 @@ import {
   type DeployedDelivery,
   type DeployedExport,
   type DeployedFunction,
+  type DeployedGrant,
   type DeployedHandler,
   type DeployedImport,
   type DeployedKind,
@@ -39,7 +42,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { definitionOf } from './state-machine.js';
-import { Attribute, Built, Construct, Embedded, EXPORT_VALUE, HOLE, Imported, ObjectValue, textOf, Unread, type Added, type Site, type Value } from './values.js';
+import { Attribute, Built, CdkRef, Construct, Embedded, EXPORT_VALUE, HOLE, Imported, ObjectValue, textOf, Unread, type Added, type Site, type Value } from './values.js';
 
 /**
  * The constructs an app made, written out as P21's `Deployment` (P57, D1).
@@ -76,6 +79,28 @@ const DECLARES: ReadonlyMap<string, { readonly kind: DeployedKind; readonly name
   ['aws-kinesis.Stream', { kind: 'stream', name: 'streamName' }],
   ['aws-s3.Bucket', { kind: 'bucket', name: 'bucketName' }],
   ['aws-stepfunctions.StateMachine', { kind: 'workflow', name: 'stateMachineName' }],
+]);
+
+/**
+ * The grants of a construct that let the grantee send to it, write to it,
+ * invoke it or start it (P272); one that only reads - consuming a queue,
+ * reading a table or a stream - is no send.
+ */
+const WRITE_GRANTS = new Set([
+  'grantSendMessages',
+  'grantPublish',
+  'grantPutEventsTo',
+  'grantPutEvents',
+  'grantWriteData',
+  'grantReadWriteData',
+  'grantFullAccess',
+  'grantWrite',
+  'grantReadWrite',
+  'grantPut',
+  'grantDelete',
+  'grantInvoke',
+  'grantStartExecution',
+  'grantStartSyncExecution',
 ]);
 
 /** The classes a mapping's `onFailure` is built of, and what each hands to (P264). */
@@ -546,6 +571,8 @@ export class AppDeployment {
       ...fn.addedBy('addEnvironment').flatMap(({ args }): [string, Value][] => (typeof args[0] === 'string' ? [[args[0], args[1]]] : [])),
     ];
     for (const [variable, value] of pairs.sort(([a], [b]) => a.localeCompare(b))) environment[variable] = this.#setting(value, fn.site, `the value of ${variable} ${fn.path} is deployed with`);
+    // What its role lets it send to (P272).
+    const grants = this.#grants(fn);
     this.parts.functions.push({
       ...fn.site,
       ...(name === undefined ? {} : { name }),
@@ -553,6 +580,7 @@ export class AppDeployment {
       ...(handler === undefined ? {} : { handler }),
       ...(runtime === undefined ? {} : { runtime }),
       ...(written instanceof Unread ? {} : { environment }),
+      ...(grants.length === 0 ? {} : { grants }),
       meta: {
         declaredAs: fn.path,
         constructPath: fn.path,
@@ -561,6 +589,57 @@ export class AppDeployment {
         ...this.#conditional(fn.conditional),
       },
     });
+  }
+
+  /**
+   * What a function's role lets it send to, write to, invoke or start (P272):
+   * each grant a construct of the app gives it - `queue.grantSendMessages(fn)`,
+   * `table.grantWriteData(fn.role)` - on that construct, and each statement
+   * added to its role (`addToRolePolicy`, `initialPolicy`) on the resources
+   * it names.
+   */
+  #grants(fn: Construct): DeployedGrant[] {
+    const out: DeployedGrant[] = [];
+    const isFn = (grantee: Value): boolean =>
+      grantee === fn || (grantee instanceof Attribute && grantee.construct === fn && (grantee.name === 'role' || grantee.name === 'grantPrincipal'));
+    for (const construct of this.constructs) {
+      for (const [method, calls] of construct.added) {
+        if (!WRITE_GRANTS.has(method)) continue;
+        for (const call of calls) {
+          if (call.args[0] === undefined || !isFn(call.args[0])) continue;
+          const kind = DECLARES.get(construct.type)?.kind;
+          const found = this.deployedOf(construct);
+          if (kind === undefined || found === undefined) continue;
+          if (found instanceof Unread) out.push({ kind, unread: found.text, by: method, ...call.site });
+          else if (found.kind === kind) out.push({ kind, name: found.name, by: method, ...call.site });
+        }
+      }
+    }
+    const statements = [...fn.addedBy('addToRolePolicy').map(({ args }) => args[0]), ...listOf(prop(fn, 'initialPolicy'))];
+    for (const statement of statements) {
+      if (!(statement instanceof Built) || builtBy(statement) !== 'PolicyStatement') continue;
+      const props = statement.args[0];
+      const effect = props instanceof ObjectValue ? props.get('effect') : undefined;
+      if (!(props instanceof ObjectValue) || textOf(effect) === 'Deny' || (effect instanceof CdkRef && effect.path.at(-1) === 'DENY')) continue;
+      const kinds = kindsGranted(listOf(props.get('actions')).flatMap((action) => (typeof action === 'string' ? [action] : [])));
+      for (const resource of listOf(props.get('resources'))) {
+        for (const kind of kinds) {
+          // An ARN written out says what it grants as written; anything else is what it points at.
+          const text = textOf(resource);
+          const found = text === undefined ? this.deployedOf(resource) : undefined;
+          const granted =
+            text !== undefined
+              ? grantedIn(kind, text)
+              : found !== undefined && !(found instanceof Unread)
+                ? found.kind === kind && found.changes !== true
+                  ? { name: found.name }
+                  : undefined
+                : { unread: found instanceof Unread ? found.text : 'a value known only once deployed' };
+          if (granted !== undefined) out.push({ kind, ...granted, by: 'PolicyStatement', ...statement.site });
+        }
+      }
+    }
+    return out;
   }
 
   /** The handler: a `NodejsFunction`'s entry and export, or a `Function`'s handler string and asset. */

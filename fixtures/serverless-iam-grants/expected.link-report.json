@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:46:33.741Z",
+  "configHash": "47d9255e1059",
+  "services": [
+    {
+      "name": "notices",
+      "repo": "./notices",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 19,
+      "edges": 13,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 4473,
+      "packages": {
+        "name": "notices",
+        "runtime": [
+          "@aws-sdk/client-eventbridge",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 2,
+    "linked": 2,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "notices",
+      "file": "src/announce.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/announce.ts:9 does not say where it sends: buses.get(event.market) is looked up in buses by event.market, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; notices-dev-announce runs it and is granted only eventbridge/shop-bus/shop.orders/OrderPlaced, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:notices#src/announce.ts:9:9",
+      "meta": {
+        "granted": [
+          "eventbridge/shop-bus/shop.orders/OrderPlaced"
+        ],
+        "functions": [
+          "notices-dev-announce"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 19,
+    "edges": 15,
+    "types": 0,
+    "missed": 1,
+    "sites": 1,
+    "notes": 2,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

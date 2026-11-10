@@ -1,0 +1,489 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:45:46.583Z",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/publish.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/publish.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{product:{sku:string}}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/workers.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/workers.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{body:string}[]}"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "channel:sqs/catalog-feed",
+      "type": "channel",
+      "label": "sqs/catalog-feed",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 42,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/catalog-prices",
+      "type": "channel",
+      "label": "sqs/catalog-prices",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 38,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/catalog-search",
+      "type": "channel",
+      "label": "sqs/catalog-search",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 34,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:catalog#template.yaml:Resources.Indexer.Events.Feed",
+      "type": "consumer",
+      "label": "mapping Resources.Indexer.Events.Feed",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 42,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "Resources.Indexer.Events.Feed",
+        "deployedBy": "sam",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:catalog#template.yaml:Resources.Indexer.Events.Prices",
+      "type": "consumer",
+      "label": "mapping Resources.Indexer.Events.Prices",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 38,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "Resources.Indexer.Events.Prices",
+        "deployedBy": "sam",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:catalog#template.yaml:Resources.Indexer.Events.Search",
+      "type": "consumer",
+      "label": "mapping Resources.Indexer.Events.Search",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 34,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "Resources.Indexer.Events.Search",
+        "deployedBy": "sam",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:${…}@Resources.Indexer",
+      "type": "entry",
+      "label": "Resources.Indexer (name generated when deployed)",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 29,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Indexer",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Indexer",
+        "logicalId": "Indexer",
+        "nameGenerated": true,
+        "handler": "workers.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{Records:{body:string}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:${…}@Resources.Publish",
+      "type": "entry",
+      "label": "Resources.Publish (name generated when deployed)",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Publish",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Publish",
+        "logicalId": "Publish",
+        "nameGenerated": true,
+        "handler": "publish.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{product:{sku:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "producer:catalog#src/publish.ts:19:11",
+      "type": "producer",
+      "label": "message sqs/catalog-search, sqs/catalog-prices",
+      "repo": "catalog",
+      "file": "src/publish.ts",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "const",
+        "method": "send"
+      }
+    },
+    {
+      "id": "producer:catalog#src/publish.ts:22:11",
+      "type": "producer",
+      "label": "message sqs/catalog-search, sqs/catalog-prices, sqs/catalog-feed",
+      "repo": "catalog",
+      "file": "src/publish.ts",
+      "line": 22,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "const",
+        "method": "send"
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "loopsBounded": {
+            "literal": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalog#src/publish.ts:handler",
+      "to": "producer:catalog#src/publish.ts:19:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/publish.ts",
+      "line": 19,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 18,
+          "bounded": "literal"
+        }
+      }
+    },
+    {
+      "from": "catalog#src/publish.ts:handler",
+      "to": "producer:catalog#src/publish.ts:22:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/publish.ts",
+      "line": 22,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 21
+        }
+      }
+    },
+    {
+      "from": "channel:sqs/catalog-feed",
+      "to": "consumer:catalog#template.yaml:Resources.Indexer.Events.Feed",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 42,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/catalog-prices",
+      "to": "consumer:catalog#template.yaml:Resources.Indexer.Events.Prices",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 38,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/catalog-search",
+      "to": "consumer:catalog#template.yaml:Resources.Indexer.Events.Search",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 34,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:catalog#template.yaml:Resources.Indexer.Events.Feed",
+      "to": "entry:catalog:invoke:${…}@Resources.Indexer",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 42,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:catalog#template.yaml:Resources.Indexer.Events.Prices",
+      "to": "entry:catalog:invoke:${…}@Resources.Indexer",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 38,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:catalog#template.yaml:Resources.Indexer.Events.Search",
+      "to": "entry:catalog:invoke:${…}@Resources.Indexer",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 34,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:catalog:invoke:${…}@Resources.Indexer",
+      "to": "catalog#src/workers.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/workers.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:catalog:invoke:${…}@Resources.Publish",
+      "to": "catalog#src/publish.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/publish.ts",
+      "line": 17
+    },
+    {
+      "from": "producer:catalog#src/publish.ts:19:11",
+      "to": "channel:sqs/catalog-prices",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{sku:string}"
+      ],
+      "file": "src/publish.ts",
+      "line": 19
+    },
+    {
+      "from": "producer:catalog#src/publish.ts:19:11",
+      "to": "channel:sqs/catalog-search",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{sku:string}"
+      ],
+      "file": "src/publish.ts",
+      "line": 19
+    },
+    {
+      "from": "producer:catalog#src/publish.ts:22:11",
+      "to": "channel:sqs/catalog-feed",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{sku:string}"
+      ],
+      "file": "src/publish.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:catalog#src/publish.ts:22:11",
+      "to": "channel:sqs/catalog-prices",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{sku:string}"
+      ],
+      "file": "src/publish.ts",
+      "line": 22
+    },
+    {
+      "from": "producer:catalog#src/publish.ts:22:11",
+      "to": "channel:sqs/catalog-search",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{sku:string}"
+      ],
+      "file": "src/publish.ts",
+      "line": 22
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/publish.ts",
+      "line": 21,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 publish once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "catalog#src/publish.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 21
+        },
+        "reaches": [
+          {
+            "id": "producer:catalog#src/publish.ts:22:11",
+            "type": "producer",
+            "words": "publish"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 1,
+        "entries": [
+          "entry:catalog:invoke:${…}@Resources.Publish"
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "template.yaml",
+      "line": 24,
+      "reason": "deployed-name-generated",
+      "level": "info",
+      "sites": 2,
+      "message": "Resources.Publish is a function with no name of its own, so it is named by where it is declared; what this file points at it by joins to it, and nothing outside this deployment can",
+      "hint": "Give it a name of its own where other repositories reach it.",
+      "symbol": "entry:catalog:invoke:${…}@Resources.Publish",
+      "adapter": "aws-lambda",
+      "service": "catalog"
+    }
+  ]
+}

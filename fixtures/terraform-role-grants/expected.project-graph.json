@@ -1,0 +1,500 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:48:57.003Z",
+  "services": [
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sqs/payments-refunded",
+      "type": "channel",
+      "label": "sqs/payments-refunded",
+      "repo": "payments",
+      "file": "infra/main.tf",
+      "line": 99,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/payments-settled",
+      "type": "channel",
+      "label": "sqs/payments-settled",
+      "repo": "payments",
+      "file": "infra/main.tf",
+      "line": 94,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "consumer:payments#infra/main.tf:aws_lambda_event_source_mapping.refunded",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.refunded",
+      "repo": "payments",
+      "file": "infra/main.tf",
+      "line": 99,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.refunded",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:payments#infra/main.tf:aws_lambda_event_source_mapping.settled",
+      "type": "consumer",
+      "label": "mapping aws_lambda_event_source_mapping.settled",
+      "repo": "payments",
+      "file": "infra/main.tf",
+      "line": 94,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "aws_lambda_event_source_mapping.settled",
+        "deployedBy": "terraform",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:payments:invoke:payments-ledger",
+      "type": "entry",
+      "label": "payments-ledger",
+      "repo": "payments",
+      "file": "infra/main.tf",
+      "line": 86,
+      "kind": "invoke",
+      "meta": {
+        "key": "payments-ledger",
+        "deployedBy": "terraform",
+        "name": "payments-ledger",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.ledger",
+        "handler": "ledger.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "queue",
+            "name": "payments-settled",
+            "by": "data.aws_iam_policy_document.settle.statement[0]"
+          },
+          {
+            "kind": "queue",
+            "name": "payments-refunded",
+            "by": "data.aws_iam_policy_document.settle.statement[0]"
+          }
+        ],
+        "reads": {
+          "": "{Records:{body:string}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:payments:invoke:payments-notify",
+      "type": "entry",
+      "label": "payments-notify",
+      "repo": "payments",
+      "file": "infra/main.tf",
+      "line": 59,
+      "kind": "invoke",
+      "meta": {
+        "key": "payments-notify",
+        "deployedBy": "terraform",
+        "name": "payments-notify",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.notify",
+        "handler": "notify.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "topic",
+            "any": "*",
+            "by": "aws_iam_role_policy.notify.policy.Statement[0]"
+          }
+        ],
+        "reads": {
+          "": "{audience:string;text:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:payments:invoke:payments-settle",
+      "type": "entry",
+      "label": "payments-settle",
+      "repo": "payments",
+      "file": "infra/main.tf",
+      "line": 29,
+      "kind": "invoke",
+      "meta": {
+        "key": "payments-settle",
+        "deployedBy": "terraform",
+        "name": "payments-settle",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.settle",
+        "handler": "settle.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "queue",
+            "name": "payments-settled",
+            "by": "data.aws_iam_policy_document.settle.statement[0]"
+          },
+          {
+            "kind": "queue",
+            "name": "payments-refunded",
+            "by": "data.aws_iam_policy_document.settle.statement[0]"
+          }
+        ],
+        "reads": {
+          "": "{outcome:string;payment:{id:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "payments#src/ledger.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "payments",
+      "file": "src/ledger.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{body:string}[]}"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "payments#src/notify.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "payments",
+      "file": "src/notify.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{audience:string;text:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "payments#src/settle.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "payments",
+      "file": "src/settle.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{outcome:string;payment:{id:string}}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:payments#src/notify.ts:9:9",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "payments",
+      "file": "src/notify.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "unresolved",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "sns",
+              {
+                "granted": "topic"
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "producer:payments#src/settle.ts:9:9",
+      "type": "producer",
+      "label": "message sqs/payments-refunded, sqs/payments-settled",
+      "repo": "payments",
+      "file": "src/settle.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "grant",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "granted": "queue"
+              }
+            ],
+            "payload": "{id:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "repo:payments",
+      "type": "repo",
+      "label": "payments",
+      "repo": "payments",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:sqs/payments-refunded",
+      "to": "consumer:payments#infra/main.tf:aws_lambda_event_source_mapping.refunded",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 99,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/payments-settled",
+      "to": "consumer:payments#infra/main.tf:aws_lambda_event_source_mapping.settled",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 94,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:payments#infra/main.tf:aws_lambda_event_source_mapping.refunded",
+      "to": "entry:payments:invoke:payments-ledger",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 99,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:payments#infra/main.tf:aws_lambda_event_source_mapping.settled",
+      "to": "entry:payments:invoke:payments-ledger",
+      "type": "calls",
+      "confidence": "static",
+      "file": "infra/main.tf",
+      "line": 94,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:payments:invoke:payments-ledger",
+      "to": "payments#src/ledger.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/ledger.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:payments:invoke:payments-notify",
+      "to": "payments#src/notify.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/notify.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:payments:invoke:payments-settle",
+      "to": "payments#src/settle.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/settle.ts",
+      "line": 8
+    },
+    {
+      "from": "payments#src/notify.ts:handler",
+      "to": "producer:payments#src/notify.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/notify.ts",
+      "line": 9
+    },
+    {
+      "from": "payments#src/settle.ts:handler",
+      "to": "producer:payments#src/settle.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/settle.ts",
+      "line": 9
+    },
+    {
+      "from": "producer:payments#src/settle.ts:9:9",
+      "to": "channel:sqs/payments-refunded",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/settle.ts",
+      "line": 9,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "grant",
+        "grants": [
+          "data.aws_iam_policy_document.settle.statement[0]"
+        ],
+        "functions": [
+          "payments-settle"
+        ]
+      }
+    },
+    {
+      "from": "producer:payments#src/settle.ts:9:9",
+      "to": "channel:sqs/payments-settled",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/settle.ts",
+      "line": 9,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "grant",
+        "grants": [
+          "data.aws_iam_policy_document.settle.statement[0]"
+        ],
+        "functions": [
+          "payments-settle"
+        ]
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/notify.ts",
+      "line": 9,
+      "reason": "channel-dynamic",
+      "message": "handler -> topics.get(event.audience)",
+      "hint": "topics.get(event.audience) is looked up in topics by event.audience, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere. Send to an address the code or the deployment states, or annotate handler with the channels it may use. What its function is granted does not narrow it: payments-notify is granted every topic by aws_iam_role_policy.notify.policy.Statement[0] on *, which bounds nothing.",
+      "symbol": "producer:payments#src/notify.ts:9:9",
+      "service": "payments",
+      "meta": {
+        "grantedEvery": [
+          {
+            "function": "payments-notify",
+            "resources": [
+              "*"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "service": "payments",
+      "file": "src/settle.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/settle.ts:9 does not say where it sends: outcomes.get(event.outcome) is looked up in outcomes by event.outcome, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; payments-settle runs it and is granted only sqs/payments-refunded, sqs/payments-settled, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:payments#src/settle.ts:9:9",
+      "meta": {
+        "granted": [
+          "sqs/payments-refunded",
+          "sqs/payments-settled"
+        ],
+        "functions": [
+          "payments-settle"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    }
+  ]
+}

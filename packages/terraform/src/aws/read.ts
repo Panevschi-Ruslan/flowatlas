@@ -24,6 +24,7 @@ import { readStateMachineInstance } from './state-machines.js';
 import { addressesOf, joinSegments, MAPPING_READERS } from './addresses.js';
 import { argument, siteOf, textOf, whyNot } from './arguments.js';
 import { environmentOf } from './environment.js';
+import { functionGrants } from './grants.js';
 import { deployedOf, generatedNameRow, isBecause, stateOutputKey } from './deployed.js';
 import { DESTINATION_READERS } from './destinations.js';
 import { EVENT_READERS } from './events.js';
@@ -181,6 +182,8 @@ export class DeploymentReading implements ResourceReading {
     }
     this.#functionIndex.set(instance, this.functions.length);
     const environment = environmentOf(instance, this);
+    // What its role lets it send to (P272).
+    const grants = functionGrants(instance, this);
     this.functions.push({
       ...at,
       ...(name === undefined ? {} : { name }),
@@ -188,6 +191,7 @@ export class DeploymentReading implements ResourceReading {
       ...(handler === undefined ? {} : { handler }),
       ...(runtime === undefined ? {} : { runtime }),
       ...(environment === undefined ? {} : { environment }),
+      ...(grants.length === 0 ? {} : { grants }),
       meta: {
         declaredAs: instance.address,
         ...(name === undefined ? { nameUnread: whyNot(nameValue, 'function_name').text } : {}),

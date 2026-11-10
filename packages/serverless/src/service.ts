@@ -3,6 +3,7 @@ import { destinationOf, executeApiAddress } from '@flowatlas/aws';
 import { type DeployedFunction, type DeployedHandler, type DeployedKind, type DeployedSetting, type PathStep, type PositionedDocument } from '@flowatlas/core';
 import { intrinsicOf, Template, type Deployed } from './cloudformation.js';
 import { readServiceFile, ServiceFileUnreadable } from './document.js';
+import { serviceFunctionGrants } from './grants.js';
 import { readEvent, readFunctionUrl, type Apis, type EventReading, type EventSite, type SharedApi } from './events.js';
 import { readOutputs, readParameters, type ApiReference, type ImplicitOutput } from './outputs.js';
 import { FileReading, type DeploymentParts } from './reading.js';
@@ -345,6 +346,8 @@ const readFunction = (reading: FileReading, declaration: FunctionDeclaration): v
       inFunction ? `the value of ${variable} ${address} is deployed with` : `the value of ${variable} the functions of ${reading.file} are deployed with`,
     );
   }
+  // What its role lets it send to (P272).
+  const grants = serviceFunctionGrants(reading, fn, path, declaration.provider);
   const deployed: DeployedFunction = {
     ...at,
     ...(typeof name === 'string' ? { name } : {}),
@@ -352,6 +355,7 @@ const readFunction = (reading: FileReading, declaration: FunctionDeclaration): v
     ...(handler === undefined ? {} : { handler }),
     ...(runtime === undefined ? {} : { runtime }),
     environment,
+    ...(grants.length === 0 ? {} : { grants }),
     meta: {
       declaredAs: address,
       stageFrom: declaration.stageFrom,

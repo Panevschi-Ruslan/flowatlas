@@ -641,6 +641,11 @@ interface Followed {
   readonly bound: Bindings;
   /** The parameter a member was chosen by, where nothing bound it (P268). */
   readonly selector?: ParameterDeclaration;
+  /**
+   * The values an element of a list of several stands for, one per element
+   * (P272): the walk stops at the element, and whoever asked follows each.
+   */
+  readonly choices?: readonly Followed[];
 }
 
 /** How deep the walk goes into the values a value is made of before it gives up. */
@@ -756,7 +761,8 @@ const KEEPING = new Set(['filter', 'slice', 'reverse', 'sort', 'toSorted', 'toRe
 
 /**
  * The values a `Map` or a `Set` bound once to a `const` is given: the second
- * argument of each `set` on it, or the argument of each `add` (P268).
+ * member of each pair it is made with and of each `set` on it, or each item
+ * it is made with and the argument of each `add` (P268, P272).
  */
 const heldIn = (collection: TsNode): TsNode[] | undefined => {
   const declaration = declarationNamed(collection);
@@ -768,6 +774,23 @@ const heldIn = (collection: TsNode): TsNode[] | undefined => {
   const nameNode = declaration.getNameNode();
   if (adds === undefined || !Node.isIdentifier(nameNode)) return undefined;
   const values: TsNode[] = [];
+  // What it is made with: `new Map([[key, value], ...])`, `new Set([a, b])`, written out.
+  const [initial] = made.getArguments();
+  if (initial !== undefined) {
+    const written = peeled(initial);
+    if (!Node.isArrayLiteralExpression(written)) return undefined;
+    for (const item of written.getElements()) {
+      if (Node.isSpreadElement(item)) return undefined;
+      if (kind === 'Set') {
+        values.push(item);
+        continue;
+      }
+      const pair = peeled(item);
+      const value = Node.isArrayLiteralExpression(pair) ? pair.getElements()[1] : undefined;
+      if (value === undefined || Node.isSpreadElement(value)) return undefined;
+      values.push(value);
+    }
+  }
   for (const reference of nameNode.findReferencesAsNodes()) {
     const access = reference.getParent();
     if (access === undefined || !Node.isPropertyAccessExpression(access) || access.getExpression() !== reference || access.getName() !== adds.method) continue;
@@ -779,20 +802,40 @@ const heldIn = (collection: TsNode): TsNode[] | undefined => {
   return values;
 };
 
+/** How many elements of a list are read as an address each before the list is too long to stand for any (P272). */
+const MOST_ELEMENTS = 16;
+
 /**
- * The one element a list holds, as it is written: a list of one, an element
- * of a list some others were taken out of, what the callback of a `map`
- * answers, the one value a `Map` or a `Set` is given (P268). Several elements
- * are several addresses, which one value cannot stand for.
+ * Every element a list holds, as it is written: the elements of a list
+ * written out, an element of a list some others were taken out of, what the
+ * callback of a `map` answers for each, the values a `Map` or a `Set` is
+ * given (P268). Several elements are several addresses, each read on its own
+ * (P272); a list past {@link MOST_ELEMENTS}, or one with a spread nothing
+ * reads, stands for none.
  */
-const elementWithin = (list: TsNode, bound: Bindings, depth: number): Followed | undefined => {
+const elementsWithin = (list: TsNode, bound: Bindings, depth: number): Followed[] | undefined => {
   if (depth > MOST_NESTED) return undefined;
   const followed = followValue(list, bound, depth + 1);
   const value = followed.value;
+  const capped = (found: Followed[] | undefined): Followed[] | undefined =>
+    found === undefined || found.length === 0 || found.length > MOST_ELEMENTS ? undefined : found;
   if (Node.isArrayLiteralExpression(value)) {
-    const [only, ...rest] = value.getElements();
-    if (only === undefined || rest.length > 0) return undefined;
-    return Node.isSpreadElement(only) ? elementWithin(only.getExpression(), followed.bound, depth + 1) : { value: only, bound: followed.bound };
+    const out: Followed[] = [];
+    for (const element of value.getElements()) {
+      if (!Node.isSpreadElement(element)) {
+        out.push({ value: element, bound: followed.bound });
+        continue;
+      }
+      const spread = elementsWithin(element.getExpression(), followed.bound, depth + 1);
+      if (spread === undefined) return undefined;
+      out.push(...spread);
+    }
+    return capped(out);
+  }
+  // A `Map` or a `Set` itself, iterated or handed a callback for each value.
+  if (Node.isNewExpression(value)) {
+    const values = heldIn(peeled(list));
+    return capped(values?.map((each) => ({ value: each, bound: followed.bound })));
   }
   if (!Node.isCallExpression(value)) return undefined;
   const callee = peeled(value.getExpression());
@@ -801,28 +844,32 @@ const elementWithin = (list: TsNode, bound: Bindings, depth: number): Followed |
   const receiver = callee.getExpression();
   if (method === 'from' && receiver.getText() === 'Array') {
     const [source] = value.getArguments();
-    return source === undefined ? undefined : elementWithin(source, followed.bound, depth + 1);
+    return source === undefined ? undefined : elementsWithin(source, followed.bound, depth + 1);
   }
-  if (KEEPING.has(method)) return elementWithin(receiver, followed.bound, depth + 1);
+  if (KEEPING.has(method)) return elementsWithin(receiver, followed.bound, depth + 1);
   if (method === 'values' && value.getArguments().length === 0) {
-    const [only, ...rest] = heldIn(peeled(receiver)) ?? [];
-    return only === undefined || rest.length > 0 ? undefined : { value: only, bound: followed.bound };
+    return capped(heldIn(peeled(receiver))?.map((each) => ({ value: each, bound: followed.bound })));
   }
   if (method === 'map') {
     const [callback] = value.getArguments();
     if (callback === undefined) return undefined;
-    const element = elementWithin(receiver, followed.bound, depth + 1);
-    return calledAnswer(callback, element === undefined ? [] : [element.value], element?.bound ?? followed.bound, depth);
+    const elements = elementsWithin(receiver, followed.bound, depth + 1);
+    if (elements === undefined) {
+      const answer = calledAnswer(callback, [], followed.bound, depth);
+      return answer === undefined ? undefined : [answer];
+    }
+    const answers = elements.map((element) => calledAnswer(callback, [element.value], element.bound, depth));
+    return answers.every((answer): answer is Followed => answer !== undefined) ? capped(answers) : undefined;
   }
   return undefined;
 };
 
 /**
- * The element a name stands for, where it is one: `for (const record of
+ * The elements a name stands for, where it is one: `for (const record of
  * records)`, or the first parameter of a callback a list hands each element
  * to - `records.forEach((record) => ...)` (P268).
  */
-const elementNamed = (node: TsNode, bound: Bindings, depth: number): Followed | undefined => {
+const elementsNamed = (node: TsNode, bound: Bindings, depth: number): Followed[] | undefined => {
   const declaration = declarationNamed(node);
   if (declaration === undefined) return undefined;
   if (Node.isVariableDeclaration(declaration)) {
@@ -838,7 +885,7 @@ const elementNamed = (node: TsNode, bound: Bindings, depth: number): Followed | 
     ) {
       return undefined;
     }
-    return elementWithin(loop.getExpression(), bound, depth + 1);
+    return elementsWithin(loop.getExpression(), bound, depth + 1);
   }
   if (!Node.isParameterDeclaration(declaration) || !Node.isIdentifier(declaration.getNameNode())) return undefined;
   const fn = declaration.getParent();
@@ -847,7 +894,7 @@ const elementNamed = (node: TsNode, bound: Bindings, depth: number): Followed | 
   if (call === undefined || !Node.isCallExpression(call) || call.getArguments()[0] !== fn) return undefined;
   const callee = peeled(call.getExpression());
   if (!Node.isPropertyAccessExpression(callee) || !ITERATING.has(callee.getName())) return undefined;
-  return elementWithin(callee.getExpression(), bound, depth + 1);
+  return elementsWithin(callee.getExpression(), bound, depth + 1);
 };
 
 /**
@@ -881,7 +928,10 @@ const followValue = (node: TsNode, bound: Bindings = NO_BINDINGS, depth = 0): Fo
       current = constant;
       continue;
     }
-    const element = elementNamed(current, held, depth);
+    const elements = elementsNamed(current, held, depth);
+    // Several elements are several values: each is followed on its own by whoever asked (P272).
+    if (elements !== undefined && elements.length > 1) return { value: current, bound: held, choices: elements };
+    const element = elements?.[0];
     if (element !== undefined) {
       current = element.value;
       held = element.bound;
@@ -991,6 +1041,8 @@ const mappedElement = (value: TsNode, bound: Bindings): Followed | undefined => 
 /** One step into what a slot holds. */
 const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlot[] => {
   const followed = followValue(expression, bound);
+  // An element of a list of several: one step into each (P272).
+  if (followed.choices !== undefined) return followed.choices.flatMap((choice) => stepInto(choice.value, step, choice.bound));
   const { value } = followed;
   const halt = (): LocatedSlot[] => [
     { expression, reached: false, ...(followed.selector === undefined ? {} : { selector: followed.selector }) },
@@ -1029,10 +1081,18 @@ const walkPath = (start: TsNode, path: readonly string[], bound: Bindings = NO_B
       slot === undefined || !slot.reached ? [slot] : stepInto(slot.expression, step, slot.bound ?? NO_BINDINGS),
     );
   }
-  // A name a parameter the walk bound holds is what that parameter was handed.
-  return slots.map((slot) =>
-    slot === undefined || !slot.reached || slot.bound === undefined ? slot : { ...slot, expression: settled(slot.expression, slot.bound) },
-  );
+  // A name a parameter the walk bound holds is what that parameter was handed;
+  // a name that is an element of a list of several is each element (P272).
+  return slots.flatMap((slot): LocatedSlot[] => {
+    if (slot === undefined || !slot.reached) return [slot];
+    const expression = slot.bound === undefined ? slot.expression : settled(slot.expression, slot.bound);
+    // A parameter the walk bound is what it was handed, and no element of anything.
+    const elements = handedValue(peeled(slot.expression), slot.bound ?? NO_BINDINGS) === undefined ? elementsNamed(peeled(expression), slot.bound ?? NO_BINDINGS, 0) : undefined;
+    if (elements !== undefined && elements.length > 1) {
+      return elements.map((element) => carrying({ ...slot, expression: settled(element.value, element.bound) }, element.bound));
+    }
+    return [slot.bound === undefined ? slot : { ...slot, expression }];
+  });
 };
 
 /** The name a `new` expression constructs, as written: `X` in `new X()` and in `new sdk.X()`. */
@@ -1358,7 +1418,11 @@ type LocatorResolvers = {
 const never: IsOperation = () => false;
 
 const resolvers: LocatorResolvers = {
-  argument: (site, locator) => one(argumentsOf(site)[locator.index]),
+  // An element of a list of several written in its place is each element (P272).
+  argument: (site, locator) => {
+    const argument = argumentsOf(site)[locator.index];
+    return argument === undefined ? [] : walkPath(argument, []);
+  },
   'argument-property': (site, locator) =>
     one(propertyOf(argumentsOf(site)[locator.index], locator.key)),
   'chain-call': (site, locator) =>

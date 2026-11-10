@@ -1,4 +1,4 @@
-import { deployedNameIn } from '@flowatlas/aws';
+import { deployedNameIn, executeApiAddress } from '@flowatlas/aws';
 import { makeHttpEntryKey, normalizePath, type PathStep, type PositionedDocument } from '@flowatlas/core';
 import { HOLE, Imported, intrinsicOf, isRecord, ServiceFileUnreadable, textOf, Unread, type ApiReference, type Deployed, type Resource } from '@flowatlas/serverless';
 import { pushRootedRoute, pushRoute, type ApiLookup, type ApiOf, type EventSite } from './events.js';
@@ -374,6 +374,73 @@ const readRestMethod = (reading: TemplateReading, method: Resource): void => {
   if (!('path' in path) || apiResource === undefined) return;
   pushRoute(reading, site, verb, path.path === '' ? '/' : path.path, apiOf(reading, apiResource, 'rest'), guards);
 };
+
+/** Every logical id a value refers to: `Ref`, `Fn::GetAtt`, and each `${Id}` or `${Id.Attribute}` of `Fn::Sub`. */
+const referencedIds = (value: unknown, depth = 0): [string, string | undefined][] => {
+  if (depth > 16) return [];
+  const intrinsic = intrinsicOf(value);
+  if (intrinsic === undefined) {
+    if (Array.isArray(value)) return value.flatMap((item) => referencedIds(item, depth + 1));
+    return isRecord(value) ? Object.values(value).flatMap((item) => referencedIds(item, depth + 1)) : [];
+  }
+  const [fn, argument] = intrinsic;
+  if (fn === 'Ref' && typeof argument === 'string') return argument.startsWith('AWS::') ? [] : [[argument, undefined]];
+  if (fn === 'Fn::GetAtt') {
+    const [id, attribute] = Array.isArray(argument) ? argument : typeof argument === 'string' ? argument.split('.') : [];
+    return typeof id === 'string' ? [[id, typeof attribute === 'string' ? attribute : undefined]] : [];
+  }
+  if (fn === 'Fn::Sub') {
+    const [text, variables] = Array.isArray(argument) ? argument : [argument, undefined];
+    const own = typeof text === 'string' ? [...text.matchAll(/\$\{([^}!]+)\}/g)].map((match) => match[1] as string) : [];
+    return [
+      ...own.filter((inside) => !inside.startsWith('AWS::') && !(isRecord(variables) && inside in variables)).map((inside): [string, string | undefined] => {
+        const dot = inside.indexOf('.');
+        return dot < 0 ? [inside, undefined] : [inside.slice(0, dot), inside.slice(dot + 1)];
+      }),
+      ...referencedIds(variables, depth + 1),
+    ];
+  }
+  return referencedIds(argument, depth + 1);
+};
+
+/**
+ * The API of the template a value a function is deployed with is the address
+ * of, and the path it asks for there after the stage (P272): a URL built
+ * around a reference to the API - `!Sub https://${Api}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/orders`
+ * - or an HTTP API's `ApiEndpoint`. The API's id is assigned when it is
+ * created; the reference says which API it is. A value that refers to the API
+ * by anything else - its id alone - is no address, and is not one here.
+ */
+export const apiValueOf =
+  (reading: TemplateReading) =>
+  (value: unknown): { readonly name: string; readonly path?: string } | undefined => {
+    if (intrinsicOf(value) === undefined) return undefined;
+    const apis = new Map<string, { api: ApiOf; kind: 'rest' | 'http'; attribute: string | undefined }>();
+    for (const [id, attribute] of referencedIds(value)) {
+      const resource = reading.template.resources.get(id);
+      const implicit = (Object.entries(IMPLICIT) as ['rest' | 'http', string][]).find(([, logicalId]) => logicalId === id && resource === undefined);
+      const kind = implicit?.[0] ?? (resource !== undefined && API_TYPES.rest.has(resource.type) ? 'rest' : resource !== undefined && API_TYPES.http.has(resource.type) ? 'http' : undefined);
+      if (kind === undefined) continue;
+      const api = resource === undefined ? apiLookup(reading)(kind, undefined, { path: [], address: id } as unknown as Parameters<ApiLookup>[2]) : apiOf(reading, resource, kind);
+      if (api !== undefined) apis.set(api.address, { api, kind, attribute });
+    }
+    const [only, ...rest] = [...apis.values()];
+    if (only === undefined || rest.length > 0) return undefined;
+    const name = only.api.name ?? only.api.address;
+    const direct = intrinsicOf(value);
+    if (direct?.[0] === 'Fn::GetAtt') return only.attribute === 'ApiEndpoint' ? { name, path: '/' } : undefined;
+    if (direct?.[0] === 'Ref') return undefined;
+    const built = reading.template.text(value);
+    const text = typeof built === 'string' ? built : built.partial;
+    const address = text === undefined ? undefined : executeApiAddress(text.split(HOLE).join('x'));
+    if (address === undefined) return undefined;
+    const stage = only.api.stage === '$default' ? undefined : only.api.stage;
+    const [first, ...after] = address.segments;
+    if (only.kind === 'http' && stage === undefined) return { name, path: `/${address.segments.join('/')}` };
+    // A REST API is always served under its stage; where the stage is not read, the first segment is it.
+    if (first === undefined || (stage !== undefined && first !== stage)) return undefined;
+    return { name, path: `/${after.join('/')}` };
+  };
 
 /**
  * What an output of the template that refers to one of its APIs is (P249): a

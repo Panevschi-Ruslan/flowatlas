@@ -331,7 +331,11 @@ export class Variables {
       if (value !== undefined && value !== null) return value;
     }
     const first = alternatives[0] ?? inside;
-    return new Unread(`${describeMissing(first)} is not given, and nothing in the files falls back from it`, first);
+    const text = `${describeMissing(first)} is not given, and nothing in the files falls back from it`;
+    // A parameter of the service with no value, and no fallback after it: one
+    // value, the same wherever it is written, as a template's is (P272).
+    const parameter = alternatives.length === 1 && /^param:/.test(first.trim()) ? first.trim().slice('param:'.length).trim() : undefined;
+    return parameter === undefined || parameter === '' ? new Unread(text, first) : new ParameterValue(text, `param:${parameter}`, `params.${parameter}`);
   }
 
   /** What one alternative of a variable stands for: a value, nothing, or why it is not read. */

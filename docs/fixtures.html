@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>241 fixtures</span>
-    <span>625 snapshot files</span>
+    <span>246 fixtures</span>
+    <span>636 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -591,8 +591,16 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Serverless, declared with the Serverless Framework, the CDK, SAM or CloudFormation <span class="count" data-total="13">13</span></h2>
+    <h2>Serverless, declared with the Serverless Framework, the CDK, SAM or CloudFormation <span class="count" data-total="17">17</span></h2>
     <ul>
+      <li class="fixture" data-search="cdk-grants serverless, declared with the serverless framework, the cdk, sam or cloudformation a shop's stock moves as a cdk app (`stock/lib/stock-stack.ts`): a function that sends where its code decides when it runs, allowed only where the app grants it (p272).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/cdk-grants">cdk-grants</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A shop's stock moves as a CDK app (<code>stock/lib/stock-stack.ts</code>): a function that sends where its code decides when it runs, allowed only where the app grants it (P272).</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="cdk-orders serverless, declared with the serverless framework, the cdk, sam or cloudformation the deployment of `terraform-orders`, written as an aws cdk app in typescript over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/cdk-orders">cdk-orders</a>
@@ -641,6 +649,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A small shop of four repositories, each deployed with a different tool, that share an API, queues, a table's stream and a topic by writing them to parameters of the account and reading them back by name (P253).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="sam-list-elements serverless, declared with the serverless framework, the cdk, sam or cloudformation a catalog (`catalog/template.yaml`) that tells several queues of every change, each queue an element of a list or a value of a map (p272).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sam-list-elements">sam-list-elements</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A catalog (<code>catalog/template.yaml</code>) that tells several queues of every change, each queue an element of a list or a value of a map (P272).</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="sam-orders serverless, declared with the serverless framework, the cdk, sam or cloudformation the deployment of `terraform-orders`, written as an aws sam template (`orders/template.yaml`) over the same handlers, and read as the same graph (p246; `scripts/deployments-agree.mjs`).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sam-orders">sam-orders</a>
@@ -655,6 +671,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>An append-only ledger as an AWS SAM template (<code>ledger/template.yaml</code>) whose table and stream are named by parameters the repository gives no value: no <code>Default</code>, no <code>samconfig.toml</code>.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="sam-policy-grants serverless, declared with the serverless framework, the cdk, sam or cloudformation a shop's relay as an aws sam template (`relay/template.yaml`), its functions sending where their code decides when they run - a queue found by listing the account, a topic or a stream or a function registered at run time - and each allowed to send only where its policies say (p272).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sam-policy-grants">sam-policy-grants</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A shop's relay as an AWS SAM template (<code>relay/template.yaml</code>), its functions sending where their code decides when they run - a queue found by listing the account, a topic or a stream or a function registered at run time - and each allowed to send only where its policies say (P272).</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="sam-shapes serverless, declared with the serverless framework, the cdk, sam or cloudformation the lending desk of a town library, deployed with aws sam (p246): a template (`library/template.yaml`), a template it nests (`library/notices`) and a tool rewritten by a macro (`library/tools`).">
@@ -679,6 +703,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">one service</span>
         </div>
         <p>A shop deployed with the Serverless Framework whose functions put events on one bus through one helper, <code>emit(name, data)</code>, which builds each entry with the factory of that name from a record of them (<code>src/common/events.ts</code>) and sends it.</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="serverless-iam-grants serverless, declared with the serverless framework, the cdk, sam or cloudformation a shop's notices as a serverless framework service (`notices/serverless.yml`) whose functions send where their code decides when they run, each allowed only where the service's role says (p272).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/serverless-iam-grants">serverless-iam-grants</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A shop's notices as a Serverless Framework service (<code>notices/serverless.yml</code>) whose functions send where their code decides when they run, each allowed only where the service's role says (P272).</p>
         <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="serverless-orders serverless, declared with the serverless framework, the cdk, sam or cloudformation the deployment of `terraform-orders`, written as a serverless framework service (`orders/serverless.yml`) over the same handlers, and read as the same graph (p57; `scripts/deployments-agree.mjs`).">
@@ -1601,7 +1633,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="58">58</span></h2>
+    <h2>Everything else <span class="count" data-total="59">59</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -2026,6 +2058,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>Tables written down one step away from the query, read without configuration (P88).</p>
         <p class="snapshots"><code>expected.cli</code> <code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="terraform-role-grants everything else a shop's payments as lambda functions deployed with terraform (`payments/infra/main.tf`), each sending where its code decides when it runs and allowed only where the role it runs as says (p272).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/terraform-role-grants">terraform-role-grants</a>
+          <span class="kind">one service</span>
+        </div>
+        <p>A shop's payments as Lambda functions deployed with Terraform (<code>payments/infra/main.tf</code>), each sending where its code decides when it runs and allowed only where the role it runs as says (P272).</p>
+        <p class="snapshots"><code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="uninstalled-internal-packages everything else what stands in for a package that is not installed (p78).">
         <div class="head">

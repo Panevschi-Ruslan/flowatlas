@@ -1,0 +1,698 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:46:33.741Z",
+  "services": [
+    {
+      "name": "notices",
+      "repo": "./notices",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:eventbridge/shop-bus/shop.orders/OrderPlaced",
+      "type": "channel",
+      "label": "eventbridge/shop-bus/shop.orders/OrderPlaced",
+      "repo": "notices",
+      "file": "serverless.yml",
+      "line": 29,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-eventbridge"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@params.alertsQueue",
+      "type": "channel",
+      "label": "sqs/${…}@params.alertsQueue",
+      "repo": "notices",
+      "file": "serverless.yml",
+      "line": 52,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:notices#ALERTS_QUEUE_URL",
+      "type": "config_key",
+      "label": "ALERTS_QUEUE_URL",
+      "repo": "notices",
+      "file": "src/alert.ts",
+      "line": 7,
+      "meta": {
+        "key": "ALERTS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:notices#serverless.yml:functions.onAlert.events[0]",
+      "type": "consumer",
+      "label": "mapping functions.onAlert.events[0]",
+      "repo": "notices",
+      "file": "serverless.yml",
+      "line": 52,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "functions.onAlert.events[0]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:notices#serverless.yml:functions.onPlaced.events[0]",
+      "type": "consumer",
+      "label": "rule functions.onPlaced.events[0]",
+      "repo": "notices",
+      "file": "serverless.yml",
+      "line": 29,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "by": "rule",
+        "declaredAs": "functions.onPlaced.events[0]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "detail"
+          ],
+          "text": false
+        }
+      }
+    },
+    {
+      "id": "entry:notices:invoke:notices-dev-alert",
+      "type": "entry",
+      "label": "notices-dev-alert",
+      "repo": "notices",
+      "file": "serverless.yml",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-dev-alert",
+        "deployedBy": "serverless",
+        "name": "notices-dev-alert",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.alert",
+        "stageFrom": "file",
+        "handler": "src/alert.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "ALERTS_QUEUE_URL": {
+            "written": "${param:alertsQueue}",
+            "value": "${…}@params.alertsQueue",
+            "kind": "queue"
+          }
+        },
+        "grants": [
+          {
+            "kind": "bus",
+            "name": "shop-bus",
+            "by": "provider.iam.role.statements[0]"
+          }
+        ],
+        "reads": {
+          "": "{text:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:notices:invoke:notices-dev-announce",
+      "type": "entry",
+      "label": "notices-dev-announce",
+      "repo": "notices",
+      "file": "serverless.yml",
+      "line": 23,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-dev-announce",
+        "deployedBy": "serverless",
+        "name": "notices-dev-announce",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.announce",
+        "stageFrom": "file",
+        "handler": "src/announce.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "bus",
+            "name": "shop-bus",
+            "by": "provider.iam.role.statements[0]"
+          }
+        ],
+        "reads": {
+          "": "{market:string;order:{id:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:notices:invoke:notices-dev-fanout",
+      "type": "entry",
+      "label": "notices-dev-fanout",
+      "repo": "notices",
+      "file": "serverless.yml",
+      "line": 42,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-dev-fanout",
+        "deployedBy": "serverless",
+        "name": "notices-dev-fanout",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.fanout",
+        "stageFrom": "file",
+        "handler": "src/fanout.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "queue",
+            "any": "arn:aws:sqs:*:*:*",
+            "by": "functions.fanout.iamRoleStatements[0]"
+          }
+        ],
+        "reads": {
+          "": "{subscriber:string;notice:{text:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:notices:invoke:notices-dev-onAlert",
+      "type": "entry",
+      "label": "notices-dev-onAlert",
+      "repo": "notices",
+      "file": "serverless.yml",
+      "line": 49,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-dev-onAlert",
+        "deployedBy": "serverless",
+        "name": "notices-dev-onAlert",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.onAlert",
+        "stageFrom": "file",
+        "handler": "src/handlers.onAlert",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "bus",
+            "name": "shop-bus",
+            "by": "provider.iam.role.statements[0]"
+          }
+        ],
+        "reads": {
+          "": "{Records:{body:string}[]}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:notices:invoke:notices-dev-onPlaced",
+      "type": "entry",
+      "label": "notices-dev-onPlaced",
+      "repo": "notices",
+      "file": "serverless.yml",
+      "line": 26,
+      "kind": "invoke",
+      "meta": {
+        "key": "notices-dev-onPlaced",
+        "deployedBy": "serverless",
+        "name": "notices-dev-onPlaced",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.onPlaced",
+        "stageFrom": "file",
+        "handler": "src/handlers.onPlaced",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "bus",
+            "name": "shop-bus",
+            "by": "provider.iam.role.statements[0]"
+          }
+        ],
+        "reads": {
+          "": "{detail:{id:string}}",
+          "detail": "{id:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "notices#src/alert.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "notices",
+      "file": "src/alert.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{text:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notices#src/announce.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "notices",
+      "file": "src/announce.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{market:string;order:{id:string}}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notices#src/fanout.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "notices",
+      "file": "src/fanout.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{subscriber:string;notice:{text:string}}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "notices#src/handlers.ts:onAlert",
+      "type": "function",
+      "label": "onAlert",
+      "repo": "notices",
+      "file": "src/handlers.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{Records:{body:string}[]}"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "notices#src/handlers.ts:onPlaced",
+      "type": "function",
+      "label": "onPlaced",
+      "repo": "notices",
+      "file": "src/handlers.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{detail:{id:string}}"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "producer:notices#src/alert.ts:7:9",
+      "type": "producer",
+      "label": "message sqs/${…}@params.alertsQueue",
+      "repo": "notices",
+      "file": "src/alert.ts",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "ALERTS_QUEUE_URL",
+                "forms": [
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{text:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "producer:notices#src/announce.ts:9:9",
+      "type": "producer",
+      "label": "event eventbridge/shop-bus/shop.orders/OrderPlaced",
+      "repo": "notices",
+      "file": "src/announce.ts",
+      "line": 9,
+      "kind": "event",
+      "meta": {
+        "kind": "event",
+        "adapter": "aws-eventbridge",
+        "channelVia": "grant",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "eventbridge",
+              {
+                "granted": "bus"
+              },
+              "shop.orders",
+              "OrderPlaced"
+            ],
+            "payload": "{id:string}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "heuristic",
+        "batch": true
+      }
+    },
+    {
+      "id": "producer:notices#src/fanout.ts:9:9",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "notices",
+      "file": "src/fanout.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "unresolved",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "granted": "queue"
+              }
+            ],
+            "payload": "{text:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "repo:notices",
+      "type": "repo",
+      "label": "notices",
+      "repo": "notices",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:eventbridge/shop-bus/shop.orders/OrderPlaced",
+      "to": "consumer:notices#serverless.yml:functions.onPlaced.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 29,
+      "meta": {
+        "by": "rule"
+      }
+    },
+    {
+      "from": "channel:sqs/${…}@params.alertsQueue",
+      "to": "consumer:notices#serverless.yml:functions.onAlert.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 52,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:notices#serverless.yml:functions.onAlert.events[0]",
+      "to": "entry:notices:invoke:notices-dev-onAlert",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 52,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:notices#serverless.yml:functions.onPlaced.events[0]",
+      "to": "entry:notices:invoke:notices-dev-onPlaced",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 29,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:notices:invoke:notices-dev-alert",
+      "to": "notices#src/alert.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/alert.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:notices:invoke:notices-dev-announce",
+      "to": "notices#src/announce.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/announce.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:notices:invoke:notices-dev-fanout",
+      "to": "notices#src/fanout.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/fanout.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:notices:invoke:notices-dev-onAlert",
+      "to": "notices#src/handlers.ts:onAlert",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers.ts",
+      "line": 3
+    },
+    {
+      "from": "entry:notices:invoke:notices-dev-onPlaced",
+      "to": "notices#src/handlers.ts:onPlaced",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/handlers.ts",
+      "line": 1
+    },
+    {
+      "from": "notices#src/alert.ts:handler",
+      "to": "config_key:notices#ALERTS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/alert.ts",
+      "line": 7,
+      "meta": {
+        "setBy": [
+          {
+            "function": "notices-dev-alert",
+            "written": "${param:alertsQueue}",
+            "value": "${…}@params.alertsQueue"
+          }
+        ]
+      }
+    },
+    {
+      "from": "notices#src/alert.ts:handler",
+      "to": "producer:notices#src/alert.ts:7:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/alert.ts",
+      "line": 7
+    },
+    {
+      "from": "notices#src/announce.ts:handler",
+      "to": "producer:notices#src/announce.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/announce.ts",
+      "line": 9
+    },
+    {
+      "from": "notices#src/fanout.ts:handler",
+      "to": "producer:notices#src/fanout.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/fanout.ts",
+      "line": 9
+    },
+    {
+      "from": "producer:notices#src/alert.ts:7:9",
+      "to": "channel:sqs/${…}@params.alertsQueue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/alert.ts",
+      "line": 7,
+      "params": [
+        "{text:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "ALERTS_QUEUE_URL"
+        ],
+        "functions": [
+          "notices-dev-alert"
+        ]
+      }
+    },
+    {
+      "from": "producer:notices#src/announce.ts:9:9",
+      "to": "channel:eventbridge/shop-bus/shop.orders/OrderPlaced",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/announce.ts",
+      "line": 9,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "grant",
+        "grants": [
+          "provider.iam.role.statements[0]"
+        ],
+        "functions": [
+          "notices-dev-announce"
+        ]
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "serverless.yml",
+      "line": 18,
+      "reason": "deployed-name-from-parameter",
+      "level": "info",
+      "message": "the queue named by the parameter alertsQueue is named by where the parameter is declared, params.alertsQueue, because the files give the parameter no value; what this deployment points at it by, or hands the parameter's value to, joins to it, and nothing outside it can",
+      "hint": "Give the parameter alertsQueue a value under params (for the stage, or default) in the service file, or hand it in from a compose file, and it is named by that value.",
+      "symbol": "params.alertsQueue",
+      "adapter": "aws-lambda",
+      "service": "notices"
+    },
+    {
+      "service": "notices",
+      "file": "src/announce.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/announce.ts:9 does not say where it sends: buses.get(event.market) is looked up in buses by event.market, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; notices-dev-announce runs it and is granted only eventbridge/shop-bus/shop.orders/OrderPlaced, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:notices#src/announce.ts:9:9",
+      "meta": {
+        "granted": [
+          "eventbridge/shop-bus/shop.orders/OrderPlaced"
+        ],
+        "functions": [
+          "notices-dev-announce"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    },
+    {
+      "file": "src/fanout.ts",
+      "line": 9,
+      "reason": "channel-dynamic",
+      "message": "handler -> subscribers.get(event.subscriber)",
+      "hint": "subscribers.get(event.subscriber) is looked up in subscribers by event.subscriber, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere. Send to an address the code or the deployment states, or annotate handler with the channels it may use. What its function is granted does not narrow it: notices-dev-fanout is granted every queue by functions.fanout.iamRoleStatements[0] on arn:aws:sqs:*:*:*, which bounds nothing.",
+      "symbol": "producer:notices#src/fanout.ts:9:9",
+      "service": "notices",
+      "meta": {
+        "grantedEvery": [
+          {
+            "function": "notices-dev-fanout",
+            "resources": [
+              "arn:aws:sqs:*:*:*"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

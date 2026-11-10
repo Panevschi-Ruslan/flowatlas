@@ -38,6 +38,7 @@ import { joinImports } from './import-link.js';
 import { keepWhereDeclared } from './declared-link.js';
 import { jobsWithoutHandler } from './job-link.js';
 import { completeFromEnvironment, reachedBy } from './environment-link.js';
+import { boundByGrants } from './grant-link.js';
 import { functionUrlsOf } from './function-url-link.js';
 import { mergeGraphs } from './merge.js';
 import {
@@ -520,7 +521,7 @@ const callEdge = (call: GraphNode, outcome: Extract<CallOutcome, { kind: 'linked
   // An API's address whose id is written out is taken as the deployment's own
   // API by its region and stage, which the id may not be (P268).
   const joinedAs =
-    outcome.hostFromFiles === true || baseUrl?.apiPath !== undefined
+    outcome.hostFromFiles === true || (baseUrl?.apiPath !== undefined && baseUrl.referenced !== true)
       ? 'heuristic'
       : baseUrl?.deployed === true
         ? 'static'
@@ -903,6 +904,8 @@ export const linkGraphs = (
   // The repository's own files fill in what a deployment leaves out (P77).
   const settings = config.settingFiles.read === false ? {} : (options.settings ?? {});
   found.push(...completeFromEnvironment(nodes, edges, merged.unresolved, settings));
+  // What is still not placed, bounded by what its functions are granted (P272).
+  found.push(...boundByGrants(nodes, edges, [merged.unresolved, found]));
   // A write onto a table's stream is a publish only where the stream is
   // declared, which only the whole project knows (P51).
   found.push(...keepWhereDeclared(nodes, edges, [merged.unresolved, found]));

@@ -145,6 +145,31 @@ only one of them moved.
   sources reads its JavaScript (`.js`, `.jsx`, `.mjs`, `.cjs`), so a plain
   Node server is read rather than skipped. The counting rule counts
   `addService(definition, implementation)` and the NestJS decorators.
+- **Where a send goes that does not say, from what its function is granted;
+  an address of a template's own API; a service's parameter with no value;
+  and lists of several elements (P272).** A send whose address is not read -
+  a queue's URL looked up in a cache the code fills by listing the account, a
+  topic handed in - is drawn, `heuristic` with `via: "grant"`, to each queue,
+  topic, bus, table, stream or bucket every function that runs it is granted
+  by name, and a start reaches each function or workflow granted; a
+  `channel-from-grant` note (new reason) replaces the row that said the
+  address was not read, quoting it. A grant on every one of the kind - `*`, an
+  ARN ending in a wildcard, a managed full-access policy - draws nothing, and
+  the row that stays says which grant bounds nothing. Grants are read from
+  SAM's policy templates and statements and the role a function's `Role`
+  names, CloudFormation's `AWS::IAM::Role`, `AWS::IAM::Policy` and
+  `AWS::IAM::ManagedPolicy`, a service file's `provider.iam.role`,
+  `iamRoleStatements` and a function's own, Terraform's role, its
+  `inline_policy`, `aws_iam_role_policy` (a policy document data source,
+  `jsonencode` or JSON) and attachments, and a CDK construct's `grant*` calls
+  and `addToRolePolicy` statements; a function carries them as `grants`. A
+  SAM or CloudFormation function deployed with `!Sub https://${Api}.execute-api...`
+  of its own API, or an HTTP API's `ApiEndpoint`, is handed that API, and a
+  request rooted at it joins the route after the stage. A Serverless
+  resource or value named by `${param:<name>}` with no value is named by the
+  parameter (`${…}@params.<name>`, `deployed-name-from-parameter`). A list of
+  several elements, and a `Map` or `Set` made with or given several values,
+  is one address per element where the walk used to stop.
 
 - **A handler behind its wrapper, a request handed in as one object, and a
   GraphQL server made into a Lambda (P269).** A `pages/api` default export
