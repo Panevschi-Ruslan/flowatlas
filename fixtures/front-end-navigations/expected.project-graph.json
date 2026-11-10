@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:32:07.779Z",
+  "builtAt": "2026-11-10T15:06:41.808Z",
   "services": [
     {
       "name": "storefront",
@@ -415,7 +415,8 @@
         "bodyKeys": [
           "path"
         ],
-        "host": "audit.internal"
+        "host": "audit.internal",
+        "sameCall": "ui_api_call:shop#lib/audit.ts:3:9"
       }
     },
     {
@@ -1289,54 +1290,6 @@
       }
     },
     {
-      "id": "ui_api_call:shop#gateways/orders.gateway.ts:14:28",
-      "type": "ui_api_call",
-      "label": "GET /orders",
-      "repo": "shop",
-      "file": "gateways/orders.gateway.ts",
-      "line": 14,
-      "kind": "http",
-      "meta": {
-        "method": "GET",
-        "url": "http://orders.internal/orders",
-        "path": "/orders",
-        "baseUrlEnv": null,
-        "responseType": "string[]",
-        "bodyType": null,
-        "headerKeys": [
-          "x-shop"
-        ],
-        "package": "axios",
-        "client": "axios",
-        "via": "literal",
-        "host": "orders.internal"
-      }
-    },
-    {
-      "id": "ui_api_call:shop#gateways/orders.gateway.ts:22:11",
-      "type": "ui_api_call",
-      "label": "DELETE /orders/:param",
-      "repo": "shop",
-      "file": "gateways/orders.gateway.ts",
-      "line": 22,
-      "kind": "http",
-      "meta": {
-        "method": "DELETE",
-        "url": "http://orders.internal/orders/:param",
-        "path": "/orders/:param",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "headerKeys": [
-          "x-shop"
-        ],
-        "package": "axios",
-        "client": "axios",
-        "via": "literal",
-        "host": "orders.internal"
-      }
-    },
-    {
       "id": "ui_api_call:shop#lib/audit.ts:3:9",
       "type": "ui_api_call",
       "label": "POST /visits",
@@ -1358,7 +1311,8 @@
         "package": null,
         "client": "fetch",
         "via": "literal",
-        "host": "audit.internal"
+        "host": "audit.internal",
+        "sameCall": "http_out:shop#lib/audit.ts:3:9"
       }
     },
     {
@@ -1651,22 +1605,6 @@
         "page": "pages/orders/index.tsx",
         "redirects": true
       }
-    },
-    {
-      "from": "shop#gateways/orders.gateway.ts:OrdersGateway",
-      "to": "ui_api_call:shop#gateways/orders.gateway.ts:14:28",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/orders.gateway.ts",
-      "line": 14
-    },
-    {
-      "from": "shop#gateways/orders.gateway.ts:OrdersGateway",
-      "to": "ui_api_call:shop#gateways/orders.gateway.ts:22:11",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/orders.gateway.ts",
-      "line": 22
     },
     {
       "from": "shop#gateways/orders.gateway.ts:OrdersGateway.latest",
@@ -2201,22 +2139,6 @@
       "line": 7
     },
     {
-      "from": "ui_api_call:shop#gateways/orders.gateway.ts:14:28",
-      "to": "external_api:orders.internal",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/orders.gateway.ts",
-      "line": 14
-    },
-    {
-      "from": "ui_api_call:shop#gateways/orders.gateway.ts:22:11",
-      "to": "external_api:orders.internal",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/orders.gateway.ts",
-      "line": 22
-    },
-    {
       "from": "ui_api_call:shop#lib/audit.ts:3:9",
       "to": "external_api:audit.internal",
       "type": "calls",
@@ -2342,18 +2264,18 @@
       "file": "gateways/orders.gateway.ts",
       "line": 14,
       "reason": "target-route-not-found",
-      "message": "no configured service serves GET /orders",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /orders */.",
-      "symbol": "ui_api_call:shop#gateways/orders.gateway.ts:14:28"
+      "message": "target service shop has no route GET /orders",
+      "hint": "Route renamed? Check shop's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:shop#gateways/orders.gateway.ts:14:28"
     },
     {
       "service": "shop",
       "file": "gateways/orders.gateway.ts",
       "line": 22,
       "reason": "target-route-not-found",
-      "message": "no configured service serves DELETE /orders/:param",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls DELETE /orders/:param */.",
-      "symbol": "ui_api_call:shop#gateways/orders.gateway.ts:22:11"
+      "message": "target service shop has no route DELETE /orders/:param",
+      "hint": "Route renamed? Check shop's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:shop#gateways/orders.gateway.ts:22:11"
     },
     {
       "service": "shop",

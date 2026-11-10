@@ -16,7 +16,7 @@ process.
 | Where | Request | Joins | Before P263 |
 |---|---|---|---|
 | `site` `app/api/report/route.ts:3` | `fetch('/api/orders')` | site's own route `via: ownOrigin`, `heuristic`, and the finding `server-request-without-origin` (the file is a route handler: the server runs it, whatever else reads it) | the join, nothing said |
-| `site` `app/page.tsx:3` | `fetch('/api/orders')` | the same join, no finding: the browser makes the same request in the same place | the same |
+| `site` `app/page.tsx:3` | `fetch('/api/orders')` | the same join and the same finding: a page under `app/` not marked `'use client'` is a server component, so the request is drawn once, from the server (P283) | the same |
 | `shop` `server/api/summary.get.ts:3` | `$fetch('/api/orders')` | shop's own route `via: inProcess`, `static` | not read |
 | `shop` `server/api/summary.get.ts:4` | `$fetch('/catalog/items')` | catalog `GET /items` through the route rule, `proxiedBy: nuxt.config.ts:3`, `proxiedAs: /items` | not read |
 | `shop` `server/api/legacy.get.ts:3` | `fetch('/api/orders')` | shop's route `via: ownOrigin`, and `server-request-without-origin` | `dynamic` |
@@ -26,8 +26,8 @@ process.
 
 ```
 calls out: 6 total, 6 linked
-ui calls: 2 total, 2 joined (the browser's reading of site's two files, same-service)
-rows: server-request-without-origin at site app/api/report/route.ts:3,
+ui calls: none (both of site's requests run on its server)
+rows: server-request-without-origin at site app/api/report/route.ts:3 and app/page.tsx:3,
       shop server/api/legacy.get.ts:3 and server/api/remote.get.ts:6
 ```
 

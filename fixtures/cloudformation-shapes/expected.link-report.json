@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:45:14.972Z",
+  "builtAt": "2026-11-10T15:05:44.686Z",
   "configHash": "77e23ae62b03",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 28,
       "types": 0,
       "unresolved": 7,
-      "durationMs": 2290,
+      "durationMs": 1507,
       "packages": {
         "name": "rides",
         "runtime": [
@@ -52,8 +52,8 @@
     "total": 5,
     "called": 0,
     "uncalled": [
+      "entry:rides:http:ALL:/*",
       "entry:rides:http:ALL:/*@rides-kiosk",
-      "entry:rides:http:ALL:/:param",
       "entry:rides:http:GET:/maps/:param",
       "entry:rides:http:GET:/rides/:param",
       "entry:rides:http:POST:/rides"

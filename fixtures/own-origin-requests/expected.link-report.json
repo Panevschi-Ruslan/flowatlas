@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:47:40.066Z",
+  "builtAt": "2026-11-10T15:13:34.697Z",
   "configHash": "8629e6e75be8",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 707,
+      "durationMs": 2316,
       "packages": {
         "name": "own-origin-requests-catalog",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 761,
+      "durationMs": 2477,
       "packages": {
         "name": "own-origin-requests-shop",
         "runtime": [
@@ -44,11 +44,11 @@
       "repo": "./site",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 10,
-      "edges": 6,
+      "nodes": 8,
+      "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 758,
+      "durationMs": 2449,
       "packages": {
         "name": "own-origin-requests-site",
         "runtime": [
@@ -70,8 +70,8 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 2,
-    "resolved": 2,
+    "total": 0,
+    "resolved": 0,
     "unresolved": 0,
     "byReason": {}
   },
@@ -123,16 +123,25 @@
       "message": "site's server makes this request to /api/orders with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
       "hint": "Build the address from a setting that gives site's own address, call the code behind the route directly, or use a client that answers it in process.",
       "symbol": "http_out:site#app/api/report/route.ts:3:24"
+    },
+    {
+      "service": "site",
+      "file": "app/page.tsx",
+      "line": 3,
+      "reason": "server-request-without-origin",
+      "message": "site's server makes this request to /api/orders with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives site's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:site#app/page.tsx:3:24"
     }
   ],
   "totals": {
-    "nodes": 26,
-    "edges": 23,
+    "nodes": 24,
+    "edges": 19,
     "types": 2,
     "missed": 2,
     "sites": 2,
     "notes": 1,
-    "findings": 3,
+    "findings": 4,
     "unresolved": 2
   }
 }

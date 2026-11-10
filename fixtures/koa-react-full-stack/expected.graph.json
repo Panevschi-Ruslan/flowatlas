@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "koa-react-full-stack",
-  "generatedAt": "2026-11-09T16:50:22.816Z",
+  "generatedAt": "2026-11-10T15:07:34.656Z",
   "nodes": [
     {
       "id": "db_query:koa-react-full-stack#src/server/orders.repository.ts:16:33",
@@ -75,44 +75,6 @@
         "registration": "ordersRouter.post",
         "middlewareRead": true,
         "handlerVia": "inline"
-      }
-    },
-    {
-      "id": "http_out:koa-react-full-stack#src/web/OrdersScreen.tsx:11:22",
-      "type": "http_out",
-      "label": "GET /api/orders",
-      "repo": "koa-react-full-stack",
-      "file": "src/web/OrdersScreen.tsx",
-      "line": 11,
-      "meta": {
-        "method": "GET",
-        "url": "/api/orders",
-        "path": "/api/orders",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "originless": true
-      }
-    },
-    {
-      "id": "http_out:koa-react-full-stack#src/web/OrdersScreen.tsx:12:24",
-      "type": "http_out",
-      "label": "POST /api/orders",
-      "repo": "koa-react-full-stack",
-      "file": "src/web/OrdersScreen.tsx",
-      "line": 12,
-      "meta": {
-        "method": "POST",
-        "url": "/api/orders",
-        "path": "/api/orders",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": "object",
-        "bodyFrom": "literal",
-        "bodyKeys": [
-          "total"
-        ],
-        "originless": true
       }
     },
     {
@@ -472,22 +434,6 @@
         "number"
       ],
       "returns": "unknown"
-    },
-    {
-      "from": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",
-      "to": "http_out:koa-react-full-stack#src/web/OrdersScreen.tsx:11:22",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/web/OrdersScreen.tsx",
-      "line": 11
-    },
-    {
-      "from": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",
-      "to": "http_out:koa-react-full-stack#src/web/OrdersScreen.tsx:12:24",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/web/OrdersScreen.tsx",
-      "line": 12
     },
     {
       "from": "koa-react-full-stack#src/web/OrdersScreen.tsx:OrdersScreen",

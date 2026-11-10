@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:32:07.779Z",
+  "builtAt": "2026-11-10T15:06:41.808Z",
   "configHash": "e53814a49045",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 1572,
+      "durationMs": 1524,
       "packages": {
         "name": "front-end-navigations-admin",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1491,
+      "durationMs": 1407,
       "packages": {
         "name": "front-end-navigations-backoffice",
         "runtime": [
@@ -52,7 +52,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1490,
+      "durationMs": 1487,
       "packages": {
         "name": "front-end-navigations-kiosk",
         "runtime": [],
@@ -67,11 +67,11 @@
       "repo": "./shop",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 26,
-      "edges": 29,
+      "nodes": 24,
+      "edges": 25,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 1615,
+      "durationMs": 1563,
       "packages": {
         "name": "front-end-navigations-shop",
         "runtime": [
@@ -91,7 +91,7 @@
       "edges": 22,
       "types": 0,
       "unresolved": 9,
-      "durationMs": 1493,
+      "durationMs": 1442,
       "packages": {
         "name": "front-end-navigations-storefront",
         "runtime": [
@@ -115,11 +115,11 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 5,
+    "total": 3,
     "resolved": 0,
-    "unresolved": 5,
+    "unresolved": 3,
     "byReason": {
-      "target-route-not-found": 5
+      "target-route-not-found": 3
     }
   },
   "channels": {
@@ -157,18 +157,18 @@
       "file": "gateways/orders.gateway.ts",
       "line": 14,
       "reason": "target-route-not-found",
-      "message": "no configured service serves GET /orders",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /orders */.",
-      "symbol": "ui_api_call:shop#gateways/orders.gateway.ts:14:28"
+      "message": "target service shop has no route GET /orders",
+      "hint": "Route renamed? Check shop's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:shop#gateways/orders.gateway.ts:14:28"
     },
     {
       "service": "shop",
       "file": "gateways/orders.gateway.ts",
       "line": 22,
       "reason": "target-route-not-found",
-      "message": "no configured service serves DELETE /orders/:param",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls DELETE /orders/:param */.",
-      "symbol": "ui_api_call:shop#gateways/orders.gateway.ts:22:11"
+      "message": "target service shop has no route DELETE /orders/:param",
+      "hint": "Route renamed? Check shop's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:shop#gateways/orders.gateway.ts:22:11"
     },
     {
       "service": "shop",
@@ -190,8 +190,8 @@
     }
   ],
   "totals": {
-    "nodes": 79,
-    "edges": 71,
+    "nodes": 77,
+    "edges": 67,
     "types": 0,
     "missed": 25,
     "sites": 34,

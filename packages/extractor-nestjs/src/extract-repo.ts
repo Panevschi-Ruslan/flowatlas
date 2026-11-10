@@ -18,6 +18,7 @@ import {
   readResolvedPackageJson,
   closeStandIns,
   withoutOtherServicesWaysIn,
+  oneSidePerRequest,
   reportSkippedTestDirectories,
   reportPatterns,
   readPatterns,
@@ -405,7 +406,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // What is written in another configured service's package is that service's
   // way in, read there; the rest of the package is still this service's to
   // read, for its types and for the code it calls (P282).
-  return withoutOtherServicesWaysIn(builder.build(), {
+  // Where both halves read a request, it is drawn on the side it runs on (P283).
+  const built = adapters.frontend.length === 0 ? builder.build() : oneSidePerRequest(builder.build(), rootDir);
+  return withoutOtherServicesWaysIn(built, {
     rootDir,
     ...(options.config === undefined ? {} : { config: options.config }),
     ...(options.configDir === undefined ? {} : { configDir: options.configDir }),

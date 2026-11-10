@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:55:40.602Z",
+  "builtAt": "2026-11-10T15:28:05.265Z",
   "services": [
     {
       "name": "shop",
@@ -57,61 +57,6 @@
         "adapter": "sveltekit-routes",
         "registration": "routes/+server",
         "handlerVia": "function"
-      }
-    },
-    {
-      "id": "http_out:shop#src/lib/api.ts:2:52",
-      "type": "http_out",
-      "label": "GET /api/orders",
-      "repo": "shop",
-      "file": "src/lib/api.ts",
-      "line": 2,
-      "meta": {
-        "method": "GET",
-        "url": "/api/orders",
-        "path": "/api/orders",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "originless": true
-      }
-    },
-    {
-      "id": "http_out:shop#src/lib/orders.ts:3:3",
-      "type": "http_out",
-      "label": "POST /api/orders",
-      "repo": "shop",
-      "file": "src/lib/orders.ts",
-      "line": 3,
-      "meta": {
-        "method": "POST",
-        "url": "/api/orders",
-        "path": "/api/orders",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": "{name:string}",
-        "bodyFrom": "literal",
-        "bodyKeys": [
-          "name"
-        ],
-        "originless": true
-      }
-    },
-    {
-      "id": "http_out:shop#src/lib/orders.ts:5:58",
-      "type": "http_out",
-      "label": "DELETE /api/orders/:param",
-      "repo": "shop",
-      "file": "src/lib/orders.ts",
-      "line": 5,
-      "meta": {
-        "method": "DELETE",
-        "url": "/api/orders/${…}",
-        "path": "/api/orders/:param",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "originless": true
       }
     },
     {
@@ -462,14 +407,6 @@
     },
     {
       "from": "shop#src/lib/api.ts:listOrders",
-      "to": "http_out:shop#src/lib/api.ts:2:52",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/lib/api.ts",
-      "line": 2
-    },
-    {
-      "from": "shop#src/lib/api.ts:listOrders",
       "to": "ui_api_call:shop#src/lib/api.ts:2:52",
       "type": "calls",
       "confidence": "static",
@@ -478,27 +415,11 @@
     },
     {
       "from": "shop#src/lib/orders.ts:cancel",
-      "to": "http_out:shop#src/lib/orders.ts:5:58",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/lib/orders.ts",
-      "line": 5
-    },
-    {
-      "from": "shop#src/lib/orders.ts:cancel",
       "to": "ui_api_call:shop#src/lib/orders.ts:5:58",
       "type": "calls",
       "confidence": "static",
       "file": "src/lib/orders.ts",
       "line": 5
-    },
-    {
-      "from": "shop#src/lib/orders.ts:place",
-      "to": "http_out:shop#src/lib/orders.ts:3:3",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/lib/orders.ts",
-      "line": 3
     },
     {
       "from": "shop#src/lib/orders.ts:place",

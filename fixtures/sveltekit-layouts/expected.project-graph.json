@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:48:36.080Z",
+  "builtAt": "2026-11-10T15:27:57.473Z",
   "services": [
     {
       "name": "shop",
@@ -107,7 +107,8 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "originless": true
+        "originless": true,
+        "sameCall": "ui_api_call:shop#src/lib/api.ts:11:73"
       }
     },
     {
@@ -119,23 +120,6 @@
       "line": 2,
       "meta": {
         "method": "GET",
-        "url": "/api/session",
-        "path": "/api/session",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "originless": true
-      }
-    },
-    {
-      "id": "http_out:shop#src/lib/api.ts:5:49",
-      "type": "http_out",
-      "label": "DELETE /api/session",
-      "repo": "shop",
-      "file": "src/lib/api.ts",
-      "line": 5,
-      "meta": {
-        "method": "DELETE",
         "url": "/api/session",
         "path": "/api/session",
         "baseUrlEnv": null,
@@ -158,7 +142,8 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "originless": true
+        "originless": true,
+        "sameCall": "ui_api_call:shop#src/lib/api.ts:8:62"
       }
     },
     {
@@ -515,27 +500,7 @@
         "package": null,
         "client": "fetch",
         "via": "literal",
-        "targetService": "shop"
-      }
-    },
-    {
-      "id": "ui_api_call:shop#src/lib/api.ts:2:65",
-      "type": "ui_api_call",
-      "label": "GET /api/session",
-      "repo": "shop",
-      "file": "src/lib/api.ts",
-      "line": 2,
-      "kind": "http",
-      "meta": {
-        "method": "GET",
-        "url": "/api/session",
-        "path": "/api/session",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "package": null,
-        "client": "fetch",
-        "via": "literal",
+        "sameCall": "http_out:shop#src/lib/api.ts:11:73",
         "targetService": "shop"
       }
     },
@@ -578,6 +543,7 @@
         "package": null,
         "client": "fetch",
         "via": "literal",
+        "sameCall": "http_out:shop#src/lib/api.ts:8:62",
         "targetService": "shop"
       }
     }
@@ -682,22 +648,6 @@
       "confidence": "static",
       "file": "src/lib/api.ts",
       "line": 2
-    },
-    {
-      "from": "shop#src/lib/api.ts:readSession",
-      "to": "ui_api_call:shop#src/lib/api.ts:2:65",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/lib/api.ts",
-      "line": 2
-    },
-    {
-      "from": "shop#src/lib/api.ts:signOut",
-      "to": "http_out:shop#src/lib/api.ts:5:49",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/lib/api.ts",
-      "line": 5
     },
     {
       "from": "shop#src/lib/api.ts:signOut",
@@ -930,18 +880,6 @@
       "confidence": "static",
       "file": "src/lib/api.ts",
       "line": 11,
-      "meta": {
-        "via": "same-service",
-        "targetService": "shop"
-      }
-    },
-    {
-      "from": "ui_api_call:shop#src/lib/api.ts:2:65",
-      "to": "entry:shop:http:GET:/api/session",
-      "type": "hits",
-      "confidence": "static",
-      "file": "src/lib/api.ts",
-      "line": 2,
       "meta": {
         "via": "same-service",
         "targetService": "shop"

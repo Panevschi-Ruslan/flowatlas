@@ -56,6 +56,13 @@ const HOLES_AMONG_TEXT = /^(?!:param$).*:param(?![\w$])/;
 const isParamSegment = (segment: string): boolean => PARAM_SEGMENT.test(segment) && !HOLES_AMONG_TEXT.test(segment);
 
 /**
+ * API Gateway's greedy `{proxy+}`, which takes the rest of the path (one
+ * segment or more), not one segment: keyed `*`, as every other catch-all is,
+ * so a request deeper under it reaches it (P283).
+ */
+const GREEDY_SEGMENT = /^\{[^/{}]+\+\}$/;
+
+/**
  * How far from a route its data access is looked for.
  *
  * One number, because two checks say "this route reaches stored data" and they
@@ -125,7 +132,8 @@ const required = (part: string, value: unknown): string => {
  * Collapse a route path into the form both sides of a call can be matched on.
  *
  * Leading slash added, trailing slash removed, repeated slashes collapsed, and
- * every parameter segment replaced by `:param`. A `*` wildcard is kept as is,
+ * every parameter segment replaced by `:param`. A `*` wildcard is kept as is
+ * (a greedy `{proxy+}` becomes one),
  * and so is an `UNREAD_SPAN`, which is not a parameter and must not be filed as
  * one. Query strings are not touched — strip them before calling.
  */
@@ -135,7 +143,7 @@ export const normalizePath = (path: string): string => {
   const segments = raw
     .split('/')
     .filter((segment) => segment.length > 0)
-    .map((segment) => (isParamSegment(segment) ? PARAM_PLACEHOLDER : segment));
+    .map((segment) => (GREEDY_SEGMENT.test(segment) ? '*' : isParamSegment(segment) ? PARAM_PLACEHOLDER : segment));
   return segments.length === 0 ? '/' : `/${segments.join('/')}`;
 };
 

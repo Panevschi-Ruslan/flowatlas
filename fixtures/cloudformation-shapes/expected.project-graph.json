@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:33:00.464Z",
+  "builtAt": "2026-11-10T15:05:44.686Z",
   "services": [
     {
       "name": "rides",
@@ -153,6 +153,25 @@
       }
     },
     {
+      "id": "entry:rides:http:ALL:/*",
+      "type": "entry",
+      "label": "ALL /*",
+      "repo": "rides",
+      "file": "stacks/rides.yaml",
+      "line": 156,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/*",
+        "rawPath": "/{proxy+}",
+        "deployedBy": "cloudformation",
+        "api": "rides-harbour-status",
+        "function": "rides-harbour-status",
+        "declaredAs": "stacks/rides.Resources.StatusApi.Target",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
       "id": "entry:rides:http:ALL:/*@rides-kiosk",
       "type": "entry",
       "label": "ALL /*",
@@ -168,25 +187,6 @@
         "function": "rides-kiosk",
         "declaredAs": "kiosk/kiosk.Resources.KioskUrl",
         "by": "function-url",
-        "adapter": "aws-lambda"
-      }
-    },
-    {
-      "id": "entry:rides:http:ALL:/:param",
-      "type": "entry",
-      "label": "ALL /:param",
-      "repo": "rides",
-      "file": "stacks/rides.yaml",
-      "line": 156,
-      "kind": "http",
-      "meta": {
-        "method": "ALL",
-        "path": "/:param",
-        "rawPath": "/{proxy+}",
-        "deployedBy": "cloudformation",
-        "api": "rides-harbour-status",
-        "function": "rides-harbour-status",
-        "declaredAs": "stacks/rides.Resources.StatusApi.Target",
         "adapter": "aws-lambda"
       }
     },
@@ -982,6 +982,17 @@
       "line": 2
     },
     {
+      "from": "entry:rides:http:ALL:/*",
+      "to": "rides#src/rides/status.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rides/status.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
       "from": "entry:rides:http:ALL:/*@rides-kiosk",
       "to": "rides#kiosk/kiosk.yaml:AWS_IAM",
       "type": "guarded_by",
@@ -1001,17 +1012,6 @@
       "type": "handles",
       "confidence": "static",
       "file": "src/kiosk/kiosk.ts",
-      "line": 2,
-      "meta": {
-        "requestRead": true
-      }
-    },
-    {
-      "from": "entry:rides:http:ALL:/:param",
-      "to": "rides#src/rides/status.ts:handler",
-      "type": "handles",
-      "confidence": "static",
-      "file": "src/rides/status.ts",
       "line": 2,
       "meta": {
         "requestRead": true

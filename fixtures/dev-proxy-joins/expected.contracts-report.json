@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-08T17:04:00.755Z",
+  "generatedAt": "2026-11-10T15:06:12.543Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -29,54 +29,6 @@
       "reason": "no-type-on-sender",
       "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
       "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
-    },
-    {
-      "edge": {
-        "from": "http_out:store#app/page.tsx:5:28",
-        "to": "entry:orders:http:GET:/orders",
-        "type": "http_calls"
-      },
-      "edgeKey": "http_out:store#app/page.tsx:5:28|http_calls|entry:orders:http:GET:/orders",
-      "direction": "request",
-      "reason": "no-type-on-sender",
-      "message": "store#app/page.tsx:Page declares no type for what it sends",
-      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
-    },
-    {
-      "edge": {
-        "from": "http_out:store#app/page.tsx:5:28",
-        "to": "entry:orders:http:GET:/orders",
-        "type": "http_calls"
-      },
-      "edgeKey": "http_out:store#app/page.tsx:5:28|http_calls|entry:orders:http:GET:/orders",
-      "direction": "response",
-      "reason": "no-type-on-sender",
-      "message": "orders#src/app.ts:GET /orders@6 answers through the response it is handed, and states no type for the answer",
-      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
-    },
-    {
-      "edge": {
-        "from": "http_out:store#app/page.tsx:6:28",
-        "to": "entry:store:http:GET:/shop-api/health",
-        "type": "http_calls"
-      },
-      "edgeKey": "http_out:store#app/page.tsx:6:28|http_calls|entry:store:http:GET:/shop-api/health",
-      "direction": "request",
-      "reason": "no-type-on-sender",
-      "message": "store#app/page.tsx:Page declares no type for what it sends",
-      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
-    },
-    {
-      "edge": {
-        "from": "http_out:store#app/page.tsx:6:28",
-        "to": "entry:store:http:GET:/shop-api/health",
-        "type": "http_calls"
-      },
-      "edgeKey": "http_out:store#app/page.tsx:6:28|http_calls|entry:store:http:GET:/shop-api/health",
-      "direction": "response",
-      "reason": "no-type-on-receiver",
-      "message": "store#app/page.tsx:Page declares no type for what it expects",
-      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
       "edge": {
@@ -324,7 +276,7 @@
     "shared": 0,
     "identical": 0,
     "hash_differs": 0,
-    "unchecked": 26,
+    "unchecked": 22,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

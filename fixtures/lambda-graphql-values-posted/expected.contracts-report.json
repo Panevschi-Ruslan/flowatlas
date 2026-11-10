@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-10T14:17:27.622Z",
+  "generatedAt": "2026-11-10T15:07:43.540Z",
   "edges": [],
   "findings": [
     {
@@ -59,6 +59,30 @@
       "reason": "no-type-on-sender",
       "message": "entry:bookshop:http:POST:/catalog declares no type for what it sends",
       "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    },
+    {
+      "edge": {
+        "from": "http_out:bookshop#src/restock/restock.ts:38:9",
+        "to": "entry:bookshop:http:GET:/plugins/*",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:bookshop#src/restock/restock.ts:38:9|http_calls|entry:bookshop:http:GET:/plugins/*",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "bookshop#src/restock/restock.ts:handler declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:bookshop#src/restock/restock.ts:38:9",
+        "to": "entry:bookshop:http:GET:/plugins/*",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:bookshop#src/restock/restock.ts:38:9|http_calls|entry:bookshop:http:GET:/plugins/*",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "bookshop#src/restock/restock.ts:handler declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     }
   ],
   "summary": {
@@ -66,7 +90,7 @@
     "shared": 0,
     "identical": 0,
     "hash_differs": 0,
-    "unchecked": 2,
+    "unchecked": 4,
     "errors": 1,
     "warnings": 0,
     "infos": 0,

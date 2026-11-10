@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:40:02.199Z",
+  "builtAt": "2026-11-10T15:16:06.297Z",
   "services": [
     {
       "name": "library",
@@ -503,6 +503,26 @@
       }
     },
     {
+      "id": "entry:library:http:ALL:/*",
+      "type": "entry",
+      "label": "ALL /*",
+      "repo": "library",
+      "file": "template.yaml",
+      "line": 88,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/*",
+        "rawPath": "/{proxy+}",
+        "deployedBy": "sam",
+        "api": "library-prod",
+        "function": "library-prod-hold",
+        "declaredAs": "Resources.HoldFunction.Events.Desk",
+        "stage": "$default",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
       "id": "entry:library:http:ALL:/*@library-prod-book",
       "type": "entry",
       "label": "ALL /*",
@@ -537,26 +557,6 @@
         "function": "library-prod-kiosk",
         "declaredAs": "Resources.KioskUrl",
         "by": "function-url",
-        "adapter": "aws-lambda"
-      }
-    },
-    {
-      "id": "entry:library:http:ALL:/:param",
-      "type": "entry",
-      "label": "ALL /:param",
-      "repo": "library",
-      "file": "template.yaml",
-      "line": 88,
-      "kind": "http",
-      "meta": {
-        "method": "ALL",
-        "path": "/:param",
-        "rawPath": "/{proxy+}",
-        "deployedBy": "sam",
-        "api": "library-prod",
-        "function": "library-prod-hold",
-        "declaredAs": "Resources.HoldFunction.Events.Desk",
-        "stage": "$default",
         "adapter": "aws-lambda"
       }
     },
@@ -1869,6 +1869,17 @@
       }
     },
     {
+      "from": "entry:library:http:ALL:/*",
+      "to": "library#src/loans/hold.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/loans/hold.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
       "from": "entry:library:http:ALL:/*@library-prod-book",
       "to": "library#src/catalog/book.ts:handler",
       "type": "handles",
@@ -1916,17 +1927,6 @@
         "scope": "route",
         "layer": "guard",
         "source": "authorizer"
-      }
-    },
-    {
-      "from": "entry:library:http:ALL:/:param",
-      "to": "library#src/loans/hold.ts:handler",
-      "type": "handles",
-      "confidence": "static",
-      "file": "src/loans/hold.ts",
-      "line": 2,
-      "meta": {
-        "requestRead": true
       }
     },
     {

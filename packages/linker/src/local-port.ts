@@ -174,9 +174,20 @@ const insideContainer = (service: string, ports: readonly ListenPort[], containe
 };
 
 /** Where a service's code says it listens, for the row about a mapping that misses it. */
-const portsSaid = (service: string, ports: readonly ListenPort[]): string => {
-  const numbered = [...new Set(ports.flatMap((port) => (port.port === undefined ? [] : [`${port.port} (${port.file}:${port.line})`])))];
-  const alone = [...new Set(ports.flatMap((port) => (port.port === undefined && port.setting !== undefined ? [`${port.setting} (${port.file}:${port.line})`] : [])))];
+const portsSaid = (service: string, ports: readonly ListenPort[], environment: Readonly<Record<string, number>> = {}): string => {
+  // A port the container's environment gives the setting the code reads is
+  // the one it listens on there, whatever the code's own fallback (P283).
+  const givenOf = (port: ListenPort): number | undefined => (port.setting === undefined ? undefined : environment[port.setting]);
+  const numbered = [
+    ...new Set(
+      ports.flatMap((port) => {
+        const given = givenOf(port);
+        if (given !== undefined) return [`${given} (${port.setting} as the container's environment gives it, ${port.file}:${port.line})`];
+        return port.port === undefined ? [] : [`${port.port} (${port.file}:${port.line})`];
+      }),
+    ),
+  ];
+  const alone = [...new Set(ports.flatMap((port) => (port.port === undefined && port.setting !== undefined && givenOf(port) === undefined ? [`${port.setting} (${port.file}:${port.line})`] : [])))];
   const said = [
     ...(numbered.length === 0 ? [] : [`listens on ${numbered.join(', ')}`]),
     ...(alone.length === 0 ? [] : [`reads its port from ${alone.join(', ')}, which the container's environment does not give`]),
@@ -212,7 +223,7 @@ const unheardRow = (service: string, container: ContainerRun, mapping: Container
     line: mapping.line,
     reason: 'published-port-unheard',
     level: 'info',
-    message: `${publishing(container, mapping, service)}, but ${portsSaid(service, ports)}`,
+    message: `${publishing(container, mapping, service)}, but ${portsSaid(service, ports, container.environment)}`,
     hint: `Map the published port to the port the server listens on (${mapping.published}:<that port>), or check that the container's environment gives the server ${mapping.container}. A request to localhost:${mapping.published} is still joined to ${service} by the file.`,
     symbol: `${container.name}:${mapping.published}:${mapping.container}`,
     meta: { published: mapping.published, container: mapping.container, listens: [...new Set(ports.flatMap((port) => (port.port === undefined ? [] : [port.port])))].sort((a, b) => a - b) },

@@ -17,6 +17,7 @@ import {
   type ServiceBinding,
   type SettingValue,
   type Unresolved,
+  workspaceRootOf,
 } from '@flowatlas/core';
 import { readComposeFile, type ComposeService, type Mapping } from './compose.js';
 import { readWorkerJson, readWorkerToml, readServerlessFile, type DeploymentSettings } from './deployed.js';
@@ -170,6 +171,26 @@ const readEnv = (into: Gathered, path: string, file: string, container?: Record<
     const value = keptValue(name, raw);
     if (value !== undefined) add(into, name, { value, file, ...(environment === undefined ? {} : { environment }) });
   }
+};
+
+/**
+ * What the environment files at the top of the workspace a service is a
+ * package of say (P283), for the settings the service's own files do not:
+ * a monorepo keeps one `.env.example` at its root for all of its packages,
+ * and its build reads it from there (`envDir`, `dotenv -e ../../.env`). The
+ * nearer file is the one that counts, as for dotenv itself, so a value from
+ * the root never stands beside one the package gives. Only the values and
+ * the names: a port written there is any package's, not this one's own.
+ */
+const readWorkspaceEnv = (into: Gathered, dir: string): void => {
+  const root = workspaceRootOf(dir);
+  if (root === undefined || realOf(root) === realOf(dir)) return;
+  const shared = gathered();
+  for (const name of filesAt(root).filter((each) => envFileReading(each) !== undefined)) {
+    readEnv(shared, join(root, name), relative(dir, join(root, name)).split(sep).join('/'));
+  }
+  for (const [name, values] of shared.values) if (!into.values.has(name)) into.values.set(name, values);
+  for (const [name, files] of shared.namedOnly) if (!into.values.has(name) && !into.namedOnly.has(name)) into.namedOnly.set(name, files);
 };
 
 /**
@@ -628,10 +649,20 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
         if (value !== undefined) add(into, name, { value, file, ...(environment === undefined ? {} : { environment }) });
       }
     }
+    readWorkspaceEnv(into, service.dir);
     readRuns(into, scripts.find((each) => each.owner === service.name)?.commands ?? []);
     manifests.push({ read: readManifestsUnder(service.dir, new Set(), choice), owner: service.name });
     composeAt(service.dir, (name) => name, service.name);
   }
+  // The compose files at the top of each workspace a service is a package of,
+  // where the configuration is kept elsewhere (P283): the containers they
+  // start are built from the packages, as those beside the configuration are.
+  const workspaceRoots = new Map<string, string>();
+  for (const service of input.services) {
+    const root = workspaceRootOf(service.dir);
+    if (root !== undefined && realOf(root) !== realOf(input.rootDir) && !byDir.has(realOf(root)) && !workspaceRoots.has(realOf(root))) workspaceRoots.set(realOf(root), resolve(root));
+  }
+  for (const root of [...workspaceRoots.values()].sort()) composeAt(root, (name) => relative(resolve(input.rootDir), join(root, name)).split(sep).join('/'));
   if (!byDir.has(realOf(input.rootDir))) {
     composeAt(input.rootDir, (name) => name);
     manifests.push({ read: readManifestsUnder(input.rootDir, new Set(input.services.map((service) => resolve(service.dir))), choice) });

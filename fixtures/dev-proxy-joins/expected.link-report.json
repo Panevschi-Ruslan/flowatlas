@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:04:00.152Z",
+  "builtAt": "2026-11-10T15:06:11.763Z",
   "configHash": "10c93f0052af",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1477,
+      "durationMs": 2333,
       "packages": {
         "name": "dev-proxy-joins-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1460,
+      "durationMs": 2304,
       "packages": {
         "name": "dev-proxy-joins-billing",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1453,
+      "durationMs": 2315,
       "packages": {
         "name": "dev-proxy-joins-catalog",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 5,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1458,
+      "durationMs": 2325,
       "packages": {
         "name": "dev-proxy-joins-jobs",
         "runtime": [
@@ -86,7 +86,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1451,
+      "durationMs": 2262,
       "packages": {
         "name": "dev-proxy-joins-legacy",
         "runtime": [
@@ -105,7 +105,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1486,
+      "durationMs": 2332,
       "packages": {
         "name": "dev-proxy-joins-orders",
         "runtime": [
@@ -119,11 +119,11 @@
       "repo": "./store",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 10,
-      "edges": 7,
+      "nodes": 8,
+      "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1530,
+      "durationMs": 2273,
       "packages": {
         "name": "dev-proxy-joins-store",
         "runtime": [
@@ -142,7 +142,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1527,
+      "durationMs": 2367,
       "packages": {
         "name": "dev-proxy-joins-storefront",
         "runtime": [
@@ -160,7 +160,7 @@
       "edges": 13,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1464,
+      "durationMs": 2249,
       "packages": {
         "name": "dev-proxy-joins-web",
         "runtime": [
@@ -173,8 +173,8 @@
     }
   ],
   "httpOut": {
-    "total": 4,
-    "linked": 3,
+    "total": 2,
+    "linked": 1,
     "byMarker": 0,
     "unknownEnv": 0,
     "noRoute": 0,
@@ -255,8 +255,8 @@
     }
   ],
   "totals": {
-    "nodes": 58,
-    "edges": 50,
+    "nodes": 56,
+    "edges": 46,
     "types": 2,
     "missed": 2,
     "sites": 2,

@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-09T11:47:40.559Z",
+  "generatedAt": "2026-11-10T15:13:35.535Z",
   "edges": [],
   "findings": [],
   "ignored": [],
@@ -149,54 +149,6 @@
       "reason": "no-type-on-sender",
       "message": "site#app/api/orders/route.ts:GET answers through the response it is handed, and states no type for the answer",
       "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
-    },
-    {
-      "edge": {
-        "from": "ui_api_call:site#app/api/report/route.ts:3:24",
-        "to": "entry:site:http:GET:/api/orders",
-        "type": "hits"
-      },
-      "edgeKey": "ui_api_call:site#app/api/report/route.ts:3:24|hits|entry:site:http:GET:/api/orders",
-      "direction": "request",
-      "reason": "no-type-on-sender",
-      "message": "site#app/api/report/route.ts:GET declares no type for what it sends",
-      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
-    },
-    {
-      "edge": {
-        "from": "ui_api_call:site#app/api/report/route.ts:3:24",
-        "to": "entry:site:http:GET:/api/orders",
-        "type": "hits"
-      },
-      "edgeKey": "ui_api_call:site#app/api/report/route.ts:3:24|hits|entry:site:http:GET:/api/orders",
-      "direction": "response",
-      "reason": "no-type-on-sender",
-      "message": "site#app/api/orders/route.ts:GET answers through the response it is handed, and states no type for the answer",
-      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
-    },
-    {
-      "edge": {
-        "from": "ui_api_call:site#app/page.tsx:3:24",
-        "to": "entry:site:http:GET:/api/orders",
-        "type": "hits"
-      },
-      "edgeKey": "ui_api_call:site#app/page.tsx:3:24|hits|entry:site:http:GET:/api/orders",
-      "direction": "request",
-      "reason": "no-type-on-sender",
-      "message": "site#app/page.tsx:Page declares no type for what it sends",
-      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
-    },
-    {
-      "edge": {
-        "from": "ui_api_call:site#app/page.tsx:3:24",
-        "to": "entry:site:http:GET:/api/orders",
-        "type": "hits"
-      },
-      "edgeKey": "ui_api_call:site#app/page.tsx:3:24|hits|entry:site:http:GET:/api/orders",
-      "direction": "response",
-      "reason": "no-type-on-sender",
-      "message": "site#app/api/orders/route.ts:GET answers through the response it is handed, and states no type for the answer",
-      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
     }
   ],
   "summary": {
@@ -204,7 +156,7 @@
     "shared": 0,
     "identical": 0,
     "hash_differs": 0,
-    "unchecked": 16,
+    "unchecked": 12,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

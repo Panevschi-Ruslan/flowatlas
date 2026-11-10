@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:47:40.066Z",
+  "builtAt": "2026-11-10T15:13:34.697Z",
   "services": [
     {
       "name": "site",
@@ -467,48 +467,6 @@
         },
         "route": "/"
       }
-    },
-    {
-      "id": "ui_api_call:site#app/api/report/route.ts:3:24",
-      "type": "ui_api_call",
-      "label": "GET /api/orders",
-      "repo": "site",
-      "file": "app/api/report/route.ts",
-      "line": 3,
-      "kind": "http",
-      "meta": {
-        "method": "GET",
-        "url": "/api/orders",
-        "path": "/api/orders",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "package": null,
-        "client": "fetch",
-        "via": "literal",
-        "targetService": "site"
-      }
-    },
-    {
-      "id": "ui_api_call:site#app/page.tsx:3:24",
-      "type": "ui_api_call",
-      "label": "GET /api/orders",
-      "repo": "site",
-      "file": "app/page.tsx",
-      "line": 3,
-      "kind": "http",
-      "meta": {
-        "method": "GET",
-        "url": "/api/orders",
-        "path": "/api/orders",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "package": null,
-        "client": "fetch",
-        "via": "literal",
-        "targetService": "site"
-      }
     }
   ],
   "edges": [
@@ -708,52 +666,12 @@
       "line": 3
     },
     {
-      "from": "site#app/api/report/route.ts:GET",
-      "to": "ui_api_call:site#app/api/report/route.ts:3:24",
-      "type": "calls",
-      "confidence": "static",
-      "file": "app/api/report/route.ts",
-      "line": 3
-    },
-    {
       "from": "site#app/page.tsx:Page",
       "to": "http_out:site#app/page.tsx:3:24",
       "type": "calls",
       "confidence": "static",
       "file": "app/page.tsx",
       "line": 3
-    },
-    {
-      "from": "site#app/page.tsx:Page",
-      "to": "ui_api_call:site#app/page.tsx:3:24",
-      "type": "calls",
-      "confidence": "static",
-      "file": "app/page.tsx",
-      "line": 3
-    },
-    {
-      "from": "ui_api_call:site#app/api/report/route.ts:3:24",
-      "to": "entry:site:http:GET:/api/orders",
-      "type": "hits",
-      "confidence": "static",
-      "file": "app/api/report/route.ts",
-      "line": 3,
-      "meta": {
-        "via": "same-service",
-        "targetService": "site"
-      }
-    },
-    {
-      "from": "ui_api_call:site#app/page.tsx:3:24",
-      "to": "entry:site:http:GET:/api/orders",
-      "type": "hits",
-      "confidence": "static",
-      "file": "app/page.tsx",
-      "line": 3,
-      "meta": {
-        "via": "same-service",
-        "targetService": "site"
-      }
     }
   ],
   "types": {
@@ -876,6 +794,15 @@
       "message": "site's server makes this request to /api/orders with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
       "hint": "Build the address from a setting that gives site's own address, call the code behind the route directly, or use a client that answers it in process.",
       "symbol": "http_out:site#app/api/report/route.ts:3:24"
+    },
+    {
+      "service": "site",
+      "file": "app/page.tsx",
+      "line": 3,
+      "reason": "server-request-without-origin",
+      "message": "site's server makes this request to /api/orders with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives site's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:site#app/page.tsx:3:24"
     }
   ]
 }

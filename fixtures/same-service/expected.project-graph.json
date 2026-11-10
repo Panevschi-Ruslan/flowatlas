@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:48:10.003Z",
+  "builtAt": "2026-11-10T15:16:28.279Z",
   "services": [
     {
       "name": "site",
@@ -59,6 +59,7 @@
         "responseType": null,
         "bodyType": null,
         "originless": true,
+        "sameCall": "ui_api_call:site#lib/things-client.ts:10:24",
         "targetService": "site"
       }
     },
@@ -81,6 +82,7 @@
           "name"
         ],
         "originless": true,
+        "sameCall": "ui_api_call:site#lib/things-client.ts:15:24",
         "targetService": "site"
       }
     },
@@ -99,6 +101,7 @@
         "responseType": null,
         "bodyType": null,
         "originless": true,
+        "sameCall": "ui_api_call:site#lib/things-client.ts:21:24",
         "targetService": "site"
       }
     },
@@ -326,6 +329,7 @@
         "package": null,
         "client": "fetch",
         "via": "literal",
+        "sameCall": "http_out:site#lib/things-client.ts:10:24",
         "targetService": "site"
       }
     },
@@ -351,6 +355,7 @@
         "package": null,
         "client": "fetch",
         "via": "literal",
+        "sameCall": "http_out:site#lib/things-client.ts:15:24",
         "targetService": "site"
       }
     },
@@ -371,7 +376,8 @@
         "bodyType": null,
         "package": null,
         "client": "fetch",
-        "via": "literal"
+        "via": "literal",
+        "sameCall": "http_out:site#lib/things-client.ts:21:24"
       }
     }
   ],

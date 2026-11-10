@@ -1,0 +1,6 @@
+services:
+  api:
+    build:
+      context: ./packages/api
+    ports:
+      - "4100:4100"

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:50:44.281Z",
+  "builtAt": "2026-11-10T15:12:56.857Z",
   "configHash": "a451ad759c33",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./storefront",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 54,
-      "edges": 45,
+      "nodes": 53,
+      "edges": 44,
       "types": 4,
       "unresolved": 3,
-      "durationMs": 1264,
+      "durationMs": 931,
       "packages": {
         "name": "next-wrapped-pages-storefront",
         "runtime": [
@@ -36,12 +36,10 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 7,
+    "total": 6,
     "resolved": 6,
-    "unresolved": 1,
-    "byReason": {
-      "target-route-not-found": 1
-    }
+    "unresolved": 0,
+    "byReason": {}
   },
   "channels": {
     "total": 0,
@@ -68,15 +66,15 @@
       "service": "storefront",
       "file": "gateways/shipping.gateway.ts",
       "line": 11,
-      "reason": "target-route-not-found",
-      "message": "no configured service serves POST /quote",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /quote */.",
-      "symbol": "ui_api_call:storefront#gateways/shipping.gateway.ts:11:26"
+      "reason": "unknown-base-url-env",
+      "message": "no service declares SHIPPING_URL",
+      "hint": "Add SHIPPING_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:storefront#gateways/shipping.gateway.ts:11:26"
     }
   ],
   "totals": {
-    "nodes": 54,
-    "edges": 57,
+    "nodes": 53,
+    "edges": 56,
     "types": 4,
     "missed": 4,
     "sites": 24,

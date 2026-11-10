@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:43:32.908Z",
+  "builtAt": "2026-11-10T15:27:57.473Z",
   "configHash": "4191b8cde503",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "sveltekit",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 34,
-      "edges": 29,
+      "nodes": 32,
+      "edges": 27,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 3045,
+      "durationMs": 4047,
       "packages": {
         "name": "sveltekit-layouts-shop",
         "runtime": [],
@@ -24,18 +24,18 @@
     }
   ],
   "httpOut": {
-    "total": 4,
+    "total": 3,
     "linked": 0,
     "byMarker": 0,
     "unknownEnv": 0,
     "noRoute": 0,
     "ambiguous": 0,
     "external": 0,
-    "dynamic": 4
+    "dynamic": 3
   },
   "ui": {
-    "total": 4,
-    "resolved": 4,
+    "total": 3,
+    "resolved": 3,
     "unresolved": 0,
     "byReason": {}
   },
@@ -47,9 +47,10 @@
   },
   "routes": {
     "total": 5,
-    "called": 4,
+    "called": 3,
     "uncalled": [
-      "entry:shop:http:GET:/#layout:src/routes/+layout.server.ts"
+      "entry:shop:http:GET:/#layout:src/routes/+layout.server.ts",
+      "entry:shop:http:GET:/api/session"
     ],
     "duplicated": []
   },
@@ -59,8 +60,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 34,
-    "edges": 33,
+    "nodes": 32,
+    "edges": 30,
     "types": 0,
     "missed": 1,
     "sites": 1,

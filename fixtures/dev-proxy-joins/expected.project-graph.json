@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:43:42.010Z",
+  "builtAt": "2026-11-10T15:06:11.763Z",
   "services": [
     {
       "name": "orders",
@@ -308,42 +308,6 @@
         "responseType": null,
         "bodyType": null,
         "host": "localhost:5180"
-      }
-    },
-    {
-      "id": "http_out:store#app/page.tsx:5:28",
-      "type": "http_out",
-      "label": "GET /shop-api/orders",
-      "repo": "store",
-      "file": "app/page.tsx",
-      "line": 5,
-      "meta": {
-        "method": "GET",
-        "url": "/shop-api/orders",
-        "path": "/shop-api/orders",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "originless": true,
-        "targetService": "orders"
-      }
-    },
-    {
-      "id": "http_out:store#app/page.tsx:6:28",
-      "type": "http_out",
-      "label": "GET /shop-api/health",
-      "repo": "store",
-      "file": "app/page.tsx",
-      "line": 6,
-      "meta": {
-        "method": "GET",
-        "url": "/shop-api/health",
-        "path": "/shop-api/health",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "originless": true,
-        "targetService": "store"
       }
     },
     {
@@ -1408,33 +1372,6 @@
       }
     },
     {
-      "from": "http_out:store#app/page.tsx:5:28",
-      "to": "entry:orders:http:GET:/orders",
-      "type": "http_calls",
-      "confidence": "heuristic",
-      "file": "app/page.tsx",
-      "line": 5,
-      "meta": {
-        "via": "proxy",
-        "targetService": "orders",
-        "listensAt": "src/app.ts:14",
-        "proxiedBy": "next.config.js:5",
-        "proxiedAs": "/orders"
-      }
-    },
-    {
-      "from": "http_out:store#app/page.tsx:6:28",
-      "to": "entry:store:http:GET:/shop-api/health",
-      "type": "http_calls",
-      "confidence": "heuristic",
-      "file": "app/page.tsx",
-      "line": 6,
-      "meta": {
-        "via": "ownOrigin",
-        "targetService": "store"
-      }
-    },
-    {
       "from": "jobs#src/server.ts:POST /jobs/sync@6",
       "to": "http_out:jobs#src/server.ts:7:9",
       "type": "calls",
@@ -1457,22 +1394,6 @@
       "confidence": "static",
       "file": "src/Invoices.tsx",
       "line": 3
-    },
-    {
-      "from": "store#app/page.tsx:Page",
-      "to": "http_out:store#app/page.tsx:5:28",
-      "type": "calls",
-      "confidence": "static",
-      "file": "app/page.tsx",
-      "line": 5
-    },
-    {
-      "from": "store#app/page.tsx:Page",
-      "to": "http_out:store#app/page.tsx:6:28",
-      "type": "calls",
-      "confidence": "static",
-      "file": "app/page.tsx",
-      "line": 6
     },
     {
       "from": "store#app/page.tsx:Page",

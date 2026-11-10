@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:36:35.522Z",
+  "builtAt": "2026-11-10T15:16:06.297Z",
   "configHash": "e187e7f2c153",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 60,
       "types": 0,
       "unresolved": 11,
-      "durationMs": 1027,
+      "durationMs": 8987,
       "packages": {
         "name": "library-desk",
         "runtime": [
@@ -60,7 +60,7 @@
     "total": 7,
     "called": 2,
     "uncalled": [
-      "entry:library:http:ALL:/:param",
+      "entry:library:http:ALL:/*",
       "entry:library:http:GET:/books/:param",
       "entry:library:http:GET:/branches/:param",
       "entry:library:http:POST:/loans",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:47:49.310Z",
+  "builtAt": "2026-11-10T15:14:07.021Z",
   "services": [
     {
       "name": "orders",
@@ -994,48 +994,6 @@
       }
     },
     {
-      "id": "ui_api_call:gateway#app/page.tsx:3:24",
-      "type": "ui_api_call",
-      "label": "GET /api/health",
-      "repo": "gateway",
-      "file": "app/page.tsx",
-      "line": 3,
-      "kind": "http",
-      "meta": {
-        "method": "GET",
-        "url": "/api/health",
-        "path": "/api/health",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "package": null,
-        "client": "fetch",
-        "via": "literal",
-        "targetService": "gateway"
-      }
-    },
-    {
-      "id": "ui_api_call:gateway#app/page.tsx:4:23",
-      "type": "ui_api_call",
-      "label": "GET /orders/today",
-      "repo": "gateway",
-      "file": "app/page.tsx",
-      "line": 4,
-      "kind": "http",
-      "meta": {
-        "method": "GET",
-        "url": "/orders/today",
-        "path": "/orders/today",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "package": null,
-        "client": "fetch",
-        "via": "literal",
-        "targetService": "orders"
-      }
-    },
-    {
       "id": "ui_api_call:kiosk#src/Kiosk.tsx:3:27",
       "type": "ui_api_call",
       "label": "GET /shop/api/orders/7",
@@ -1287,22 +1245,6 @@
       "line": 4
     },
     {
-      "from": "gateway#app/page.tsx:Page",
-      "to": "ui_api_call:gateway#app/page.tsx:3:24",
-      "type": "calls",
-      "confidence": "static",
-      "file": "app/page.tsx",
-      "line": 3
-    },
-    {
-      "from": "gateway#app/page.tsx:Page",
-      "to": "ui_api_call:gateway#app/page.tsx:4:23",
-      "type": "calls",
-      "confidence": "static",
-      "file": "app/page.tsx",
-      "line": 4
-    },
-    {
       "from": "http_out:gateway#app/page.tsx:3:24",
       "to": "entry:gateway:http:GET:/api/health",
       "type": "http_calls",
@@ -1440,35 +1382,6 @@
         "listensAt": "src/app.ts:10",
         "proxiedBy": "proxy.conf.json:8",
         "proxiedAs": "/v2/invoices"
-      }
-    },
-    {
-      "from": "ui_api_call:gateway#app/page.tsx:3:24",
-      "to": "entry:gateway:http:GET:/api/health",
-      "type": "hits",
-      "confidence": "static",
-      "file": "app/page.tsx",
-      "line": 3,
-      "meta": {
-        "via": "same-service",
-        "targetService": "gateway"
-      }
-    },
-    {
-      "from": "ui_api_call:gateway#app/page.tsx:4:23",
-      "to": "entry:orders:http:GET:/orders/:param",
-      "type": "hits",
-      "confidence": "heuristic",
-      "file": "app/page.tsx",
-      "line": 4,
-      "meta": {
-        "via": "proxy",
-        "targetService": "orders",
-        "listensAt": "src/app.ts:14",
-        "proxiedBy": "next.config.js:5",
-        "proxiedTo": [
-          "ORDERS_URL from .env.example"
-        ]
       }
     },
     {
@@ -1614,6 +1527,24 @@
         "key": "admin.localhost:4300"
       },
       "service": "admin"
+    },
+    {
+      "service": "gateway",
+      "file": "app/page.tsx",
+      "line": 3,
+      "reason": "server-request-without-origin",
+      "message": "gateway's server makes this request to /api/health with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives gateway's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:gateway#app/page.tsx:3:24"
+    },
+    {
+      "service": "gateway",
+      "file": "app/page.tsx",
+      "line": 4,
+      "reason": "server-request-without-origin",
+      "message": "gateway's server makes this request to /orders/today with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives gateway's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:gateway#app/page.tsx:4:23"
     },
     {
       "service": "web",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:07:45.607Z",
+  "builtAt": "2026-11-10T15:14:07.021Z",
   "configHash": "72110bdba2d9",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1143,
+      "durationMs": 6290,
       "packages": {
         "name": "proxy-chain-joins-admin",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1193,
+      "durationMs": 6763,
       "packages": {
         "name": "proxy-chain-joins-billing",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1145,
+      "durationMs": 6239,
       "packages": {
         "name": "proxy-chain-joins-catalog",
         "runtime": [
@@ -64,11 +64,11 @@
       "repo": "./gateway",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 8,
-      "edges": 5,
+      "nodes": 6,
+      "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1107,
+      "durationMs": 7083,
       "packages": {
         "name": "proxy-chain-joins-gateway",
         "runtime": [
@@ -87,7 +87,7 @@
       "edges": 3,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1183,
+      "durationMs": 6969,
       "packages": {
         "name": "proxy-chain-joins-jobs",
         "runtime": [
@@ -105,7 +105,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1201,
+      "durationMs": 6760,
       "packages": {
         "name": "proxy-chain-joins-kiosk",
         "runtime": [
@@ -125,7 +125,7 @@
       "edges": 1,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1105,
+      "durationMs": 6950,
       "packages": {
         "name": "proxy-chain-joins-ledger",
         "runtime": [
@@ -143,7 +143,7 @@
       "edges": 2,
       "types": 2,
       "unresolved": 0,
-      "durationMs": 1145,
+      "durationMs": 6335,
       "packages": {
         "name": "proxy-chain-joins-orders",
         "runtime": [
@@ -161,7 +161,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1085,
+      "durationMs": 6094,
       "packages": {
         "name": "proxy-chain-joins-web",
         "runtime": [
@@ -184,8 +184,8 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 9,
-    "resolved": 8,
+    "total": 7,
+    "resolved": 6,
     "unresolved": 1,
     "byReason": {
       "proxy-chain-unfollowed": 1
@@ -212,6 +212,24 @@
   },
   "unresolved": [
     {
+      "service": "gateway",
+      "file": "app/page.tsx",
+      "line": 3,
+      "reason": "server-request-without-origin",
+      "message": "gateway's server makes this request to /api/health with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives gateway's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:gateway#app/page.tsx:3:24"
+    },
+    {
+      "service": "gateway",
+      "file": "app/page.tsx",
+      "line": 4,
+      "reason": "server-request-without-origin",
+      "message": "gateway's server makes this request to /orders/today with no host through the platform fetch, which has no page address on the server to resolve it against: it throws as written",
+      "hint": "Build the address from a setting that gives gateway's own address, call the code behind the route directly, or use a client that answers it in process.",
+      "symbol": "http_out:gateway#app/page.tsx:4:23"
+    },
+    {
       "service": "web",
       "file": "src/Shop.tsx",
       "line": 6,
@@ -222,13 +240,13 @@
     }
   ],
   "totals": {
-    "nodes": 49,
-    "edges": 37,
+    "nodes": 47,
+    "edges": 33,
     "types": 2,
     "missed": 2,
     "sites": 2,
     "notes": 0,
-    "findings": 0,
+    "findings": 2,
     "unresolved": 2
   }
 }

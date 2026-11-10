@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:50:44.281Z",
+  "builtAt": "2026-11-10T15:12:56.857Z",
   "services": [
     {
       "name": "storefront",
@@ -989,33 +989,6 @@
         "through": "request",
         "targetService": "storefront"
       }
-    },
-    {
-      "id": "ui_api_call:storefront#gateways/shipping.gateway.ts:11:26",
-      "type": "ui_api_call",
-      "label": "POST /quote",
-      "repo": "storefront",
-      "file": "gateways/shipping.gateway.ts",
-      "line": 11,
-      "kind": "http",
-      "meta": {
-        "method": "POST",
-        "url": "${SHIPPING_URL}/quote",
-        "path": "/quote",
-        "baseUrlEnv": "SHIPPING_URL",
-        "responseType": null,
-        "bodyType": "{items:type:storefront#BasketItem[]}",
-        "bodyFrom": "literal",
-        "bodyKeys": [
-          "items"
-        ],
-        "headerKeys": [
-          "content-type"
-        ],
-        "package": null,
-        "client": "fetch",
-        "via": "template-env"
-      }
     }
   ],
   "edges": [
@@ -1484,14 +1457,6 @@
       "line": 11
     },
     {
-      "from": "storefront#gateways/shipping.gateway.ts:quoteShipping",
-      "to": "ui_api_call:storefront#gateways/shipping.gateway.ts:11:26",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/shipping.gateway.ts",
-      "line": 11
-    },
-    {
       "from": "storefront#lib/basket-store.ts:addToBasket",
       "to": "storefront#lib/basket-store.ts:readBasket",
       "type": "calls",
@@ -1855,10 +1820,10 @@
       "service": "storefront",
       "file": "gateways/shipping.gateway.ts",
       "line": 11,
-      "reason": "target-route-not-found",
-      "message": "no configured service serves POST /quote",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /quote */.",
-      "symbol": "ui_api_call:storefront#gateways/shipping.gateway.ts:11:26"
+      "reason": "unknown-base-url-env",
+      "message": "no service declares SHIPPING_URL",
+      "hint": "Add SHIPPING_URL to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:storefront#gateways/shipping.gateway.ts:11:26"
     },
     {
       "file": "lib/basket-store.ts",

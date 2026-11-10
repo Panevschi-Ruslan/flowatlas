@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T14:43:38.896Z",
+  "builtAt": "2026-11-10T15:28:15.785Z",
   "configHash": "4191b8cde503",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./shop",
       "type": "sveltekit",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 12,
-      "edges": 8,
+      "nodes": 11,
+      "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2401,
+      "durationMs": 8221,
       "packages": {
         "name": "svelte-moved-routes",
         "runtime": [],
@@ -24,14 +24,14 @@
     }
   ],
   "httpOut": {
-    "total": 1,
+    "total": 0,
     "linked": 0,
     "byMarker": 0,
     "unknownEnv": 0,
     "noRoute": 0,
     "ambiguous": 0,
     "external": 0,
-    "dynamic": 1
+    "dynamic": 0
   },
   "ui": {
     "total": 1,
@@ -59,8 +59,8 @@
   },
   "unresolved": [],
   "totals": {
-    "nodes": 12,
-    "edges": 9,
+    "nodes": 11,
+    "edges": 8,
     "types": 0,
     "missed": 0,
     "sites": 0,

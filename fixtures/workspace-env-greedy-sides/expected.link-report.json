@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:12:02.209Z",
+  "configHash": "154f487813ac",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./shop/packages/api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "@shop/api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "files",
+      "repo": "./files",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 6,
+      "durationMs": 0,
+      "packages": {
+        "name": "files",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "store",
+      "repo": "./store",
+      "type": "remix",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 18,
+      "edges": 18,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "store",
+        "runtime": [
+          "@remix-run/node",
+          "@remix-run/react",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./shop/packages/web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 8,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "@shop/web",
+        "runtime": [
+          "axios",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 5,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 5,
+    "uncalled": [
+      "entry:store:http:GET:/reports",
+      "entry:store:http:POST:/reports"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "store",
+      "file": "app/lib/files.ts",
+      "line": 3,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /files/* in files answers GET /files/reports/:param/summary",
+      "hint": "No route of files spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "http_out:store#app/lib/files.ts:3:21"
+    },
+    {
+      "service": "store",
+      "file": "app/lib/files.ts",
+      "line": 3,
+      "reason": "base-url-from-name",
+      "level": "info",
+      "message": "no service declares FILES_URL and nothing read gives it a value, so it is taken as files, the one service it is named after",
+      "hint": "Only the setting's name chose the service. Add FILES_URL to services[].baseUrlEnv of files to say so outright, or of the service it really is.",
+      "symbol": "http_out:store#app/lib/files.ts:3:21",
+      "meta": {
+        "variable": "FILES_URL",
+        "from": "its name"
+      },
+      "sites": 3
+    },
+    {
+      "service": "store",
+      "file": "app/lib/files.ts",
+      "line": 9,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /files/* in files answers GET /files/shared/:param",
+      "hint": "No route of files spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "http_out:store#app/lib/files.ts:9:10"
+    },
+    {
+      "service": "store",
+      "file": "app/lib/files.ts",
+      "line": 9,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /files/* in files answers GET /files/shared/:param",
+      "hint": "No route of files spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "ui_api_call:store#app/lib/files.ts:9:10"
+    },
+    {
+      "service": "store",
+      "file": "app/lib/files.ts",
+      "line": 14,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /files/* in files answers GET /files/previews/:param",
+      "hint": "No route of files spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "ui_api_call:store#app/lib/files.ts:14:10"
+    },
+    {
+      "service": "web",
+      "file": "src/Tokens.tsx",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "VITE_API_URL is http://localhost:4100/v1 in ../../.env.example, which is taken as api",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add VITE_API_URL to services[].baseUrlEnv of api to say so outright.",
+      "symbol": "ui_api_call:web#src/Tokens.tsx:7:22",
+      "meta": {
+        "variable": "VITE_API_URL",
+        "value": "http://localhost:4100/v1",
+        "from": "../../.env.example"
+      },
+      "sites": 3
+    }
+  ],
+  "totals": {
+    "nodes": 40,
+    "edges": 39,
+    "types": 0,
+    "missed": 13,
+    "sites": 16,
+    "notes": 2,
+    "findings": 0,
+    "unresolved": 13
+  }
+}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:47:13.970Z",
+  "builtAt": "2026-11-10T15:12:40.924Z",
   "services": [
     {
       "name": "shop",
@@ -150,6 +150,7 @@
         "bodyType": null,
         "application": ".",
         "originless": true,
+        "sameCall": "ui_api_call:shop#app/orders-client.ts:8:24",
         "targetService": "shop"
       }
     },
@@ -168,6 +169,7 @@
         "responseType": null,
         "bodyType": null,
         "application": ".",
+        "sameCall": "ui_api_call:shop#app/orders-upstream.ts:10:24",
         "targetService": "shop"
       }
     },
@@ -187,6 +189,7 @@
         "bodyType": null,
         "application": "examples/blog",
         "originless": true,
+        "sameCall": "ui_api_call:shop#examples/blog/src/api-client.ts:12:24",
         "targetService": "shop"
       }
     },
@@ -206,6 +209,7 @@
         "bodyType": null,
         "application": "examples/blog",
         "originless": true,
+        "sameCall": "ui_api_call:shop#examples/blog/src/api-client.ts:17:24",
         "targetService": "shop"
       }
     },
@@ -224,6 +228,7 @@
         "responseType": null,
         "bodyType": null,
         "application": "examples/blog",
+        "sameCall": "ui_api_call:shop#examples/blog/src/orders-upstream.ts:10:24",
         "targetService": "shop"
       }
     },
@@ -243,6 +248,7 @@
         "bodyType": null,
         "application": "examples/template",
         "originless": true,
+        "sameCall": "ui_api_call:shop#examples/template/src/orders-client.ts:11:24",
         "targetService": "shop"
       }
     },
@@ -489,6 +495,7 @@
         "client": "fetch",
         "application": ".",
         "via": "literal",
+        "sameCall": "http_out:shop#app/orders-client.ts:8:24",
         "targetService": "shop"
       }
     },
@@ -511,6 +518,7 @@
         "client": "fetch",
         "application": ".",
         "via": "template-env",
+        "sameCall": "http_out:shop#app/orders-upstream.ts:10:24",
         "targetService": "shop"
       }
     },
@@ -533,6 +541,7 @@
         "client": "fetch",
         "application": "examples/blog",
         "via": "literal",
+        "sameCall": "http_out:shop#examples/blog/src/api-client.ts:12:24",
         "targetService": "shop"
       }
     },
@@ -555,6 +564,7 @@
         "client": "fetch",
         "application": "examples/blog",
         "via": "literal",
+        "sameCall": "http_out:shop#examples/blog/src/api-client.ts:17:24",
         "targetService": "shop"
       }
     },
@@ -577,6 +587,7 @@
         "client": "fetch",
         "application": "examples/blog",
         "via": "template-env",
+        "sameCall": "http_out:shop#examples/blog/src/orders-upstream.ts:10:24",
         "targetService": "shop"
       }
     },
@@ -599,6 +610,7 @@
         "client": "fetch",
         "application": "examples/template",
         "via": "literal",
+        "sameCall": "http_out:shop#examples/template/src/orders-client.ts:11:24",
         "targetService": "shop"
       }
     }

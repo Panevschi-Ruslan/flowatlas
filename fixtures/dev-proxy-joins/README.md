@@ -38,21 +38,18 @@ changes) and the target's `listensAt`.
 | `storefront` `index.vue:12` | `$fetch('/orders-api/orders')` | orders `GET /orders`, `proxiedBy: nuxt.config.ts:3` | `target-route-not-found` |
 | `store` `page.tsx:5` | `/shop-api/orders` | orders `GET /orders`, `proxiedBy: next.config.js:5` | `target-route-not-found` |
 | `store` `page.tsx:6` | `/shop-api/health` | store's own route, which Next serves before its rewrites | the same |
-| `store` `page.tsx:5`, server half | `/shop-api/orders` | orders `GET /orders` through the rewrite, as the browser's (P260) | `dynamic` |
-| `store` `page.tsx:6`, server half | `/shop-api/health` | store's own route, `via: ownOrigin` (P260) | `dynamic` |
 | `jobs` `server.ts:7` | `localhost:5180/api/orders` | orders through web's proxy; no third party for `localhost:5180` | a third party `localhost:5180` |
 | `jobs` `server.ts:8` | `localhost:5180/rates/today` | the third party `rates.example.test` through web's proxy | a third party `localhost:5180` |
 
-The server half of the Next reader reads `page.tsx`'s two relative requests as
-requests from the server too. Until P260 they had no host to place them
-(`dynamic`); a Next server resolves them against its own address, so they join
-its own route or its rewrites, and what is wrong with either is said once, by
-the browser's reading.
+`page.tsx` is marked `'use client'`, so its two requests are drawn once, from
+the browser (P283). Until then the server half read them as requests from the
+server too: without a host before P260 (`dynamic`), then joined against the
+server's own address.
 
 ## Expected
 
 ```
-calls out: 4 total, 3 linked, 1 third party
+calls out: 2 total, 1 linked, 1 third party
 ui calls: 12 total, 10 joined to a route, 1 proxied-to-third-party, 1 target-route-not-found
 rows: proxy-rule-unread at vite.config.ts:17 (STATS_URL given no address)
 ```

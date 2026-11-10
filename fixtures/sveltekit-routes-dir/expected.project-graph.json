@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:48:37.703Z",
+  "builtAt": "2026-11-10T15:28:15.785Z",
   "services": [
     {
       "name": "shop",
@@ -41,23 +41,6 @@
         "adapter": "sveltekit-routes",
         "registration": "routes/+page.server",
         "handlerVia": "function"
-      }
-    },
-    {
-      "id": "http_out:shop#src/lib/api.ts:2:51",
-      "type": "http_out",
-      "label": "GET /api/items",
-      "repo": "shop",
-      "file": "src/lib/api.ts",
-      "line": 2,
-      "meta": {
-        "method": "GET",
-        "url": "/api/items",
-        "path": "/api/items",
-        "baseUrlEnv": null,
-        "responseType": null,
-        "bodyType": null,
-        "originless": true
       }
     },
     {
@@ -279,14 +262,6 @@
         "page": "/items/[id]",
         "order": 0
       }
-    },
-    {
-      "from": "shop#src/lib/api.ts:listItems",
-      "to": "http_out:shop#src/lib/api.ts:2:51",
-      "type": "calls",
-      "confidence": "static",
-      "file": "src/lib/api.ts",
-      "line": 2
     },
     {
       "from": "shop#src/lib/api.ts:listItems",

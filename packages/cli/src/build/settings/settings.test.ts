@@ -523,3 +523,41 @@ describe("an Angular application's environment files (P280)", () => {
     });
   });
 });
+
+describe("a workspace's own files, for the packages of it (P283)", () => {
+  let root: string | undefined;
+  afterEach(() => {
+    if (root !== undefined) rmSync(root, { recursive: true, force: true });
+    root = undefined;
+  });
+
+  it("gives a package what the workspace's example file says, where the package's own says nothing, and reads the workspace's compose file", () => {
+    root = mkdtempSync(join(tmpdir(), 'flowatlas-settings-'));
+    const files: Record<string, string> = {
+      'shop/package.json': JSON.stringify({ name: 'shop', private: true, workspaces: ['packages/*'] }),
+      'shop/.env.example': 'VITE_API_URL=http://localhost:4100/v2\nVITE_GQL_URL=http://localhost:4100/graphql\nPORT=4100\n',
+      'shop/.env': 'VITE_SECRET=x\n',
+      'shop/docker-compose.yml': 'services:\n  api:\n    build: ./packages/api\n    ports:\n      - "4100:4100"\n',
+      'shop/packages/web/package.json': JSON.stringify({ name: 'web' }),
+      'shop/packages/web/.env.example': 'VITE_GQL_URL=http://localhost:4300/graphql\n',
+      'shop/packages/api/package.json': JSON.stringify({ name: 'api' }),
+    };
+    for (const [path, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(root, path)), { recursive: true });
+      writeFileSync(join(root, path), text);
+    }
+    // The configuration kept outside the workspace, as a separate checkout of it would be.
+    const read = readProjectSettings({
+      services: ['web', 'api'].map((name) => ({ name, dir: join(root as string, 'shop', 'packages', name) })),
+      rootDir: join(root, 'config'),
+    });
+    expect(read['web']?.values).toEqual({
+      VITE_API_URL: [{ value: 'http://localhost:4100/v2', file: '../../.env.example' }],
+      VITE_GQL_URL: [{ value: 'http://localhost:4300/graphql', file: '.env.example' }],
+    });
+    expect(read['web']?.namedOnly).toEqual({ VITE_SECRET: ['../../.env'] });
+    // A port the workspace's file writes is no package's own.
+    expect(read['web']?.hosts).toEqual([]);
+    expect(read['api']?.hosts.map((each) => [each.host, each.file])).toContainEqual(['localhost:4100', '../shop/docker-compose.yml']);
+  });
+});

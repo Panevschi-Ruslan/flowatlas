@@ -35,6 +35,8 @@ describe('normalizePath', () => {
     ['/orders/:id?', '/orders/:param'],
     ['/orders/:id(\\d+)', '/orders/:param'],
     ['/files/*', '/files/*'],
+    ['/files/{proxy+}', '/files/*'],
+    ['{proxy+}', '/*'],
     ['/orders/:param', '/orders/:param'],
     ['/Orders/Items', '/Orders/Items'],
     ['  /orders/:id  ', '/orders/:param'],

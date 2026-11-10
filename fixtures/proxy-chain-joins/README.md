@@ -30,15 +30,16 @@ and a Next server's own requests with no host.
 | `jobs` `server.ts:7` | `http://localhost:5190/shop/api/orders/7` | orders, as `Kiosk.tsx:3` | `target-route-not-found` at web |
 | `admin` `invoices.service.ts:11` | `/billing/invoices` | billing `GET /invoices` | the same |
 | `admin` `invoices.service.ts:15` | `/billing/v2/invoices` | ledger `GET /v2/invoices` by the router, `proxiedBy: proxy.conf.json:8` | `target-route-not-found` at billing |
-| `gateway` `page.tsx:3` | `/api/health`, read by the server half | gateway's own route, `via: ownOrigin` (and by the browser's reading, `same-service`, as before) | `dynamic` |
-| `gateway` `page.tsx:4` | `/orders/today`, read by the server half | orders through gateway's rewrite, `proxiedTo: [ORDERS_URL from .env.example]` (and by the browser's reading, the same) | `dynamic`; the browser's reading by its route alone |
+| `gateway` `page.tsx:3` | `/api/health`, drawn from the server only: an async page under `app/` is a server component (P283) | gateway's own route, `via: ownOrigin`, and `server-request-without-origin` | `dynamic` |
+| `gateway` `page.tsx:4` | `/orders/today`, drawn from the server only | orders through gateway's rewrite, `proxiedTo: [ORDERS_URL from .env.example]`, and `server-request-without-origin` | `dynamic`; the browser's reading by its route alone |
 
 ## Expected
 
 ```
 calls out: 3 total, 3 linked
-ui calls: 9 total, 8 joined, 1 proxy-chain-unfollowed
-rows: proxy-rule-unread at admin proxy.conf.json:9 (a router key by host)
+ui calls: 7 total, 6 joined, 1 proxy-chain-unfollowed
+rows: proxy-rule-unread at admin proxy.conf.json:9 (a router key by host);
+      server-request-without-origin at gateway app/page.tsx:3 and :4
 ```
 
 Measured with the tool at the commit before P260 over the same tree:

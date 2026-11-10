@@ -215,6 +215,11 @@ describe('a port the code and the files decide together (P254)', () => {
     expect(alone.project.unresolved.find((each) => each.reason === 'published-port-unheard')?.message).toContain(
       "but orders's code reads its port from PORT (src/main.ts:7), which the container's environment does not give",
     );
+    // The port the container's environment gives, not the code's fallback (P283).
+    const given = link('localhost:3002', { orders: [at(3002, { setting: 'PORT' })] }, config(), { orders: container([[3002, 3002]], { PORT: 8080 }) });
+    expect(given.project.unresolved.find((each) => each.reason === 'published-port-unheard')?.message).toBe(
+      "docker-compose.yml publishes port 3002 of orders (orders) as 3002, but orders's code listens on 8080 (PORT as the container's environment gives it, src/main.ts:7)",
+    );
   });
 
   it("fills a port the code reads from a setting alone with the service's own example environment file", () => {
