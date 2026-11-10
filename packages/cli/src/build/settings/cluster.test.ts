@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, posix, relative, sep } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { commandsAround } from '@flowatlas/serverless';
 import { readManifestsUnder, type ChartInstall } from './cluster.js';
@@ -636,7 +636,8 @@ describe('helmfile bases and needs, and kustomize vars (P273)', () => {
 
   it("layers a helmfile's bases under it, their environments, values and releases first, and keeps what each release needs", () => {
     const dir = layered();
-    const read = readHelmfile(join(dir, 'deploy/helmfile.yaml'), (path) => relative(join(dir, 'deploy'), path));
+    // Named as the build names them: relative, with the separators every platform shares.
+    const read = readHelmfile(join(dir, 'deploy/helmfile.yaml'), (path) => relative(join(dir, 'deploy'), path).split(sep).join(posix.sep));
     expect(said(read.installs)).toEqual([
       'production db bases/releases.yaml.gotmpl:2 [{"port":5433}] after config',
       'production config bases/releases.yaml.gotmpl:9 []',
@@ -653,7 +654,7 @@ describe('helmfile bases and needs, and kustomize vars (P273)', () => {
   it('keeps what the releases a command keeps need, with --include-needs and --include-transitive-needs', () => {
     const dir = layered();
     const kept = (needs: 'none' | 'direct' | 'transitive'): string[] =>
-      readHelmfile(join(dir, 'deploy/helmfile.yaml'), (path) => relative(join(dir, 'deploy'), path), { environments: ['production'], releases: ['orders'], needs }).installs.map((each) => each.release ?? '');
+      readHelmfile(join(dir, 'deploy/helmfile.yaml'), (path) => relative(join(dir, 'deploy'), path).split(sep).join(posix.sep), { environments: ['production'], releases: ['orders'], needs }).installs.map((each) => each.release ?? '');
     expect(kept('none')).toEqual(['orders']);
     expect(kept('direct')).toEqual(['db', 'orders']);
     expect(kept('transitive')).toEqual(['db', 'config', 'orders']);
