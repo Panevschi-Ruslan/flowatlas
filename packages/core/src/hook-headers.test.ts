@@ -1,7 +1,7 @@
 import { Project, SyntaxKind } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { PLATFORM_HEADERS } from './built-query.js';
-import { headersAHookAdds, joinHookHeaders, type HookHanded } from './hook-headers.js';
+import { defaultHeadersWritten, headersAHookAdds, joinHookHeaders, type HookHanded } from './hook-headers.js';
 import { responseHeadersRead, type AnswerHanded } from './response-headers.js';
 
 /** The function handed to `use(...)` in `body`. */
@@ -97,5 +97,55 @@ describe('the headers a caller reads off the answer (P265)', () => {
     expect(readIn('async function f() { const res = await ask(); keep(res.headers.get(name)); }')).toEqual({ keys: [], unread: true });
     expect(readIn("async function f() { const res = await ask(); keep(res.headers); keep(res.headers.get('x-total')); }")).toEqual({ keys: ['x-total'], unread: true });
     expect(readIn('async function f() { const res = await ask(); keep(res.data); return res; }')).toBeUndefined();
+  });
+
+  it('reads an answer handed back from the function the request is made in, where each caller holds it (P276)', () => {
+    // A service returns the observable; the component subscribes.
+    expect(
+      readIn("class Invoices { page() { return ask(); } }\nclass List { constructor(private invoices: Invoices) {} load() { this.invoices.page().subscribe((res) => keep(res.headers.get('X-Total'))); } }", 'observable'),
+    ).toEqual({ keys: ['x-total'], unread: false });
+    // Through operators that hand the answer on as it is.
+    expect(
+      readIn("declare const tap: any; declare const catchError: any;\nfunction page() { return ask().pipe(tap(() => 1), catchError(() => 2)); }\nfunction load() { page().subscribe((res) => keep(res.headers.get('x-total'))); }", 'observable'),
+    ).toEqual({ keys: ['x-total'], unread: false });
+    // A promise, returned awaited, read where the caller awaits it.
+    expect(readIn("const fetchPage = async () => { return await ask(); };\nasync function load() { const res = await fetchPage(); keep(res.headers['x-total']); }")).toEqual({ keys: ['x-total'], unread: false });
+    // An operator that changes the answer stops the reading.
+    expect(readIn("declare const map: any;\nfunction page() { return ask().pipe(map((res) => res.body)); }\nfunction load() { page().subscribe((res) => keep(res.headers.get('x-total'))); }", 'observable')).toBeUndefined();
+  });
+});
+
+/** What the first write under `defaults.headers` in `body` adds. */
+const defaultsIn = (body: string) => {
+  const source = new Project({ useInMemoryFileSystem: true }).createSourceFile('a.ts', `declare const api: any;\ndeclare const token: string;\nconst NAME = 'X-Const';\n${body}`);
+  const node = [...source.getDescendantsOfKind(SyntaxKind.BinaryExpression), ...source.getDescendantsOfKind(SyntaxKind.DeleteExpression)].find((each) => each.getText().includes('.defaults.headers'));
+  if (node === undefined) throw new Error('no write');
+  const written = defaultHeadersWritten(node);
+  return written === undefined ? undefined : { owner: written.owner.getText(), headers: written.headers };
+};
+
+describe("a client's default headers (P276)", () => {
+  it.each([
+    ['a key under `common`', "api.defaults.headers.common['X-Tenant'] = token;", ['x-tenant']],
+    ['a property under `common`', 'api.defaults.headers.common.Authorization = token;', ['authorization']],
+    ['a key of the headers themselves', "api.defaults.headers['X-Client'] = 'shop';", ['x-client']],
+    ['a constant key', 'api.defaults.headers.common[NAME] = token;', ['x-const']],
+    ['a whole set', "api.defaults.headers.common = { 'X-One': '1', 'X-Two': '2' };", ['x-one', 'x-two']],
+  ])('reads %s', (_, body, keys) => {
+    expect(defaultsIn(body)).toEqual({ owner: 'api', headers: { keys, unread: false } });
+  });
+
+  it.each([
+    ['a name written as code', 'api.defaults.headers.common[token] = token;'],
+    ['a write under a condition', "if (token) api.defaults.headers.common['X-Tenant'] = token;"],
+    ['a removal', "delete api.defaults.headers.common['X-Tenant'];"],
+    ['a header kept for one verb', "api.defaults.headers.post['X-Tenant'] = token;"],
+    ['a set that cannot be read', 'api.defaults.headers.common = { ...api.defaults.headers.common, [token]: token };'],
+  ])('says %s is unread', (_, body) => {
+    expect(defaultsIn(body)?.headers).toEqual({ keys: [], unread: true });
+  });
+
+  it('reads nothing that is not under `defaults.headers`', () => {
+    expect(defaultsIn('api.defaults.headersTimeout = 1;')).toBeUndefined();
   });
 });

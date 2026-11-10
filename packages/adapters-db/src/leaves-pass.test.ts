@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { AdapterRegistry, type GraphNode, type RepoGraph } from '@flowatlas/core';
+import { registerEntryAdapters } from '@flowatlas/adapters-entry';
 import { extractRepo } from '@flowatlas/extractor-nestjs';
 import { describe, expect, it } from 'vitest';
 import { registerDbAdapters } from './index.js';
@@ -427,6 +428,51 @@ describe('the query a request writes in its options (P256)', () => {
     expect(from('browse')).not.toHaveProperty('headersUnread');
     expect(from('browseShared')).toMatchObject({ path: '/api/browse', headerKeys: ['x-tenant'] });
     expect(from('total')).toMatchObject({ path: '/api/page', headerKeys: ['x-tenant'], responseHeaderKeys: ['x-total'] });
+  });
+});
+
+describe('a route whose work is behind an object a factory hands back, and the wrapper in front of it (P276)', () => {
+  const shop = (): Promise<RepoGraph> =>
+    extractRepo({
+      rootDir: resolve(FIXTURES, 'front-end-navigations/shop'),
+      repo: 'shop',
+      service: { name: 'shop', repo: resolve(FIXTURES, 'front-end-navigations/shop'), type: 'nextjs' },
+      registry: registerEntryAdapters(registerDbAdapters(new AdapterRegistry())),
+      extraPasses: [leavesPass],
+    });
+  const calls = (graph: RepoGraph): string[] =>
+    graph.edges
+      .filter((edge) => edge.type === 'calls')
+      .map((edge) => `${edge.from.split('#')[1]} -> ${edge.to.split('#')[1]?.replace(/:\d+:\d+$/, '') ?? edge.to}`)
+      .sort();
+
+  it("follows a call through the object to the member it lands on, `this` of a member included, and walks the wrapper's body", async () => {
+    const graph = await shop();
+    const drawn = calls(graph);
+    expect(drawn).toEqual(
+      expect.arrayContaining([
+        'pages/api/orders.ts:handler -> gateways/orders.gateway.ts:OrdersGateway.list',
+        'pages/api/orders.ts:handler -> gateways/orders.gateway.ts:OrdersGateway.latest',
+        'pages/api/orders.ts:handler -> gateways/orders.gateway.ts:OrdersGateway.remove',
+        'gateways/orders.gateway.ts:OrdersGateway.latest -> gateways/orders.gateway.ts:OrdersGateway.list',
+        'pages/api/orders.ts:withAudit -> lib/with-audit.ts:withAudit',
+        'lib/with-audit.ts:withAudit -> lib/audit.ts:recordVisit',
+      ]),
+    );
+    // The factory that only hands the object back holds nothing of its own.
+    expect(graph.nodes.some((node) => node.id.endsWith(':OrdersGateway'))).toBe(false);
+    expect(graph.unresolved.flatMap((row) => (row.meta?.['causes'] as Array<{ cause: string }> | undefined) ?? [{ cause: String(row.meta?.['cause']) }]).some((cause) => cause.cause === 'object-literal')).toBe(false);
+  });
+
+  it("puts the members' requests on them, with the header written to the client's defaults", async () => {
+    const graph = await shop();
+    const request = (holder: string) => {
+      const edge = graph.edges.find((each) => each.type === 'calls' && each.from.endsWith(`:${holder}`) && each.to.startsWith('http_out'));
+      return graph.nodes.find((node) => node.id === edge?.to)?.meta ?? {};
+    };
+    expect(request('OrdersGateway.list')).toMatchObject({ method: 'GET', path: '/orders', headerKeys: ['x-shop'] });
+    expect(request('OrdersGateway.remove')).toMatchObject({ method: 'DELETE', headerKeys: ['x-shop'] });
+    expect(request('recordVisit')).toMatchObject({ method: 'POST', path: '/visits' });
   });
 });
 

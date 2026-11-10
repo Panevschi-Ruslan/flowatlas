@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T20:10:58.719Z",
+  "builtAt": "2026-11-09T21:55:40.602Z",
   "configHash": "4191b8cde503",
   "services": [
     {
@@ -9,10 +9,10 @@
       "type": "sveltekit",
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 23,
-      "edges": 17,
+      "edges": 18,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 743,
+      "durationMs": 4432,
       "packages": {
         "name": "svelte-shop",
         "runtime": [],
@@ -58,7 +58,7 @@
   "unresolved": [],
   "totals": {
     "nodes": 23,
-    "edges": 20,
+    "edges": 21,
     "types": 0,
     "missed": 0,
     "sites": 0,

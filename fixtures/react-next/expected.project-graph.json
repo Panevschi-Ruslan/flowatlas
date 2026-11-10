@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:50:34.987Z",
+  "builtAt": "2026-11-09T21:52:01.180Z",
   "services": [
     {
       "name": "shop",
@@ -1478,6 +1478,21 @@
       "line": 18
     },
     {
+      "from": "shop#app/api/(admin)/invoices/route.ts:withAdmin",
+      "to": "shop#lib/with-admin.ts:withAdmin",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "app/api/(admin)/invoices/route.ts",
+      "line": 18,
+      "meta": {
+        "wrapper": true
+      }
+    },
+    {
       "from": "shop#app/api/jobs/route.ts:POST",
       "to": "shop#lib/orders-store.ts:saveOrder",
       "type": "calls",
@@ -1581,6 +1596,21 @@
       "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
       "file": "app/api/reports/route.ts",
       "line": 14
+    },
+    {
+      "from": "shop#app/api/reports/route.ts:withAdmin",
+      "to": "shop#lib/with-admin.ts:withAdmin",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "app/api/reports/route.ts",
+      "line": 14,
+      "meta": {
+        "wrapper": true
+      }
     },
     {
       "from": "shop#app/orders/page.tsx:OrdersPage",

@@ -51,6 +51,7 @@ import { functionsPass } from './passes/functions.js';
 import { graphqlPass } from './passes/graphql.js';
 import { httpPass } from './passes/http.js';
 import { markersPass } from './passes/markers.js';
+import { navigationsPass } from './passes/navigations.js';
 import { proceduresPass } from './passes/procedures.js';
 import { routesPass } from './passes/routes.js';
 import { signaturesPass } from './passes/signatures.js';
@@ -142,6 +143,8 @@ export const BUILT_IN_PASSES: readonly ReactExtractorPass[] = [
   // After the routes, so a screen's node has its address before a parent's
   // edge to it writes the node (P255).
   childrenPass,
+  // After the routes and the children, so a navigation is matched against every screen's address (P276).
+  navigationsPass,
   actionsPass,
   httpPass,
   // After the requests, so a `fetch` that sends an operation is one node (P232).

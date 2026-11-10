@@ -1,5 +1,6 @@
 import {
   declarationOf,
+  defaultHeadersWritten,
   headersAHookAdds,
   joinHookHeaders,
   NO_HOOK_HEADERS,
@@ -21,9 +22,10 @@ import { Node, SyntaxKind, type CallExpression, type Node as TsNode, type Source
  * headers })` with interceptors on `httpService.axiosRef` - so a request to a
  * procedure whose input takes a header is compared with the ones its client
  * adds, and not told it sends none. What a function does to the headers is
- * read by the core's one reading (`headersAHookAdds`); a default header
- * assigned to a client (`api.defaults.headers.common[...] = ...`) is said as
- * not read, since which requests are made after it is not.
+ * read by the core's one reading (`headersAHookAdds`), and so is a default
+ * header written to a client (`api.defaults.headers.common[...] = ...`,
+ * `defaultHeadersWritten`, P276): a name written plainly is carried by every
+ * request the client makes, as an interceptor's is.
  *
  * Which client a request goes through is decided by what its call is made
  * on: the module itself, the framework's injected client (by its package,
@@ -84,7 +86,8 @@ type ClientKey = 'module' | 'framework' | TsNode;
 
 export const serverClientHeaders = (files: () => readonly SourceFile[], packageOf: (node: TsNode) => string | undefined) => {
   let registered: Map<ClientKey, TsNode[]> | undefined;
-  const defaulted = new Set<ClientKey>();
+  const defaulted = new Map<ClientKey, HookHeaders[]>();
+  let defaultedUnplaced = false;
   let configured: HookHeaders = NO_HOOK_HEADERS;
 
   /** The declaration a name of an instance is held by, followed to the one whose value makes it. */
@@ -151,16 +154,13 @@ export const serverClientHeaders = (files: () => readonly SourceFile[], packageO
         }
       }
       if (defaults) {
-        for (const binary of file.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
-          if (binary.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) continue;
-          const left = binary.getLeft().getText();
-          const at = left.indexOf('.defaults.headers');
-          if (at <= 0) continue;
-          // What the defaults are assigned on: the expression written before `.defaults`.
-          let owner: TsNode | undefined = binary.getLeft();
-          while (owner !== undefined && owner.getText().length > at) owner = Node.isPropertyAccessExpression(owner) || Node.isElementAccessExpression(owner) ? owner.getExpression() : undefined;
-          const key = owner === undefined ? undefined : keyOf(owner);
-          if (key !== undefined) defaulted.add(key);
+        for (const node of [...file.getDescendantsOfKind(SyntaxKind.BinaryExpression), ...file.getDescendantsOfKind(SyntaxKind.DeleteExpression)]) {
+          const written = defaultHeadersWritten(node);
+          if (written === undefined) continue;
+          // What the defaults are written on: the expression before `.defaults`.
+          const key = keyOf(written.owner);
+          if (key === undefined) defaultedUnplaced = true;
+          else defaulted.set(key, [...(defaulted.get(key) ?? []), written.headers]);
         }
       }
     }
@@ -197,7 +197,9 @@ export const serverClientHeaders = (files: () => readonly SourceFile[], packageO
       return headersAHookAdds(written ?? target, 'options', [PLATFORM_HEADERS]);
     });
     const own = key === 'module' ? NO_HOOK_HEADERS : key === 'framework' ? configured : madeWith(key);
-    const parts = [own, ...hooks, defaulted.has(key) ? { keys: [], unread: true } : NO_HOOK_HEADERS];
+    // An instance is made with its module's defaults, and keeps what is written to its own (P276).
+    const defaults = [...(defaulted.get(key) ?? []), ...(key === 'module' || key === 'framework' ? [] : (defaulted.get('module') ?? []))];
+    const parts = [own, ...hooks, ...defaults, defaultedUnplaced ? { keys: [], unread: true } : NO_HOOK_HEADERS];
     return joinHookHeaders(parts);
   };
 };

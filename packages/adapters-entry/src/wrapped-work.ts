@@ -3,6 +3,7 @@ import {
   originOfValue,
   startLineOf,
   type Confidence,
+  type EntryHandler,
   type EntryWrapping,
   type ExtractContext,
   type Origin,
@@ -18,7 +19,7 @@ import {
   type Node as TsNode,
   type ParameterDeclaration,
 } from 'ts-morph';
-import { fileOfNode, isWrittenFunction, packageOfCall, repoFunctionOf, unwrapValue } from './shared.js';
+import { fileOfNode, handlerOfFunction, inlineHandlerOf, isWrittenFunction, packageOfCall, repoFunctionOf, unwrapValue } from './shared.js';
 
 /**
  * A call that wraps one function, and how far that is known.
@@ -408,6 +409,20 @@ const workIn = (node: TsNode): TsNode | undefined => {
   return undefined;
 };
 
+/**
+ * The function of this repository a wrapper runs, where it names one (P276):
+ * the wrapper a call is made of (`withTracing` of `withTracing(handler)`), a
+ * middleware handed to a chain by its name, the factory a middleware handed to
+ * a chain was made by (`requireRole('admin')`), or a middleware written in
+ * place. A wrapper from a package names nothing here.
+ */
+const wrapperRuns = (node: TsNode, ctx: ExtractContext): EntryHandler | undefined => {
+  const value = unwrapValue(node);
+  if (isWrittenFunction(value)) return inlineHandlerOf(value, label(value), ctx);
+  const named = repoFunctionOf(Node.isCallExpression(value) ? value.getExpression() : value);
+  return named === undefined ? undefined : handlerOfFunction(named, ctx);
+};
+
 /** What taking the wrappers off a handler export found. */
 export interface Chain {
   inner?: TsNode;
@@ -446,15 +461,19 @@ export const unwrapChain = (start: TsNode, ctx: ExtractContext): Chain => {
   let stopped: CallExpression | undefined;
   let expression = unwrapValue(start);
   let viaMethods = false;
-  const wrapping = (node: TsNode, source: string, kind: string): EntryWrapping => ({
-    label: label(node),
-    layer: 'middleware',
-    scope: 'route',
-    source,
-    file: fileOfNode(node, ctx),
-    line: startLineOf(node),
-    kind,
-  });
+  const wrapping = (node: TsNode, source: string, kind: string): EntryWrapping => {
+    const runs = wrapperRuns(node, ctx);
+    return {
+      label: label(node),
+      layer: 'middleware',
+      scope: 'route',
+      source,
+      file: fileOfNode(node, ctx),
+      line: startLineOf(node),
+      kind,
+      ...(runs === undefined ? {} : { runs }),
+    };
+  };
   for (let depth = 0; depth < 16 && Node.isCallExpression(expression); depth += 1) {
     const callee = expression.getExpression();
     const args = expression.getArguments();

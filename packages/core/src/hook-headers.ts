@@ -1,7 +1,7 @@
 import type { Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { conditionsAround } from './address-rewrite.js';
-import { builtQueryOf, writtenKey, type QueryBuilder } from './built-query.js';
+import { builtQueryOf, writtenHeaderNames, writtenKey, type QueryBuilder } from './built-query.js';
 
 /**
  * The headers a function a client runs before every request adds to it
@@ -301,4 +301,65 @@ export const headersAHookAdds = (fn: TsNode, handed: HookHanded, builders: reado
     }
   }
   return { keys: [...keys].sort(), unread, ...(replaces ? { replaces: true as const } : {}) };
+};
+
+/** The verbs a client keeps headers of its own for, under `defaults.headers`. */
+const VERB_DEFAULTS: ReadonlySet<string> = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options']);
+
+/** One step of an access written to a client's defaults: a member by name, or one in brackets. */
+type Step = { readonly name: string } | { readonly written: TsNode | undefined };
+
+/**
+ * What one write to a client's default headers adds to every request the
+ * client makes (P276): `api.defaults.headers.common['X-Tenant'] = t`,
+ * `client.defaults.headers.common.Authorization = token`,
+ * `api.defaults.headers['X-Client'] = 'shop'`, a whole set
+ * (`api.defaults.headers.common = { ... }`) - with the expression written
+ * before `.defaults`, the client, for the reader to place.
+ *
+ * Read as a hook's headers are (D1 of P265): a name written as a literal or a
+ * constant of one, set unconditionally where it is written, is added - the
+ * header is carried from then on, as an interceptor's is once it is
+ * registered. A name written as code, one written under a condition, one
+ * removed (`delete ...`), a set that cannot be read, and one kept for a single
+ * verb (`defaults.headers.post[...]`), which only some requests carry, are
+ * `unread`. Undefined where the node writes nothing under `defaults.headers`.
+ */
+export const defaultHeadersWritten = (node: TsNode): { owner: TsNode; headers: HookHeaders } | undefined => {
+  let target: TsNode;
+  let value: TsNode | undefined;
+  if (Node.isBinaryExpression(node) && node.getOperatorToken().getKind() === SyntaxKind.EqualsToken) {
+    target = node.getLeft();
+    value = node.getRight();
+  } else if (Node.isDeleteExpression(node)) {
+    target = node.getExpression();
+  } else {
+    return undefined;
+  }
+  const steps: Step[] = [];
+  let at = unwrap(target);
+  while (Node.isPropertyAccessExpression(at) || Node.isElementAccessExpression(at)) {
+    steps.unshift(Node.isPropertyAccessExpression(at) ? { name: at.getName() } : { written: at.getArgumentExpression() });
+    at = unwrap(at.getExpression());
+    const first = steps[0];
+    if (first !== undefined && 'name' in first && first.name === 'defaults') break;
+  }
+  const [defaults, headers, ...rest] = steps;
+  if (defaults === undefined || !('name' in defaults) || defaults.name !== 'defaults') return undefined;
+  if (headers === undefined || !('name' in headers) || headers.name !== 'headers') return undefined;
+  const owner = at;
+  const fn = ownerOf(node) ?? node.getSourceFile();
+  if (value === undefined || conditionsAround(node, fn).length > 0) return { owner, headers: UNREAD };
+  const nameOf = (step: Step): string | undefined => ('name' in step ? step.name : writtenKey(step.written));
+  const [first, second, ...more] = rest;
+  const firstName = first === undefined ? undefined : nameOf(first);
+  // A whole set: `defaults.headers = {...}` or `defaults.headers.common = {...}`.
+  if (first === undefined || (firstName === 'common' && second === undefined)) {
+    const names = writtenHeaderNames(unwrap(value), []);
+    return { owner, headers: names === undefined ? UNREAD : { keys: names, unread: false } };
+  }
+  if (firstName === undefined || more.length > 0) return { owner, headers: UNREAD };
+  if (VERB_DEFAULTS.has(firstName)) return { owner, headers: UNREAD };
+  const name = firstName === 'common' ? (second === undefined ? undefined : nameOf(second)) : second === undefined ? firstName : undefined;
+  return { owner, headers: name === undefined ? UNREAD : { keys: [name.toLowerCase()], unread: false } };
 };

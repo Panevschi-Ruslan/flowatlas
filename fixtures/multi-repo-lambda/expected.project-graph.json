@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-08T17:04:46.403Z",
+  "builtAt": "2026-11-09T21:47:28.007Z",
   "services": [
     {
       "name": "platform",
@@ -363,6 +363,26 @@
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
         }
+      }
+    },
+    {
+      "id": "loans#functions/create-loan/index.ts:logged",
+      "type": "function",
+      "label": "logged",
+      "repo": "loans",
+      "file": "functions/create-loan/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{before:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 7
+          }
+        ]
       }
     },
     {
@@ -832,6 +852,19 @@
       "returns": "type:@flowatlas/fixtures#Loan",
       "file": "functions/create-loan/index.ts",
       "line": 13
+    },
+    {
+      "from": "loans#functions/create-loan/index.ts:logged()",
+      "to": "loans#functions/create-loan/index.ts:logged",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{before:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "functions/create-loan/index.ts",
+      "line": 17,
+      "meta": {
+        "wrapper": true
+      }
     },
     {
       "from": "loans#functions/get-loan/index.ts:handler",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:48:34.463Z",
+  "builtAt": "2026-11-09T21:55:40.602Z",
   "services": [
     {
       "name": "shop",
@@ -519,6 +519,21 @@
       "returns": "Response",
       "file": "src/routes/+page.svelte",
       "line": 9
+    },
+    {
+      "from": "shop#src/routes/+page.svelte:place",
+      "to": "shop#src/routes/+page.svelte:routes/+page",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/routes/+page.svelte",
+      "line": 10,
+      "meta": {
+        "navigates": "/",
+        "route": "/",
+        "page": "src/routes/+page.svelte"
+      }
     },
     {
       "from": "shop#src/routes/+page.svelte:refresh",

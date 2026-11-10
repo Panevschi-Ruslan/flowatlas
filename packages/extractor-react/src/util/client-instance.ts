@@ -1,4 +1,4 @@
-import { declarationOf, headersAHookAdds, isPlatformProvided, joinHookHeaders, NO_HOOK_HEADERS, PLATFORM_HEADERS, writtenHeaderNames, type HookHeaders } from '@flowatlas/core';
+import { declarationOf, defaultHeadersWritten, headersAHookAdds, isPlatformProvided, joinHookHeaders, NO_HOOK_HEADERS, PLATFORM_HEADERS, writtenHeaderNames, type HookHeaders } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { CLIENT_FACTORIES, type ClientFactory } from '../clients.js';
@@ -317,8 +317,14 @@ export const clientInstances = (options: InstanceOptions) => {
    * after it is made (P239, P244).
    */
   let assignments: Map<TsNode | ClientFactory, TsNode[]> | undefined;
-  /** Whether the repository assigns to a client's default headers anywhere (`axios.defaults.headers.common[...] = ...`, P262). */
-  let headerDefaults = false;
+  /**
+   * What the repository writes to each client's default headers
+   * (`axios.defaults.headers.common[...] = ...`), by the client written to
+   * (P276), and whether a write lands on a client nothing here places, which
+   * any instance may then be.
+   */
+  const headerDefaults = new Map<TsNode | ClientFactory, HookHeaders[]>();
+  let headerDefaultsUnplaced = false;
   let registrations: Map<TsNode | ClientFactory, Array<{ factory: ClientFactory; fn: TsNode }>> | undefined;
   const scan = (): void => {
     if (assignments !== undefined) return;
@@ -329,7 +335,15 @@ export const clientInstances = (options: InstanceOptions) => {
     const chains = CLIENT_FACTORIES.flatMap((factory) => (factory.rewrites?.registeredAt === undefined ? [] : [{ factory, chain: factory.rewrites.registeredAt }]));
     for (const file of options.files()) {
       const text = file.getFullText();
-      if (/\.defaults\.headers\b/.test(text)) headerDefaults = true;
+      if (/\.defaults\.headers\b/.test(text)) {
+        for (const node of [...file.getDescendantsOfKind(SyntaxKind.BinaryExpression), ...file.getDescendantsOfKind(SyntaxKind.DeleteExpression)]) {
+          const written = defaultHeadersWritten(node);
+          if (written === undefined) continue;
+          const key = factoryOfModule(written.owner) ?? holderOf(written.owner);
+          if (key === undefined) headerDefaultsUnplaced = true;
+          else headerDefaults.set(key, [...(headerDefaults.get(key) ?? []), written.headers]);
+        }
+      }
       if (chains.some(({ chain }) => chain.every((name) => text.includes(name)))) {
         for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
           for (const { factory, chain } of chains) {
@@ -457,13 +471,17 @@ export const clientInstances = (options: InstanceOptions) => {
     if (holder === undefined) return instance;
     const registered = registeredOn(holder, instance.factory);
     const readings = registered.length === 0 ? instance.readings : [...(instance.readings ?? []), ...registered];
-    // What an interceptor registered on it does to its headers (P265); a default
-    // header assigned anywhere may be on its requests, and is not read (P262).
+    // What an interceptor registered on it does to its headers (P265), and what
+    // is written to its default headers and to its module's, whose defaults an
+    // instance is made with (P276); a write to a client nothing here places may
+    // be to this one, and is not read.
+    const defaultsAt = instance.factory.defaults === undefined ? [] : [...(headerDefaults.get(holder) ?? []), ...(holder === instance.factory ? [] : (headerDefaults.get(instance.factory) ?? []))];
     const hookHeaders = withHeaders(
       joinHookHeaders([
         instance.hookHeaders ?? NO_HOOK_HEADERS,
         registeredHeaders(holder, instance.factory),
-        headerDefaults && instance.factory.defaults !== undefined ? { keys: [], unread: true } : NO_HOOK_HEADERS,
+        ...defaultsAt,
+        headerDefaultsUnplaced && instance.factory.defaults !== undefined ? { keys: [], unread: true } : NO_HOOK_HEADERS,
       ]),
     );
     const kept = {

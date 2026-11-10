@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:44:41.936Z",
+  "builtAt": "2026-11-09T21:50:44.281Z",
   "configHash": "a451ad759c33",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./storefront",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 46,
-      "edges": 40,
+      "nodes": 54,
+      "edges": 45,
       "types": 4,
       "unresolved": 3,
-      "durationMs": 1075,
+      "durationMs": 1264,
       "packages": {
         "name": "next-wrapped-pages-storefront",
         "runtime": [
@@ -75,11 +75,11 @@
     }
   ],
   "totals": {
-    "nodes": 46,
-    "edges": 52,
+    "nodes": 54,
+    "edges": 57,
     "types": 4,
     "missed": 4,
-    "sites": 22,
+    "sites": 24,
     "notes": 0,
     "findings": 0,
     "unresolved": 4

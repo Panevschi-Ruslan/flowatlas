@@ -287,6 +287,13 @@ export const entriesPass = definePass('entries', (ctx: ReactExtractContext) => {
 
       if (entry.wrapping !== undefined) {
         addEntryWrapping(ctx.builder, ctx.repo, entry.id, entry.wrapping);
+        // The function a wrapper runs, drawn as its node calling it, as the server half draws it (P276).
+        for (const one of entry.wrapping) {
+          const runs = one.runs === undefined || one.label === '' ? undefined : resolveHandler(ctx, one.runs);
+          if (runs === undefined) continue;
+          ctx.ensureFunctionNode(runs.fn);
+          ctx.builder.addEdge({ from: makeSymbolId(ctx.repo, one.file, one.label), to: runs.id, type: 'calls', confidence: 'static', file: one.file, ...(one.line === undefined ? {} : { line: one.line }), meta: { wrapper: true } });
+        }
       }
       // A way in that is not a function says what it takes where it is declared (P35).
       if (entry.signature !== undefined) recordStatedSignatures(ctx.builder, ctx.types, [[entry.id, entry.signature]]);

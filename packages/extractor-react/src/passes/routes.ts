@@ -1,5 +1,5 @@
-import { normalizePath } from '@flowatlas/core';
-import { APP_PAGES, routePathOfFile } from '@flowatlas/adapters-entry';
+import { APP_PAGES, PAGES_SCREENS, routePathOfFile } from '@flowatlas/adapters-entry';
+import { hasDependency, normalizePath } from '@flowatlas/core';
 import type { JsxAttributeLike, Node as TsNode, ObjectLiteralExpression } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
@@ -37,6 +37,19 @@ const stringOf = (value: TsNode | undefined): string | undefined => {
   return undefined;
 };
 
+/**
+ * The address a page of Next's older router is shown at, or nothing: only a
+ * file under the application's own `pages/` (or `src/pages/`), not under
+ * `pages/api`, and not one whose name starts with an underscore (P276).
+ */
+const pagesRouterPath = (file: string): string | null => {
+  const at = file.startsWith('pages/') ? 0 : file.startsWith('src/pages/') ? 'src/'.length : -1;
+  if (at < 0) return null;
+  const inside = file.slice(at + 'pages/'.length);
+  if (inside.startsWith('api/') || inside.split('/').some((part) => part.startsWith('_'))) return null;
+  return routePathOfFile(file.slice(at), PAGES_SCREENS);
+};
+
 /** Whether this is the function its file hands out as the default export. */
 const isDefaultExport = (indexed: IndexedFunction): boolean => {
   const [declaration] = indexed.fn.declaration
@@ -65,8 +78,9 @@ const isDefaultExport = (indexed: IndexedFunction): boolean => {
 export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
   const routed = new Map<string, Set<string>>();
 
-  const claim = (indexed: IndexedFunction | undefined, path: string): void => {
-    if (indexed === undefined || indexed.role !== 'component') return;
+  const claim = (indexed: IndexedFunction | undefined, path: string, placed = false): void => {
+    // A file a router places is a screen whatever it returns: a page that only redirects is still the page at that address (P276).
+    if (indexed === undefined || (indexed.role !== 'component' && !placed)) return;
     const paths = routed.get(indexed.id);
     // A component shown at two addresses keeps both, sorted, so the answer does
     // not depend on which file happened to be read first.
@@ -117,7 +131,7 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
       if (tag.getText() !== 'Route') return;
       const path = stringOf(attributeOf(attributes, ['path']));
       if (path === undefined) return;
-      claim(shownBy(attributeOf(attributes, ['element', 'Component'])), normalizePath(path));
+      claim(shownBy(attributeOf(attributes, ['element', 'Component', 'component'])), normalizePath(path));
     });
   }
 
@@ -125,10 +139,13 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
   // of a file in the right place *is* the screen, and the address is where the
   // file is. Only the default export, because everything else in that file is
   // a part of the screen rather than the screen.
+  // The older router's pages too, where the application is Next's (P276): a
+  // page a navigation lands on is a screen whichever router shows it.
+  const next = hasDependency(ctx.pkg, 'next');
   for (const indexed of ctx.functions.all()) {
-    if (indexed.role !== 'component') continue;
-    const path = routePathOfFile(indexed.file, APP_PAGES);
-    if (path !== null && isDefaultExport(indexed)) claim(indexed, path);
+    if (indexed.role === 'hook') continue;
+    const path = routePathOfFile(indexed.file, APP_PAGES) ?? (next ? pagesRouterPath(indexed.file) : null);
+    if (path !== null && isDefaultExport(indexed)) claim(indexed, path, true);
   }
 
   for (const [id, paths] of routed) {

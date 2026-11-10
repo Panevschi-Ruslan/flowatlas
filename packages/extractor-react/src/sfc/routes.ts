@@ -76,6 +76,28 @@ const fullPath = (route: ObjectLiteralExpression): string | undefined => {
   return `/${own}`;
 };
 
+/**
+ * The name each Vue Router route gives the component file it shows - `{ path,
+ * name: 'orders', component }` - so a navigation by name lands on it (P276).
+ */
+export const routeNames = (
+  sources: readonly SourceFile[],
+  options: { repoDir: string; extensions: readonly string[] },
+): Map<string, Set<string>> => {
+  const named = new Map<string, Set<string>>();
+  for (const sourceFile of sources) {
+    sourceFile.forEachDescendant((node) => {
+      if (!Node.isObjectLiteralExpression(node)) return;
+      const component = valueOf(node, 'component');
+      const name = stringOf(valueOf(node, 'name'));
+      if (component === undefined || name === undefined) return;
+      const file = routedFile(component, options.repoDir, options.extensions);
+      if (file !== undefined) named.set(file, (named.get(file) ?? new Set()).add(name));
+    });
+  }
+  return named;
+};
+
 /** Every component file the repository routes to, with the addresses it is shown at. */
 export const routedComponents = (
   sources: readonly SourceFile[],

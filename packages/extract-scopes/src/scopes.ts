@@ -24,10 +24,12 @@
  * is the altitude, which is above the core and below every framework.
  */
 import {
+  factoryMembers,
   isServiceSource,
   memberFunction,
   methodBodies,
   moduleFunctions,
+  onlyHandsBackMembers,
   placedFunction,
   type ClassMethod,
   type NamedFunction,
@@ -174,6 +176,22 @@ const moduleLevelFunctions = function* (
   for (const fn of moduleFunctions(source)) {
     if (seen.has(fn.declaration)) continue;
     seen.add(fn.declaration);
+    // A factory handing back an object of functions written whole: each member
+    // is a function of its own, which a call through the object lands on
+    // (P276). A factory that does nothing else is the members and nothing more,
+    // so what they hold is said once, by them; one that does more keeps its own
+    // body too.
+    const members = factoryMembers(fn).filter((member) => !seen.has(member.declaration));
+    for (const member of members) {
+      seen.add(member.declaration);
+      yield scopeOf(ctx, member);
+    }
+    if (members.length > 0 && onlyHandsBackMembers(fn)) {
+      // Named already, so not a function written in place either.
+      const written = fn.body.getParent();
+      if (written !== undefined) seen.add(written);
+      continue;
+    }
     yield scopeOf(ctx, fn);
   }
 };

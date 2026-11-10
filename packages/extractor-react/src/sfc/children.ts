@@ -7,7 +7,7 @@ import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
 import { svelteMarkupTags, vueTemplateTags, type MarkupTag } from './events.js';
-import { drawNavigations } from './navigation.js';
+import { drawNavigations, nuxtPages } from './navigation.js';
 import { asyncComponentFile, installedPlugins, librarySettingsOf, libraryOf, type InstalledPlugins } from './registrations.js';
 
 /**
@@ -331,9 +331,7 @@ export const drawChildren = (
     const middlewareFiles = new Map(nuxt.names.middleware.map((each) => [each.file, each.name] as const));
     drawNavigations(
       ctx,
-      nuxt.pages,
-      byFile,
-      (file) => components.find(({ made }) => made.file === file)?.script,
+      nuxtPages(nuxt.pages, byFile, (file) => components.find(({ made }) => made.file === file)?.script),
       [
         ...components.map(({ component, made, script }) => ({ file: made.file, script, component, ...(made.format.extension === '.vue' ? { markup: made.text } : {}) })),
         ...sources.filter((source) => !scripts.has(source)).map((script) => ({ file: ctx.fileOf(script), script })),
@@ -343,6 +341,7 @@ export const drawChildren = (
         return name === undefined ? undefined : middlewareFunction(ctx, name, file);
       },
       edge,
+      true,
     );
   }
 };

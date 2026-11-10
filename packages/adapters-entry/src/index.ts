@@ -115,7 +115,7 @@ export { readGrpcCalls } from './grpc-calls.js';
 export type { GrpcCallReading } from './grpc-calls.js';
 export { contractsOf } from './grpc-contracts.js';
 export type { Contract, Contracts, ContractService } from './grpc-contracts.js';
-export { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
+export { APP_PAGES, APP_ROUTER, PAGES_API, PAGES_SCREENS } from './nextjs-paths.js';
 export {
   fsAddressSpace,
   fsApplicationMap,

@@ -27,6 +27,11 @@ export, though the hint said a wrapper handed a function of this repository is
 read. The newer router read the wrapper's call as the handler, and the walk
 stopped inside the wrapper at the parameter it calls.
 
+Since P276 each wrapper of the repository in front of a route is walked: its
+middleware node `calls` the function in `lib/with-tracing.ts` (`withTracing`,
+`withSession`, `withTiming`; `meta.wrapper: true`), and what its body reaches
+is on the route.
+
 ## The requests
 
 `lib/request.ts` is `({ url = '', method = 'GET', body, queryParams = {} }) =>
@@ -36,7 +41,10 @@ the methods of the object a function hands back, `request({ url:
 caller, its address the `url` it writes and its verb the `method` it writes or
 the `GET` the pattern defaults to, in the browser reader and the server reader
 alike, so all six join the routes above. Before, the request stayed in the
-wrapper, `? /${…}`, and joined nothing.
+wrapper, `? /${…}`, and joined nothing. On the server each is held by the
+member it is written in (`Api.getBasket`, `Api.placeOrder`, ...), a function
+of its own since P276, and not by the factory `Api`, which only hands the
+object back.
 
 `gateways/shipping.gateway.ts` takes its base out of the environment where it
 declares it, `const { SHIPPING_URL = '' } = process.env`, which is the same read

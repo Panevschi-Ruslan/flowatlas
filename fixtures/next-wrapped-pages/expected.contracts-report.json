@@ -1,7 +1,7 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-09T16:44:42.757Z",
+  "generatedAt": "2026-11-09T21:50:45.004Z",
   "edges": [
     {
       "edge": {
@@ -20,7 +20,7 @@
       "receiver": {
         "service": "storefront",
         "typeId": "type:storefront#BasketItem[]",
-        "symbol": "storefront#gateways/api.gateway.ts:Api"
+        "symbol": "storefront#gateways/api.gateway.ts:Api.getBasket"
       },
       "findings": [
         {
@@ -41,7 +41,7 @@
           "receiver": {
             "service": "storefront",
             "typeId": "type:storefront#BasketItem[]",
-            "symbol": "storefront#gateways/api.gateway.ts:Api"
+            "symbol": "storefront#gateways/api.gateway.ts:Api.getBasket"
           },
           "typeId": "type:storefront#BasketItem[]",
           "field": "",
@@ -70,7 +70,7 @@
           "receiver": {
             "service": "storefront",
             "typeId": "type:storefront#BasketItem[]",
-            "symbol": "storefront#gateways/api.gateway.ts:Api"
+            "symbol": "storefront#gateways/api.gateway.ts:Api.getBasket"
           },
           "typeId": "type:storefront#BasketItem[]",
           "field": "",
@@ -101,7 +101,7 @@
       "receiver": {
         "service": "storefront",
         "typeId": "type:storefront#BasketItem[]",
-        "symbol": "storefront#gateways/api.gateway.ts:Api"
+        "symbol": "storefront#gateways/api.gateway.ts:Api.addToBasket"
       },
       "findings": [
         {
@@ -122,7 +122,7 @@
           "receiver": {
             "service": "storefront",
             "typeId": "type:storefront#BasketItem[]",
-            "symbol": "storefront#gateways/api.gateway.ts:Api"
+            "symbol": "storefront#gateways/api.gateway.ts:Api.addToBasket"
           },
           "typeId": "type:storefront#BasketItem[]",
           "field": "",
@@ -151,7 +151,7 @@
           "receiver": {
             "service": "storefront",
             "typeId": "type:storefront#BasketItem[]",
-            "symbol": "storefront#gateways/api.gateway.ts:Api"
+            "symbol": "storefront#gateways/api.gateway.ts:Api.addToBasket"
           },
           "typeId": "type:storefront#BasketItem[]",
           "field": "",
@@ -182,7 +182,7 @@
       "receiver": {
         "service": "storefront",
         "typeId": "{placed:boolean}",
-        "symbol": "storefront#gateways/api.gateway.ts:Api"
+        "symbol": "storefront#gateways/api.gateway.ts:Api.placeOrder"
       },
       "findings": [],
       "rulesApplied": []
@@ -204,7 +204,7 @@
       "receiver": {
         "service": "storefront",
         "typeId": "{id:string;name:string}[]",
-        "symbol": "storefront#gateways/api.gateway.ts:Api"
+        "symbol": "storefront#gateways/api.gateway.ts:Api.listProducts"
       },
       "findings": [],
       "rulesApplied": []
@@ -226,7 +226,7 @@
       "receiver": {
         "service": "storefront",
         "typeId": "{id:string;city:string}[]",
-        "symbol": "storefront#gateways/api.gateway.ts:Api"
+        "symbol": "storefront#gateways/api.gateway.ts:Api.listStores"
       },
       "findings": [],
       "rulesApplied": []
@@ -251,7 +251,7 @@
       "receiver": {
         "service": "storefront",
         "typeId": "type:storefront#BasketItem[]",
-        "symbol": "storefront#gateways/api.gateway.ts:Api"
+        "symbol": "storefront#gateways/api.gateway.ts:Api.getBasket"
       },
       "typeId": "type:storefront#BasketItem[]",
       "field": "",
@@ -280,7 +280,7 @@
       "receiver": {
         "service": "storefront",
         "typeId": "type:storefront#BasketItem[]",
-        "symbol": "storefront#gateways/api.gateway.ts:Api"
+        "symbol": "storefront#gateways/api.gateway.ts:Api.getBasket"
       },
       "typeId": "type:storefront#BasketItem[]",
       "field": "",
@@ -309,7 +309,7 @@
       "receiver": {
         "service": "storefront",
         "typeId": "type:storefront#BasketItem[]",
-        "symbol": "storefront#gateways/api.gateway.ts:Api"
+        "symbol": "storefront#gateways/api.gateway.ts:Api.addToBasket"
       },
       "typeId": "type:storefront#BasketItem[]",
       "field": "",
@@ -338,7 +338,7 @@
       "receiver": {
         "service": "storefront",
         "typeId": "type:storefront#BasketItem[]",
-        "symbol": "storefront#gateways/api.gateway.ts:Api"
+        "symbol": "storefront#gateways/api.gateway.ts:Api.addToBasket"
       },
       "typeId": "type:storefront#BasketItem[]",
       "field": "",
@@ -361,7 +361,7 @@
       "edgeKey": "http_out:storefront#gateways/api.gateway.ts:13:12|http_calls|entry:storefront:http:GET:/api/basket",
       "direction": "request",
       "reason": "no-type-on-sender",
-      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it sends",
+      "message": "storefront#gateways/api.gateway.ts:Api.getBasket declares no type for what it sends",
       "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
     },
     {
@@ -373,7 +373,7 @@
       "edgeKey": "http_out:storefront#gateways/api.gateway.ts:16:12|http_calls|entry:storefront:http:POST:/api/basket",
       "direction": "request",
       "reason": "no-type-on-sender",
-      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it sends",
+      "message": "storefront#gateways/api.gateway.ts:Api.addToBasket declares no type for what it sends",
       "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
     },
     {
@@ -385,7 +385,7 @@
       "edgeKey": "http_out:storefront#gateways/api.gateway.ts:19:12|http_calls|entry:storefront:http:DELETE:/api/basket",
       "direction": "request",
       "reason": "no-type-on-sender",
-      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it sends",
+      "message": "storefront#gateways/api.gateway.ts:Api.emptyBasket declares no type for what it sends",
       "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
     },
     {
@@ -397,7 +397,7 @@
       "edgeKey": "http_out:storefront#gateways/api.gateway.ts:19:12|http_calls|entry:storefront:http:DELETE:/api/basket",
       "direction": "response",
       "reason": "no-type-on-receiver",
-      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it expects",
+      "message": "storefront#gateways/api.gateway.ts:Api.emptyBasket declares no type for what it expects",
       "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
     },
     {
@@ -409,7 +409,7 @@
       "edgeKey": "http_out:storefront#gateways/api.gateway.ts:22:12|http_calls|entry:storefront:http:POST:/api/checkout",
       "direction": "request",
       "reason": "no-type-on-sender",
-      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it sends",
+      "message": "storefront#gateways/api.gateway.ts:Api.placeOrder declares no type for what it sends",
       "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
     },
     {
@@ -421,7 +421,7 @@
       "edgeKey": "http_out:storefront#gateways/api.gateway.ts:25:12|http_calls|entry:storefront:http:ALL:/api/catalog",
       "direction": "request",
       "reason": "no-type-on-sender",
-      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it sends",
+      "message": "storefront#gateways/api.gateway.ts:Api.listProducts declares no type for what it sends",
       "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
     },
     {
@@ -433,7 +433,7 @@
       "edgeKey": "http_out:storefront#gateways/api.gateway.ts:28:12|http_calls|entry:storefront:http:GET:/api/stores",
       "direction": "request",
       "reason": "no-type-on-sender",
-      "message": "storefront#gateways/api.gateway.ts:Api declares no type for what it sends",
+      "message": "storefront#gateways/api.gateway.ts:Api.listStores declares no type for what it sends",
       "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
     },
     {

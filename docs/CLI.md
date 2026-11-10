@@ -638,6 +638,46 @@ answers and none may own. `cycles` leaves navigations out of its walk (two
 pages linking to each other are no cycle); `dead` and every flow keep them, a
 page a link reaches being reached (`fixtures/nuxt-navigation`).
 
+Every other router's navigations are read the same way, to the same edges and
+rows (P276): `push` and `replace` (and React Router's data router's
+`navigate`) on a router however it was got - `useRouter()` from Vue Router,
+`next/router` or `next/navigation`, a router `createRouter(...)` or
+`createBrowserRouter(...)` made (held in a `const`, here or in the module it
+is imported from), Next's `Router` (the default export of `next/router`), a
+Vue component's `this.$router`, and `push` or `replace` taken out of
+`useRouter()`; React Router's `navigate` from `useNavigate()`; SvelteKit's
+`goto` (`replaceState` is `meta.replace`); a `redirect(...)` from
+`next/navigation`, React Router, Remix or SvelteKit (`redirect(status,
+location)`), `meta.redirects: true`; `<RouterLink to>` in a Vue template; and
+`<Link to>`, `<NavLink to>` (React Router, Remix) and Next's `<Link href>` in
+JSX, a `{ pathname }` read as its path; React Router's `<Navigate to>` and,
+before version 6, `<Redirect to>` and the history `useHistory()` hands back
+(`history.push`), whose `<Route path component={...}>` places a screen too. The pages are the screens the reading
+placed: a route table, `<Route>`, a page under `app/`, a SvelteKit page, a Vue
+Router route (whose `name` names the page for a navigation by name) and, in a
+Next application, a page of the older router under `pages/` (or
+`src/pages/`; not `pages/api`, not `_app` or `_document`), which now carries
+its `route` too - a page file's default export is the page whatever it
+returns, one that only redirects included. A catch-all ranks below any page
+that fits as far without one (`/` is the start page, not `[...slug]`). Two pages that fit as well in two applications one service
+holds are told apart by the navigating file - the one whose directories it
+shares most is its own application's; an address that starts with a value
+read at run time (`` `${origin}/orders` ``) may start with a host and is a
+`dynamic` row; a value glued to the end of the last segment
+(`` `/orders${query}` ``) is the query. Where some of the application's routes
+are written in a way the route reader does not place - a path built by a call
+or a template, a screen named by a member (`Scenes.Home.Component`) - an
+address no placed page shows is `meta.why: unplaced` (info) rather than
+`missing`, since the page may be one of those. A step through the history
+(`navigate(-1)`) names no page and says nothing. An Angular class's
+`router.navigate([...])` and `router.navigateByUrl(...)` - on a `Router`
+injected by its constructor or `inject(Router)` - are `calls` edges from the
+method to the component the route at that address shows, each value read at
+run time a parameter, with the same two rows; one relative to the route the
+component is shown at (`relativeTo`) is a `dynamic` row. A template's
+`routerLink` stays the template reader's, a click that triggers the screen
+(`fixtures/front-end-navigations`).
+
 `onMounted` (or `onBeforeMount`) at the top of `app.vue`'s setup, or of a
 composable that setup calls, runs its function once, on the client, when the
 root component is mounted - after the router's first navigation, before any
@@ -6721,6 +6761,27 @@ handler, and a row otherwise. A handler wrapped in a chain —
 it wraps, with the chain and the wrappers as middleware in front of it, in the
 order they run. `flow invoke:<name>` starts from a function.
 
+**A wrapper's own body is on the route's walk (P276).** Every wrapper drawn in
+front of a way in this way - a file-system router's (`export default
+withTracing(handler)`) and a deployed function's - that names a function of
+this repository has its body walked as a handler's is: the wrapper's node
+`calls` the function (`meta.wrapper: true`), and what it reaches - a session
+it reads, a request it makes, a function it calls by name - is drawn from it.
+The function is the wrapper a call is made of, a middleware handed to a chain
+by its name, the factory a middleware handed to a chain was made by
+(`requireRole('admin')`), or a middleware written in place; a wrapper from a
+package names nothing here.
+
+**An object of functions a factory hands back (P276).** `const Gateway = () =>
+({ listOrders(id) {…}, placeOrder: async () => … })` with `export default
+Gateway()`: a call `Gateway.listOrders(id)` lands on the member written in the
+literal, a function of its own named by the factory and the member
+(`Gateway.listOrders`), and so does `this.listOrders()` in another member. Its body
+is a scope like any function's, so the requests and queries in it hang off it;
+a factory that does nothing but hand the object back is its members and holds
+nothing of its own, one that does more keeps its own body too. A member of a
+value that may be either of two objects is not landed on.
+
 **A handler re-exported lands where it is declared.** `export { processReturns }
 from './operations'` and `export * from './operations'` are followed to the
 declaration they re-export, and so is an export that is a name for something
@@ -7811,7 +7872,7 @@ client instance is made with (`axios.create({ headers })`, `ky.create`,
 `req.clone({ setHeaders: { ... } })`. Where they are written and cannot be
 read (a name, a spread, a field), or where something the reader cannot see
 may add to them - a hook or an interceptor of the instance, the call's own
-hook, a default assigned to the client's `defaults.headers`, an Angular
+hook, a default header written in a way not read (below), an Angular
 interceptor that sets its headers another way - the request records
 `meta.headersUnread`, and the headers are not compared (`any-unknown-skip:
 headers` in the edge's `rulesApplied`) rather than called missing. A call that
@@ -7840,6 +7901,17 @@ replaces them. An Angular interceptor's `req.clone({ headers: req.headers.set('X
 v) })` - chained, with `.append`, through a `const` - is read as `setHeaders`
 is; `.delete` leaves them unread.
 
+A header written to a client's defaults is read the same way, in the browser
+and on the server (P276): `api.defaults.headers.common['X-Tenant'] = t`,
+`axios.defaults.headers.common.Authorization = token`,
+`api.defaults.headers['X-Client'] = 'shop'` and a whole set
+(`api.defaults.headers.common = { ... }`) are headers every request of that
+client carries - and an instance carries its module's, being made with its
+defaults. A name written as code, one written under a condition, a removal
+(`delete ...`), a set that cannot be read, and a header kept for one verb
+(`defaults.headers.post[...]`) leave the client's requests
+`meta.headersUnread`, as does a write to a client nothing here places.
+
 The headers a caller reads off a `detailed` answer are compared with the ones
 the procedure's output declares (P265). Each reader records the names a
 request's caller reads off its answer, where the request is made where it is
@@ -7848,7 +7920,13 @@ read (`meta.responseHeaderKeys`): through `get` or `has`
 `.raw`, an Angular call observing the whole response with `observe:
 'response'`), lower-cased since the lookup ignores case; as a key
 (`response.headers['x-total']`, axios's), as written. A name written as code,
-or the headers handed on, is `meta.responseHeadersUnread`. The answer is then
+or the headers handed on, is `meta.responseHeadersUnread`. An answer handed
+back from the function the request is made in (`return
+this.http.get(url, { observe: 'response' })`, through `pipe` operators that
+hand it on as it is - `tap`, `catchError`, `retry`, `shareReplay`, ... - or
+`return await fetch(...)`) is read where each caller of that function holds
+it, a component subscribing to the service's method, two functions out at
+most (P276). The answer is then
 compared as `{ headers, body }`, from the caller's end: only the names it reads
 are compared, so a header the procedure declares and nobody reads is nothing;
 one it reads that the output declares agrees; one read as a key with a capital

@@ -1,6 +1,7 @@
 import type { GraphBuilder } from '../builder.js';
 import { makeSymbolId } from '../ids.js';
 import type { NodeType } from '../model/nodes.js';
+import type { EntryHandler } from './entry.js';
 
 /**
  * Which part of the chain in front of an entry point something is.
@@ -48,6 +49,14 @@ export interface EntryWrapping {
   line?: number;
   /** Sub-classification of the node, e.g. `function`, `class` or `file`. */
   kind?: string;
+  /**
+   * The function of this repository the wrapper is, where the reader could name
+   * it: `withTracing` of `export default withTracing(handler)` (P276). Its
+   * body runs on every request the way in answers - the headers it sets, the
+   * session it checks, the calls it makes - so the extractor walks it as it
+   * walks a handler, and draws the wrapper's node calling it.
+   */
+  runs?: EntryHandler;
 }
 
 /** One wrapping, once its node is known. */

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "lending-library-desk",
-  "generatedAt": "2026-10-07T18:36:36.372Z",
+  "generatedAt": "2026-11-09T21:46:02.947Z",
   "nodes": [
     {
       "id": "entry:lending-library-desk:invoke:library-desk-cancel-hold",
@@ -344,6 +344,35 @@
       }
     },
     {
+      "id": "lending-library-desk#src/lib/tracing.ts:traced",
+      "type": "function",
+      "label": "traced",
+      "repo": "lending-library-desk",
+      "file": "src/lib/tracing.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "fn",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 11
+          }
+        ]
+      }
+    },
+    {
       "id": "repo:lending-library-desk",
       "type": "repo",
       "label": "lending-library-desk",
@@ -480,6 +509,22 @@
       "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
+      "from": "lending-library-desk#src/handlers/cancel-hold.ts:span",
+      "to": "lending-library-desk#src/lib/tracing.ts:traced",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/cancel-hold.ts",
+      "line": 12,
+      "meta": {
+        "wrapper": true
+      },
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+    },
+    {
       "from": "lending-library-desk#src/handlers/create-loan.ts:handler@15",
       "to": "lending-library-desk#src/lib/desk-table.ts:saveLoan",
       "type": "calls",
@@ -555,6 +600,22 @@
         "unknown"
       ],
       "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+    },
+    {
+      "from": "lending-library-desk#src/handlers/renew-loan.ts:t",
+      "to": "lending-library-desk#src/lib/tracing.ts:traced",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/renew-loan.ts",
+      "line": 14,
+      "meta": {
+        "wrapper": true
+      },
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
     }
   ],
   "types": {

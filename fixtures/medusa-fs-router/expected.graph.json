@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "medusa-fs-router",
-  "generatedAt": "2026-11-09T16:50:26.682Z",
+  "generatedAt": "2026-11-09T21:46:13.858Z",
   "nodes": [
     {
       "id": "entry:medusa-fs-router:http:GET:/admin/orders",
@@ -347,6 +347,25 @@
       }
     },
     {
+      "id": "medusa-fs-router#src/utils/with-admin.ts:withAdmin",
+      "type": "function",
+      "label": "withAdmin",
+      "repo": "medusa-fs-router",
+      "file": "src/utils/with-admin.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "handler",
+              "type": "T"
+            }
+          ],
+          "returns": "T"
+        }
+      }
+    },
+    {
       "id": "repo:medusa-fs-router",
       "type": "repo",
       "label": "medusa-fs-router",
@@ -562,6 +581,21 @@
       "returns": "unknown[]"
     },
     {
+      "from": "medusa-fs-router#src/api/admin/orders/route.ts:withAdmin",
+      "to": "medusa-fs-router#src/utils/with-admin.ts:withAdmin",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 17,
+      "meta": {
+        "wrapper": true
+      },
+      "params": [
+        "T"
+      ],
+      "returns": "T"
+    },
+    {
       "from": "medusa-fs-router#src/api/store/products/route.ts:GET",
       "to": "medusa-fs-router#src/services/products.ts:listProducts",
       "type": "calls",
@@ -632,6 +666,14 @@
       "hint": "Nothing to do if that is deliberate; move the file out from under the underscored directory if it was meant to answer requests.",
       "symbol": "src/api/store/_helpers/route.ts",
       "adapter": "medusa-routes"
+    },
+    {
+      "file": "src/utils/with-admin.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "level": "info"
     }
   ]
 }

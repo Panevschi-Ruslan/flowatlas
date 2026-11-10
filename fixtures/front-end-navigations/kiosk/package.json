@@ -1,0 +1,9 @@
+{
+  "name": "front-end-navigations-kiosk",
+  "version": "0.0.0",
+  "private": true,
+  "devDependencies": {
+    "@sveltejs/kit": "^2.5.0",
+    "svelte": "^5.0.0"
+  }
+}

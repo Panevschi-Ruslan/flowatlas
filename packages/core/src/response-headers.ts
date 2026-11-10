@@ -12,9 +12,11 @@ import { writtenKey } from './built-query.js';
  * recorded lower-cased, as every client hands a response's names on; a name
  * read as a key of the headers is recorded as written, since only the
  * lower-cased one is there. A name written as code, the headers handed on or
- * walked, is `unread`: the caller may read names nothing here sees. The
- * answer handed back to the caller's own caller is not followed, and says
- * nothing.
+ * walked, is `unread`: the caller may read names nothing here sees. An
+ * answer handed back from the function the request is made in - `return
+ * this.http.get(...)`, through `pipe` operators that hand it on as it is - is
+ * read where each caller of that function holds it, two functions out at most
+ * (P276).
  *
  * How the answer reaches the caller is the reader's to say: a promise
  * (`await`, `.then`) or an observable (`subscribe`, the first operator of
@@ -70,11 +72,67 @@ const heldBy = (declaration: TsNode, name: TsNode): Holding[] => {
   });
 };
 
+/** The operators of `pipe` that hand the answer on as it is, so the piped observable answers with it still. */
+const PASSING = new Set(['tap', 'catchError', 'retry', 'retryWhen', 'take', 'first', 'shareReplay', 'share', 'finalize', 'timeout', 'delay', 'takeUntil', 'takeUntilDestroyed']);
+
+/** How many functions an answer handed back is followed out through to its callers. */
+const RETURN_DEPTH = 2;
+
+/** How many callers of one function an answer handed back is followed to. */
+const CALLERS = 20;
+
+const isFunctionLike = (node: TsNode): boolean =>
+  Node.isArrowFunction(node) || Node.isFunctionExpression(node) || Node.isFunctionDeclaration(node) || Node.isMethodDeclaration(node);
+
+/**
+ * The calls of the function an answer is handed back from, when it is: the
+ * value of its `return`, or its concise body (P276). A service's
+ * `getOrders() { return this.http.get(url, { observe: 'response' }) }` is read
+ * where the component subscribes to `this.orders.getOrders()`, as a request
+ * made where it is read is read there.
+ */
+const callersOfReturned = (at: TsNode): TsNode[] => {
+  const parent = at.getParent();
+  const fn = parent !== undefined && Node.isReturnStatement(parent) ? parent.getFirstAncestor(isFunctionLike) : parent !== undefined && Node.isArrowFunction(parent) && parent.getBody() === at ? parent : undefined;
+  if (fn === undefined) return [];
+  const holder = Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) ? fn.getParent() : fn;
+  const name =
+    holder !== undefined && (Node.isMethodDeclaration(holder) || Node.isFunctionDeclaration(holder) || Node.isVariableDeclaration(holder) || Node.isPropertyDeclaration(holder) || Node.isPropertyAssignment(holder))
+      ? holder.getNameNode()
+      : undefined;
+  if (name === undefined || !Node.isIdentifier(name)) return [];
+  let references: TsNode[];
+  try {
+    references = name.findReferencesAsNodes();
+  } catch {
+    return [];
+  }
+  return references.slice(0, CALLERS).flatMap((reference) => {
+    const access = reference.getParent();
+    const callee = access !== undefined && Node.isPropertyAccessExpression(access) && access.getNameNode() === reference ? access : reference;
+    const call = callee.getParent();
+    return call !== undefined && Node.isCallExpression(call) && call.getExpression() === callee ? [call] : [];
+  });
+};
+
 /** Where the answer to a call is held, however it reaches the caller. */
-const holdingsOf = (call: TsNode, handed: AnswerHanded): Holding[] => {
+const holdingsOf = (call: TsNode, handed: AnswerHanded, depth = 0): Holding[] => {
   let at = usedAs(call);
   let parent = at.getParent();
+  // Handed back to the function's callers: read where each of them holds it (P276).
+  if (depth < RETURN_DEPTH) {
+    const callers = callersOfReturned(at);
+    if (callers.length > 0) return callers.flatMap((caller) => holdingsOf(caller, handed, depth + 1));
+  }
   if (handed === 'observable') {
+    // `.pipe(tap(...), catchError(...))`: the piped observable still answers with the response.
+    if (parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getName() === 'pipe' && parent.getExpression() === at) {
+      const invoked = parent.getParent();
+      const operators = invoked !== undefined && Node.isCallExpression(invoked) ? invoked.getArguments() : [];
+      if (invoked !== undefined && operators.length > 0 && operators.every((operator) => Node.isCallExpression(operator) && PASSING.has(operator.getExpression().getText()))) {
+        return holdingsOf(invoked, handed, depth);
+      }
+    }
     if (parent !== undefined && Node.isCallExpression(parent) && parent.getArguments()[0] === at && /^(?:firstValueFrom|lastValueFrom)$/.test(parent.getExpression().getText())) {
       return holdingsOf(parent, 'promise');
     }
@@ -97,6 +155,11 @@ const holdingsOf = (call: TsNode, handed: AnswerHanded): Holding[] => {
   if (parent !== undefined && Node.isAwaitExpression(parent)) {
     at = usedAs(parent);
     parent = at.getParent();
+    // `return await fetch(...)`: handed back as well.
+    if (depth < RETURN_DEPTH) {
+      const callers = callersOfReturned(at);
+      if (callers.length > 0) return callers.flatMap((caller) => holdingsOf(caller, handed, depth + 1));
+    }
   } else if (parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getName() === 'then' && parent.getExpression() === at) {
     const invoked = parent.getParent();
     return invoked !== undefined && Node.isCallExpression(invoked) ? handedTo(invoked.getArguments()[0]) : [];

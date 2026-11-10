@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "lending-library-desk",
-  "generatedAt": "2026-10-07T18:36:35.899Z",
+  "generatedAt": "2026-11-09T21:46:01.767Z",
   "nodes": [
     {
       "id": "entry:lending-library-desk:invoke:library-desk-cancel-hold",
@@ -512,6 +512,81 @@
       }
     },
     {
+      "id": "lending-library-desk#src/lib/wrappers.ts:measured",
+      "type": "function",
+      "label": "measured",
+      "repo": "lending-library-desk",
+      "file": "src/lib/wrappers.ts",
+      "line": 43,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "fn",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
+    },
+    {
+      "id": "lending-library-desk#src/lib/wrappers.ts:traced",
+      "type": "function",
+      "label": "traced",
+      "repo": "lending-library-desk",
+      "file": "src/lib/wrappers.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "fn",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 18
+          }
+        ]
+      }
+    },
+    {
+      "id": "lending-library-desk#src/lib/wrappers.ts:withRetry",
+      "type": "function",
+      "label": "withRetry",
+      "repo": "lending-library-desk",
+      "file": "src/lib/wrappers.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "{attempts:number}"
+            },
+            {
+              "name": "fn",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
+    },
+    {
       "id": "repo:lending-library-desk",
       "type": "repo",
       "label": "lending-library-desk",
@@ -746,6 +821,22 @@
       "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
     },
     {
+      "from": "lending-library-desk#src/handlers/create-loan.ts:traced",
+      "to": "lending-library-desk#src/lib/wrappers.ts:traced",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/create-loan.ts",
+      "line": 15,
+      "meta": {
+        "wrapper": true
+      },
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+    },
+    {
       "from": "lending-library-desk#src/handlers/place-hold.ts:placeHold",
       "to": "lending-library-desk#src/lib/desk-table.ts:addHold",
       "type": "calls",
@@ -772,6 +863,22 @@
       "returns": "type:lending-library-desk#Loan|undefined"
     },
     {
+      "from": "lending-library-desk#src/handlers/record-return.ts:withRetry",
+      "to": "lending-library-desk#src/lib/wrappers.ts:withRetry",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/record-return.ts",
+      "line": 14,
+      "meta": {
+        "wrapper": true
+      },
+      "params": [
+        "{attempts:number}",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+    },
+    {
       "from": "lending-library-desk#src/handlers/renew-loan.ts:renewLoan",
       "to": "lending-library-desk#src/lib/desk-table.ts:extendLoan",
       "type": "calls",
@@ -796,6 +903,38 @@
         "unknown"
       ],
       "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+    },
+    {
+      "from": "lending-library-desk#src/handlers/renew-loan.ts:traced",
+      "to": "lending-library-desk#src/lib/wrappers.ts:traced",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/renew-loan.ts",
+      "line": 16,
+      "meta": {
+        "wrapper": true
+      },
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+    },
+    {
+      "from": "lending-library-desk#src/handlers/send-reminder.ts:measured",
+      "to": "lending-library-desk#src/lib/wrappers.ts:measured",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/handlers/send-reminder.ts",
+      "line": 11,
+      "meta": {
+        "wrapper": true
+      },
+      "params": [
+        "string",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
     },
     {
       "from": "lending-library-desk#src/handlers/send-reminder.ts:sendReminders",

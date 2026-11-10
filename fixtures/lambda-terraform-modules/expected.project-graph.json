@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-08T09:12:43.772Z",
+  "builtAt": "2026-11-09T21:45:35.960Z",
   "services": [
     {
       "name": "catalogue",
@@ -64,6 +64,27 @@
           ],
           "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
         }
+      }
+    },
+    {
+      "id": "catalogue#src/handlers/register-borrower.ts:audited",
+      "type": "function",
+      "label": "audited",
+      "repo": "catalogue",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{after:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "borrower registered",
+            "at": 7
+          }
+        ]
       }
     },
     {
@@ -406,6 +427,19 @@
       "returns": "type:catalogue#Title|undefined",
       "file": "src/handlers/get-title.ts",
       "line": 5
+    },
+    {
+      "from": "catalogue#src/handlers/register-borrower.ts:audited()",
+      "to": "catalogue#src/handlers/register-borrower.ts:audited",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{after:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "src/handlers/register-borrower.ts",
+      "line": 16,
+      "meta": {
+        "wrapper": true
+      }
     },
     {
       "from": "catalogue#src/handlers/register-borrower.ts:register",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:50:41.170Z",
+  "builtAt": "2026-11-09T21:56:19.480Z",
   "services": [
     {
       "name": "api",
@@ -48,7 +48,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "route": "/orders"
       }
     },
     {

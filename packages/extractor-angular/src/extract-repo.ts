@@ -48,6 +48,7 @@ import { signaturesPass } from './passes/signatures.js';
 import { socketsPass } from './passes/sockets.js';
 import { ssePass } from './passes/sse.js';
 import { templatesPass } from './passes/templates.js';
+import { navigationsPass } from './passes/navigations.js';
 import type { AngularExtractorPass } from './passes/types.js';
 import { ANGULAR_SHAPES } from './shapes/index.js';
 
@@ -141,6 +142,8 @@ export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   modulesPass,
   classesPass,
   templatesPass,
+  // After the routes are read and the classes indexed: a navigation lands on a routed screen (P276).
+  navigationsPass,
   callsPass,
   httpPass,
   // After the requests, so a request that sends an operation is one node (P232).

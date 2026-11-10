@@ -170,6 +170,30 @@ only one of them moved.
   parameter (`${…}@params.<name>`, `deployed-name-from-parameter`). A list of
   several elements, and a `Map` or `Set` made with or given several values,
   is one address per element where the walk used to stop.
+- **Every router's navigations, a client's default headers, an answer handed
+  back, a wrapper's body and an object of functions a factory hands back
+  (P276).** `push` and `replace` on a router however it was got
+  (`useRouter()` of Vue Router or Next, `createRouter`, React Router's data
+  routers, Next's `Router`, `this.$router`, `push` taken out of
+  `useRouter()`), React Router's `navigate` from `useNavigate()`, SvelteKit's
+  `goto`, a `redirect(...)` of Next, React Router, Remix or SvelteKit,
+  `<RouterLink to>` outside Nuxt, and `<Link to>`, `<NavLink to>` and Next's
+  `<Link href>` in JSX are `calls` edges to the page shown, with the
+  `navigation-external` and `navigation-unresolved` rows, as Nuxt's are, and
+  left out of `cycles`; an Angular class's `router.navigate([...])` and
+  `navigateByUrl(...)` too. A Next page of the older router under `pages/`
+  is a screen with its `route`; two pages that fit as well in two
+  applications of one service are told apart by the navigating file. A header
+  written to a client's defaults (`api.defaults.headers.common['X'] = v`) is
+  carried by its requests in the browser and on the server, unread only where
+  written as code, under a condition, removed or for one verb. A response
+  handed back from the function the request is made in - an Angular service
+  returning `http.get(url, { observe: 'response' })` - is read for the headers
+  where each caller holds it. A wrapper drawn in front of a way in that names
+  a function of the repository has its body walked, its node calling the
+  function. A member of an object a factory writes whole and hands back
+  (`export default Gateway()`, `Gateway.listOrders(id)`), and `this.member()` in
+  another member, land on the member, a function and a scope of its own.
 
 - **A handler behind its wrapper, a request handed in as one object, and a
   GraphQL server made into a Lambda (P269).** A `pages/api` default export

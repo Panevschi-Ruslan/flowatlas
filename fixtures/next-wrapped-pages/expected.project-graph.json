@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:44:41.936Z",
+  "builtAt": "2026-11-09T21:50:44.281Z",
   "services": [
     {
       "name": "storefront",
@@ -369,6 +369,114 @@
       }
     },
     {
+      "id": "storefront#gateways/api.gateway.ts:Api.addToBasket",
+      "type": "function",
+      "label": "Api.addToBasket",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sessionId",
+              "type": "string"
+            },
+            {
+              "name": "item",
+              "type": "type:storefront#BasketItem"
+            }
+          ],
+          "returns": "type:storefront#BasketItem[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#gateways/api.gateway.ts:Api.emptyBasket",
+      "type": "function",
+      "label": "Api.emptyBasket",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sessionId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#gateways/api.gateway.ts:Api.getBasket",
+      "type": "function",
+      "label": "Api.getBasket",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sessionId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:storefront#BasketItem[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#gateways/api.gateway.ts:Api.listProducts",
+      "type": "function",
+      "label": "Api.listProducts",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string;name:string}[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#gateways/api.gateway.ts:Api.listStores",
+      "type": "function",
+      "label": "Api.listStores",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string;city:string}[]"
+        }
+      }
+    },
+    {
+      "id": "storefront#gateways/api.gateway.ts:Api.placeOrder",
+      "type": "function",
+      "label": "Api.placeOrder",
+      "repo": "storefront",
+      "file": "gateways/api.gateway.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sessionId",
+              "type": "string"
+            }
+          ],
+          "returns": "{placed:boolean}"
+        }
+      }
+    },
+    {
       "id": "storefront#gateways/shipping.gateway.ts:quoteShipping",
       "type": "function",
       "label": "quoteShipping",
@@ -515,6 +623,25 @@
       }
     },
     {
+      "id": "storefront#lib/with-tracing.ts:withSession",
+      "type": "function",
+      "label": "withSession",
+      "repo": "storefront",
+      "file": "lib/with-tracing.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        }
+      }
+    },
+    {
       "id": "storefront#lib/with-tracing.ts:withTiming",
       "type": "function",
       "label": "withTiming",
@@ -530,7 +657,38 @@
             }
           ],
           "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
-        }
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 29
+          }
+        ]
+      }
+    },
+    {
+      "id": "storefront#lib/with-tracing.ts:withTracing",
+      "type": "function",
+      "label": "withTracing",
+      "repo": "storefront",
+      "file": "lib/with-tracing.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "handler",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "at": 16
+          }
+        ]
       }
     },
     {
@@ -1195,52 +1353,19 @@
       "line": 5
     },
     {
-      "from": "storefront#gateways/api.gateway.ts:Api",
-      "to": "http_out:storefront#gateways/api.gateway.ts:13:12",
+      "from": "storefront#app/api/stores/route.ts:withTiming",
+      "to": "storefront#lib/with-tracing.ts:withTiming",
       "type": "calls",
       "confidence": "static",
-      "file": "gateways/api.gateway.ts",
-      "line": 13
-    },
-    {
-      "from": "storefront#gateways/api.gateway.ts:Api",
-      "to": "http_out:storefront#gateways/api.gateway.ts:16:12",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/api.gateway.ts",
-      "line": 16
-    },
-    {
-      "from": "storefront#gateways/api.gateway.ts:Api",
-      "to": "http_out:storefront#gateways/api.gateway.ts:19:12",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/api.gateway.ts",
-      "line": 19
-    },
-    {
-      "from": "storefront#gateways/api.gateway.ts:Api",
-      "to": "http_out:storefront#gateways/api.gateway.ts:22:12",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/api.gateway.ts",
-      "line": 22
-    },
-    {
-      "from": "storefront#gateways/api.gateway.ts:Api",
-      "to": "http_out:storefront#gateways/api.gateway.ts:25:12",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/api.gateway.ts",
-      "line": 25
-    },
-    {
-      "from": "storefront#gateways/api.gateway.ts:Api",
-      "to": "http_out:storefront#gateways/api.gateway.ts:28:12",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/api.gateway.ts",
-      "line": 28
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "app/api/stores/route.ts",
+      "line": 10,
+      "meta": {
+        "wrapper": true
+      }
     },
     {
       "from": "storefront#gateways/api.gateway.ts:Api",
@@ -1301,6 +1426,54 @@
       "confidence": "static",
       "file": "gateways/api.gateway.ts",
       "line": 28
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api.addToBasket",
+      "to": "http_out:storefront#gateways/api.gateway.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 16
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api.emptyBasket",
+      "to": "http_out:storefront#gateways/api.gateway.ts:19:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 19
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api.getBasket",
+      "to": "http_out:storefront#gateways/api.gateway.ts:13:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 13
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api.listProducts",
+      "to": "http_out:storefront#gateways/api.gateway.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 25
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api.listStores",
+      "to": "http_out:storefront#gateways/api.gateway.ts:28:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 28
+    },
+    {
+      "from": "storefront#gateways/api.gateway.ts:Api.placeOrder",
+      "to": "http_out:storefront#gateways/api.gateway.ts:22:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/api.gateway.ts",
+      "line": 22
     },
     {
       "from": "storefront#gateways/shipping.gateway.ts:quoteShipping",
@@ -1380,6 +1553,21 @@
       "line": 15
     },
     {
+      "from": "storefront#pages/api/basket.ts:withTracing",
+      "to": "storefront#lib/with-tracing.ts:withTracing",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "pages/api/basket.ts",
+      "line": 33,
+      "meta": {
+        "wrapper": true
+      }
+    },
+    {
       "from": "storefront#pages/api/catalog/index.ts:ALL /api/catalog@6",
       "to": "storefront#lib/basket-store.ts:listProducts",
       "type": "calls",
@@ -1388,6 +1576,21 @@
       "returns": "{id:string;name:string}[]",
       "file": "pages/api/catalog/index.ts",
       "line": 7
+    },
+    {
+      "from": "storefront#pages/api/catalog/index.ts:withTracing",
+      "to": "storefront#lib/with-tracing.ts:withTracing",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "pages/api/catalog/index.ts",
+      "line": 6,
+      "meta": {
+        "wrapper": true
+      }
     },
     {
       "from": "storefront#pages/api/checkout.ts:placeOrder",
@@ -1400,6 +1603,36 @@
       "returns": "void",
       "file": "pages/api/checkout.ts",
       "line": 8
+    },
+    {
+      "from": "storefront#pages/api/checkout.ts:withSession",
+      "to": "storefront#lib/with-tracing.ts:withSession",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "pages/api/checkout.ts",
+      "line": 13,
+      "meta": {
+        "wrapper": true
+      }
+    },
+    {
+      "from": "storefront#pages/api/checkout.ts:withTracing",
+      "to": "storefront#lib/with-tracing.ts:withTracing",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{prototype:any;length:number;arguments:any;caller:Function;name:string}",
+      "file": "pages/api/checkout.ts",
+      "line": 13,
+      "meta": {
+        "wrapper": true
+      }
     },
     {
       "from": "ui_api_call:storefront#gateways/api.gateway.ts:13:12@15:26",
@@ -1632,14 +1865,14 @@
       "line": 30,
       "reason": "call-dynamic-receiver",
       "level": "info",
-      "sites": 19,
+      "sites": 21,
       "hint": "The receiver has no single class type; inject a class to make the edge visible.",
       "symbol": "makeProbe -> response.json",
       "meta": {
         "causes": [
           {
             "cause": "interface-type",
-            "sites": 19,
+            "sites": 21,
             "samples": [
               {
                 "file": "lib/basket-store.ts",
@@ -1647,17 +1880,18 @@
                 "symbol": "makeProbe -> response.json"
               },
               {
-                "file": "pages/api/basket.ts",
-                "line": 17,
-                "symbol": "handler -> response.status(200).json"
+                "file": "lib/with-tracing.ts",
+                "line": 37,
+                "symbol": "withSession -> response.status(401).send"
               },
               {
-                "file": "pages/api/basket.ts",
-                "line": 17,
-                "symbol": "handler -> response.status"
+                "file": "lib/with-tracing.ts",
+                "line": 37,
+                "symbol": "withSession -> response.status"
               }
             ],
             "files": [
+              "pages/api/basket.ts",
               "pages/api/catalog/index.ts",
               "pages/api/checkout.ts",
               "pages/api/reviews.ts"

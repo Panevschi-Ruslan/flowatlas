@@ -249,7 +249,7 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
   'navigation-external': () =>
     "A page, a component or a route middleware navigates to an address with a host, or with `{ external: true }`: it leaves the application, so no page of it is joined. Nothing to do; the row says where the application hands the visitor on.",
   'navigation-unresolved': () =>
-    "A page, a component or a route middleware navigates - `navigateTo(...)`, `<NuxtLink to>` - to an address no page of the application shows, to one two pages fit as well, or to one written as code, so the page it shows is not joined. Correct the address or the name, add the page, or write the address as a literal (a template of one, or `{ name: '...' }`).",
+    "A page, a component or a route middleware navigates - `navigateTo(...)`, `router.push(...)`, `navigate(...)`, `goto(...)`, `redirect(...)`, `router.navigate([...])`, `<NuxtLink to>`, `<Link to>` - to an address no page of the application shows, to one two pages fit as well, or to one written as code, so the page it shows is not joined. Correct the address or the name, add the page, or write the address as a literal (a template of one, or `{ name: '...' }`).",
   'framework-feature-off': () =>
     "The repository writes code for a feature its framework builds only behind a flag - Nitro's tasks, before Nitro 3 - and the configuration leaves the flag off, so the build registers none of it. The code is drawn and marked `enabled: false`. Turn the flag on to have it built, or remove the code.",
   'framework-module-unread': () =>

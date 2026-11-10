@@ -577,11 +577,14 @@ export type { ExtractorPass } from './passes.js';
 
 export { buildClassIndex, ClassIndex } from './class-index.js';
 export {
+  factoryMembers,
   functionAt,
   inlineFunction,
   memberFunction,
   moduleFunctions,
   namedFunction,
+  objectMemberFunction,
+  onlyHandsBackMembers,
   placedFunction,
   placeOf,
 } from './functions.js';
@@ -1125,6 +1128,6 @@ export type {
 } from './conventions.js';
 export { ConfigPath, NotLiteral, configValueAt, exportedNamesOf, parseSyntax, readConfigLiteral } from './config-literal.js';
 export { builtQueryInAddress, builtQueryOf, PLATFORM_HEADERS, PLATFORM_QUERY, writtenHeaderNames, writtenKey, type BuiltQuery, type QueryBuilder } from './built-query.js';
-export { headersAHookAdds, joinHookHeaders, NO_HOOK_HEADERS, type HookHanded, type HookHeaders } from './hook-headers.js';
+export { defaultHeadersWritten, headersAHookAdds, joinHookHeaders, NO_HOOK_HEADERS, type HookHanded, type HookHeaders } from './hook-headers.js';
 export { responseHeadersRead, type AnswerHanded, type ResponseHeadersRead } from './response-headers.js';
 export type { ConfigLiteral, ExportedNames } from './config-literal.js';
