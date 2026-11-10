@@ -355,3 +355,44 @@ describe('an operation sent under a base nothing read', () => {
     expect(resolveUiCall(uiCall('web', 'POST', '/${…}/graphql', { client: 'apollo' }), index)).toMatchObject({ kind: 'linked', via: 'graphql-path' });
   });
 });
+
+/**
+ * A GraphQL operation sent to a setting whose values name no configured
+ * service (P281): the path its values for this machine agree on is asked of
+ * the services' GraphQL endpoints, and joined only where the endpoint serves
+ * a root field the operation asks for.
+ */
+describe('an operation sent to a setting no value of which names a service', () => {
+  const value = (text: string, from: string) => ({ variable: 'STORE_API_URL', value: text, from, deployed: false });
+  const schemaEndpoint = (repo: string, path: string, fields: Record<string, unknown>): GraphNode => {
+    const made = endpoint(repo, path);
+    return { ...made, meta: { ...made.meta, graphql: { endpoint: true, fieldsAt: path, schema: { roots: { query: 'Query', mutation: 'Mutation' }, types: { Mutation: { fields } } } } } };
+  };
+  const operation = (field: string): GraphNode =>
+    uiCall('web', 'POST', '/', { baseUrlEnv: 'STORE_API_URL', client: 'codegen-sdk', graphql: { operation: 'mutation', fields: [{ field }] } });
+  const indexWith = (values: ReturnType<typeof value>[]): UiIndex => ({
+    ...indexOf({ api: [schemaEndpoint('api', '/store-api', { signIn: {} }), schemaEndpoint('api', '/office-api', { signIn: {} })], web: [] }),
+    baseUrlOf: () => ({ kind: 'external', host: 'demo.example.com', found: values[0] as ReturnType<typeof value>, values }),
+  });
+
+  it('reaches the endpoint at the path of the value for running it here, a third party deployment aside', () => {
+    const index = indexWith([value('https://demo.example.com/store-api', 'wrangler.toml'), value('http://localhost:3000/store-api', '.env.example')]);
+    const outcome = resolveUiCall(operation('signIn'), index);
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'graphql-path', targetService: 'api' });
+    expect(outcome.kind === 'linked' && outcome.entry.id).toBe('entry:api:http:POST:/store-api');
+    expect(outcome.kind === 'linked' && outcome.baseUrl?.from).toBe('.env.example');
+  });
+
+  it('is not joined where the endpoint declares none of the root fields, and says which', () => {
+    const index = indexWith([value('http://localhost:3000/store-api', '.env.example')]);
+    const outcome = resolveUiCall(operation('payByCard'), index);
+    expect(outcome).toMatchObject({ kind: 'noRoute', targetService: 'api', unserved: ['Mutation.payByCard'] });
+    expect(uiFindingFor(outcome)?.reason).toBe('graphql-field-no-resolver');
+  });
+
+  it('decides nothing from a public host alone, or from local values that disagree', () => {
+    expect(resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/store-api', 'wrangler.toml')])).kind).toBe('noRoute');
+    const split = indexWith([value('http://localhost:3000/store-api', '.env'), value('http://localhost:3000/office-api', '.env.example')]);
+    expect(resolveUiCall(operation('signIn'), split)).toMatchObject({ kind: 'noRoute', targetService: null });
+  });
+});

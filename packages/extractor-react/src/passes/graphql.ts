@@ -38,6 +38,9 @@ const clientsOf = (ctx: ReactExtractContext): { sources: () => SourceFile[]; pag
 
 const DEFAULT_ENDPOINT = '/graphql';
 
+/** The libraries whose address is the one a request is sent to, read from where it is sent rather than from a client. */
+const SENT = new Set(['codegen-sdk']);
+
 /**
  * The address a client is made with. A client whose whole address is a
  * setting (`createClient({ url: import.meta.env.VITE_GQL_URL })`) is sent to
@@ -45,11 +48,14 @@ const DEFAULT_ENDPOINT = '/graphql';
  * `/graphql`, where the address is not read - so a value the setting is
  * given, or a configuration naming the key, decides which service answers.
  */
-const clientAddress = (node: TsNode, sharedPackages: readonly string[] | undefined): ApiUrl => {
+const clientAddress = (node: TsNode, sharedPackages: readonly string[] | undefined, sent: boolean): ApiUrl => {
   const read = analyzeApiUrl(node, { sharedPackages: sharedPackages ?? [] });
   if (read.path !== null || read.baseUrlEnv !== null || read.host !== null) return read;
   const base = analyzeClientBase(node, { sharedPackages: sharedPackages ?? [] });
   if (base.baseUrlEnv === null || (base.path !== null && base.path !== '' && base.path !== '/')) return read;
+  // The address a request is sent to, not a client's base (P281): a codegen
+  // SDK's requester posting to the setting is sent to the setting's value.
+  if (sent) return base;
   return { ...base, url: `\${${base.baseUrlEnv}}${DEFAULT_ENDPOINT}`, path: DEFAULT_ENDPOINT };
 };
 
@@ -71,7 +77,7 @@ export const graphqlPass = definePass('graphql', (ctx: ReactExtractContext) => {
     const leaf = makeLeafId('ui_api_call', ctx.repo, file, at.line, at.column);
     const network = siteOf(call);
     const id = placed === undefined ? leaf : `${leaf}@${network.line}:${network.column}`;
-    const reading = documentOf(found.document);
+    const reading = found.reading ?? documentOf(found.document);
     let graphql: Record<string, unknown> | undefined;
     if (reading.kind === 'read') {
       const [operation] = operationsOf(reading.document, reading.fragments);
@@ -118,11 +124,14 @@ export const graphqlPass = definePass('graphql', (ctx: ReactExtractContext) => {
         reason: 'graphql-client-unread',
         level: 'action',
         message: `the operation is sent with a client this could not follow to its address: ${chosen.why}`,
-        hint: 'Make the client with its uri written where it is made, or hand it down through a context provider whose value is one, so the endpoint the operation reaches can be read.',
+        hint:
+          found.library === 'codegen-sdk'
+            ? 'Hand getSdk a function of the repository that sends with fetch or a GraphQL client, or a GraphQLClient made with its address, so the endpoint the operation reaches can be read.'
+            : 'Make the client with its uri written where it is made, or hand it down through a context provider whose value is one, so the endpoint the operation reaches can be read.',
         symbol: call.getExpression().getText(),
       });
     }
-    const address: ApiUrl | undefined = chosen.kind === 'address' && chosen.node !== undefined ? clientAddress(chosen.node, ctx.config.sharedPackages) : undefined;
+    const address: ApiUrl | undefined = chosen.kind === 'address' && chosen.node !== undefined ? clientAddress(chosen.node, ctx.config.sharedPackages, SENT.has(found.library)) : undefined;
     const path = chosen.kind === 'unread' ? null : (address?.path ?? DEFAULT_ENDPOINT);
     ctx.builder.addNode({
       id,
@@ -184,7 +193,7 @@ export const graphqlPass = definePass('graphql', (ctx: ReactExtractContext) => {
    * hands one.
    */
   const followedOut = (call: CallExpression, found: GraphqlCall, owner: IndexedFunction, strong: boolean): boolean => {
-    if (found.document === undefined || documentOf(found.document).kind === 'read') return false;
+    if (found.reading !== undefined || found.document === undefined || documentOf(found.document).kind === 'read') return false;
     const handed = handedOutward(ctx, found.document, (value) => documentOf(value).kind === 'read');
     if (handed === undefined || handed.length === 0) return false;
     const readings = handed.map((each) => ({ each, reading: each.value === undefined ? undefined : documentOf(each.value) }));

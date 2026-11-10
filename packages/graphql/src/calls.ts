@@ -1,16 +1,18 @@
 import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { documentOf } from './documents.js';
+import { documentOf, type DocumentReading } from './documents.js';
+import { sdkCallOf } from './sdk.js';
 
 /**
  * The calls that send a GraphQL operation (P232), in the spellings of the
  * clients a repository uses: Apollo Client's hooks and `client.query`,
  * urql's, graphql-request's `request` and `GraphQLClient#request`,
  * apollo-angular's `this.apollo.query` and its `Query` services, and `fetch`
- * with a body holding `query`. Each is a request to an endpoint, which is
- * what joins it to a service; the document is what joins it to the fields.
+ * with a body holding `query`, and a method of the SDK GraphQL Code Generator
+ * writes (P281). Each is a request to an endpoint, which is what joins it to
+ * a service; the document is what joins it to the fields.
  */
-export type GraphqlLibrary = 'apollo' | 'urql' | 'graphql-request' | 'apollo-angular' | 'fetch';
+export type GraphqlLibrary = 'apollo' | 'urql' | 'graphql-request' | 'apollo-angular' | 'fetch' | 'codegen-sdk';
 
 export interface GraphqlCall {
   readonly library: GraphqlLibrary;
@@ -25,6 +27,13 @@ export interface GraphqlCall {
    * itself (`{ client }`, `named`), or the one it is a method of.
    */
   readonly client?: { readonly node: TsNode; readonly named: boolean };
+  /**
+   * The operation, where it was read without an expression of its own: a
+   * method of a codegen SDK whose module is not committed (P281).
+   */
+  readonly reading?: DocumentReading;
+  /** Why the address the call is sent to could not be read, where it is decided away from the call (P281). */
+  readonly endpointUnread?: string;
 }
 
 /**
@@ -179,7 +188,16 @@ export const graphqlCallOf = (call: CallExpression, handed?: (expression: TsNode
     const endpoint = constructedWith(receiver, 'GraphQLClient');
     return { library: 'graphql-request', document: first, ...(endpoint === undefined ? {} : { endpoint }) };
   }
-  return undefined;
+  // A method of the SDK codegen writes: `sdk.signIn(variables)` (P281).
+  const sdk = sdkCallOf(call);
+  if (sdk === undefined) return undefined;
+  return {
+    library: 'codegen-sdk',
+    document: sdk.document,
+    reading: sdk.reading,
+    ...(sdk.endpoint === undefined ? {} : { endpoint: sdk.endpoint }),
+    ...(sdk.endpointUnread === undefined ? {} : { endpointUnread: sdk.endpointUnread }),
+  };
 };
 
 /**

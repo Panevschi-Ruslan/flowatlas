@@ -65,7 +65,13 @@ export interface FoundValue {
 /** What the values of a setting say a request's base address is. */
 export type BaseUrlAnswer =
   | { readonly kind: 'service'; readonly service: string; readonly found: FoundValue; readonly others: readonly FoundValue[] }
-  | { readonly kind: 'external'; readonly host: string; readonly found: FoundValue }
+  | {
+      readonly kind: 'external';
+      readonly host: string;
+      readonly found: FoundValue;
+      /** Every value found, among them those of this machine a third party's host outweighed (P281). */
+      readonly values?: readonly FoundValue[];
+    }
   | {
       readonly kind: 'unsettled';
       readonly values: readonly FoundValue[];
@@ -238,7 +244,7 @@ export const baseUrlOf = (input: BaseUrlInput): BaseUrlAnswer | undefined => {
   }
   if (byService.size === 0 && unsettled.length === 0 && external.size > 0) {
     const [[host, found]] = [...external.entries()].sort(([a], [b]) => cmp(a, b)) as [[string, FoundValue]];
-    return { kind: 'external', host, found };
+    return { kind: 'external', host, found, values };
   }
   const services = [...new Set([...byService.keys(), ...unsettled])].sort(cmp);
   // Values that name nothing configured - a port nobody is known to listen

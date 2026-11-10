@@ -1,9 +1,9 @@
-import { forEachCall, makeLeafId, normalizeFilePath } from '@flowatlas/core';
+import { forEachCall, makeLeafId, normalizeFilePath, rootSettingAddress } from '@flowatlas/core';
 import { definePass, scopesOf, type NestExtractContext, type NestExtractorPass } from '@flowatlas/extractor-nestjs';
 import { callAddressOf, documentOf, GRAPHQL_META, graphqlCallOf, operationMeta, operationsOf, pageClientIn } from '@flowatlas/graphql';
-import type { CallExpression } from 'ts-morph';
+import type { CallExpression, Node as TsNode } from 'ts-morph';
 import { Node } from 'ts-morph';
-import { analyzeUrl } from './leaves/url.js';
+import { analyzeUrl, routePathOf, type UrlInfo } from './leaves/url.js';
 
 /**
  * The GraphQL operations a server sends another service (P232):
@@ -13,6 +13,21 @@ import { analyzeUrl } from './leaves/url.js';
  * `meta.graphql`, so the linker joins it to the other service's endpoint by
  * the same rules as any request and then to the fields it selects.
  */
+/** `process.env.X` and `import.meta.env.X`: the setting a read names. */
+const environmentKey = (node: TsNode): string | null =>
+  Node.isPropertyAccessExpression(node) && /^(?:globalThis\.)?(?:process|import\.meta)\.env$/.test(node.getExpression().getText()) ? node.getName() : null;
+
+/**
+ * The setting an address a codegen SDK's requester sends to is rooted at,
+ * followed through the names and branches it is held in (P281):
+ * `let API_URL = typeof process !== 'undefined' ? process.env.API_URL ?? FALLBACK : FALLBACK`.
+ */
+const settingRooted = (node: TsNode): UrlInfo | undefined => {
+  const rooted = rootSettingAddress(node, { readSetting: environmentKey });
+  if (rooted === null) return undefined;
+  return { url: `\${${rooted.key}}${rooted.prefix}`, path: routePathOf(rooted.prefix), baseUrlEnv: rooted.key, host: null };
+};
+
 export const graphqlCallsPass: NestExtractorPass = definePass('graphql-calls', (ctx: NestExtractContext) => {
   const sources = ctx.project.getSourceFiles().filter((file) => !file.getFilePath().includes('/node_modules/'));
   let made: ReturnType<typeof pageClientIn> | null = null;
@@ -27,7 +42,7 @@ export const graphqlCallsPass: NestExtractorPass = definePass('graphql-calls', (
       const site = ctx.project.getSourceFile(call.getSourceFile().getFilePath())?.getLineAndColumnAtPos(call.getStart());
       if (site === undefined) return;
       const id = makeLeafId('http_out', ctx.repo, scope.file, site.line, site.column);
-      const reading = documentOf(found.document);
+      const reading = found.reading ?? documentOf(found.document);
       const operation = reading.kind === 'read' ? operationsOf(reading.document, reading.fragments)[0] : undefined;
       const graphql = reading.kind === 'read' && operation !== undefined ? operationMeta(operation, reading, (path) => normalizeFilePath(path, ctx.repoDir), found.library, found.transport) : undefined;
       if (reading.kind !== 'read') {
@@ -61,8 +76,11 @@ export const graphqlCallsPass: NestExtractorPass = definePass('graphql-calls', (
         });
       }
       const written = chosen.kind === 'address' ? chosen.node : undefined;
-      const info = written === undefined ? undefined : analyzeUrl(written);
-      const path = chosen.kind === 'unread' ? null : (info?.path ?? '/graphql');
+      // A codegen SDK's address is the one its requester sends to, whole (P281), not a client's base.
+      const sent = found.library === 'codegen-sdk';
+      const read = written === undefined ? undefined : analyzeUrl(written, { whole: sent });
+      const info = sent && written !== undefined && read?.path === null ? (settingRooted(written) ?? read) : read;
+      const path = chosen.kind === 'unread' ? null : (info?.path ?? (sent ? null : '/graphql'));
       scope.ensure();
       ctx.builder.addNode({
         id,

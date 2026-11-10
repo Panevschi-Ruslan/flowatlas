@@ -1,7 +1,8 @@
 import { posix } from 'node:path';
 import type { FileSystemHost, Project } from 'ts-morph';
+import { SyntaxKind } from 'ts-morph';
 import type { DocumentReading } from './documents.js';
-import { graphqlFile } from './documents.js';
+import { documentOf, graphqlFile } from './documents.js';
 import type { HandedFragment } from './operations.js';
 import type { OperationDefinition } from './parse.js';
 
@@ -17,8 +18,9 @@ import type { OperationDefinition } from './parse.js';
  * with or without the operation's type after it (`OrdersQueryDocument`).
  * Read where the module is missing and is either one the configuration
  * generates or is named like a codegen output (`graphql`, `generated`,
- * `gql`); the documents its configuration lists, or every `.graphql` and
- * `.gql` file of the package where none is found. The fragments of every one
+ * `gql`); the documents its configuration lists - `.graphql` files, and
+ * the `gql` templates of source files it lists (P281) - or every `.graphql`
+ * and `.gql` file of the package where none is found. The fragments of every one
  * of those files are handed to the operation, as codegen hands them.
  */
 
@@ -66,14 +68,23 @@ interface CodegenConfig {
   readonly outputs: readonly string[];
 }
 
+/** One operation of the documents, with the reading of the document it is written in. */
+interface IndexedOperation {
+  readonly path: string;
+  readonly definition: OperationDefinition;
+  readonly reading: Extract<DocumentReading, { kind: 'read' }>;
+}
+
 /** The operations of a set of documents, by their name as codegen names a document. */
 interface DocumentIndex {
-  readonly operations: ReadonlyMap<string, ReadonlyArray<{ readonly path: string; readonly definition: OperationDefinition }>>;
+  readonly operations: ReadonlyMap<string, readonly IndexedOperation[]>;
   readonly fragments: readonly HandedFragment[];
-  readonly files: ReadonlyMap<string, Extract<DocumentReading, { kind: 'read' }>>;
   readonly unread: number;
   readonly listed: string;
 }
+
+/** The source files codegen reads `gql` templates from, where its configuration lists them (P281). */
+const SOURCE_DOCUMENT = /\.(tsx?|jsx?|mts|cts)$/;
 
 /** The comparable form of a name: letters and digits, lower case, so `ToggleSMTP` and `ToggleSmtp` are one. */
 const comparable = (name: string): string => name.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -199,7 +210,20 @@ const configNear = (files: FileSystemHost, from: string): CodegenConfig | undefi
 /** The documents of a set of files, indexed once per file system and listing. */
 const indexes = new WeakMap<FileSystemHost, Map<string, DocumentIndex>>();
 
-const indexOf = (files: FileSystemHost, dir: string, globs: readonly string[]): DocumentIndex => {
+/** The `gql` and `graphql` templates of a source file codegen lists, each read as a document (P281). */
+const templatesIn = (project: Project, path: string): DocumentReading[] => {
+  const sourceFile = project.getSourceFile(path);
+  if (sourceFile === undefined) return [];
+  return sourceFile
+    .getDescendantsOfKind(SyntaxKind.TaggedTemplateExpression)
+    .filter((template) => TEMPLATE_TAGS.has(template.getTag().getText().replace(/^.*\./, '')))
+    .map((template) => documentOf(template));
+};
+
+const TEMPLATE_TAGS = new Set(['gql', 'graphql']);
+
+const indexOf = (project: Project, dir: string, globs: readonly string[], generated: readonly string[]): DocumentIndex => {
+  const files = project.getFileSystem();
   const key = `${dir}\0${globs.join('\0')}`;
   const known = indexes.get(files)?.get(key);
   if (known !== undefined) return known;
@@ -209,32 +233,38 @@ const indexOf = (files: FileSystemHost, dir: string, globs: readonly string[]): 
     paths = files
       .globSync(patterns)
       .map((path) => path.replace(/\\/g, '/'))
-      .filter((path) => /\.(graphql|gql|graphqls)$/.test(path) && !path.includes('/node_modules/'));
+      .filter((path) => (/\.(graphql|gql|graphqls)$/.test(path) || (SOURCE_DOCUMENT.test(path) && !path.endsWith('.d.ts') && !generated.includes(withoutExtension(path)))) && !path.includes('/node_modules/'));
   } catch {
     paths = [];
   }
-  const operations = new Map<string, Array<{ path: string; definition: OperationDefinition }>>();
+  const operations = new Map<string, IndexedOperation[]>();
   const fragments: HandedFragment[] = [];
-  const read = new Map<string, Extract<DocumentReading, { kind: 'read' }>>();
   let unread = 0;
+  const add = (path: string, reading: Extract<DocumentReading, { kind: 'read' }>): void => {
+    for (const definition of reading.document.definitions) {
+      if (definition.kind === 'fragment') fragments.push({ ...definition, written: reading.written });
+      if (definition.kind !== 'operation' || definition.name === undefined) continue;
+      for (const name of new Set([comparable(definition.name), comparable(`${definition.name}${ROOT_SUFFIX[definition.operation]}`)])) {
+        const list = operations.get(name) ?? [];
+        list.push({ path, definition, reading });
+        operations.set(name, list);
+      }
+    }
+  };
   for (const path of [...new Set(paths)].sort()) {
+    // A source file's templates, as codegen's own loader reads them.
+    if (SOURCE_DOCUMENT.test(path)) {
+      for (const reading of templatesIn(project, path)) if (reading.kind === 'read') add(path, reading);
+      continue;
+    }
     const file = graphqlFile(files, path, 0);
     if (file?.kind !== 'read') {
       unread += 1;
       continue;
     }
-    read.set(path, file);
-    for (const definition of file.document.definitions) {
-      if (definition.kind === 'fragment') fragments.push({ ...definition, written: file.written });
-      if (definition.kind !== 'operation' || definition.name === undefined) continue;
-      for (const name of new Set([comparable(definition.name), comparable(`${definition.name}${ROOT_SUFFIX[definition.operation]}`)])) {
-        const list = operations.get(name) ?? [];
-        list.push({ path, definition });
-        operations.set(name, list);
-      }
-    }
+    add(path, file);
   }
-  const index: DocumentIndex = { operations, fragments, files: read, unread, listed: globs.join(', ') };
+  const index: DocumentIndex = { operations, fragments, unread, listed: globs.join(', ') };
   const byKey = indexes.get(files) ?? new Map<string, DocumentIndex>();
   byKey.set(key, index);
   indexes.set(files, byKey);
@@ -285,13 +315,14 @@ export const codegenDocument = (project: Project, importingFile: string, specifi
   if (!generated && !OUTPUT_NAMED.test(lastSegment)) return undefined;
   const dir = config !== undefined && config.documents.length > 0 ? config.dir : packageDirOf(files, importingDir);
   const globs = config !== undefined && config.documents.length > 0 ? config.documents : ['**/*.graphql', '**/*.gql'];
-  const index = indexOf(files, dir, globs);
+  const generatedPaths = config === undefined ? [] : config.outputs.map((output) => withoutExtension(posix.join(config.dir, output)));
+  const index = indexOf(project, dir, globs, generatedPaths);
   const found = index.operations.get(comparable(named)) ?? [];
   const where = config?.path === undefined ? 'the .graphql files of its package' : `the documents ${posix.basename(config.path)} lists (${index.listed})`;
   if (found.length === 0) return { kind: 'dynamic', why: `${exported} is generated by GraphQL codegen into ${specifier}, which is not committed, and no operation named ${named} is in ${where}` };
   if (found.length > 1) return { kind: 'dynamic', why: `${exported} is generated by GraphQL codegen into ${specifier}, and ${found.length} operations of ${where} are named ${named}: ${found.map((each) => each.path).join(', ')}` };
-  const [only] = found as [{ path: string; definition: OperationDefinition }];
-  const file = index.files.get(only.path) as Extract<DocumentReading, { kind: 'read' }>;
+  const [only] = found as [IndexedOperation];
+  const file = only.reading;
   // Codegen hands an operation every fragment of every document it lists.
   const fragments = [...index.fragments, ...file.fragments];
   return { kind: 'read', document: { definitions: [only.definition] }, text: file.text, written: file.written, fragments, unread: file.unread };

@@ -10,6 +10,7 @@ import {
 } from './route-match.js';
 import { chooseByApiName } from './api-choice.js';
 import { whereFound, type BaseUrlAnswer, type FoundValue } from './base-url-value.js';
+import { localGraphqlEndpoint, unservedFinding } from './graphql-value.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
 import { defaultPortOf, forwardedAgain, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
 
@@ -83,6 +84,8 @@ export interface RouteIndex {
   ingressOf?(host: string, path: string): Forward | undefined;
   /** Whether a service's server resolves its own requests with no host against its own address (P260). */
   ownOrigin?(service: string): boolean;
+  /** Every configured service, for a GraphQL operation asked of every endpoint at a path (P281). */
+  services?(): readonly string[];
 }
 
 /** Where a binding goes, as the deployment files and the configuration say. */
@@ -96,7 +99,7 @@ export type BindingAnswer =
 /** What each way a call can end carries with it. */
 interface Details {
   linked: {
-    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host' | 'proxy' | 'ingress' | 'ownOrigin' | 'inProcess';
+    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host' | 'proxy' | 'ingress' | 'ownOrigin' | 'inProcess' | 'graphqlPath';
     entry: GraphNode;
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
@@ -148,6 +151,8 @@ interface Details {
      * were left open, as `service METHOD path`. Never a join.
      */
     unread: readonly string[];
+    /** The root fields an operation asks for that the GraphQL endpoint at the path neither declares nor resolves (P281). */
+    unserved?: readonly string[];
   };
   ambiguous: {
     targetService: string;
@@ -216,7 +221,9 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
         : `Add ${workers[0] ?? 'the worker'} to services[].aliases of the service it is, or add that service to the configuration.`,
   }),
   noRoute: (detail) =>
-    detail.unread.length === 0
+    detail.unserved !== undefined
+      ? unservedFinding(detail.targetService, detail.method, detail.path, detail.unserved)
+      : detail.unread.length === 0
       ? {
           reason: 'target-route-not-found',
           message: `target service ${detail.targetService} has no route ${detail.method} ${detail.path}`,
@@ -775,6 +782,10 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
   }
   // Nobody claims it: what the setting is given may still say (P77).
   const valued = claiming.length === 0 ? index.baseUrlOf?.(call) : undefined;
+  // A GraphQL operation the values settle on no service: the endpoint at the path its local values agree on (P281).
+  const local = typeof path === 'string' && wasRead(path) && index.services !== undefined ? localGraphqlEndpoint(call, path, valued, index.services(), (service) => index.routesOf(service)) : undefined;
+  if (local?.kind === 'linked') return { outcome: { kind: 'linked', via: 'graphqlPath', entry: local.entry, runnersUp: [] }, notes, baseUrl: local.found };
+  if (local?.kind === 'unserved') return { outcome: { kind: 'noRoute', targetService: local.service, method: 'POST', path: local.path, verbs: [], unread: [], unserved: local.fields }, notes };
   if (valued?.kind === 'external') {
     return { outcome: { kind: 'external', host: valued.host }, notes, baseUrl: valued.found };
   }

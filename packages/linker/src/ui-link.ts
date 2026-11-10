@@ -1,5 +1,6 @@
 import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
 import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
+import { localGraphqlEndpoint, sendsOperation, unservedFinding } from './graphql-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
 import { defaultPortOf, forwardedAgain, proxiedOutFinding, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
@@ -107,6 +108,8 @@ interface Details {
     unread: readonly string[];
     /** The service was the one an annotation named, so it is the annotation that is wrong (P127). */
     named?: true;
+    /** The root fields an operation asks for that the GraphQL endpoint at the path neither declares nor resolves (P281). */
+    unserved?: readonly string[];
   };
   /** An annotation names a service nothing configured answers to, by name or alias (P127). */
   serviceUnknown: { service: string; aliases: readonly string[] };
@@ -154,6 +157,7 @@ const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null
   linked: null,
   dynamic: null,
   noRoute: (detail) => {
+    if (detail.unserved !== undefined && detail.targetService !== null) return unservedFinding(detail.targetService, detail.method, detail.path, detail.unserved);
     if (detail.named === true && detail.targetService !== null) {
       return MARKER_FINDINGS.routeNotFound({ ...detail, service: detail.targetService }, '@flowatlas-calls');
     }
@@ -287,6 +291,19 @@ const byBaseUrlEnv = (ask: Ask): UiOutcome | undefined => {
 };
 
 /**
+ * A GraphQL operation sent to a setting whose values name no configured
+ * service (P281): the endpoint at the path its values for this machine agree
+ * on, where it declares a root field the operation asks for
+ * (`localGraphqlEndpoint`).
+ */
+const byLocalGraphqlValue = (ask: Ask, answer: BaseUrlAnswer | undefined): UiOutcome | undefined => {
+  const found = localGraphqlEndpoint(ask.call, ask.path, answer, ask.index.services(), (service) => ask.index.routesOf(service));
+  if (found === undefined) return undefined;
+  if (found.kind === 'unserved') return { kind: 'noRoute', targetService: found.service, method: 'POST', path: found.path, verbs: [], unread: [], unserved: found.fields };
+  return { kind: 'linked', via: 'graphql-path', entry: found.entry, targetService: found.service, runnersUp: [], baseUrl: found.found };
+};
+
+/**
  * The one service the value the settings key is given names, where nobody
  * claims the key (P77). A guess, the way a route found by its address alone
  * is: the value is the one the repository writes down for running it.
@@ -295,7 +312,7 @@ const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
   const { env, index } = ask;
   if (env === undefined || index.claimantsOf(env).length > 0) return undefined;
   const answer = index.baseUrlOf?.(ask.call);
-  if (answer?.kind !== 'service') return undefined;
+  if (answer?.kind !== 'service') return byLocalGraphqlValue(ask, answer);
   // A value with a path of its own is where the request goes, path included
   // (P91); where that answers nothing and the path alone does, the value's
   // path is a mount and the join without it stands.
@@ -489,8 +506,6 @@ const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
   byUniqueRoute,
 ];
 
-/** The clients that send nothing but GraphQL operations. */
-const GRAPHQL_CLIENTS = new Set(['apollo', 'urql', 'graphql-request', 'apollo-angular']);
 
 /** An address whose opening was not read and whose rest was: `/${…}/settings`. */
 const UNREAD_BASE = /^\/\$\{…\}((?:\/[^/]+)+)$/;
@@ -509,7 +524,7 @@ const UNREAD_BASE = /^\/\$\{…\}((?:\/[^/]+)+)$/;
  */
 const byGraphqlPath = (call: GraphNode, path: string, index: UiIndex): UiOutcome | undefined => {
   // An operation: one whose document was read, or one a GraphQL client sends whatever its document.
-  const operation = call.meta?.['graphql'] !== undefined || GRAPHQL_CLIENTS.has(String(call.meta?.['client']));
+  const operation = sendsOperation(call);
   if (!operation || call.meta?.['method'] !== 'POST') return undefined;
   const tail = UNREAD_BASE.exec(path)?.[1];
   if (tail === undefined || !wasRead(tail)) return undefined;

@@ -275,6 +275,7 @@ export const pageClientIn = (sources: readonly SourceFile[]): TsNode | undefined
  * names, or the page's client.
  */
 export const callAddressOf = (found: GraphqlCall, sources: readonly SourceFile[], pageClient: () => TsNode | undefined): { kind: 'address'; node: TsNode | undefined } | { kind: 'unread'; why: string } => {
+  if (found.endpointUnread !== undefined) return { kind: 'unread', why: found.endpointUnread };
   if (found.endpoint !== undefined) return { kind: 'address', node: found.endpoint };
   if (found.client === undefined) return { kind: 'address', node: pageClient() };
   const chosen = clientAddressOf(found.client.node, sources);

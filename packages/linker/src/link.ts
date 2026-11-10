@@ -490,6 +490,8 @@ const JOINED_AS: Readonly<Record<Extract<CallOutcome, { kind: 'linked' }>['via']
   // The service the value a setting is given names (P77): a guess unless the
   // value is the one a function that runs the request is deployed with.
   baseUrlValue: () => 'heuristic',
+  // The GraphQL endpoint at the path a setting's local value names (P281): a guess, as a route found by its address alone is.
+  graphqlPath: () => 'heuristic',
   functionUrl: (call) => {
     const path = call.meta?.['path'];
     return typeof path === 'string' && wasRead(path) ? 'static' : 'heuristic';
@@ -963,6 +965,7 @@ export const linkGraphs = (
     forwardOf: proxied.forwardOf,
     ingressOf: ways.ingressOf,
     ownOrigin: (service) => ownOrigins.has(service),
+    services: () => [...routesByService.keys()].sort(cmp),
   };
   const uiIndex: UiIndex = {
     ...buildUiIndex(config, routesByService, servicesByEnv),

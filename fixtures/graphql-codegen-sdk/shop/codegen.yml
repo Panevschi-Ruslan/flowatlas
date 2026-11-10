@@ -1,0 +1,14 @@
+overwrite: true
+schema:
+  - "${STORE_API_URL:http://localhost:3000/store-api}"
+  # A payment plugin the server may load adds this; written here so codegen runs without it.
+  - 'type Mutation { payByCard: String }'
+documents:
+  - "app/**/*.{ts,tsx}"
+  - "!app/generated/*"
+generates:
+  app/generated/graphql.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-generic-sdk

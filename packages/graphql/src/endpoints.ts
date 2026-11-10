@@ -1,4 +1,4 @@
-import type { ClassDeclaration, Decorator, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
+import type { CallExpression, ClassDeclaration, Decorator, Node as TsNode, ObjectLiteralExpression, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { resolveStaticString } from '@flowatlas/core';
 import { followed } from './gateway.js';
@@ -33,6 +33,15 @@ import { followed } from './gateway.js';
  *
  * What cannot be read is said, never guessed: a path written as code keeps
  * the library's default with the reason beside it.
+ *
+ * A module made by a function of the repository (P281) -
+ * `configureApi(settings => ({ apiPath: …, resolverModule: StoreApiModule }))`
+ * called once per API, the function's `forRootAsync` answering its options
+ * from what each call hands it, through a function of the repository
+ * (`useFactory: () => createOptions(…, getOptions(config))`) - is one
+ * endpoint per call, its options read with what that call handed. A path
+ * read from a setting the code does not write is the default its
+ * declaration documents (`@default 'store-api'`), said beside it.
  */
 export interface ServedEndpoint {
   readonly path: string;
@@ -50,6 +59,8 @@ export interface ServedEndpoint {
   readonly open?: string;
   /** What of the module could not be read, and why. */
   readonly unread: readonly string[];
+  /** What was read from a documented default rather than the code, and why it may differ (P281). */
+  readonly defaulted?: readonly string[];
 }
 
 /** A cast, parentheses or `!` round an expression, taken off. */
@@ -127,16 +138,185 @@ const answeredObject = (fn: TsNode): ObjectLiteralExpression | undefined => {
   return undefined;
 };
 
-/** The options a `GraphQLModule.forRoot*` call is handed, or why they could not be read. */
-const moduleOptions = (call: TsNode & { getArguments(): TsNode[] }, asynchronous: boolean): { options?: ObjectLiteralExpression; why?: string } => {
-  const handed = bare(followed(call.getArguments()[0]));
-  if (handed === undefined || !Node.isObjectLiteralExpression(handed)) return { why: 'its options are not an object written here' };
-  if (!asynchronous) return { options: handed };
+/**
+ * What the parameters of the functions a module's options are read through
+ * were handed (P281): each parameter, the expression its call handed it and
+ * what that call's own parameters were handed.
+ */
+type Bindings = ReadonlyMap<TsNode, Valued>;
+interface Valued {
+  readonly node: TsNode;
+  readonly bindings: Bindings;
+}
+
+const NONE: Bindings = new Map();
+
+/** How far a value is followed through parameters, names and functions. */
+const BOUND_DEPTH = 10;
+
+const parametersOf = (fn: TsNode): TsNode[] => (fn as { getParameters?: () => TsNode[] }).getParameters?.() ?? [];
+
+/** The bindings a call of a function makes: each parameter to what the call hands it, read under the caller's bindings. */
+const boundBy = (fn: TsNode, call: TsNode & { getArguments(): TsNode[] }, bindings: Bindings, outer: Bindings): Bindings => {
+  const own = new Map<TsNode, Valued>([...outer, ...bindings]);
+  parametersOf(fn).forEach((parameter, index) => {
+    const argument = call.getArguments()[index];
+    if (argument !== undefined) own.set(parameter, { node: argument, bindings });
+  });
+  return own;
+};
+
+/** An expression followed through what its parameters were handed and the constants it names. */
+const resolved = (node: TsNode | undefined, bindings: Bindings, depth = 0): Valued | undefined => {
+  const value = bare(node);
+  if (value === undefined) return undefined;
+  if (depth > BOUND_DEPTH) return { node: value, bindings };
+  if (Node.isAwaitExpression(value)) return resolved(value.getExpression(), bindings, depth + 1);
+  if (!Node.isIdentifier(value)) return { node: value, bindings };
+  const symbol = value.getSymbol();
+  for (const declaration of (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations() ?? []) {
+    const bound = bindings.get(declaration);
+    if (bound !== undefined) return resolved(bound.node, bound.bindings, depth + 1);
+    if (Node.isVariableDeclaration(declaration) && Node.isIdentifier(declaration.getNameNode()) && declaration.getInitializer() !== undefined) {
+      return resolved(declaration.getInitializer(), bindings, depth + 1);
+    }
+  }
+  return { node: value, bindings };
+};
+
+/** Every expression a function answers: its expression body, or what each of its own `return`s hands back. */
+const answers = (fn: TsNode): TsNode[] => {
+  const body = (fn as { getBody?: () => TsNode | undefined }).getBody?.();
+  if (body === undefined) return [];
+  if (!Node.isBlock(body)) return [body];
+  return body
+    .getDescendantsOfKind(SyntaxKind.ReturnStatement)
+    .filter((statement) => statement.getFirstAncestor((node) => Node.isFunctionLikeDeclaration(node) || Node.isArrowFunction(node) || Node.isFunctionExpression(node)) === fn)
+    .flatMap((statement) => {
+      const expression = statement.getExpression();
+      return expression === undefined ? [] : [expression];
+    });
+};
+
+/** The function a value is, with the bindings it was written under. */
+const functionIn = (node: TsNode | undefined, bindings: Bindings): Valued | undefined => {
+  const value = resolved(node, bindings);
+  if (value === undefined) return undefined;
+  const fn = functionOf(value.node);
+  if (fn === undefined || fn.getSourceFile().isInNodeModules() || fn.getSourceFile().isDeclarationFile()) return undefined;
+  return { node: fn, bindings: value.bindings };
+};
+
+/**
+ * The object literal an expression is, or a function it calls answers: written
+ * in place, through a name, a parameter or `await`, or the object a function
+ * of the repository - or one handed in - answers when called with what the
+ * call hands it.
+ */
+const objectIn = (node: TsNode | undefined, bindings: Bindings, depth = 0): { object: ObjectLiteralExpression; bindings: Bindings } | undefined => {
+  if (depth > BOUND_DEPTH) return undefined;
+  const value = resolved(node, bindings);
+  if (value === undefined) return undefined;
+  if (Node.isObjectLiteralExpression(value.node)) return { object: value.node, bindings: value.bindings };
+  if (Node.isPropertyAccessExpression(value.node)) {
+    const member = memberIn(value.node, value.bindings, depth + 1);
+    return member === undefined ? undefined : objectIn(member.node, member.bindings, depth + 1);
+  }
+  if (!Node.isCallExpression(value.node)) return undefined;
+  const fn = functionIn(value.node.getExpression(), value.bindings);
+  if (fn === undefined) return undefined;
+  const inner = boundBy(fn.node, value.node, value.bindings, fn.bindings);
+  for (const expression of answers(fn.node)) {
+    const found = objectIn(expression, inner, depth + 1);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+};
+
+/** What a member of an object read with its bindings holds: `options.apiPath`. */
+const memberIn = (access: TsNode, bindings: Bindings, depth = 0): Valued | undefined => {
+  if (!Node.isPropertyAccessExpression(access)) return undefined;
+  const holder = objectIn(access.getExpression(), bindings, depth + 1);
+  if (holder === undefined) return undefined;
+  const value = valueOf(holder.object, access.getName());
+  return value === undefined ? undefined : { node: value, bindings: holder.bindings };
+};
+
+/** The default the declaration a member is read from documents: `@default 'store-api'` on the property of a settings type. */
+const documentedDefault = (access: TsNode): string | undefined => {
+  if (!Node.isPropertyAccessExpression(access)) return undefined;
+  for (const declaration of access.getNameNode().getSymbol()?.getDeclarations() ?? []) {
+    const docs = (declaration as { getJsDocs?: () => Array<{ getTags(): Array<{ getTagName(): string; getCommentText(): string | undefined }> }> }).getJsDocs?.() ?? [];
+    for (const doc of docs) {
+      for (const tag of doc.getTags()) {
+        if (tag.getTagName() !== 'default') continue;
+        const text = (tag.getCommentText() ?? '').trim();
+        const quoted = /^(['"`])(.*)\1$/.exec(text);
+        if (quoted !== null) return quoted[2];
+      }
+    }
+  }
+  return undefined;
+};
+
+/** A string read with bindings: a literal or constant, a member of an object handed in, `+` of two, or a member's documented default. */
+const stringIn = (node: TsNode | undefined, bindings: Bindings, defaulted: string[], depth = 0): string | undefined => {
+  if (depth > BOUND_DEPTH) return undefined;
+  const value = resolved(node, bindings);
+  if (value === undefined) return undefined;
+  const written = stringValue(value.node);
+  if (written !== undefined) return written;
+  if (Node.isBinaryExpression(value.node) && value.node.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
+    const left = stringIn(value.node.getLeft(), value.bindings, defaulted, depth + 1);
+    const right = left === undefined ? undefined : stringIn(value.node.getRight(), value.bindings, defaulted, depth + 1);
+    return left === undefined || right === undefined ? undefined : `${left}${right}`;
+  }
+  if (Node.isPropertyAccessExpression(value.node)) {
+    const member = memberIn(value.node, value.bindings, depth + 1);
+    if (member !== undefined) return stringIn(member.node, member.bindings, defaulted, depth + 1);
+    const documented = documentedDefault(value.node);
+    if (documented !== undefined) {
+      defaulted.push(`${value.node.getText()} is a setting the code does not write, read as '${documented}', the default its declaration documents`);
+      return documented;
+    }
+  }
+  return undefined;
+};
+
+/** The classes a list read with bindings names: `[options.resolverModule]`, spreads and all. */
+const classesIn = (node: TsNode | undefined, bindings: Bindings, depth = 0): ClassDeclaration[] => {
+  if (depth > BOUND_DEPTH) return [];
+  const value = resolved(node, bindings);
+  if (value === undefined) return [];
+  if (Node.isArrayLiteralExpression(value.node)) {
+    return value.node.getElements().flatMap((element) => classesIn(Node.isSpreadElement(element) ? element.getExpression() : element, value.bindings, depth + 1));
+  }
+  if (Node.isPropertyAccessExpression(value.node)) {
+    const member = memberIn(value.node, value.bindings, depth + 1);
+    if (member !== undefined) return classesIn(member.node, member.bindings, depth + 1);
+  }
+  return listedClasses(value.node);
+};
+
+/** The options a `GraphQLModule.forRoot*` call is handed, with what the calls they are read through handed, or why they could not be read. */
+const moduleOptions = (
+  call: TsNode & { getArguments(): TsNode[] },
+  asynchronous: boolean,
+  bindings: Bindings,
+): { options?: ObjectLiteralExpression; bindings?: Bindings; why?: string } => {
+  const read = objectIn(call.getArguments()[0], bindings);
+  if (read === undefined) return { why: 'its options are not an object written here' };
+  const handed = read.object;
+  if (!asynchronous) return { options: handed, bindings: read.bindings };
   const factory = valueOf(handed, 'useFactory');
   if (factory !== undefined) {
-    const fn = functionOf(factory);
-    const options = fn === undefined ? undefined : answeredObject(fn);
-    return options === undefined ? { why: 'its useFactory does not answer an object written in it' } : { options };
+    const fn = functionIn(factory, read.bindings);
+    let found: { object: ObjectLiteralExpression; bindings: Bindings } | undefined;
+    for (const expression of fn === undefined ? [] : answers(fn.node)) {
+      found = objectIn(expression, fn?.bindings ?? NONE);
+      if (found !== undefined) break;
+    }
+    return found === undefined ? { why: 'its useFactory does not answer an object written in it' } : { options: found.object, bindings: found.bindings };
   }
   const named = classOf(valueOf(handed, 'useClass') ?? valueOf(handed, 'useExisting'));
   if (named !== undefined) {
@@ -303,6 +483,28 @@ const openReason = (options: ObjectLiteralExpression): string | undefined => {
   return undefined;
 };
 
+/**
+ * Where a module is made, and what it is made with (P281): the `forRoot*`
+ * call itself, or - where it is written in a function of the repository that
+ * takes parameters - each call of that function, with what it hands. A
+ * function nothing here calls is read as written.
+ */
+const madeAt = (forRoot: TsNode): Array<{ at: TsNode; bindings: Bindings }> => {
+  const fn = forRoot.getFirstAncestor((node) => Node.isFunctionDeclaration(node) || Node.isArrowFunction(node) || Node.isFunctionExpression(node));
+  if (fn === undefined || parametersOf(fn).length === 0) return [{ at: forRoot, bindings: NONE }];
+  const holder = fn.getParent();
+  const name = Node.isFunctionDeclaration(fn) ? fn.getNameNode() : holder !== undefined && Node.isVariableDeclaration(holder) ? holder.getNameNode() : undefined;
+  if (name === undefined || !Node.isIdentifier(name)) return [{ at: forRoot, bindings: NONE }];
+  const calls = name
+    .findReferencesAsNodes()
+    .map((reference) => reference.getParent())
+    .filter((parent): parent is CallExpression => parent !== undefined && Node.isCallExpression(parent) && parent.getExpression().getText() === name.getText())
+    .filter((call) => !call.getSourceFile().isInNodeModules() && !call.getSourceFile().isDeclarationFile())
+    .sort((a, b) => (a.getSourceFile().getFilePath() === b.getSourceFile().getFilePath() ? a.getStart() - b.getStart() : a.getSourceFile().getFilePath() < b.getSourceFile().getFilePath() ? -1 : 1));
+  if (calls.length === 0) return [{ at: forRoot, bindings: NONE }];
+  return calls.map((call) => ({ at: call, bindings: boundBy(fn, call, NONE, NONE) }));
+};
+
 /** Every endpoint a NestJS server's `GraphQLModule.forRoot*` calls serve, in the order of the files. */
 export const nestEndpointsIn = (sources: readonly SourceFile[], tags: ReadonlySet<string>, untagged?: { readonly scope: string; readonly from: string }): ServedEndpoint[] => {
   let modules: Map<ClassDeclaration, ModuleReading> | undefined;
@@ -314,33 +516,45 @@ export const nestEndpointsIn = (sources: readonly SourceFile[], tags: ReadonlySe
       const callee = node.getExpression().getText();
       const matched = /(?:^|\.)GraphQLModule\.forRoot(Async)?$/.exec(callee);
       if (matched === null) return;
-      const unread: string[] = [];
-      const reading = moduleOptions(node, matched[1] !== undefined);
-      if (reading.why !== undefined) unread.push(reading.why);
-      const options = reading.options;
-      let path = '/graphql';
-      const written = options === undefined ? undefined : valueOf(options, 'path');
-      if (written !== undefined) {
-        const value = stringValue(written);
-        if (value === undefined) unread.push(`its path ${written.getText()} is not a string this could read`);
-        else path = value.startsWith('/') ? value : `/${value}`;
+      for (const made of madeAt(node)) {
+        const unread: string[] = [];
+        const defaulted: string[] = [];
+        const reading = moduleOptions(node, matched[1] !== undefined, made.bindings);
+        if (reading.why !== undefined) unread.push(reading.why);
+        const options = reading.options;
+        const bound = reading.bindings ?? NONE;
+        let path = '/graphql';
+        const written = options === undefined ? undefined : valueOf(options, 'path');
+        if (written !== undefined) {
+          const value = stringIn(written, bound, defaulted);
+          if (value === undefined) unread.push(`its path ${written.getText()} is not a string this could read`);
+          else path = value.startsWith('/') ? value : `/${value}`;
+        }
+        let include: Set<ClassDeclaration> | undefined;
+        const included = options === undefined ? undefined : valueOf(options, 'include');
+        if (included !== undefined) {
+          const named = classesIn(included, bound);
+          modules ??= modulesIn(sources);
+          include = providedUnder(named, modules);
+          if (named.length === 0) unread.push(`its include ${included.getText()} names no module this could read`);
+        }
+        let scope: string | undefined;
+        for (const property of options?.getProperties() ?? []) {
+          if (!Node.isPropertyAssignment(property) || property.getName() === 'path') continue;
+          const value = stringIn(property.getInitializer(), bound, []);
+          if (value !== undefined && tags.has(value)) scope = value;
+        }
+        const open = options === undefined ? undefined : openReason(options);
+        endpoints.push({
+          path,
+          at: made.at,
+          ...(include === undefined ? {} : { include }),
+          ...(scope === undefined ? {} : { scope }),
+          ...(open === undefined ? {} : { open }),
+          unread,
+          ...(defaulted.length === 0 ? {} : { defaulted }),
+        });
       }
-      let include: Set<ClassDeclaration> | undefined;
-      const included = options === undefined ? undefined : valueOf(options, 'include');
-      if (included !== undefined) {
-        const named = listedClasses(included);
-        modules ??= modulesIn(sources);
-        include = providedUnder(named, modules);
-        if (named.length === 0) unread.push(`its include ${included.getText()} names no module this could read`);
-      }
-      let scope: string | undefined;
-      for (const property of options?.getProperties() ?? []) {
-        if (!Node.isPropertyAssignment(property) || property.getName() === 'path') continue;
-        const value = stringValue(property.getInitializer());
-        if (value !== undefined && tags.has(value)) scope = value;
-      }
-      const open = options === undefined ? undefined : openReason(options);
-      endpoints.push({ path, at: node, ...(include === undefined ? {} : { include }), ...(scope === undefined ? {} : { scope }), ...(open === undefined ? {} : { open }), unread });
     });
   }
   if (untagged === undefined) return endpoints;

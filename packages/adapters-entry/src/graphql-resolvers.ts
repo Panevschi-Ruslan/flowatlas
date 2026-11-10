@@ -409,6 +409,19 @@ export const graphqlResolversAdapter: EntryAdapter = {
           adapter: 'graphql-resolvers',
         });
       }
+      // A path read from the default a setting's declaration documents (P281): what a configuration may change.
+      for (const why of endpoint.defaulted ?? []) {
+        ctx.builder.addUnresolved({
+          file,
+          line,
+          reason: 'graphql-endpoint-unread',
+          level: 'info',
+          message: `the GraphQL endpoint made here is read at ${endpoint.path}: ${why}`,
+          hint: 'A configuration that sets it moves the endpoint; write the path where the module is made to have it read as written.',
+          symbol: id,
+          adapter: 'graphql-resolvers',
+        });
+      }
     }
     // What a gateway cannot be read for, said where it is made (D9). A
     // subgraph no gateway names is said by the linker, which sees them all.

@@ -1,0 +1,1731 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T14:32:20.369Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "module",
+      "label": "GraphQLModule",
+      "repo": "api",
+      "file": "node_modules/@nestjs/graphql",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "external": true
+      }
+    },
+    {
+      "id": "api#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "SettingsService",
+          "StatusServer"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/config/settings.ts:SettingsService",
+      "type": "provider",
+      "label": "SettingsService",
+      "repo": "api",
+      "file": "src/config/settings.ts",
+      "line": 21,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/config/settings.ts:SettingsService.load",
+      "type": "method",
+      "label": "SettingsService.load",
+      "repo": "api",
+      "file": "src/config/settings.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "settings",
+              "type": "type:api#ApiSettings"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/main.ts:start",
+      "type": "function",
+      "label": "start",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/office/office-api.module.ts:OfficeApiModule",
+      "type": "module",
+      "label": "OfficeApiModule",
+      "repo": "api",
+      "file": "src/office/office-api.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "OfficeResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/office/office.resolver.ts:OfficeResolver",
+      "type": "provider",
+      "label": "OfficeResolver",
+      "repo": "api",
+      "file": "src/office/office.resolver.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "OfficeApiModule"
+      }
+    },
+    {
+      "id": "api#src/office/office.resolver.ts:OfficeResolver.signIn",
+      "type": "method",
+      "label": "OfficeResolver.signIn",
+      "repo": "api",
+      "file": "src/office/office.resolver.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "email",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Staff"
+        }
+      }
+    },
+    {
+      "id": "api#src/office/office.resolver.ts:OfficeResolver.staff",
+      "type": "method",
+      "label": "OfficeResolver.staff",
+      "repo": "api",
+      "file": "src/office/office.resolver.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Staff[]"
+        }
+      }
+    },
+    {
+      "id": "api#src/status/status.server.ts:GET /status@22",
+      "type": "function",
+      "label": "GET /status@22",
+      "repo": "api",
+      "file": "src/status/status.server.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/status/status.server.ts:StatusServer",
+      "type": "provider",
+      "label": "StatusServer",
+      "repo": "api",
+      "file": "src/status/status.server.ts",
+      "line": 15,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "api#src/status/status.server.ts:StatusServer.start",
+      "type": "method",
+      "label": "StatusServer.start",
+      "repo": "api",
+      "file": "src/status/status.server.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "config",
+              "type": "type:api#StatusConfig"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "api#src/store/store-api.module.ts:StoreApiModule",
+      "type": "module",
+      "label": "StoreApiModule",
+      "repo": "api",
+      "file": "src/store/store-api.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "StoreResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "api#src/store/store.resolver.ts:StoreResolver",
+      "type": "provider",
+      "label": "StoreResolver",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 21,
+      "kind": "injectable",
+      "meta": {
+        "module": "StoreApiModule"
+      }
+    },
+    {
+      "id": "api#src/store/store.resolver.ts:StoreResolver.cart",
+      "type": "method",
+      "label": "StoreResolver.cart",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:api#Cart"
+        }
+      }
+    },
+    {
+      "id": "api#src/store/store.resolver.ts:StoreResolver.signIn",
+      "type": "method",
+      "label": "StoreResolver.signIn",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "email",
+              "type": "string"
+            }
+          ],
+          "returns": "type:api#Shopper"
+        }
+      }
+    },
+    {
+      "id": "config_key:api#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 7,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Mutation.signIn@/office-api",
+      "type": "entry",
+      "label": "Mutation.signIn@/office-api",
+      "repo": "api",
+      "file": "src/office/office.resolver.ts",
+      "line": 19,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "signIn",
+        "returns": "Staff!",
+        "args": {
+          "email": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "endpoint": "/office-api",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Mutation.signIn@/store-api",
+      "type": "entry",
+      "label": "Mutation.signIn@/store-api",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 28,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "signIn",
+        "returns": "Shopper!",
+        "args": {
+          "email": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "endpoint": "/store-api",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.cart@/store-api",
+      "type": "entry",
+      "label": "Query.cart@/store-api",
+      "repo": "api",
+      "file": "src/store/store.resolver.ts",
+      "line": 23,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "cart",
+        "returns": "Cart!",
+        "endpoint": "/store-api",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:graphql:Query.staff@/office-api",
+      "type": "entry",
+      "label": "Query.staff@/office-api",
+      "repo": "api",
+      "file": "src/office/office.resolver.ts",
+      "line": 14,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "staff",
+        "returns": "[Staff!]!",
+        "endpoint": "/office-api",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/status",
+      "type": "entry",
+      "label": "GET /status",
+      "repo": "api",
+      "file": "src/status/status.server.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/status",
+        "rawPath": "/status",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/office-api",
+      "type": "entry",
+      "label": "POST /office-api",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/office-api",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Staff": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Cart": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "total": {
+                    "type": "Float!"
+                  }
+                }
+              },
+              "Shopper": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "staff": {
+                    "type": "[Staff!]!"
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "signIn": {
+                    "type": "Staff!",
+                    "args": {
+                      "email": {
+                        "type": "String!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 7,
+              "setting": "PORT"
+            }
+          ],
+          "fieldsAt": "/office-api"
+        }
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/store-api",
+      "type": "entry",
+      "label": "POST /store-api",
+      "repo": "api",
+      "file": "src/app.module.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/store-api",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Staff": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Cart": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "total": {
+                    "type": "Float!"
+                  }
+                }
+              },
+              "Shopper": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "email": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "cart": {
+                    "type": "Cart!"
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "signIn": {
+                    "type": "Shopper!",
+                    "args": {
+                      "email": {
+                        "type": "String!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 3000,
+              "file": "src/main.ts",
+              "line": 7,
+              "setting": "PORT"
+            }
+          ],
+          "fieldsAt": "/store-api"
+        }
+      }
+    },
+    {
+      "id": "kiosk#src/client.ts:officeSdk",
+      "type": "function",
+      "label": "officeSdk",
+      "repo": "kiosk",
+      "file": "src/client.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "kiosk#src/pages/StaffPage.tsx:StaffPage",
+      "type": "ui_component",
+      "label": "StaffPage",
+      "repo": "kiosk",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 10,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers",
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:kiosk",
+      "type": "repo",
+      "label": "kiosk",
+      "repo": "kiosk",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "functions": 7,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "shop#app/api-client.ts:postOperation",
+      "type": "function",
+      "label": "postOperation",
+      "repo": "shop",
+      "file": "app/api-client.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{query:string;variables?:unknown;headers?:Headers}"
+            }
+          ],
+          "returns": "{data:Response;errors?:unknown[]}"
+        }
+      }
+    },
+    {
+      "id": "shop#app/api-client.ts:requester",
+      "type": "function",
+      "label": "requester",
+      "repo": "shop",
+      "file": "app/api-client.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "doc",
+              "type": "unknown"
+            },
+            {
+              "name": "variables",
+              "type": "V",
+              "optional": true
+            },
+            {
+              "name": "options",
+              "type": "type:shop#CallOptions",
+              "optional": true
+            }
+          ],
+          "returns": "R"
+        }
+      }
+    },
+    {
+      "id": "shop#app/services/account.ts:activeCart",
+      "type": "function",
+      "label": "activeCart",
+      "repo": "shop",
+      "file": "app/services/account.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "type:shop#CallOptions"
+            }
+          ],
+          "returns": "{id:string;total:number}"
+        }
+      }
+    },
+    {
+      "id": "shop#app/services/account.ts:payByCard",
+      "type": "function",
+      "label": "payByCard",
+      "repo": "shop",
+      "file": "app/services/account.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "type:shop#CallOptions"
+            }
+          ],
+          "returns": "{payByCard?:string|null}"
+        }
+      }
+    },
+    {
+      "id": "shop#app/services/account.ts:signIn",
+      "type": "function",
+      "label": "signIn",
+      "repo": "shop",
+      "file": "app/services/account.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "email",
+              "type": "string"
+            },
+            {
+              "name": "options",
+              "type": "type:shop#CallOptions"
+            }
+          ],
+          "returns": "{id:string;email:string}"
+        }
+      }
+    },
+    {
+      "id": "ui_action:kiosk#src/pages/StaffPage.tsx:17:15",
+      "type": "ui_action",
+      "label": "onClick={() => void signIn('a@b.c')}",
+      "repo": "kiosk",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => void signIn('a@b.c')",
+        "component": "kiosk#src/pages/StaffPage.tsx:StaffPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:kiosk#src/pages/StaffPage.tsx:18:15",
+      "type": "ui_action",
+      "label": "onClick={() => void archive()}",
+      "repo": "kiosk",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => void archive()",
+        "component": "kiosk#src/pages/StaffPage.tsx:StaffPage",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#src/pages/StaffPage.tsx:12:37",
+      "type": "ui_api_call",
+      "label": "mutation SignIn /office-api",
+      "repo": "kiosk",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_OFFICE_URL}/office-api",
+        "path": "/office-api",
+        "baseUrlEnv": "VITE_OFFICE_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "codegen-sdk",
+        "client": "codegen-sdk",
+        "via": "template-env",
+        "graphql": {
+          "operation": "mutation",
+          "name": "SignIn",
+          "fields": [
+            {
+              "field": "signIn",
+              "arguments": [
+                "email"
+              ],
+              "line": 9,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 10
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "email",
+              "type": "String!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/gql/Staff.graphql",
+            "line": 8
+          },
+          "library": "codegen-sdk"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#src/pages/StaffPage.tsx:14:25",
+      "type": "ui_api_call",
+      "label": "POST /office-api",
+      "repo": "kiosk",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_OFFICE_URL}/office-api",
+        "path": "/office-api",
+        "baseUrlEnv": "VITE_OFFICE_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "codegen-sdk",
+        "client": "codegen-sdk",
+        "via": "template-env",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:kiosk#src/pages/StaffPage.tsx:8:10",
+      "type": "ui_api_call",
+      "label": "query StaffList /office-api",
+      "repo": "kiosk",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${VITE_OFFICE_URL}/office-api",
+        "path": "/office-api",
+        "baseUrlEnv": "VITE_OFFICE_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "codegen-sdk",
+        "client": "codegen-sdk",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "StaffList",
+          "fields": [
+            {
+              "field": "staff",
+              "line": 2,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 3
+                },
+                {
+                  "field": "name",
+                  "line": 4
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "src/gql/Staff.graphql",
+            "line": 1
+          },
+          "library": "codegen-sdk"
+        },
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/api-client.ts:11:10",
+      "type": "ui_api_call",
+      "label": "POST ?",
+      "repo": "shop",
+      "file": "app/api-client.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{query:string;variables?:unknown;headers?:Headers}",
+        "bodyFrom": "literal",
+        "headersUnread": true,
+        "package": null,
+        "client": "fetch",
+        "via": null
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/services/account.ts:12:52",
+      "type": "ui_api_call",
+      "label": "mutation payByCard /",
+      "repo": "shop",
+      "file": "app/services/account.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${STORE_API_URL}",
+        "path": "/",
+        "baseUrlEnv": "STORE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "codegen-sdk",
+        "client": "codegen-sdk",
+        "via": "template-env",
+        "graphql": {
+          "operation": "mutation",
+          "name": "payByCard",
+          "fields": [
+            {
+              "field": "payByCard",
+              "line": 35
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "app/generated/graphql.ts",
+            "line": 34
+          },
+          "library": "codegen-sdk"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/services/account.ts:5:64",
+      "type": "ui_api_call",
+      "label": "mutation signIn /",
+      "repo": "shop",
+      "file": "app/services/account.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${STORE_API_URL}",
+        "path": "/",
+        "baseUrlEnv": "STORE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "codegen-sdk",
+        "client": "codegen-sdk",
+        "via": "template-env",
+        "graphql": {
+          "operation": "mutation",
+          "name": "signIn",
+          "fields": [
+            {
+              "field": "signIn",
+              "arguments": [
+                "email"
+              ],
+              "line": 19,
+              "selections": [
+                {
+                  "field": "id",
+                  "on": "Shopper",
+                  "line": 13
+                },
+                {
+                  "field": "email",
+                  "on": "Shopper",
+                  "line": 14
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "email",
+              "type": "String!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "app/generated/graphql.ts",
+            "line": 18
+          },
+          "library": "codegen-sdk"
+        },
+        "baseUrl": "http://localhost:3000/store-api",
+        "baseUrlFrom": ".env.example",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/services/account.ts:8:3",
+      "type": "ui_api_call",
+      "label": "query cart /",
+      "repo": "shop",
+      "file": "app/services/account.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${STORE_API_URL}",
+        "path": "/",
+        "baseUrlEnv": "STORE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "codegen-sdk",
+        "client": "codegen-sdk",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "cart",
+          "fields": [
+            {
+              "field": "cart",
+              "line": 27,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 28
+                },
+                {
+                  "field": "total",
+                  "line": 29
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "app/generated/graphql.ts",
+            "line": 26
+          },
+          "library": "codegen-sdk"
+        },
+        "baseUrl": "http://localhost:3000/store-api",
+        "baseUrlFrom": ".env.example",
+        "targetService": "api"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#src/office/office-api.module.ts:OfficeApiModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 9
+    },
+    {
+      "from": "api#src/app.module.ts:AppModule",
+      "to": "api#src/store/store-api.module.ts:StoreApiModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 9
+    },
+    {
+      "from": "api#src/main.ts:start",
+      "to": "config_key:api#PORT",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:api:graphql:Mutation.signIn@/office-api",
+      "to": "api#src/office/office.resolver.ts:OfficeResolver.signIn",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Staff",
+      "file": "src/office/office.resolver.ts",
+      "line": 19
+    },
+    {
+      "from": "entry:api:graphql:Mutation.signIn@/store-api",
+      "to": "api#src/store/store.resolver.ts:StoreResolver.signIn",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:api#Shopper",
+      "file": "src/store/store.resolver.ts",
+      "line": 28
+    },
+    {
+      "from": "entry:api:graphql:Query.cart@/store-api",
+      "to": "api#src/store/store.resolver.ts:StoreResolver.cart",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#Cart",
+      "file": "src/store/store.resolver.ts",
+      "line": 23
+    },
+    {
+      "from": "entry:api:graphql:Query.staff@/office-api",
+      "to": "api#src/office/office.resolver.ts:OfficeResolver.staff",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:api#Staff[]",
+      "file": "src/office/office.resolver.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:api:http:GET:/status",
+      "to": "api#src/status/status.server.ts:GET /status@22",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{status:string}",
+      "file": "src/status/status.server.ts",
+      "line": 22,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "kiosk#src/pages/StaffPage.tsx:StaffPage",
+      "to": "kiosk#src/client.ts:officeSdk",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 8
+    },
+    {
+      "from": "kiosk#src/pages/StaffPage.tsx:StaffPage",
+      "to": "ui_api_call:kiosk#src/pages/StaffPage.tsx:12:37",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 12
+    },
+    {
+      "from": "kiosk#src/pages/StaffPage.tsx:StaffPage",
+      "to": "ui_api_call:kiosk#src/pages/StaffPage.tsx:14:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 14
+    },
+    {
+      "from": "kiosk#src/pages/StaffPage.tsx:StaffPage",
+      "to": "ui_api_call:kiosk#src/pages/StaffPage.tsx:8:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 8
+    },
+    {
+      "from": "shop#app/api-client.ts:postOperation",
+      "to": "ui_api_call:shop#app/api-client.ts:11:10",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "app/api-client.ts",
+      "line": 11
+    },
+    {
+      "from": "shop#app/api-client.ts:requester",
+      "to": "shop#app/api-client.ts:postOperation",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{query:string;variables?:unknown;headers?:Headers}"
+      ],
+      "returns": "{data:Response;errors?:unknown[]}",
+      "file": "app/api-client.ts",
+      "line": 19
+    },
+    {
+      "from": "shop#app/services/account.ts:activeCart",
+      "to": "ui_api_call:shop#app/services/account.ts:8:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/services/account.ts",
+      "line": 8
+    },
+    {
+      "from": "shop#app/services/account.ts:payByCard",
+      "to": "ui_api_call:shop#app/services/account.ts:12:52",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/services/account.ts",
+      "line": 12
+    },
+    {
+      "from": "shop#app/services/account.ts:signIn",
+      "to": "ui_api_call:shop#app/services/account.ts:5:64",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/services/account.ts",
+      "line": 5
+    },
+    {
+      "from": "ui_action:kiosk#src/pages/StaffPage.tsx:17:15",
+      "to": "kiosk#src/pages/StaffPage.tsx:StaffPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 17
+    },
+    {
+      "from": "ui_action:kiosk#src/pages/StaffPage.tsx:18:15",
+      "to": "kiosk#src/pages/StaffPage.tsx:StaffPage",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 18
+    },
+    {
+      "from": "ui_api_call:kiosk#src/pages/StaffPage.tsx:12:37",
+      "to": "entry:api:graphql:Mutation.signIn@/office-api",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/gql/Staff.graphql",
+      "line": 9,
+      "meta": {
+        "graphql": {
+          "operation": "SignIn",
+          "field": "Mutation.signIn"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/pages/StaffPage.tsx:12:37",
+      "to": "entry:api:http:POST:/office-api",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 12,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/pages/StaffPage.tsx:14:25",
+      "to": "entry:api:http:POST:/office-api",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 14,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/pages/StaffPage.tsx:8:10",
+      "to": "entry:api:graphql:Query.staff@/office-api",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/gql/Staff.graphql",
+      "line": 2,
+      "meta": {
+        "graphql": {
+          "operation": "StaffList",
+          "field": "Query.staff"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:kiosk#src/pages/StaffPage.tsx:8:10",
+      "to": "entry:api:http:POST:/office-api",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/pages/StaffPage.tsx",
+      "line": 8,
+      "meta": {
+        "via": "api-target",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/services/account.ts:5:64",
+      "to": "entry:api:graphql:Mutation.signIn@/store-api",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "app/generated/graphql.ts",
+      "line": 19,
+      "meta": {
+        "graphql": {
+          "operation": "signIn",
+          "field": "Mutation.signIn"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/services/account.ts:5:64",
+      "to": "entry:api:http:POST:/store-api",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "app/services/account.ts",
+      "line": 5,
+      "meta": {
+        "via": "graphql-path",
+        "targetService": "api",
+        "baseUrl": "http://localhost:3000/store-api",
+        "baseUrlFrom": ".env.example"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/services/account.ts:8:3",
+      "to": "entry:api:graphql:Query.cart@/store-api",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "app/generated/graphql.ts",
+      "line": 27,
+      "meta": {
+        "graphql": {
+          "operation": "cart",
+          "field": "Query.cart"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/services/account.ts:8:3",
+      "to": "entry:api:http:POST:/store-api",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "app/services/account.ts",
+      "line": 8,
+      "meta": {
+        "via": "graphql-path",
+        "targetService": "api",
+        "baseUrl": "http://localhost:3000/store-api",
+        "baseUrlFrom": ".env.example"
+      }
+    }
+  ],
+  "types": {
+    "type:api#ApiSettings": {
+      "name": "ApiSettings",
+      "kind": "object",
+      "declaredIn": "api#src/config/settings.ts",
+      "structuralHash": "914ee0b046b3810f",
+      "fields": [
+        {
+          "name": "storePath",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "officePath",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:api#Cart": {
+      "name": "Cart",
+      "kind": "object",
+      "declaredIn": "api#src/store/store.resolver.ts",
+      "structuralHash": "e752b571a9fb0fb7",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:api#Shopper": {
+      "name": "Shopper",
+      "kind": "object",
+      "declaredIn": "api#src/store/store.resolver.ts",
+      "structuralHash": "f392a5918b5eac56",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:api#Staff": {
+      "name": "Staff",
+      "kind": "object",
+      "declaredIn": "api#src/office/office.resolver.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    },
+    "type:api#StatusConfig": {
+      "name": "StatusConfig",
+      "kind": "object",
+      "declaredIn": "api#src/status/status.server.ts",
+      "structuralHash": "287407543079ba97",
+      "fields": [
+        {
+          "name": "port",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "route",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:shop#CallOptions": {
+      "name": "CallOptions",
+      "kind": "object",
+      "declaredIn": "shop#app/api-client.ts",
+      "structuralHash": "b4dd432b675f56d9",
+      "fields": [
+        {
+          "name": "request",
+          "type": "Request",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 13,
+      "reason": "graphql-endpoint-unread",
+      "level": "info",
+      "sites": 2,
+      "message": "the GraphQL endpoint made here is read at /store-api: settings.api.storePath is a setting the code does not write, read as 'store-api', the default its declaration documents",
+      "hint": "A configuration that sets it moves the endpoint; write the path where the module is made to have it read as written.",
+      "symbol": "entry:api:http:POST:/store-api",
+      "adapter": "graphql-resolvers",
+      "service": "api"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 13,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports configureApi((settings) => ({ apiType: 'store', apiPath: settings.api.storePath,",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 14,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports configureApi((settings) => ({ apiType: 'office', apiPath: settings.api.officePat",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/status/status.server.ts",
+      "line": 22,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 7,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "StatusServer.start -> app.get",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "src/status/status.server.ts",
+                "line": 23,
+                "symbol": "StatusServer.start -> res.send"
+              },
+              {
+                "file": "src/status/status.server.ts",
+                "line": 23,
+                "symbol": "GET /status@22 -> res.send"
+              },
+              {
+                "file": "src/status/status.server.ts",
+                "line": 26,
+                "symbol": "StatusServer.start -> res.send"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "http",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/status/status.server.ts",
+                "line": 28,
+                "symbol": "StatusServer.start -> http.createServer(app).listen"
+              },
+              {
+                "file": "src/status/status.server.ts",
+                "line": 28,
+                "symbol": "StatusServer.start -> http.createServer"
+              }
+            ]
+          },
+          {
+            "cause": "untyped-value",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/status/status.server.ts",
+                "line": 22,
+                "symbol": "StatusServer.start -> app.get"
+              },
+              {
+                "file": "src/status/status.server.ts",
+                "line": 25,
+                "symbol": "StatusServer.start -> app.get"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/status/status.server.ts",
+      "line": 25,
+      "reason": "route-path-dynamic",
+      "hint": "Write the path as a literal, a const, or a + or template of them, and every path of a list the same way; a path that needs a call or a run-time value to compute is not recorded as a route at all, so no caller can reach it.",
+      "symbol": "app.get(config.route || '/ready')",
+      "adapter": "express-routes",
+      "service": "api"
+    },
+    {
+      "file": "src/client.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "kiosk"
+    },
+    {
+      "file": "src/pages/StaffPage.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "kiosk"
+    },
+    {
+      "file": "src/pages/StaffPage.tsx",
+      "line": 14,
+      "reason": "graphql-document-dynamic",
+      "level": "action",
+      "message": "ArchiveStaffDocument is generated by GraphQL codegen into ./generated/sdk, which is not committed, and no operation named ArchiveStaff is in the documents codegen.ts lists (src/gql/**/*.graphql)",
+      "hint": "Write the document as a gql template or a .graphql file, so the fields it asks for can be joined.",
+      "symbol": "officeSdk().ArchiveStaff",
+      "service": "kiosk"
+    },
+    {
+      "file": "app/api-client.ts",
+      "line": 8,
+      "reason": "type-generic-uninstantiated",
+      "level": "info",
+      "sites": 3,
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "Response",
+      "service": "shop"
+    },
+    {
+      "file": "app/api-client.ts",
+      "line": 11,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the function with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "fetch(API_URL, {\n    method: 'POST',\n    body: JSON.stringify(body),\n    headers",
+      "service": "shop"
+    },
+    {
+      "service": "shop",
+      "file": "app/services/account.ts",
+      "line": 5,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "STORE_API_URL is http://localhost:3000/store-api in .env.example, which is taken as api",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add STORE_API_URL to services[].baseUrlEnv of api to say so outright.",
+      "symbol": "ui_api_call:shop#app/services/account.ts:5:64",
+      "meta": {
+        "variable": "STORE_API_URL",
+        "value": "http://localhost:3000/store-api",
+        "from": ".env.example"
+      },
+      "sites": 2
+    },
+    {
+      "service": "shop",
+      "file": "app/services/account.ts",
+      "line": 12,
+      "reason": "graphql-field-no-resolver",
+      "message": "api serves the GraphQL endpoint POST /store-api the value of the request's setting names, and neither its schema nor a resolver declares Mutation.payByCard: nothing read serves the operation, so it is not joined there",
+      "hint": "A plugin or package the server loads may add the field; read it as a service, or correct the operation.",
+      "symbol": "ui_api_call:shop#app/services/account.ts:12:52"
+    }
+  ]
+}

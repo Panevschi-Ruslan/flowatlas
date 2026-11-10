@@ -89,6 +89,56 @@ describe('the endpoints a NestJS server serves (P266)', () => {
     expect(servedBy(made)).toEqual({ 'Query.stores': ['/admin'], 'Query.carts': ['/graphql'] });
   });
 
+  it('reads a module a function makes once per call, its options from what each call hands through the functions they pass (P281)', () => {
+    const made = project({
+      'settings.ts': [
+        'export interface ApiSettings {',
+        "  /** @description The public API's path.\n   * @default 'store-api'\n   */",
+        '  storePath?: string;',
+        "  /** @default 'back-office'\n   */",
+        '  officePath?: string;',
+        '}',
+        'export class Settings { get api(): Required<ApiSettings> { return {} as any; } }',
+      ].join('\n'),
+      'configure.ts': [
+        "import { GraphQLModule } from '@nestjs/graphql';",
+        "import { Settings } from './settings';",
+        'export interface ApiOptions { apiPath: string; resolverModule: Function }',
+        'export function configureApi(getOptions: (settings: Settings) => ApiOptions) {',
+        '  return GraphQLModule.forRootAsync({',
+        '    useFactory: (settings: Settings) => createOptions(settings, getOptions(settings)),',
+        '    inject: [Settings],',
+        '  });',
+        '}',
+        'async function createOptions(settings: Settings, options: ApiOptions) {',
+        '  const helper = () => ({ path: "/never" });',
+        "  return { path: '/' + options.apiPath, include: [options.resolverModule], typeDefs: '' };",
+        '}',
+      ].join('\n'),
+      'app.module.ts': [
+        "import { Module } from '@nestjs/common';",
+        "import { Query, Resolver } from '@nestjs/graphql';",
+        "import { configureApi } from './configure';",
+        '@Resolver() export class Catalog { @Query(() => String) products() { return ""; } }',
+        '@Resolver() export class Staff { @Query(() => String) staff() { return ""; } }',
+        '@Module({ providers: [Catalog] }) export class StoreApiModule {}',
+        '@Module({ providers: [Staff] }) export class OfficeApiModule {}',
+        '@Module({ imports: [',
+        '  configureApi((settings) => ({ apiPath: settings.api.storePath, resolverModule: StoreApiModule })),',
+        "  configureApi(() => ({ apiPath: 'office', resolverModule: OfficeApiModule })),",
+        '] })',
+        'export class AppModule {}',
+      ].join('\n'),
+    });
+    const endpoints = read(made).endpoints;
+    expect(endpoints.map((each) => [each.path, each.unread, each.defaulted?.length ?? 0])).toEqual([
+      ['/store-api', [], 1],
+      ['/office', [], 0],
+    ]);
+    expect(endpoints[0]?.defaulted?.[0]).toContain("the default its declaration documents");
+    expect(servedBy(made)).toEqual({ 'Query.products': ['/store-api'], 'Query.staff': ['/office'] });
+  });
+
   it('says a path written as code, and keeps the library default', () => {
     const made = project({
       'app.module.ts': [
