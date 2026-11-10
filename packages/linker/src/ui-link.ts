@@ -468,6 +468,19 @@ const answers = (result: RouteResult): boolean =>
  * and several is a question only the configuration can settle.
  */
 const byUniqueRoute = (ask: Ask): UiOutcome | undefined => {
+  // A setting whose value is a host no service is reached at, with a path
+  // after it (`https://api.example.test/api`), puts that path in front of
+  // every address written under it (P280): asked first, as the value is.
+  const answer = ask.env === undefined ? undefined : ask.index.baseUrlOf?.(ask.call);
+  const start = answer?.kind === 'external' ? pathOfValue(answer.found) : undefined;
+  if (start !== undefined) {
+    const whole = uniqueRoute({ ...ask, path: normalizePath(`${start}/${ask.path}`) });
+    if (whole?.kind === 'linked') return whole;
+  }
+  return uniqueRoute(ask);
+};
+
+const uniqueRoute = (ask: Ask): UiOutcome | undefined => {
   const { method, path, index } = ask;
   const answering = index
     .services()

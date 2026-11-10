@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-06T18:05:13.386Z",
+  "builtAt": "2026-11-10T14:22:31.823Z",
   "configHash": "a2d7e328641e",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 959,
+      "durationMs": 1188,
       "packages": {
         "name": "client-interceptor-base-billing",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 947,
+      "durationMs": 1174,
       "packages": {
         "name": "client-interceptor-base-orders",
         "runtime": [
@@ -50,7 +50,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 944,
+      "durationMs": 1266,
       "packages": {
         "name": "client-interceptor-base-reports",
         "runtime": [
@@ -69,7 +69,7 @@
       "edges": 15,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 755,
+      "durationMs": 981,
       "packages": {
         "name": "client-interceptor-base-shop",
         "runtime": [
@@ -97,7 +97,7 @@
     "resolved": 5,
     "unresolved": 1,
     "byReason": {
-      "ambiguous-route-target": 1
+      "api-path-partly-read": 1
     }
   },
   "channels": {
@@ -119,25 +119,15 @@
     "total": 2,
     "sharedPackage": 0
   },
-  "unresolved": [
-    {
-      "service": "shop",
-      "file": "src/Items.tsx",
-      "line": 14,
-      "reason": "ambiguous-route-target",
-      "message": "billing and orders both answer GET /items",
-      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
-      "symbol": "ui_api_call:shop#src/Items.tsx:14:28"
-    }
-  ],
+  "unresolved": [],
   "totals": {
     "nodes": 40,
     "edges": 29,
     "types": 2,
-    "missed": 2,
-    "sites": 2,
+    "missed": 1,
+    "sites": 1,
     "notes": 0,
     "findings": 0,
-    "unresolved": 2
+    "unresolved": 1
   }
 }

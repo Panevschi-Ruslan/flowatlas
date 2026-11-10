@@ -45,7 +45,7 @@ import { Node, SyntaxKind } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { ANGULAR_HTTP } from '../index-classes.js';
 import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSite } from '../util/forward.js';
-import { interceptorBaseOf, interceptorHeadersOf, type InterceptorBase, type InterceptorHeaders } from '../util/interceptor-base.js';
+import { interceptedBase, interceptorBaseOf, interceptorHeadersOf, type InterceptorBase, type InterceptorHeaders } from '../util/interceptor-base.js';
 import type { ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
@@ -379,7 +379,7 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         file: ctx.fileOf(at),
         line: siteOf(at).line,
         reason: 'api-client-base-unread',
-        hint: `${why}. Requests through the framework's client are recorded under the path each call writes, and join by their route alone. Write the base as a literal or a setting, and the rewrite unconditionally.`,
+        hint: `${why}. Requests through the framework's client are recorded with an opening not read, \`\${…}\` before the path each call writes, and join nothing. Write the base as a literal or a setting, and the rewrite unconditionally or under a test of the address.`,
         symbol: at.getText().slice(0, 80),
       });
     }
@@ -423,8 +423,9 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
   ): void => {
     const { call, methodId, file } = site;
     // The address the call writes, under the base an interceptor puts in front
-    // of every request the framework's client makes (P239).
-    const interceptor = spelling.intercepted === true ? interceptorBase().base : undefined;
+    // of every request the framework's client makes (P239), or of the ones a
+    // test of the address holds for (P280).
+    const interceptor = spelling.intercepted === true ? interceptedBase(interceptorBase(), written) : undefined;
     const address = underBase(interceptor, written);
     const intercepted = address !== written;
 

@@ -249,18 +249,16 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     return rootSettingAddress(at, { readSetting: settingKeyOf });
   };
 
-  const resolved = resolveStaticString(node, {
-    sharedPackages,
-    envRoots: ENV_ROOTS,
-    settingBehind,
-    resolveSpan,
-  });
+  const reading = { sharedPackages, envRoots: ENV_ROOTS, settingBehind, resolveSpan };
+  const written = resolveStaticString(node, reading);
+  // `'/orders?' + params.toString()`, `` `${base}/orders?status=` + s `` (P262):
+  // what is added after a `?` is the query, and the address the text before it.
+  const queried = written === null ? queryAdded(node, options) : undefined;
+  if (queried !== undefined) return queried;
+  // `'/sellers/' + name`: the address a template would spell (P280).
+  const resolved = written ?? resolveStaticString(node, { ...reading, concatenation: true });
 
   if (resolved === null) {
-    // `'/orders?' + params.toString()`, `` `${base}/orders?status=` + s `` (P262):
-    // what is added after a `?` is the query, and the address the text before it.
-    const queried = queryAdded(node, options);
-    if (queried !== undefined) return queried;
     // Not a string this reader can put together, but perhaps a name that
     // stands for one: `fetch(ordersUrl(id))` is an address like any other,
     // written one call further away.

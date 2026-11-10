@@ -186,12 +186,32 @@ describe('an axios request interceptor that sets the base (P244)', () => {
         '/src/api.ts': AXIOS_WITH(interceptor, `axios.create({ baseURL: '/made' })`),
         '/src/Panel.tsx': PANEL(`api.get('/orders'); api.post('/orders', {});`),
       });
-      // The instance keeps the base it was made with, and one row names the line.
-      expect(addresses(graph), interceptor).toEqual(['GET /made/orders', 'POST /made/orders']);
+      // The base the instance was made with, with a hole in front where the rewrite may change it (P280), and one row names the line.
+      expect(addresses(graph), interceptor).toEqual(['GET ${…}/made/orders', 'POST ${…}/made/orders']);
+      expect(requests(graph)[0]?.meta?.['path'], interceptor).toBe('/${…}/made/orders');
       expect(rows(graph), interceptor).toHaveLength(1);
       expect(rows(graph)[0]?.hint, interceptor).toContain(why);
       expect(rows(graph)[0]).toMatchObject({ file: 'src/api.ts', line: 3 });
     }
+  });
+
+  it('applies a rewrite made under a test of the address to the requests it holds for (P280)', () => {
+    const graph = read({
+      '/src/api.ts': AXIOS_WITH(`(config) => { if (config.url.startsWith('/api/')) config.baseURL = 'https://api.example.test'; return config; }`),
+      '/src/Panel.tsx': PANEL(`api.get('/api/orders'); api.get('/health'); api.get('/' + section + '/list');`),
+    });
+    expect(addresses(graph)).toEqual(['GET ${…}/:param/list', 'GET /health', 'GET https://api.example.test/api/orders']);
+    expect(requests(graph).find((node) => node.meta?.['host'] !== undefined)?.meta).toMatchObject({ host: 'api.example.test', path: '/api/orders', baseFrom: 'interceptor' });
+    expect(rows(graph)).toEqual([]);
+  });
+
+  it('puts a literal host written in front of the address apart from its path (P280)', () => {
+    const graph = read({
+      '/src/api.ts': AXIOS_WITH(`(config) => { config.url = 'https://api.example.test/v1' + config.url; return config; }`),
+      '/src/Panel.tsx': PANEL(`api.get('/orders/' + id);`),
+    });
+    expect(addresses(graph)).toEqual(['GET https://api.example.test/v1/orders/:param']);
+    expect(requests(graph)[0]?.meta).toMatchObject({ host: 'api.example.test', path: '/v1/orders/:param' });
   });
 
   it('is a row where two interceptors set different bases', () => {
@@ -205,7 +225,7 @@ describe('an axios request interceptor that sets the base (P244)', () => {
       ].join('\n'),
       '/src/Panel.tsx': PANEL(`api.get('/orders');`),
     });
-    expect(addresses(graph)).toEqual(['GET /orders']);
+    expect(addresses(graph)).toEqual(['GET ${…}/orders']);
     expect(rows(graph)).toHaveLength(1);
     expect(rows(graph)[0]?.hint).toContain('rewrite the address differently');
   });
@@ -319,7 +339,7 @@ describe('ky beforeRequest hooks that replace the request (P244)', () => {
       '/src/api.ts': `import ky from 'ky';\nexport const api = ky.create({ prefixUrl: '/api', hooks: { beforeRequest: [(request) => { return new Request(pick(request), request); }] } });\n`,
       '/src/Panel.tsx': PANEL(`api.get('items');`),
     });
-    expect(addresses(unread)).toEqual(['GET /api/items']);
+    expect(addresses(unread)).toEqual(['GET ${…}/api/items']);
     expect(rows(unread)).toHaveLength(1);
     const headers = read({
       '/src/api.ts': `import ky from 'ky';\nexport const api = ky.create({ prefixUrl: '/api', hooks: { beforeRequest: [(request) => { request.headers.set('x', '1'); }] } });\n`,
@@ -381,7 +401,7 @@ describe('a hook written on one call (P250)', () => {
         "api.get('items', { hooks: { beforeRequest: [(request) => new Request(`https://two.example.test${new URL(request.url).pathname}`, request)] } });",
       ),
     });
-    expect(addresses(disagree)).toEqual(['GET /api/items']);
+    expect(addresses(disagree)).toEqual(['GET ${…}/api/items']);
     expect(rows(disagree)).toHaveLength(1);
   });
 
@@ -394,7 +414,7 @@ describe('a hook written on one call (P250)', () => {
         };
       `,
     });
-    expect(addresses(graph)).toEqual(['GET /items']);
+    expect(addresses(graph)).toEqual(['GET ${…}/items']);
     expect(rows(graph)).toHaveLength(1);
     expect(rows(graph)[0]?.hint).toContain('a hook this call runs before its request');
   });
@@ -441,7 +461,7 @@ describe('ky hooks that build the address another way (P250)', () => {
       '/src/api.ts': KY_WITH('/api', `(request) => new Request(request.url.replace('/v1', '/v2'), request)`),
       '/src/Panel.tsx': PANEL(`api.get('items');`),
     });
-    expect(addresses(graph)).toEqual(['GET /api/items']);
+    expect(addresses(graph)).toEqual(['GET ${…}/api/items']);
     expect(rows(graph)).toHaveLength(1);
   });
 });

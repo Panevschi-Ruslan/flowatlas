@@ -1,0 +1,214 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-10T14:22:05.092Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/sellers.service.ts:16:12",
+        "to": "entry:api:http:GET:/api/sellers/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/sellers.service.ts:16:12|hits|entry:api:http:GET:/api/sellers/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "api",
+        "typeId": "{name:any;following:boolean}",
+        "symbol": "api#src/catalog.routes.ts:GET /sellers/:name@11"
+      },
+      "receiver": {
+        "service": "admin",
+        "typeId": "type:admin#Seller",
+        "symbol": "admin#src/app/sellers.service.ts:SellersService.seller"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:name"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/catalog.service.ts:25:12",
+        "to": "entry:api:http:GET:/api/products/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/catalog.service.ts:25:12|hits|entry:api:http:GET:/api/products/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "api",
+        "typeId": "{id:any;name:string}",
+        "symbol": "api#src/catalog.routes.ts:GET /products/:id@9"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#Product",
+        "symbol": "web#src/app/catalog.service.ts:CatalogService.get"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:id"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/catalog.service.ts:29:12",
+        "to": "entry:api:http:GET:/api/sellers/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/catalog.service.ts:29:12|hits|entry:api:http:GET:/api/sellers/:param",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "api",
+        "typeId": "{name:any;following:boolean}",
+        "symbol": "api#src/catalog.routes.ts:GET /sellers/:name@11"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#Seller",
+        "symbol": "web#src/app/catalog.service.ts:CatalogService.seller"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:name"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/catalog.service.ts:33:12",
+        "to": "entry:api:http:POST:/api/sellers/:param/follow",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/catalog.service.ts:33:12|hits|entry:api:http:POST:/api/sellers/:param/follow",
+      "direction": "response",
+      "status": "hash_differs",
+      "sender": {
+        "service": "api",
+        "typeId": "{name:any;following:boolean}",
+        "symbol": "api#src/catalog.routes.ts:POST /sellers/:name/follow@13"
+      },
+      "receiver": {
+        "service": "web",
+        "typeId": "type:web#Seller",
+        "symbol": "web#src/app/catalog.service.ts:CatalogService.follow"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:name"
+      ]
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/sellers.service.ts:16:12",
+        "to": "entry:api:http:GET:/api/sellers/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/sellers.service.ts:16:12|hits|entry:api:http:GET:/api/sellers/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/app/sellers.service.ts:SellersService.seller declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/catalog.service.ts:21:12#/featured",
+        "to": "entry:api:http:GET:/api/products/featured",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/catalog.service.ts:21:12#/featured|hits|entry:api:http:GET:/api/products/featured",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/catalog.service.ts:CatalogService.list declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/catalog.service.ts:21:12#/featured",
+        "to": "entry:api:http:GET:/api/products/featured",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/catalog.service.ts:21:12#/featured|hits|entry:api:http:GET:/api/products/featured",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/catalog.routes.ts:GET /products/featured@7 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/catalog.service.ts:21:12#",
+        "to": "entry:api:http:GET:/api/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/catalog.service.ts:21:12#|hits|entry:api:http:GET:/api/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/catalog.service.ts:CatalogService.list declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/catalog.service.ts:21:12#",
+        "to": "entry:api:http:GET:/api/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/catalog.service.ts:21:12#|hits|entry:api:http:GET:/api/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/catalog.routes.ts:GET /products@5 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/catalog.service.ts:25:12",
+        "to": "entry:api:http:GET:/api/products/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/catalog.service.ts:25:12|hits|entry:api:http:GET:/api/products/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/catalog.service.ts:CatalogService.get declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/catalog.service.ts:29:12",
+        "to": "entry:api:http:GET:/api/sellers/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/catalog.service.ts:29:12|hits|entry:api:http:GET:/api/sellers/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/catalog.service.ts:CatalogService.seller declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/app/catalog.service.ts:33:12",
+        "to": "entry:api:http:POST:/api/sellers/:param/follow",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/app/catalog.service.ts:33:12|hits|entry:api:http:POST:/api/sellers/:param/follow",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/app/catalog.service.ts:CatalogService.follow declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 4,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 4,
+    "unchecked": 8,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

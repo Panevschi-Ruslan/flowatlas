@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T11:33:11.705Z",
+  "builtAt": "2026-11-10T14:22:31.823Z",
   "services": [
     {
       "name": "orders",
@@ -681,20 +681,21 @@
     {
       "id": "ui_api_call:shop#src/Items.tsx:14:28",
       "type": "ui_api_call",
-      "label": "GET /items",
+      "label": "GET /${…}/items",
       "repo": "shop",
       "file": "src/Items.tsx",
       "line": 14,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "url": "/items",
-        "path": "/items",
+        "url": "${…}/items",
+        "path": "/${…}/items",
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
         "package": "axios",
         "client": "axios",
+        "baseFrom": "interceptor",
         "via": "literal"
       }
     },
@@ -1058,19 +1059,10 @@
   },
   "unresolved": [
     {
-      "service": "shop",
-      "file": "src/Items.tsx",
-      "line": 14,
-      "reason": "ambiguous-route-target",
-      "message": "billing and orders both answer GET /items",
-      "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
-      "symbol": "ui_api_call:shop#src/Items.tsx:14:28"
-    },
-    {
       "file": "src/api/legacy.ts",
       "line": 11,
       "reason": "api-client-base-unread",
-      "hint": "The base of this axios instance: a function axios runs before every request writes one of two bases by a branch (isStaff()), and which one a request goes out under is not read. Requests through it are recorded under the base the instance is made with, or the path each call writes where it is made with none, and this function may change either. Set the base unconditionally, to a literal, a settings key or a constant.",
+      "hint": "The base of this axios instance: a function axios runs before every request writes one of two bases by a branch (isStaff()), and which one a request goes out under is not read. Requests through it are recorded with an opening not read, `${…}` before the path each call writes, and join nothing. Set the base unconditionally or under a test of the address, to a literal, a settings key or a constant.",
       "symbol": "{\n  ...config,\n  baseURL: isStaff() ? import.meta.env.VITE_ORDERS_URL : import.m",
       "service": "shop"
     }

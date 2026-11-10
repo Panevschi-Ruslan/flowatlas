@@ -1,4 +1,4 @@
-import { asksAbsolute, conditionsAround, declarationOf, prefixOfRewrite, underBase } from '@flowatlas/core';
+import { asksAbsolute, conditionsAround, declarationOf, prefixOfRewrite, rewriteTestOf, underBase, UNREAD_SPAN, type AddressTest } from '@flowatlas/core';
 import type { ArrowFunction, FunctionDeclaration, FunctionExpression, MethodDeclaration, Node as TsNode } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import type { ClientFactory, RequestRewrites } from '../clients.js';
@@ -35,8 +35,11 @@ import type { ApiUrl } from './url.js';
  * Read only where it is certain, by the rule an interceptor of the framework's
  * client is read by (P239): the one condition that changes nothing is whether
  * the address is already absolute, and the one that is understood is "only
- * where no base is set". Any other condition, a base chosen between two values
- * by a branch, or a rewrite whose base cannot be read, is a row.
+ * where no base is set". A condition about the address's own form,
+ * `if (config.url.startsWith('/api'))`, is a test each request's written
+ * address is put to (P280). Any other condition, a base chosen between two
+ * values by a branch, or a rewrite whose base cannot be read, is a row, and
+ * the requests through the client are then partly read.
  */
 export interface Rewrite {
   readonly kind: 'base' | 'fallback' | 'prefix' | 'origin';
@@ -49,6 +52,8 @@ export interface Rewrite {
    * to a host or a setting.
    */
   readonly when?: 'relative';
+  /** The test of the address each request writes that the rewrite is made under, where there is one (P280). */
+  readonly test?: AddressTest;
 }
 
 export type RewriteReading =
@@ -372,9 +377,12 @@ export const rewritesOf = (fnNode: TsNode, factory: ClientFactory, read: BaseRea
     const conditions = conditionsAround(write.at, fnNode);
     const unset = conditions.some((condition) => asksUnset(condition, handed, factory.baseKey));
     const open = conditions.filter((condition) => !asksAbsolute(condition, handed.isAddress) && !asksUnset(condition, handed, factory.baseKey));
-    if (open.length > 0) {
+    // A condition about the address's own form is a test each request is put to (P280).
+    const test = open.length === 0 ? null : rewriteTestOf(write.at, fnNode, handed.isAddress, (condition) => asksUnset(condition, handed, factory.baseKey));
+    if (test === undefined) {
       return { kind: 'unread', at: write.at, why: `${runs} rewrites the address only when ${quoted(open[0] as TsNode)}, so which requests go out under it is not known` };
     }
+    const tested = test === null ? {} : { test };
     const value = unwrap(write.value);
     if (Node.isConditionalExpression(value)) {
       return { kind: 'unread', at: write.at, why: `${runs} writes one of two bases by a branch (${quoted(value.getCondition())}), and which one a request goes out under is not read` };
@@ -384,12 +392,12 @@ export const rewritesOf = (fnNode: TsNode, factory: ClientFactory, read: BaseRea
       const base = read(behind ?? value);
       if (base === 'unread') return { kind: 'unread', at: write.at, why: `${runs} writes ${factory.baseKey} and it could not be read` };
       const kind = write.fallback === true || unset || behind !== undefined ? 'fallback' : 'base';
-      return { kind: 'rewrite', rewrite: { kind, base, at: write.at } };
+      return { kind: 'rewrite', rewrite: { kind, base, at: write.at, ...tested } };
     }
     if (write.key === 'origin') {
       const replaced = originOf(value, handed, read);
       if (replaced?.base === 'unread') return { kind: 'unread', at: write.at, why: `${runs} replaces the request's origin, and the base it puts there could not be read` };
-      if (replaced !== undefined) return { kind: 'rewrite', rewrite: { kind: 'origin', base: replaced.base, at: write.at, ...(replaced.when === undefined ? {} : { when: replaced.when }) } };
+      if (replaced !== undefined) return { kind: 'rewrite', rewrite: { kind: 'origin', base: replaced.base, at: write.at, ...(replaced.when === undefined ? {} : { when: replaced.when }), ...tested } };
     }
     const prefix = prefixOfRewrite(value, handed.isAddress, (node) => {
       const base = read(node);
@@ -398,8 +406,37 @@ export const rewritesOf = (fnNode: TsNode, factory: ClientFactory, read: BaseRea
     if (prefix === undefined) {
       return { kind: 'unread', at: write.at, why: `${runs} rewrites the address, and the base it puts in front could not be read` };
     }
-    return { kind: 'rewrite', rewrite: { kind: write.key === 'origin' ? 'origin' : 'prefix', base: prefix, at: write.at } };
+    return { kind: 'rewrite', rewrite: { kind: write.key === 'origin' ? 'origin' : 'prefix', base: prefix, at: write.at, ...tested } };
   });
+};
+
+/**
+ * The opening of an address a function rewrites in a way not read (P280): a
+ * hole, in front of the path of whatever base the call or the instance gives,
+ * since the rewrite may change what stands before that path and nothing says
+ * it removes it.
+ */
+export const unreadOpening = (base: ApiUrl | undefined): ApiUrl => {
+  const path = base?.path === null || base?.path === undefined || base.path === '/' ? '' : base.path.replace(/\/+$/, '');
+  return { url: `${UNREAD_SPAN}${path}`, path: `/${UNREAD_SPAN}${path}`, baseUrlEnv: null, host: null, via: null, guessed: false };
+};
+
+/**
+ * The rewrite a request goes out under, by the address it writes (P280): the
+ * one its client runs where it applies, none where a test of the address
+ * says it does not, and `unread` where the rewrite is not read or the test
+ * cannot tell from what is read of the address.
+ */
+export const rewriteFor = (
+  runs: { readonly rewrite?: Rewrite; readonly rewriteUnread?: unknown } | undefined,
+  written: ApiUrl,
+): Rewrite | 'unread' | undefined => {
+  if (runs === undefined) return undefined;
+  if (runs.rewriteUnread !== undefined) return 'unread';
+  const { rewrite } = runs;
+  if (rewrite?.test === undefined) return rewrite;
+  const holds = rewrite.test(written.url ?? written.path ?? '');
+  return holds === undefined ? 'unread' : holds ? rewrite : undefined;
 };
 
 /** A base without its host or setting: the path a request built from another's keeps. */

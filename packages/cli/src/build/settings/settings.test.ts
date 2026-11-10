@@ -6,6 +6,7 @@ import { interpolated, readComposeFile } from './compose.js';
 import { readServerlessFile, readWorkerJson, readWorkerToml } from './deployed.js';
 import { namesInEnvFile, readEnvFile } from './dotenv.js';
 import { composeEnvironment, envFileEnvironment, envFileReading } from './files.js';
+import { readEnvironmentFile } from './angular-environments.js';
 import { readProjectSettings } from './read.js';
 
 describe('which environment files may be read for values (P77)', () => {
@@ -482,5 +483,43 @@ describe('the workers a worker is bound to (P91)', () => {
     expect(staging['orders']?.bindings).toEqual([
       { binding: 'CATALOG', service: 'catalog-worker-staging', file: 'wrangler.json', environment: 'staging' },
     ]);
+  });
+});
+
+describe("an Angular application's environment files (P280)", () => {
+  let root: string | undefined;
+  afterEach(() => {
+    if (root !== undefined) rmSync(root, { recursive: true, force: true });
+    root = undefined;
+  });
+
+  it('reads the object a file exports, nested keys joined with dots', () => {
+    const text = "export const environment = {\n  production: false,\n  apiUrl: 'https://api.example.test/api',\n  auth: { issuer: `https://id.example.test` },\n  empty: '',\n};\n";
+    expect(readEnvironmentFile(text)).toEqual([
+      { name: 'apiUrl', raw: 'https://api.example.test/api' },
+      { name: 'auth.issuer', raw: 'https://id.example.test' },
+    ]);
+  });
+
+  it("keeps each value under the key the code reads, the file a configuration swaps in naming its environment", () => {
+    root = mkdtempSync(join(tmpdir(), 'flowatlas-settings-'));
+    const files: Record<string, string> = {
+      'web/angular.json': JSON.stringify({ projects: { web: { sourceRoot: 'app' } } }),
+      'web/app/environments/environment.ts': "export const environment = { apiUrl: 'http://localhost:3000/api', apiToken: 'https://not.kept.example.test' };\n",
+      'web/app/environments/environment.prod.ts': "export const environment = { apiUrl: 'https://api.example.test/api' };\n",
+      'web/src/environments/environment.development.ts': "export const environment = { apiUrl: 'http://localhost:4000' };\n",
+    };
+    for (const [path, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(root, path)), { recursive: true });
+      writeFileSync(join(root, path), text);
+    }
+    const read = readProjectSettings({ services: [{ name: 'web', dir: join(root, 'web') }], rootDir: root });
+    expect(read['web']?.values).toEqual({
+      apiUrl: [
+        { value: 'https://api.example.test/api', file: 'app/environments/environment.prod.ts', environment: 'production' },
+        { value: 'http://localhost:3000/api', file: 'app/environments/environment.ts' },
+        { value: 'http://localhost:4000', file: 'src/environments/environment.development.ts', environment: 'development' },
+      ],
+    });
   });
 });

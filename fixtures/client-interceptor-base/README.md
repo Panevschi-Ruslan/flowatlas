@@ -30,7 +30,7 @@ where the instance is made; this one is the base written one step later.
 | `shop` `Items.tsx:11` | `ofetch.create({ onRequest({ options }) { options.baseURL = import.meta.env.VITE_BILLING_URL } })` | `GET ${VITE_BILLING_URL}/items` | billing, `static`, `api-target` | `GET /items`, ambiguous |
 | `shop` `Items.tsx:12` | ky `hooks.beforeRequest` answering `` new Request(`${BILLING_HOST}${new URL(request.url).pathname}`, request) `` | `POST https://billing.example.test/items` | billing, `static`, `host` | `POST items`, ambiguous |
 | `shop` `Items.tsx:13` | `axios.interceptors.request.use(...)` on the module, `config.url = import.meta.env.VITE_BILLING_URL + config.url` behind an "is it absolute" guard; called as `axios.request({ url })` | `GET ${VITE_BILLING_URL}/items` | billing, `static`, `api-target` | not read (a config call) |
-| `shop` `Items.tsx:14` | an interceptor answering `{ ...config, baseURL: isStaff() ? ORDERS : BILLING }` | `GET /items` | nothing: `ambiguous-route-target` | the same |
+| `shop` `Items.tsx:14` | an interceptor answering `{ ...config, baseURL: isStaff() ? ORDERS : BILLING }` | `GET ${…}/items` (P280: the rewrite is not read, so the opening is a hole) | nothing: `api-path-partly-read`, with the `api-client-base-unread` row | `GET /items`, `ambiguous-route-target` |
 | `reports` `reports.controller.ts:12` | `fetch('https://billing.example.test/items')` | `GET https://billing.example.test/items` | billing, `static`, `host` | third party |
 | `reports` `reports.controller.ts:18` | `fetch('https://payments.example.test/charge', { method: 'POST' })` | `POST https://payments.example.test/charge` | third party | the same |
 
@@ -50,7 +50,7 @@ answer it.
 
 ```
 calls out: 2 total, 1 linked, 1 third party
-ui calls: 6 total, 5 joined to a route, 1 not (ambiguous-route-target 1)
+ui calls: 6 total, 5 joined to a route, 1 not (api-path-partly-read 1)
 routes:   6 total, 4 reached, 2 never called
 ```
 

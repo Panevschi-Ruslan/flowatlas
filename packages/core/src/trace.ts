@@ -483,6 +483,13 @@ const readString = (value: TsNode, scope: Scope, budget: number): string | null 
   const chosen = scope.choices?.get(node);
   if (chosen !== undefined) return chosen;
 
+  // `'/orders/' + id`, every piece read (P280).
+  if (Node.isBinaryExpression(node) && node.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
+    const left = readString(node.getLeft(), scope, budget - 1);
+    const right = left === null ? null : readString(node.getRight(), scope, budget - 1);
+    return left === null || right === null ? null : left + right;
+  }
+
   if (Node.isTemplateExpression(node)) {
     let text = node.getHead().getLiteralText();
     for (const span of node.getTemplateSpans()) {
@@ -733,6 +740,19 @@ const pathOf = (
     });
     return text;
   }
+  // `'/orders/' + id + '/items'`: the pieces of a join read as a template's
+  // text and holes are (P280).
+  if (Node.isBinaryExpression(node) && node.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
+    const pieces = joinedPieces(node);
+    let text = '';
+    pieces.forEach((piece, index) => {
+      const isLast = index === pieces.length - 1;
+      const next = pieces[index + 1];
+      const following = next === undefined ? null : readString(next, scope, budget - 1);
+      text += pathOf(piece, scope, budget - 1, before + text, isLast ? after : (following ?? ''), isLast && last);
+    });
+    return text;
+  }
   if (Node.isIdentifier(node)) {
     const declaration = node.getSymbol()?.getDeclarations()[0];
     if (declaration !== undefined && Node.isParameterDeclaration(declaration)) {
@@ -747,6 +767,14 @@ const pathOf = (
     return pathOf(remembered.node, remembered.scope, budget - 1, before, after, last);
   }
   return hole(node);
+};
+
+/** The pieces of `a + b + c`, left to right. */
+const joinedPieces = (node: TsNode): TsNode[] => {
+  const value = unwrap(node);
+  return Node.isBinaryExpression(value) && value.getOperatorToken().getKind() === SyntaxKind.PlusToken
+    ? [...joinedPieces(value.getLeft()), ...joinedPieces(value.getRight())]
+    : [value];
 };
 
 /**
@@ -2381,6 +2409,29 @@ export const literalChoices = (value: TsNode, max = MOST_CHOICES): FiniteLookup[
     if (declaration === undefined || !Node.isParameterDeclaration(declaration)) continue;
     const members = literalUnionOf(identifier, max);
     if (members !== null && members.length > 1) found.set(identifier, [...members].sort());
+  }
+  return [...found].map(([node, values]) => ({ node, values }));
+};
+
+/**
+ * The branches a value chooses between where it is written as `a ? b : c`
+ * with text on both sides (P280): `'/products' + (featured ? '/featured' : '')` is two
+ * addresses, each a route of its own, and the condition is decided at run
+ * time. Read as one hole it reached neither.
+ */
+export const branchChoices = (value: TsNode): FiniteLookup[] => {
+  const top = unwrap(value);
+  const conditionals = [
+    ...(Node.isConditionalExpression(top) ? [top] : []),
+    ...value.getDescendantsOfKind(SyntaxKind.ConditionalExpression),
+  ];
+  const found = new Map<TsNode, string[]>();
+  for (const conditional of conditionals) {
+    if (found.has(conditional) || !Node.isConditionalExpression(conditional)) continue;
+    const branches = [conditional.getWhenTrue(), conditional.getWhenFalse()].map((branch) => evaluateExpression(unwrap(branch)));
+    if (!branches.every((branch) => branch.resolved && typeof branch.value === 'string')) continue;
+    const values = [...new Set(branches.map((branch) => (branch.resolved ? String(branch.value) : '')))].sort();
+    if (values.length > 1) found.set(conditional, values);
   }
   return [...found].map(([node, values]) => ({ node, values }));
 };

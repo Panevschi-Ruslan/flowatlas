@@ -126,24 +126,28 @@ describe("an interceptor's base, in front of every request of the framework's cl
     expect(addresses(graph)).toEqual(['GET /api/v1/orders', 'GET /plain', 'GET https://status.example.test/health']);
   });
 
-  it('says so, and puts no base in front, when the rewrite depends on something else', () => {
+  it('says so, and leaves every address partly read, when the rewrite depends on something else (P280)', () => {
     const graph = extract({
       'api.interceptor.ts': `
         import type { HttpInterceptorFn } from '@angular/common/http';
         import { environment } from './environment';
         export const apiInterceptor: HttpInterceptorFn = (req, next) => {
-          if (req.url.includes('assets')) return next(req);
+          if (req.headers.has('X-Raw')) return next(req);
           return next(req.clone({ url: \`\${environment.apiUrl}\${req.url}\` }));
         };
       `,
       'app.config.ts': REGISTERED,
     });
-    expect(addresses(graph)).toContain('GET /orders');
+    expect(addresses(graph)).toContain('GET ${…}/orders');
+    expect(requests(graph).find((node) => node.meta?.['url'] === '${…}/orders')?.meta).toMatchObject({ path: '/${…}/orders', baseFrom: 'interceptor' });
+    // An address of its own host, and a request the client does not make, are as they were.
+    expect(addresses(graph)).toEqual(expect.arrayContaining(['GET /plain', 'GET https://status.example.test/health']));
     expect(rows(graph)).toMatchObject([{ file: 'api.interceptor.ts', line: 6 }]);
-    expect(rows(graph)[0]?.hint).toContain("only when req.url.includes('assets')");
+    expect(rows(graph)[0]?.hint).toContain("only when req.headers.has('X-Raw')");
+    expect(rows(graph)[0]?.hint).toContain('join nothing');
   });
 
-  it('says so when two interceptors rewrite the address', () => {
+  it('says so, and leaves every address partly read, when two interceptors rewrite the address (P280)', () => {
     const graph = extract({
       'api.interceptor.ts': `
         import type { HttpInterceptorFn } from '@angular/common/http';
@@ -152,7 +156,7 @@ describe("an interceptor's base, in front of every request of the framework's cl
       `,
       'app.config.ts': `${REGISTERED}\nexport const more = withInterceptors([otherInterceptor]);\nimport { otherInterceptor } from './api.interceptor';\n`,
     });
-    expect(addresses(graph)).toContain('GET /orders');
+    expect(addresses(graph)).toContain('GET ${…}/orders');
     expect(rows(graph)).toHaveLength(2);
   });
 
@@ -165,5 +169,78 @@ describe("an interceptor's base, in front of every request of the framework's cl
     });
     expect(addresses(graph)).toContain('GET /orders');
     expect(rows(graph)).toEqual([]);
+  });
+});
+
+const ASSETS = `
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+
+@Injectable({ providedIn: 'root' })
+export class CatalogService {
+  constructor(private readonly http: HttpClient) {}
+  icons() { return this.http.get('/assets/icons.json'); }
+  item(id: string) { return this.http.get('/api/items/' + id); }
+  page(slug: string) { return this.http.get(\`/pages/\${slug}\`); }
+}
+`;
+
+describe("an interceptor's rewrite, read for the host it names and the addresses it is applied to (P280)", () => {
+  it('puts a literal host and its path in front, the host recorded apart from the path', () => {
+    const graph = extract({
+      'api.interceptor.ts': `
+        import type { HttpInterceptorFn } from '@angular/common/http';
+        export const apiInterceptor: HttpInterceptorFn = (req, next) => next(req.clone({ url: \`https://api.example.test/api\${req.url}\` }));
+      `,
+      'app.config.ts': REGISTERED,
+    });
+    const orders = requests(graph).find((node) => String(node.meta?.['url']).endsWith('/api/orders'));
+    expect(orders?.meta).toMatchObject({ url: 'https://api.example.test/api/orders', path: '/api/orders', host: 'api.example.test', baseFrom: 'interceptor' });
+    expect(rows(graph)).toEqual([]);
+  });
+
+  it('applies the base to the addresses a guard that leaves does not send on as they are', () => {
+    const graph = extract({
+      'catalog.service.ts': ASSETS,
+      'api.interceptor.ts': `
+        import type { HttpInterceptorFn } from '@angular/common/http';
+        export const apiInterceptor: HttpInterceptorFn = (req, next) => {
+          if (req.url.startsWith('/assets/') || req.url === '/health') {
+            return next(req);
+          }
+          return next(req.clone({ url: 'https://api.example.test' + req.url }));
+        };
+      `,
+      'app.config.ts': REGISTERED,
+    });
+    expect(addresses(graph)).toEqual(
+      expect.arrayContaining(['GET /assets/icons.json', 'GET https://api.example.test/api/items/:param', 'GET https://api.example.test/orders', 'GET https://api.example.test/pages/:param']),
+    );
+    expect(rows(graph)).toEqual([]);
+  });
+
+  it('applies the base only where the condition it is written under holds, and partly reads an address the test cannot tell', () => {
+    const graph = extract({
+      'catalog.service.ts': ASSETS,
+      'api.interceptor.ts': `
+        import type { HttpInterceptorFn } from '@angular/common/http';
+        export const apiInterceptor: HttpInterceptorFn = (req, next) => {
+          if (/^\\/(api|orders)/.test(req.url) && req.url !== '/orders/export') {
+            return next(req.clone({ url: \`/gateway\${req.url}\` }));
+          }
+          return next(req);
+        };
+      `,
+      'app.config.ts': REGISTERED,
+    });
+    expect(addresses(graph)).toEqual(
+      expect.arrayContaining(['GET /assets/icons.json', 'GET ${…}/api/items/:param', 'GET /gateway/orders', 'GET ${…}/pages/:param']),
+    );
+    expect(rows(graph)).toEqual([]);
+  });
+
+  it('reads text joined to a value with + as the address a template would spell', () => {
+    const graph = extract({ 'catalog.service.ts': ASSETS });
+    expect(addresses(graph)).toContain('GET /api/items/:param');
   });
 });

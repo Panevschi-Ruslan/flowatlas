@@ -36,6 +36,7 @@ import { commandsAround, type Command } from '@flowatlas/serverless';
 import { dockerRunsOf, readHelmfileRuns, readHelmInstalls, readKustomizeApplies, readPortForwards, type PortForward } from './docker-run.js';
 import { helmfilesAt, helmfilesIn, readHelmfile } from './helmfile.js';
 import { namesInEnvFile, readEnvFile, type Written } from './dotenv.js';
+import { angularEnvironmentsOf } from './angular-environments.js';
 import { composeEnvironment, envFileEnvironment, envFileReading, environmentName, isComposeFile } from './files.js';
 
 /**
@@ -619,6 +620,13 @@ export const readProjectSettings = (input: SettingsInput): Record<string, RepoSe
     for (const name of filesAt(service.dir)) {
       const reader = READERS.find((each) => each.matches(name));
       reader?.read(into, join(service.dir, name), name);
+    }
+    // An Angular application's environment files, by the key its code reads (P280).
+    for (const { file, environment, written } of angularEnvironmentsOf(service.dir)) {
+      for (const { name, raw } of written) {
+        const value = keptValue(name, raw);
+        if (value !== undefined) add(into, name, { value, file, ...(environment === undefined ? {} : { environment }) });
+      }
     }
     readRuns(into, scripts.find((each) => each.owner === service.name)?.commands ?? []);
     manifests.push({ read: readManifestsUnder(service.dir, new Set(), choice), owner: service.name });

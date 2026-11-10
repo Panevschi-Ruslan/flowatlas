@@ -396,3 +396,23 @@ describe('an operation sent to a setting no value of which names a service', () 
     expect(resolveUiCall(operation('signIn'), split)).toMatchObject({ kind: 'noRoute', targetService: null });
   });
 });
+
+describe('a request rooted at a setting whose value is a host no service is reached at (P280)', () => {
+  const external = (value: string): UiIndex['baseUrlOf'] => () => ({
+    kind: 'external',
+    host: 'api.example.test',
+    found: { variable: 'apiUrl', value, from: 'src/environments/environment.ts', deployed: false },
+  });
+
+  it("reaches the one service serving the address under the value's path, as a guess", () => {
+    const index = { ...indexOf({ api: [route('api', 'GET', '/api/products/:param')] }), baseUrlOf: external('https://api.example.test/api') };
+    const outcome = resolveUiCall(uiCall('web', 'GET', '/products/:param', { baseUrlEnv: 'apiUrl' }), index);
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'unique-route', targetService: 'api' });
+  });
+
+  it('reaches the address as written where nothing serves it under that path', () => {
+    const index = { ...indexOf({ api: [route('api', 'GET', '/products')] }), baseUrlOf: external('https://api.example.test/v2') };
+    const outcome = resolveUiCall(uiCall('web', 'GET', '/products', { baseUrlEnv: 'apiUrl' }), index);
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'unique-route', targetService: 'api' });
+  });
+});

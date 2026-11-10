@@ -125,17 +125,15 @@ const settingBehind = (node: TsNode): SettingBehind | null => {
  * branch a caller's own argument decides — comes back saying so.
  */
 export const analyzeApiUrl = (node: TsNode, sharedPackages: readonly string[]): ApiUrl => {
-  const resolved = resolveStaticString(node, {
-    sharedPackages,
-    envRoots: ENV_ROOTS,
-    settingBehind,
-    resolveSpan: readSpan,
-  });
+  const reading = { sharedPackages, envRoots: ENV_ROOTS, settingBehind, resolveSpan: readSpan };
+  const written = resolveStaticString(node, reading);
+  // `'/orders?' + params.toString()` (P262): what is added after a `?` is
+  // the query, and the address the text before it.
+  const queried = written === null ? queryAdded(node, sharedPackages) : undefined;
+  if (queried !== undefined) return queried;
+  // `'/sellers/' + name`: the address a template would spell (P280).
+  const resolved = written ?? resolveStaticString(node, { ...reading, concatenation: true });
   if (resolved === null) {
-    // `'/orders?' + params.toString()` (P262): what is added after a `?` is
-    // the query, and the address the text before it.
-    const queried = queryAdded(node, sharedPackages);
-    if (queried !== undefined) return queried;
     // Not a string this reader can put together, but perhaps a helper that
     // assembles one: `this.http.delete(this.buildAdminUrl(id))` is an address
     // like any other, written one call further away.

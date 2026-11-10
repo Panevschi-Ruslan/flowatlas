@@ -1,4 +1,16 @@
-import { asksAbsolute, builtQueryOf, conditionsAround, PLATFORM_HEADERS, prefixOfRewrite, writtenHeaderNames, writtenKey, type QueryBuilder } from '@flowatlas/core';
+import {
+  asksAbsolute,
+  builtQueryOf,
+  conditionsAround,
+  PLATFORM_HEADERS,
+  prefixOfRewrite,
+  rewriteTestOf,
+  UNREAD_SPAN,
+  writtenHeaderNames,
+  writtenKey,
+  type AddressTest,
+  type QueryBuilder,
+} from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 import { analyzeBaseUrl, type ApiUrl } from './url.js';
@@ -16,18 +28,44 @@ import { analyzeBaseUrl, type ApiUrl } from './url.js';
  *
  * Read only where it is certain. An interceptor runs for every request, so the
  * one condition that changes nothing is whether the address is already
- * absolute, which `underBase` honours anyway. Any other condition in front
- * of the rewrite - a path it skips, a header it looks for - means some requests
- * go out under the base and some do not, and nothing here can tell which: that
- * is a row, and no base. So is a second interceptor rewriting the address, since
- * which runs first, and for which application, is not read.
+ * absolute, which `underBase` honours anyway. A condition about the address's
+ * own form - `if (req.url.startsWith('/api'))`, a path it skips with
+ * `if (req.url.startsWith('/assets')) return next(req)` - is asked of each
+ * request's written address, and the base goes in front of the ones it holds
+ * for (P280). Any other condition - a header it looks for, a flag - means some
+ * requests go out under the base and some do not, and nothing here can tell
+ * which: that is a row, and every request of the client is then partly read.
+ * So is a second interceptor rewriting the address, since which runs first,
+ * and for which application, is not read.
  */
 export interface InterceptorBase {
-  /** The base every request of the framework's client goes out under, when one was read. */
-  readonly base?: ApiUrl;
+  /** The rewrites read: each base, and the test of the written address it is applied under where there is one. */
+  readonly rewrites: ReadonlyArray<{ readonly base: ApiUrl; readonly test?: AddressTest }>;
   /** Where an interceptor rewrites the address and nothing could be taken from it, and why. */
   readonly unread: ReadonlyArray<{ readonly at: TsNode; readonly why: string }>;
 }
+
+/** The opening of an address an interceptor rewrites in a way not read: a hole (P280). */
+const UNREAD_BASE: ApiUrl = { url: UNREAD_SPAN, path: `/${UNREAD_SPAN}`, baseUrlEnv: null, host: null, via: null, guessed: false };
+
+/**
+ * The base a request of the framework's client goes out under, by what it
+ * writes (P280): the one rewrite that applies to it, none where none does, and
+ * a hole where a rewrite is not read, a test cannot tell from what is read of
+ * the address, or two rewrites put different bases in front.
+ */
+export const interceptedBase = (intercepting: InterceptorBase, written: ApiUrl): ApiUrl | undefined => {
+  if (intercepting.unread.length > 0) return UNREAD_BASE;
+  const text = written.url ?? written.path ?? '';
+  const applied = new Map<string | null, ApiUrl>();
+  for (const { base, test } of intercepting.rewrites) {
+    const holds = test === undefined ? true : test(text);
+    if (holds === undefined) return UNREAD_BASE;
+    if (holds) applied.set(base.url, base);
+  }
+  if (applied.size > 1) return UNREAD_BASE;
+  return [...applied.values()][0];
+};
 
 const unwrap = (node: TsNode): TsNode => {
   let current = node;
@@ -85,7 +123,7 @@ const registered = (name: string, texts: readonly string[]): boolean => {
 /** The base the repository's interceptors put in front of every request, read once. */
 export const interceptorBaseOf = (files: readonly SourceFile[], sharedPackages: readonly string[]): InterceptorBase => {
   const texts = files.map((file) => file.getFullText());
-  const rewrites: Array<{ at: CallExpression; name: string; base?: ApiUrl; why?: string }> = [];
+  const rewrites: Array<{ at: CallExpression; name: string; base?: ApiUrl; test?: AddressTest; why?: string }> = [];
   files.forEach((file, index) => {
     const text = texts[index] ?? '';
     if (!text.includes('.clone(') || !text.includes('url')) return;
@@ -101,8 +139,11 @@ export const interceptorBaseOf = (files: readonly SourceFile[], sharedPackages: 
       const owner = unwrap(callee.getExpression());
       if (!Node.isIdentifier(owner) || owner.getSymbol()?.getDeclarations()[0] !== interceptor.request) continue;
       const written = Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
-      const conditional = conditionsAround(call, interceptor.fn).filter((condition) => !asksAbsolute(condition, (node) => isRequestUrl(node, interceptor.request)));
-      if (conditional.length > 0) {
+      const isAddress = (node: TsNode): boolean => isRequestUrl(node, interceptor.request);
+      // A condition about the address's own form is a test each request is put to (P280).
+      const test = rewriteTestOf(call, interceptor.fn, isAddress);
+      if (test === undefined) {
+        const conditional = conditionsAround(call, interceptor.fn).filter((condition) => !asksAbsolute(condition, isAddress));
         rewrites.push({ at: call, name: interceptor.name, why: `${interceptor.name} rewrites the address only when ${conditional[0]?.getText().slice(0, 60)}, so which requests go out under the base is not known` });
         continue;
       }
@@ -110,20 +151,26 @@ export const interceptorBaseOf = (files: readonly SourceFile[], sharedPackages: 
       rewrites.push(
         base === undefined
           ? { at: call, name: interceptor.name, why: `${interceptor.name} rewrites the address and the base it puts in front could not be read` }
-          : { at: call, name: interceptor.name, base },
+          : { at: call, name: interceptor.name, base, ...(test === null ? {} : { test }) },
       );
     }
   });
   const names = new Set(rewrites.map((rewrite) => rewrite.name));
   if (names.size > 1) {
     const listed = [...names].sort().join(', ');
-    return { unread: rewrites.map((rewrite) => ({ at: rewrite.at, why: `${names.size} interceptors rewrite the address (${listed}), and which runs first, and for which application, is not read` })) };
+    return { rewrites: [], unread: rewrites.map((rewrite) => ({ at: rewrite.at, why: `${names.size} interceptors rewrite the address (${listed}), and which runs first, and for which application, is not read` })) };
   }
   const unread = rewrites.flatMap((rewrite) => (rewrite.why === undefined ? [] : [{ at: rewrite.at, why: rewrite.why }]));
-  const bases = [...new Set(rewrites.flatMap((rewrite) => (rewrite.base === undefined ? [] : [rewrite.base.url])))];
-  if (unread.length > 0 || bases.length !== 1) return { unread };
-  const base = rewrites.find((rewrite) => rewrite.base !== undefined)?.base;
-  return base === undefined ? { unread } : { base, unread };
+  if (unread.length > 0) return { rewrites: [], unread };
+  // Two rewrites both made unconditionally put two bases in front of every request: which one stands is not read.
+  const sure = [...new Set(rewrites.filter((rewrite) => rewrite.test === undefined).map((rewrite) => rewrite.base?.url))];
+  if (sure.length > 1) {
+    return { rewrites: [], unread: rewrites.map((rewrite) => ({ at: rewrite.at, why: `${rewrite.name} rewrites the address ${sure.length} different ways, and which one a request goes out under is not read` })) };
+  }
+  return {
+    rewrites: rewrites.flatMap((rewrite) => (rewrite.base === undefined ? [] : [{ base: rewrite.base, ...(rewrite.test === undefined ? {} : { test: rewrite.test }) }])),
+    unread,
+  };
 };
 
 /**

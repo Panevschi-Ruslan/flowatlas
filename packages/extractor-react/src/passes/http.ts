@@ -50,7 +50,7 @@ import type { IndexedFunction } from '../index-functions.js';
 import { clientInstances, type ClientInstance } from '../util/client-instance.js';
 import { enclosingIndexed, requestsOf, type ReadRequest, type RequestSite } from '../util/forward.js';
 import { localClientOf, type LocalClientReading } from '../util/local-client.js';
-import { basedBy } from '../util/request-rewrite.js';
+import { basedBy, rewriteFor, unreadOpening } from '../util/request-rewrite.js';
 import { analyzeApiUrl, analyzeClientBase, isSomewhere, underBase, type ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
@@ -350,7 +350,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     if (instance.rewriteUnread !== undefined) {
       say(
         instance.rewriteUnread,
-        'Requests through it are recorded under the base the instance is made with, or the path each call writes where it is made with none, and this function may change either. Set the base unconditionally, to a literal, a settings key or a constant.',
+        'Requests through it are recorded with an opening not read, `${…}` before the path each call writes, and join nothing. Set the base unconditionally or under a test of the address, to a literal, a settings key or a constant.',
       );
     }
   };
@@ -367,7 +367,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       file: ctx.fileOf(unread.at),
       line: siteOf(unread.at).line,
       reason: 'api-client-base-unread',
-      hint: `The base of this ${hooked.factory.client.name} request: ${unread.why}. It is recorded under the base its call or its client gives, and the hook may change it. Set the base unconditionally, to a literal, a settings key or a constant.`,
+      hint: `The base of this ${hooked.factory.client.name} request: ${unread.why}. It is recorded with an opening not read, \`\${…}\` before the path the call writes, and joins nothing. Set the base unconditionally or under a test of the address, to a literal, a settings key or a constant.`,
       symbol: unread.at.getText().slice(0, 80),
     });
   };
@@ -431,7 +431,10 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     // either, after both are known: it sets the base over the call's own, or
     // where none is set, or puts one in front of the address (P244).
     const runs = hooked ?? found.instance;
-    const base = basedBy(runs?.rewrite, before);
+    // Under a test of the address, only where the address it writes passes;
+    // and a rewrite not read leaves the opening of the address a hole (P280).
+    const applied = rewriteFor(runs, request.address);
+    const base = applied === 'unread' ? unreadOpening(before) : basedBy(applied, before);
     const rewritten = base !== before;
     const address = underBase(base, request.address);
     const at = siteOf(site.call);
@@ -661,7 +664,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       basesIn: (body) =>
         describedCallsIn(body).map((found) => {
           if (found.instance !== undefined) reportUnreadBase(found.instance);
-          return found.instance === undefined ? null : (basedBy(found.instance.rewrite, found.instance.base) ?? null);
+          // A rewrite under a test of each request's address is no one base of the instance (P280).
+          const rewrite = found.instance?.rewrite?.test === undefined ? found.instance?.rewrite : undefined;
+          return found.instance === undefined ? null : (basedBy(rewrite, found.instance.base) ?? null);
         }),
     });
     readings.set(cls, reading);

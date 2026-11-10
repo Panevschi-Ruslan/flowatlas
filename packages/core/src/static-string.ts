@@ -63,6 +63,13 @@ export interface StaticStringOptions {
    * never change one.
    */
   resolveSpan?: (node: TsNode) => string | null;
+  /**
+   * Whether text joined with `+` to a value read at run time is read as the
+   * template it spells, `'/orders/' + id` as `` `/orders/${id}` `` (P280).
+   * Asked for by a reader of addresses, where a hole is a segment; a name
+   * put together that way is not a name read.
+   */
+  concatenation?: boolean;
 }
 
 /** Which shared package a declaration came from, when it came from one. */
@@ -165,36 +172,101 @@ const rootSpellings = (node: TsNode): string[] => {
   return bound === undefined ? [node.getText()] : [node.getText(), bound];
 };
 
-const fromTemplate = (
-  template: TemplateExpression,
-  options: StaticStringOptions,
-): StaticString => {
+/** One hole of a string put together from text and holes, and the text after it. */
+interface Span {
+  readonly expression: TsNode;
+  readonly tail: string;
+}
+
+const fromTemplate = (template: TemplateExpression, options: StaticStringOptions): StaticString =>
+  fromSpans(
+    template.getHead().getLiteralText(),
+    template.getTemplateSpans().map((span) => ({ expression: span.getExpression(), tail: span.getLiteral().getLiteralText() })),
+    options,
+  );
+
+/** The pieces of `a + b + c`, left to right. */
+const piecesOf = (node: TsNode): TsNode[] => {
+  let value = node;
+  while (Node.isParenthesizedExpression(value)) value = value.getExpression();
+  return Node.isBinaryExpression(value) && value.getOperatorToken().getText() === '+'
+    ? [...piecesOf(value.getLeft()), ...piecesOf(value.getRight())]
+    : [value];
+};
+
+/** What one piece of a join is: text that is read, or a value that is not. */
+type Piece = { readonly text: string } | { readonly expression: TsNode };
+
+/** A piece of a join as text and holes, a template among them taken apart into its own. */
+const partsOf = (piece: TsNode): Piece[] => {
+  if (Node.isTemplateExpression(piece)) {
+    return [
+      { text: piece.getHead().getLiteralText() },
+      ...piece.getTemplateSpans().flatMap((span): Piece[] => [{ expression: span.getExpression() }, { text: span.getLiteral().getLiteralText() }]),
+    ];
+  }
+  const evaluated = evaluateExpression(piece);
+  return evaluated.resolved && (typeof evaluated.value === 'string' || typeof evaluated.value === 'number')
+    ? [{ text: String(evaluated.value) }]
+    : [{ expression: piece }];
+};
+
+/** Whether a piece of a join is text, as written, as a template or as a constant holds it. */
+const isText = (piece: TsNode): boolean => {
+  if (Node.isStringLiteral(piece) || Node.isNoSubstitutionTemplateLiteral(piece) || Node.isTemplateExpression(piece)) return true;
+  const evaluated = evaluateExpression(piece);
+  return evaluated.resolved && typeof evaluated.value === 'string';
+};
+
+/**
+ * `'/sellers/' + name + '/follow'`: text joined with `+` to values read at
+ * run time, read as the same string written as a template is (P280), holes
+ * and a setting it opens with alike. Only a join that holds text: a sum of
+ * values none of which is a string is not a string put together.
+ */
+const fromConcatenation = (expr: TsNode, options: StaticStringOptions): StaticString | null => {
+  const pieces = piecesOf(expr);
+  if (pieces.length < 2 || !pieces.some(isText)) return null;
+  const parts = pieces.flatMap(partsOf);
+  let head = '';
+  let at = 0;
+  for (let part = parts[at]; part !== undefined && 'text' in part; part = parts[++at]) head += part.text;
+  const spans: Span[] = [];
+  while (at < parts.length) {
+    const hole = parts[at] as { expression: TsNode };
+    let tail = '';
+    for (let part = parts[++at]; part !== undefined && 'text' in part; part = parts[++at]) tail += part.text;
+    spans.push({ expression: hole.expression, tail });
+  }
+  return spans.length === 0 ? null : fromSpans(head, spans, options);
+};
+
+const fromSpans = (head: string, all: readonly Span[], options: StaticStringOptions): StaticString => {
   const roots = options.envRoots ?? [];
 
-  let value = template.getHead().getLiteralText();
+  let value = head;
   const envRefs: string[] = [];
   let guessed = false;
 
-  const all = template.getTemplateSpans();
   let end = all.length;
   // Trailing holes that are only ever a query string or nothing add nothing to
   // the route, and a hole before them still ends the address.
   while (end > 0) {
     const span = all[end - 1];
-    if (span === undefined || span.getLiteral().getLiteralText() !== '') break;
-    if (evaluateExpression(span.getExpression()).resolved) break;
-    if (!isQueryTail(span.getExpression())) break;
+    if (span === undefined || span.tail !== '') break;
+    if (evaluateExpression(span.expression).resolved) break;
+    if (!isQueryTail(span.expression)) break;
     end -= 1;
   }
   const spans = all.slice(0, end);
   for (const [index, span] of spans.entries()) {
-    const tail = span.getLiteral().getLiteralText();
+    const tail = span.tail;
     // Only a hole the string starts with can be its root. Dropping one from the
     // middle would leave a path that reads as complete and is not.
     const opening = value === '' && envRefs.length === 0;
-    const direct = opening ? settingKeyIn(span.getExpression(), roots) : null;
+    const direct = opening ? settingKeyIn(span.expression, roots) : null;
     const behind =
-      opening && direct === null ? options.settingBehind?.(span.getExpression()) : null;
+      opening && direct === null ? options.settingBehind?.(span.expression) : null;
     const found = behind === null || behind === undefined ? null : behind;
     const key = direct ?? (typeof found === 'string' ? found : (found?.key ?? null));
     if (key !== null) {
@@ -207,14 +279,14 @@ const fromTemplate = (
       value = (root?.prefix ?? '') + tail;
       continue;
     }
-    const evaluated = evaluateExpression(span.getExpression());
+    const evaluated = evaluateExpression(span.expression);
     const read =
       evaluated.resolved && typeof evaluated.value === 'string'
         ? evaluated.value
-        : options.resolveSpan?.(span.getExpression());
+        : options.resolveSpan?.(span.expression);
     const hole =
       options.placeholder ??
-      (choosesASegment(span.getExpression())
+      (choosesASegment(span.expression)
         ? UNREAD_SPAN
         : holeIn(value, tail, index === spans.length - 1));
     value += (read ?? hole) + tail;
@@ -279,7 +351,9 @@ export const resolveStaticString = (
   if (branched !== undefined) return branched;
 
   const evaluated = evaluateExpression(expr);
-  if (!evaluated.resolved || typeof evaluated.value !== 'string') return null;
+  if (!evaluated.resolved || typeof evaluated.value !== 'string') {
+    return options.concatenation === true && !evaluated.resolved ? fromConcatenation(expr, options) : null;
+  }
 
   const declaration = declarationOf(expr);
   const shared = sharedPackageOf(declaration, options.sharedPackages ?? []);

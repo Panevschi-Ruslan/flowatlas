@@ -4,6 +4,7 @@ import {
   enclosingMethod,
   finiteLookups,
   literalChoices,
+  branchChoices,
   PARAM_PLACEHOLDER,
   parametersOf,
   readsParameterOf,
@@ -135,7 +136,7 @@ const choicesAcross = (urlArg: TsNode, frames: readonly CallFrame[]): FiniteLook
   const written = writtenAcross(urlArg, frames);
   const tables = written.flatMap((each) => finiteLookups(each));
   if (tables.length > 0) return tables;
-  return written.flatMap((each) => literalChoices(each));
+  return written.flatMap((each) => [...literalChoices(each), ...branchChoices(each)]);
 };
 
 /**
