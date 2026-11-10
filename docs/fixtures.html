@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>247 fixtures</span>
-    <span>638 snapshot files</span>
+    <span>248 fixtures</span>
+    <span>641 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -1633,7 +1633,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="60">60</span></h2>
+    <h2>Everything else <span class="count" data-total="61">61</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -2010,6 +2010,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         </div>
         <p>A hand-written sample of the graph schema itself, not a repository: no manifest, no configuration, no sources, nothing for the tool to run over.</p>
         <p class="snapshots"><code>expected.graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="service-package-types everything else a workspace of three configured services: a nestjs api (`apps/api`) serving graphql at `/graphql` and rest under a `v1` prefix, a storefront that declares nothing of it, and a back office that declares the api's package (`&quot;@shop/api&quot;: &quot;workspace:^&quot;`) to import its `order` type and one helper (p282).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/service-package-types">service-package-types</a>
+          <span class="kind">3 services</span>
+        </div>
+        <p>A workspace of three configured services: a NestJS API (<code>apps/api</code>) serving GraphQL at <code>/graphql</code> and REST under a <code>v1</code> prefix, a storefront that declares nothing of it, and a back office that declares the API's package (<code>&quot;@shop/api&quot;: &quot;workspace:^&quot;</code>) to import its <code>Order</code> type and one helper (P282).</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="sqs-environment-fallback everything else a lending library's returns service whose code names a queue, a topic and a bus by a variable of its environment with a default beside it: `process.env.returns_queue_url ?? '&lt;url&gt;'`, `?? item_returned_topic` and `process.env.event_bus_name || 'library-events'` (r175).">
         <div class="head">

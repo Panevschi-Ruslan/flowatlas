@@ -17,6 +17,7 @@ import {
   parseConfig,
   readResolvedPackageJson,
   closeStandIns,
+  withoutOtherServicesWaysIn,
   reportSkippedTestDirectories,
   reportPatterns,
   readPatterns,
@@ -401,7 +402,15 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // Last, once every edge is drawn: one whose receiver a stand-in typed is a guess (P78).
   closeStandIns(base);
 
-  return builder.build();
+  // What is written in another configured service's package is that service's
+  // way in, read there; the rest of the package is still this service's to
+  // read, for its types and for the code it calls (P282).
+  return withoutOtherServicesWaysIn(builder.build(), {
+    rootDir,
+    ...(options.config === undefined ? {} : { config: options.config }),
+    ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
+    ...(options.service === undefined ? {} : { service: options.service }),
+  });
 };
 
 export const defaultOutputPath = (rootDir: string, output = '.flowatlas'): string =>

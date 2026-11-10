@@ -1,0 +1,9 @@
+{
+  "name": "@shop/catalog",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "dependencies": {
+    "@nestjs/common": "^10.4.0"
+  }
+}

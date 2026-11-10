@@ -516,6 +516,8 @@ export {
 export type { DeclarationShape, ResolutionSource, ShapeFileReading } from './declaration-shapes.js';
 export { forgetPackageIndexes, NEVER_A_SOURCE, packageIndexOf, rangeIncludes, serviceDirOf } from './package-index.js';
 export type { PackageIndex, PackageIndexInput, PackageSource, PackageSourceOrigin } from './package-index.js';
+export { otherServiceDirs, withoutOtherServicesWaysIn } from './other-services.js';
+export type { OtherServicesOptions } from './other-services.js';
 export {
   closeStandIns,
   hashShapeFile,

@@ -13,6 +13,7 @@ import {
   readResolvedPackageJson,
   recordApplications,
   closeStandIns,
+  withoutOtherServicesWaysIn,
   reportSkippedTestDirectories,
   reportPatterns,
   readPatterns,
@@ -354,7 +355,14 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // framework adds to them (P240), so the rows count those as well.
   reportConventions(base);
   closeStandIns(base);
-  return builder.build();
+  // What is written in another configured service's package is that service's
+  // way in, read there (P282).
+  return withoutOtherServicesWaysIn(builder.build(), {
+    rootDir,
+    ...(options.config === undefined ? {} : { config: options.config }),
+    ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
+    ...(options.service === undefined ? {} : { service: options.service }),
+  });
 };
 
 export const defaultOutputPath = (rootDir: string, output = '.flowatlas'): string =>

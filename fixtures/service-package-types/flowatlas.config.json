@@ -1,0 +1,26 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./apps/api",
+      "type": "nestjs"
+    },
+    {
+      "name": "storefront",
+      "repo": "./apps/storefront",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_API_URL"
+      ]
+    },
+    {
+      "name": "backoffice",
+      "repo": "./apps/backoffice",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_API_URL"
+      ]
+    }
+  ],
+  "output": ".flowatlas"
+}

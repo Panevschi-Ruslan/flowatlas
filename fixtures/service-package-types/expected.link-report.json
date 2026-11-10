@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T14:18:31.669Z",
+  "configHash": "b410fd28fe29",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./apps/api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 18,
+      "edges": 8,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "@shop/api",
+        "runtime": [
+          "@apollo/server",
+          "@nestjs/apollo",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/graphql",
+          "@shop/catalog",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "backoffice",
+      "repo": "./apps/backoffice",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 6,
+      "edges": 4,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "@shop/backoffice",
+        "runtime": [
+          "@apollo/client",
+          "@shop/api",
+          "@shop/formatting",
+          "graphql",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "storefront",
+      "repo": "./apps/storefront",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 5,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "@shop/storefront",
+        "runtime": [
+          "@apollo/client",
+          "graphql",
+          "react"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 3,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 2,
+    "uncalled": [
+      "entry:api:http:GET:/v1/catalog/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 29,
+    "edges": 19,
+    "types": 2,
+    "missed": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

@@ -1187,6 +1187,17 @@ only one of them moved.
 
 ### Fixed
 
+- **A service's package declared by another service gives it types, not
+  ways in (P282).** A front end that declares its API's workspace package to
+  import the API's types read the API's resolvers, controllers and consumers
+  as ways in of its own: two services answered every one of them, each request
+  to them was `ambiguous-route-target`, the front end's own requests joined its
+  copy, and the copies stood at addresses the API never serves (read without
+  its bootstrap, they lost its global prefix). What is written in another
+  configured service's directory, or in a library the declaring service
+  reaches only through that service's package, is now that service's way in
+  alone; the declaring service still reads the files, for their types and for
+  the code it calls. A library a service declares itself is unchanged.
 - **An API Gateway address is no queue (P268).** A queue's URL is read by
   its shape - a host and two segments - so an environment value
   `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`, or a
