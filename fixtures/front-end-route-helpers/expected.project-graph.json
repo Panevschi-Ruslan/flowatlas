@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:50:22.705Z",
+  "builtAt": "2026-11-10T16:14:20.827Z",
   "services": [
     {
       "name": "desk",
@@ -918,38 +918,9 @@
         "template": "src/routes/+page.svelte",
         "handlerVia": "enclosing"
       }
-    },
-    {
-      "id": "ui_api_call:catalog#gateways/products.gateway.ts:11:30",
-      "type": "ui_api_call",
-      "label": "GET /products",
-      "repo": "catalog",
-      "file": "gateways/products.gateway.ts",
-      "line": 11,
-      "kind": "http",
-      "meta": {
-        "method": "GET",
-        "url": "http://products.internal/products",
-        "path": "/products",
-        "baseUrlEnv": null,
-        "responseType": "string[]",
-        "bodyType": null,
-        "package": "axios",
-        "client": "axios",
-        "via": "literal",
-        "host": "products.internal"
-      }
     }
   ],
   "edges": [
-    {
-      "from": "catalog#gateways/products.gateway.ts:ProductsGateway",
-      "to": "ui_api_call:catalog#gateways/products.gateway.ts:11:30",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/products.gateway.ts",
-      "line": 11
-    },
     {
       "from": "catalog#gateways/products.gateway.ts:ProductsGateway.list",
       "to": "http_out:catalog#gateways/products.gateway.ts:11:30",
@@ -1372,14 +1343,6 @@
       "confidence": "static",
       "file": "src/routes/+page.svelte",
       "line": 11
-    },
-    {
-      "from": "ui_api_call:catalog#gateways/products.gateway.ts:11:30",
-      "to": "external_api:products.internal",
-      "type": "calls",
-      "confidence": "static",
-      "file": "gateways/products.gateway.ts",
-      "line": 11
     }
   ],
   "types": {},
@@ -1389,9 +1352,9 @@
       "file": "gateways/products.gateway.ts",
       "line": 11,
       "reason": "target-route-not-found",
-      "message": "no configured service serves GET /products",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /products */.",
-      "symbol": "ui_api_call:catalog#gateways/products.gateway.ts:11:30"
+      "message": "target service catalog has no route GET /products",
+      "hint": "Route renamed? Check catalog's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:catalog#gateways/products.gateway.ts:11:30"
     },
     {
       "file": "pages/api/products.ts",

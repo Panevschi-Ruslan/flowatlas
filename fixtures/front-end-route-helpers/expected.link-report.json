@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:34:25.316Z",
+  "builtAt": "2026-11-10T16:14:20.827Z",
   "configHash": "bc7eb680f0b5",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./catalog",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 8,
-      "edges": 5,
+      "nodes": 7,
+      "edges": 3,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2740,
+      "durationMs": 1025,
       "packages": {
         "name": "front-end-route-helpers-catalog",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 2,
-      "durationMs": 2729,
+      "durationMs": 990,
       "packages": {
         "name": "front-end-route-helpers-console",
         "runtime": [
@@ -53,7 +53,7 @@
       "edges": 16,
       "types": 0,
       "unresolved": 8,
-      "durationMs": 2830,
+      "durationMs": 1031,
       "packages": {
         "name": "front-end-route-helpers-desk",
         "runtime": [
@@ -75,7 +75,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 2668,
+      "durationMs": 990,
       "packages": {
         "name": "front-end-route-helpers-panel",
         "runtime": [
@@ -94,7 +94,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 2760,
+      "durationMs": 991,
       "packages": {
         "name": "front-end-route-helpers-sites",
         "runtime": [
@@ -113,7 +113,7 @@
       "edges": 4,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 2784,
+      "durationMs": 1007,
       "packages": {
         "name": "front-end-route-helpers-stand",
         "runtime": [],
@@ -135,12 +135,10 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 1,
+    "total": 0,
     "resolved": 0,
-    "unresolved": 1,
-    "byReason": {
-      "target-route-not-found": 1
-    }
+    "unresolved": 0,
+    "byReason": {}
   },
   "channels": {
     "total": 0,
@@ -166,14 +164,14 @@
       "file": "gateways/products.gateway.ts",
       "line": 11,
       "reason": "target-route-not-found",
-      "message": "no configured service serves GET /products",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /products */.",
-      "symbol": "ui_api_call:catalog#gateways/products.gateway.ts:11:30"
+      "message": "target service catalog has no route GET /products",
+      "hint": "Route renamed? Check catalog's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:catalog#gateways/products.gateway.ts:11:30"
     }
   ],
   "totals": {
-    "nodes": 53,
-    "edges": 36,
+    "nodes": 52,
+    "edges": 34,
     "types": 0,
     "missed": 18,
     "sites": 19,

@@ -462,7 +462,8 @@ describe('events', () => {
     expect(deployment.routes.map((route) => [route.method, route.path, route.api, route.meta?.['stage'], route.guards?.map((guard) => guard.label)])).toEqual([
       ['GET', '/orders/:param', 'shop-prod', 'Prod', ['api key']],
       ['POST', '/orders', 'shop-admin', 'v1', ['Staff']],
-      ['ALL', '/:param', 'shop-prod', '$default', undefined],
+      // An HTTP API's default route is {proxy+}, greedy (P283).
+      ['ALL', '/*', 'shop-prod', '$default', undefined],
     ]);
     expect(reasons(deployment)).toContain('route-path-unread');
   });
@@ -827,7 +828,8 @@ describe('plain CloudFormation templates (P248)', () => {
     ].join('\n');
     for (const deployment of [readPlain({ 'stack.yaml': plain(resources) }), read({ 'template.yaml': template(resources) })]) {
       expect(deployment.routes.map((route) => [route.method, route.path, route.api, route.target])).toEqual([
-        ['ALL', '/:param', 'shop-quick', { function: 0 }],
+        // A quick-create API's one route is {proxy+}, greedy (P283).
+        ['ALL', '/*', 'shop-quick', { function: 0 }],
         ['GET', '/status', 'shop-keyed', { function: 0 }],
       ]);
       expect(deployment.rows.filter((row) => row.reason === 'route-target-unread').map((row) => row.level)).toEqual(['info']);

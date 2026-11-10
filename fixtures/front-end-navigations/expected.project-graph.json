@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:06:41.808Z",
+  "builtAt": "2026-11-10T16:14:18.803Z",
   "services": [
     {
       "name": "storefront",
@@ -596,7 +596,7 @@
           "files": 7,
           "filesRead": 7,
           "filesUnreadable": 0,
-          "functions": 13,
+          "functions": 12,
           "components": 7,
           "hooks": 0,
           "skippedExternalCalls": {
@@ -822,33 +822,11 @@
       "label": "accountLoader",
       "repo": "storefront",
       "file": "src/main.tsx",
-      "line": 24,
-      "meta": {
-        "signature": {
-          "params": [],
-          "returns": "unknown"
-        }
-      }
-    },
-    {
-      "id": "storefront#src/main.tsx:router",
-      "type": "function",
-      "label": "router",
-      "repo": "storefront",
-      "file": "src/main.tsx",
-      "line": 9
-    },
-    {
-      "id": "storefront#src/main.tsx:settingsPath",
-      "type": "function",
-      "label": "settingsPath",
-      "repo": "storefront",
-      "file": "src/main.tsx",
       "line": 20,
       "meta": {
         "signature": {
           "params": [],
-          "returns": "string"
+          "returns": "unknown"
         }
       }
     },
@@ -858,7 +836,7 @@
       "label": "signOut",
       "repo": "storefront",
       "file": "src/main.tsx",
-      "line": 30,
+      "line": 26,
       "meta": {
         "signature": {
           "params": [],
@@ -1799,23 +1777,13 @@
       "params": [],
       "returns": "unknown",
       "file": "src/main.tsx",
-      "line": 25,
+      "line": 21,
       "meta": {
         "navigates": "/login",
         "route": "/login",
         "page": "src/pages/Login.tsx",
         "redirects": true
       }
-    },
-    {
-      "from": "storefront#src/main.tsx:router",
-      "to": "storefront#src/main.tsx:settingsPath",
-      "type": "calls",
-      "confidence": "static",
-      "params": [],
-      "returns": "string",
-      "file": "src/main.tsx",
-      "line": 17
     },
     {
       "from": "storefront#src/main.tsx:signOut",
@@ -1825,7 +1793,7 @@
       "params": [],
       "returns": "unknown",
       "file": "src/main.tsx",
-      "line": 31,
+      "line": 27,
       "meta": {
         "navigates": "/login",
         "route": "/login",
@@ -2347,7 +2315,7 @@
     },
     {
       "file": "src/main.tsx",
-      "line": 24,
+      "line": 20,
       "reason": "type-unresolved",
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",

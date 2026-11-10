@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:06:41.808Z",
+  "builtAt": "2026-11-10T16:14:18.803Z",
   "configHash": "e53814a49045",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 1524,
+      "durationMs": 909,
       "packages": {
         "name": "front-end-navigations-admin",
         "runtime": [
@@ -33,7 +33,7 @@
       "edges": 8,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 1407,
+      "durationMs": 884,
       "packages": {
         "name": "front-end-navigations-backoffice",
         "runtime": [
@@ -52,7 +52,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 1487,
+      "durationMs": 916,
       "packages": {
         "name": "front-end-navigations-kiosk",
         "runtime": [],
@@ -71,7 +71,7 @@
       "edges": 25,
       "types": 0,
       "unresolved": 5,
-      "durationMs": 1563,
+      "durationMs": 953,
       "packages": {
         "name": "front-end-navigations-shop",
         "runtime": [
@@ -87,11 +87,11 @@
       "repo": "./storefront",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 22,
-      "edges": 22,
+      "nodes": 20,
+      "edges": 21,
       "types": 0,
       "unresolved": 9,
-      "durationMs": 1442,
+      "durationMs": 908,
       "packages": {
         "name": "front-end-navigations-storefront",
         "runtime": [
@@ -190,8 +190,8 @@
     }
   ],
   "totals": {
-    "nodes": 77,
-    "edges": 67,
+    "nodes": 75,
+    "edges": 66,
     "types": 0,
     "missed": 25,
     "sites": 34,

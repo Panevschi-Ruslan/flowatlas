@@ -169,7 +169,8 @@ describe('an app, followed from its entry (P57)', () => {
       ['POST', '/orders', 'Api', { function: 0 }, ['IAM']],
       ['GET', '/orders/:param', 'Api', { function: 0 }, undefined],
       ['ALL', '/', 'shop-proxy', { function: 0 }, undefined],
-      ['ALL', '/:param', 'shop-proxy', { function: 0 }, undefined],
+      // The proxy's {proxy+} is greedy: any rest of the address (P283).
+      ['ALL', '/*', 'shop-proxy', { function: 0 }, undefined],
     ]);
   });
 
