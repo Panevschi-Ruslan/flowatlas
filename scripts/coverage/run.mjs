@@ -65,7 +65,7 @@
  */
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative, resolve, sep } from 'node:path';
+import { dirname, join, posix, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { byFamily, isSourceFile, measureSites } from './counting-rule.mjs';
 import { extentOfTarget } from './extent.mjs';
@@ -75,6 +75,7 @@ import { clonePaths, readGate } from './read-gate.mjs';
 import { renderReport } from './report.mjs';
 import {
   TargetError,
+  documentsOf,
   inTarget,
   isMultiRepository,
   pinRepository,
@@ -584,16 +585,37 @@ const configure = (config, target, cloneDir) => {
     const type = (readRoot === undefined ? undefined : declared[readRoot]) ?? service.type;
     return { ...service, type };
   });
-  writeFileSync(config, `${JSON.stringify({ ...parsed, services }, null, 2)}\n`, 'utf8');
-  return parsed.services.map((service, index) => ({
-    name: service.name,
-    // Clone-relative, because the gate has to turn a path the graph spells
-    // relative to a service into a path the counting rule spells relative to the
-    // clone, and the service is the only thing that knows the difference.
-    repo: relative(cloneDir, resolve(dirname(config), service.repo)).split('\\').join('/') || '.',
-    guessed: service.type,
-    type: services[index].type,
+  // A service the target declares by a document (P287): written as a user
+  // writes one, its path relative to the configuration file.
+  const documents = documentsOf(target).map(({ name, kind, path, services: named, baseUrlEnv, hosts }) => ({
+    name,
+    document: {
+      kind,
+      path: relative(dirname(config), join(cloneDir, path)).split('\\').join('/'),
+      ...(named === undefined ? {} : { services: named }),
+    },
+    ...(baseUrlEnv === undefined ? {} : { baseUrlEnv }),
+    ...(hosts === undefined ? {} : { hosts }),
   }));
+  writeFileSync(config, `${JSON.stringify({ ...parsed, services: [...services, ...documents] }, null, 2)}\n`, 'utf8');
+  return [
+    ...parsed.services.map((service, index) => ({
+      name: service.name,
+      // Clone-relative, because the gate has to turn a path the graph spells
+      // relative to a service into a path the counting rule spells relative to the
+      // clone, and the service is the only thing that knows the difference.
+      repo: relative(cloneDir, resolve(dirname(config), service.repo)).split('\\').join('/') || '.',
+      guessed: service.type,
+      type: services[index].type,
+    })),
+    // A declared service lives where its document is, as the configuration has it.
+    ...documentsOf(target).map(({ name, kind, path }) => ({
+      name,
+      repo: posix.dirname(path),
+      guessed: `${kind} document`,
+      type: `${kind} document`,
+    })),
+  ];
 };
 
 /**
@@ -1024,6 +1046,7 @@ const main = async () => {
   let unpinned;
   try {
     unpinned = chosen.flatMap(unpinnedOf);
+    for (const target of chosen) documentsOf(target);
   } catch (cause) {
     if (cause instanceof TargetError) throw new UsageError(cause.message);
     throw cause;

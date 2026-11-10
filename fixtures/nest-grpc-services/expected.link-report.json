@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:20:11.244Z",
+  "builtAt": "2026-11-10T15:47:19.273Z",
   "configHash": "96461efb3e91",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 9,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 6334,
+      "durationMs": 4261,
       "packages": {
         "name": "nest-grpc-services-gateway",
         "runtime": [
@@ -32,9 +32,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 10,
       "edges": 3,
-      "types": 2,
+      "types": 6,
       "unresolved": 1,
-      "durationMs": 5632,
+      "durationMs": 4991,
       "packages": {
         "name": "nest-grpc-services-orders",
         "runtime": [
@@ -79,14 +79,14 @@
     "duplicated": []
   },
   "types": {
-    "total": 3,
+    "total": 7,
     "sharedPackage": 0
   },
   "unresolved": [],
   "totals": {
     "nodes": 25,
     "edges": 14,
-    "types": 3,
+    "types": 7,
     "missed": 1,
     "sites": 1,
     "notes": 0,

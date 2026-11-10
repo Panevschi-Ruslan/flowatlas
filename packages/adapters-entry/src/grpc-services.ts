@@ -1,19 +1,24 @@
-import type { EntryAdapter, EntryHandler, EntryNode, ExtractContext, ProtoMethod } from '@flowatlas/core';
+import type { EntryAdapter, EntryHandler, EntryNode, ExtractContext, ProtoMethod, ProtoTypes } from '@flowatlas/core';
 import {
   decoratorArgs,
   evaluateExpression,
   findDecorators,
+  GRPC_PACKAGE_CONTRACTS,
+  IMPLEMENTED_BY_META,
   grpcCallKind,
   grpcEntryKey,
   hasAnyDependency,
   makeEntryId,
   namedFunction,
+  packageOfSpecifier,
+  parseProto,
+  protoTypes,
   startLineOf,
 } from '@flowatlas/core';
 import { dirname } from 'node:path';
-import { Node, SyntaxKind, type CallExpression, type Node as TsNode, type SourceFile } from 'ts-morph';
+import { Node, SyntaxKind, type CallExpression, type ClassDeclaration, type Node as TsNode, type SourceFile } from 'ts-morph';
 import { declaredSpelling, methodNamed, type Contract, type Contracts, type ContractService } from './grpc-contracts.js';
-import { bare, contractsFor, GRPC_PACKAGES, protoSpecsOf, readServiceSpelling, valueOf, type ServiceReading } from './grpc-reading.js';
+import { bare, contractsFor, GRPC_PACKAGES, moduleOfName, protoSpecsOf, readServiceSpelling, valueOf, type ServiceReading } from './grpc-reading.js';
 import { fileOfNode, handlerOf, handlerOfFunction, inlineHandlerOf, repoFunctionOf, repoSources } from './shared.js';
 import { unwrapWork } from './wrapped-work.js';
 
@@ -71,16 +76,52 @@ export const grpcServerAdapter: EntryAdapter = {
       entries.push(entry);
     };
     const options = grpcTransportOptions(ctx);
+    const nest: NestServed = { services: new Map(), unread: false };
+    let contracts: Contracts | undefined;
     for (const source of repoSources(ctx)) {
-      const contracts = contractsFor(source, ctx.repoDir);
+      contracts = contractsFor(source, ctx.repoDir);
       for (const call of source.getDescendantsOfKind(SyntaxKind.CallExpression)) {
         for (const entry of registeredOf(call, ctx, contracts)) keep(entry);
+        for (const entry of handedToServerOf(call, ctx)) keep(entry);
       }
-      for (const entry of decoratedOf(source, ctx, contracts, options)) keep(entry);
+      for (const entry of decoratedOf(source, ctx, contracts, options, nest)) keep(entry);
+    }
+    unimplementedByControllers(ctx, nest);
+    // The messages a way in takes and answers, registered once every way in is read.
+    for (const types of [contracts?.types(ctx.repo), packageTypes.get(ctx.repo)]) {
+      if (types === undefined) continue;
+      for (const [id, entry] of Object.entries(types.registry())) ctx.builder.addType(id, entry);
     }
     return entries;
   },
 };
+
+/**
+ * The payload types of the contracts packages hand a server, per repository
+ * (P287): a health service's messages are registered under the server's own.
+ */
+const packageTypes = new Map<string, ProtoTypes>();
+
+const packageTypesOf = (repo: string): ProtoTypes => {
+  const found =
+    packageTypes.get(repo) ??
+    protoTypes(
+      GRPC_PACKAGE_CONTRACTS.map((contract) => ({ path: contract.path, file: parseProto(contract.text) })),
+      repo,
+    );
+  packageTypes.set(repo, found);
+  return found;
+};
+
+/**
+ * What a method takes and answers, as the contract's messages (P287): the
+ * signature a procedure's way in carries, which the contract check compares a
+ * caller's request with.
+ */
+const signatureOf = (types: ProtoTypes, pkg: string | undefined, method: ProtoMethod): { params: { name: string; type: string }[]; returns: string } => ({
+  params: [{ name: 'request', type: types.refOf(method.request, pkg) }],
+  returns: types.refOf(method.response, pkg),
+});
 
 /** One member of an implementation: the name it is held under and what it holds. */
 interface Implemented {
@@ -88,11 +129,23 @@ interface Implemented {
   readonly node: TsNode;
 }
 
+/**
+ * What an implementation holds: its members, whether they were written in an
+ * object or are a class's methods, and whether every member was read - a
+ * spread of something unread leaves members nobody can name.
+ */
+interface Implementation {
+  readonly members: Implemented[];
+  readonly from: 'object' | 'class';
+  readonly complete: boolean;
+}
+
 /** The members of an implementation object, or of an instance of a class of the repository's. */
-const implementationOf = (expression: TsNode, depth = 0): Implemented[] | undefined => {
+const implementationOf = (expression: TsNode, depth = 0): Implementation | undefined => {
   const value = valueOf(expression);
   if (Node.isObjectLiteralExpression(value)) {
     const members: Implemented[] = [];
+    let complete = true;
     for (const property of value.getProperties()) {
       if (Node.isPropertyAssignment(property)) {
         const initializer = property.getInitializer();
@@ -109,20 +162,34 @@ const implementationOf = (expression: TsNode, depth = 0): Implemented[] | undefi
         members.push({ name: property.getName(), node });
       } else if (Node.isMethodDeclaration(property)) {
         members.push({ name: property.getName(), node: property });
-      } else if (Node.isSpreadAssignment(property) && depth < 4) {
-        members.push(...(implementationOf(property.getExpression(), depth + 1) ?? []));
-      }
+      } else if (Node.isSpreadAssignment(property)) {
+        const spread = depth < 4 ? implementationOf(property.getExpression(), depth + 1) : undefined;
+        members.push(...(spread?.members ?? []));
+        if (spread?.complete !== true) complete = false;
+      } else complete = false;
     }
-    return members;
+    return { members, from: 'object', complete };
   }
   if (Node.isNewExpression(value)) {
     const made = bare(value.getExpression());
     const declaration = Node.isIdentifier(made) ? made.getSymbol()?.getAliasedSymbol()?.getDeclarations()[0] ?? made.getSymbol()?.getDeclarations()[0] : undefined;
     if (declaration === undefined || !Node.isClassDeclaration(declaration)) return undefined;
-    return declaration
-      .getMethods()
-      .filter((method) => !method.isStatic() && method.getScope() !== 'private' && method.getScope() !== 'protected')
-      .map((method) => ({ name: method.getName(), node: method }));
+    // A class's own methods and those it inherits from classes of the repository.
+    const members: Implemented[] = [];
+    const seen = new Set<string>();
+    let complete = true;
+    let at: ClassDeclaration | undefined = declaration;
+    for (let level = 0; at !== undefined && level < 8; level += 1) {
+      for (const method of at.getMethods()) {
+        if (method.isStatic() || method.getScope() === 'private' || method.getScope() === 'protected' || seen.has(method.getName())) continue;
+        seen.add(method.getName());
+        members.push({ name: method.getName(), node: method });
+      }
+      const base: ClassDeclaration | undefined = at.getBaseClass();
+      if (base === undefined && at.getExtends() !== undefined) complete = false;
+      at = base;
+    }
+    return { members, from: 'class', complete };
   }
   return undefined;
 };
@@ -159,18 +226,31 @@ const methodOfMember = (
   return { name: declaredSpelling(name) };
 };
 
+/** Where a method's contract is, and the types its messages are registered as. */
+interface Declaration {
+  /** The contract's path as a node records it. */
+  readonly path: string;
+  readonly pkg: string | undefined;
+  readonly types: ProtoTypes;
+}
+
+const declarationOf = (ctx: ExtractContext, contracts: Contracts, declared: ContractService | undefined): Declaration | undefined =>
+  declared === undefined
+    ? undefined
+    : { path: contracts.pathOf(declared.contract), pkg: declared.contract.file.package, types: contracts.types(ctx.repo) };
+
 /** What every gRPC entry carries, from the service and the method. */
 const entryOf = (
   ctx: ExtractContext,
-  contracts: Contracts,
+  declaration: Declaration | undefined,
   site: TsNode,
   fullName: string,
   method: string,
   call: string,
-  declared: ContractService | undefined,
   declaredMethod: ProtoMethod | undefined,
   handler: { handler?: EntryHandler; via: string },
   registration: string,
+  extra: Record<string, unknown> = {},
 ): EntryNode => {
   const key = grpcEntryKey(fullName, method);
   return {
@@ -188,12 +268,116 @@ const entryOf = (
       service: fullName,
       method,
       ...(declaredMethod === undefined ? {} : { request: declaredMethod.request, response: declaredMethod.response }),
-      ...(declared === undefined ? {} : { contract: contracts.pathOf(declared.contract) }),
+      ...(declaration === undefined ? {} : { contract: declaration.path }),
+      // The messages as a procedure's input and output (P287).
+      ...(declaration === undefined || declaredMethod === undefined ? {} : { signature: signatureOf(declaration.types, declaration.pkg, declaredMethod) }),
       adapter: ADAPTER,
       registration,
       handlerVia: handler.via,
+      ...extra,
     },
   };
+};
+
+/**
+ * The ways in of a service a package implements (P287), drawn from the
+ * package's contract with nothing of the repository's behind them; or, for a
+ * package whose service is none this knows, a row saying so.
+ */
+const packageServiceOf = (ctx: ExtractContext, site: TsNode, pkg: string, registration: string, symbol: string): EntryNode[] => {
+  const known = GRPC_PACKAGE_CONTRACTS.filter((contract) => pkg.toLowerCase().includes(contract.word));
+  if (known.length === 0) {
+    ctx.builder.addUnresolved({
+      file: fileOfNode(site, ctx),
+      line: startLineOf(site),
+      reason: 'grpc-package-service',
+      level: 'info',
+      message: `${symbol} registers a gRPC service the package ${pkg} implements, and its contract is none this knows, so its methods are not drawn.`,
+      hint: 'Nothing to change if the service is the package\'s business. Load its .proto file from the repository and register it by name, so its methods are drawn.',
+      symbol,
+      adapter: ADAPTER,
+      meta: { package: pkg },
+    });
+    return [];
+  }
+  const types = packageTypesOf(ctx.repo);
+  const entries: EntryNode[] = [];
+  for (const contract of known) {
+    const file = parseProto(contract.text);
+    const declaration: Declaration = { path: contract.path, pkg: file.package, types };
+    for (const service of file.services) {
+      for (const method of service.methods) {
+        entries.push(entryOf(ctx, declaration, site, service.fullName, method.name, grpcCallKind(method), method, { via: 'package' }, registration, { [IMPLEMENTED_BY_META]: pkg }));
+      }
+    }
+  }
+  return entries;
+};
+
+/** The package a name of a service comes from, by its import or its `require`, where it is a package's. */
+const packageOfService = (expression: TsNode): string | undefined => {
+  let at = bare(expression);
+  while (Node.isPropertyAccessExpression(at) || Node.isCallExpression(at) || Node.isNewExpression(at)) at = bare(at.getExpression());
+  if (!Node.isIdentifier(at)) return undefined;
+  const value = valueOf(at);
+  if (Node.isCallExpression(value)) {
+    const callee = value.getExpression();
+    const [first] = value.getArguments();
+    if (Node.isIdentifier(callee) && callee.getText() === 'require' && first !== undefined && Node.isStringLiteral(first)) {
+      const specifier = first.getLiteralValue();
+      return specifier.startsWith('.') ? undefined : packageOfSpecifier(specifier);
+    }
+  }
+  const specifier = moduleOfName(at);
+  return specifier === undefined || specifier.startsWith('.') ? undefined : packageOfSpecifier(specifier);
+};
+
+/**
+ * A service a package hands the server itself (P287): `new
+ * HealthImplementation(statuses).addToServer(server)`, `new
+ * ReflectionService(definition).addToServer(server)`, the instance made from
+ * a package's class.
+ */
+const handedToServerOf = (call: CallExpression, ctx: ExtractContext): EntryNode[] => {
+  const callee = call.getExpression();
+  if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'addToServer' || call.getArguments().length === 0) return [];
+  const made = valueOf(callee.getExpression());
+  if (!Node.isNewExpression(made)) return [];
+  const pkg = packageOfService(made.getExpression());
+  if (pkg === undefined || GRPC_PACKAGE_CONTRACTS.every((contract) => !pkg.toLowerCase().includes(contract.word))) return [];
+  return packageServiceOf(ctx, call, pkg, 'addToServer', `${made.getExpression().getText().slice(0, 60)}.addToServer`);
+};
+
+/** The row for a method a contract declares that the implementation registered for it does not hold. */
+const unimplemented = (ctx: ExtractContext, site: TsNode, fullName: string, methods: readonly ProtoMethod[], path: string, by: string): void => {
+  for (const method of methods) {
+    ctx.builder.addUnresolved({
+      file: fileOfNode(site, ctx),
+      line: startLineOf(site),
+      reason: 'grpc-method-unimplemented',
+      level: 'info',
+      message: `${fullName}/${method.name} is declared by ${path} and ${by} does not implement it, so a client calling it is answered UNIMPLEMENTED.`,
+      hint: 'Implement the method where the service is registered, or take it out of the contract if no client is meant to call it.',
+      symbol: `${fullName}/${method.name}`,
+      adapter: ADAPTER,
+      meta: { service: fullName, method: method.name, contract: path },
+    });
+  }
+};
+
+/** The row for a member of an implementation, or a decorated method, that is no method of the contract. */
+const undeclared = (ctx: ExtractContext, site: TsNode, fullName: string, name: string, path: string, drawn: boolean): void => {
+  ctx.builder.addUnresolved({
+    file: fileOfNode(site, ctx),
+    line: startLineOf(site),
+    reason: 'grpc-method-undeclared',
+    level: 'info',
+    message: `${name} is implemented for ${fullName} and ${path} declares no such method, so no client of the contract can call it${drawn ? '; it is drawn as written' : ', and it is not drawn'}.`,
+    hint: 'Declare the method in the contract, or correct its name to the one the contract declares; a helper the implementation holds belongs outside it.',
+    symbol: `${fullName}/${name}`,
+    adapter: ADAPTER,
+    meta: { service: fullName, method: name, contract: path },
+  });
 };
 
 /** The ways in one `addService(...)` call registers. */
@@ -206,10 +390,12 @@ const registeredOf = (call: CallExpression, ctx: ExtractContext, contracts: Cont
   const line = startLineOf(call);
   const spelled = bare(definition);
   const service = Node.isPropertyAccessExpression(spelled) && spelled.getName() === 'service' ? spelled.getExpression() : spelled;
-  const reading = readServiceSpelling(service, contracts);
+  const read = readServiceSpelling(service, contracts);
+  const reading: ServiceReading & { package?: Declaration } = read.kind === 'named' && read.declared === undefined ? (packageDeclared(read, ctx.repo) ?? read) : read;
   if (reading.kind === 'unread') {
-    // A health or reflection service a package hands over is not this server's own.
-    if (isPackageService(service)) return [];
+    // A health or reflection service a package hands over: the package's contract says its methods (P287).
+    const pkg = packageOfService(service);
+    if (pkg !== undefined) return packageServiceOf(ctx, call, pkg, callee.getName(), `${callee.getName()}(${definition.getText().slice(0, 60)})`);
     ctx.builder.addUnresolved({
       file,
       line,
@@ -222,13 +408,14 @@ const registeredOf = (call: CallExpression, ctx: ExtractContext, contracts: Cont
     });
     return [];
   }
-  const members = implementationOf(implementation);
+  const implemented = implementationOf(implementation);
+  const declaration = reading.package === undefined ? declarationOf(ctx, contracts, reading.declared) : reading.package;
   const entries: EntryNode[] = [];
-  if (members === undefined) {
+  if (implemented === undefined) {
     // The service is named and its implementation is not read: its methods are
     // still ways in, drawn from the contract with nothing behind them.
     for (const method of reading.declared?.service.methods ?? []) {
-      entries.push(entryOf(ctx, contracts, call, reading.fullName, method.name, grpcCallKind(method), reading.declared, method, { via: 'none' }, callee.getName()));
+      entries.push(entryOf(ctx, declaration, call, reading.fullName, method.name, grpcCallKind(method), method, { via: 'none' }, callee.getName()));
     }
     ctx.builder.addUnresolved({
       file,
@@ -242,39 +429,40 @@ const registeredOf = (call: CallExpression, ctx: ExtractContext, contracts: Cont
     });
     return entries;
   }
-  for (const member of members) {
+  const served = new Set<string>();
+  for (const member of implemented.members) {
     const method = methodOfMember(reading, member.name);
-    if (method === undefined) continue;
+    if (method === undefined) {
+      // A member the contract does not declare: said where it was written in
+      // an object handed over for the service, not for a class's other methods.
+      if (implemented.from === 'object' && declaration !== undefined) undeclared(ctx, member.node, reading.fullName, member.name, declaration.path, false);
+      continue;
+    }
+    served.add(method.name);
     const label = `grpc ${reading.fullName}/${method.name}`;
     const kind = method.declared === undefined ? 'unary' : grpcCallKind(method.declared);
-    entries.push(entryOf(ctx, contracts, call, reading.fullName, method.name, kind, reading.declared, method.declared, handlerOfMember(member, label, ctx), callee.getName()));
+    entries.push(entryOf(ctx, declaration, call, reading.fullName, method.name, kind, method.declared, handlerOfMember(member, label, ctx), callee.getName()));
+  }
+  if (reading.declared !== undefined && declaration !== undefined && implemented.complete) {
+    unimplemented(ctx, call, reading.fullName, reading.declared.service.methods.filter((method) => !served.has(method.name)), declaration.path, `the implementation registered at this call`);
   }
   if (reading.declared === undefined) contractUnread(ctx, file, line, reading.fullName, reading.paths === undefined);
   return entries;
 };
 
-/** A service a package hands the server - health checking, reflection - named by a module nobody here wrote. */
-const isPackageService = (expression: TsNode): boolean => {
-  let at = bare(expression);
-  while (Node.isPropertyAccessExpression(at)) at = bare(at.getExpression());
-  if (!Node.isIdentifier(at)) return false;
-  const value = valueOf(at);
-  const root = Node.isCallExpression(value) ? value : at;
-  const text = root.getText();
-  return /^require\(['"][^.]/.test(text) || isImportedPackage(at);
-};
-
-const isImportedPackage = (identifier: TsNode): boolean => {
-  for (const declaration of identifier.getSymbol()?.getDeclarations() ?? []) {
-    const statement = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
-    if (statement !== undefined) return !statement.getModuleSpecifierValue().startsWith('.');
-    if (Node.isVariableDeclaration(declaration) || Node.isBindingElement(declaration)) {
-      const holder = Node.isBindingElement(declaration) ? declaration.getFirstAncestorByKind(SyntaxKind.VariableDeclaration) : declaration;
-      const text = holder?.getInitializer()?.getText() ?? '';
-      if (/^require\(['"][^.]/.test(text)) return true;
-    }
+/**
+ * A service named by a contract no file of the repository holds and a package
+ * implements (P287): `loadSync(require.resolve('<health package>/health.proto'))`
+ * names `grpc.health.v1.Health`, which the protocol's own contract declares.
+ */
+const packageDeclared = (reading: Extract<ServiceReading, { kind: 'named' }>, repo: string): (Extract<ServiceReading, { kind: 'named' }> & { package: Declaration }) | undefined => {
+  for (const contract of GRPC_PACKAGE_CONTRACTS) {
+    const file = parseProto(contract.text);
+    const service = file.services.find((each) => each.fullName === reading.fullName);
+    if (service === undefined) continue;
+    return { ...reading, declared: { contract: { path: contract.path, file }, service }, package: { path: contract.path, pkg: file.package, types: packageTypesOf(repo) } };
   }
-  return false;
+  return undefined;
 };
 
 /** The row for a service no contract of the repository declares. */
@@ -368,8 +556,38 @@ export const nestServiceNamed = (
   return { why: packages.length === 0 ? `no .proto file of the repository declares a service ${name}, and no package is named in the transport's options` : `the transport's options name several packages, and no .proto file of the repository says which holds ${name}` };
 };
 
+/**
+ * The methods of each declared service NestJS controllers answer, by the
+ * service's full name, for the methods none answers; and whether a decorator
+ * of the repository names what it answers at run time, which might be any of
+ * them.
+ */
+interface NestServed {
+  readonly services: Map<string, { readonly declared: ContractService; readonly declaration: Declaration; readonly site: TsNode; readonly served: Set<string> }>;
+  unread: boolean;
+}
+
+/**
+ * A row per method of a service the controllers answer some of and not this
+ * one (P287); none where a decorator could not be read, since it may be the
+ * one that answers it.
+ */
+const unimplementedByControllers = (ctx: ExtractContext, served: NestServed): void => {
+  if (served.unread) return;
+  for (const [fullName, each] of served.services) {
+    const missing = each.declared.service.methods.filter((method) => !each.served.has(method.name));
+    unimplemented(ctx, each.site, fullName, missing, each.declaration.path, 'no controller');
+  }
+};
+
 /** The ways in a NestJS controller's gRPC decorators declare. */
-const decoratedOf = (source: SourceFile, ctx: ExtractContext, contracts: Contracts, options: readonly GrpcTransportOptions[]): EntryNode[] => {
+const decoratedOf = (
+  source: SourceFile,
+  ctx: ExtractContext,
+  contracts: Contracts,
+  options: readonly GrpcTransportOptions[],
+  served: NestServed,
+): EntryNode[] => {
   const entries: EntryNode[] = [];
   for (const declaration of source.getClasses()) {
     for (const method of declaration.getMethods()) {
@@ -380,6 +598,7 @@ const decoratedOf = (source: SourceFile, ctx: ExtractContext, contracts: Contrac
         const serviceName = serviceArg === undefined ? declaration.getName() : serviceArg.resolved && typeof serviceArg.value === 'string' ? serviceArg.value : undefined;
         const rpc = methodArg === undefined ? declaredSpelling(method.getName()) : methodArg.resolved && typeof methodArg.value === 'string' ? methodArg.value : undefined;
         if (serviceName === undefined || rpc === undefined) {
+          served.unread = true;
           ctx.builder.addUnresolved({
             file,
             line,
@@ -410,8 +629,16 @@ const decoratedOf = (source: SourceFile, ctx: ExtractContext, contracts: Contrac
         const methodName = declaredMethod?.name ?? rpc;
         const call = declaredMethod === undefined ? (NEST_DECORATORS.get(decorator.getName()) ?? 'unary') : grpcCallKind(declaredMethod);
         if (named.declared === undefined) contractUnread(ctx, file, line, named.fullName, true);
+        const contract = declarationOf(ctx, contracts, named.declared);
+        if (named.declared !== undefined && contract !== undefined) {
+          // Said once per service, at the first controller that answers it.
+          const answered = served.services.get(named.fullName) ?? { declared: named.declared, declaration: contract, site: declaration, served: new Set<string>() };
+          served.services.set(named.fullName, answered);
+          if (declaredMethod === undefined) undeclared(ctx, method, named.fullName, methodName, contract.path, true);
+          else answered.served.add(declaredMethod.name);
+        }
         entries.push(
-          entryOf(ctx, contracts, method, named.fullName, methodName, call, named.declared, declaredMethod, { handler: handlerOf(method, ctx), via: 'method' }, decorator.getName()),
+          entryOf(ctx, contract, method, named.fullName, methodName, call, declaredMethod, { handler: handlerOf(method, ctx), via: 'method' }, decorator.getName()),
         );
       }
     }

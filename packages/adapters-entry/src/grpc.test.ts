@@ -1,5 +1,6 @@
 import {
   GraphBuilder,
+  TypeCollector,
   noAdapters,
   parseConfig,
   silentLogger,
@@ -60,8 +61,13 @@ const servedBy = (files: Record<string, string>, pkg?: Record<string, string>): 
 };
 
 /** Every call in every function of the repository, read as the server pass reads them. */
-const calledBy = (files: Record<string, string>, pkg?: Record<string, string>): { calls: GraphNode[]; rows: Unresolved[] } => {
-  const { project, ctx } = repository(files, pkg);
+const calledBy = (
+  files: Record<string, string>,
+  pkg?: Record<string, string>,
+  typed = false,
+  contracts?: Record<string, string>,
+): { calls: GraphNode[]; rows: Unresolved[] } => {
+  const { project, ctx } = repository(files, pkg, contracts);
   const rows: Unresolved[] = [];
   const holders = project
     .getSourceFiles()
@@ -85,6 +91,7 @@ const calledBy = (files: Record<string, string>, pkg?: Record<string, string>): 
       return { path: null, baseUrlEnv: env ?? null, host: null };
     },
     report: (row) => rows.push(row),
+    ...(typed ? { types: new TypeCollector({ builder: ctx.builder, repo: 'svc' }) } : {}),
   });
   return { calls: ctx.builder.build().nodes.filter((node) => node.type === 'http_out'), rows };
 };
@@ -124,10 +131,13 @@ describe('gRPC servers (P274)', () => {
     });
     expect(rows).toEqual([]);
     expect(entries.map((entry) => [entry.key, entry.meta?.['call'], entry.meta?.['handlerVia'], entry.meta?.['contract']])).toEqual([
+      // The package's health service, by the protocol's own contract (P287).
+      ['grpc:grpc.health.v1.Health/Check', 'unary', 'package', 'grpc/health/v1/health.proto'],
+      ['grpc:grpc.health.v1.Health/Watch', 'server-stream', 'package', 'grpc/health/v1/health.proto'],
       ['grpc:shop.CartService/GetCart', 'unary', 'function', '../proto/shop.proto'],
       ['grpc:shop.CartService/AddItem', 'unary', 'inline', '../proto/shop.proto'],
     ]);
-    expect(entries[0]).toMatchObject({ kind: 'rpc', label: 'grpc shop.CartService/GetCart', handler: { functionName: 'getCart' } });
+    expect(entries[2]).toMatchObject({ kind: 'rpc', label: 'grpc shop.CartService/GetCart', handler: { functionName: 'getCart' } });
   });
 
   it('names a generated definition nobody committed by the contract, and reads an instance of a class', () => {
@@ -199,7 +209,163 @@ describe('gRPC servers (P274)', () => {
       ['grpc:shop.CartService/AddItem', 'unary', 'addItem'],
       ['grpc:shop.CatalogService/WatchPrices', 'server-stream', 'prices'],
     ]);
-    expect(rows.map((row) => row.reason)).toEqual(['grpc-service-unread']);
+    // Nothing said unimplemented: the decorator read at run time may answer any method (P287).
+    expect(rows.map((row) => [row.reason, row.symbol])).toEqual([['grpc-service-unread', 'CartController.dynamic']]);
+  });
+
+  it('says a method no NestJS controller answers, and a decorator naming one the contract does not declare (P287)', () => {
+    const { rows } = servedBy(
+      {
+        '/svc/src/main.ts': `
+          import { Transport } from '@nestjs/microservices';
+          export const options = { transport: Transport.GRPC, options: { package: 'shop', protoPath: 'proto/shop.proto' } };
+        `,
+        '/svc/src/cart.controller.ts': `
+          import { GrpcMethod } from '@nestjs/microservices';
+          export class CartController {
+            @GrpcMethod('CartService', 'GetCart') one() { return {}; }
+            @GrpcMethod('CartService', 'GetCarts') many() { return {}; }
+          }
+        `,
+      },
+      { '@nestjs/microservices': '^12.0.0', '@grpc/grpc-js': '^1.0.0' },
+    );
+    expect(rows.map((row) => [row.reason, row.symbol])).toEqual([
+      ['grpc-method-unimplemented', 'shop.CartService/AddItem'],
+      ['grpc-method-undeclared', 'shop.CartService/GetCarts'],
+    ]);
+  });
+});
+
+/** The messages of the shop's contract, for the payload types (P287). */
+const SHOP_MESSAGES = `
+syntax = "proto3";
+package shop;
+service CartService {
+  rpc GetCart (GetCartRequest) returns (Cart);
+  rpc AddItem (AddItemRequest) returns (Cart);
+  rpc Clear (GetCartRequest) returns (Cart);
+}
+message GetCartRequest { string user_id = 1; }
+message AddItemRequest { string user_id = 1; Item item = 2; }
+message Item { string product_id = 1; int32 quantity = 2; }
+message Cart { string user_id = 1; repeated Item items = 2; }
+`;
+
+describe('gRPC servers and their contracts (P287)', () => {
+  const read = (files: Record<string, string>, pkg?: Record<string, string>) => {
+    const { ctx } = repository(files, pkg, { '/proto/shop.proto': SHOP_MESSAGES });
+    const entries = grpcServerAdapter.extractEntries(ctx);
+    const graph = ctx.builder.build();
+    return { entries, rows: graph.unresolved, types: graph.types };
+  };
+
+  it('says a contract method the server does not implement, and a member the contract does not declare', () => {
+    const { entries, rows } = read({
+      '/svc/index.js': `
+        const grpc = require('@grpc/grpc-js');
+        const loader = require('@grpc/proto-loader');
+        const pkg = grpc.loadPackageDefinition(loader.loadSync('shop.proto'));
+        new grpc.Server().addService(pkg.shop.CartService.service, { getCart: (call, cb) => cb(null, {}), addItems: (call, cb) => cb(null, {}) });
+      `,
+    });
+    expect(entries.map((entry) => entry.key)).toEqual(['grpc:shop.CartService/GetCart']);
+    // Informational, so one row per reason stands for every place it was said.
+    expect(rows.map((row) => [row.reason, row.level, row.symbol, row.sites ?? 1])).toEqual([
+      ['grpc-method-undeclared', 'info', 'shop.CartService/addItems', 1],
+      ['grpc-method-unimplemented', 'info', 'shop.CartService/AddItem', 2],
+    ]);
+  });
+
+  it('says nothing undeclared of a class instance, and nothing unimplemented where a spread was not read', () => {
+    const { rows } = read({
+      '/svc/src/server.ts': `
+        import { Server } from '@grpc/grpc-js';
+        import { CartServiceService } from './gen/shop_grpc_pb';
+        import { rest } from './rest';
+        class Cart { getCart(call, cb) { cb(null, {}); } helper() {} }
+        new Server().addService(CartServiceService, new Cart());
+        new Server().addService(CartServiceService, { ...rest, getCart: (call, cb) => cb(null, {}) });
+      `,
+    });
+    // The class's two missing methods; nothing for its helper, nothing for the object with a spread.
+    expect(rows.map((row) => [row.reason, row.symbol, row.sites])).toEqual([['grpc-method-unimplemented', 'shop.CartService/AddItem', 2]]);
+  });
+
+  it('carries the messages as the input and output of the way in, registered as types', () => {
+    const { entries, types } = read({
+      '/svc/index.js': `
+        const grpc = require('@grpc/grpc-js');
+        const loader = require('@grpc/proto-loader');
+        const pkg = grpc.loadPackageDefinition(loader.loadSync('shop.proto'));
+        new grpc.Server().addService(pkg.shop.CartService.service, { getCart() {}, addItem() {}, clear() {} });
+      `,
+    });
+    expect(entries[1]?.meta?.['signature']).toEqual({ params: [{ name: 'request', type: 'type:svc#.shop.AddItemRequest' }], returns: 'type:svc#.shop.Cart' });
+    expect(types['type:svc#.shop.AddItemRequest']?.fields).toEqual([
+      { name: 'userId', type: 'string', optional: false, meta: { protoPresence: 'implicit', protoName: 'user_id' } },
+      { name: 'item', type: 'type:svc#.shop.Item', optional: true, meta: { protoPresence: 'explicit' } },
+    ]);
+    expect(types['type:svc#.shop.Cart']?.fields?.map((field) => [field.name, field.type])).toEqual([
+      ['userId', 'string'],
+      ['items', 'type:svc#.shop.Item[]'],
+    ]);
+    expect(types['type:svc#.shop.Item']?.structuralHash).toMatch(/^[0-9a-f]{16}$/);
+  });
+
+  it('draws the health and reflection services a package hands the server, and says one it does not know', () => {
+    const { entries, rows } = read({
+      '/svc/src/server.ts': `
+        import { Server } from '@grpc/grpc-js';
+        import { HealthImplementation } from 'grpc-health-check';
+        import { ReflectionService } from '@grpc/reflection';
+        import { MetricsService, metricsImpl } from 'grpc-metrics';
+        const server = new Server();
+        new HealthImplementation({ '': 'SERVING' }).addToServer(server);
+        const reflection = new ReflectionService({});
+        reflection.addToServer(server);
+        server.addService(MetricsService, metricsImpl);
+      `,
+    });
+    expect(entries.map((entry) => [entry.key, entry.meta?.['registration'], entry.meta?.['implementedBy']])).toEqual([
+      ['grpc:grpc.health.v1.Health/Check', 'addToServer', 'grpc-health-check'],
+      ['grpc:grpc.health.v1.Health/Watch', 'addToServer', 'grpc-health-check'],
+      ['grpc:grpc.reflection.v1.ServerReflection/ServerReflectionInfo', 'addToServer', '@grpc/reflection'],
+      ['grpc:grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo', 'addToServer', '@grpc/reflection'],
+    ]);
+    expect(entries[0]?.meta?.['signature']).toEqual({ params: [{ name: 'request', type: 'type:svc#.grpc.health.v1.HealthCheckRequest' }], returns: 'type:svc#.grpc.health.v1.HealthCheckResponse' });
+    expect(rows.map((row) => [row.reason, row.level, row.meta?.['package']])).toEqual([['grpc-package-service', 'info', 'grpc-metrics']]);
+  });
+});
+
+describe('gRPC calls and what they hand over (P287)', () => {
+  it('records the request a call hands, the keys it writes, and the answer its callback reads', () => {
+    const { calls } = calledBy(
+      {
+        '/svc/src/gen/cart.ts': `
+          export interface Cart { userId: string }
+          export interface CartServiceClient {
+            getCart(request: { userId: string }, callback: (error: Error | null, response: Cart) => void): void;
+            addItem(request: object, callback: (error: Error | null, response: any) => void): void;
+          }
+          export declare const CartServiceClient: { new (address: string, credentials: unknown): CartServiceClient };
+        `,
+        '/svc/src/clients.ts': `
+          import { CartServiceClient } from './gen/cart';
+          const cart = new CartServiceClient(process.env.CART_ADDR, undefined);
+          export function getCart(userId: string) { cart.getCart({ userId }, (error, cart) => cart.userId); }
+          export function add() { cart.addItem({ userId: 'u', quantity: 2 }, (error, answer) => answer); }
+        `,
+      },
+      undefined,
+      true,
+      { '/proto/shop.proto': SHOP_MESSAGES },
+    );
+    expect(calls.map((call) => [call.meta?.['procedure'], call.meta?.['inputKeys'], call.meta?.['outputType'] ?? null])).toEqual([
+      ['grpc:shop.CartService/GetCart', ['userId'], 'type:svc#Cart'],
+      ['grpc:shop.CartService/AddItem', ['quantity', 'userId'], null],
+    ]);
+    expect(calls[0]?.meta?.['inputType']).toEqual(expect.any(String));
   });
 });
 

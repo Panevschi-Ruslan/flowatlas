@@ -131,6 +131,10 @@ const GATED = {
       // A gRPC service registered and not named, or named with no contract to say its methods (P274).
       'grpc-service-unread',
       'grpc-contract-unread',
+      // A gRPC service a package implements, and the methods a contract and its server disagree on (P287).
+      'grpc-package-service',
+      'grpc-method-unimplemented',
+      'grpc-method-undeclared',
       'route-file-not-served',
       'route-module-not-found',
       'route-claimed-twice',

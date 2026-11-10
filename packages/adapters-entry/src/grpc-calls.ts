@@ -6,15 +6,18 @@ import {
   hasAnyDependency,
   makeLeafId,
   siteOf,
+  writtenKeysOf,
   type GraphBuilder,
   type PackageJson,
+  type ProtoMethod,
+  type TypeCollector,
   type Unresolved,
 } from '@flowatlas/core';
 import { Node, SyntaxKind, type CallExpression, type Node as TsNode, type Project } from 'ts-morph';
 import { declaredSpelling, methodNamed, type Contracts } from './grpc-contracts.js';
 import { bare, calleeNameOf, contractsFor, GRPC_PACKAGES, valueOf, type ServiceReading } from './grpc-reading.js';
 import { grpcTransportOptions, nestServiceNamed, type GrpcTransportOptions } from './grpc-services.js';
-import type { LinkAddress, ProcedureCallHolder, ReadProcedureCall } from './procedure-calls.js';
+import { sentType, typeRefOf, type LinkAddress, type ProcedureCallHolder, type ReadProcedureCall } from './procedure-calls.js';
 import { readServiceSpelling } from './grpc-reading.js';
 
 /** What the half reading a server hands the gRPC calls reader (P274). */
@@ -29,7 +32,51 @@ export interface GrpcCallReading {
   /** An address handed to a client, read as this half reads any address. */
   addressOf(address: TsNode): LinkAddress;
   report(row: Unresolved): void;
+  /** What a call hands and reads back is typed with this, where the half has one (P287). */
+  readonly types?: Pick<TypeCollector, 'collectType' | 'unwrapAsync'>;
 }
+
+/**
+ * What a call hands the method and what it reads back (P287), as the contract
+ * check compares a procedure's request: the request is the first argument of
+ * a method that takes one, typed as the code types it and with the keys an
+ * object written in place writes; a stream the client writes is written
+ * later. The answer is the second parameter of the callback written in place,
+ * or what the call returns where it returns the answer - a promise or an
+ * observable a NestJS client gives.
+ */
+const exchangedAt = (
+  call: CallExpression,
+  declared: ProtoMethod | undefined,
+  types: Pick<TypeCollector, 'collectType' | 'unwrapAsync'> | undefined,
+): Record<string, unknown> => {
+  if (declared?.requestStream === true) return { inputLater: true };
+  const args = call.getArguments();
+  const first = args[0];
+  const input = first === undefined || Node.isArrowFunction(first) || Node.isFunctionExpression(first) ? undefined : first;
+  const inputKeys = input === undefined ? undefined : writtenKeysOf([input]);
+  const inputType = input === undefined || types === undefined ? undefined : sentType(input, types);
+  let outputType: string | undefined;
+  if (types !== undefined && declared?.responseStream !== true) {
+    const callback = args.slice(1).find((arg) => Node.isArrowFunction(arg) || Node.isFunctionExpression(arg));
+    if (callback !== undefined && (Node.isArrowFunction(callback) || Node.isFunctionExpression(callback))) {
+      const answer = callback.getParameters()[1];
+      const type = answer?.getType();
+      if (answer !== undefined && type !== undefined && !type.isAny() && !type.isUnknown()) outputType = typeRefOf(types, type, answer);
+    } else if (callback === undefined) {
+      const returned = types.unwrapAsync(call.getType());
+      const name = returned.getSymbol()?.getName() ?? '';
+      // A call object of the library's own (`ClientUnaryCall`) is not the answer.
+      if (!returned.isAny() && !returned.isUnknown() && !returned.isVoid() && !/^Client\w*Call$|Stream$/.test(name)) outputType = typeRefOf(types, returned, call);
+    }
+  }
+  return {
+    ...(inputKeys === undefined ? {} : { inputKeys }),
+    ...(inputType === undefined ? {} : { inputType }),
+    ...(input === undefined ? { inputNone: true } : {}),
+    ...(outputType === undefined ? {} : { outputType }),
+  };
+};
 
 /** The methods every client has that are not methods of its service. */
 const CLIENT_METHODS = new Set([
@@ -264,6 +311,7 @@ export const readGrpcCalls = (holders: Iterable<ProcedureCallHolder>, reading: G
         method: methodName,
         ...(service.declared === undefined ? {} : { contract: contractsFor(call.getSourceFile(), reading.repoDir).pathOf(service.declared.contract) }),
         ...(address === undefined ? {} : { link: { protocol: 'grpc', ...address } }),
+        ...exchangedAt(call, declared, reading.types),
       },
     });
     holder.ensure();

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:12:04.061Z",
+  "builtAt": "2026-11-10T15:52:11.393Z",
   "services": [
     {
       "name": "storefront",
@@ -151,6 +151,15 @@
         "request": "AddItemRequest",
         "response": "google.protobuf.Empty",
         "contract": "proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:cart#.shop.AddItemRequest"
+            }
+          ],
+          "returns": "type:cart#.google.protobuf.Empty"
+        },
         "adapter": "protobuf-document",
         "declaredBy": "proto/shop.proto"
       }
@@ -171,6 +180,15 @@
         "request": "EmptyCartRequest",
         "response": "google.protobuf.Empty",
         "contract": "proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:cart#.shop.EmptyCartRequest"
+            }
+          ],
+          "returns": "type:cart#.google.protobuf.Empty"
+        },
         "adapter": "protobuf-document",
         "declaredBy": "proto/shop.proto"
       }
@@ -191,6 +209,15 @@
         "request": "GetCartRequest",
         "response": "Cart",
         "contract": "proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:cart#.shop.GetCartRequest"
+            }
+          ],
+          "returns": "type:cart#.shop.Cart"
+        },
         "adapter": "protobuf-document",
         "declaredBy": "proto/shop.proto"
       }
@@ -211,6 +238,15 @@
         "request": "GetProductRequest",
         "response": "Product",
         "contract": "../proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:catalog#.shop.GetProductRequest"
+            }
+          ],
+          "returns": "type:catalog#.shop.Product"
+        },
         "adapter": "grpc-server",
         "registration": "addService",
         "handlerVia": "method"
@@ -232,6 +268,15 @@
         "request": "ListProductsRequest",
         "response": "ListProductsReply",
         "contract": "../proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:catalog#.shop.ListProductsRequest"
+            }
+          ],
+          "returns": "type:catalog#.shop.ListProductsReply"
+        },
         "adapter": "grpc-server",
         "registration": "addService",
         "handlerVia": "method"
@@ -253,9 +298,80 @@
         "request": "WatchPricesRequest",
         "response": "PriceChange",
         "contract": "../proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:catalog#.shop.WatchPricesRequest"
+            }
+          ],
+          "returns": "type:catalog#.shop.PriceChange"
+        },
         "adapter": "grpc-server",
         "registration": "addService",
         "handlerVia": "method"
+      }
+    },
+    {
+      "id": "entry:payments:rpc:grpc:grpc.health.v1.Health/Check",
+      "type": "entry",
+      "label": "grpc grpc.health.v1.Health/Check",
+      "repo": "payments",
+      "file": "index.js",
+      "line": 18,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:grpc.health.v1.Health/Check",
+        "call": "unary",
+        "service": "grpc.health.v1.Health",
+        "method": "Check",
+        "request": "HealthCheckRequest",
+        "response": "HealthCheckResponse",
+        "contract": "grpc/health/v1/health.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:payments#.grpc.health.v1.HealthCheckRequest"
+            }
+          ],
+          "returns": "type:payments#.grpc.health.v1.HealthCheckResponse"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "package",
+        "implementedBy": "grpc-health-check"
+      }
+    },
+    {
+      "id": "entry:payments:rpc:grpc:grpc.health.v1.Health/Watch",
+      "type": "entry",
+      "label": "grpc grpc.health.v1.Health/Watch",
+      "repo": "payments",
+      "file": "index.js",
+      "line": 18,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:grpc.health.v1.Health/Watch",
+        "call": "server-stream",
+        "service": "grpc.health.v1.Health",
+        "method": "Watch",
+        "request": "HealthCheckRequest",
+        "response": "HealthCheckResponse",
+        "contract": "grpc/health/v1/health.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:payments#.grpc.health.v1.HealthCheckRequest"
+            }
+          ],
+          "returns": "type:payments#.grpc.health.v1.HealthCheckResponse"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "package",
+        "implementedBy": "grpc-health-check"
       }
     },
     {
@@ -274,6 +390,15 @@
         "request": "ChargeRequest",
         "response": "ChargeReply",
         "contract": "../proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:payments#.shop.ChargeRequest"
+            }
+          ],
+          "returns": "type:payments#.shop.ChargeReply"
+        },
         "adapter": "grpc-server",
         "registration": "addService",
         "handlerVia": "function"
@@ -394,6 +519,11 @@
           "protocol": "grpc",
           "baseUrlEnv": "CART_ADDR"
         },
+        "inputKeys": [
+          "userId"
+        ],
+        "inputType": "{userId:string}",
+        "outputType": "type:storefront#Cart",
         "targetService": "cart"
       }
     },
@@ -417,6 +547,12 @@
           "protocol": "grpc",
           "baseUrlEnv": "CART_ADDR"
         },
+        "inputKeys": [
+          "productId",
+          "quantity",
+          "userId"
+        ],
+        "inputType": "{userId:string;productId:string;quantity:1}",
         "targetService": "cart"
       }
     },
@@ -440,6 +576,11 @@
           "protocol": "grpc",
           "baseUrlEnv": "PAYMENTS_ADDR"
         },
+        "inputKeys": [
+          "amount",
+          "orderId"
+        ],
+        "inputType": "{orderId:string;amount:number}",
         "targetService": "payments"
       }
     },
@@ -463,6 +604,10 @@
           "protocol": "grpc",
           "baseUrlEnv": "CART_ADDR"
         },
+        "inputKeys": [
+          "userId"
+        ],
+        "inputType": "{userId:string}",
         "targetService": "cart"
       }
     },
@@ -486,6 +631,8 @@
           "protocol": "grpc",
           "host": "catalog:50051"
         },
+        "inputKeys": [],
+        "inputType": "{}",
         "targetService": "catalog"
       }
     },
@@ -508,7 +655,11 @@
         "link": {
           "protocol": "grpc",
           "baseUrlEnv": "SHIPPING_ADDR"
-        }
+        },
+        "inputKeys": [
+          "zip"
+        ],
+        "inputType": "{zip:string}"
       }
     },
     {
@@ -1077,6 +1228,10 @@
       "confidence": "declared",
       "file": "src/clients.ts",
       "line": 27,
+      "params": [
+        "{userId:string}"
+      ],
+      "returns": "type:storefront#Cart",
       "meta": {
         "via": "link-url",
         "targetService": "cart"
@@ -1089,6 +1244,9 @@
       "confidence": "declared",
       "file": "src/clients.ts",
       "line": 31,
+      "params": [
+        "{userId:string;productId:string;quantity:1}"
+      ],
       "meta": {
         "via": "link-url",
         "targetService": "cart"
@@ -1101,6 +1259,9 @@
       "confidence": "static",
       "file": "src/clients.ts",
       "line": 36,
+      "params": [
+        "{orderId:string;amount:number}"
+      ],
       "meta": {
         "via": "link-url",
         "targetService": "payments"
@@ -1113,6 +1274,9 @@
       "confidence": "declared",
       "file": "src/clients.ts",
       "line": 37,
+      "params": [
+        "{userId:string}"
+      ],
       "meta": {
         "via": "link-url",
         "targetService": "cart"
@@ -1125,6 +1289,9 @@
       "confidence": "static",
       "file": "src/clients.ts",
       "line": 42,
+      "params": [
+        "{}"
+      ],
       "meta": {
         "via": "link-url",
         "targetService": "catalog"
@@ -1264,6 +1431,373 @@
     }
   ],
   "types": {
+    "type:cart#.google.protobuf.Empty": {
+      "name": "google.protobuf.Empty",
+      "kind": "object",
+      "declaredIn": "cart#google.protobuf.Empty",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "google.protobuf.Empty"
+      }
+    },
+    "type:cart#.shop.AddItemRequest": {
+      "name": "shop.AddItemRequest",
+      "kind": "object",
+      "declaredIn": "cart#proto/shop.proto",
+      "structuralHash": "bff72a38e5591bbe",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "user_id"
+          }
+        },
+        {
+          "name": "productId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "product_id"
+          }
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.AddItemRequest"
+      }
+    },
+    "type:cart#.shop.Cart": {
+      "name": "shop.Cart",
+      "kind": "object",
+      "declaredIn": "cart#proto/shop.proto",
+      "structuralHash": "cb9a77511e09d434",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "user_id"
+          }
+        },
+        {
+          "name": "productIds",
+          "type": "string[]",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "product_ids"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.Cart"
+      }
+    },
+    "type:cart#.shop.EmptyCartRequest": {
+      "name": "shop.EmptyCartRequest",
+      "kind": "object",
+      "declaredIn": "cart#proto/shop.proto",
+      "structuralHash": "c95ae1d48907aa54",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "user_id"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.EmptyCartRequest"
+      }
+    },
+    "type:cart#.shop.GetCartRequest": {
+      "name": "shop.GetCartRequest",
+      "kind": "object",
+      "declaredIn": "cart#proto/shop.proto",
+      "structuralHash": "c95ae1d48907aa54",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "user_id"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.GetCartRequest"
+      }
+    },
+    "type:catalog#.shop.GetProductRequest": {
+      "name": "shop.GetProductRequest",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "f130d3628fd99765",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.GetProductRequest"
+      }
+    },
+    "type:catalog#.shop.ListProductsReply": {
+      "name": "shop.ListProductsReply",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "8f2ea2b37e170803",
+      "fields": [
+        {
+          "name": "products",
+          "type": "type:catalog#.shop.Product[]",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.ListProductsReply"
+      }
+    },
+    "type:catalog#.shop.ListProductsRequest": {
+      "name": "shop.ListProductsRequest",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.ListProductsRequest"
+      }
+    },
+    "type:catalog#.shop.PriceChange": {
+      "name": "shop.PriceChange",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "0c174079cc931849",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "price",
+          "type": "number | string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.PriceChange"
+      }
+    },
+    "type:catalog#.shop.Product": {
+      "name": "shop.Product",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "517b1688238ae8a9",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "price",
+          "type": "number | string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.Product"
+      }
+    },
+    "type:catalog#.shop.WatchPricesRequest": {
+      "name": "shop.WatchPricesRequest",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "4096bfea451cef8b",
+      "fields": [
+        {
+          "name": "ids",
+          "type": "string[]",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.WatchPricesRequest"
+      }
+    },
+    "type:payments#.grpc.health.v1.HealthCheckRequest": {
+      "name": "grpc.health.v1.HealthCheckRequest",
+      "kind": "object",
+      "declaredIn": "payments#grpc/health/v1/health.proto",
+      "structuralHash": "5d2ba12e6a4bf05e",
+      "fields": [
+        {
+          "name": "service",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "grpc.health.v1.HealthCheckRequest"
+      }
+    },
+    "type:payments#.grpc.health.v1.HealthCheckResponse": {
+      "name": "grpc.health.v1.HealthCheckResponse",
+      "kind": "object",
+      "declaredIn": "payments#grpc/health/v1/health.proto",
+      "structuralHash": "d934738c8ff8e196",
+      "fields": [
+        {
+          "name": "status",
+          "type": "type:payments#.grpc.health.v1.HealthCheckResponse.ServingStatus",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "grpc.health.v1.HealthCheckResponse"
+      }
+    },
+    "type:payments#.grpc.health.v1.HealthCheckResponse.ServingStatus": {
+      "name": "grpc.health.v1.HealthCheckResponse.ServingStatus",
+      "kind": "union",
+      "declaredIn": "payments#grpc/health/v1/health.proto",
+      "structuralHash": "63f7867893079bdb",
+      "members": [
+        "'UNKNOWN'",
+        "'SERVING'",
+        "'NOT_SERVING'",
+        "'SERVICE_UNKNOWN'",
+        "number"
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoEnum": "grpc.health.v1.HealthCheckResponse.ServingStatus"
+      }
+    },
+    "type:payments#.shop.ChargeReply": {
+      "name": "shop.ChargeReply",
+      "kind": "object",
+      "declaredIn": "payments#../proto/shop.proto",
+      "structuralHash": "0f893db236aea663",
+      "fields": [
+        {
+          "name": "transactionId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "transaction_id"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.ChargeReply"
+      }
+    },
+    "type:payments#.shop.ChargeRequest": {
+      "name": "shop.ChargeRequest",
+      "kind": "object",
+      "declaredIn": "payments#../proto/shop.proto",
+      "structuralHash": "7f6862105bc45d17",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "order_id"
+          }
+        },
+        {
+          "name": "amount",
+          "type": "number | string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.ChargeRequest"
+      }
+    },
     "type:storefront#Cart": {
       "name": "Cart",
       "kind": "object",

@@ -11,13 +11,50 @@
  * them all; `services` names the ones this service answers, and without it
  * every service of the file is this one's.
  */
-import { DECLARED_CONFIDENCE, grpcCallKind, grpcEntryKey, makeEntryId, makeSymbolId, parseProto, SCHEMA_VERSION, type GraphEdge, type GraphNode } from '@flowatlas/core';
+import {
+  DECLARED_CONFIDENCE,
+  grpcCallKind,
+  grpcEntryKey,
+  makeEntryId,
+  makeSymbolId,
+  parseProto,
+  protoTypes,
+  SCHEMA_VERSION,
+  type GraphEdge,
+  type GraphNode,
+  type ProtoSource,
+} from '@flowatlas/core';
 import { DECLARED_BY, DocumentError, type ReadDocumentOptions, type ReadDocumentResult } from '../document/declared.js';
+
+/** How many files a contract's imports are followed through for the messages they declare. */
+const MAX_IMPORTS = 32;
+
+/**
+ * The file and the files it imports, as far as they are beside it (P287): a
+ * message a method takes may be declared in a file the contract imports,
+ * looked for relative to the contract's directory as protoc's include path
+ * most often has it. One not found declares nothing, and a field of its type
+ * claims nothing; the well-known types are never looked for.
+ */
+const sourcesOf = (documentPath: string, text: string, readBeside: ReadDocumentOptions['readBeside']): ProtoSource[] => {
+  const sources: ProtoSource[] = [{ path: documentPath, file: parseProto(text) }];
+  const seen = new Set<string>();
+  for (let index = 0; index < sources.length && sources.length < MAX_IMPORTS; index += 1) {
+    for (const imported of (sources[index] as ProtoSource).file.imports) {
+      if (seen.has(imported) || imported.startsWith('google/protobuf/')) continue;
+      seen.add(imported);
+      const beside = readBeside?.(imported);
+      if (beside !== undefined) sources.push({ path: imported, file: parseProto(beside) });
+    }
+  }
+  return sources;
+};
 
 export const readProtobufDocument = (raw: unknown, options: ReadDocumentOptions): ReadDocumentResult => {
   const { service, documentPath } = options;
   if (typeof raw !== 'string') throw new DocumentError(`${documentPath} is not a .proto file`);
   const file = parseProto(raw);
+  const types = protoTypes(sourcesOf(documentPath, raw, options.readBeside), service);
   const named = options.services;
   const services = file.services.filter((each) => named === undefined || named.includes(each.fullName) || named.includes(each.name));
   if (file.services.length === 0) throw new DocumentError(`${documentPath} declares no service`);
@@ -49,6 +86,8 @@ export const readProtobufDocument = (raw: unknown, options: ReadDocumentOptions)
           request: method.request,
           response: method.response,
           contract: documentPath,
+          // The messages as a procedure's input and output (P287).
+          signature: { params: [{ name: 'request', type: types.refOf(method.request, file.package) }], returns: types.refOf(method.response, file.package) },
           adapter: 'protobuf-document',
           ...declared,
         },
@@ -59,6 +98,6 @@ export const readProtobufDocument = (raw: unknown, options: ReadDocumentOptions)
   }
   return {
     declared: nodes.filter((node) => node.type === 'entry').length,
-    graph: { schemaVersion: SCHEMA_VERSION, repo: service, generatedAt: options.generatedAt ?? new Date().toISOString(), nodes, edges, types: {}, unresolved: [], meta: { ...declared } },
+    graph: { schemaVersion: SCHEMA_VERSION, repo: service, generatedAt: options.generatedAt ?? new Date().toISOString(), nodes, edges, types: types.registry(), unresolved: [], meta: { ...declared } },
   };
 };

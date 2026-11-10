@@ -8,6 +8,34 @@ only one of them moved.
 
 ### Added
 
+- **gRPC messages as payload types, a package's health and reflection
+  services, and what a server and its contract disagree on (P287).** A
+  `.proto` file's messages and enums are read (nested ones, `repeated`,
+  `map`, `optional`, `oneof`, proto2 and editions) and registered as types:
+  fields named as JavaScript reads them (`user_id` as `userId`), the 32-bit
+  numbers as `number`, the 64-bit ones as `number | string`, an enum as its
+  names or a number, a `oneof` as one shape per member chosen, the well-known
+  types other than `Empty` claiming nothing. Every gRPC way in - a server's,
+  a NestJS controller's, a service declared by its contract (following the
+  files it imports) - carries its request and response as a procedure's
+  input and output, and a call carries the request it writes, its keys, and
+  the answer its callback or its promise reads, so `flowatlas contracts`
+  compares a caller's request object with the message: a field the message
+  does not declare, a value of the wrong kind. A field of a message may always
+  be left out by its sender (a new wire rule, `proto-presence`), so no gRPC
+  field is ever an optionality finding. A health service a package hands the
+  server (`addService(health.service, ...)`, `new
+  HealthImplementation(...).addToServer(server)`) is drawn as
+  `grpc.health.v1.Health/Check` and `/Watch`, and a reflection service as
+  `ServerReflectionInfo` of both versions; a package's service of any other
+  contract is a `grpc-package-service` row. A method the contract declares
+  that the server registering the service does not implement is a
+  `grpc-method-unimplemented` finding, and a member an implementation object
+  or a NestJS decorator names that the contract does not declare a
+  `grpc-method-undeclared` finding, both informational. The coverage harness
+  lets a target declare services by a document (`documents`), passed into the
+  configuration it generates.
+
 - **The coverage harness measures whether a join is right, and reads a
   system split across repositories (P278).** A target may carry hand labels,
   `scripts/coverage/labels/<target>.json` (gitignored; the format is

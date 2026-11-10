@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:20:11.244Z",
+  "builtAt": "2026-11-10T15:47:19.273Z",
   "services": [
     {
       "name": "gateway",
@@ -64,6 +64,15 @@
         "request": "FindOrderRequest",
         "response": "Order",
         "contract": "../proto/orders.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:orders#.orders.FindOrderRequest"
+            }
+          ],
+          "returns": "type:orders#.orders.Order"
+        },
         "adapter": "grpc-server",
         "registration": "GrpcMethod",
         "handlerVia": "method"
@@ -85,6 +94,15 @@
         "request": "ListOrdersRequest",
         "response": "Order",
         "contract": "../proto/orders.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:orders#.orders.ListOrdersRequest"
+            }
+          ],
+          "returns": "type:orders#.orders.Order"
+        },
         "adapter": "grpc-server",
         "registration": "GrpcMethod",
         "handlerVia": "method"
@@ -106,6 +124,15 @@
         "request": "OrderUpdate",
         "response": "OrderUpdate",
         "contract": "../proto/orders.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:orders#.orders.OrderUpdate"
+            }
+          ],
+          "returns": "type:orders#.orders.OrderUpdate"
+        },
         "adapter": "grpc-server",
         "registration": "GrpcStreamMethod",
         "handlerVia": "method"
@@ -287,6 +314,11 @@
           "protocol": "grpc",
           "baseUrlEnv": "ORDERS_GRPC_URL"
         },
+        "inputKeys": [
+          "id"
+        ],
+        "inputType": "{id:string}",
+        "outputType": "type:gateway#Order",
         "targetService": "orders"
       }
     },
@@ -310,6 +342,10 @@
           "protocol": "grpc",
           "baseUrlEnv": "ORDERS_GRPC_URL"
         },
+        "inputKeys": [
+          "customerId"
+        ],
+        "inputType": "{customerId:string}",
         "targetService": "orders"
       }
     },
@@ -607,6 +643,10 @@
       "confidence": "static",
       "file": "src/orders.client.ts",
       "line": 26,
+      "params": [
+        "{id:string}"
+      ],
+      "returns": "type:gateway#Order",
       "meta": {
         "via": "link-url",
         "targetService": "orders"
@@ -619,6 +659,9 @@
       "confidence": "static",
       "file": "src/orders.client.ts",
       "line": 30,
+      "params": [
+        "{customerId:string}"
+      ],
       "meta": {
         "via": "link-url",
         "targetService": "orders"
@@ -646,6 +689,103 @@
       "meta": {
         "declKind": "interface",
         "exported": false
+      }
+    },
+    "type:orders#.orders.FindOrderRequest": {
+      "name": "orders.FindOrderRequest",
+      "kind": "object",
+      "declaredIn": "orders#../proto/orders.proto",
+      "structuralHash": "f130d3628fd99765",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "orders.FindOrderRequest"
+      }
+    },
+    "type:orders#.orders.ListOrdersRequest": {
+      "name": "orders.ListOrdersRequest",
+      "kind": "object",
+      "declaredIn": "orders#../proto/orders.proto",
+      "structuralHash": "fd70414e0bfe9370",
+      "fields": [
+        {
+          "name": "customerId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "customer_id"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "orders.ListOrdersRequest"
+      }
+    },
+    "type:orders#.orders.Order": {
+      "name": "orders.Order",
+      "kind": "object",
+      "declaredIn": "orders#../proto/orders.proto",
+      "structuralHash": "9b6c96ba536215ea",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "orders.Order"
+      }
+    },
+    "type:orders#.orders.OrderUpdate": {
+      "name": "orders.OrderUpdate",
+      "kind": "object",
+      "declaredIn": "orders#../proto/orders.proto",
+      "structuralHash": "9b6c96ba536215ea",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "orders.OrderUpdate"
       }
     },
     "type:orders#Order": {

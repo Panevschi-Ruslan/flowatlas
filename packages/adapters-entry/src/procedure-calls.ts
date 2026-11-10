@@ -871,7 +871,7 @@ const declaredFor = (input: TsNode): Type | undefined => {
  * unresolved type at every call, where the contract check already says the
  * end has no type.
  */
-const typeRefOf = (types: Pick<TypeCollector, 'collectType'>, type: Type, at: TsNode): string =>
+export const typeRefOf = (types: Pick<TypeCollector, 'collectType'>, type: Type, at: TsNode): string =>
   type.isAny() ? 'any' : type.isUnknown() ? 'unknown' : types.collectType(type, at);
 
 /** How deep an object written in place is read field by field. */
@@ -914,7 +914,7 @@ const writtenShape = (node: TsNode, types: Pick<TypeCollector, 'collectType'>, d
 };
 
 /** The reference of what a call hands a procedure (P247): declared, else written, else its own type. */
-const sentType = (input: TsNode, types: Pick<TypeCollector, 'collectType'>): string => {
+export const sentType = (input: TsNode, types: Pick<TypeCollector, 'collectType'>): string => {
   const declared = declaredFor(input);
   if (declared !== undefined) return types.collectType(declared, input);
   const written = writtenShape(input, types);

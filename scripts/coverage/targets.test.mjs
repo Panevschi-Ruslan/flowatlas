@@ -4,6 +4,7 @@ import { byRepository } from './figures.mjs';
 import { renderReport } from './report.mjs';
 import {
   TargetError,
+  documentsOf,
   inTarget,
   pinRepository,
   readRootsOf,
@@ -37,6 +38,27 @@ test('a target of one repository is one repository at the target\'s directory', 
   assert.deepEqual(typesOf(single), { 'apps/api': 'nestjs' });
   assert.equal(inTarget(repo, 'apps/web/src/a.ts'), 'apps/web/src/a.ts');
   assert.deepEqual(unpinnedOf(single), []);
+});
+
+test('a target declares a service in another language by a document, its path read inside the repository it is in (P287)', () => {
+  const polyglot = {
+    ...single,
+    documents: [{ name: 'cart', kind: 'protobuf', path: 'pb/shop.proto', services: ['CartService'], baseUrlEnv: ['CART_ADDR'] }],
+  };
+  assert.deepEqual(documentsOf(polyglot), [{ name: 'cart', kind: 'protobuf', path: 'pb/shop.proto', services: ['CartService'], baseUrlEnv: ['CART_ADDR'] }]);
+  assert.deepEqual(documentsOf(single), []);
+  const several = {
+    ...system,
+    repositories: [system.repositories[0], { ...system.repositories[1], documents: [{ name: 'billing', kind: 'openapi', path: 'docs/api.yaml' }] }],
+  };
+  assert.deepEqual(documentsOf(several), [{ name: 'billing', kind: 'openapi', path: 'catalog/docs/api.yaml' }]);
+  assert.throws(() => documentsOf({ ...single, documents: [{ name: 'a b', kind: 'protobuf', path: 'x.proto' }] }), TargetError);
+  assert.throws(() => documentsOf({ ...single, documents: [{ name: 'cart', path: 'x.proto' }] }), TargetError);
+  assert.throws(() => documentsOf({ ...single, documents: [{ name: 'cart', kind: 'protobuf', path: 'x.proto', services: [] }] }), TargetError);
+  assert.throws(
+    () => documentsOf({ ...single, documents: [{ name: 'cart', kind: 'protobuf', path: 'x.proto' }, { name: 'cart', kind: 'protobuf', path: 'y.proto' }] }),
+    TargetError,
+  );
 });
 
 test('a target of several repositories reads each under its own directory', () => {

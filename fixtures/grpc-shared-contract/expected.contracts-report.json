@@ -1,49 +1,184 @@
 {
   "contractsFormatVersion": 5,
   "schemaVersion": 7,
-  "generatedAt": "2026-11-09T22:12:06.381Z",
-  "edges": [],
+  "generatedAt": "2026-11-10T15:47:12.234Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:storefront#src/clients.ts:27:43",
+        "to": "entry:cart:rpc:grpc:shop.CartService/GetCart",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:storefront#src/clients.ts:27:43|hits|entry:cart:rpc:grpc:shop.CartService/GetCart",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{userId:string}",
+        "symbol": "storefront#src/clients.ts:getCart",
+        "writes": [
+          "userId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "cart",
+        "typeId": "type:cart#.shop.GetCartRequest",
+        "symbol": "cart#proto/shop.proto:shop.CartService.GetCart",
+        "declaredBy": "proto/shop.proto"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "proto-presence:userId"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/clients.ts:27:43",
+        "to": "entry:cart:rpc:grpc:shop.CartService/GetCart",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:storefront#src/clients.ts:27:43|hits|entry:cart:rpc:grpc:shop.CartService/GetCart",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "cart",
+        "typeId": "type:cart#.shop.Cart",
+        "symbol": "cart#proto/shop.proto:shop.CartService.GetCart",
+        "declaredBy": "proto/shop.proto"
+      },
+      "receiver": {
+        "service": "storefront",
+        "typeId": "type:storefront#Cart",
+        "symbol": "storefront#src/clients.ts:getCart"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/clients.ts:31:9",
+        "to": "entry:cart:rpc:grpc:shop.CartService/AddItem",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:storefront#src/clients.ts:31:9|hits|entry:cart:rpc:grpc:shop.CartService/AddItem",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{userId:string;productId:string;quantity:1}",
+        "symbol": "storefront#src/clients.ts:addToCart",
+        "writes": [
+          "productId",
+          "quantity",
+          "userId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "cart",
+        "typeId": "type:cart#.shop.AddItemRequest",
+        "symbol": "cart#proto/shop.proto:shop.CartService.AddItem",
+        "declaredBy": "proto/shop.proto"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "proto-presence:productId",
+        "proto-presence:quantity",
+        "proto-presence:userId"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/clients.ts:36:5",
+        "to": "entry:payments:rpc:grpc:shop.PaymentService/Charge",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:storefront#src/clients.ts:36:5|hits|entry:payments:rpc:grpc:shop.PaymentService/Charge",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{orderId:string;amount:number}",
+        "symbol": "storefront#src/clients.ts:checkout",
+        "writes": [
+          "amount",
+          "orderId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "payments",
+        "typeId": "type:payments#.shop.ChargeRequest",
+        "symbol": "payments#index.js:chargeHandler"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "proto-presence:amount",
+        "proto-presence:orderId"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/clients.ts:37:5",
+        "to": "entry:cart:rpc:grpc:shop.CartService/EmptyCart",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:storefront#src/clients.ts:37:5|hits|entry:cart:rpc:grpc:shop.CartService/EmptyCart",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{userId:string}",
+        "symbol": "storefront#src/clients.ts:checkout",
+        "writes": [
+          "userId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "cart",
+        "typeId": "type:cart#.shop.EmptyCartRequest",
+        "symbol": "cart#proto/shop.proto:shop.CartService.EmptyCart",
+        "declaredBy": "proto/shop.proto"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "proto-presence:userId"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:storefront#src/clients.ts:42:35",
+        "to": "entry:catalog:rpc:grpc:shop.CatalogService/ListProducts",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:storefront#src/clients.ts:42:35|hits|entry:catalog:rpc:grpc:shop.CatalogService/ListProducts",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "storefront",
+        "typeId": "{}",
+        "symbol": "storefront#src/clients.ts:listProducts",
+        "writes": [],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "type:catalog#.shop.ListProductsRequest",
+        "symbol": "catalog#src/catalog.ts:CatalogImpl.listProducts"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:."
+      ]
+    }
+  ],
   "findings": [],
   "ignored": [],
   "unchecked": [
     {
       "edge": {
-        "from": "http_out:storefront#src/clients.ts:27:43",
-        "to": "entry:cart:rpc:grpc:shop.CartService/GetCart",
-        "type": "hits"
-      },
-      "edgeKey": "http_out:storefront#src/clients.ts:27:43|hits|entry:cart:rpc:grpc:shop.CartService/GetCart",
-      "direction": "request",
-      "reason": "procedure-input-undeclared",
-      "message": "entry:cart:rpc:grpc:shop.CartService/GetCart declares no input, so what the caller sends is not compared with anything",
-      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
-    },
-    {
-      "edge": {
-        "from": "http_out:storefront#src/clients.ts:27:43",
-        "to": "entry:cart:rpc:grpc:shop.CartService/GetCart",
-        "type": "hits"
-      },
-      "edgeKey": "http_out:storefront#src/clients.ts:27:43|hits|entry:cart:rpc:grpc:shop.CartService/GetCart",
-      "direction": "response",
-      "reason": "procedure-output-inferred",
-      "message": "what entry:cart:rpc:grpc:shop.CartService/GetCart answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared."
-    },
-    {
-      "edge": {
-        "from": "http_out:storefront#src/clients.ts:31:9",
-        "to": "entry:cart:rpc:grpc:shop.CartService/AddItem",
-        "type": "hits"
-      },
-      "edgeKey": "http_out:storefront#src/clients.ts:31:9|hits|entry:cart:rpc:grpc:shop.CartService/AddItem",
-      "direction": "request",
-      "reason": "procedure-input-undeclared",
-      "message": "entry:cart:rpc:grpc:shop.CartService/AddItem declares no input, so what the caller sends is not compared with anything",
-      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
-    },
-    {
-      "edge": {
         "from": "http_out:storefront#src/clients.ts:31:9",
         "to": "entry:cart:rpc:grpc:shop.CartService/AddItem",
         "type": "hits"
@@ -51,20 +186,8 @@
       "edgeKey": "http_out:storefront#src/clients.ts:31:9|hits|entry:cart:rpc:grpc:shop.CartService/AddItem",
       "direction": "response",
       "reason": "procedure-output-inferred",
-      "message": "what entry:cart:rpc:grpc:shop.CartService/AddItem answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared."
-    },
-    {
-      "edge": {
-        "from": "http_out:storefront#src/clients.ts:36:5",
-        "to": "entry:payments:rpc:grpc:shop.PaymentService/Charge",
-        "type": "hits"
-      },
-      "edgeKey": "http_out:storefront#src/clients.ts:36:5|hits|entry:payments:rpc:grpc:shop.PaymentService/Charge",
-      "direction": "request",
-      "reason": "procedure-input-undeclared",
-      "message": "entry:payments:rpc:grpc:shop.PaymentService/Charge declares no input, so what the caller sends is not compared with anything",
-      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+      "message": "what entry:cart:rpc:grpc:shop.CartService/AddItem answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it",
+      "hint": "Type the answer where it is read - the callback's parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads."
     },
     {
       "edge": {
@@ -75,20 +198,8 @@
       "edgeKey": "http_out:storefront#src/clients.ts:36:5|hits|entry:payments:rpc:grpc:shop.PaymentService/Charge",
       "direction": "response",
       "reason": "procedure-output-inferred",
-      "message": "what entry:payments:rpc:grpc:shop.PaymentService/Charge answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared."
-    },
-    {
-      "edge": {
-        "from": "http_out:storefront#src/clients.ts:37:5",
-        "to": "entry:cart:rpc:grpc:shop.CartService/EmptyCart",
-        "type": "hits"
-      },
-      "edgeKey": "http_out:storefront#src/clients.ts:37:5|hits|entry:cart:rpc:grpc:shop.CartService/EmptyCart",
-      "direction": "request",
-      "reason": "procedure-input-undeclared",
-      "message": "entry:cart:rpc:grpc:shop.CartService/EmptyCart declares no input, so what the caller sends is not compared with anything",
-      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+      "message": "what entry:payments:rpc:grpc:shop.PaymentService/Charge answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it",
+      "hint": "Type the answer where it is read - the callback's parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads."
     },
     {
       "edge": {
@@ -99,20 +210,8 @@
       "edgeKey": "http_out:storefront#src/clients.ts:37:5|hits|entry:cart:rpc:grpc:shop.CartService/EmptyCart",
       "direction": "response",
       "reason": "procedure-output-inferred",
-      "message": "what entry:cart:rpc:grpc:shop.CartService/EmptyCart answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared."
-    },
-    {
-      "edge": {
-        "from": "http_out:storefront#src/clients.ts:42:35",
-        "to": "entry:catalog:rpc:grpc:shop.CatalogService/ListProducts",
-        "type": "hits"
-      },
-      "edgeKey": "http_out:storefront#src/clients.ts:42:35|hits|entry:catalog:rpc:grpc:shop.CatalogService/ListProducts",
-      "direction": "request",
-      "reason": "procedure-input-undeclared",
-      "message": "entry:catalog:rpc:grpc:shop.CatalogService/ListProducts declares no input, so what the caller sends is not compared with anything",
-      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+      "message": "what entry:cart:rpc:grpc:shop.CartService/EmptyCart answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it",
+      "hint": "Type the answer where it is read - the callback's parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads."
     },
     {
       "edge": {
@@ -123,16 +222,16 @@
       "edgeKey": "http_out:storefront#src/clients.ts:42:35|hits|entry:catalog:rpc:grpc:shop.CatalogService/ListProducts",
       "direction": "response",
       "reason": "procedure-output-inferred",
-      "message": "what entry:catalog:rpc:grpc:shop.CatalogService/ListProducts answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it",
-      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared."
+      "message": "what entry:catalog:rpc:grpc:shop.CatalogService/ListProducts answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it",
+      "hint": "Type the answer where it is read - the callback's parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads."
     }
   ],
   "summary": {
-    "edges": 0,
+    "edges": 6,
     "shared": 0,
-    "identical": 0,
-    "hash_differs": 0,
-    "unchecked": 10,
+    "identical": 1,
+    "hash_differs": 5,
+    "unchecked": 4,
     "errors": 0,
     "warnings": 0,
     "infos": 0,

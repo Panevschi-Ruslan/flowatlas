@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:12:04.061Z",
+  "builtAt": "2026-11-10T15:47:09.862Z",
   "configHash": "0a68605c088b",
   "services": [
     {
@@ -10,9 +10,9 @@
       "extractor": "protobuf-document",
       "nodes": 6,
       "edges": 3,
-      "types": 0,
+      "types": 5,
       "unresolved": 0,
-      "durationMs": 3
+      "durationMs": 13
     },
     {
       "name": "catalog",
@@ -21,9 +21,9 @@
       "extractor": "@flowatlas/extractor-nestjs",
       "nodes": 8,
       "edges": 3,
-      "types": 0,
+      "types": 6,
       "unresolved": 1,
-      "durationMs": 1802,
+      "durationMs": 3044,
       "packages": {
         "name": "grpc-shared-contract-catalog",
         "runtime": [
@@ -37,11 +37,11 @@
       "repo": "./payments",
       "type": "grpc",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 4,
+      "nodes": 6,
       "edges": 2,
-      "types": 0,
+      "types": 5,
       "unresolved": 0,
-      "durationMs": 1602,
+      "durationMs": 3025,
       "packages": {
         "name": "grpc-shared-contract-payments",
         "runtime": [
@@ -61,7 +61,7 @@
       "edges": 22,
       "types": 1,
       "unresolved": 2,
-      "durationMs": 2273,
+      "durationMs": 3596,
       "packages": {
         "name": "grpc-shared-contract-storefront",
         "runtime": [
@@ -108,7 +108,7 @@
     "duplicated": []
   },
   "types": {
-    "total": 1,
+    "total": 17,
     "sharedPackage": 0
   },
   "unresolved": [
@@ -139,9 +139,9 @@
     }
   ],
   "totals": {
-    "nodes": 42,
+    "nodes": 44,
     "edges": 35,
-    "types": 1,
+    "types": 17,
     "missed": 5,
     "sites": 11,
     "notes": 0,

@@ -574,6 +574,9 @@ const isOpaqueEntry = (entry: TypeEntry | undefined): boolean =>
  *
  * Those are the only shapes worth walking once the hashes have already matched.
  */
+/** A message or a choice of a gRPC contract, registered by the `.proto` reader (P287). */
+const isProtobufEntry = (entry: TypeEntry): boolean => entry.meta?.['declaredBy'] === 'protobuf';
+
 export const hasWireAnnotation = (entry: TypeEntry | undefined): boolean =>
   (entry?.fields ?? []).some(
     (field) =>
@@ -825,7 +828,8 @@ const compareFields = (
     // and its presence was never in question.
     if (have.opaque || want.opaque) continue;
 
-    if (have.optional !== want.optional) {
+    // A gRPC field may always be left out (P287): its optionality is no question.
+    if (have.optional !== want.optional && !want.rules.includes('proto-presence')) {
       record(walk, {
         kind: 'optionality_mismatch',
         path: here,
@@ -970,7 +974,10 @@ const compareEntries = (
   // useful than either guessing or going quiet (I5).
   if (depth <= 0) {
     walk.rules.add(at('depth-cap', path));
-    if (sameShape) return;
+    // A gRPC message's hash can never equal a language's type for it - a
+    // 64-bit integer is `number | string` to the one and `number` to the
+    // other - so below the cut it says nothing either way (P287).
+    if (sameShape || isProtobufEntry(senderEntry) || isProtobufEntry(receiverEntry)) return;
     record(walk, {
       kind: 'type_mismatch',
       path,

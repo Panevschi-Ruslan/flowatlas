@@ -37,6 +37,28 @@ describe('a service declared by a .proto file (P274)', () => {
   });
 });
 
+describe('the messages of a service declared by a .proto file (P287)', () => {
+  it('carries each method\'s messages as its input and output, read through the files the contract imports', () => {
+    const contract = `
+      syntax = "proto3";
+      package shop;
+      import "common/money.proto";
+      service PaymentService { rpc Charge (ChargeRequest) returns (ChargeReply); }
+      message ChargeRequest { shop.common.Money amount = 1; string card_number = 2; }
+      message ChargeReply { string transaction_id = 1; }
+    `;
+    const beside: Record<string, string> = { 'common/money.proto': 'syntax = "proto3"; package shop.common; message Money { string currency_code = 1; int64 units = 2; }' };
+    const { graph } = readProtobufDocument(contract, { service: 'payment', documentPath: 'pb/shop.proto', readBeside: (path) => beside[path], generatedAt: 'now' });
+    const [entry] = graph.nodes.filter((node) => node.type === 'entry');
+    expect(entry?.meta?.['signature']).toEqual({ params: [{ name: 'request', type: 'type:payment#.shop.ChargeRequest' }], returns: 'type:payment#.shop.ChargeReply' });
+    expect(graph.types['type:payment#.shop.ChargeRequest']?.fields?.map((field) => [field.name, field.type, field.optional])).toEqual([
+      ['amount', 'type:payment#.shop.common.Money', true],
+      ['cardNumber', 'string', false],
+    ]);
+    expect(graph.types['type:payment#.shop.common.Money']).toMatchObject({ declaredIn: 'payment#common/money.proto' });
+  });
+});
+
 describe('a gRPC call sent where nothing here can read (P274)', () => {
   const entry = (repo: string): GraphNode => ({ id: `entry:${repo}`, type: 'entry', label: 'x', repo, kind: 'rpc', meta: { key: 'grpc:shop.CartService/GetCart', call: 'unary' } });
   const call: GraphNode = { id: 'c', type: 'http_out', label: 'c', repo: 'web', kind: 'rpc', meta: { procedure: 'grpc:shop.CartService/GetCart', call: 'unary' } };

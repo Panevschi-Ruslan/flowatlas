@@ -83,7 +83,7 @@ export type { DeployedEntryKind, HttpMethod, ReachedAs, SiteLeafType } from './i
 export { whenFree } from './when-free.js';
 
 export { ENTRY_KINDS, NODE_TYPES, isEntryKind } from './model/nodes.js';
-export { SENDS_META, wayInBodyRead } from './model/way-in.js';
+export { IMPLEMENTED_BY_META, SENDS_META, wayInBodyRead } from './model/way-in.js';
 export type { EntryKind, GraphNode, NodeType } from './model/nodes.js';
 
 export {
@@ -333,7 +333,9 @@ export {
 } from './positioned-document.js';
 export type { DefinitionFormat, PathStep, PositionedDocument } from './positioned-document.js';
 export { grpcCallKind, grpcEntryKey, parseProto, sameMethodName } from './protobuf.js';
-export type { GrpcCallKind, ProtoFile, ProtoMethod, ProtoService } from './protobuf.js';
+export type { GrpcCallKind, ProtoEnum, ProtoField, ProtoFile, ProtoMessage, ProtoMethod, ProtoService } from './protobuf.js';
+export { GRPC_PACKAGE_CONTRACTS, protoJsonName, protoTypes } from './protobuf-types.js';
+export type { GrpcPackageContract, ProtoSource, ProtoTypes } from './protobuf-types.js';
 export { readExpressionDocument, UnreadMember } from './positioned-expression.js';
 
 export {

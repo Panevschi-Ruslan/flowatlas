@@ -60,6 +60,8 @@ export interface KindedRow {
 const NOTES: readonly string[] = [
   // A gRPC service no .proto file of the repository declares, drawn from what the code writes (P274)
   'grpc-contract-unread',
+  // A gRPC service a package implements whose contract is none this knows (P287)
+  'grpc-package-service',
   // A call of a framework module that the options it is handed rule out (P255)
   'framework-module-skipped',
   // A feature the files use that the build's own flag turns off: Nitro's tasks (P262)
@@ -151,6 +153,9 @@ const FINDINGS: readonly string[] = [
   // Two declarations where the framework takes one, or one it never serves
   'route-claimed-twice',
   'graphql-field-resolved-twice',
+  // A gRPC contract's method a server does not implement, and a member it implements the contract does not declare (P287)
+  'grpc-method-unimplemented',
+  'grpc-method-undeclared',
   // A federated graph its composition refuses, or a supergraph its subgraphs moved past (P241)
   'graphql-composition-conflict',
   'graphql-supergraph-drift',
@@ -531,6 +536,8 @@ const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
     [
       'route-claimed-twice',
       'graphql-field-resolved-twice',
+      'grpc-method-unimplemented',
+      'grpc-method-undeclared',
       'graphql-composition-conflict',
       'graphql-supergraph-drift',
       'graphql-entity-type-unsaid',

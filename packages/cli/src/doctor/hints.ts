@@ -420,6 +420,12 @@ export const HINTS: Readonly<Record<string, HintTemplate>> = Object.freeze({
     'A gRPC server registers a service, or a client is made for one, that cannot be named: no .proto file of the repository declares it, the generated code is not there to read, or its name is decided at run time. Its methods are not drawn. Keep the contract in the repository and name the service as text.',
   'grpc-contract-unread': () =>
     'A gRPC service is named and no .proto file of the repository declares it, so its methods are named as the code writes them and how each is called is not known. Keep the .proto file it is generated from in the repository.',
+  'grpc-method-unimplemented': () =>
+    'A .proto contract declares a method of a service, and the server that registers the service implements no member for it: a client calling it is answered UNIMPLEMENTED. Informational where the method is not meant to be called yet. Implement it where the service is registered, or take it out of the contract.',
+  'grpc-method-undeclared': () =>
+    'A server implements a member for a gRPC service that the service\'s .proto contract does not declare, so no client of the contract can call it: usually a method renamed on one side only. Declare it in the contract, or correct its name.',
+  'grpc-package-service': () =>
+    'A gRPC server registers a service a package implements, and the package\'s contract is not one this knows (health checking and reflection are known and drawn), so its methods are not drawn. Load its .proto file from the repository and register the service by name to have them drawn.',
   'grpc-method-unserved': () =>
     'A service calls gRPC methods that a .proto file of the repository declares and that no configured service implements: the service answering them is written in another language or not configured. Declare it by the file (document kind protobuf, with the services it answers), or add the repository that implements it.',
   'mcp-name-dynamic': () =>
@@ -907,6 +913,8 @@ export const FINDING_LABELS: Readonly<Record<string, readonly [one: string, many
   'route-shadowed': ['route a worker answers first', 'routes a worker answers first'],
   'route-claimed-twice': ['route claimed twice', 'routes claimed twice'],
   'graphql-field-resolved-twice': ['GraphQL field resolved twice', 'GraphQL fields resolved twice'],
+  'grpc-method-unimplemented': ['gRPC method its server does not implement', 'gRPC methods their servers do not implement'],
+  'grpc-method-undeclared': ['gRPC member its contract does not declare', 'gRPC members their contracts do not declare'],
   'graphql-composition-conflict': ['federated field composition refuses', 'federated fields composition refuses'],
   'graphql-supergraph-drift': ['supergraph field out of date', 'supergraph fields out of date'],
   'graphql-auth-not-checked': ['gateway that checks no authorization directive', 'gateways that check no authorization directive'],

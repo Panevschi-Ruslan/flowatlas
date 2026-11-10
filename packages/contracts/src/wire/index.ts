@@ -17,6 +17,7 @@ import { classTransformer } from './class-transformer.js';
 import { dateString } from './date-string.js';
 import { objectidString } from './objectid-string.js';
 import { optionalAcceptsNull } from './optional-accepts-null.js';
+import { protoPresence } from './proto-presence.js';
 import type { FieldView, WireRule } from './rule.js';
 import { setMapJson } from './set-map-json.js';
 import { undefinedVanishes } from './undefined-vanishes.js';
@@ -24,6 +25,8 @@ import { undefinedVanishes } from './undefined-vanishes.js';
 export const WIRE_RULES: readonly WireRule[] = [
   classTransformer,
   undefinedVanishes,
+  // After vanishing, which may make a field optional too; before the substitutions, which leave optionality alone.
+  protoPresence,
   optionalAcceptsNull,
   dateString,
   bigintString,
@@ -103,6 +106,7 @@ export {
   dateString,
   objectidString,
   optionalAcceptsNull,
+  protoPresence,
   setMapJson,
   undefinedVanishes,
 };

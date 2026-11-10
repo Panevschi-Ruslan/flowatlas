@@ -1,5 +1,5 @@
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
-import { parseProto, sameMethodName, toPosixPath, type ProtoFile, type ProtoMethod, type ProtoService } from '@flowatlas/core';
+import { parseProto, protoTypes, sameMethodName, toPosixPath, type ProtoFile, type ProtoMethod, type ProtoService, type ProtoTypes } from '@flowatlas/core';
 import type { FileSystemHost } from 'ts-morph';
 
 /**
@@ -54,6 +54,8 @@ export interface Contracts {
   file(spec: string, fromDir: string): Contract | undefined;
   /** A contract's path as a node records it: relative to the service's directory. */
   pathOf(contract: Contract): string;
+  /** The messages of every contract here as payload types, registered under a repository (P287). */
+  types(repo: string): ProtoTypes;
 }
 
 /** Directories no contract of the repository's own is kept in. */
@@ -69,6 +71,9 @@ const MAX_ASCENT = 12;
 const PROJECT_MARK = 'flowatlas.config.json';
 
 const cache = new WeakMap<FileSystemHost, Map<string, readonly Contract[]>>();
+
+/** The payload types of one set of contracts, per repository they are registered under. */
+const typesCache = new WeakMap<readonly Contract[], Map<string, ProtoTypes>>();
 
 const exists = (fs: FileSystemHost, path: string): boolean => {
   try {
@@ -167,6 +172,13 @@ export const contractsOf = (fs: FileSystemHost, repoDir: string): Contracts => {
       return ends.length === 1 ? ends[0] : undefined;
     },
     pathOf: (contract) => toPosixPath(relative(repoDir, contract.path)),
+    types: (repo) => {
+      const byRepo = typesCache.get(all) ?? new Map<string, ProtoTypes>();
+      typesCache.set(all, byRepo);
+      const found = byRepo.get(repo) ?? protoTypes(all.map((contract) => ({ path: toPosixPath(relative(repoDir, contract.path)), file: contract.file })), repo);
+      byRepo.set(repo, found);
+      return found;
+    },
   };
 };
 

@@ -78,6 +78,7 @@ export {
   classTransformer,
   dateString,
   objectidString,
+  protoPresence,
   setMapJson,
   undefinedVanishes,
   viewOf,

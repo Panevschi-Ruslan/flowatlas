@@ -35,6 +35,7 @@ export const grpcCallsPass: NestExtractorPass = definePass('grpc-calls', (ctx: N
       };
     },
     report: (row) => ctx.report(row),
+    types: ctx.types,
   });
   withdrawDescribedCalls(ctx.builder, new Set(read.map(({ file, line, call }) => describedCallKey(file, line, call))), ['call-dynamic-receiver']);
 });

@@ -220,6 +220,28 @@ counting rule's route sites, the requests it sends and how many joined a way in
 **of another repository**, and the messages it sends that another repository
 consumes. A report of one repository gains neither section.
 
+## Services declared by a document
+
+A system written in several languages is read only as far as the readers go.
+A service in another language is configured the way a user configures it, by
+the contract the repository shares with it, so a target may list them:
+
+```json
+"documents": [
+  { "name": "cart", "kind": "protobuf", "path": "pb/shop.proto", "services": ["CartService"], "baseUrlEnv": ["CART_ADDR"] }
+]
+```
+
+Each entry becomes a service of the generated configuration, `document: {
+kind, path, services }` with `baseUrlEnv` and `hosts` beside it where given;
+`path` is relative to the target's directory, or, for a target of several
+repositories, written on the repository it is in and relative to its clone.
+It is configuration and not tuning: it says what the code cannot - which
+service answers a contract it never implements here - and the report lists
+each as `<kind> document` among the services it read by. A name that is not
+one plain word, a document with no `kind` or `path`, a name given twice, or a
+list that is empty is refused before anything is cloned.
+
 ## The read gate
 
 Every measurement is also an assertion, held in

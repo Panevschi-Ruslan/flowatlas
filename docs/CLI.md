@@ -774,6 +774,35 @@ Rows: `grpc-service-unread`, `grpc-contract-unread` and
 `grpc-method-unserved` (`fixtures/grpc-shared-contract`,
 `fixtures/nest-grpc-services`).
 
+**gRPC messages, a package's services, and a contract a server disagrees
+with (P287).** Each method's request and response are the contract's
+messages, registered as types (`type:<service>#.shop.GetCartRequest`) and
+carried by its way in as a procedure's input and output, so `flowatlas
+contracts` compares the request object a call writes, and the answer its
+callback or promise reads, with them. A field is named as JavaScript reads it
+(`user_id` as `userId`); `int32`, `uint32`, `float`, `double` and the like
+are `number`, the 64-bit integers `number | string`, `bool` `boolean`,
+`bytes` `Buffer | string`, an enum its value names or a number, `repeated T`
+`T[]`, a `map` an `object` not compared key by key, a `oneof` one shape per
+member chosen, `google.protobuf.Empty` an empty message and every other
+well-known type nothing compared. A field may always be left out by its
+sender - it arrives as its default - which the wire rule `proto-presence`
+says, so only what a field holds is compared; a proto2 `required` field stays
+required. A service declared by its contract follows the files the contract
+imports, relative to its directory. A health service a package hands the
+server, `addService(health.service, ...)` or `new
+HealthImplementation(...).addToServer(server)`, is drawn as
+`grpc.health.v1.Health/Check` and `/Watch` with the protocol's own messages,
+and `new ReflectionService(...).addToServer(server)` as
+`ServerReflectionInfo` of `grpc.reflection.v1` and `v1alpha`; a package's
+service of any other contract is a `grpc-package-service` row. A method the
+contract declares that the server registering the service does not implement
+(an object, a class instance, or no NestJS controller) is a
+`grpc-method-unimplemented` finding, and a member an implementation object or
+a NestJS decorator names that the contract does not declare a
+`grpc-method-undeclared` finding, both informational
+(`fixtures/grpc-contract-messages`).
+
 **Several GraphQL endpoints, and the client each operation is sent with
 (P266).** A NestJS server that imports `GraphQLModule.forRoot*` more than once
 serves each at its own path: the options are read in place, from a
@@ -3604,7 +3633,7 @@ any reader writes a reason `doctor` does not know. By what they are about:
 | Routes and their addresses | `route-path-dynamic`, `route-mount-unread`, `route-registry-unread`, `route-file-not-served`, `route-claimed-twice`, `route-module-not-found`, `route-verb-unread`, `route-handler-unread`, `route-handler-anonymous`, `server-action-unread`, `middleware-matcher-unread`, `mcp-name-dynamic` (P270) |
 | A described framework that matched nothing | `entry-http-description-inactive`, `entry-http-types-unmatched`, `entry-http-routes-unmatched`, `entry-http-routes-unplaced`, `entry-procedures-description-inactive` |
 | Procedures | `procedure-router-unread`, `procedure-key-dynamic`, `procedure-branch-unread`, `procedure-trees-unmatched`, `procedure-members-unmatched`, `procedure-path-dynamic`, `procedure-not-found`, `procedure-ambiguous`, `procedure-call-mismatch`, `procedure-link-dynamic`, `procedure-link-socket` (info), `procedure-link-unserved`, `procedure-prefix-unread`, `procedure-contract-unread`, `procedure-unmounted` (info, P270) |
-| gRPC services and calls (P274) | `grpc-service-unread` (a service registered, or a client made, that cannot be named), `grpc-contract-unread` (info: a service no `.proto` file of the repository declares, its methods named as written), `grpc-method-unserved` (a method a contract declares that nothing configured implements) |
+| gRPC services and calls (P274) | `grpc-service-unread` (a service registered, or a client made, that cannot be named), `grpc-contract-unread` (info: a service no `.proto` file of the repository declares, its methods named as written), `grpc-method-unserved` (a method a contract declares that nothing configured implements), `grpc-package-service` (info: a service a package implements whose contract is not known, its methods not drawn), `grpc-method-unimplemented` (info finding: a method the contract declares that the server registering the service does not implement), `grpc-method-undeclared` (info finding: a member a server implements for a service that its contract does not declare) |
 | Requests between services and from a browser | `dynamic-http-url`, `unknown-base-url-env`, `service-binding-unknown`, `target-route-not-found`, `ambiguous-route`, `ambiguous-route-application`, `ambiguous-route-api`, `route-api-guessed`, `base-url-from-files`, `base-url-from-name`, `ambiguous-route-target`, `route-wildcard-only`, `route-mount-assumed-empty`, `api-path-dynamic`, `api-method-dynamic`, `api-base-unknown`, `api-base-override-unread`, `api-client-unread`, `api-client-base-unread` |
 | The gate in front of a route | `route-unguarded`, `route-guard-skipped`, `route-checked-in-body` (info), `route-public-declared` (info), `marker-reason-missing` (info), `route-shadowed` |
 | What a framework's build would have written (P240) | `aliases-from-convention` (info), `aliases-from-config` (info), `implicit-imports-from-convention` (info), `implicit-import-ambiguous`, `framework-layer-unread`, `framework-setting-dynamic` |

@@ -96,6 +96,58 @@ export const typesOf = (target) =>
     ),
   );
 
+/** A list of names a document entry may carry: `services`, `baseUrlEnv`, `hosts`. */
+const NAME_LISTS = ['services', 'baseUrlEnv', 'hosts'];
+
+/**
+ * The services the target declares by a document (P287), each as `{ name,
+ * kind, path, services?, baseUrlEnv?, hosts? }` with `path` relative to the
+ * target's directory.
+ *
+ * A system whose services are written in several languages is read only as
+ * far as its readers go; a service in another language is configured by the
+ * contract the repository shares with it, `document: { kind, path, services }`,
+ * which is configuration a real user writes and `link` cannot guess. So a
+ * target may say it, on the target for one repository or on each repository
+ * of several, `documents: [{ name, kind, path, services }]`, and the harness
+ * adds each to the configuration it generates. Refused rather than guessed: a
+ * name that is not a word, a document with no kind or path, a name given
+ * twice.
+ */
+export const documentsOf = (target) => {
+  const found = [];
+  const seen = new Set();
+  const lists = Array.isArray(target.repositories)
+    ? target.repositories.map((entry) => ({ repo: { dir: entry.name }, documents: entry.documents }))
+    : [{ repo: { dir: '.' }, documents: target.documents }];
+  for (const { repo, documents } of lists) {
+    if (documents === undefined) continue;
+    if (!Array.isArray(documents)) throw new TargetError(`${target.name}: \`documents\` is not a list`);
+    for (const document of documents) {
+      const { name, kind, path } = document ?? {};
+      if (typeof name !== 'string' || !PLAIN.test(name)) {
+        throw new TargetError(`${target.name}: every document needs a \`name\` that is one plain word, and one has ${JSON.stringify(name)}`);
+      }
+      if (seen.has(name)) throw new TargetError(`${target.name}: two documents are named ${name}`);
+      seen.add(name);
+      if (typeof kind !== 'string' || kind === '' || typeof path !== 'string' || path === '') {
+        throw new TargetError(`${target.name}: document ${name} needs a \`kind\` and a \`path\``);
+      }
+      const lists = {};
+      for (const key of NAME_LISTS) {
+        const value = document[key];
+        if (value === undefined) continue;
+        if (!Array.isArray(value) || value.length === 0 || value.some((each) => typeof each !== 'string' || each === '')) {
+          throw new TargetError(`${target.name}: document ${name}'s \`${key}\` is not a list of names`);
+        }
+        lists[key] = value;
+      }
+      found.push({ name, kind, path: inTarget(repo, path), ...lists });
+    }
+  }
+  return found;
+};
+
 /** The repositories not pinned yet, by a name a person can find in the list. */
 export const unpinnedOf = (target) =>
   repositoriesOf(target)

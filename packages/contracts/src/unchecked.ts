@@ -215,6 +215,12 @@ export const uncheckedNote = (
     // states the answer at all: the binding types it where it is read. A plain
     // request to the procedure's route is compared with the output (P256).
     case 'procedure-output-inferred':
+      if (detail === 'callback') {
+        return {
+          message: `what ${subject} answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it`,
+          hint: 'Type the answer where it is read - the callback\'s parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads.',
+        };
+      }
       return detail === 'hook'
         ? {
             message: `what ${subject} answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it`,

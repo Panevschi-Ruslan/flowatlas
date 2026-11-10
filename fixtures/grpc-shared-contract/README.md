@@ -11,7 +11,9 @@ gRPC services and their callers, one contract shared by all of them (P274):
   by its bare name, `loadSync('shop.proto')`, which its build copies in, and
   registers `loadPackageDefinition(...).shop.PaymentService.service` with
   `{ charge: chargeHandler }`. It claims `PAYMENTS_ADDR` as its address. The
-  health service it registers from a package is not one of its own ways in.
+  health service it registers from a package is drawn by the protocol's own
+  contract, `grpc.health.v1.Health/Check` and `/Watch`, with no code of its
+  own behind them (P287).
 - `catalog` registers `CatalogServiceService`, imported from generated code
   nobody committed (`./gen/shop_grpc_pb`), with an instance of `CatalogImpl`.
   The contract says which service that is and how each method is called:

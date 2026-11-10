@@ -247,13 +247,14 @@ const procedureExchanges = (
   const answering = party(lookup, handler.service, declared.returns, handler.symbol);
   const reading = party(lookup, caller.service, edge.returns, caller.symbol);
   // No answer type on the request: the call hands the answer to a hook or a
-  // query's options, typed there by the binding's inference (P58).
+  // query's options, typed there by the binding's inference (P58), or a gRPC
+  // call to a callback whose answer is not typed (P287).
   const response: Exchange = {
     ...both('response', answering, reading),
     procedure: true,
     ...(typeof asked['outputType'] === 'string'
       ? {}
-      : { blocked: { reason: 'procedure-output-inferred' as const, subject: edge.to, detail: 'hook' } }),
+      : { blocked: { reason: 'procedure-output-inferred' as const, subject: edge.to, detail: asked['client'] === 'grpc' ? 'callback' : 'hook' } }),
   };
   return [request, response];
 };
