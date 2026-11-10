@@ -101,6 +101,50 @@ export function b(name: string) { return new Worker(name); }
     expect(names(second as NewExpression)[0]).toContain('nothing calls its function');
   });
 
+  it('reads the queue a base class keeps from each class that extends it, through a class a condition chooses (P286)', () => {
+    const { 'jobs.ts': jobs } = files({
+      'jobs.ts': `
+import { Worker } from 'bullmq';
+enum Topic { Mail = 'mail', Billing = 'billing' }
+class Client {
+  static readonly paid = false;
+  open(topic: string, processor: unknown) {
+    const Made = !Client.paid ? Worker : require('worker-paid').PaidWorker;
+    return new Made(topic, processor);
+  }
+}
+class WorkerBase {
+  constructor(public readonly topic: Topic, private readonly client: Client) {}
+  start(processor: unknown) { this.client.open(this.topic, processor); }
+}
+class MailWorker extends WorkerBase { constructor(client: Client) { super(Topic.Mail, client); } }
+class BillingWorker extends WorkerBase { constructor(client: Client) { super(Topic.Billing, client); } }
+class LateBilling extends BillingWorker {}
+class Any extends WorkerBase {}
+export const custom = new Any('audit' as Topic, new Client());
+`,
+    });
+    const made = (jobs as SourceFile).getDescendantsOfKind(SyntaxKind.NewExpression).find((each) => each.getExpression().getText() === 'Made') as NewExpression;
+    expect(constructsFrom(made, 'Worker', ['bullmq'])).toBe(true);
+    expect(names(made)).toEqual(['audit', 'billing', 'mail']);
+    const through = namesHandedTo(made.getArguments()[0] as never, { sharedPackages: [] }).map((reading) => reading.through.join(' > '));
+    expect(through).toContain('Client.open > MailWorker');
+    expect(through).toContain('Client.open > new Any');
+  });
+
+  it('says why where nothing builds the class a field is kept by (P286)', () => {
+    const { 'jobs.ts': jobs } = files({
+      'jobs.ts': `
+import { Worker } from 'bullmq';
+export class Lone {
+  constructor(private readonly topic: string) {}
+  start() { return new Worker(this.topic); }
+}
+`,
+    });
+    expect(names(workerIn(jobs as SourceFile))[0]).toContain('nothing here builds it');
+  });
+
   it('is not a worker unless the class is the transport’s', () => {
     const { 'jobs.ts': jobs } = files({
       'jobs.ts': `

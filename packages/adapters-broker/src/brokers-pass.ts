@@ -63,7 +63,7 @@ import {
   type ReceiverEvidence,
 } from './call-site.js';
 import { addressOf, appliesAt, collapsed, messageValue, readAddress, readWritten, type AddressedElement } from './address.js';
-import { forwardedPublish, heldAt, waits } from './forwarded.js';
+import { forwardedPublish, heldAtSite, heldValues, waits, type Held } from './forwarded.js';
 import { constructsFrom, dispatchRecord, functionBehind, handlerInRecord, namesHandedTo, type HandlerTarget } from './constructed.js';
 import { payloadParameter, typeAtPath } from './payload.js';
 import { isResolved, nameForKind, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
@@ -175,6 +175,42 @@ const jobsNamed = (expressions: readonly TsNode[]): { jobName: string | null; jo
   if (distinct.length === 1) return { jobName: distinct[0] ?? null };
   if (distinct.length > 1 && distinct.every((name): name is string => name !== null)) return { jobName: null, jobNames: distinct.sort() };
   return { jobName: null };
+};
+
+/** Whether a value followed out is several values, not one written with several branches (P286). */
+const severalOf = (held: Held): boolean =>
+  held.kind === 'written' && (held.choices?.length ?? 0) > 1 && !Node.isConditionalExpression(held.expression);
+
+/** The job a value followed out names, or each it may name (P286). */
+const jobsHeld = (held: Held | undefined): { jobName: string | null; jobNames?: string[] } =>
+  held?.kind !== 'written' ? { jobName: null } : jobsNamed(held.choices ?? [held.expression]);
+
+/**
+ * What each element of a publish's address waits on, where one of them waits
+ * on somebody further out (P267, P286): the place each locator reached for
+ * it, followed past what the walk bound and the path it did not take. An
+ * element read where the call is written is `undefined`, and stays as it
+ * was read. Absent where nothing waits.
+ */
+const addressesWaiting = (
+  call: CallExpression,
+  locators: readonly NameLocator[],
+  elements: readonly AddressedElement[],
+  context: LocatorContext,
+): (Held | undefined)[] | undefined => {
+  if (elements.length === 0 || elements.every((element) => isResolved(element.resolution))) return undefined;
+  const located = locators.map((locator) => locatedSlots(call, locator, context));
+  const held = elements.map((element, index): Held | undefined => {
+    if (isResolved(element.resolution)) return undefined;
+    for (const slots of located) {
+      const slot = slots.length === elements.length ? slots[index] : slots.length === 1 && elements.length === 1 ? slots[0] : undefined;
+      if (slot === undefined) continue;
+      const value = heldValues(slot.expression, slot.reached ? [] : (slot.rest ?? []), call, slot.bound);
+      if (waits(value)) return value;
+    }
+    return undefined;
+  });
+  return held.some((value) => value !== undefined) ? held : undefined;
 };
 
 /** Where a publish's message is written, as its description says. */
@@ -400,15 +436,11 @@ export const extractBrokers = (ctx: PassContext): void => {
     const [first] = namedAt;
     const named = first !== undefined && namedAt.every((each) => each.getText() === first.getText()) ? first : undefined;
     const carried = messageAt(call, pattern, context);
-    const job = named === undefined ? undefined : heldAt(named);
-    const message = carried === undefined ? undefined : heldAt(carried);
-    const [only] = elements;
+    const job = named === undefined ? undefined : heldAtSite(named, call);
+    const message = carried === undefined ? undefined : heldAtSite(carried, call);
     const [part, ...more] = addressOf(pattern);
-    const address =
-      elements.length !== 1 || only === undefined || isResolved(only.resolution) || part === undefined || more.length > 0 || 'literal' in part
-        ? undefined
-        : locatedExpressions(call, part.at, context).map(heldAt).find(waits);
-    if (address === undefined) {
+    const addresses = part === undefined || more.length > 0 || 'literal' in part ? undefined : addressesWaiting(call, part.at, elements, context);
+    if (addresses === undefined) {
       // The queue read here and the job decided further out (P271): drawn
       // where each caller names the job, on the queue read here.
       if (job === undefined || !waits(job) || elements.length === 0 || !elements.every((element) => isResolved(element.resolution))) return undefined;
@@ -418,8 +450,8 @@ export const extractBrokers = (ctx: PassContext): void => {
         return {
           site: site.site,
           elements: [...elements],
-          jobName: decided?.kind === 'written' ? jobNameOf(decided.expression) : null,
-          payload: handed === undefined || handed.kind === 'unread' ? undefined : messageValue(handed.expression),
+          ...jobsHeld(decided),
+          payload: handed === undefined || handed.kind === 'unread' || severalOf(handed) ? undefined : messageValue(handed.expression),
           undecided: site.undecided,
           through: site.through,
           writtenIn: undefined,
@@ -427,31 +459,39 @@ export const extractBrokers = (ctx: PassContext): void => {
       });
       return { readings, here: walked.here };
     }
-    const walked = forwardedPublish([address, job, message], ctx.di, 2);
+    const count = addresses.length;
+    const walked = forwardedPublish([...addresses, job, message], ctx.di, count + 1, count);
     const readings = walked.sites.map((site): ForwardedReading => {
-      const [queue, job, message] = site.values;
-      const element: AddressedElement =
-        queue?.kind === 'written' && part !== undefined
-          ? readWritten(queue.expression, part, ctx.config)
-          : {
-              resolution: {
-                unresolved: 'channel-dynamic',
-                text: (queue?.expression ?? site.site).getText().slice(0, 60),
-                why:
-                  queue?.kind === 'unread'
-                    ? queue.why
-                    : `The queue is handed in from further out than ${site.through.length} calls, which is as far as it is followed.`,
-              },
-            };
+      const queues = site.values.slice(0, count);
+      const [job, message] = site.values.slice(count);
+      const read = queues.flatMap((queue, index): AddressedElement[] => {
+        // An element read where the call is written stays as it was read there.
+        if (queue === undefined) return elements[index] === undefined ? [] : [elements[index] as AddressedElement];
+        if (queue.kind === 'written' && part !== undefined) {
+          return (queue.choices ?? [queue.expression]).map((each) => readWritten(each, part, ctx.config));
+        }
+        return [
+          {
+            resolution: {
+              unresolved: 'channel-dynamic',
+              text: (queue.expression ?? site.site).getText().slice(0, 60),
+              why:
+                queue.kind === 'unread'
+                  ? queue.why
+                  : `The queue is handed in from further out than ${site.through.length} calls, which is as far as it is followed.`,
+            },
+          },
+        ];
+      });
       return {
         site: site.site,
-        elements: [{ ...element, resolution: nameForKind(element.resolution, spec.channelKind) }],
+        elements: read.map((element) => ({ ...element, resolution: nameForKind(element.resolution, spec.channelKind) })),
         ...(!namesJobs(pattern)
           ? { jobName: undefined }
           : named === undefined && namedAt.length > 0
             ? jobsNamed(namedAt)
-            : { jobName: job?.kind === 'written' ? jobNameOf(job.expression) : null }),
-        payload: message === undefined || message.kind === 'unread' ? undefined : messageValue(message.expression),
+            : jobsHeld(job)),
+        payload: message === undefined || message.kind === 'unread' || severalOf(message) ? undefined : messageValue(message.expression),
         undecided: site.undecided,
         through: site.through,
         writtenIn: undefined,

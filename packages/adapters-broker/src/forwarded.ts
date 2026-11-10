@@ -4,6 +4,7 @@ import {
   evaluateExpression,
   importOf,
   parameterBehind,
+  walkPath,
   type DiMap,
   type Forwarder,
 } from '@flowatlas/core';
@@ -13,6 +14,7 @@ import {
   VariableDeclarationKind,
   type CallExpression,
   type ClassDeclaration,
+  type MethodDeclaration,
   type Node as TsNode,
   type ParameterDeclaration,
 } from 'ts-morph';
@@ -40,12 +42,30 @@ import {
 
 /** What one value of a publish is, where the walk has got to. */
 export type Held =
-  /** Written here: read as a name, a job or a message. */
-  | { readonly kind: 'written'; readonly expression: TsNode }
+  /**
+   * Written here: read as a name, a job or a message. `choices` where it is
+   * one of several values written out - each branch of a condition, each
+   * record a function may answer (P286).
+   */
+  | { readonly kind: 'written'; readonly expression: TsNode; readonly choices?: readonly TsNode[] }
   /** A parameter, or a property of one: decided by whoever calls its function. */
   | { readonly kind: 'parameter'; readonly parameter: ParameterDeclaration; readonly path: readonly string[]; readonly expression: TsNode }
   /** A field the instance was constructed with: decided by whoever built the instance. */
   | { readonly kind: 'field'; readonly owner: ClassDeclaration; readonly index: number; readonly expression: TsNode }
+  /**
+   * What the instance was set up with by a call of another of its methods:
+   * `this.queue = new Queue(name)` in `open(name)`, read in `add` (P286).
+   * Decided by whatever calls `method` on the same instance as the caller
+   * holds.
+   */
+  | {
+      readonly kind: 'set';
+      readonly owner: ClassDeclaration;
+      readonly method: MethodDeclaration;
+      readonly index: number;
+      readonly path: readonly string[];
+      readonly expression: TsNode;
+    }
   /** Followed as far as it goes, and no further: `why` says where it stopped. */
   | { readonly kind: 'unread'; readonly expression: TsNode; readonly why: string };
 
@@ -96,7 +116,7 @@ const bindingPath = (element: TsNode): { parameter: ParameterDeclaration; path: 
 };
 
 /** Where a class's constructor takes the value a field holds, when that is all the field ever holds. */
-const fieldIndex = (owner: ClassDeclaration, name: string): number | undefined => {
+export const fieldIndex = (owner: ClassDeclaration, name: string): number | undefined => {
   const [constructor] = owner.getConstructors();
   if (constructor === undefined) return undefined;
   const parameters = constructor.getParameters();
@@ -150,7 +170,122 @@ export const heldAt = (expression: TsNode): Held => {
 };
 
 /** Whether a value still waits on somebody further out. */
-export const waits = (held: Held): boolean => held.kind === 'parameter' || held.kind === 'field';
+export const waits = (held: Held): boolean => held.kind === 'parameter' || held.kind === 'field' || held.kind === 'set';
+
+/** Whether a class is the other or extends it, however far up. */
+const derivesFrom = (cls: ClassDeclaration, owner: ClassDeclaration): boolean => {
+  let current: ClassDeclaration | undefined = cls;
+  for (let step = 0; step < 8 && current !== undefined; step += 1) {
+    if (current === owner) return true;
+    current = current.getBaseClass();
+  }
+  return false;
+};
+
+const isSelf = (receiver: TsNode | undefined): boolean =>
+  receiver === undefined || Node.isThisExpression(receiver) || receiver.getKind() === SyntaxKind.SuperKeyword;
+
+/**
+ * What a value read at a site is, for the walk: as `heldAt` says, and a
+ * parameter of another method of the instance - reached through a field that
+ * method sets - as what the instance was set up with (P286).
+ */
+export const heldAtSite = (expression: TsNode, site: TsNode): Held => {
+  const held = heldAt(expression);
+  if (held.kind !== 'parameter') return held;
+  const fn = held.parameter.getParent();
+  if (!Node.isMethodDeclaration(fn) || site.getFirstAncestor((node) => node === fn) !== undefined) return held;
+  const owner = fn.getParent();
+  const around = methodAround(site)?.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+  if (!Node.isClassDeclaration(owner) || around === undefined || !derivesFrom(around, owner)) return held;
+  return { kind: 'set', owner, method: fn, index: positionOf(held.parameter), path: held.path, expression: site };
+};
+
+/** How deep one value is followed into the values it is made of. */
+const MOST_FOLLOWED = 8;
+
+/** Each branch of a condition, as a value of its own (P286). */
+const branchesOf = (expression: TsNode, depth = 0): TsNode[] => {
+  const node = unwrapped(expression);
+  if (!Node.isConditionalExpression(node) || depth > 4) return [expression];
+  return [...branchesOf(node.getWhenTrue(), depth + 1), ...branchesOf(node.getWhenFalse(), depth + 1)];
+};
+
+/**
+ * The values at a path of what an expression holds, for the walk (P286): a
+ * record written out, a `const` it was bound to, a record spread into it,
+ * each record a function it calls answers - an `async` one awaited as
+ * readily - with that function's parameters bound to what the call hands
+ * them, and each branch of a condition. Where the path stops at a parameter
+ * of the function the walk stands in, the rest of the path is read at its
+ * callers.
+ */
+export const heldValues = (start: TsNode, path: readonly string[], site: TsNode, bound: Bindings = new Map(), depth = 0): Held => {
+  if (depth > MOST_FOLLOWED) return { kind: 'unread', expression: start, why: `${start.getText().slice(0, 60)} is made of more values than are followed.` };
+  const found: Held[] = [];
+  const reached: TsNode[] = [];
+  for (const slot of walkPath(start, path, bound)) {
+    if (slot === undefined) {
+      return { kind: 'unread', expression: start, why: `${start.getText().slice(0, 60)} writes no ${path.join('.')}.` };
+    }
+    if (slot.reached) {
+      reached.push(slot.expression);
+      for (const branch of branchesOf(slot.expression)) found.push(heldIn(branch, slot.bound ?? bound, site, depth, []));
+    } else {
+      found.push(heldIn(slot.expression, slot.bound ?? bound, site, depth, slot.rest ?? []));
+    }
+  }
+  const [first, ...more] = found;
+  if (first === undefined) return { kind: 'unread', expression: start, why: `${start.getText().slice(0, 60)} holds nothing written out.` };
+  if (more.length === 0) return first;
+  if (found.every((each) => each.kind === 'written')) {
+    const [one] = reached;
+    return {
+      kind: 'written',
+      expression: reached.length === 1 && one !== undefined ? one : first.expression,
+      choices: found.flatMap((each) => (each.kind === 'written' ? (each.choices ?? [each.expression]) : [])),
+    };
+  }
+  return (
+    found.find((each) => each.kind === 'unread') ?? {
+      kind: 'unread',
+      expression: start,
+      why: `${start.getText().slice(0, 60)} is one of several values, some decided further out than others.`,
+    }
+  );
+};
+
+/** One value the walk reached, read past the bindings and destructurings it names (P286). */
+const heldIn = (expression: TsNode, bound: Bindings, site: TsNode, depth: number, rest: readonly string[]): Held => {
+  let node = unwrapped(expression);
+  if (Node.isAwaitExpression(node)) node = unwrapped(node.getExpression());
+  if (Node.isIdentifier(node)) {
+    const declaration = declarationOf(node);
+    const handed = declaration === undefined ? undefined : bound.get(declaration);
+    if (handed !== undefined) return heldValues(handed, rest, site, bound, depth + 1);
+    // `const { type } = options`: the key of what it was taken out of.
+    if (declaration !== undefined && Node.isBindingElement(declaration) && declaration.getDotDotDotToken() === undefined) {
+      const pattern = declaration.getParent();
+      const variable = pattern?.getParent();
+      const source = variable !== undefined && Node.isVariableDeclaration(variable) && Node.isObjectBindingPattern(pattern) ? variable.getInitializer() : undefined;
+      if (source !== undefined) {
+        const key = declaration.getPropertyNameNode()?.getText() ?? declaration.getName();
+        return heldValues(source, [key, ...rest], site, bound, depth + 1);
+      }
+    }
+  } else if (Node.isPropertyAccessExpression(node) && !Node.isThisExpression(unwrapped(node.getExpression()))) {
+    const inner = unwrapped(node.getExpression());
+    const root = Node.isIdentifier(inner) ? declarationOf(inner) : undefined;
+    // `job.type` where `job` is a parameter the walk bound, or a name taken out of one.
+    if (root !== undefined && (bound.has(root) || Node.isBindingElement(root) || Node.isVariableDeclaration(root))) {
+      return heldValues(inner, [node.getName(), ...rest], site, bound, depth + 1);
+    }
+  }
+  const held = heldAtSite(node, site);
+  if (rest.length === 0) return held;
+  if (held.kind === 'parameter' || held.kind === 'set') return { ...held, path: [...held.path, ...rest] };
+  return { kind: 'unread', expression: node, why: `${node.getText().slice(0, 60)} is not written out where ${rest[0]} would be read.` };
+};
 
 /** The function callers call, for a parameter: the method, the function, or what holds the arrow. */
 const holderOfParameter = (parameter: ParameterDeclaration): Forwarder | undefined => {
@@ -178,9 +313,101 @@ const methodAround = (node: TsNode): Forwarder | undefined => {
  */
 const holderAt = (value: Held, site: TsNode): Forwarder | undefined => {
   if (value.kind === 'parameter') return holderOfParameter(value.parameter);
-  if (value.kind !== 'field') return undefined;
+  if (value.kind !== 'field' && value.kind !== 'set') return undefined;
   const method = methodAround(site);
-  return method !== undefined && method.getFirstAncestorByKind(SyntaxKind.ClassDeclaration) === value.owner ? method : undefined;
+  const cls = method?.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+  // A method of a class extending the owner holds the same instance (P286).
+  return method !== undefined && cls !== undefined && derivesFrom(cls, value.owner) ? method : undefined;
+};
+
+/** The `super(...)` call a constructor makes. */
+const superCallOf = (cls: ClassDeclaration): CallExpression | undefined =>
+  cls
+    .getConstructors()[0]
+    ?.getDescendantsOfKind(SyntaxKind.CallExpression)
+    .find((call) => call.getExpression().getKind() === SyntaxKind.SuperKeyword);
+
+/**
+ * What an instance of `cls` holds in a field its base class `owner` keeps
+ * from its constructor's argument `index`, as `cls` and each class between
+ * hand it to `super(...)` (P286): `super(QueueName.mail, …)` in a subclass
+ * makes every instance of it hold `QueueName.mail`. A value one of them
+ * takes as its own constructor's argument is what its instance was built
+ * with; undefined where `cls` does not extend `owner`.
+ */
+const heldThroughSuper = (cls: ClassDeclaration, owner: ClassDeclaration, index: number, expression: TsNode): Held | undefined => {
+  const lineage: ClassDeclaration[] = [];
+  let current: ClassDeclaration | undefined = cls;
+  while (current !== undefined && current !== owner && lineage.length < 8) {
+    lineage.unshift(current);
+    current = current.getBaseClass();
+  }
+  if (current !== owner) return undefined;
+  let at = index;
+  let holder = owner;
+  for (const each of lineage) {
+    const constructor = each.getConstructors()[0];
+    // A class with no constructor of its own is built with its base's.
+    if (constructor === undefined) {
+      holder = each;
+      continue;
+    }
+    const handed = superCallOf(each)?.getArguments()[at];
+    if (handed === undefined) {
+      return { kind: 'unread', expression, why: `${each.getName() ?? 'A class'} hands its base class nothing for the value ${owner.getName() ?? 'it'} keeps.` };
+    }
+    const held = heldAt(handed);
+    if (held.kind === 'parameter' && held.parameter.getParent() === constructor && held.path.length === 0) {
+      at = constructor.getParameters().indexOf(held.parameter);
+      holder = each;
+      continue;
+    }
+    return held.kind === 'written' ? held : { kind: 'unread', expression: handed, why: `${handed.getText().slice(0, 60)} is not written where ${each.getName() ?? 'the class'} hands it to its base class.` };
+  }
+  return { kind: 'field', owner: holder, index: at, expression };
+};
+
+/** The class a receiver is an instance of, as its type says. */
+const classOfReceiver = (receiver: TsNode): ClassDeclaration | undefined => {
+  const declaration = receiver
+    .getType()
+    .getSymbol()
+    ?.getDeclarations()
+    .find((each) => Node.isClassDeclaration(each));
+  return declaration !== undefined && Node.isClassDeclaration(declaration) ? declaration : undefined;
+};
+
+/** The declaration a receiver names: the variable, or the field. */
+const receiverDeclaration = (receiver: TsNode): TsNode | undefined => {
+  const node = unwrapped(receiver);
+  const name = Node.isPropertyAccessExpression(node) ? node.getNameNode() : Node.isIdentifier(node) ? node : undefined;
+  return name?.getSymbol()?.getDeclarations()[0];
+};
+
+/**
+ * What an instance was set up with, read where the caller holds it (P286):
+ * the argument every call of the setting method on the same variable or
+ * field hands it - `this.client.open(this.queueName)` beside
+ * `this.client.add(job)`. Two different values, or none, is no answer.
+ */
+const setOn = (receiver: TsNode, value: Extract<Held, { kind: 'set' }>, call: CallExpression): Held => {
+  const declaration = receiverDeclaration(receiver);
+  const unread = (why: string): Held => ({ kind: 'unread', expression: receiver, why });
+  if (declaration === undefined) return unread(`${receiver.getText().slice(0, 60)} is set up by ${value.method.getName()} somewhere this cannot see.`);
+  const answers: Held[] = [];
+  for (const setter of callSitesOf(value.method)) {
+    const on = receiverOf(setter);
+    if (on === undefined || receiverDeclaration(on) !== declaration) continue;
+    const argument = setter.getArguments()[value.index];
+    if (argument === undefined) return unread(`${setter.getText().slice(0, 60)} hands ${value.method.getName()} nothing.`);
+    const held = heldValues(argument, value.path, call);
+    // A field of the instance the setter is called from is the caller's own: the same instance.
+    answers.push(held.kind === 'field' || held.kind === 'set' ? { ...held, expression: call } : held);
+  }
+  const [first, ...more] = answers;
+  if (first === undefined) return unread(`Nothing calls ${value.method.getName()} on ${receiver.getText().slice(0, 60)}.`);
+  const same = more.every((each) => each.kind === first.kind && each.expression.getText() === first.expression.getText());
+  return same ? first : unread(`${receiver.getText().slice(0, 60)} is set up with different values by different calls of ${value.method.getName()}.`);
 };
 
 const positionOf = (parameter: ParameterDeclaration): number => {
@@ -373,7 +600,15 @@ const providedArgument = (token: TsNode, bindings: Bindings, owner: ClassDeclara
 };
 
 /** What the instance a call is made on was constructed with at `index`. */
-const instanceValue = (receiver: TsNode, owner: ClassDeclaration, index: number, di: DiMap): Held => {
+const instanceValue = (receiver: TsNode, owner: ClassDeclaration, index: number, di: DiMap, depth = 0): Held => {
+  // An instance of a class extending the owner holds what that class hands
+  // its base (P286), or what it was itself built with.
+  const typed = classOfReceiver(receiver);
+  if (typed !== undefined && typed !== owner && depth < 4) {
+    const through = heldThroughSuper(typed, owner, index, receiver);
+    if (through?.kind === 'field' && through.owner !== owner) return instanceValue(receiver, through.owner, through.index, di, depth + 1);
+    if (through !== undefined && through.kind !== 'field') return through;
+  }
   const made = constructionOf(receiver, owner);
   if (made !== undefined) {
     const argument = made[index];
@@ -414,30 +649,25 @@ const stepped = (value: Held, call: CallExpression, holder: Forwarder, di: DiMap
   if (holderAt(value, value.expression) !== holder) {
     return { kind: 'unread', expression: value.expression, why: `${value.expression.getText().slice(0, 60)} is decided by a caller of another function.` };
   }
-  if (value.kind === 'field') {
+  if (value.kind === 'field' || value.kind === 'set') {
     const receiver = receiverOf(call);
-    // `this.add(...)` from another method of the same instance: still the
-    // field, now waiting on whoever calls that method.
-    if (receiver === undefined || Node.isThisExpression(receiver)) return { ...value, expression: call };
-    return instanceValue(receiver, value.owner, value.index, di);
+    if (isSelf(receiver)) {
+      // `this.add(...)` from another method of the same instance: still the
+      // field, now waiting on whoever calls that method - unless that method
+      // is a subclass's, whose constructor decides it (P286).
+      const cls = call.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+      const decided = value.kind === 'field' && cls !== undefined && cls !== value.owner ? heldThroughSuper(cls, value.owner, value.index, call) : undefined;
+      return decided ?? { ...value, expression: call };
+    }
+    if (value.kind === 'set') return setOn(receiver as TsNode, value, call);
+    return instanceValue(receiver as TsNode, value.owner, value.index, di);
   }
   const position = positionOf(value.parameter);
-  let argument: TsNode | undefined = call.getArguments()[position] ?? value.parameter.getInitializer();
+  const argument: TsNode | undefined = call.getArguments()[position] ?? value.parameter.getInitializer();
   if (argument === undefined || Node.isSpreadElement(argument)) {
     return { kind: 'unread', expression: call, why: `${call.getText().slice(0, 60)} hands nothing for ${value.parameter.getName()}.` };
   }
-  for (const [step, key] of value.path.entries()) {
-    const inner = propertyIn(argument as TsNode, key);
-    if (inner === null) {
-      const held = heldAt(argument as TsNode);
-      return held.kind === 'parameter'
-        ? { ...held, path: [...held.path, ...value.path.slice(step)] }
-        : { kind: 'unread', expression: argument as TsNode, why: `${(argument as TsNode).getText().slice(0, 60)} is not written out where ${key} would be read.` };
-    }
-    if (inner === undefined) return { kind: 'unread', expression: argument as TsNode, why: `${(argument as TsNode).getText().slice(0, 60)} writes no ${key}.` };
-    argument = inner;
-  }
-  return heldAt(argument);
+  return heldValues(argument, value.path, call);
 };
 
 /** A function as a reader names it: `Class.method`, or the function's own name. */
@@ -479,7 +709,7 @@ export interface ForwardedPublish {
  * another implementation of the method instead is followed, and said to be:
  * a queue the caller names is the queue whichever runs.
  */
-export const forwardedPublish = (values: readonly (Held | undefined)[], di: DiMap, deciding = 1): ForwardedPublish => {
+export const forwardedPublish = (values: readonly (Held | undefined)[], di: DiMap, deciding = 1, addressed = 1): ForwardedPublish => {
   /** The value a site waits on: the address while it waits, then the job (P271). */
   const decider = (current: readonly (Held | undefined)[]): Held | undefined =>
     current.slice(0, deciding).find((value): value is Held => value !== undefined && waits(value));
@@ -506,7 +736,7 @@ export const forwardedPublish = (values: readonly (Held | undefined)[], di: DiMa
     if (callers.length === 0 && hops.length === 0) short = true;
     // The queue was decided at the last call and only the job waits on a
     // function nothing calls: drawn there, its job unread (P271).
-    if (callers.length === 0 && hops.length > 0 && address !== current[0]) {
+    if (callers.length === 0 && hops.length > 0 && !current.slice(0, addressed).includes(address)) {
       sites.push({ site: hops.at(-1) as CallExpression, values: current, hops, through, undecided });
     }
     for (const caller of callers) {

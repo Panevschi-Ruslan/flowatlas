@@ -142,6 +142,8 @@ const entryOf = (statement: TsNode | undefined, depth = 0): TsNode | undefined =
     const [index] = statement.getIndexSignatures();
     return index?.getReturnTypeNode();
   }
+  // `{ [name in QueueName]?: Queue }`: one entry per key of a union (P286).
+  if (Node.isMappedTypeNode(statement)) return statement.getTypeNode();
   if (!Node.isTypeReference(statement)) return undefined;
   const name = statement.getTypeName().getText();
   const args = statement.getTypeArguments();

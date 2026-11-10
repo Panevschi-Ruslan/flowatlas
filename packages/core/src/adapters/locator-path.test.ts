@@ -206,3 +206,51 @@ const forward = (command: PutCommand) => client.send(command);`);
     expect(locatorApplies(callTo(file, 'send'), { kind: 'argument', index: 0 })).toBe(true);
   });
 });
+
+describe('a key of every node of a tree, and records built further in (P286)', () => {
+  const QUEUES: NameLocator = { kind: 'argument-tree', index: 0, key: 'queueName', children: 'children' };
+
+  it('reads the root first and each child after its parent', () => {
+    const file = parse(`flows.add({ queueName: 'close', children: [
+  { queueName: 'archive', children: [{ queueName: 'compress' }] },
+  { queueName: 'notify' },
+] });`);
+    expect(slots(callTo(file, 'add'), QUEUES)).toEqual(["'close'", "'archive'", "'compress'", "'notify'"]);
+  });
+
+  it('reads each tree of a list, and stops at a list of children not written out', () => {
+    const file = parse(`declare const later: unknown[];
+flows.addBulk([{ queueName: 'a' }, { queueName: 'b', children: later }]);`);
+    expect(slots(callTo(file, 'addBulk'), { ...QUEUES, path: ['*'] })).toEqual(["'a'", "'b'", 'stopped at later']);
+  });
+
+  it('reads a key through a record spread in from what a method of the class builds', () => {
+    const file = parse(`class Jobs {
+  run(type: string) { return flows.add({ ...this.node(type), children: [] }); }
+  private node(kind: string) { return { name: 'job', queueName: kind }; }
+}`);
+    // The method's parameter is what the call hands it: `run`'s own `type`.
+    expect(slots(callTo(file, 'add'), QUEUES)).toEqual(['type']);
+  });
+
+  it('reads a queue made by a class a condition chooses, set in another method', () => {
+    const file = parse(`class Client {
+  private queue: Queue;
+  open(topic: string) {
+    const Made = paid ? PaidQueue : Queue;
+    this.queue = new Made(topic);
+  }
+  add(job: string) { return this.queue.add(job); }
+}`);
+    expect(slots(callTo(file, 'add'), { kind: 'receiver-constructed-path', class: 'Queue', path: [] })).toEqual(['topic']);
+  });
+
+  it('reads each record a function may answer, awaited', () => {
+    const file = parse(`async function build(kind: boolean) {
+  if (kind) return { type: 'a' };
+  return { type: 'b' };
+}
+async function run() { queue.send(await build(true)); }`);
+    expect(slots(callTo(file, 'send'), { kind: 'argument-path', index: 0, path: ['type'] })).toEqual(["'a'", "'b'"]);
+  });
+});

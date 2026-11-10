@@ -5862,6 +5862,7 @@ readable name wins. `channel` replaces `channelArg` where both are given.
 | `{ "kind": "chain-call", "method": "from", "index": 0 }` | argument 0 of `from(...)` anywhere in the same chain |
 | `{ "kind": "chain-root-argument", "index": 0 }` | argument 0 of the call the chain started from |
 | `{ "kind": "argument-path", "index": 0, "path": ["Entries", "*", "DetailType"] }` | a path of properties inside argument 0; `*` is every element of an array |
+| `{ "kind": "argument-tree", "index": 0, "key": "queueName", "children": "children" }` | `key` at every node of a tree written in argument 0, the root first and each node's `children` after it - one name per node. `"path": ["*"]` reads each tree of a list |
 | `{ "kind": "constructed-argument-path", "class": "PutEventsCommand", "path": ["Entries", "*", "DetailType"] }` | the same path inside what `PutEventsCommand` is constructed with, where the construction is an argument of the call — built in the call or in a `const` before it. `"index": 1` starts the path in the constructor's second argument |
 | `{ "kind": "receiver-constructed-path", "class": "Upload", "path": ["params", "Bucket"] }` | the path inside what the receiver was constructed with - `new Upload({ params: { Bucket } }).done()`, or the same `new` in a `const` before the call |
 | `{ "kind": "receiver-registry-key", "class": "Queue" }` | the key the receiver is looked up by - `this.queues[name].add(...)` or `this.queues.get(name).add(...)` - where every write into that registry in the class (or module) is `new Queue(key)` under that same key. `"index": 1` is the constructor's second argument |
@@ -5894,6 +5895,12 @@ elements, and a `Map` or `Set` made with several values or given several by
 `set` and `add`, is one address per element (P272): `for (const url of [A, B])`
 sends to both, one edge each, and a list past sixteen elements or with a
 spread nothing reads stops the walk as before (`fixtures/sam-list-elements`).
+A function that may answer several records - an `async` one awaited as
+readily, a `return` of nothing no record - is each of them, a method of the
+class called on `this` is read as a function is, a record spread in that is
+written out (a `const`, what a function answers) holds the key or leaves it to
+what is written before it, and a field the class sets in one place only is
+what it is set to (P286, `fixtures/job-queue-layers`).
 
 **Where a send goes that does not say: what its function is granted** (P272).
 A send whose address is not read - a queue's URL looked up in a cache the code

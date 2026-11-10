@@ -32,6 +32,15 @@ const QUEUE_OF_RECEIVER: readonly NameLocator[] = [
   { kind: 'receiver-registry-key', class: 'Queue', index: 0 },
 ];
 
+/** A key of every job of a flow's tree, the parent first and each child after it (P286). */
+const FLOW_NODES = (key: string, path?: readonly string[]): NameLocator => ({
+  kind: 'argument-tree',
+  index: 0,
+  key,
+  children: 'children',
+  ...(path === undefined ? {} : { path }),
+});
+
 /**
  * The queue a worker class declares, written either way round.
  *
@@ -122,6 +131,30 @@ const bullmq: BrokerSpec = {
   name: 'bullmq',
   detect: (pkg) => hasAnyDependency(pkg, ['bullmq', '@nestjs/bullmq', 'bull', '@nestjs/bull']),
   producerPatterns: [
+    // A flow is a tree of jobs, each naming its own queue: `flows.add({ name,
+    // queueName, data, children: [{ name, queueName, data }] })` adds a job to
+    // every queue the tree names, the parent's and each child's (P286). Read
+    // before a queue's own `add`, which the same method name would match.
+    {
+      method: 'add',
+      channelArg: -1,
+      channel: [FLOW_NODES('queueName')],
+      name: [FLOW_NODES('name')],
+      payload: [FLOW_NODES('data')],
+      kind: 'job',
+      receiverType: 'FlowProducer',
+      receiverPackages: ['bullmq'],
+    },
+    {
+      method: 'addBulk',
+      channelArg: -1,
+      channel: [FLOW_NODES('queueName', ['*'])],
+      name: [FLOW_NODES('name', ['*'])],
+      payload: [FLOW_NODES('data', ['*'])],
+      kind: 'job',
+      receiverType: 'FlowProducer',
+      receiverPackages: ['bullmq'],
+    },
     // The queue itself is the channel, and the receiver is bound to one; the
     // first argument names the unit of work, not the channel.
     {

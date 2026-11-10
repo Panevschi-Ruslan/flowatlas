@@ -422,11 +422,13 @@ export type { AddressPart, BrokerAdapter, CallPattern, ChannelKind, StartedEntry
 export {
   EVERY_ELEMENT,
   EVERY_KEY,
+  constructedNames,
   locatedExpressions,
   locatedSlots,
   locatorApplies,
   locatorIsCondition,
   originsOf,
+  walkPath,
 } from './adapters/locator.js';
 export type {
   Bindings,

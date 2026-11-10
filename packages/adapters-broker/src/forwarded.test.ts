@@ -1,7 +1,7 @@
 import { DiMap } from '@flowatlas/core';
 import { Project, SyntaxKind, type CallExpression, type SourceFile } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
-import { forwardedPublish, heldAt, type Held } from './forwarded.js';
+import { forwardedPublish, heldAt, heldAtSite, heldValues, type Held } from './forwarded.js';
 
 /**
  * Following the values of a publish out of a layer of the repository's own
@@ -127,5 +127,108 @@ class Audit {
     const out = walked(project(''));
     expect(out.sites).toEqual([]);
     expect(out.here).toBe(true);
+  });
+});
+
+describe('a value read where its record is built further in (P286)', () => {
+  const held = (source: string): string[] => {
+    const file = new Project({ useInMemoryFileSystem: true }).createSourceFile('a.ts', source);
+    const calls = file.getDescendantsOfKind(SyntaxKind.CallExpression).filter((each) => each.getExpression().getText() === 'enqueue');
+    return calls.flatMap((call) => {
+      const value = heldValues(call.getArguments()[0] as never, ['type'], call);
+      if (value.kind !== 'written') return [`${value.kind}:${value.kind === 'unread' ? value.why : value.expression.getText()}`];
+      return (value.choices ?? [value.expression]).map((each) => each.getText());
+    });
+  };
+
+  it('reads the record an async function answers, its kind the caller hands it', () => {
+    expect(
+      held(`
+declare function enqueue(job: unknown): void;
+async function buildMove(options: { id: string; type: 'move-out' | 'move-in' }) {
+  const { id, type } = options;
+  await Promise.resolve(id);
+  return { type, payload: { id } };
+}
+export async function run() { enqueue(await buildMove({ id: '1', type: 'move-out' })); }
+`),
+    ).toEqual(["'move-out'"]);
+  });
+
+  it('reads every record a function may answer, and none where it answers nothing', () => {
+    expect(
+      held(`
+declare function enqueue(job: unknown): void;
+function notifyJob(target: string) { return { type: 'notify', payload: { target } }; }
+async function thumbnailIfNeeded(url: string, notify: boolean) {
+  if (url.endsWith('.png')) return { type: 'thumbnail' as const, payload: { url } };
+  if (notify) return notifyJob(url);
+  return undefined;
+}
+export async function run() { enqueue(await thumbnailIfNeeded('a.png', true)); }
+`),
+    ).toEqual(["'thumbnail'", "'notify'"]);
+  });
+
+  it('reads a record spread into another, and each branch of a condition', () => {
+    expect(
+      held(`
+declare function enqueue(job: unknown): void;
+function notifyJob(target: string) { return { type: 'notify', payload: { target } }; }
+export function run(urgent: boolean) {
+  const job = { ...notifyJob('a'), delay: 10 };
+  enqueue(job);
+  enqueue({ type: urgent ? 'ping-fast' : 'ping', payload: {} });
+}
+`),
+    ).toEqual(["'notify'", "'ping-fast'", "'ping'"]);
+  });
+
+  it('waits on the caller where the record is a parameter', () => {
+    expect(
+      held(`
+declare function enqueue(job: unknown): void;
+export function run(job: { type: string }) { enqueue({ ...job, delay: 1 }); }
+`),
+    ).toEqual(['parameter:job']);
+  });
+});
+
+describe('a queue an instance is set up with, and one its subclasses hand their base (P286)', () => {
+  it('reads the queue set by another method of the client, and the topic each subclass hands its base', () => {
+    const file = new Project({ useInMemoryFileSystem: true }).createSourceFile(
+      'a.ts',
+      `
+declare class Queue { constructor(name: string); add(job: string, data: unknown): Promise<void> }
+enum Topic { Mail = 'mail', Billing = 'billing' }
+class Client {
+  private queue: Queue;
+  open(topic: string) { this.queue = new Queue(topic); }
+  add(name: string, data: unknown) { return this.queue.add(name, data); }
+}
+class QueueBase {
+  private client: Client;
+  constructor(public readonly topic: Topic, client: Client) { this.client = client; }
+  open() { this.client.open(this.topic); }
+  add(job: { name: string; data: unknown }) { return this.client.add(job.name, job.data); }
+}
+class MailQueue extends QueueBase { constructor() { super(Topic.Mail, new Client()); this.open(); } }
+class BillingQueue extends QueueBase { constructor(client: Client) { super(Topic.Billing, client); } }
+const mail = new MailQueue();
+const billing = new BillingQueue(new Client());
+export const a = () => mail.add({ name: 'welcome', data: {} });
+export const b = () => billing.add({ name: 'invoice', data: {} });
+`,
+    );
+    const call = file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getText().startsWith('this.queue.add')) as CallExpression;
+    const queue = heldAtSite(file.getDescendantsOfKind(SyntaxKind.NewExpression)[0]?.getArguments()[0] as never, call);
+    expect(queue.kind).toBe('set');
+    const [name] = call.getArguments();
+    const out = forwardedPublish([queue, heldAt(name as never)], new DiMap(), 2);
+    expect(out.sites.map((site) => site.values.map(show))).toEqual([
+      ['written:Topic.Mail', "written:'welcome'"],
+      ['written:Topic.Billing', "written:'invoice'"],
+    ]);
+    expect(out.sites[0]?.through).toEqual(['Client.add', 'QueueBase.add']);
   });
 });

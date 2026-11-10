@@ -88,6 +88,26 @@ only one of them moved.
   every handler names another job is the finding `job-no-handler` (info); a
   queue with a handler that takes every job is not asked about, and neither is
   a handler of a job nothing adds.
+- **Queues kept by a base class, job records built further in, and BullMQ
+  flows (P286).** A queue or a worker made from a field its class keeps from
+  the constructor - `super(Topic.Mail, …)` in each class extending it - is
+  read once per class: a worker made with `this.topic` is a consumer of every
+  topic the classes extending its class hand `super(...)` (or a `new` of it
+  hands its constructor), and a publish on a queue a client opened in another
+  method (`this.queue = new Queue(topic)` in `open(topic)`, `this.queue.add`
+  in `add`) is drawn where the caller holds the instance, with the topic that
+  instance was built with - through `super(...)` where the instance is of a
+  class extending the one that keeps it. A class chosen by a condition,
+  `const Made = paid ? PaidWorker : Worker`, is the transport's where either
+  branch is. A job record handed to a layer is read where it is built: a
+  `const`, a record spread into another, each record a function may answer
+  (an `async` one awaited; a `return` of nothing is no record) with its
+  parameters bound to what the call hands, a name taken out of an options
+  object, and each branch of a condition, one queue per value. BullMQ's
+  `FlowProducer.add` and `addBulk` add a job to the queue of every node of the
+  tree, the parent's and each child's, `name` and `data` read per node. A
+  registry typed `{ [kind in JobKind]?: Queue }` states its entries are
+  queues (`fixtures/job-queue-layers`).
 - **An MCP client joined to the server's tools, MCP names read as far as the
   source states them, a server function reached through a client the
   repository builds, and a written return type read for a method call

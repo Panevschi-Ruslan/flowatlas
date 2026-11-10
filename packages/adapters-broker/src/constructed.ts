@@ -12,8 +12,9 @@ import {
   type NamedFunction,
   type TakenElement,
 } from '@flowatlas/core';
-import { Node, SyntaxKind, type ClassDeclaration, type NewExpression, type Node as TsNode, type ParameterDeclaration } from 'ts-morph';
+import { Node, SyntaxKind, VariableDeclarationKind, type ClassDeclaration, type NewExpression, type Node as TsNode, type ParameterDeclaration } from 'ts-morph';
 import { isResolved, resolveChannelName, type ChannelResolution } from './channel-name.js';
+import { fieldIndex } from './forwarded.js';
 
 /**
  * A worker started by a construction, read once per queue it is started on
@@ -117,6 +118,14 @@ export const namesHandedTo = (
   const node = unwrapped(expression);
   const resolution = resolveChannelName(node, config);
   if (isResolved(resolution)) return [{ resolution, bound, through, undecided: false }];
+  // A field the instance keeps from its constructor: what each construction
+  // of the class, and each class extending it, hands that constructor (P286).
+  if (Node.isPropertyAccessExpression(node) && Node.isThisExpression(unwrapped(node.getExpression()))) {
+    const owner = node.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+    const index = owner === undefined ? undefined : fieldIndex(owner, node.getName());
+    if (owner !== undefined && index !== undefined && depth <= MOST_HOPS * 2) return builtWith(node, owner, index, config, bound, through, depth + 1);
+    return [{ resolution, bound, through, undecided: false }];
+  }
   const declaration = declarationOf(node);
   if (declaration === undefined || depth > MOST_HOPS * 2) return [{ resolution, bound, through, undecided: false }];
   const held = bound.get(declaration);
@@ -135,6 +144,12 @@ export const namesHandedTo = (
       if (out.length > MOST_READINGS) return [unread(node, `${node.getText()} stands for more queues than are read.`, bound, through)];
     }
     return out;
+  }
+  // A constructor's parameter is what every construction hands it (P286).
+  const constructor = Node.isParameterDeclaration(declaration) ? declaration.getParent() : undefined;
+  if (Node.isParameterDeclaration(declaration) && constructor !== undefined && Node.isConstructorDeclaration(constructor)) {
+    const owner = constructor.getParent();
+    if (Node.isClassDeclaration(owner)) return builtWith(node, owner, constructor.getParameters().indexOf(declaration), config, bound, through, depth + 1);
   }
   if (Node.isParameterDeclaration(declaration) && through.length < MOST_HOPS) {
     const forwarded = forwardedFrom(declaration);
@@ -162,6 +177,56 @@ export const namesHandedTo = (
     return out;
   }
   return [{ resolution, bound, through, undecided: false }];
+};
+
+/** How many classes down from a base its constructions are looked for. */
+const MOST_GENERATIONS = 4;
+
+/**
+ * Every value an instance of `owner` is built with at its constructor's
+ * argument `index` (P286): what each `new` of it hands there, and what each
+ * class extending it hands `super(...)` there - a value that class takes as
+ * its own constructor's argument being what its constructions hand it. A
+ * class extending it with no constructor of its own is built as it is.
+ */
+const builtWith = (
+  at: TsNode,
+  owner: ClassDeclaration,
+  index: number,
+  config: Pick<FlowatlasConfig, 'sharedPackages'>,
+  bound: Bound,
+  through: readonly string[],
+  depth: number,
+  generation = 0,
+): NameReading[] => {
+  const out: NameReading[] = [];
+  const name = owner.getName() ?? 'the class';
+  const nameNode = owner.getNameNode();
+  for (const reference of nameNode?.findReferencesAsNodes() ?? []) {
+    const made = reference.getParent();
+    if (made === undefined || !Node.isNewExpression(made) || made.getExpression() !== reference) continue;
+    const argument = made.getArguments()[index];
+    if (argument === undefined) continue;
+    out.push(...namesHandedTo(argument, config, bound, [...through, `new ${name}`], depth + 1));
+  }
+  if (generation < MOST_GENERATIONS) {
+    for (const derived of owner.getDerivedClasses()) {
+      if (derived.getBaseClass() !== owner) continue;
+      const constructor = derived.getConstructors()[0];
+      if (constructor === undefined) {
+        out.push(...builtWith(at, derived, index, config, bound, through, depth + 1, generation + 1));
+        continue;
+      }
+      const handed = constructor
+        .getDescendantsOfKind(SyntaxKind.CallExpression)
+        .find((call) => call.getExpression().getKind() === SyntaxKind.SuperKeyword)
+        ?.getArguments()[index];
+      if (handed === undefined) continue;
+      out.push(...namesHandedTo(handed, config, bound, [...through, derived.getName() ?? '?'], depth + 1));
+    }
+  }
+  if (out.length > MOST_READINGS) return [unread(at, `${at.getText()} stands for more queues than are read.`, bound, through)];
+  return out.length > 0 ? out : [unread(at, `${at.getText()} is what ${name} is built with, and nothing here builds it.`, bound, through)];
 };
 
 /** The function a handler is: a method of the class, or a function of the repository's own. */
@@ -284,8 +349,38 @@ export const handlerInRecord = (record: TsNode, key: string, owner: ClassDeclara
 };
 
 /** Whether a construction makes the transport's class: imported by that name from one of its packages. */
-export const constructsFrom = (construction: NewExpression, className: string, packages: readonly string[]): boolean => {
-  const callee = unwrapped(construction.getExpression());
+export const constructsFrom = (construction: NewExpression, className: string, packages: readonly string[]): boolean =>
+  classesConstructed(construction.getExpression()).some((callee) => isTransportClass(callee, className, packages));
+
+/**
+ * The classes a `new` may make, as written: the callee, or past a `const`
+ * holding a class, each branch of the condition choosing it - `const Made =
+ * pro ? WorkerPro : Worker` (P286).
+ */
+const classesConstructed = (callee: TsNode, depth = 0): TsNode[] => {
+  const node = unwrapped(callee);
+  if (depth > 4) return [node];
+  if (Node.isConditionalExpression(node)) return [...classesConstructed(node.getWhenTrue(), depth + 1), ...classesConstructed(node.getWhenFalse(), depth + 1)];
+  if (Node.isBinaryExpression(node)) {
+    const operator = node.getOperatorToken().getKind();
+    return operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken
+      ? [...classesConstructed(node.getLeft(), depth + 1), ...classesConstructed(node.getRight(), depth + 1)]
+      : [];
+  }
+  if (!Node.isIdentifier(node)) return [node];
+  const declaration = node.getSymbol()?.getDeclarations()[0];
+  const held =
+    declaration !== undefined && Node.isVariableDeclaration(declaration) && declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const
+      ? declaration.getInitializer()
+      : undefined;
+  // A `const` bound to `require('pkg')` is the package's import, read as one.
+  if (held === undefined || (Node.isCallExpression(held) && held.getExpression().getText() === 'require')) return [node];
+  return classesConstructed(held, depth + 1);
+};
+
+/** Whether a class as written is the transport's: imported by that name from one of its packages. */
+const isTransportClass = (written: TsNode, className: string, packages: readonly string[]): boolean => {
+  const callee = unwrapped(written);
   const binding = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
   if (!Node.isIdentifier(binding)) return false;
   const imported = importOf(binding);

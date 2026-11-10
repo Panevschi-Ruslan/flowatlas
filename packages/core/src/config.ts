@@ -337,6 +337,16 @@ const nameLocatorSchema = z.discriminatedUnion('kind', [
     path: z.array(z.string().min(1)).min(1),
   }),
   z.strictObject({
+    kind: z.literal('argument-tree'),
+    index: z.number().int().min(0),
+    /** The key every node of the tree names its address under (P286). */
+    key: z.string().min(1),
+    /** The key a node keeps the nodes under it in. */
+    children: z.string().min(1),
+    /** Where the trees are in the argument, `*` for each of a list; the argument itself by default. */
+    path: z.array(z.string().min(1)).optional(),
+  }),
+  z.strictObject({
     kind: z.literal('constructed-argument-path'),
     /** The class whose construction is an argument of the call. */
     class: z.string().min(1),

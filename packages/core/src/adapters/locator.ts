@@ -97,6 +97,13 @@ export type NameLocator =
    */
   | { kind: 'argument-path'; index: number; path: readonly string[] }
   /**
+   * A key of a tree written in an argument, at its root and at every node
+   * under it: `add({ name, queueName, children: [{ queueName, … }] })`, one
+   * address per node, the root first and each child after its parent (P286).
+   * `children` is the key a node keeps the nodes under it in.
+   */
+  | { kind: 'argument-tree'; index: number; key: string; children: string; path?: readonly string[] }
+  /**
    * A path of properties inside what a class is constructed with, where the
    * construction is an argument of this call.
    *
@@ -186,6 +193,12 @@ export type LocatedSlot =
       readonly selector?: ParameterDeclaration;
       /** The parameters the walk bound on its way here, which what is left of the path is read with. */
       readonly bound?: Bindings;
+      /**
+       * Where the walk stopped short, the steps of the path it did not take,
+       * the one it stopped at first (P286): a reader that follows the place
+       * it stopped at - a parameter out to its callers - reads them there.
+       */
+      readonly rest?: readonly string[];
     }
   | undefined;
 
@@ -580,6 +593,44 @@ const constValue = (node: TsNode): TsNode | undefined => {
   return declaration.getInitializer();
 };
 
+/**
+ * What a field of the class is set to, where the class sets it in one place
+ * only and declares it with no value of its own: `this.queue = new
+ * Queue(name)` in the method that opens the queue, read wherever
+ * `this.queue` is used (P286). A field set in two places holds whichever
+ * ran last, which nothing here can say.
+ */
+const assignedField = (node: TsNode): TsNode | undefined => {
+  if (!Node.isPropertyAccessExpression(node) || !Node.isThisExpression(peeled(node.getExpression()))) return undefined;
+  const owner = node.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+  const declaration = node.getNameNode().getSymbol()?.getDeclarations()[0];
+  if (
+    owner === undefined ||
+    declaration === undefined ||
+    !Node.isPropertyDeclaration(declaration) ||
+    declaration.getParent() !== owner ||
+    declaration.isStatic() ||
+    declaration.getInitializer() !== undefined
+  ) {
+    return undefined;
+  }
+  const name = node.getName();
+  const values: TsNode[] = [];
+  owner.forEachDescendant((each) => {
+    if (!Node.isBinaryExpression(each) || each.getOperatorToken().getKind() !== SyntaxKind.EqualsToken) return;
+    const left = peeled(each.getLeft());
+    if (Node.isPropertyAccessExpression(left) && Node.isThisExpression(peeled(left.getExpression())) && left.getName() === name) {
+      values.push(each.getRight());
+    }
+  });
+  const [only, ...more] = values;
+  if (only === undefined || more.length > 0) return undefined;
+  // A field the constructor keeps a parameter of in is what each instance was
+  // built with, which the reader of a publish follows to whoever built it.
+  const kept = declarationNamed(peeled(only));
+  return kept !== undefined && Node.isParameterDeclaration(kept) && Node.isConstructorDeclaration(kept.getParent()) ? undefined : only;
+};
+
 /** Parentheses and the assertions TypeScript lets a value carry, which say nothing about the value. */
 const peeled = (node: TsNode): TsNode => {
   let current = node;
@@ -682,12 +733,64 @@ const calledAnswer = (fn: TsNode, written: readonly TsNode[], bound: Bindings, d
   if (target.getSourceFile().isDeclarationFile()) return undefined;
   const answer = answerOf(target);
   if (answer === undefined || !Node.isFunctionLikeDeclaration(target)) return undefined;
+  return { value: answer, bound: handedTo(target, written, bound) };
+};
+
+/** A function's parameters, each bound to what a call of it hands it, or to its default. */
+const handedTo = (target: TsNode, written: readonly TsNode[], bound: Bindings): Bindings => {
   const handed = new Map(bound);
+  if (!Node.isFunctionLikeDeclaration(target)) return handed;
   target.getParameters().forEach((parameter, index) => {
     const argument = written[index] ?? parameter.getInitializer();
     if (argument !== undefined) handed.set(parameter, argument);
   });
-  return { value: answer, bound: handed };
+  return handed;
+};
+
+/** Whether a function's answer says it answers nothing: `return`, `return undefined`, `return null`. */
+const answersNothing = (answer: TsNode | undefined): boolean => {
+  if (answer === undefined) return true;
+  const value = peeled(answer);
+  return value.getKind() === SyntaxKind.NullKeyword || (Node.isIdentifier(value) && value.getText() === 'undefined');
+};
+
+/**
+ * Everything a function called with these arguments may answer, its
+ * parameters bound to them (P286): each `return` of its own that answers
+ * something, an `async` function's as readily as any other's. A function of
+ * a declaration file, or one that answers nothing anywhere, has none.
+ */
+const calledAnswers = (fn: TsNode, written: readonly TsNode[], bound: Bindings, depth: number): Followed[] | undefined => {
+  const target = followValue(fn, bound, depth + 1).value;
+  if (target.getSourceFile().isDeclarationFile()) return undefined;
+  if (!Node.isArrowFunction(target) && !Node.isFunctionExpression(target) && !Node.isFunctionDeclaration(target) && !Node.isMethodDeclaration(target)) {
+    return undefined;
+  }
+  const body = target.getBody();
+  if (body === undefined) return undefined;
+  const handed = handedTo(target, written, bound);
+  if (!Node.isBlock(body)) return [{ value: body, bound: handed }];
+  const answers: Followed[] = [];
+  for (const statement of body.getDescendantsOfKind(SyntaxKind.ReturnStatement)) {
+    const own =
+      statement.getFirstAncestor(
+        (ancestor) => Node.isFunctionLikeDeclaration(ancestor) || Node.isFunctionExpression(ancestor) || Node.isArrowFunction(ancestor),
+      ) === target;
+    const answer = statement.getExpression();
+    if (own && answer !== undefined && !answersNothing(answer)) answers.push({ value: answer, bound: handed });
+  }
+  return answers.length === 0 ? undefined : answers;
+};
+
+/**
+ * What a call answers, followed into the function it calls: one value, or
+ * one choice per answer where it may answer several (P286).
+ */
+const calledValue = (fn: TsNode, written: readonly TsNode[], bound: Bindings, depth: number): Followed | undefined => {
+  const answers = calledAnswers(fn, written, bound, depth);
+  const [only, ...more] = answers ?? [];
+  if (only === undefined) return undefined;
+  return more.length === 0 ? only : { value: fn, bound, choices: answers };
 };
 
 /**
@@ -724,8 +827,18 @@ const chosenMember = (node: TsNode, bound: Bindings, depth: number): Followed | 
   if (called && Node.isIdentifier(callee)) {
     const declaration = declarationNamed(callee);
     if (declaration === undefined) return undefined;
-    if (Node.isFunctionDeclaration(declaration)) return calledAnswer(declaration, written, bound, depth);
-    return isConstDeclaration(declaration) ? calledAnswer(callee, written, bound, depth) : undefined;
+    if (Node.isFunctionDeclaration(declaration)) return calledValue(declaration, written, bound, depth);
+    return isConstDeclaration(declaration) ? calledValue(callee, written, bound, depth) : undefined;
+  }
+  // A method of the class the call is written in, or of one it extends:
+  // `this.buildJob(options)` is the record the method builds (P286).
+  if (called && Node.isPropertyAccessExpression(callee) && Node.isThisExpression(peeled(callee.getExpression()))) {
+    for (const owner of classesAround(callee)) {
+      const method = methodNamedOn(owner, callee.getName());
+      const fn = method === undefined ? undefined : functionOf(method);
+      if (fn !== undefined) return calledValue(fn, written, bound, depth);
+    }
+    return undefined;
   }
   let key: string;
   let record: TsNode;
@@ -918,12 +1031,17 @@ const followValue = (node: TsNode, bound: Bindings = NO_BINDINGS, depth = 0): Fo
   if (depth > MOST_NESTED) return { value: current, bound: held };
   for (let link = 0; link < MOST_LINKS; link += 1) {
     current = peeled(current);
+    // What a promise settles to is the value that was awaited (P286).
+    if (Node.isAwaitExpression(current)) {
+      current = current.getExpression();
+      continue;
+    }
     const handed = handedValue(current, held);
     if (handed !== undefined) {
       current = handed;
       continue;
     }
-    const constant = constValue(current);
+    const constant = constValue(current) ?? assignedField(current);
     if (constant !== undefined) {
       current = constant;
       continue;
@@ -946,6 +1064,8 @@ const followValue = (node: TsNode, bound: Bindings = NO_BINDINGS, depth = 0): Fo
       return { value: current, bound: held, ...(handedIn === undefined ? {} : { selector: handedIn }) };
     }
     if ('selector' in chosen) return { value: current, bound: held, selector: chosen.selector };
+    // A function that may answer several values is each of them (P286).
+    if (chosen.choices !== undefined) return { value: current, bound: held, choices: chosen.choices };
     current = chosen.value;
     held = chosen.bound;
   }
@@ -978,21 +1098,32 @@ const keyOf = (name: string): string => name.replace(/^['"`]|['"`]$/g, '');
  * because "absent" lets a description fill in a default, and filling in a
  * default for a key a spread supplies is a guess.
  */
-const writtenProperty = (record: ObjectLiteralExpression, key: string): LocatedSlot => {
+const writtenProperty = (record: ObjectLiteralExpression, key: string, bound: Bindings = NO_BINDINGS, depth = 0): LocatedSlot => {
   const properties = record.getProperties();
   for (let index = properties.length - 1; index >= 0; index -= 1) {
     const property = properties[index];
     if (property === undefined) continue;
-    if (Node.isSpreadAssignment(property)) return stopped(property.getExpression());
+    if (Node.isSpreadAssignment(property)) {
+      // A record spread in that is written out - a `const`, or what a function
+      // building it answers - holds the key or does not, and one that does
+      // not leaves it to what is written before it (P286).
+      const spread = depth > MOST_NESTED ? undefined : followValue(property.getExpression(), bound, depth + 1);
+      if (spread === undefined || spread.choices !== undefined || !Node.isObjectLiteralExpression(spread.value)) {
+        return stopped(property.getExpression());
+      }
+      const inner = writtenProperty(spread.value, key, spread.bound, depth + 1);
+      if (inner === undefined) continue;
+      return inner;
+    }
     const nameNode = property.getNameNode();
     if (Node.isComputedPropertyName(nameNode)) return stopped(nameNode);
     if (keyOf(nameNode.getText()) !== key) continue;
     if (Node.isPropertyAssignment(property)) {
       const initializer = property.getInitializer();
-      return initializer === undefined ? stopped(property) : { expression: initializer, reached: true };
+      return initializer === undefined ? stopped(property) : carrying({ expression: initializer, reached: true }, bound);
     }
     if (Node.isShorthandPropertyAssignment(property)) {
-      return { expression: property.getNameNode(), reached: true };
+      return carrying({ expression: property.getNameNode(), reached: true }, bound);
     }
     // A method or an accessor computes the value when it is asked for.
     return stopped(property);
@@ -1061,7 +1192,7 @@ const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlo
   }
   if (!Node.isObjectLiteralExpression(value)) return halt();
   if (step === EVERY_KEY) return value.getProperties().map((property) => carrying(writtenKey(property), followed.bound));
-  return [carrying(writtenProperty(value, step), followed.bound)];
+  return [writtenProperty(value, step, followed.bound)];
 };
 
 /**
@@ -1074,11 +1205,15 @@ const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlo
  * element, and dropping them would shift every later element onto the wrong
  * index of a sibling path walked over the same list.
  */
-const walkPath = (start: TsNode, path: readonly string[], bound: Bindings = NO_BINDINGS): LocatedSlot[] => {
+export const walkPath = (start: TsNode, path: readonly string[], bound: Bindings = NO_BINDINGS): LocatedSlot[] => {
   let slots: LocatedSlot[] = [carrying({ expression: start, reached: true }, bound)];
-  for (const step of path) {
+  for (const [index, step] of path.entries()) {
     slots = slots.flatMap((slot) =>
-      slot === undefined || !slot.reached ? [slot] : stepInto(slot.expression, step, slot.bound ?? NO_BINDINGS),
+      slot === undefined || !slot.reached
+        ? [slot]
+        : stepInto(slot.expression, step, slot.bound ?? NO_BINDINGS).map((next) =>
+            next === undefined || next.reached || next.rest !== undefined ? next : { ...next, rest: path.slice(index) },
+          ),
     );
   }
   // A name a parameter the walk bound holds is what that parameter was handed;
@@ -1095,6 +1230,29 @@ const walkPath = (start: TsNode, path: readonly string[], bound: Bindings = NO_B
   });
 };
 
+/** How deep a tree of nodes is read before the rest of it is left unread. */
+const MOST_TREE_DEPTH = 4;
+
+/**
+ * A key of every node of a tree, the root first and each node's children
+ * after it (P286). A list of children not written out is one place that
+ * stopped, which a reader says it could not read.
+ */
+const treeSlots = (node: TsNode, key: string, children: string, bound: Bindings, depth: number): LocatedSlot[] => {
+  const own = walkPath(node, [key], bound);
+  if (depth >= MOST_TREE_DEPTH) return own;
+  const under = walkPath(node, [children, EVERY_ELEMENT], bound);
+  return [
+    ...own,
+    ...under.flatMap((child): LocatedSlot[] => {
+      if (child === undefined) return [];
+      // A node that is no record written out is already the place its key stopped.
+      if (!child.reached) return (child.rest?.length ?? 0) > 1 ? [] : [child];
+      return treeSlots(child.expression, key, children, child.bound ?? NO_BINDINGS, depth + 1);
+    }),
+  ];
+};
+
 /** The name a `new` expression constructs, as written: `X` in `new X()` and in `new sdk.X()`. */
 const constructedName = (construction: NewExpression): string | undefined => {
   const callee = construction.getExpression();
@@ -1102,6 +1260,46 @@ const constructedName = (construction: NewExpression): string | undefined => {
   if (Node.isPropertyAccessExpression(callee)) return callee.getName();
   return undefined;
 };
+
+/**
+ * Every class a `new` may make, as the code names them: the class itself, or
+ * past a `const` holding the class, each branch of the condition that chooses
+ * it - `const Made = pro ? QueuePro : Queue` (P286).
+ */
+export const constructedNames = (callee: TsNode): string[] => {
+  const names: string[] = [];
+  const visit = (node: TsNode, depth: number): void => {
+    const written = peeled(node);
+    if (depth > 4) return;
+    if (Node.isConditionalExpression(written)) {
+      visit(written.getWhenTrue(), depth + 1);
+      visit(written.getWhenFalse(), depth + 1);
+      return;
+    }
+    if (Node.isBinaryExpression(written)) {
+      const operator = written.getOperatorToken().getKind();
+      if (operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken) {
+        visit(written.getLeft(), depth + 1);
+        visit(written.getRight(), depth + 1);
+      }
+      return;
+    }
+    if (Node.isPropertyAccessExpression(written)) {
+      names.push(written.getName());
+      return;
+    }
+    if (!Node.isIdentifier(written)) return;
+    const held = constValue(written);
+    if (held === undefined) names.push(written.getText());
+    else visit(held, depth + 1);
+  };
+  visit(callee, 0);
+  return names;
+};
+
+/** Whether a `new` makes the class of this name, or may, where a condition chooses the class (P286). */
+const constructs = (construction: NewExpression, className: string): boolean =>
+  constructedNames(construction.getExpression()).includes(className);
 
 /**
  * The argument of this call that is an instance of a class, by the class's name.
@@ -1231,7 +1429,7 @@ const registryKey = (site: LocatorSite, className: string, index: number): Locat
     return (
       construction !== undefined &&
       Node.isNewExpression(construction) &&
-      constructedName(construction) === className &&
+      constructs(construction, className) &&
       sameBinding(key, construction.getArguments()[index])
     );
   });
@@ -1450,6 +1648,16 @@ const resolvers: LocatorResolvers = {
     const argument = argumentsOf(site)[locator.index];
     return argument === undefined ? [] : walkPath(argument, locator.path, context.bound);
   },
+  'argument-tree': (site, locator, context) => {
+    const argument = argumentsOf(site)[locator.index];
+    if (argument === undefined) return [];
+    const bound = context.bound ?? NO_BINDINGS;
+    // Each root a path reaches - every tree of a list of them - read in turn.
+    const roots = locator.path === undefined ? [carrying({ expression: argument, reached: true }, bound)] : walkPath(argument, locator.path, bound);
+    return roots.flatMap((root): LocatedSlot[] =>
+      root === undefined || !root.reached ? [root] : treeSlots(root.expression, locator.key, locator.children, root.bound ?? bound, 0),
+    );
+  },
   'constructed-argument-path': (site, locator, context) => {
     const found = instanceArgument(site, locator.class, context.bound);
     if (found === undefined) return [];
@@ -1462,7 +1670,7 @@ const resolvers: LocatorResolvers = {
     const receiver = receiverOf(site);
     if (receiver === undefined) return [];
     const made = followValue(receiver, context.bound);
-    if (!Node.isNewExpression(made.value) || constructedName(made.value) !== locator.class) return [stopped(receiver)];
+    if (!Node.isNewExpression(made.value) || !constructs(made.value, locator.class)) return [stopped(receiver)];
     const input = made.value.getArguments()[locator.index ?? 0];
     return input === undefined ? [undefined] : walkPath(input, locator.path, made.bound);
   },
