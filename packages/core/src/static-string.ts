@@ -223,6 +223,38 @@ const fromTemplate = (
   return { value, via: 'template', envRefs, ...(guessed ? { guessed: true } : {}) };
 };
 
+/** The two branches of a condition, written in place or held in a `const`. */
+const branchesOf = (expr: TsNode): [TsNode, TsNode] | undefined => {
+  let value: TsNode | undefined = expr;
+  while (value !== undefined && Node.isParenthesizedExpression(value)) value = value.getExpression();
+  if (value !== undefined && Node.isIdentifier(value)) {
+    const declaration = value.getSymbol()?.getDeclarations()[0];
+    const constant = declaration !== undefined && Node.isVariableDeclaration(declaration) && declaration.getVariableStatement()?.getDeclarationKind() === 'const';
+    value = constant ? declaration.getInitializer() : undefined;
+    while (value !== undefined && Node.isParenthesizedExpression(value)) value = value.getExpression();
+  }
+  return value !== undefined && Node.isConditionalExpression(value) ? [value.getWhenTrue(), value.getWhenFalse()] : undefined;
+};
+
+/** What an address asks for apart from its query and fragment. */
+const beforeQuery = (value: string): string => value.split(/[?#]/)[0] ?? '';
+
+/**
+ * A condition whose two branches are one address but for the query (P279):
+ * `params ? \`/api/signup?${params}\` : '/api/signup'` asks for `/api/signup`
+ * whichever is taken, so it is read as the branch that carries a query - the
+ * address with its query unread - and not as a string known only at run time.
+ * Branches that differ anywhere before the query are left unread.
+ */
+const sameRouteEitherWay = (expr: TsNode, options: StaticStringOptions): StaticString | undefined => {
+  const branches = branchesOf(expr);
+  if (branches === undefined) return undefined;
+  const [yes, no] = branches.map((branch) => resolveStaticString(branch, options));
+  if (yes === null || yes === undefined || no === null || no === undefined) return undefined;
+  if (beforeQuery(yes.value) !== beforeQuery(no.value) || yes.envRefs.join('\0') !== no.envRefs.join('\0')) return undefined;
+  return yes.value.length >= no.value.length ? yes : no;
+};
+
 /**
  * Reads a string out of the source without running it.
  *
@@ -242,6 +274,9 @@ export const resolveStaticString = (
   }
 
   if (Node.isTemplateExpression(expr)) return fromTemplate(expr, options);
+
+  const branched = sameRouteEitherWay(expr, options);
+  if (branched !== undefined) return branched;
 
   const evaluated = evaluateExpression(expr);
   if (!evaluated.resolved || typeof evaluated.value !== 'string') return null;

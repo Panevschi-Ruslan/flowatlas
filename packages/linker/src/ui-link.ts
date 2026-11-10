@@ -7,6 +7,7 @@ import { cmp } from './order.js';
 import {
   behindUnread,
   callingApplication,
+  catchAllBehind,
   isMatch,
   matchRoute,
   verbsAnswering,
@@ -531,6 +532,22 @@ const byGraphqlPath = (call: GraphNode, path: string, index: UiIndex): UiOutcome
 };
 
 /**
+ * A request read in part that a catch-all answers whatever the unread part
+ * holds (P279): of the caller's own service where the address names no host
+ * and no setting, as a relative address means; of the one service its
+ * setting names otherwise. See {@link catchAllBehind}.
+ */
+const byCatchAll = (call: GraphNode, method: unknown, path: string, env: unknown, index: UiIndex): UiOutcome | undefined => {
+  if (typeof method !== 'string' || typeof call.meta?.['host'] === 'string') return undefined;
+  const service = typeof env === 'string' ? index.targetOf(call.repo, env) : call.repo;
+  if (service === undefined) return undefined;
+  const from = service === call.repo ? callingApplication(call) : undefined;
+  const entry = catchAllBehind(method, path, index.routesOf(service) ?? [], from);
+  if (entry === undefined) return undefined;
+  return { kind: 'linked', via: typeof env === 'string' ? 'base-url-env' : 'same-service', entry, targetService: service, runnersUp: [] };
+};
+
+/**
  * Decides which route a request made in the browser reaches.
  *
  * Answers a question and changes nothing, so the decision can be read, tested
@@ -547,7 +564,7 @@ export const resolveUiCall = (call: GraphNode, index: UiIndex): UiOutcome => {
   // follow became an edge marked `static`. It is counted apart from an address
   // that was wholly unreadable, because this one is often a helper the tool
   // could learn to follow, and that is worth being able to measure.
-  if (!wasRead(path)) return byGraphqlPath(call, path, index) ?? { kind: 'dynamic', reason: 'api-path-partly-read' };
+  if (!wasRead(path)) return byGraphqlPath(call, path, index) ?? byCatchAll(call, method, path, env, index) ?? { kind: 'dynamic', reason: 'api-path-partly-read' };
   if (typeof method !== 'string') return { kind: 'dynamic', reason: 'api-method-dynamic' };
 
   const ask: Ask = { call, method, path, env: typeof env === 'string' ? env : undefined, index };

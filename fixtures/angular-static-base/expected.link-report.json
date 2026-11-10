@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T23:27:45.361Z",
+  "builtAt": "2026-11-10T14:15:43.093Z",
   "configHash": "37634076a802",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 3,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 654,
+      "durationMs": 1388,
       "packages": {
         "name": "api",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 5,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 516,
+      "durationMs": 1290,
       "packages": {
         "name": "web",
         "runtime": [
@@ -81,15 +81,25 @@
     "total": 0,
     "sharedPackage": 0
   },
-  "unresolved": [],
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/app/items.service.ts",
+      "line": 75,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…}/items is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/app/items.service.ts:75:12"
+    }
+  ],
   "totals": {
     "nodes": 20,
     "edges": 10,
     "types": 0,
-    "missed": 1,
-    "sites": 1,
+    "missed": 2,
+    "sites": 2,
     "notes": 0,
     "findings": 0,
-    "unresolved": 1
+    "unresolved": 2
   }
 }

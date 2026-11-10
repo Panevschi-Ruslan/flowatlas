@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:38:16.134Z",
+  "builtAt": "2026-11-10T14:18:29.464Z",
   "services": [
     {
       "name": "catalog-api",
@@ -1589,6 +1589,15 @@
       "hint": "The type argument is not known here, so the reference names the parameter.",
       "symbol": "T",
       "service": "storefront"
+    },
+    {
+      "service": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 59,
+      "reason": "api-path-dynamic",
+      "message": "GET /items/:param/${…}${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:storefront#src/app/items.client.ts:59:12"
     }
   ]
 }

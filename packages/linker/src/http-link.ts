@@ -2,6 +2,7 @@ import { IN_PROCESS_META, normalizePath, wasRead, type GraphNode } from '@flowat
 import {
   behindUnread,
   callingApplication,
+  catchAllBehind,
   isMatch,
   matchRoute,
   verbsAnswering,
@@ -540,6 +541,11 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     // towards a route this call may never reach.
     // An empty path is a request for exactly what a setting holds, which is
     // only an address once the setting's value says what is in it (P91).
+    // Save where a catch-all of the service answers whatever the part nobody read holds (P279).
+    if (typeof requestedPath === 'string' && requestedPath !== '' && !wasRead(requestedPath) && verbRead && typeof host !== 'string') {
+      const entry = catchAllBehind(method, requestedPath, index.routesOf(targetService) ?? [], callerApplicationIn(targetService));
+      if (entry !== undefined) return { outcome: { kind: 'linked', via, entry, runnersUp: [] }, notes, ...taken };
+    }
     if (typeof requestedPath !== 'string' || requestedPath === '' || !wasRead(requestedPath) || !verbRead) {
       return { outcome: { kind: 'dynamic', targetService }, notes, ...taken };
     }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T11:31:42.416Z",
+  "builtAt": "2026-11-10T14:18:56.477Z",
   "configHash": "6bdd35fd6118",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 18,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 1278,
+      "durationMs": 1365,
       "packages": {
         "name": "billing",
         "runtime": [
@@ -34,7 +34,7 @@
       "edges": 41,
       "types": 7,
       "unresolved": 1,
-      "durationMs": 1326,
+      "durationMs": 1480,
       "packages": {
         "name": "gateway",
         "runtime": [
@@ -60,7 +60,7 @@
       "edges": 26,
       "types": 5,
       "unresolved": 0,
-      "durationMs": 1275,
+      "durationMs": 1365,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -83,7 +83,7 @@
       "edges": 21,
       "types": 1,
       "unresolved": 3,
-      "durationMs": 974,
+      "durationMs": 1160,
       "packages": {
         "name": "web",
         "runtime": [
@@ -163,6 +163,15 @@
     },
     {
       "service": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 59,
+      "reason": "dynamic-http-url",
+      "message": "GET /orders/${…}${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "http_out:gateway#src/clients/orders.client.ts:59:12"
+    },
+    {
+      "service": "gateway",
       "file": "src/clients/payments.client.ts",
       "line": 24,
       "reason": "unknown-base-url-env",
@@ -218,6 +227,15 @@
     {
       "service": "web",
       "file": "src/app/orders-api.service.ts",
+      "line": 48,
+      "reason": "api-path-dynamic",
+      "message": "GET /orders/${…}-summary is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/app/orders-api.service.ts:48:12"
+    },
+    {
+      "service": "web",
+      "file": "src/app/orders-api.service.ts",
       "line": 106,
       "reason": "target-route-not-found",
       "message": "POST /orders/:param/hold reaches no route, though /orders/:param/resume does",
@@ -229,10 +247,10 @@
     "nodes": 134,
     "edges": 117,
     "types": 15,
-    "missed": 8,
-    "sites": 8,
+    "missed": 10,
+    "sites": 10,
     "notes": 0,
     "findings": 4,
-    "unresolved": 8
+    "unresolved": 10
   }
 }

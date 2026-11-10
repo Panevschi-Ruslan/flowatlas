@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:37:02.524Z",
+  "builtAt": "2026-11-10T14:17:09.524Z",
   "services": [
     {
       "name": "api",
@@ -809,5 +809,15 @@
       }
     }
   },
-  "unresolved": []
+  "unresolved": [
+    {
+      "service": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 35,
+      "reason": "dynamic-http-url",
+      "message": "GET /reports/${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "http_out:client#src/orders/orders.client.ts:35:12"
+    }
+  ]
 }

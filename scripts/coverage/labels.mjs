@@ -61,6 +61,10 @@
  * endpoint and every field it selects; its root fields are what it is a call
  * of, so the endpoint and the nested fields are where it went through rather
  * than other places it went. An external API is recorded and is not a way in.
+ * So a GraphQL request whose document could not be read, joined only to the
+ * endpoint it goes through, is a call of nothing the graph names: for
+ * `unread-ok` it is right where a row at the site says why the fields are
+ * unread, and missed where none does (P279).
  *
  * Addresses are compared the way the graph keys them: `METHOD:/path` with
  * every parameter `:param` (`makeHttpKey`), so a label may spell a parameter
@@ -248,6 +252,7 @@ const reachedFrom = (index, calls) => {
   const targets = new Map();
   const external = [];
   const jobs = new Set();
+  let throughOnly = true;
   for (const call of calls) {
     if (typeof call.meta?.jobName === 'string') jobs.add(call.meta.jobName);
     for (const edge of index.out.get(call.id) ?? []) {
@@ -259,13 +264,16 @@ const reachedFrom = (index, calls) => {
         continue;
       }
       const ways = index.waysOf(node);
-      if (ways.length > 0) targets.set(node.id, ways);
+      if (ways.length === 0) continue;
+      targets.set(node.id, ways);
+      // A GraphQL endpoint is gone through, not called (P279).
+      if (node.meta?.graphql?.endpoint !== true) throughOnly = false;
     }
   }
   const all = [...targets.values()];
   const roots = all.filter((ways) => isRootField(ways[0]));
   const principal = roots.length > 0 ? roots : all;
-  return { all, principal, external, jobs: [...jobs] };
+  return { all, principal, external, jobs: [...jobs], throughOnly: all.length > 0 && throughOnly };
 };
 
 const describe = (targets) => {
@@ -310,7 +318,7 @@ const judge = (index, label, readSource) => {
   const result = (outcome) => ({ ...base, ...moved, outcome, got });
   if (label.expect === 'none') return result(joined ? 'falsely' : 'right');
   if (label.expect === 'unread-ok') {
-    if (joined) return result('falsely');
+    if (joined && !reached.throughOnly) return result('falsely');
     return result(rows.length > 0 ? 'right' : 'missed');
   }
   const expected = (Array.isArray(label.expect) ? label.expect : [label.expect]).map(parseWay);

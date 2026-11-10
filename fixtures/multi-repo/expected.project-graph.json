@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-07T17:37:56.766Z",
+  "builtAt": "2026-11-10T14:18:14.239Z",
   "services": [
     {
       "name": "gateway",
@@ -3908,6 +3908,15 @@
     },
     {
       "service": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 59,
+      "reason": "dynamic-http-url",
+      "message": "GET /orders/${…}${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "http_out:gateway#src/clients/orders.client.ts:59:12"
+    },
+    {
+      "service": "gateway",
       "file": "src/clients/payments.client.ts",
       "line": 24,
       "reason": "unknown-base-url-env",
@@ -3968,6 +3977,15 @@
       "message": "gateway and orders both answer GET /orders/:param",
       "hint": "Set services[].apiTarget on the frontend to say which service its settings key names.",
       "symbol": "ui_api_call:web#src/app/orders-api.service.ts:34:12"
+    },
+    {
+      "service": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 48,
+      "reason": "api-path-dynamic",
+      "message": "GET /orders/${…}-summary is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/app/orders-api.service.ts:48:12"
     },
     {
       "service": "web",

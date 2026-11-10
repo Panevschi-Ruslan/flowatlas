@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T05:54:54.539Z",
+  "builtAt": "2026-11-10T14:18:19.813Z",
   "configHash": "70acd3434793",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 1,
-      "durationMs": 0,
+      "durationMs": 902,
       "packages": {
         "name": "admin",
         "runtime": [
@@ -30,7 +30,7 @@
       "edges": 2,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1293,
       "packages": {
         "name": "catalog-api",
         "runtime": [
@@ -49,7 +49,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1237,
       "packages": {
         "name": "orders",
         "runtime": [
@@ -68,7 +68,7 @@
       "edges": 7,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 892,
       "packages": {
         "name": "storefront",
         "runtime": [
@@ -122,21 +122,48 @@
     {
       "service": "storefront",
       "file": "src/app/shop.client.ts",
+      "line": 16,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:storefront#src/app/shop.client.ts:16:12"
+    },
+    {
+      "service": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 21,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:storefront#src/app/shop.client.ts:21:12"
+    },
+    {
+      "service": "storefront",
+      "file": "src/app/shop.client.ts",
       "line": 25,
       "reason": "marker-service-unknown",
       "message": "@flowatlas-calls names catalogue, which is not a configured service nor an alias of one (the aliases are catalog)",
       "hint": "Add catalogue to services[] in flowatlas.config.json, or to services[].aliases of the service it means, or correct the annotation.",
       "symbol": "ui_api_call:storefront#src/app/shop.client.ts:25:3"
+    },
+    {
+      "service": "storefront",
+      "file": "src/app/shop.client.ts",
+      "line": 26,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:storefront#src/app/shop.client.ts:26:12"
     }
   ],
   "totals": {
     "nodes": 30,
     "edges": 16,
     "types": 1,
-    "missed": 2,
-    "sites": 2,
+    "missed": 5,
+    "sites": 5,
     "notes": 0,
     "findings": 0,
-    "unresolved": 2
+    "unresolved": 5
   }
 }

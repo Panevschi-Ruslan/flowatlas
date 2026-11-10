@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:52:01.180Z",
+  "builtAt": "2026-11-10T14:22:01.896Z",
   "services": [
     {
       "name": "shop",
@@ -1980,6 +1980,15 @@
       "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
       "symbol": "any",
       "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/hooks/use-resource.ts",
+      "line": 14,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/hooks/use-resource.ts:14:26"
     }
   ]
 }

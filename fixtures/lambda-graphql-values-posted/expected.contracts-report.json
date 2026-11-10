@@ -1,0 +1,75 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-10T14:17:27.622Z",
+  "edges": [],
+  "findings": [
+    {
+      "severity": "error",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:bookshop#src/restock/restock.ts:19:9",
+        "to": "entry:bookshop:http:POST:/catalog",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:bookshop#src/restock/restock.ts:19:9|http_calls|entry:bookshop:http:POST:/catalog",
+      "direction": "request",
+      "sender": {
+        "service": "bookshop",
+        "typeId": null,
+        "symbol": "http_out:bookshop#src/restock/restock.ts:19:9"
+      },
+      "receiver": {
+        "service": "bookshop",
+        "typeId": null,
+        "symbol": "entry:bookshop:http:POST:/catalog"
+      },
+      "typeId": "graphql:bookshop#Mutation",
+      "field": "addBook(copies)",
+      "expected": null,
+      "actual": "copies",
+      "rule": "graphql-arg-unknown",
+      "message": "mutation hands Mutation.addBook an argument copies at src/restock/restock.ts:14, which the field does not take",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:bookshop#src/restock/restock.ts:32:9",
+        "to": "entry:bookshop:http:POST:/catalog",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:bookshop#src/restock/restock.ts:32:9|http_calls|entry:bookshop:http:POST:/catalog",
+      "direction": "request",
+      "reason": "no-type-on-receiver",
+      "message": "entry:bookshop:http:POST:/catalog declares no type for what it expects",
+      "hint": "Type what the handler is given: a `@Body()` or `@Payload()` parameter with a declared class."
+    },
+    {
+      "edge": {
+        "from": "http_out:bookshop#src/restock/restock.ts:32:9",
+        "to": "entry:bookshop:http:POST:/catalog",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:bookshop#src/restock/restock.ts:32:9|http_calls|entry:bookshop:http:POST:/catalog",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "entry:bookshop:http:POST:/catalog declares no type for what it sends",
+      "hint": "Give the handler a return type. A handler that answers with nothing has no contract to check."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 2,
+    "errors": 1,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

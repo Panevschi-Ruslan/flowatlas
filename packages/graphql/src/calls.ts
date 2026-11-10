@@ -27,7 +27,20 @@ export interface GraphqlCall {
   readonly client?: { readonly node: TsNode; readonly named: boolean };
 }
 
-const APOLLO_HOOKS = new Set(['useQuery', 'useLazyQuery', 'useSuspenseQuery', 'useBackgroundQuery', 'useMutation', 'useSubscription', 'useReadQuery']);
+/**
+ * The packages a server imports `fetch` from, and the names each exports it
+ * under (P279): `import fetch from 'node-fetch'` sends what the platform's does.
+ */
+const FETCH_MODULES: ReadonlyMap<string, readonly string[]> = new Map([
+  ['node-fetch', ['default', 'fetch']],
+  ['cross-fetch', ['default', 'fetch']],
+  ['isomorphic-fetch', ['default']],
+  ['isomorphic-unfetch', ['default']],
+  ['undici', ['fetch']],
+  ['@whatwg-node/fetch', ['fetch']],
+]);
+
+const APOLLO_HOOKS =new Set(['useQuery', 'useLazyQuery', 'useSuspenseQuery', 'useBackgroundQuery', 'useMutation', 'useSubscription', 'useReadQuery']);
 const URQL_HOOKS = new Set(['useQuery', 'useMutation', 'useSubscription']);
 
 /** The module a name is imported from, and the name it exports it under, when it is imported. */
@@ -76,6 +89,23 @@ const optionObjects = (node: TsNode | undefined, depth = 0): ObjectLiteralExpres
 /** Whether an expression is a document this can read: what tells `client.query(doc)` from `db.query(sql)`. */
 const isReadDocument = (expression: TsNode | undefined): boolean => expression !== undefined && documentOf(expression).kind === 'read';
 
+/** The options only Apollo Client's `query` takes beside its document. */
+const APOLLO_QUERY_OPTIONS = ['variables', 'fetchPolicy', 'errorPolicy', 'context'];
+
+/**
+ * Whether a call is Apollo Client's by the options it is handed, whatever its
+ * document (P279): `client.mutate({ mutation })`, `client.watchQuery({ query })`
+ * and `client.query({ query, variables })` name keys no other client's call
+ * does. Such a call whose document is built at run time is still a GraphQL
+ * request, to its client's endpoint, with a row saying its fields are unread -
+ * rather than nothing at all.
+ */
+const apolloShaped = (method: string, options: ObjectLiteralExpression): boolean => {
+  if (method === 'mutate') return options.getProperty('mutation') !== undefined;
+  if (options.getProperty('query') === undefined) return false;
+  return method === 'watchQuery' || (method === 'query' && APOLLO_QUERY_OPTIONS.some((key) => options.getProperty(key) !== undefined));
+};
+
 /** The address a `new GraphQLClient(url)` the receiver was made by names. */
 const constructedWith = (receiver: TsNode, className: string): TsNode | undefined => {
   if (!Node.isIdentifier(receiver) && !Node.isPropertyAccessExpression(receiver)) return undefined;
@@ -102,8 +132,11 @@ export const graphqlCallOf = (call: CallExpression, handed?: (expression: TsNode
     // A hook imported under another name is the hook it exports: `useQuery as useApollo`.
     const name = imported?.exported ?? callee.getText();
     const module = imported?.module;
-    if (name === 'fetch' && module === undefined) {
-      const document = fetchedDocument(call);
+    if (module === undefined ? name === 'fetch' : FETCH_MODULES.get(module)?.includes(name) === true) {
+      // One whose document is written as an operation but could not be read is
+      // still a GraphQL request: its reader says why the fields are unread (P279).
+      const query = fetchedQuery(call);
+      const document = isReadDocument(query) || looksLikeOperation(query) ? query : undefined;
       return document === undefined ? undefined : { library: 'fetch', document, ...(call.getArguments()[0] === undefined ? {} : { endpoint: call.getArguments()[0] as TsNode }) };
     }
     if (module === undefined) return undefined;
@@ -132,10 +165,10 @@ export const graphqlCallOf = (call: CallExpression, handed?: (expression: TsNode
   const angular = /apollo$/i.test(receiver.getText()) || receiver.getType().getText().endsWith('Apollo');
   const options = objectAt(call, 0);
   const made = angular ? {} : { client: { node: receiver, named: false } };
-  if (options !== undefined && ['query', 'watchQuery', 'subscribe'].includes(method) && isDocument(property(options, 'query'))) {
+  if (options !== undefined && ['query', 'watchQuery', 'subscribe'].includes(method) && (isDocument(property(options, 'query')) || apolloShaped(method, options))) {
     return { library: angular ? 'apollo-angular' : 'apollo', document: property(options, 'query'), ...(method === 'subscribe' ? { transport: 'ws' as const } : {}), ...made };
   }
-  if (options !== undefined && method === 'mutate' && isDocument(property(options, 'mutation'))) {
+  if (options !== undefined && method === 'mutate' && (isDocument(property(options, 'mutation')) || apolloShaped(method, options))) {
     return { library: angular ? 'apollo-angular' : 'apollo', document: property(options, 'mutation'), ...made };
   }
   const first = call.getArguments()[0];
@@ -149,14 +182,29 @@ export const graphqlCallOf = (call: CallExpression, handed?: (expression: TsNode
   return undefined;
 };
 
-/** What a `fetch` sends as `query`, where its body is `JSON.stringify({ query })` written in place: a document or not. */
+/**
+ * What a `fetch` sends as `query`, where its body is `JSON.stringify({ query })`:
+ * a document or not. The object is written in place or held in a `const`
+ * (`const body = { query: … }; fetch(url, { body: JSON.stringify(body) })`, P279).
+ */
 export const fetchedQuery = (call: CallExpression): TsNode | undefined => {
   const init = objectAt(call, 1);
   const body = init === undefined ? undefined : property(init, 'body');
   if (body === undefined || !Node.isCallExpression(body) || body.getExpression().getText() !== 'JSON.stringify') return undefined;
-  const [payload] = body.getArguments();
-  if (payload === undefined || !Node.isObjectLiteralExpression(payload)) return undefined;
-  return property(payload, 'query');
+  const [payload] = optionObjects(body.getArguments()[0]);
+  return payload === undefined ? undefined : property(payload, 'query');
+};
+
+/**
+ * Whether what a `fetch` sends as `query` is written as a GraphQL operation
+ * (P279): text that opens with `query`, `mutation`, `subscription` or `{`. Such
+ * a document this could not read is a GraphQL request whose fields are unread,
+ * not some other API's search term.
+ */
+export const looksLikeOperation = (query: TsNode | undefined): boolean => {
+  if (query === undefined) return false;
+  const text = Node.isStringLiteral(query) || Node.isNoSubstitutionTemplateLiteral(query) || Node.isTemplateExpression(query) ? query.getText().slice(1) : '';
+  return /^\s*(query|mutation|subscription)\b|^\s*\{/.test(text);
 };
 
 /** The document a `fetch` sends, where its body is `JSON.stringify({ query })` written in place. */

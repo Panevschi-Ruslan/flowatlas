@@ -1,0 +1,36 @@
+service: bookshop
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+
+functions:
+  # A GraphQL server made into the function's handler: every field its
+  # resolvers answer is a way in, and this route is its endpoint.
+  catalog:
+    handler: src/catalog/index.server
+    events:
+      - http:
+          path: catalog
+          method: POST
+
+  # Everything under /plugins, whatever follows.
+  plugins:
+    handler: src/plugins/handler.handler
+    events:
+      - http:
+          path: plugins/{proxy+}
+          method: GET
+
+  restock:
+    handler: src/restock/restock.handler
+    environment:
+      CATALOG_API_URL: ${self:custom.catalogUrl}
+    events:
+      - schedule: rate(1 hour)
+
+custom:
+  catalogUrl: https://api.example.com/${sls:stage}

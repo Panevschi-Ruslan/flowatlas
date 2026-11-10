@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T04:49:24.759Z",
+  "builtAt": "2026-11-10T14:17:09.524Z",
   "configHash": "a47ef5cd45c0",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 10,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 659,
+      "durationMs": 973,
       "packages": {
         "name": "api",
         "runtime": [
@@ -31,7 +31,7 @@
       "edges": 8,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 712,
+      "durationMs": 1051,
       "packages": {
         "name": "client",
         "runtime": [
@@ -89,15 +89,25 @@
     "total": 1,
     "sharedPackage": 0
   },
-  "unresolved": [],
+  "unresolved": [
+    {
+      "service": "client",
+      "file": "src/orders/orders.client.ts",
+      "line": 35,
+      "reason": "dynamic-http-url",
+      "message": "GET /reports/${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "http_out:client#src/orders/orders.client.ts:35:12"
+    }
+  ],
   "totals": {
     "nodes": 32,
     "edges": 20,
     "types": 1,
-    "missed": 0,
-    "sites": 0,
+    "missed": 1,
+    "sites": 1,
     "notes": 0,
     "findings": 0,
-    "unresolved": 0
+    "unresolved": 1
   }
 }

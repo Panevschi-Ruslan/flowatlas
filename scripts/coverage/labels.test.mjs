@@ -38,7 +38,7 @@ const graph = {
     entry('api', 'http', 'GET:/api/cart'),
     entry('api', 'http', 'POST:/api/cart'),
     entry('api', 'http', 'GET:/api/orders/:param'),
-    entry('api', 'http', 'POST:/graphql'),
+    { ...entry('api', 'http', 'POST:/graphql'), meta: { graphql: { endpoint: true } } },
     entry('api', 'graphql', 'Mutation.placeOrder@/graphql'),
     entry('api', 'graphql', 'Order.total@/graphql'),
     entry('api', 'event', 'mail'),
@@ -64,6 +64,8 @@ const graph = {
     node('producer', 'api', 'src/mail.ts', 3, 5, { meta: { jobName: 'welcome' } }),
     node('ui_api_call', 'web', 'src/two.ts', 5, 1),
     node('ui_api_call', 'web', 'src/two.ts', 5, 40),
+    node('ui_api_call', 'web', 'src/records.ts', 12, 3),
+    node('ui_api_call', 'web', 'src/records.ts', 20, 3),
   ],
   edges: [
     // Right: the cart is read from GET /api/cart.
@@ -89,8 +91,12 @@ const graph = {
     // Two calls on one line, told apart by column.
     { from: 'ui_api_call:web#src/two.ts:5:1', to: 'entry:api:http:GET:/api/cart', type: 'hits' },
     { from: 'ui_api_call:web#src/two.ts:5:40', to: 'entry:api:http:POST:/api/cart', type: 'hits' },
+    // Two GraphQL requests whose documents are built at run time: the endpoint alone.
+    { from: 'ui_api_call:web#src/records.ts:12:3', to: 'entry:api:http:POST:/graphql', type: 'hits' },
+    { from: 'ui_api_call:web#src/records.ts:20:3', to: 'entry:api:http:POST:/graphql', type: 'hits' },
   ],
   unresolved: [
+    { file: 'src/records.ts', line: 12, reason: 'graphql-document-dynamic', service: 'web' },
     { file: 'src/dynamic.ts', line: 8, reason: 'url-dynamic', service: 'web' },
     {
       file: 'src/folded.ts',
@@ -201,6 +207,14 @@ test('`unread-ok` wants a row at the site, folded samples included', () => {
   assert.equal(one({ file: 'apps/web/src/dynamic.ts', line: 8, kind: 'browser', expect: 'unread-ok' }).outcome, 'right');
   assert.equal(one({ file: 'apps/web/src/other.ts', line: 6, kind: 'browser', expect: 'unread-ok' }).outcome, 'right');
   assert.equal(one({ file: 'apps/web/src/dynamic.ts', line: 9, kind: 'browser', expect: 'unread-ok' }).outcome, 'missed');
+});
+
+test('a GraphQL request with an unread document goes through its endpoint and calls nothing (P279)', () => {
+  const read = one({ file: 'apps/web/src/records.ts', line: 12, kind: 'graphql', expect: 'unread-ok' });
+  assert.equal(read.outcome, 'right');
+  assert.equal(one({ file: 'apps/web/src/records.ts', line: 20, kind: 'graphql', expect: 'unread-ok' }).outcome, 'missed');
+  // Joined to the endpoint and a route besides is a join of something.
+  assert.equal(one({ file: 'apps/web/src/checkout.ts', line: 30, kind: 'graphql', expect: 'unread-ok' }).outcome, 'falsely');
 });
 
 test('a column picks one of two calls on a line', () => {

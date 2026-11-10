@@ -70,7 +70,9 @@ const templateText = (template: TsNode): { text: string; offset: number; holes: 
   if (Node.isNoSubstitutionTemplateLiteral(template)) return { text: template.getLiteralText(), offset: template.getStart() + 1, holes: [] };
   if (Node.isStringLiteral(template)) return { text: template.getLiteralText(), offset: template.getStart() + 1, holes: [] };
   if (!Node.isTemplateExpression(template)) return undefined;
-  const raw = template.getText().slice(1, -1);
+  // A line break written as an escape - `mutation {\n  orders }` - is one, the
+  // same length as the escape so every offset stays the file's (P279).
+  const raw = template.getText().slice(1, -1).replace(/\\(\\|[nrt])/g, (escape, kind: string) => (kind === '\\' ? escape : kind === 't' ? '  ' : '\n '));
   let text = '';
   let at = 0;
   const holes: TsNode[] = [];
@@ -80,15 +82,44 @@ const templateText = (template: TsNode): { text: string; offset: number; holes: 
     const after = span.getLiteral();
     const holeStart = before.getEnd() - 2 - start;
     const holeEnd = after.getStart() + 1 - start;
-    text += raw.slice(at, holeStart) + ' '.repeat(holeEnd - holeStart);
-    at = holeEnd;
+    text += raw.slice(at, holeStart);
     // A value written inside a string of the document - `email: "${email}"` -
-    // is a value, which the document's shape does not depend on (P266).
-    if (!insideString(text)) holes.push(span.getExpression());
+    // is a value, which the document's shape does not depend on (P266); and so
+    // is one written bare where an argument's value goes - `id: ${orderId}` -
+    // which stands as a value of the same length so the document parses (P279).
+    if (insideString(text)) text += ' '.repeat(holeEnd - holeStart);
+    else if (atValue(text)) text += '0'.padEnd(holeEnd - holeStart, ' ');
+    else {
+      text += ' '.repeat(holeEnd - holeStart);
+      holes.push(span.getExpression());
+    }
+    at = holeEnd;
     before = after;
   }
   text += raw.slice(at);
   return { text, offset: start, holes };
+};
+
+/**
+ * Whether the end of a document's text so far is where a value goes (P279):
+ * after an argument's or an input field's `:`, or first in a list. A
+ * `:` after an alias names a field, never a value, so it counts only inside
+ * the parentheses of arguments - where a `(` before it is not yet closed.
+ */
+const atValue = (text: string): boolean => {
+  const before = text.trimEnd();
+  const last = before[before.length - 1];
+  if (last !== ':' && last !== '[') return false;
+  let depth = 0;
+  for (let at = before.length - 1; at >= 0; at -= 1) {
+    const char = before[at];
+    if (char === ')') depth += 1;
+    else if (char === '(') {
+      if (depth === 0) return true;
+      depth -= 1;
+    }
+  }
+  return false;
 };
 
 /** Whether the end of a document's text so far is inside a string: an odd count of unescaped quotes on its last line. */

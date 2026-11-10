@@ -367,3 +367,63 @@ describe('a server made into a function a platform invokes (P269)', () => {
     expect(graphqlServerHandled(file?.getVariableDeclaration('other')?.getInitializer())).toBeUndefined();
   });
 });
+
+describe('a document a server posts with fetch, written with its values in it (P279)', () => {
+  const files = {
+    'orders.ts': [
+      "import fetch from 'node-fetch';",
+      'export async function place(name: string, total: number) {',
+      '  const body = {',
+      '    query: `mutation {',
+      '      placeOrder(name: "${name}", total: ${total}) {',
+      '        id',
+      '      }',
+      '    }`,',
+      '  };',
+      "  await fetch(ENDPOINT, { method: 'POST', body: JSON.stringify(body) });",
+      '}',
+      'export async function status(id: string, state: string) {',
+      "  await fetch(ENDPOINT, { method: 'POST', body: JSON.stringify({ query: `mutation {\\n  setStatus(id: ${id}, status: ${state}) {\\n    id\\n  }\\n}` }) });",
+      '}',
+      'export async function search(term: string) {',
+      "  await fetch(ENDPOINT, { method: 'POST', body: JSON.stringify({ query: term }) });",
+      '}',
+      'export async function built(fields: string) {',
+      "  await fetch(ENDPOINT, { method: 'POST', body: JSON.stringify({ query: `query { order { ${fields} } }` }) });",
+      '}',
+    ].join('\n'),
+  };
+
+  it('reads the operation through node-fetch, a body held in a const, and a value written bare where an argument goes', () => {
+    const made = project(files);
+    const [place, status, search, built] = callsIn(made, 'orders.ts', 'fetch');
+    const placed = graphqlCallOf(place as CallExpression);
+    expect(placed?.library).toBe('fetch');
+    const reading = documentOf(placed?.document);
+    expect(reading.kind).toBe('read');
+    if (reading.kind !== 'read') return;
+    expect(metaOf(reading).fields?.map((field) => field.field)).toEqual(['placeOrder']);
+    expect(metaOf(reading).fields?.[0]?.line).toBe(5);
+    // A line break written as an escape is one.
+    const statusReading = documentOf(graphqlCallOf(status as CallExpression)?.document);
+    expect(statusReading.kind === 'read' ? metaOf(statusReading).fields?.map((field) => field.field) : statusReading.why).toEqual(['setStatus']);
+    // A search term is not a GraphQL request.
+    expect(graphqlCallOf(search as CallExpression)).toBeUndefined();
+    // A document whose selection is built at run time is one, unread, with a reason.
+    const unread = graphqlCallOf(built as CallExpression);
+    expect(unread?.library).toBe('fetch');
+    expect(documentOf(unread?.document).kind).toBe('dynamic');
+  });
+
+  it('takes Apollo Client by the options it is handed, whatever its document', () => {
+    const made = project({
+      'records.ts': [
+        'export const merge = (client: any, mutation: unknown) => client.mutate({ mutation, variables: { ids: [] } });',
+        'export const list = (client: any, query: unknown) => client.query({ query, variables: { limit: 10 } });',
+        'export const raw = (db: any, query: string) => db.query({ query });',
+      ].join('\n'),
+    });
+    const calls = made.getSourceFile('records.ts')?.getDescendantsOfKind(SyntaxKind.CallExpression) ?? [];
+    expect(calls.map((call) => graphqlCallOf(call)?.library ?? 'none')).toEqual(['apollo', 'apollo', 'none']);
+  });
+});

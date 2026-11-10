@@ -832,6 +832,23 @@ const partlyRead = (call: GraphNode): { method: string | null; path: string } | 
   return wasRead(path) && verb !== null ? undefined : { method: verb, path };
 };
 
+/**
+ * What is said of a request whose address was read in part and joins nothing
+ * (P279): a reader reports an address it could not read at all where it is
+ * written, and one with a literal segment read and a `${…}` beside it went
+ * unsaid. Not for an address that names its host, which is the host's to
+ * answer, a third party's paths being none of the project's.
+ */
+const partlyReadFinding = (call: GraphNode, reason: 'api-path-dynamic' | 'dynamic-http-url'): Finding | undefined => {
+  const read = partlyRead(call);
+  if (read === undefined || wasRead(read.path) || typeof call.meta?.['host'] === 'string') return undefined;
+  return {
+    reason,
+    message: `${read.method ?? 'a request to'} ${read.path} is built in part at run time, and no route is joined across the part (\`\${…}\`) nobody read`,
+    hint: 'Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.',
+  };
+};
+
 /** A request between services that may still reach a route of the service it was aimed at. */
 const nearMissOf = (call: GraphNode, outcome: CallOutcome): Unjoined | undefined => {
   const read = partlyRead(call);
@@ -1167,6 +1184,8 @@ export const linkGraphs = (
     }
     const partial = nearMissOf(call, outcome);
     if (partial !== undefined) partials.push(partial);
+    const unread = outcome.kind === 'dynamic' && !browserTwinned(call) ? partlyReadFinding(call, 'dynamic-http-url') : undefined;
+    if (unread !== undefined) record(call, unread);
 
     const aim = aimOf(outcome);
     if (aim !== undefined) call.meta = { ...call.meta, targetService: aim };
@@ -1305,6 +1324,8 @@ export const linkGraphs = (
     if (outcome.kind === 'dynamic') {
       const partial = uiNearMissOf(call, uiIndex);
       if (partial !== undefined) partials.push(partial);
+      const unread = outcome.reason === 'api-path-partly-read' ? partlyReadFinding(call, 'api-path-dynamic') : undefined;
+      if (unread !== undefined) record(call, unread);
     }
     // An address built at run time was already reported where it was written,
     // with the annotation that would fix it; saying it again here adds nothing.
