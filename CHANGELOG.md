@@ -79,6 +79,19 @@ only one of them moved.
   handed a role (`role:`) carries the role's grants, statements, inline
   policies and attached `Policy`s, and `Grant.addToPrincipal` adds to the
   grantee's.
+- **Plain browser code, and an API's address written out with its id (P284).**
+  A directory with no manifest that holds a page and the scripts it loads, and
+  nothing that builds them, is the type `browser`: `link` and `init` offer it,
+  and the browser reader reads the requests its scripts send - `fetch`, and
+  `XMLHttpRequest`'s `open(verb, address)` - with the classic scripts of one
+  page sharing their globals. Every route of a Serverless service's own API
+  records where the API is served (`meta.servedAt`): the gateway host of its
+  region with the id left open, under its stage, or any stage where the file
+  leaves it to the command line. A request written anywhere in the project to
+  `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>` is joined to
+  the one API served there, the path after the stage asked of its routes,
+  `heuristic`, with a `base-url-from-files` note; several APIs there are an
+  `ambiguous-route-target` row naming them.
 
 - **The coverage harness measures whether a join is right, and reads a
   system split across repositories (P278).** A target may carry hand labels,

@@ -20,7 +20,9 @@ import {
   declaresDeployment,
   guessDirectoryType,
   guessUnreadIn,
+  isPlainBrowserCode,
   looksLikeApplication,
+  PLAIN_BROWSER_TYPE,
   UNKNOWN_TYPE,
 } from '../stacks.js';
 import { READABLE_TYPES } from '../readers.js';
@@ -246,6 +248,12 @@ export const scanCandidates = (scanDir: string, configDir: string): Candidate[] 
     const pkg = readPackageJson(absPath) ?? (declaresDeployment(absPath) ? {} : undefined);
     if (pkg !== undefined) {
       found.push(...servicesIn(absPath, self, pkg));
+      continue;
+    }
+    // Or a directory of pages and the scripts they load, with nothing to build
+    // them (P284): a front end of its own.
+    if (isPlainBrowserCode(absPath)) {
+      found.push({ absPath, repo: repoPathFor(self, absPath), name: basename(absPath), type: PLAIN_BROWSER_TYPE });
       continue;
     }
     // Or an application of a workspace that keeps one manifest for everything,

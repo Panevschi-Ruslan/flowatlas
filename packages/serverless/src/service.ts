@@ -1,5 +1,5 @@
 import { join, posix } from 'node:path';
-import { destinationOf, executeApiAddress } from '@flowatlas/aws';
+import { destinationOf, executeApiAddress, executeApiServedAt } from '@flowatlas/aws';
 import { type DeployedFunction, type DeployedHandler, type DeployedKind, type DeployedSetting, type PathStep, type PositionedDocument } from '@flowatlas/core';
 import { intrinsicOf, Template, type Deployed } from './cloudformation.js';
 import { readServiceFile, ServiceFileUnreadable } from './document.js';
@@ -9,7 +9,7 @@ import { readOutputs, readParameters, type ApiReference, type ImplicitOutput } f
 import { FileReading, type DeploymentParts } from './reading.js';
 import { DESTINATION_KINDS, readResources } from './resources.js';
 import { readPluginStateMachines, readStateMachineResource } from './state-machines.js';
-import { Imported, isRecord, textOf, Unread, Variables, type StageFrom } from './variables.js';
+import { DEFAULT_REGION, Imported, isRecord, textOf, Unread, Variables, type StageFrom } from './variables.js';
 
 /**
  * One service file, read into the parts of a deployment (P57).
@@ -68,6 +68,14 @@ const ownApiOf = (
     return undefined;
   };
 };
+
+/**
+ * Whether the stage a service is deployed to is chosen when it is run (P284):
+ * none written, or written as the command line's option with a default.
+ * The configuration's own options settle it.
+ */
+const stageChosenOnRun = (from: StageFrom, written: unknown): boolean =>
+  from === 'default' || (from === 'file' && typeof written === 'string' && /^\$\{opt:stage\b[^}]*\}$/.test(written.trim()));
 
 /** `functions` as one mapping, written as one or as a list of them. */
 const functionsOf = (value: unknown): [string, Record<string, unknown>][] => {
@@ -196,7 +204,22 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
     ...(sharedRest === undefined ? {} : { sharedRest }),
     ...(sharedHttp === undefined ? {} : { sharedHttp }),
   };
-  const events: EventReading = { file: reading, apis };
+  // Where the service's own APIs are served (P284): in its region, the REST
+  // API under its stage and the HTTP API at its default stage, which writes
+  // none. A stage the file leaves to the command line (`${opt:stage, ...}`,
+  // or none written) is any the deployment is run with, unless the
+  // configuration's options name it.
+  const region = textOf(provider['region']) ?? (provider['region'] === undefined ? DEFAULT_REGION : undefined);
+  const writtenStage = isRecord(document.value) && isRecord(document.value['provider']) ? document.value['provider']['stage'] : undefined;
+  const chosen = stageChosenOnRun(stage.from, writtenStage);
+  const served =
+    region === undefined || stageText === undefined
+      ? undefined
+      : {
+          ...(apis.rest === undefined ? {} : { rest: executeApiServedAt(region, apis.rest, { name: stageText, chosen }) }),
+          ...(apis.http === undefined ? {} : { http: executeApiServedAt(region, apis.http, {}) }),
+        };
+  const events: EventReading = { file: reading, apis: served === undefined ? apis : { ...apis, served } };
   reading.ownApi = ownApiOf(functions, apis, stageText, textOf(provider['region']));
 
   const providerEnvironment = isRecord(provider['environment']) ? provider['environment'] : {};

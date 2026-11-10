@@ -13,6 +13,7 @@ import { whereFound, type BaseUrlAnswer, type FoundValue } from './base-url-valu
 import { localGraphqlEndpoint, unservedFinding } from './graphql-value.js';
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
 import { defaultPortOf, forwardedAgain, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
+import { apiServedAt, servedAmbiguousFinding, servedAtFinding } from './served-at-link.js';
 
 /** A reason, a sentence and what to do about it — everything but where it happened. */
 export interface Finding {
@@ -99,7 +100,7 @@ export type BindingAnswer =
 /** What each way a call can end carries with it. */
 interface Details {
   linked: {
-    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host' | 'proxy' | 'ingress' | 'ownOrigin' | 'inProcess' | 'graphqlPath' | 'externalValuePath';
+    via: 'baseUrlEnv' | 'marker' | 'functionUrl' | 'apiName' | 'baseUrlValue' | 'serviceBinding' | 'host' | 'proxy' | 'ingress' | 'ownOrigin' | 'inProcess' | 'graphqlPath' | 'externalValuePath' | 'servedAt';
     entry: GraphNode;
     runnersUp: readonly string[];
     /** The settings whose part of the route's address was taken as empty (R144). */
@@ -117,6 +118,8 @@ interface Details {
   portClosed: { host: string; closed: ClosedPort };
   /** The request is forwarded through more servers than are followed, or in a circle (P260). */
   proxyChain: { services: readonly string[]; loop: boolean };
+  /** Several APIs of the project are served where the address is written, its id not read (P284). */
+  apiAmbiguous: { method: string; path: string; host: string; apis: readonly string[] };
   /**
    * The host, when it was found from the value the setting is given rather
    * than written in the call (P77), or is where a server's proxy forwards the
@@ -193,6 +196,7 @@ const FINDINGS: { [K in OutcomeKind]: ((detail: Details[K]) => Finding) | null }
   portShared: ({ port, said }) => portSharedFinding(port, said),
   portClosed: ({ host, closed }) => portClosedFinding(host, closed),
   proxyChain: ({ services, loop }) => proxyChainFinding(services, loop),
+  apiAmbiguous: ({ method, path, host, apis }) => servedAmbiguousFinding(method, path, host, apis),
   unknownEnv: ({ env, claiming, values }) =>
     claiming.length === 0 && values !== undefined
       ? unsettledFinding(env, values)
@@ -538,6 +542,8 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     via: Extract<CallOutcome, { kind: 'linked' }>['via'],
     taken: { baseUrl?: FoundValue },
     requestedPath: unknown = path,
+    /** Only the routes of one of its APIs, where the address names which (P284). */
+    among?: readonly GraphNode[],
   ): Resolution => {
     // Knowing which service is asked is not knowing what is asked of it. A route
     // guessed here would be a route this service does not serve, reported as
@@ -557,7 +563,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
       return { outcome: { kind: 'dynamic', targetService }, notes, ...taken };
     }
 
-    const routes = index.routesOf(targetService) ?? [];
+    const routes = among ?? index.routesOf(targetService) ?? [];
     const requested = requestedPath as string;
     const from = callerApplicationIn(targetService);
     let found = matchRoute(method, requested, routes, from);
@@ -780,6 +786,19 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
           ...(at.listening === undefined ? {} : { listening: at.listening }),
         },
       };
+    }
+    // A host no service is reached at where the project serves one of its
+    // APIs, the address naming it by an id no file holds (P284).
+    const url = call.meta?.['url'];
+    const served =
+      at === undefined && typeof host === 'string' && typeof path === 'string' && wasRead(path) && index.services !== undefined
+        ? apiServedAt(method, host, path, typeof url === 'string' ? url : `${host}${path}`, index.services(), (service) => index.routesOf(service))
+        : undefined;
+    if (served?.kind === 'several') return { outcome: { kind: 'apiAmbiguous', method, path: path as string, host: host as string, apis: served.apis }, notes };
+    if (served?.kind === 'one') {
+      const reached = within(served.found.service, 'servedAt', {}, served.found.path, served.found.routes);
+      if (reached.outcome.kind === 'linked') notes.push(servedAtFinding(served.found));
+      return reached;
     }
     // Nothing to look up: either it names a third party outright, or the
     // address was built at run time and there is nothing to read.

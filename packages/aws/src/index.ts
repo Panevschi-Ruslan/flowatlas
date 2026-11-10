@@ -38,6 +38,7 @@ export {
   deployedArn,
   deployedNameIn,
   executeApiAddress,
+  executeApiServedAt,
   FUNCTION_NAME_FORMS,
   TABLE_CHANGES_FORMS,
   type DeployedName,

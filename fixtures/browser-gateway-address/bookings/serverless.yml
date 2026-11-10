@@ -1,0 +1,28 @@
+service: bookings
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  # Deployed as `sls deploy --stage dev` while it is built, `prod` otherwise.
+  stage: ${opt:stage, 'prod'}
+  region: ${opt:region, 'eu-west-1'}
+
+functions:
+  listSlots:
+    handler: src/slots.handler
+    events:
+      - http:
+          path: slots
+          method: GET
+
+  bookSlot:
+    handler: src/book.handler
+    events:
+      - http:
+          path: bookings
+          method: POST
+
+  cancelBooking:
+    handler: src/cancel.handler
+    events:
+      - httpApi: 'DELETE /bookings/{id}'

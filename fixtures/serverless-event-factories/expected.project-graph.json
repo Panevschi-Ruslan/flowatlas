@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:40:31.478Z",
+  "builtAt": "2026-11-10T15:32:05.429Z",
   "services": [
     {
       "name": "shop",
@@ -178,6 +178,16 @@
         "api": "dev-shop",
         "function": "shop-dev-ledger",
         "declaredAs": "functions.ledger.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-shop",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -197,6 +207,16 @@
         "api": "dev-shop",
         "function": "shop-dev-placeOrder",
         "declaredAs": "functions.placeOrder.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-shop",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -216,6 +236,16 @@
         "api": "dev-shop",
         "function": "shop-dev-shipOrder",
         "declaredAs": "functions.shipOrder.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-shop",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -235,6 +265,16 @@
         "api": "dev-shop",
         "function": "shop-dev-refund",
         "declaredAs": "functions.refund.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-shop",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

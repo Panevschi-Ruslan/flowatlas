@@ -1,0 +1,680 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:10:09.026Z",
+  "services": [
+    {
+      "name": "bookings",
+      "repo": "./bookings",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "bookings#src/book.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "bookings",
+      "file": "src/book.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{body:string}"
+            }
+          ],
+          "returns": "{statusCode:201;body:string}"
+        }
+      }
+    },
+    {
+      "id": "bookings#src/cancel.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "bookings",
+      "file": "src/cancel.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{pathParameters?:{id?:string}}"
+            }
+          ],
+          "returns": "{statusCode:204;body:string}"
+        }
+      }
+    },
+    {
+      "id": "bookings#src/slots.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "bookings",
+      "file": "src/slots.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{statusCode:200;body:string}"
+        }
+      }
+    },
+    {
+      "id": "entry:bookings:http:DELETE:/bookings/:param",
+      "type": "entry",
+      "label": "DELETE /bookings/:param",
+      "repo": "bookings",
+      "file": "serverless.yml",
+      "line": 28,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/bookings/:param",
+        "rawPath": "/bookings/{id}",
+        "deployedBy": "serverless",
+        "api": "prod-bookings",
+        "function": "bookings-prod-cancelBooking",
+        "declaredAs": "functions.cancelBooking.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [],
+            "api": "prod-bookings"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:bookings:http:GET:/slots",
+      "type": "entry",
+      "label": "GET /slots",
+      "repo": "bookings",
+      "file": "serverless.yml",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/slots",
+        "rawPath": "slots",
+        "deployedBy": "serverless",
+        "api": "prod-bookings",
+        "function": "bookings-prod-listSlots",
+        "declaredAs": "functions.listSlots.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "prod-bookings",
+            "chosenDefault": "prod"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:bookings:http:POST:/bookings",
+      "type": "entry",
+      "label": "POST /bookings",
+      "repo": "bookings",
+      "file": "serverless.yml",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/bookings",
+        "rawPath": "bookings",
+        "deployedBy": "serverless",
+        "api": "prod-bookings",
+        "function": "bookings-prod-bookSlot",
+        "declaredAs": "functions.bookSlot.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "prod-bookings",
+            "chosenDefault": "prod"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:bookings:invoke:bookings-prod-bookSlot",
+      "type": "entry",
+      "label": "bookings-prod-bookSlot",
+      "repo": "bookings",
+      "file": "serverless.yml",
+      "line": 18,
+      "kind": "invoke",
+      "meta": {
+        "key": "bookings-prod-bookSlot",
+        "deployedBy": "serverless",
+        "name": "bookings-prod-bookSlot",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.bookSlot",
+        "stageFrom": "file",
+        "handler": "src/book.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{body:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:bookings:invoke:bookings-prod-cancelBooking",
+      "type": "entry",
+      "label": "bookings-prod-cancelBooking",
+      "repo": "bookings",
+      "file": "serverless.yml",
+      "line": 25,
+      "kind": "invoke",
+      "meta": {
+        "key": "bookings-prod-cancelBooking",
+        "deployedBy": "serverless",
+        "name": "bookings-prod-cancelBooking",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.cancelBooking",
+        "stageFrom": "file",
+        "handler": "src/cancel.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{pathParameters?:{id?:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:bookings:invoke:bookings-prod-listSlots",
+      "type": "entry",
+      "label": "bookings-prod-listSlots",
+      "repo": "bookings",
+      "file": "serverless.yml",
+      "line": 11,
+      "kind": "invoke",
+      "meta": {
+        "key": "bookings-prod-listSlots",
+        "deployedBy": "serverless",
+        "name": "bookings-prod-listSlots",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.listSlots",
+        "stageFrom": "file",
+        "handler": "src/slots.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "external_api:k7m2p9q4r1.execute-api.eu-central-1.amazonaws.com",
+      "type": "external_api",
+      "label": "k7m2p9q4r1.execute-api.eu-central-1.amazonaws.com",
+      "repo": "web",
+      "meta": {
+        "host": "k7m2p9q4r1.execute-api.eu-central-1.amazonaws.com"
+      }
+    },
+    {
+      "id": "repo:bookings",
+      "type": "repo",
+      "label": "bookings",
+      "repo": "bookings",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "apiRoots": [
+          {
+            "key": "stack:bookings-prod#HttpApiId",
+            "path": "/",
+            "api": "prod-bookings",
+            "file": "serverless.yml",
+            "line": 3,
+            "deployedBy": "serverless"
+          }
+        ],
+        "exports": [
+          {
+            "keys": [
+              "export:sls-bookings-prod-ServiceEndpoint",
+              "stack:bookings-prod#ServiceEndpoint"
+            ],
+            "address": "Outputs.ServiceEndpoint",
+            "file": "serverless.yml",
+            "line": 3,
+            "kind": "api",
+            "value": "prod-bookings",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "stack:bookings-prod#HttpApiId"
+            ],
+            "address": "Outputs.HttpApiId",
+            "file": "serverless.yml",
+            "line": 3,
+            "kind": "api",
+            "value": "prod-bookings",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "stack:bookings-prod#HttpApiUrl"
+            ],
+            "address": "Outputs.HttpApiUrl",
+            "file": "serverless.yml",
+            "line": 3,
+            "kind": "api",
+            "value": "prod-bookings",
+            "deployedBy": "serverless"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "functions": 4,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/book.js:2:10",
+      "type": "ui_api_call",
+      "label": "POST /dev/bookings",
+      "repo": "web",
+      "file": "js/book.js",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/dev/bookings",
+        "path": "/dev/bookings",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{slot:any;name:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "name",
+          "slot"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "bookings"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/cancel.js:3:3",
+      "type": "ui_api_call",
+      "label": "DELETE /bookings/:param",
+      "repo": "web",
+      "file": "js/cancel.js",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/bookings/:param",
+        "path": "/bookings/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "xhr",
+        "via": "literal",
+        "host": "k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "bookings"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/slots.js:2:24",
+      "type": "ui_api_call",
+      "label": "GET /dev/slots",
+      "repo": "web",
+      "file": "js/slots.js",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/dev/slots",
+        "path": "/dev/slots",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "bookings"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/weather.js:2:24",
+      "type": "ui_api_call",
+      "label": "GET /dev/forecast",
+      "repo": "web",
+      "file": "js/weather.js",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://k7m2p9q4r1.execute-api.eu-central-1.amazonaws.com/dev/forecast",
+        "path": "/dev/forecast",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "const",
+        "host": "k7m2p9q4r1.execute-api.eu-central-1.amazonaws.com"
+      }
+    },
+    {
+      "id": "web#js/book.js:bookSlot",
+      "type": "function",
+      "label": "bookSlot",
+      "repo": "web",
+      "file": "js/book.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "slot",
+              "type": "any"
+            },
+            {
+              "name": "name",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/cancel.js:cancelBooking",
+      "type": "function",
+      "label": "cancelBooking",
+      "repo": "web",
+      "file": "js/cancel.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/slots.js:loadSlots",
+      "type": "function",
+      "label": "loadSlots",
+      "repo": "web",
+      "file": "js/slots.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/weather.js:forecast",
+      "type": "function",
+      "label": "forecast",
+      "repo": "web",
+      "file": "js/weather.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:bookings:http:DELETE:/bookings/:param",
+      "to": "bookings#src/cancel.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{cancelled:string}",
+      "file": "src/cancel.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true,
+        "params": "{id?:string}"
+      }
+    },
+    {
+      "from": "entry:bookings:http:GET:/slots",
+      "to": "bookings#src/slots.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{slots:string[]}",
+      "file": "src/slots.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:bookings:http:POST:/bookings",
+      "to": "bookings#src/book.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string}",
+      "file": "src/book.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true,
+        "body": "{slot:string;name:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:bookings:invoke:bookings-prod-bookSlot",
+      "to": "bookings#src/book.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/book.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:bookings:invoke:bookings-prod-cancelBooking",
+      "to": "bookings#src/cancel.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/cancel.ts",
+      "line": 1
+    },
+    {
+      "from": "entry:bookings:invoke:bookings-prod-listSlots",
+      "to": "bookings#src/slots.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/slots.ts",
+      "line": 1
+    },
+    {
+      "from": "ui_api_call:web#js/book.js:2:10",
+      "to": "entry:bookings:http:POST:/bookings",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/book.js",
+      "line": 2,
+      "params": [
+        "{slot:any;name:any}"
+      ],
+      "meta": {
+        "via": "served-at",
+        "targetService": "bookings",
+        "servedApi": "prod-bookings"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/cancel.js:3:3",
+      "to": "entry:bookings:http:DELETE:/bookings/:param",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/cancel.js",
+      "line": 3,
+      "meta": {
+        "via": "served-at",
+        "targetService": "bookings",
+        "servedApi": "prod-bookings"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/slots.js:2:24",
+      "to": "entry:bookings:http:GET:/slots",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/slots.js",
+      "line": 2,
+      "meta": {
+        "via": "served-at",
+        "targetService": "bookings",
+        "servedApi": "prod-bookings"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/weather.js:2:24",
+      "to": "external_api:k7m2p9q4r1.execute-api.eu-central-1.amazonaws.com",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/weather.js",
+      "line": 2
+    },
+    {
+      "from": "web#js/book.js:bookSlot",
+      "to": "ui_api_call:web#js/book.js:2:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/book.js",
+      "line": 2
+    },
+    {
+      "from": "web#js/cancel.js:cancelBooking",
+      "to": "ui_api_call:web#js/cancel.js:3:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/cancel.js",
+      "line": 3
+    },
+    {
+      "from": "web#js/slots.js:loadSlots",
+      "to": "ui_api_call:web#js/slots.js:2:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/slots.js",
+      "line": 2
+    },
+    {
+      "from": "web#js/weather.js:forecast",
+      "to": "ui_api_call:web#js/weather.js:2:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/weather.js",
+      "line": 2
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "js/book.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/dev/bookings names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, and the request as one for /bookings on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/book.js:2:10"
+    },
+    {
+      "service": "web",
+      "file": "js/cancel.js",
+      "line": 3,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/bookings/:param names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.eu-west-1.amazonaws.com with a route for it, and the request as one for /bookings/:param on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/cancel.js:3:3"
+    },
+    {
+      "service": "web",
+      "file": "js/slots.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/dev/slots names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, and the request as one for /slots on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/slots.js:2:24"
+    },
+    {
+      "service": "web",
+      "file": "js/weather.js",
+      "line": 2,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /dev/forecast",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /dev/forecast */.",
+      "symbol": "ui_api_call:web#js/weather.js:2:24"
+    }
+  ]
+}

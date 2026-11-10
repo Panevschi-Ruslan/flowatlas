@@ -15,6 +15,7 @@ import {
   registerFrontendAdapters as registerAngularFrontend,
 } from '@flowatlas/extractor-angular';
 import {
+  forcedFor,
   REACT_SOURCE_ROOTS,
   registerFrontendAdapters as registerReactFrontend,
 } from '@flowatlas/extractor-react';
@@ -94,10 +95,12 @@ export const adaptersBySlot = (
   pkg: PackageJson,
   config: FlowatlasConfig,
   repoDir?: string,
+  /** The service's type, where it chooses an adapter no manifest gives away (P284). */
+  type?: string,
 ): Record<AdapterSlot, string[]> => {
   const detected = registry.detect(
     pkg,
-    config.adapters.auto ? config.adapters.force : {},
+    forcedFor(type, config.adapters.auto ? config.adapters.force : {}),
     config,
     repoDir,
   );
@@ -111,8 +114,9 @@ export const adapterNames = (
   pkg: PackageJson,
   config: FlowatlasConfig,
   repoDir?: string,
+  type?: string,
 ): string[] => {
-  const bySlot = adaptersBySlot(registry, pkg, config, repoDir);
+  const bySlot = adaptersBySlot(registry, pkg, config, repoDir, type);
   const names = ADAPTER_SLOTS.flatMap((slot) => bySlot[slot]);
   return [...names, ...config.adapters.broker.custom.map((broker) => broker.name)].sort();
 };
@@ -159,7 +163,7 @@ export const declinedNote = (
 ): string | undefined => {
   const slot = decidingSlot(type);
   if (slot === undefined) return undefined;
-  const claimed = adaptersBySlot(createRegistry(), pkg, config, repoDir)[slot];
+  const claimed = adaptersBySlot(createRegistry(), pkg, config, repoDir, type)[slot];
   if (claimed.length > 0) return undefined;
   return (
     `no ${slot} adapter recognises it, so its reader walked the repository and had nowhere to put anything;` +

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:40:50.951Z",
+  "builtAt": "2026-11-10T15:32:20.584Z",
   "services": [
     {
       "name": "members",
@@ -325,6 +325,13 @@
         "api": "club-accounts",
         "function": "accounts-prod-join",
         "declaredAs": "functions.join.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.us-east-1.amazonaws.com",
+            "base": [],
+            "api": "club-accounts"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -344,6 +351,13 @@
         "api": "club-accounts",
         "function": "accounts-prod-renew",
         "declaredAs": "functions.renew.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.us-east-1.amazonaws.com",
+            "base": [],
+            "api": "club-accounts"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

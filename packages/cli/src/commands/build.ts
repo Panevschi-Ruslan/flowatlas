@@ -377,7 +377,7 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
     adapters:
       extractor === null
         ? []
-        : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config, repoDir),
+        : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config, repoDir, service.type),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(repoDir, 'package.json')),
     dependencies: surveyDependencies(repoDir),

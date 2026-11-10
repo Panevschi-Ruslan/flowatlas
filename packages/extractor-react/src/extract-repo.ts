@@ -40,7 +40,7 @@ import {
   type EmbeddedFormat,
 } from '@flowatlas/core';
 import { createReactContext } from './context.js';
-import { declaresReact } from './framework.js';
+import { declaresReact, forcedFor } from './framework.js';
 import { COMPONENT_TAIL_NAME } from './sfc/formats.js';
 import { sfcPass } from './sfc/pass.js';
 import { buildReactFunctionIndex } from './index-functions.js';
@@ -299,7 +299,7 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const pkg: PackageJson = readResolvedPackageJson(rootDir) ?? {};
 
   const registry = options.registry ?? new AdapterRegistry();
-  const adapters = registry.detect(pkg, config.adapters.auto ? config.adapters.force : {});
+  const adapters = registry.detect(pkg, forcedFor(service.type, config.adapters.auto ? config.adapters.force : {}));
 
   const builder = new GraphBuilder({
     repo,

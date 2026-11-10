@@ -5,6 +5,7 @@ import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from '
 import { portClosedFinding, portSharedFinding, type ClosedPort, type Listening, type PortAnswer } from './local-port.js';
 import { defaultPortOf, forwardedAgain, proxiedOutFinding, proxyChainFinding, PROXY_HOPS, type Forward } from './proxy-forward.js';
 import { cmp } from './order.js';
+import { apiServedAt, servedAmbiguousFinding, type ServedApi } from './served-at-link.js';
 import {
   behindUnread,
   callingApplication,
@@ -62,7 +63,7 @@ export interface UiIndex {
  * `marker` is an annotation naming the service, `@flowatlas-calls catalog GET
  * /items`, which outranks all of them (P127).
  */
-export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'proxy' | 'ingress' | 'same-service' | 'unique-route' | 'graphql-path';
+export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'proxy' | 'ingress' | 'same-service' | 'unique-route' | 'graphql-path' | 'served-at';
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -81,7 +82,11 @@ interface Details {
     listening?: Listening;
     /** The proxy rule the request was forwarded by, and how (P257). */
     proxied?: Forward;
+    /** The API taken as the one served where the address is written, its id not read (P284). */
+    servedAt?: ServedApi;
   };
+  /** Several APIs of the project are served where the address is written, its id not read (P284). */
+  apiAmbiguous: { method: string; path: string; host: string; apis: readonly string[] };
   /** Two or more services listen on the port an address on this machine names (P250). */
   portShared: { port: number; said: readonly string[]; services: readonly string[] };
   /** A host on a network names the service at a port it is not reached at there (P257). */
@@ -110,6 +115,8 @@ interface Details {
     named?: true;
     /** The root fields an operation asks for that the GraphQL endpoint at the path neither declares nor resolves (P281). */
     unserved?: readonly string[];
+    /** The API the address was taken as, which serves no such route (P284). */
+    servedAt?: ServedApi;
   };
   /** An annotation names a service nothing configured answers to, by name or alias (P127). */
   serviceUnknown: { service: string; aliases: readonly string[] };
@@ -169,6 +176,7 @@ const FINDINGS: { [K in UiOutcomeKind]: ((detail: Details[K]) => Finding) | null
   proxiedOut: ({ service, forward }) => proxiedOutFinding(service, forward),
   proxyChain: ({ services, loop }) => proxyChainFinding(services, loop),
   ambiguous: (detail) => AMBIGUITY[detail.applications === undefined ? 'target' : 'application'](detail),
+  apiAmbiguous: ({ method, path, host, apis }) => servedAmbiguousFinding(method, path, host, apis),
 };
 
 /**
@@ -367,6 +375,24 @@ const byHost = (ask: Ask): UiOutcome | undefined => {
 };
 
 /**
+ * The API a host no service is reached at serves the request at, where the
+ * address names it by an id no file holds and the project serves exactly one
+ * API there (P284): the path after its stage, asked of that API's routes.
+ */
+const byServedAt = (ask: Ask): UiOutcome | undefined => {
+  const { call, method, path, index } = ask;
+  const host = call.meta?.['host'];
+  const url = call.meta?.['url'];
+  if (typeof host !== 'string') return undefined;
+  const answer = apiServedAt(method, host, path, typeof url === 'string' ? url : `${host}${path}`, index.services(), (service) => index.routesOf(service));
+  if (answer === undefined) return undefined;
+  if (answer.kind === 'several') return { kind: 'apiAmbiguous', method, path, host, apis: answer.apis };
+  const { found } = answer;
+  const outcome = within({ ...ask, path: found.path }, found.service, 'served-at', found.routes);
+  return outcome.kind === 'linked' || outcome.kind === 'noRoute' ? { ...outcome, servedAt: found } : outcome;
+};
+
+/**
  * The request a server's proxy makes for a request it forwards (P257): the
  * service at the target's host, asked for the rewritten path, the join a
  * guess that names the rule. A host no service is reached at is a third
@@ -516,6 +542,7 @@ const WAYS: ReadonlyArray<(ask: Ask) => UiOutcome | undefined> = [
   byBaseUrlEnv,
   byBaseUrlValue,
   byHost,
+  byServedAt,
   byProxy,
   byIngress,
   bySameService,
@@ -659,9 +686,10 @@ const callerApplicationIn = (ask: Ask, service: string): string | undefined =>
   service === ask.call.repo ? callingApplication(ask.call) : undefined;
 
 /** The route one named service answers with, or why it does not. */
-const within = (ask: Ask, targetService: string, via: UiVia): UiOutcome => {
+const within = (ask: Ask, targetService: string, via: UiVia, among?: readonly GraphNode[]): UiOutcome => {
   const { method, path, index } = ask;
-  const routes = index.routesOf(targetService) ?? [];
+  // Only the routes of one of its APIs, where the address names which (P284).
+  const routes = among ?? index.routesOf(targetService) ?? [];
   const from = callerApplicationIn(ask, targetService);
   let found = matchRoute(method, path, routes, from);
   if (!isMatch(found) && found.reason === 'not-found') {

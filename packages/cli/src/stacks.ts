@@ -53,11 +53,11 @@ export const UNREAD_SIGNATURES: ReadonlyArray<readonly [framework: string, depen
 /** The first name in a table whose dependency the manifest declares. */
 const firstMatch = (
   pkg: PackageJson,
-  table: ReadonlyArray<readonly [name: string, dependency: string, ...rest: unknown[]]>,
+  table: ReadonlyArray<readonly [name: string, dependency: string | null, ...rest: unknown[]]>,
 ): string | undefined => {
   const declared = allDependencies(pkg);
   for (const [name, dependency] of table) {
-    if (Object.hasOwn(declared, dependency)) return name;
+    if (dependency !== null && Object.hasOwn(declared, dependency)) return name;
   }
   return undefined;
 };
@@ -268,6 +268,50 @@ export const guessDirectoryType = (
     if (found !== UNKNOWN_TYPE) return found;
   }
   return declaresDeployment(dir) ? DEPLOYED_TYPE : UNKNOWN_TYPE;
+};
+
+/** The type of a directory of plain browser code (P284), as the reader's row names it. */
+export const PLAIN_BROWSER_TYPE = 'browser';
+
+const PAGE = /\.html?$/i;
+const SCRIPT = /\.(?:js|mjs)$/i;
+const TYPED = /\.(?:ts|tsx|mts|cts|jsx|vue|svelte)$/i;
+
+/**
+ * Whether a directory is plain browser code (P284): no manifest, a page at its
+ * top, and scripts in it or below - written for a browser to load as they
+ * are, with nothing to build them and no framework to read them by. A file of
+ * TypeScript, JSX or a component format anywhere says something builds it,
+ * and the directory is not this. Bounded in depth as `nestedManifests` is.
+ */
+export const isPlainBrowserCode = (dir: string, depth = 3): boolean => {
+  if (existsSync(join(dir, 'package.json'))) return false;
+  let page = false;
+  let script = false;
+  let built = false;
+  const walk = (at: string, level: number): void => {
+    if (level > depth || built) return;
+    let entries;
+    try {
+      entries = readdirSync(at, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry.name.startsWith('.') || NOT_NESTED.has(entry.name)) continue;
+      if (entry.isDirectory()) {
+        if (existsSync(join(at, entry.name, 'package.json'))) built = true;
+        else walk(join(at, entry.name), level + 1);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      if (TYPED.test(entry.name)) built = true;
+      else if (SCRIPT.test(entry.name)) script = true;
+      else if (level === 1 && PAGE.test(entry.name)) page = true;
+    }
+  };
+  walk(dir, 1);
+  return page && script && !built;
 };
 
 /** The stack a directory is built on when nothing here reads it, from its manifest or its files. */

@@ -1,4 +1,4 @@
-import { nameInForms, type DeployedKind } from '@flowatlas/core';
+import { nameInForms, type DeployedKind, type ServedAt } from '@flowatlas/core';
 
 /**
  * The longer spellings a deployed name is written inside: an ARN, and for a
@@ -63,6 +63,24 @@ export const executeApiAddress = (text: string): ExecuteApiAddress | undefined =
   const [, id, region, path] = found as unknown as [string, string, string, string | undefined];
   return { id, region, segments: (path ?? '').split('/').filter((segment) => segment !== '') };
 };
+
+/**
+ * Where API Gateway serves an API (P284), as a route records it
+ * (`ServedAt`): the id in the host is the platform's, and the base is the
+ * stage - `'*'` where the stage is chosen when the deployment is run, with
+ * the one it deploys to otherwise - or nothing for an HTTP API's default
+ * stage, which writes none.
+ */
+export const executeApiServedAt = (
+  region: string,
+  api: string,
+  stage: { readonly name?: string; readonly chosen?: boolean },
+): ServedAt => ({
+  host: `*.execute-api.${region}.amazonaws.com`,
+  base: stage.name === undefined ? [] : [stage.chosen === true ? '*' : stage.name],
+  api,
+  ...(stage.chosen === true && stage.name !== undefined ? { chosenDefault: stage.name } : {}),
+});
 
 /** A table's stream of changes, which is named by the table it belongs to. */
 export const TABLE_CHANGES_FORMS: readonly string[] = ['^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)/stream/.+$'];

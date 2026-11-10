@@ -1,0 +1,9 @@
+{
+  "name": "bookings",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A booking service as Lambda functions behind API Gateway, deployed with the Serverless Framework.",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

@@ -19,6 +19,7 @@ import {
   wasRead,
   writtenKeysOf,
   describedRequestsAt,
+  evaluateExpression,
   PLATFORM_FETCH,
   PLATFORM_HEADERS,
   PLATFORM_QUERY,
@@ -141,6 +142,12 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
    */
   const verbOf = (call: CallExpression, shape: CallShape, chain: readonly CallExpression[] = []): string | null => {
     if (shape.method !== null) return shape.method;
+    // Written as text in an argument of its own (P284).
+    if (shape.methodAt !== undefined) {
+      const written = call.getArguments()[shape.methodAt];
+      const value = written === undefined ? undefined : evaluateExpression(written);
+      return value?.resolved === true && typeof value.value === 'string' ? value.value.toUpperCase() : null;
+    }
     const read = requestVerbOf(call, { ...PLATFORM_FETCH, optionsAt: shape.optionsAt ?? PLATFORM_FETCH.optionsAt });
     if (read !== null || chain.length === 0) return read;
     // A verb the wrapper is handed, read at the caller its address was read

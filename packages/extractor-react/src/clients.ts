@@ -48,6 +48,11 @@ export interface ClientType {
 export interface CallShape {
   /** The verb this spelling always means, or null when the call says. */
   readonly method: string | null;
+  /**
+   * The argument the call writes its verb in as text, where it writes it
+   * there rather than in its options (P284): `xhr.open('POST', url)`.
+   */
+  readonly methodAt?: number;
   readonly urlAt: number;
   /** The argument holding the body, when the spelling has one. */
   readonly bodyAt?: number;
@@ -282,8 +287,22 @@ export const KY: RequestClient = {
   },
 };
 
+/**
+ * The browser's older client (P284): `xhr.open('POST', url)` on a value of
+ * the platform's `XMLHttpRequest`, the verb and the address written in the
+ * one call, the body handed to `send` afterwards and not read here.
+ */
+export const XHR: RequestClient = {
+  name: 'xhr',
+  package: null,
+  receiver: {
+    types: [{ package: null, typeName: 'XMLHttpRequest' }],
+    verbs: { open: { method: null, methodAt: 0, urlAt: 1 } },
+  },
+};
+
 /** Every client this extractor reads without being told anything. */
-export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS, OFETCH, KY];
+export const REQUEST_CLIENTS: readonly RequestClient[] = [FETCH, AXIOS, OFETCH, KY, XHR];
 
 /**
  * How an instance of an installed client is made, and where its base is written.

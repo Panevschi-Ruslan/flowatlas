@@ -11,8 +11,8 @@
  * framework-independent, and this package is the proof that it is.
  */
 
-export { reactFrontendAdapter, registerFrontendAdapters, svelteFrontendAdapter, SVELTE_READING, vueFrontendAdapter, VUE_READING } from './adapter.js';
-export { declaresReact, declaresSvelte, declaresVue } from './framework.js';
+export { PLAIN_READING, plainBrowserAdapter, reactFrontendAdapter, registerFrontendAdapters, svelteFrontendAdapter, SVELTE_READING, vueFrontendAdapter, VUE_READING } from './adapter.js';
+export { declaresReact, declaresSvelte, declaresVue, forcedFor, PLAIN_BROWSER_ADAPTER, PLAIN_BROWSER_TYPE } from './framework.js';
 export { SVELTE_FORMAT, VUE_FORMAT } from './sfc/formats.js';
 
 export { BUILT_IN_PASSES, defaultOutputPath, extractBrowser, extractReact, extractRepo, openProject, REACT_READING } from './extract-repo.js';

@@ -8,6 +8,8 @@ import {
   type DeployedDelivery,
   type DeployedKind,
   type PathStep,
+  SERVED_AT_META,
+  type ServedAt,
 } from '@flowatlas/core';
 import { intrinsicOf, type Deployed } from './cloudformation.js';
 import type { FileReading } from './reading.js';
@@ -53,6 +55,8 @@ export interface Apis {
   readonly sharedRest?: SharedApi;
   /** `provider.httpApi.id`: the HTTP API is another deployment's. */
   readonly sharedHttp?: SharedApi;
+  /** Where the service's own REST and HTTP APIs are served (P284). */
+  readonly served?: { readonly rest?: ServedAt; readonly http?: ServedAt };
 }
 
 /** What every event reader is handed. */
@@ -142,7 +146,16 @@ const guardsOf = (reading: EventReading, site: EventSite, settings: Record<strin
  * another deployment creates, it hangs from the point that deployment
  * publishes, which the linker gives it its full path from (P249).
  */
-const route = (reading: EventReading, site: EventSite, method: string, rawPath: string, api: string | SharedApi, settings: Record<string, unknown>, apiAddress: string): void => {
+const route = (
+  reading: EventReading,
+  site: EventSite,
+  method: string,
+  rawPath: string,
+  api: string | SharedApi,
+  settings: Record<string, unknown>,
+  apiAddress: string,
+  served?: ServedAt,
+): void => {
   const verb = method.toUpperCase() === 'ANY' || method === '*' ? 'ALL' : method.toUpperCase();
   const below = normalizePath(`/${rawPath.replace(/^\/+/, '')}`);
   if (typeof api !== 'string' && 'unread' in api) {
@@ -159,7 +172,13 @@ const route = (reading: EventReading, site: EventSite, method: string, rawPath: 
     ...(typeof api === 'string' ? { api } : { root: { key: api.root, below } }),
     target: { function: site.index },
     ...(guards.length === 0 ? {} : { guards }),
-    meta: { declaredAs: site.address, key: makeHttpEntryKey(verb, path), apiAddress: typeof api === 'string' ? apiAddress : `import:${api.root}` },
+    meta: {
+      declaredAs: site.address,
+      key: makeHttpEntryKey(verb, path),
+      apiAddress: typeof api === 'string' ? apiAddress : `import:${api.root}`,
+      // Where the service's own API is served, for an address written out with its id (P284).
+      ...(typeof api === 'string' && served !== undefined ? { [SERVED_AT_META]: [served] } : {}),
+    },
   });
 };
 
@@ -174,7 +193,7 @@ const readHttp: EventReader = (value, site, reading) => {
     eventRow(reading, site, 'route-path-unread', `the ${method === undefined ? 'method' : path === undefined ? 'path' : 'API name'} of ${site.address} is not read`, 'Write the method and the path so the file settles them.');
     return;
   }
-  route(reading, site, method, path, api, settings, `${reading.file.file}#rest-api`);
+  route(reading, site, method, path, api, settings, `${reading.file.file}#rest-api`, reading.apis.sharedRest === undefined ? reading.apis.served?.rest : undefined);
 };
 
 /** `httpApi: 'GET /orders'`, `httpApi: '*'`, or `httpApi: { method, path, authorizer }`: an HTTP API route. */
@@ -189,7 +208,16 @@ const readHttpApi: EventReader = (value, site, reading) => {
     eventRow(reading, site, 'route-path-unread', `the route key of ${site.address} is not read`, 'Write the method and the path so the file settles them, such as "GET /orders".');
     return;
   }
-  route(reading, site, method, method === '*' && rawPath === '*' ? '/{proxy+}' : rawPath, api, settings, `${reading.file.file}#http-api`);
+  route(
+    reading,
+    site,
+    method,
+    method === '*' && rawPath === '*' ? '/{proxy+}' : rawPath,
+    api,
+    settings,
+    `${reading.file.file}#http-api`,
+    reading.apis.sharedHttp === undefined ? reading.apis.served?.http : undefined,
+  );
 };
 
 /** `websocket: $connect`, or `websocket: { route }`: a way in of the socket API. */

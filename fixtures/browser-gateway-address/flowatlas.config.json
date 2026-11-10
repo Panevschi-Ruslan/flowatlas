@@ -1,0 +1,7 @@
+{
+  "services": [
+    { "name": "bookings", "repo": "./bookings", "type": "lambda" },
+    { "name": "web", "repo": "./web", "type": "browser" }
+  ],
+  "output": ".flowatlas"
+}

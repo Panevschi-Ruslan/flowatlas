@@ -314,4 +314,34 @@ describe('what P246 added to the CloudFormation a service file holds', () => {
     const http = read({ 'serverless.yml': service('{ httpApi: { path: /dev/ledger, method: POST } }') }).functions[1]?.environment ?? {};
     expect(http['OTHER_STAGE']).toMatchObject({ names: { kind: 'api', name: 'dev-shop' }, path: '/prod/ledger' });
   });
+
+  it('records where each of its own APIs is served, the stage left open where the command line chooses it (P284)', () => {
+    const service = (stage: string, more = ''): string =>
+      [
+        'service: shop',
+        `provider: { name: aws, ${stage}region: eu-west-1${more} }`,
+        'functions:',
+        '  ledger:',
+        '    handler: src/ledger.handler',
+        '    events: [{ http: { path: ledger, method: POST } }, { httpApi: "GET /entries" }]',
+      ].join('\n');
+    const servedOf = (yaml: string, options?: Record<string, string>) =>
+      read({ 'serverless.yml': yaml }, options).routes.map((route) => [route.method, route.meta?.['servedAt']]);
+    // `${opt:stage, 'prod'}`: whatever stage it is run with, prod where none is given.
+    expect(servedOf(service("stage: \"${opt:stage, 'prod'}\", "))).toEqual([
+      ['POST', [{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod' }]],
+      ['GET', [{ host: '*.execute-api.eu-west-1.amazonaws.com', base: [], api: 'prod-shop' }]],
+    ]);
+    // None written: the framework's default, chosen the same way.
+    expect(servedOf(service(''))[0]?.[1]).toEqual([{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api: 'dev-shop', chosenDefault: 'dev' }]);
+    // Written as text, or named by the configuration's options: that stage.
+    expect(servedOf(service('stage: prod, '))[0]?.[1]).toEqual([{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['prod'], api: 'prod-shop' }]);
+    expect(servedOf(service("stage: \"${opt:stage, 'prod'}\", "), { stage: 'qa' })[0]?.[1]).toEqual([
+      { host: '*.execute-api.eu-west-1.amazonaws.com', base: ['qa'], api: 'qa-shop' },
+    ]);
+    // An API another deployment creates is served where that deployment says, which is not read here.
+    const shared = servedOf(service('stage: prod, ', ', apiGateway: { restApiId: abc123, restApiRootResourceId: def456 }'));
+    expect(shared.filter(([method]) => method === 'POST').map(([, served]) => served)).toEqual(shared.some(([method]) => method === 'POST') ? [undefined] : []);
+    expect(shared.find(([method]) => method === 'GET')?.[1]).toEqual([{ host: '*.execute-api.eu-west-1.amazonaws.com', base: [], api: 'prod-shop' }]);
+  });
 });

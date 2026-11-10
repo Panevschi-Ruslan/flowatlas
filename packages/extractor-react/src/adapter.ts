@@ -3,7 +3,7 @@ import { nuxtApplicationOf, viteConventions } from '@flowatlas/adapters-entry';
 import { extractBrowser, extractReact, type BrowserReading } from './extract-repo.js';
 import { frontEndListens } from './dev-server.js';
 import { frontEndProxies } from './dev-proxy.js';
-import { declaresReact, declaresSvelte, declaresVue } from './framework.js';
+import { declaresReact, declaresSvelte, declaresVue, PLAIN_BROWSER_ADAPTER } from './framework.js';
 import { SVELTE_FORMAT, VUE_FORMAT } from './sfc/formats.js';
 
 /**
@@ -71,6 +71,25 @@ export const svelteFrontendAdapter: FrontendAdapter = {
   proxies: frontEndProxies,
 };
 
+/**
+ * Plain browser code (P284): pages and the scripts they load, no framework.
+ * Every file of the directory is its own, and what it reads of them is what
+ * any front end's scripts say: the requests they send and the calls between
+ * them. Never detected - a manifest that declares nothing says nothing - and
+ * chosen by the service's type (`forcedFor`).
+ */
+export const PLAIN_READING: BrowserReading = { declares: () => true };
+
+export const plainBrowserAdapter: FrontendAdapter = {
+  name: PLAIN_BROWSER_ADAPTER,
+  detect: () => false,
+  extract: (ctx, options) => extractBrowser(ctx, options ?? {}, PLAIN_READING),
+};
+
 /** Puts this extractor where the registry can find it, like every other adapter. */
 export const registerFrontendAdapters = (registry: AdapterRegistry): AdapterRegistry =>
-  registry.register('frontend', reactFrontendAdapter).register('frontend', vueFrontendAdapter).register('frontend', svelteFrontendAdapter);
+  registry
+    .register('frontend', reactFrontendAdapter)
+    .register('frontend', vueFrontendAdapter)
+    .register('frontend', svelteFrontendAdapter)
+    .register('frontend', plainBrowserAdapter);

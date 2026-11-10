@@ -63,8 +63,12 @@ const HALF_OF_READER: Readonly<Record<string, Half>> = Object.freeze({
   [REACT_EXTRACTOR]: 'browser',
 });
 
-/** One framework: its type, the dependency that gives it away, and its reader. */
-export type ReaderRow = readonly [type: string, dependency: string, reader: string];
+/**
+ * One framework: its type, the dependency that gives it away, and its reader.
+ * `null` for a type no manifest gives away (P284), which only the
+ * configuration, `link` or `init` looking at the directory writes.
+ */
+export type ReaderRow = readonly [type: string, dependency: string | null, reader: string];
 
 /**
  * Every framework this tool reads, in the order a manifest is asked about them.
@@ -140,6 +144,10 @@ export const READERS: readonly ReaderRow[] = [
   // reads as TypeScript (P233).
   ['vue', 'vue', REACT_EXTRACTOR],
   ['svelte', 'svelte', REACT_EXTRACTOR],
+  // Plain browser code (P284): pages and the scripts they load, with no
+  // manifest and no framework. Nothing declares it, so no manifest is asked
+  // about it; `link` and `init` offer it for a directory of pages and scripts.
+  ['browser', null, REACT_EXTRACTOR],
 ];
 
 /**

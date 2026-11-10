@@ -14,7 +14,7 @@ import {
 } from '@flowatlas/core';
 import type { Command } from 'commander';
 import { CliError, EXIT } from '../exit.js';
-import { declaresDeployment, guessDirectoryType, guessType, UNKNOWN_TYPE } from '../stacks.js';
+import { declaresDeployment, guessDirectoryType, guessType, isPlainBrowserCode, PLAIN_BROWSER_TYPE, UNKNOWN_TYPE } from '../stacks.js';
 import { describedProject } from '../workspace-projects.js';
 import { runMissingCommand } from './doctor.js';
 import { repoPathFor, suggestName } from './init.js';
@@ -91,11 +91,14 @@ const describe = (dir: string): { name: string; type: string } => {
   const application = describeApplication(dir);
   if (application !== undefined) return application;
   const pkg = readPackageJson(dir) ?? (declaresDeployment(dir) ? {} : undefined);
+  // Pages and the scripts they load, with nothing to build them (P284): a
+  // front end of its own, read for the requests its scripts send.
+  if (pkg === undefined && isPlainBrowserCode(dir)) return { name: basename(dir), type: PLAIN_BROWSER_TYPE };
   if (pkg === undefined) {
     throw new FlowatlasError(
       'not-a-repository',
-      `${dir} has no package.json, is no application of a workspace, and has no Terraform that declares a function or a route`,
-      'Point at the root of a repository (the directory holding its package.json, or its Terraform), or at an application of a workspace: a directory with a tsconfig of its own that extends the root\'s.',
+      `${dir} has no package.json, is no application of a workspace, has no Terraform that declares a function or a route, and is no directory of pages and the scripts they load`,
+      'Point at the root of a repository (the directory holding its package.json, or its Terraform), at an application of a workspace: a directory with a tsconfig of its own that extends the root\'s, or at a directory of plain browser code: .html pages and .js scripts.',
     );
   }
   const declared = guessType(pkg);

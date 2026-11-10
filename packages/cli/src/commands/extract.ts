@@ -394,7 +394,7 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
   cache.repos[repo] = {
     repo: options.service?.repo ?? rootDir,
     extractor,
-    adapters: adapterNames(registry, readResolvedPackageJson(rootDir) ?? {}, config, rootDir),
+    adapters: adapterNames(registry, readResolvedPackageJson(rootDir) ?? {}, config, rootDir, options.service?.type),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(rootDir, 'package.json')),
     globalFiles: [...globalFiles(warm), ...deployed],

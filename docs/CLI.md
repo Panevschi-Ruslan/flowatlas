@@ -159,7 +159,12 @@ makes it `nextjs`, `@sveltejs/kit` makes it `sveltekit`, `@remix-run/node` or
 `@grpc/grpc-js` or `grpc` makes it `grpc` (a gRPC server written on the library
 itself, read for its services and its calls), `@angular/core` makes it `angular`, `react` makes it `react`, `vue` makes it `vue`,
 `svelte` makes it `svelte`, and anything else is
-written as `unknown`. Those fifteen are every type there is. Hono and Telegraf have
+written as `unknown`. A directory with no manifest at all that holds a page
+(`.html`) at its top and the scripts it loads (`.js`, `.mjs`), and no
+TypeScript, JSX or component file, is `browser`: plain browser code, read by the
+browser reader for the requests its scripts send - `fetch` and
+`XMLHttpRequest`'s `open(verb, address)` - with the scripts of one page sharing
+their globals as the browser runs them (P284). Those sixteen are every type there is. Hono and Telegraf have
 no type of their own: they are frameworks the server reader finds inside a
 repository whichever server type it is given, so a repository whose only
 framework is Hono is
@@ -4687,7 +4692,7 @@ Every key of `flowatlas.config.json`. Only `services` has no default.
 |---|---|---|---|
 | `name` | string | required | what this service is called everywhere else |
 | `repo` | string | required unless `document` is given | path to the repository, relative to this file or absolute. A service has a `repo` or a `document`, never both |
-| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `nuxt`, `remix`, `react-router`, `express`, `fastify` or `koa` for anything with a server in it, `grpc` for a gRPC server written on `@grpc/grpc-js`, `lambda` for functions whose ways in are declared in Terraform, `angular`, `react`, `vue` or `svelte` for a repository that is only a browser. Anything else is skipped and `build` says which type to set |
+| `type` | string | required for a repository | which reader opens it: `nestjs`, `medusa`, `nextjs`, `sveltekit`, `nuxt`, `remix`, `react-router`, `express`, `fastify` or `koa` for anything with a server in it, `grpc` for a gRPC server written on `@grpc/grpc-js`, `lambda` for functions whose ways in are declared in Terraform, `angular`, `react`, `vue` or `svelte` for a repository that is only a browser, `browser` for plain pages and scripts with no framework (P284). Anything else is skipped and `build` says which type to set |
 | `baseUrlEnv` | string[] | `[]` | settings keys other services use to address this one |
 | `apiBaseEnv` | string[] | found in the environment files | for a browser: which of its settings keys hold an address, when they are not found |
 | `hosts` | string[] | `[]` | hosts this service is reached at, as `host` or `host:port` (`["orders.example.com"]`), for a base address read from a repository's files to be matched against beside the service's name |
@@ -7262,6 +7267,21 @@ HTTP API where no stage is written; a request rooted at it asks for `<path>` on
 it, joined `heuristic` with a `base-url-from-files` note, because an address of
 another API of the same region and stage would read the same (P268). An address
 of API Gateway or of a function URL is never read as a queue.
+
+**Where each API is served** (P284): every route of the service's own REST API
+records it (`meta.servedAt`) - `*.execute-api.<region>.amazonaws.com`, the id
+left open, under its stage - and every route of its HTTP API the same host with
+no stage. A stage the file leaves to the command line (`${opt:stage, 'prod'}`,
+or none written) is any stage the service may be run with, unless the
+configuration's `infra.options` names one. A request written anywhere in the
+project - a browser's or another service's - to an address with an id no file
+holds is joined to the one API served at its host and stage, asking for the
+path after the stage, `heuristic` (`meta.via: 'served-at'` on a browser's edge,
+`'servedAt'` on a service's) with a `base-url-from-files` note; of several, an
+API with a route for the request is asked before one without and a stage the
+deployment writes before one it leaves open, and several still left are an
+`ambiguous-route-target` row naming them. A host the configuration places
+(`services[].hosts`) is the configuration's answer first.
 
 The `serverless-step-functions` plugin's `stepFunctions.stateMachines` are
 workflows: the definition is the file's own value, each state drawn at its

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:07:42.825Z",
+  "builtAt": "2026-11-10T15:12:38.615Z",
   "services": [
     {
       "name": "bookshop",
@@ -336,21 +336,31 @@
       }
     },
     {
-      "id": "entry:bookshop:http:GET:/plugins/*",
+      "id": "entry:bookshop:http:GET:/plugins/:param",
       "type": "entry",
-      "label": "GET /plugins/*",
+      "label": "GET /plugins/:param",
       "repo": "bookshop",
       "file": "serverless.yml",
       "line": 24,
       "kind": "http",
       "meta": {
         "method": "GET",
-        "path": "/plugins/*",
+        "path": "/plugins/:param",
         "rawPath": "plugins/{proxy+}",
         "deployedBy": "serverless",
         "api": "dev-bookshop",
         "function": "bookshop-dev-plugins",
         "declaredAs": "functions.plugins.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-bookshop",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -445,6 +455,16 @@
         "api": "dev-bookshop",
         "function": "bookshop-dev-catalog",
         "declaredAs": "functions.catalog.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-bookshop",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -856,7 +876,7 @@
       "line": 6
     },
     {
-      "from": "entry:bookshop:http:GET:/plugins/*",
+      "from": "entry:bookshop:http:GET:/plugins/:param",
       "to": "bookshop#src/plugins/handler.ts:handler",
       "type": "handles",
       "confidence": "static",
@@ -966,18 +986,6 @@
         "via": "baseUrlEnv",
         "targetService": "bookshop"
       }
-    },
-    {
-      "from": "http_out:bookshop#src/restock/restock.ts:38:9",
-      "to": "entry:bookshop:http:GET:/plugins/*",
-      "type": "http_calls",
-      "confidence": "static",
-      "file": "src/restock/restock.ts",
-      "line": 38,
-      "meta": {
-        "via": "baseUrlEnv",
-        "targetService": "bookshop"
-      }
     }
   ],
   "types": {
@@ -1019,9 +1027,9 @@
       "service": "bookshop",
       "file": "src/restock/restock.ts",
       "line": 38,
-      "reason": "route-wildcard-only",
-      "message": "only the catch-all GET /plugins/* in bookshop answers GET /plugins/:param/install${…}",
-      "hint": "No route of bookshop spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "reason": "dynamic-http-url",
+      "message": "GET /plugins/:param/install${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
       "symbol": "http_out:bookshop#src/restock/restock.ts:38:9"
     },
     {
