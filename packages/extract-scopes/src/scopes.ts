@@ -86,6 +86,13 @@ export interface Scope extends Holder {
    * declared inside another one would share (R156).
    */
   fn?: NamedFunction;
+  /**
+   * Parts of the body that are bodies of their own, read by their own scopes:
+   * the members of the object a factory hands back, where the factory does
+   * more than hand it back (P288). A walk of the body passes over them, so a
+   * call written in a member is held once, by the member.
+   */
+  leaveOut?: ReadonlySet<TsNode>;
 }
 
 /**
@@ -192,7 +199,8 @@ const moduleLevelFunctions = function* (
       if (written !== undefined) seen.add(written);
       continue;
     }
-    yield scopeOf(ctx, fn);
+    // One that does more keeps its own body, its members' parts left to them (P288).
+    yield members.length === 0 ? scopeOf(ctx, fn) : { ...scopeOf(ctx, fn), leaveOut: new Set(members.map((member) => member.declaration)) };
   }
 };
 

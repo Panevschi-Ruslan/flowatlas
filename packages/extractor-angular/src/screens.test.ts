@@ -289,3 +289,64 @@ export class ItemComponent {
     expect(why).toEqual(['dynamic', 'missing']);
   });
 });
+
+describe("a template's and a guard's navigations (P288)", () => {
+  const files = {
+    'app.routes.ts': `import { provideRouter } from '@angular/router';
+import { authGuard } from './auth.guard';
+import { StartComponent } from './start.component';
+import { LoginComponent } from './login.component';
+import { QueueComponent } from './queue.component';
+export const config = provideRouter([
+  { path: '', component: StartComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'queue', component: QueueComponent, canActivate: [authGuard] },
+]);
+`,
+    'auth.guard.ts': `import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+export const authGuard = () => {
+  const router = inject(Router);
+  return localStorage.getItem('session') !== null ? true : router.createUrlTree(['/login']);
+};
+export function endedGuard() {
+  return inject(Router).parseUrl('/');
+}
+`,
+    'start.component.ts': `import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+@Component({
+  selector: 'app-start',
+  template: '<button (click)="router.navigate([\\'/queue\\'])">Q</button><button (click)="router.navigateByUrl(\\'/login\\')">L</button><button (click)="router.navigate([\\'/archive\\'])">A</button>',
+})
+export class StartComponent {
+  constructor(public readonly router: Router) {}
+}
+`,
+    'login.component.ts': `import { Component } from '@angular/core';
+@Component({ selector: 'app-login', template: '<form></form>' })
+export class LoginComponent {}
+`,
+    'queue.component.ts': `import { Component } from '@angular/core';
+@Component({ selector: 'app-queue', template: '<ul></ul>' })
+export class QueueComponent {}
+`,
+  };
+
+  it("joins a click's `navigate` to the screen it shows, and a functional guard's `createUrlTree` and `parseUrl` as redirects", () => {
+    const graph = extract(files);
+    const byId = new Map(graph.nodes.map((node) => [node.id, node]));
+    const clicks = graph.edges
+      .filter((edge) => edge.type === 'triggers' && edge.meta?.['navigates'] !== undefined)
+      .map((edge) => `${String(edge.meta?.['navigates'])} -> ${String(byId.get(edge.to)?.label)}`)
+      .sort();
+    expect(clicks).toEqual(['/login -> LoginComponent', '/queue -> QueueComponent']);
+    const guards = graph.edges
+      .filter((edge) => edge.type === 'calls' && edge.meta?.['navigates'] !== undefined)
+      .map((edge) => `${String(byId.get(edge.from)?.label)} -> ${String(byId.get(edge.to)?.label)} (${String(edge.meta?.['redirects'])})`)
+      .sort();
+    expect(guards).toEqual(['authGuard -> LoginComponent (true)', 'endedGuard -> StartComponent (true)']);
+    expect(rows(graph, 'navigation-unresolved').map((row) => row.symbol)).toEqual(['StartComponent (click) navigates to /archive']);
+    expect(reasons(graph)).not.toContain('handler-not-a-method');
+  });
+});

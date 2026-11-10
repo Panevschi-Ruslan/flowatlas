@@ -35,6 +35,24 @@ only one of them moved.
   `grpc-method-undeclared` finding, both informational. The coverage harness
   lets a target declare services by a document (`documents`), passed into the
   configuration it generates.
+- **Routes and navigations written through helpers, lazy screens and
+  templates (P288).** A route's path and a navigation's address are read
+  through a function of the repository that hands back text, its arguments
+  bound (a rest parameter's `join` and `length` included), a `const` in a
+  template, and an optional parameter both ways; a condition nothing decides
+  is one address per branch, the edge `heuristic` with `meta.branch`, a
+  route so placed named in `meta.routeGuessed`. A route's screen is read
+  through any lazy loader handed `() => import(...)`, a module handing on
+  another's default export, and a member of the object a loader hands back
+  (`Screens.Home.Component`). `createBrowserHistory()` navigates. In a service
+  of several applications a navigation's candidates are its own
+  application's pages, and a page file that hands out another file's
+  component places it at its address. A navigation in a template's handler
+  (Vue, Nuxt, Svelte), a SvelteKit application's plain `<a href>`, Angular's
+  `(click)="router.navigate(...)"` (a `triggers` edge) and a functional
+  guard's `createUrlTree` / `parseUrl` (a `function` node, `meta.redirects`)
+  are read. A call in a member of an object a factory hands back, where the
+  factory does more, is held by the member alone.
 
 - **The coverage harness measures whether a join is right, and reads a
   system split across repositories (P278).** A target may carry hand labels,

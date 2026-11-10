@@ -1,9 +1,12 @@
-import { NAVIGATES_META, startLineOf } from '@flowatlas/core';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { hasDependency, NAVIGATES_META, startLineOf } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode, SourceFile } from 'ts-morph';
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
-import { vueTemplateTags } from './events.js';
+import { spelledPaths } from '../util/path-text.js';
+import { svelteMarkupEvents, svelteMarkupTags, vueTemplateEvents, vueTemplateTags } from './events.js';
 
 /**
  * Where a front end navigates, each navigation joined to the page it shows:
@@ -44,11 +47,13 @@ export interface Page {
   readonly route: string;
   readonly name?: string;
   readonly fn: IndexedFunction;
+  /** The address was read through a branch nothing written decides (P288). */
+  readonly guessed?: true;
 }
 
 /** Where a navigation lands, as the router decides it. */
 type Landing =
-  | { readonly kind: 'page'; readonly page: Page; readonly by: 'path' | 'name'; readonly written: string }
+  | { readonly kind: 'page'; readonly page: Page; readonly by: 'path' | 'name'; readonly written: string; readonly guessed?: true }
   | { readonly kind: 'external'; readonly written: string }
   | { readonly kind: 'unresolved'; readonly why: 'missing' | 'dynamic' | 'ambiguous'; readonly written: string };
 
@@ -151,9 +156,10 @@ const sharedDirectories = (a: string, b: string): number => {
  * file: the page nearest it, by the directories they share, is its own
  * application's (P276).
  */
-const byPath = (pages: readonly Page[], path: string, from: string): Landing => {
+const byPath = (all: readonly Page[], path: string, from: string): Landing => {
   // An address that starts with a value read at run time may start with a host: which application it is in is not read.
   if (path.startsWith('${')) return { kind: 'unresolved', why: 'dynamic', written: path };
+  const pages = ownPages(all, from);
   // A value glued to the end of the last segment (`/login${query}`) is the query, not the page.
   const trimmed = path.replace(/([^/$}])\$\{[^}]*\}$/, '$1');
   const written = segmentsOf(trimmed.replace(/\$\{[^}]*\}/g, '\u0000'));
@@ -165,6 +171,8 @@ const byPath = (pages: readonly Page[], path: string, from: string): Landing => 
   let top = fits.filter((each) => each.fit === best);
   // One component shown at two addresses that fit as well is still one page.
   if (top.length > 1 && top.every((each) => each.page.fn === top[0]?.page.fn)) top = top.slice(0, 1);
+  // A page placed through a branch nothing decides gives way to one placed outright (P288).
+  if (top.length > 1 && top.some((each) => each.page.guessed !== true)) top = top.filter((each) => each.page.guessed !== true);
   if (top.length > 1) {
     const nearest = Math.max(...top.map((each) => sharedDirectories(each.page.file, from)));
     top = top.filter((each) => sharedDirectories(each.page.file, from) === nearest);
@@ -173,6 +181,34 @@ const byPath = (pages: readonly Page[], path: string, from: string): Landing => 
   if (top.length === 0) return { kind: 'unresolved', why: 'missing', written: shown };
   if (top.length > 1) return { kind: 'unresolved', why: 'ambiguous', written: shown };
   return { kind: 'page', page: (top[0] as { page: Page }).page, by: 'path', written: shown };
+};
+
+/** Each service's application roots: a file's nearest directory holding a manifest, below the repository's. */
+const ROOTS = new WeakMap<readonly Page[], { readonly repoDir: string; readonly roots: Map<string, string> }>();
+
+/** The directory of the nearest manifest above a repo-relative file, `''` for the repository's own. */
+const rootOf = (repoDir: string, roots: Map<string, string>, file: string): string => {
+  const directory = file.split('/').slice(0, -1).join('/');
+  const known = roots.get(directory);
+  if (known !== undefined) return known;
+  const found = directory === '' || existsSync(join(repoDir, directory, 'package.json')) ? directory : rootOf(repoDir, roots, directory);
+  roots.set(directory, found);
+  return found;
+};
+
+/**
+ * The pages a navigation written in a file can show: those of the
+ * application the file is in - the nearest directory holding a manifest -
+ * where that application has pages, every page otherwise (a library of the
+ * workspace navigates to the pages of whichever application renders it). A
+ * router shows its own application's pages only, so in a service holding
+ * many applications a page of a sibling is no candidate (P288).
+ */
+const ownPages = (pages: readonly Page[], from: string): readonly Page[] => {
+  const scoped = ROOTS.get(pages);
+  if (scoped === undefined) return pages;
+  const root = rootOf(scoped.repoDir, scoped.roots, from);
+  const own = pages.filter((page) => rootOf(scoped.repoDir, scoped.roots, page.file) === root);  return own.length > 0 ? own : pages;
 };
 
 /** The text of an address written as a literal or a template, its `${…}` holes kept. */
@@ -190,7 +226,45 @@ const propertyValue = (object: TsNode, key: string): TsNode | undefined => {
   return property !== undefined && Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
 };
 
-/** Where `navigateTo(to, options)` lands. */
+/** Where an address read as text lands, from a branch nothing decides where it was read through one. */
+const pathLanding = (pages: readonly Page[], text: string, from: string, external: boolean, guessed: boolean): Landing => {
+  if (EXTERNAL.test(text) || (external && !text.startsWith('/'))) return { kind: 'external', written: text };
+  const landing = byPath(pages, text, from);
+  return landing.kind === 'page' && (guessed || landing.page.guessed === true) ? { ...landing, guessed: true } : landing;
+};
+
+/**
+ * Where `navigateTo(to, options)` lands: one landing per address the value
+ * spells, a path a function of the repository hands back read through it
+ * (`push(adminPath('teams'))`), one per branch nothing decides (P288).
+ */
+const landingsOf = (pages: readonly Page[], to: TsNode | undefined, options: TsNode | undefined, from: string): Landing[] => {
+  const external = options !== undefined && propertyValue(options, 'external')?.getText() === 'true';
+  if (to === undefined) return [{ kind: 'unresolved', why: 'dynamic', written: '' }];
+  const text = addressText(to);
+  if (text !== undefined && !Node.isTemplateExpression(to)) return [pathLanding(pages, text, from, external, false)];
+  const spelled = Node.isObjectLiteralExpression(to) ? undefined : spelledPaths(to);
+  if (spelled !== undefined) return branchLandings(spelled.map((each) => ({ landing: pathLanding(pages, each.text, from, external, each.guessed === true), guessed: each.guessed === true })));
+  if (Node.isObjectLiteralExpression(to)) {
+    const name = propertyValue(to, 'name');
+    const pathname = propertyValue(to, 'path') ?? propertyValue(to, 'pathname');
+    const read = name === undefined && pathname !== undefined && addressText(pathname) === undefined ? spelledPaths(pathname) : undefined;
+    if (read !== undefined) return branchLandings(read.map((each) => ({ landing: pathLanding(pages, each.text, from, false, each.guessed === true), guessed: each.guessed === true })));
+  }
+  return [landingOf(pages, to, options, from)];
+};
+
+/**
+ * The landings of a navigation's branches: where one branch nothing decides
+ * lands on a page, another that lands nowhere is the build's other choice and
+ * says nothing of its own (P288).
+ */
+const branchLandings = (read: ReadonlyArray<{ readonly landing: Landing; readonly guessed: boolean }>): Landing[] =>
+  read.some((each) => each.landing.kind === 'page')
+    ? read.filter((each) => each.landing.kind === 'page' || !each.guessed).map((each) => each.landing)
+    : read.map((each) => each.landing);
+
+/** Where `navigateTo(to, options)` lands, read as written. */
 const landingOf = (pages: readonly Page[], to: TsNode | undefined, options: TsNode | undefined, from: string): Landing => {
   const external = options !== undefined && propertyValue(options, 'external')?.getText() === 'true';
   if (to === undefined) return { kind: 'unresolved', why: 'dynamic', written: '' };
@@ -245,6 +319,10 @@ const ROUTER_MAKERS: ReadonlyMap<string, ReadonlySet<string>> = new Map([
   ['createBrowserRouter', new Set(['react-router', 'react-router-dom'])],
   ['createHashRouter', new Set(['react-router', 'react-router-dom'])],
   ['createMemoryRouter', new Set(['react-router', 'react-router-dom'])],
+  // The history React Router before version 6 is handed, made once and imported where a component navigates outside the router (P288).
+  ['createBrowserHistory', new Set(['history'])],
+  ['createHashHistory', new Set(['history'])],
+  ['createMemoryHistory', new Set(['history'])],
 ]);
 /** React Router's `useNavigate()`, which hands back the function that navigates. */
 const NAVIGATE_HOOK_MODULES: ReadonlySet<string> = new Set(['react-router', 'react-router-dom', '@remix-run/react']);
@@ -473,10 +551,14 @@ export const drawNavigations = (
       route: landing.page.route,
       page: landing.page.file,
       ...(landing.by === 'name' ? { byName: true } : {}),
+      ...(landing.guessed === true ? { branch: true } : {}),
       ...extra,
     });
   };
   const linkTags = nuxt ? LINK_TAGS : VUE_ROUTER_LINK_TAGS;
+  const kit = hasDependency(ctx.pkg, '@sveltejs/kit');
+  // A router shows its own application's pages: a sibling's in a service of many is no candidate (P288). Nuxt's layers lend pages across.
+  if (!nuxt) ROOTS.set(pages, { repoDir: ctx.repoDir, roots: new Map() });
 
   for (const { file, script, component, markup } of scripts) {
     if (MAY_NAVIGATE.test(script.getFullText())) {
@@ -498,10 +580,12 @@ export const drawNavigations = (
           const parent = node.getParent();
           const returned = middleware !== undefined && parent !== undefined && (Node.isReturnStatement(parent) || Node.isArrowFunction(parent));
           const redirects = navigation.redirects === true || returned;
-          land(owner, file, line, landingOf(pages, navigation.to, navigation.options, file), {
-            ...(navigation.replace === true ? { replace: true } : {}),
-            ...(redirects ? { redirects: true } : {}),
-          });
+          for (const landing of landingsOf(pages, navigation.to, navigation.options, file)) {
+            land(owner, file, line, landing, {
+              ...(navigation.replace === true ? { replace: true } : {}),
+              ...(redirects ? { redirects: true } : {}),
+            });
+          }
           return;
         }
         // `<Link to="/orders">`, `<NavLink to>`, Next's `<Link href>` (P276).
@@ -517,10 +601,34 @@ export const drawNavigations = (
         const initializer = written.getInitializer();
         const value = initializer !== undefined && Node.isJsxExpression(initializer) ? initializer.getExpression() : initializer;
         const replace = node.getAttributes().some((each) => Node.isJsxAttribute(each) && each.getNameNode().getText() === 'replace' && (each.getInitializer() === undefined || each.getInitializer()?.getText() === '{true}'));
-        land(owner, file, startLineOf(node), landingOf(pages, value, undefined, file), { link: tag.getText(), ...(replace ? { replace: true } : {}), ...(link.redirects === true ? { redirects: true } : {}) });
+        for (const landing of landingsOf(pages, value, undefined, file)) {
+          land(owner, file, startLineOf(node), landing, { link: tag.getText(), ...(replace ? { replace: true } : {}), ...(link.redirects === true ? { redirects: true } : {}) });
+        }
       });
     }
     if (component === undefined || markup === undefined) continue;
+    const svelte = file.endsWith('.svelte');
+    // `@click="router.push('/x')"`, `on:click={() => goto('/x')}`: a navigation in the markup's own handler (P288).
+    for (const event of svelte ? svelteMarkupEvents(markup) : vueTemplateEvents(markup)) {
+      for (const call of templateCalls(event.source)) {
+        const how = templateNavigation(script, call.callee, nuxt);
+        const [first] = call.args;
+        if (how === undefined || first === undefined || /^-?\d+$/.test(first.trim())) continue;
+        land(component, file, event.line, boundLanding(pages, first, file), { handler: event.attribute, ...(how.replace ? { replace: true } : {}) });
+      }
+    }
+    if (svelte) {
+      // SvelteKit's router takes over a plain `<a href>` to a page of the application (P288).
+      if (!kit) continue;
+      for (const tag of svelteMarkupTags(markup)) {
+        if (tag.name !== 'a') continue;
+        const href = tag.attributes.get('href');
+        if (typeof href !== 'string') continue;
+        const landing = svelteHrefLanding(pages, href.trim(), file);
+        if (landing !== undefined) land(component, file, tag.line, landing, { link: 'a' });
+      }
+      continue;
+    }
     for (const tag of vueTemplateTags(markup)) {
       if (!linkTags.has(tag.name)) continue;
       const literal = tag.attributes.get('to');
@@ -539,9 +647,14 @@ export const drawNavigations = (
   }
 };
 
-/** What `:to="..."` names: a quoted address, `{ name: '...' }`, or code. */
+/** What `:to="..."` names: a quoted address, a template of one, `{ name: '...' }`, or code. */
 const boundLanding = (pages: readonly Page[], bound: string, from: string): Landing => {
   const value = bound.trim();
+  const template = /^`([^`]*)`$/.exec(value);
+  if (template !== null && (template[1] as string).includes('${')) {
+    const text = template[1] as string;
+    return EXTERNAL.test(text) ? { kind: 'external', written: text } : byPath(pages, text, from);
+  }
   const quoted = /^(['"`])([^'"`$]*)\1$/.exec(value);
   if (quoted !== null) {
     const text = quoted[2] as string;
@@ -554,4 +667,122 @@ const boundLanding = (pages: readonly Page[], bound: string, from: string): Land
     return found.length === 1 ? { kind: 'page', page: found[0] as Page, by: 'name', written: name } : { kind: 'unresolved', why: found.length === 0 ? 'missing' : 'ambiguous', written: name };
   }
   return { kind: 'unresolved', why: 'dynamic', written: value.replace(/\s+/g, ' ').slice(0, 60) };
+};
+
+/** A call written in a markup handler: what is called, as written, and its arguments' text. */
+interface TemplateCall {
+  readonly callee: string;
+  readonly args: readonly string[];
+}
+
+/** The arguments of a call whose `(` is at `open`, split at their own commas, or nothing where the text ends first. */
+const argumentsAt = (source: string, open: number): string[] | undefined => {
+  const args: string[] = [];
+  let depth = 0;
+  let quote: string | undefined;
+  let start = open + 1;
+  for (let at = open; at < source.length; at += 1) {
+    const char = source[at] as string;
+    if (quote !== undefined) {
+      if (char === '\\') at += 1;
+      else if (char === quote) quote = undefined;
+      continue;
+    }
+    if (char === "'" || char === '"' || char === '`') quote = char;
+    else if (char === '(' || char === '[' || char === '{') depth += 1;
+    else if (char === ')' || char === ']' || char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        const last = source.slice(start, at).trim();
+        if (last !== '') args.push(last);
+        return args;
+      }
+    } else if (char === ',' && depth === 1) {
+      args.push(source.slice(start, at).trim());
+      start = at + 1;
+    }
+  }
+  return undefined;
+};
+
+/** Every call a markup handler's code makes: `router.push('/x')`, `$router.replace(...)`, `goto('/x')`. */
+const templateCalls = (source: string): TemplateCall[] => {
+  const calls: TemplateCall[] = [];
+  for (const match of source.matchAll(/(?<![\w$.])((?:this\s*\.\s*)?[A-Za-z_$][\w$]*(?:\s*\.\s*[A-Za-z_$][\w$]*)?)\s*\(/g)) {
+    const args = argumentsAt(source, (match.index as number) + match[0].length - 1);
+    if (args !== undefined) calls.push({ callee: (match[1] as string).replace(/\s+/g, ''), args });
+  }
+  return calls;
+};
+
+/** The declaration a name has in a component's script: a `const`, a name taken out of one, or an import. */
+const declaredIn = (script: SourceFile, name: string): TsNode | undefined => {
+  let found: TsNode | undefined;
+  script.forEachDescendant((node, traversal) => {
+    if (!Node.isIdentifier(node) || node.getText() !== name) return;
+    const parent = node.getParent();
+    if (parent !== undefined && (Node.isVariableDeclaration(parent) || Node.isBindingElement(parent) || Node.isImportSpecifier(parent)) && parent.getNameNode() === node) {
+      found = parent;
+      traversal.stop();
+    }
+    if (parent !== undefined && Node.isImportSpecifier(parent) && parent.getAliasNode() === node) {
+      found = parent;
+      traversal.stop();
+    }
+  });
+  return found;
+};
+
+/**
+ * Whether a call written in a markup handler navigates, and how: `push` and
+ * `replace` on `$router` or on a router the script holds, Nuxt's
+ * `navigateTo`, SvelteKit's `goto`, and `push` / `replace` taken out of a
+ * router (P288).
+ */
+const templateNavigation = (script: SourceFile, callee: string, nuxt: boolean): { readonly replace: boolean } | undefined => {
+  const parts = callee.split('.');
+  const method = parts.at(-1) as string;
+  if (parts.length > 1) {
+    const replace = ROUTER_METHODS.get(method);
+    if (replace === undefined) return undefined;
+    const receiver = parts.slice(0, -1).join('.');
+    if (receiver === '$router' || receiver === 'this.$router') return { replace };
+    if (parts.length !== 2) return undefined;
+    const held = declaredIn(script, receiver);
+    const value = held !== undefined && Node.isVariableDeclaration(held) ? held.getInitializer() : undefined;
+    return value !== undefined && isRouter(value, nuxt) ? { replace } : undefined;
+  }
+  if (nuxt && method === 'navigateTo' && declaredIn(script, method) === undefined) return { replace: false };
+  const declaration = declaredIn(script, method);
+  if (declaration === undefined) return undefined;
+  if (Node.isImportSpecifier(declaration)) {
+    const module = declaration.getImportDeclaration().getModuleSpecifierValue();
+    if (declaration.getName() === 'goto' && module === '$app/navigation') return { replace: false };
+    if (declaration.getName() === 'navigateTo' && NUXT_MODULES.has(module)) return { replace: false };
+    return undefined;
+  }
+  if (Node.isBindingElement(declaration)) {
+    const taken = declaration.getPropertyNameNode()?.getText() ?? declaration.getName();
+    const holder = declaration.getParent()?.getParent();
+    const value = holder !== undefined && Node.isVariableDeclaration(holder) ? holder.getInitializer() : undefined;
+    const replace = ROUTER_METHODS.get(taken);
+    return replace !== undefined && value !== undefined && isRouter(value, nuxt) ? { replace } : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * Where a SvelteKit `<a href>` lands: a literal address, one with values
+ * written in braces (`/orders/{order.id}`), or code in braces; a fragment
+ * or an empty `href` names no page and says nothing.
+ */
+const svelteHrefLanding = (pages: readonly Page[], href: string, from: string): Landing | undefined => {
+  if (href === '' || href.startsWith('#')) return undefined;
+  const whole = /^\{([^{}]*)\}$/.exec(href);
+  if (whole !== null) return boundLanding(pages, whole[1] as string, from);
+  const text = href.replace(/\{([^{}]*)\}/g, (_match, inner: string) => `\${${inner.trim()}}`);
+  if (EXTERNAL.test(text)) return { kind: 'external', written: text };
+  // A relative address is the browser's to resolve against the page it is on, which is not read here.
+  if (!text.startsWith('/')) return { kind: 'unresolved', why: 'dynamic', written: text };
+  return byPath(pages, text, from);
 };

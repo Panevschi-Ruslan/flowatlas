@@ -4,6 +4,8 @@ import type { JsxAttributeLike, Node as TsNode, ObjectLiteralExpression } from '
 import { Node } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
+import { componentIn } from '../util/component.js';
+import { beforeQuery, holdsHole, spelledPaths } from '../util/path-text.js';
 import { definePass } from './types.js';
 
 /** The value written for a key of an object, when the object writes one. */
@@ -27,15 +29,49 @@ const attributeOf = (
   return undefined;
 };
 
-/** The string an expression is, when it is one written in place. */
-const stringOf = (value: TsNode | undefined): string | undefined => {
+/**
+ * Every address a route's path is written as, each with its optional
+ * parameters left out and put in (`/home/:tab?` is `/home` and
+ * `/home/:param`), or nothing where it is not read: a path built by a call
+ * of a package, or one holding a value read at run time (P288). A path a
+ * function of the repository hands back is read through it
+ * (`path={startPath()}`, `` `${findPath()}/:query?` ``); one arrived at
+ * through a branch nothing decides is `guessed`.
+ */
+export const routePathsOf = (value: TsNode | undefined): Array<{ readonly path: string; readonly guessed?: true }> | undefined => {
   if (value === undefined) return undefined;
-  if (Node.isStringLiteral(value) || Node.isNoSubstitutionTemplateLiteral(value)) {
-    return value.getLiteralValue();
+  const inner = Node.isJsxExpression(value) ? value.getExpression() : value;
+  if (inner === undefined) return undefined;
+  const spelled = spelledPaths(inner);
+  // A value in the query is no part of the route; one in the path leaves it unread.
+  const paths = spelled?.map((each) => ({ ...each, text: beforeQuery(each.text) }));
+  if (paths === undefined || paths.some((each) => holdsHole(each.text))) return undefined;
+  const out: Array<{ path: string; guessed?: true }> = [];
+  for (const each of paths) {
+    for (const path of withOptionals(each.text)) {
+      const normal = normalizePath(path);
+      if (out.some((other) => other.path === normal)) continue;
+      out.push({ path: normal, ...(each.guessed === true ? { guessed: true as const } : {}) });
+    }
   }
-  if (Node.isJsxExpression(value)) return stringOf(value.getExpression());
-  return undefined;
+  return out;
 };
+
+/** A path with each optional parameter (`:tab?`) left out and put in, at most a few ways. */
+const withOptionals = (path: string): string[] => {
+  let out = [''];
+  for (const segment of path.split('/').filter((part) => part !== '')) {
+    const optional = /^:[^/]+\?$/.test(segment);
+    const kept = optional ? segment.slice(0, -1) : segment;
+    out = out.flatMap((head) => (optional ? [head, `${head}/${kept}`] : [`${head}/${kept}`]));
+    if (out.length > 8) return [path];
+  }
+  return out.map((each) => (each === '' ? '/' : each));
+};
+
+/** The component a route's screen names, written as a name, an element, a lazily loaded module or a member of one. */
+export const routeScreenOf = (ctx: ReactExtractContext, value: TsNode | undefined): IndexedFunction | undefined =>
+  value === undefined ? undefined : componentIn(ctx, value);
 
 /**
  * The address a page of Next's older router is shown at, or nothing: only a
@@ -78,7 +114,8 @@ const isDefaultExport = (indexed: IndexedFunction): boolean => {
 export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
   const routed = new Map<string, Set<string>>();
 
-  const claim = (indexed: IndexedFunction | undefined, path: string, placed = false): void => {
+  const guessed = new Map<string, Set<string>>();
+  const claim = (indexed: IndexedFunction | undefined, path: string, placed = false, branch = false): void => {
     // A file a router places is a screen whatever it returns: a page that only redirects is still the page at that address (P276).
     if (indexed === undefined || (indexed.role !== 'component' && !placed)) return;
     const paths = routed.get(indexed.id);
@@ -86,26 +123,10 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
     // not depend on which file happened to be read first.
     if (paths === undefined) routed.set(indexed.id, new Set([path]));
     else paths.add(path);
+    if (branch) guessed.set(indexed.id, new Set([...(guessed.get(indexed.id) ?? []), path]));
   };
-
-  /** The component an entry shows, when it names one declared here. */
-  const shownBy = (value: TsNode | undefined): IndexedFunction | undefined => {
-    if (value === undefined) return undefined;
-    const inner = Node.isJsxExpression(value) ? value.getExpression() : value;
-    if (inner === undefined) return undefined;
-    const named = Node.isJsxSelfClosingElement(inner)
-      ? inner.getTagNameNode()
-      : Node.isJsxElement(inner)
-        ? inner.getOpeningElement().getTagNameNode()
-        : inner;
-    if (!Node.isIdentifier(named)) return undefined;
-    const symbol = named.getSymbol();
-    if (symbol === undefined) return undefined;
-    for (const declaration of (symbol.getAliasedSymbol() ?? symbol).getDeclarations()) {
-      const indexed = ctx.functions.get(declaration as never);
-      if (indexed !== undefined) return indexed;
-    }
-    return undefined;
+  const claimAll = (indexed: IndexedFunction | undefined, paths: ReturnType<typeof routePathsOf>): void => {
+    for (const each of paths ?? []) claim(indexed, each.path, false, each.guessed === true);
   };
 
   for (const sourceFile of ctx.project.getSourceFiles()) {
@@ -115,9 +136,9 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
       // The table form: `{ path: '/orders', element: <Orders /> }`, or the same
       // with `Component`, which the same library also accepts.
       if (Node.isObjectLiteralExpression(node)) {
-        const path = stringOf(valueOf(node, 'path'));
-        if (path === undefined) return;
-        claim(shownBy(valueOf(node, 'element') ?? valueOf(node, 'Component')), normalizePath(path));
+        const paths = routePathsOf(valueOf(node, 'path'));
+        if (paths === undefined) return;
+        claimAll(routeScreenOf(ctx, valueOf(node, 'element') ?? valueOf(node, 'Component')), paths);
         return;
       }
       // The element form: `<Route path="/orders" element={<Orders />} />`.
@@ -129,9 +150,9 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
       if (attributes === undefined) return;
       const tag = Node.isJsxSelfClosingElement(node) ? node.getTagNameNode() : (node as never as { getTagNameNode(): TsNode }).getTagNameNode();
       if (tag.getText() !== 'Route') return;
-      const path = stringOf(attributeOf(attributes, ['path']));
-      if (path === undefined) return;
-      claim(shownBy(attributeOf(attributes, ['element', 'Component', 'component'])), normalizePath(path));
+      const paths = routePathsOf(attributeOf(attributes, ['path']));
+      if (paths === undefined) return;
+      claimAll(routeScreenOf(ctx, attributeOf(attributes, ['element', 'Component', 'component'])), paths);
     });
   }
 
@@ -142,16 +163,36 @@ export const routesPass = definePass('routes', (ctx: ReactExtractContext) => {
   // The older router's pages too, where the application is Next's (P276): a
   // page a navigation lands on is a screen whichever router shows it.
   const next = hasDependency(ctx.pkg, 'next');
+  const pageFiles = new Set<string>();
   for (const indexed of ctx.functions.all()) {
     if (indexed.role === 'hook') continue;
     const path = routePathOfFile(indexed.file, APP_PAGES) ?? (next ? pagesRouterPath(indexed.file) : null);
-    if (path !== null && isDefaultExport(indexed)) claim(indexed, path, true);
+    if (path !== null && isDefaultExport(indexed)) {
+      claim(indexed, path, true);
+      pageFiles.add(indexed.file);
+    }
+  }
+  // A page file that hands out another file's component as its own
+  // (`import Page from './[slug]/page'; export default Page`): that component
+  // is the page at this address too (P288).
+  for (const sourceFile of ctx.project.getSourceFiles()) {
+    if (sourceFile.getFilePath().includes('/node_modules/')) continue;
+    const file = ctx.fileOf(sourceFile);
+    if (pageFiles.has(file)) continue;
+    const path = routePathOfFile(file, APP_PAGES) ?? (next ? pagesRouterPath(file) : null);
+    if (path === null) continue;
+    for (const declaration of sourceFile.getExportedDeclarations().get('default') ?? []) {
+      if (declaration.getSourceFile() === sourceFile) continue;
+      const indexed = ctx.functions.get(declaration as never);
+      if (indexed !== undefined && indexed.role !== 'hook') claim(indexed, path, true);
+    }
   }
 
   for (const [id, paths] of routed) {
     const indexed = ctx.functions.byId(id);
     if (indexed !== undefined) {
-      ctx.ensureFunctionNode(indexed.fn, { route: [...paths].sort().join(' ') });
+      const branches = guessed.get(id);
+      ctx.ensureFunctionNode(indexed.fn, { route: [...paths].sort().join(' '), ...(branches === undefined ? {} : { routeGuessed: [...branches].sort().join(' ') }) });
     }
   }
 });

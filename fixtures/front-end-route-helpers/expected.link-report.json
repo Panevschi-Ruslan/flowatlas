@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:34:25.316Z",
+  "configHash": "bc7eb680f0b5",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 8,
+      "edges": 5,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2740,
+      "packages": {
+        "name": "front-end-route-helpers-catalog",
+        "runtime": [
+          "axios",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 9,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 2729,
+      "packages": {
+        "name": "front-end-route-helpers-console",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "desk",
+      "repo": "./desk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 18,
+      "edges": 16,
+      "types": 0,
+      "unresolved": 8,
+      "durationMs": 2830,
+      "packages": {
+        "name": "front-end-route-helpers-desk",
+        "runtime": [
+          "history",
+          "mobx-react",
+          "react",
+          "react-dom",
+          "react-router-dom"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "panel",
+      "repo": "./panel",
+      "type": "vue",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 6,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 2668,
+      "packages": {
+        "name": "front-end-route-helpers-panel",
+        "runtime": [
+          "vue",
+          "vue-router"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "sites",
+      "repo": "./sites",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 6,
+      "edges": 3,
+      "types": 0,
+      "unresolved": 5,
+      "durationMs": 2760,
+      "packages": {
+        "name": "front-end-route-helpers-sites",
+        "runtime": [
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stand",
+      "repo": "./stand",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 6,
+      "edges": 4,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2784,
+      "packages": {
+        "name": "front-end-route-helpers-stand",
+        "runtime": [],
+        "dev": [
+          "@sveltejs/kit",
+          "svelte"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 1,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 1,
+    "resolved": 0,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:catalog:http:ALL:/api/products"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "catalog",
+      "file": "gateways/products.gateway.ts",
+      "line": 11,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /products",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /products */.",
+      "symbol": "ui_api_call:catalog#gateways/products.gateway.ts:11:30"
+    }
+  ],
+  "totals": {
+    "nodes": 53,
+    "edges": 36,
+    "types": 0,
+    "missed": 18,
+    "sites": 19,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 18
+  }
+}

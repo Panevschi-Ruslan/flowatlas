@@ -1,0 +1,1594 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:50:22.705Z",
+  "services": [
+    {
+      "name": "desk",
+      "repo": "./desk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "sites",
+      "repo": "./sites",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stand",
+      "repo": "./stand",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "panel",
+      "repo": "./panel",
+      "type": "vue",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#gateways/products.gateway.ts:ProductsGateway",
+      "type": "function",
+      "label": "ProductsGateway",
+      "repo": "catalog",
+      "file": "gateways/products.gateway.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "object"
+        }
+      }
+    },
+    {
+      "id": "catalog#gateways/products.gateway.ts:ProductsGateway.list",
+      "type": "function",
+      "label": "ProductsGateway.list",
+      "repo": "catalog",
+      "file": "gateways/products.gateway.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "catalog#pages/api/products.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "pages/api/products.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_request",
+              "type": "unknown"
+            },
+            {
+              "name": "response",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "console#src/app/auth.guard.ts:authGuard",
+      "type": "function",
+      "label": "authGuard",
+      "repo": "console",
+      "file": "src/app/auth.guard.ts",
+      "line": 5
+    },
+    {
+      "id": "console#src/app/auth.guard.ts:endedGuard",
+      "type": "function",
+      "label": "endedGuard",
+      "repo": "console",
+      "file": "src/app/auth.guard.ts",
+      "line": 11
+    },
+    {
+      "id": "console#src/app/login.component.ts:LoginComponent",
+      "type": "ui_component",
+      "label": "LoginComponent",
+      "repo": "console",
+      "file": "src/app/login.component.ts",
+      "line": 3,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-login"
+      }
+    },
+    {
+      "id": "console#src/app/queue.component.ts:QueueComponent",
+      "type": "ui_component",
+      "label": "QueueComponent",
+      "repo": "console",
+      "file": "src/app/queue.component.ts",
+      "line": 3,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-queue"
+      }
+    },
+    {
+      "id": "console#src/app/start.component.ts:StartComponent",
+      "type": "ui_component",
+      "label": "StartComponent",
+      "repo": "console",
+      "file": "src/app/start.component.ts",
+      "line": 5,
+      "kind": "standalone",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "standalone": true,
+        "selector": "app-start"
+      }
+    },
+    {
+      "id": "desk#src/lib/load-screen.ts:loadScreen",
+      "type": "function",
+      "label": "loadScreen",
+      "repo": "desk",
+      "file": "src/lib/load-screen.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "factory",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "{Component:unknown;preload:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "desk#src/lib/paths.ts:adminPath",
+      "type": "function",
+      "label": "adminPath",
+      "repo": "desk",
+      "file": "src/lib/paths.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "segments",
+              "type": "string[]",
+              "rest": true
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "desk#src/lib/paths.ts:findPath",
+      "type": "function",
+      "label": "findPath",
+      "repo": "desk",
+      "file": "src/lib/paths.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ query }",
+              "type": "{query?:string}",
+              "optional": true
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "desk#src/lib/paths.ts:pageUrl",
+      "type": "function",
+      "label": "pageUrl",
+      "repo": "desk",
+      "file": "src/lib/paths.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "doc",
+              "type": "{path:string}"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "desk#src/lib/paths.ts:startPath",
+      "type": "function",
+      "label": "startPath",
+      "repo": "desk",
+      "file": "src/lib/paths.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "desk#src/routes/index.tsx:Routes",
+      "type": "ui_component",
+      "label": "Routes",
+      "repo": "desk",
+      "file": "src/routes/index.tsx",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "desk#src/routes/screens.ts:Article",
+      "type": "function",
+      "label": "Article",
+      "repo": "desk",
+      "file": "src/routes/screens.ts",
+      "line": 6
+    },
+    {
+      "id": "desk#src/routes/screens.ts:Home",
+      "type": "function",
+      "label": "Home",
+      "repo": "desk",
+      "file": "src/routes/screens.ts",
+      "line": 4
+    },
+    {
+      "id": "desk#src/routes/screens.ts:Search",
+      "type": "function",
+      "label": "Search",
+      "repo": "desk",
+      "file": "src/routes/screens.ts",
+      "line": 5
+    },
+    {
+      "id": "desk#src/screens/Article.tsx:Article",
+      "type": "ui_component",
+      "label": "Article",
+      "repo": "desk",
+      "file": "src/screens/Article.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ parent }",
+              "type": "{parent:{path:string}}"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "route": "/a/:param"
+      }
+    },
+    {
+      "id": "desk#src/screens/Home.tsx:Home",
+      "type": "ui_component",
+      "label": "Home",
+      "repo": "desk",
+      "file": "src/screens/Home.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ team }",
+              "type": "{team:{id:string}}"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "route": "/ /:param /home /home/:param",
+        "routeGuessed": "/ /:param /home /home/:param"
+      }
+    },
+    {
+      "id": "desk#src/screens/Login/Login.tsx:Login",
+      "type": "ui_component",
+      "label": "Login",
+      "repo": "desk",
+      "file": "src/screens/Login/Login.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/login"
+      }
+    },
+    {
+      "id": "desk#src/screens/Search.tsx:Search",
+      "type": "ui_component",
+      "label": "Search",
+      "repo": "desk",
+      "file": "src/screens/Search.tsx",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/search /search/:param"
+      }
+    },
+    {
+      "id": "desk#src/screens/TeamMembers.tsx:TeamMembers",
+      "type": "ui_component",
+      "label": "TeamMembers",
+      "repo": "desk",
+      "file": "src/screens/TeamMembers.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/admin/teams/:param/members"
+      }
+    },
+    {
+      "id": "entry:catalog:http:ALL:/api/products",
+      "type": "entry",
+      "label": "ALL /api/products",
+      "repo": "catalog",
+      "file": "pages/api/products.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/products",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "external_api:products.internal",
+      "type": "external_api",
+      "label": "products.internal",
+      "repo": "catalog",
+      "meta": {
+        "host": "products.internal"
+      }
+    },
+    {
+      "id": "http_out:catalog#gateways/products.gateway.ts:11:30",
+      "type": "http_out",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "gateways/products.gateway.ts",
+      "line": 11,
+      "meta": {
+        "method": "GET",
+        "url": "/products",
+        "path": "/products",
+        "baseUrlEnv": null,
+        "responseType": "string[]",
+        "bodyType": null,
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "panel#src/views/BoardView.vue:BoardView",
+      "type": "ui_component",
+      "label": "BoardView",
+      "repo": "panel",
+      "file": "src/views/BoardView.vue",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "panel#src/views/TicketsView.vue:TicketsView",
+      "type": "ui_component",
+      "label": "TicketsView",
+      "repo": "panel",
+      "file": "src/views/TicketsView.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/tickets"
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "axios": 3
+          },
+          "functions": 2,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "repo:console",
+      "type": "repo",
+      "label": "console",
+      "repo": "console",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "templates": 3,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:desk",
+      "type": "repo",
+      "label": "desk",
+      "repo": "desk",
+      "meta": {
+        "stats": {
+          "files": 12,
+          "filesRead": 12,
+          "filesUnreadable": 0,
+          "functions": 15,
+          "components": 6,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:panel",
+      "type": "repo",
+      "label": "panel",
+      "repo": "panel",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 2,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "repo:sites",
+      "type": "repo",
+      "label": "sites",
+      "repo": "sites",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 5,
+          "components": 5,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "repo:stand",
+      "type": "repo",
+      "label": "stand",
+      "repo": "stand",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 0,
+          "components": 4,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "svelte"
+          ],
+          "entry": [
+            "sveltekit-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sites#apps/blog/src/app/(app)/[slug]/page.tsx:BlogPage",
+      "type": "ui_component",
+      "label": "BlogPage",
+      "repo": "sites",
+      "file": "apps/blog/src/app/(app)/[slug]/page.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "{params:{slug?:string}}"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "route": "/ /:param"
+      }
+    },
+    {
+      "id": "sites#apps/blog/src/app/(app)/search/page.tsx:SearchPage",
+      "type": "ui_component",
+      "label": "SearchPage",
+      "repo": "sites",
+      "file": "apps/blog/src/app/(app)/search/page.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "route": "/search"
+      }
+    },
+    {
+      "id": "sites#apps/blog/src/components/Header.tsx:Header",
+      "type": "ui_component",
+      "label": "Header",
+      "repo": "sites",
+      "file": "apps/blog/src/components/Header.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "sites#apps/store/src/app/(app)/[slug]/page.tsx:StorePage",
+      "type": "ui_component",
+      "label": "StorePage",
+      "repo": "sites",
+      "file": "apps/store/src/app/(app)/[slug]/page.tsx",
+      "line": 2,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "{ params }",
+              "type": "{params:{slug?:string}}"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "route": "/ /:param"
+      }
+    },
+    {
+      "id": "sites#apps/store/src/components/Header.tsx:Header",
+      "type": "ui_component",
+      "label": "Header",
+      "repo": "sites",
+      "file": "apps/store/src/components/Header.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "stand#src/routes/+page.svelte:routes/+page",
+      "type": "ui_component",
+      "label": "routes/+page",
+      "repo": "stand",
+      "file": "src/routes/+page.svelte",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "stand#src/routes/cart/+page.svelte:cart/+page",
+      "type": "ui_component",
+      "label": "cart/+page",
+      "repo": "stand",
+      "file": "src/routes/cart/+page.svelte",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/cart"
+      }
+    },
+    {
+      "id": "stand#src/routes/orders/+page.svelte:orders/+page",
+      "type": "ui_component",
+      "label": "orders/+page",
+      "repo": "stand",
+      "file": "src/routes/orders/+page.svelte",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "stand#src/routes/orders/[id]/+page.svelte:[id]/+page",
+      "type": "ui_component",
+      "label": "[id]/+page",
+      "repo": "stand",
+      "file": "src/routes/orders/[id]/+page.svelte",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "id": "ui_action:console#src/app/start.component.ts:10:13",
+      "type": "ui_action",
+      "label": "click=\"router.navigate(['/archive'])\"",
+      "repo": "console",
+      "file": "src/app/start.component.ts",
+      "line": 10,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "router.navigate(['/archive'])",
+        "component": "console#src/app/start.component.ts:StartComponent",
+        "template": "src/app/start.component.ts",
+        "args": [
+          "['/archive']"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:console#src/app/start.component.ts:8:13",
+      "type": "ui_action",
+      "label": "click=\"router.navigate(['/queue'])\"",
+      "repo": "console",
+      "file": "src/app/start.component.ts",
+      "line": 8,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "router.navigate(['/queue'])",
+        "component": "console#src/app/start.component.ts:StartComponent",
+        "template": "src/app/start.component.ts",
+        "args": [
+          "['/queue']"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:console#src/app/start.component.ts:9:13",
+      "type": "ui_action",
+      "label": "click=\"router.navigateByUrl('/login')\"",
+      "repo": "console",
+      "file": "src/app/start.component.ts",
+      "line": 9,
+      "kind": "click",
+      "meta": {
+        "event": "click",
+        "handler": "router.navigateByUrl('/login')",
+        "component": "console#src/app/start.component.ts:StartComponent",
+        "template": "src/app/start.component.ts",
+        "args": [
+          "'/login'"
+        ]
+      }
+    },
+    {
+      "id": "ui_action:desk#src/screens/Article.tsx:6:18",
+      "type": "ui_action",
+      "label": "onClick={() => history.push(pageUrl(parent))}",
+      "repo": "desk",
+      "file": "src/screens/Article.tsx",
+      "line": 6,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => history.push(pageUrl(parent))",
+        "component": "desk#src/screens/Article.tsx:Article",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:desk#src/screens/Home.tsx:10:15",
+      "type": "ui_action",
+      "label": "onClick={() => history.push(findPath({ query: 'open' }))}",
+      "repo": "desk",
+      "file": "src/screens/Home.tsx",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => history.push(findPath({ query: 'open' }))",
+        "component": "desk#src/screens/Home.tsx:Home",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:desk#src/screens/Search.tsx:7:18",
+      "type": "ui_action",
+      "label": "onClick={() => history.push(startPath())}",
+      "repo": "desk",
+      "file": "src/screens/Search.tsx",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => history.push(startPath())",
+        "component": "desk#src/screens/Search.tsx:Search",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:panel#src/views/BoardView.vue:10:13",
+      "type": "ui_action",
+      "label": "@click=\"$router.replace({ name: 'board' })\"",
+      "repo": "panel",
+      "file": "src/views/BoardView.vue",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "$router.replace({ name: 'board' })",
+        "component": "panel#src/views/BoardView.vue:BoardView",
+        "template": "src/views/BoardView.vue",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:panel#src/views/BoardView.vue:11:13",
+      "type": "ui_action",
+      "label": "@click=\"router.back()\"",
+      "repo": "panel",
+      "file": "src/views/BoardView.vue",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "router.back()",
+        "component": "panel#src/views/BoardView.vue:BoardView",
+        "template": "src/views/BoardView.vue",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:panel#src/views/BoardView.vue:9:13",
+      "type": "ui_action",
+      "label": "@click=\"router.push('/tickets')\"",
+      "repo": "panel",
+      "file": "src/views/BoardView.vue",
+      "line": 9,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "router.push('/tickets')",
+        "component": "panel#src/views/BoardView.vue:BoardView",
+        "template": "src/views/BoardView.vue",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:stand#src/routes/+page.svelte:11:9",
+      "type": "ui_action",
+      "label": "on:click=\"() => goto('/cart')\"",
+      "repo": "stand",
+      "file": "src/routes/+page.svelte",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "() => goto('/cart')",
+        "component": "stand#src/routes/+page.svelte:routes/+page",
+        "template": "src/routes/+page.svelte",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:catalog#gateways/products.gateway.ts:11:30",
+      "type": "ui_api_call",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "gateways/products.gateway.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://products.internal/products",
+        "path": "/products",
+        "baseUrlEnv": null,
+        "responseType": "string[]",
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "products.internal"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalog#gateways/products.gateway.ts:ProductsGateway",
+      "to": "ui_api_call:catalog#gateways/products.gateway.ts:11:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/products.gateway.ts",
+      "line": 11
+    },
+    {
+      "from": "catalog#gateways/products.gateway.ts:ProductsGateway.list",
+      "to": "http_out:catalog#gateways/products.gateway.ts:11:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/products.gateway.ts",
+      "line": 11
+    },
+    {
+      "from": "catalog#pages/api/products.ts:handler",
+      "to": "catalog#gateways/products.gateway.ts:ProductsGateway.list",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "pages/api/products.ts",
+      "line": 7
+    },
+    {
+      "from": "console#src/app/auth.guard.ts:authGuard",
+      "to": "console#src/app/login.component.ts:LoginComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/auth.guard.ts",
+      "line": 7,
+      "meta": {
+        "navigates": "/login",
+        "route": "/login",
+        "page": "src/app/login.component.ts",
+        "redirects": true
+      }
+    },
+    {
+      "from": "console#src/app/auth.guard.ts:endedGuard",
+      "to": "console#src/app/start.component.ts:StartComponent",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/auth.guard.ts",
+      "line": 12,
+      "meta": {
+        "navigates": "/",
+        "route": "/",
+        "page": "src/app/start.component.ts",
+        "byUrl": true,
+        "redirects": true
+      }
+    },
+    {
+      "from": "desk#src/routes/index.tsx:Routes",
+      "to": "desk#src/lib/paths.ts:adminPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "string",
+      "file": "src/routes/index.tsx",
+      "line": 17
+    },
+    {
+      "from": "desk#src/routes/index.tsx:Routes",
+      "to": "desk#src/lib/paths.ts:findPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{query?:string}"
+      ],
+      "returns": "string",
+      "file": "src/routes/index.tsx",
+      "line": 15
+    },
+    {
+      "from": "desk#src/routes/index.tsx:Routes",
+      "to": "desk#src/lib/paths.ts:startPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/routes/index.tsx",
+      "line": 14
+    },
+    {
+      "from": "desk#src/routes/screens.ts:Article",
+      "to": "desk#src/lib/load-screen.ts:loadScreen",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{Component:unknown;preload:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "src/routes/screens.ts",
+      "line": 6
+    },
+    {
+      "from": "desk#src/routes/screens.ts:Home",
+      "to": "desk#src/lib/load-screen.ts:loadScreen",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{Component:unknown;preload:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "src/routes/screens.ts",
+      "line": 4
+    },
+    {
+      "from": "desk#src/routes/screens.ts:Search",
+      "to": "desk#src/lib/load-screen.ts:loadScreen",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "{Component:unknown;preload:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "src/routes/screens.ts",
+      "line": 5
+    },
+    {
+      "from": "desk#src/screens/Article.tsx:Article",
+      "to": "desk#src/lib/paths.ts:pageUrl",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{path:string}"
+      ],
+      "returns": "string",
+      "file": "src/screens/Article.tsx",
+      "line": 6
+    },
+    {
+      "from": "desk#src/screens/Home.tsx:Home",
+      "to": "desk#src/lib/paths.ts:adminPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]"
+      ],
+      "returns": "string",
+      "file": "src/screens/Home.tsx",
+      "line": 11
+    },
+    {
+      "from": "desk#src/screens/Home.tsx:Home",
+      "to": "desk#src/lib/paths.ts:findPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{query?:string}"
+      ],
+      "returns": "string",
+      "file": "src/screens/Home.tsx",
+      "line": 10
+    },
+    {
+      "from": "desk#src/screens/Home.tsx:Home",
+      "to": "desk#src/screens/Search.tsx:Search",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/screens/Home.tsx",
+      "line": 10,
+      "meta": {
+        "navigates": "/search",
+        "route": "/search",
+        "page": "src/screens/Search.tsx"
+      }
+    },
+    {
+      "from": "desk#src/screens/Home.tsx:Home",
+      "to": "desk#src/screens/TeamMembers.tsx:TeamMembers",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/screens/Home.tsx",
+      "line": 11,
+      "meta": {
+        "navigates": "/admin/teams/${team.id}/members",
+        "route": "/admin/teams/:param/members",
+        "page": "src/screens/TeamMembers.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "desk#src/screens/Search.tsx:Search",
+      "to": "desk#src/lib/paths.ts:startPath",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "src/screens/Search.tsx",
+      "line": 7
+    },
+    {
+      "from": "desk#src/screens/Search.tsx:Search",
+      "to": "desk#src/screens/Home.tsx:Home",
+      "type": "calls",
+      "confidence": "heuristic",
+      "params": [
+        "{team:{id:string}}"
+      ],
+      "returns": "unknown",
+      "file": "src/screens/Search.tsx",
+      "line": 7,
+      "meta": {
+        "navigates": "/",
+        "route": "/",
+        "page": "src/screens/Home.tsx",
+        "branch": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:ALL:/api/products",
+      "to": "catalog#pages/api/products.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ids:string[]}",
+      "file": "pages/api/products.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "panel#src/views/BoardView.vue:BoardView",
+      "to": "panel#src/views/TicketsView.vue:TicketsView",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/views/BoardView.vue",
+      "line": 9,
+      "meta": {
+        "navigates": "/tickets",
+        "route": "/tickets",
+        "page": "src/views/TicketsView.vue",
+        "handler": "@click"
+      }
+    },
+    {
+      "from": "sites#apps/blog/src/components/Header.tsx:Header",
+      "to": "sites#apps/blog/src/app/(app)/[slug]/page.tsx:BlogPage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{params:{slug?:string}}"
+      ],
+      "returns": "unknown",
+      "file": "apps/blog/src/components/Header.tsx",
+      "line": 7,
+      "meta": {
+        "navigates": "/",
+        "route": "/",
+        "page": "apps/blog/src/app/(app)/[slug]/page.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "sites#apps/blog/src/components/Header.tsx:Header",
+      "to": "sites#apps/blog/src/app/(app)/search/page.tsx:SearchPage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "apps/blog/src/components/Header.tsx",
+      "line": 8,
+      "meta": {
+        "navigates": "/search",
+        "route": "/search",
+        "page": "apps/blog/src/app/(app)/search/page.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "sites#apps/store/src/components/Header.tsx:Header",
+      "to": "sites#apps/store/src/app/(app)/[slug]/page.tsx:StorePage",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{params:{slug?:string}}"
+      ],
+      "returns": "unknown",
+      "file": "apps/store/src/components/Header.tsx",
+      "line": 7,
+      "meta": {
+        "navigates": "/",
+        "route": "/",
+        "page": "apps/store/src/app/(app)/[slug]/page.tsx",
+        "link": "Link"
+      }
+    },
+    {
+      "from": "stand#src/routes/+page.svelte:routes/+page",
+      "to": "stand#src/routes/cart/+page.svelte:cart/+page",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/routes/+page.svelte",
+      "line": 11,
+      "meta": {
+        "navigates": "/cart",
+        "route": "/cart",
+        "page": "src/routes/cart/+page.svelte",
+        "handler": "on:click"
+      }
+    },
+    {
+      "from": "stand#src/routes/+page.svelte:routes/+page",
+      "to": "stand#src/routes/orders/+page.svelte:orders/+page",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/routes/+page.svelte",
+      "line": 7,
+      "meta": {
+        "navigates": "/orders",
+        "route": "/orders",
+        "page": "src/routes/orders/+page.svelte",
+        "link": "a"
+      }
+    },
+    {
+      "from": "stand#src/routes/+page.svelte:routes/+page",
+      "to": "stand#src/routes/orders/[id]/+page.svelte:[id]/+page",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/routes/+page.svelte",
+      "line": 8,
+      "meta": {
+        "navigates": "/orders/${data.latest}",
+        "route": "/orders/:param",
+        "page": "src/routes/orders/[id]/+page.svelte",
+        "link": "a"
+      }
+    },
+    {
+      "from": "ui_action:console#src/app/start.component.ts:8:13",
+      "to": "console#src/app/queue.component.ts:QueueComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/start.component.ts",
+      "line": 8,
+      "meta": {
+        "navigates": "/queue",
+        "route": "/queue",
+        "page": "src/app/queue.component.ts"
+      }
+    },
+    {
+      "from": "ui_action:console#src/app/start.component.ts:9:13",
+      "to": "console#src/app/login.component.ts:LoginComponent",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "src/app/start.component.ts",
+      "line": 9,
+      "meta": {
+        "navigates": "/login",
+        "route": "/login",
+        "page": "src/app/login.component.ts",
+        "byUrl": true
+      }
+    },
+    {
+      "from": "ui_action:desk#src/screens/Article.tsx:6:18",
+      "to": "desk#src/screens/Article.tsx:Article",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/Article.tsx",
+      "line": 6
+    },
+    {
+      "from": "ui_action:desk#src/screens/Home.tsx:10:15",
+      "to": "desk#src/screens/Home.tsx:Home",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/Home.tsx",
+      "line": 10
+    },
+    {
+      "from": "ui_action:desk#src/screens/Search.tsx:7:18",
+      "to": "desk#src/screens/Search.tsx:Search",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/screens/Search.tsx",
+      "line": 7
+    },
+    {
+      "from": "ui_action:panel#src/views/BoardView.vue:10:13",
+      "to": "panel#src/views/BoardView.vue:BoardView",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/views/BoardView.vue",
+      "line": 10
+    },
+    {
+      "from": "ui_action:panel#src/views/BoardView.vue:11:13",
+      "to": "panel#src/views/BoardView.vue:BoardView",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/views/BoardView.vue",
+      "line": 11
+    },
+    {
+      "from": "ui_action:panel#src/views/BoardView.vue:9:13",
+      "to": "panel#src/views/BoardView.vue:BoardView",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/views/BoardView.vue",
+      "line": 9
+    },
+    {
+      "from": "ui_action:stand#src/routes/+page.svelte:11:9",
+      "to": "stand#src/routes/+page.svelte:routes/+page",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/routes/+page.svelte",
+      "line": 11
+    },
+    {
+      "from": "ui_api_call:catalog#gateways/products.gateway.ts:11:30",
+      "to": "external_api:products.internal",
+      "type": "calls",
+      "confidence": "static",
+      "file": "gateways/products.gateway.ts",
+      "line": 11
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "catalog",
+      "file": "gateways/products.gateway.ts",
+      "line": 11,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /products",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /products */.",
+      "symbol": "ui_api_call:catalog#gateways/products.gateway.ts:11:30"
+    },
+    {
+      "file": "pages/api/products.ts",
+      "line": 7,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "handler -> response.status(200).json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "interface-type",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "pages/api/products.ts",
+                "line": 7,
+                "symbol": "handler -> response.status(200).json"
+              },
+              {
+                "file": "pages/api/products.ts",
+                "line": 7,
+                "symbol": "handler -> response.status"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/app/start.component.ts",
+      "line": 10,
+      "reason": "navigation-unresolved",
+      "level": "action",
+      "message": "src/app/start.component.ts navigates to /archive, which no configured route answers, so the navigation joins nothing",
+      "hint": "Correct the address, or configure a route that answers it.",
+      "symbol": "StartComponent (click) navigates to /archive",
+      "meta": {
+        "cause": "navigation-unresolved",
+        "why": "missing",
+        "navigates": "/archive"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/app/start.component.ts",
+      "line": 14,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "StartComponent.constructor[0]",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@angular/router"
+      },
+      "service": "console"
+    },
+    {
+      "file": "src/lib/load-screen.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "desk"
+    },
+    {
+      "file": "src/routes/index.tsx",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "desk"
+    },
+    {
+      "file": "src/screens/Article.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "desk"
+    },
+    {
+      "file": "src/screens/Article.tsx",
+      "line": 6,
+      "reason": "navigation-unresolved",
+      "level": "info",
+      "message": "src/screens/Article.tsx navigates to an address written as code (pageUrl(parent)), so which page it shows is not read",
+      "hint": "Write the address as a literal or a template of one, or as `{ name: '...' }` with a literal name.",
+      "symbol": "Article navigates to pageUrl(parent)",
+      "meta": {
+        "cause": "navigation-unresolved",
+        "why": "dynamic",
+        "navigates": "pageUrl(parent)"
+      },
+      "service": "desk"
+    },
+    {
+      "file": "src/screens/Home.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "desk"
+    },
+    {
+      "file": "src/screens/Login/Login.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "desk"
+    },
+    {
+      "file": "src/screens/Search.tsx",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "desk"
+    },
+    {
+      "file": "src/screens/TeamMembers.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "desk"
+    },
+    {
+      "file": "apps/blog/src/app/(app)/[slug]/page.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "sites"
+    },
+    {
+      "file": "apps/blog/src/app/(app)/search/page.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "sites"
+    },
+    {
+      "file": "apps/blog/src/components/Header.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "sites"
+    },
+    {
+      "file": "apps/store/src/app/(app)/[slug]/page.tsx",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "sites"
+    },
+    {
+      "file": "apps/store/src/components/Header.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "sites"
+    },
+    {
+      "file": "src/routes/+page.svelte",
+      "line": 10,
+      "reason": "navigation-external",
+      "level": "info",
+      "message": "src/routes/+page.svelte navigates to https://help.example.com/stand, outside the application, so no page of it is joined",
+      "hint": "Nothing to do: an address with a host, or one navigated to with `{ external: true }`, leaves the application.",
+      "symbol": "routes/+page navigates to https://help.example.com/stand",
+      "meta": {
+        "cause": "navigation-external",
+        "navigates": "https://help.example.com/stand"
+      },
+      "service": "stand"
+    },
+    {
+      "file": "src/routes/orders/+page.svelte",
+      "line": 2,
+      "reason": "navigation-unresolved",
+      "level": "action",
+      "message": "src/routes/orders/+page.svelte navigates to /missing-page, which no page of the application shows, so the navigation joins nothing",
+      "hint": "Correct the address or the name, or add the page under `pages/`.",
+      "symbol": "orders/+page navigates to /missing-page",
+      "meta": {
+        "cause": "navigation-unresolved",
+        "why": "missing",
+        "navigates": "/missing-page"
+      },
+      "service": "stand"
+    }
+  ]
+}

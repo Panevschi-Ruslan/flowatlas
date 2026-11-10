@@ -6,6 +6,7 @@ import type { IndexedFunction } from '../index-functions.js';
 import { drawNavigations, type DrawEdge, type NavigatingScript, type Page } from '../sfc/navigation.js';
 import { routeNames } from '../sfc/routes.js';
 import { repoFiles } from '../sfc/stores.js';
+import { routePathsOf, routeScreenOf } from './routes.js';
 import { definePass } from './types.js';
 
 /**
@@ -28,11 +29,13 @@ export const navigationsPass = definePass('navigations', (ctx: ReactExtractConte
 
   const pages: Page[] = [];
   for (const indexed of ctx.functions.all()) {
-    const route = ctx.builder.getNode(indexed.id)?.meta?.['route'];
+    const meta = ctx.builder.getNode(indexed.id)?.meta;
+    const route = meta?.['route'];
     if (typeof route !== 'string' || route === '') continue;
     const named = [...(names.get(indexed.file) ?? [])];
+    const branches = typeof meta?.['routeGuessed'] === 'string' ? new Set(meta['routeGuessed'].split(' ')) : new Set<string>();
     for (const path of route.split(' ')) {
-      pages.push({ file: indexed.file, route: path, fn: indexed, ...(named.length === 1 ? { name: named[0] as string } : {}) });
+      pages.push({ file: indexed.file, route: path, fn: indexed, ...(named.length === 1 ? { name: named[0] as string } : {}), ...(branches.has(path) ? { guessed: true as const } : {}) });
     }
   }
   if (pages.length === 0) return;
@@ -43,7 +46,7 @@ export const navigationsPass = definePass('navigations', (ctx: ReactExtractConte
   const scripts: NavigatingScript[] = [
     ...ctx.embedded.flatMap((made) => {
       const component = components.get(made.file);
-      return [{ file: made.file, script: made.sourceFile, ...(component === undefined ? {} : { component }), ...(made.format.extension === '.vue' ? { markup: made.text } : {}) }];
+      return [{ file: made.file, script: made.sourceFile, ...(component === undefined ? {} : { component }), ...(made.format.extension === '.vue' || made.format.extension === '.svelte' ? { markup: made.text } : {}) }];
     }),
     ...sources.filter((source) => !embedded.has(source)).map((script) => ({ file: ctx.fileOf(script), script })),
   ];
@@ -56,37 +59,37 @@ export const navigationsPass = definePass('navigations', (ctx: ReactExtractConte
     drawn.add(key);
     ctx.ensureFunctionNode(from.fn);
     ctx.ensureFunctionNode(to.fn);
-    ctx.builder.addEdge({ from: from.id, to: to.id, type: 'calls', confidence: 'static', file, line, meta });
+    // A page reached through a branch nothing written decides is one of two the build may make (P288).
+    ctx.builder.addEdge({ from: from.id, to: to.id, type: 'calls', confidence: meta['branch'] === true ? 'heuristic' : 'static', file, line, meta });
   };
-  drawNavigations(ctx, pages, scripts, () => undefined, edge, false, unplacedRoutes(sources.filter((source) => !embedded.has(source))));
+  drawNavigations(ctx, pages, scripts, () => undefined, edge, false, unplacedRoutes(ctx, sources.filter((source) => !embedded.has(source))));
 });
 
 const SCREEN_KEYS = ['element', 'Component', 'component'];
 
-/** Whether a screen is written as something the route reader can place: a name, or an element of one. */
-const placeable = (value: TsNode | undefined): boolean => {
-  const inner = value !== undefined && Node.isJsxExpression(value) ? value.getExpression() : value;
-  if (inner === undefined) return true;
-  if (Node.isIdentifier(inner)) return true;
-  if (Node.isJsxSelfClosingElement(inner)) return Node.isIdentifier(inner.getTagNameNode());
-  if (Node.isJsxElement(inner)) return Node.isIdentifier(inner.getOpeningElement().getTagNameNode());
-  // A lazy `() => import('./X.vue')` is the component reader's to place.
-  return Node.isArrowFunction(inner) || Node.isFunctionExpression(inner);
-};
-
-const isLiteral = (value: TsNode | undefined): boolean => {
-  const inner = value !== undefined && Node.isJsxExpression(value) ? value.getExpression() : value;
-  return inner !== undefined && (Node.isStringLiteral(inner) || Node.isNoSubstitutionTemplateLiteral(inner));
-};
-
 /**
  * How many routes of the application are written in a way the route reader
- * does not place - a path built by a call or a template, a screen named by a
- * member (`Scenes.Home.Component`) - so a navigation that lands on no placed
- * page may still land on one of them (P276).
+ * does not place - a path built by a call of a package or holding a value
+ * read at run time, a screen it cannot name - so a navigation that lands on
+ * no placed page may still land on one of them (P276). Read as the route
+ * reader reads them (`routePathsOf`, `routeScreenOf`), so a route it places
+ * is never counted here (P288).
  */
-const unplacedRoutes = (sources: readonly SourceFile[]): number => {
+const unplacedRoutes = (ctx: ReactExtractContext, sources: readonly SourceFile[]): number => {
   let count = 0;
+  const placed = (path: TsNode | undefined, screen: TsNode | undefined): boolean => {
+    if (routePathsOf(path) === undefined) return false;
+    const inner = screen !== undefined && Node.isJsxExpression(screen) ? screen.getExpression() : screen;
+    // No screen named: a layout or a redirect, which shows nothing a navigation lands on.
+    if (inner === undefined) return true;
+    // A lazy `() => import('./X.vue')` is the component reader's to place.
+    if (Node.isArrowFunction(inner) || Node.isFunctionExpression(inner)) return true;
+    // A name, or an element of one, as before; a member or a call the route reader resolves (P288).
+    if (Node.isIdentifier(inner)) return true;
+    if (Node.isJsxSelfClosingElement(inner) && Node.isIdentifier(inner.getTagNameNode())) return true;
+    if (Node.isJsxElement(inner) && Node.isIdentifier(inner.getOpeningElement().getTagNameNode())) return true;
+    return routeScreenOf(ctx, inner) !== undefined;
+  };
   for (const source of sources) {
     if (!/\bpath\b/.test(source.getFullText())) continue;
     source.forEachDescendant((node) => {
@@ -96,7 +99,7 @@ const unplacedRoutes = (sources: readonly SourceFile[]): number => {
         if (path === undefined || screen === undefined) return;
         const written = Node.isPropertyAssignment(path) ? path.getInitializer() : undefined;
         const shown = Node.isPropertyAssignment(screen) ? screen.getInitializer() : undefined;
-        if (!isLiteral(written) || !placeable(shown)) count += 1;
+        if (!placed(written, shown)) count += 1;
         return;
       }
       if (!Node.isJsxSelfClosingElement(node) && !Node.isJsxOpeningElement(node)) return;
@@ -108,7 +111,7 @@ const unplacedRoutes = (sources: readonly SourceFile[]): number => {
       const path = attribute('path');
       if (path === undefined) return;
       const shown = SCREEN_KEYS.map(attribute).find((each) => each !== undefined);
-      if (!isLiteral(path) || !placeable(shown)) count += 1;
+      if (!placed(path, shown)) count += 1;
     });
   }
   return count;

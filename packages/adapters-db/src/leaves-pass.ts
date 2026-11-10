@@ -2381,10 +2381,10 @@ export const extractLeaves = (ctx: NestExtractContext): void => {
       if (emitDb(expression, scope)) return;
       if (emitCache(expression, scope)) return;
       emitHttp(expression, scope);
-    });
+    }, scope.leaveOut);
 
     scope.body.forEachDescendant((node, traversal) => {
-      if (Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
+      if (Node.isClassDeclaration(node) || Node.isClassExpression(node) || scope.leaveOut?.has(node) === true) {
         traversal.skip();
         return;
       }

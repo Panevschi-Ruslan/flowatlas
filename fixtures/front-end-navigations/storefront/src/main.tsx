@@ -13,13 +13,9 @@ export const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   // A loader that sends a visitor with no session to the login screen.
   { path: '/account', loader: accountLoader },
-  // A path a function builds: the route reader does not place it.
-  { path: settingsPath(), element: <Login /> },
+  // A path read at run time: the route reader does not place it.
+  { path: import.meta.env.VITE_SETTINGS_PATH, element: <Login /> },
 ]);
-
-function settingsPath(): string {
-  return '/settings';
-}
 
 export async function accountLoader() {
   if (document.cookie === '') return redirect('/login');

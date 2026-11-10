@@ -780,10 +780,10 @@ const declaredErrorOf = (call: CallExpression): Omit<Thrown, 'line'> | undefined
  * in `leaveOut`: one an interceptor maps an error to, which is read as that
  * (P207).
  */
-export const throwsIn = (body: Node, leaveOut: ReadonlySet<Node> = new Set()): Thrown[] => {
+export const throwsIn = (body: Node, leaveOut: ReadonlySet<Node> = new Set(), parts?: ReadonlySet<Node>): Thrown[] => {
   const found: Thrown[] = [];
   for (const statement of body.getDescendantsOfKind(SyntaxKind.ThrowStatement)) {
-    if (leaveOut.has(statement) || caughtWithin(statement, body)) continue;
+    if (leaveOut.has(statement) || caughtWithin(statement, body) || (parts !== undefined && statement.getAncestors().some((at) => parts.has(at)))) continue;
     const thrown = thrownBy(statement.getExpression(), statement);
     if (thrown !== undefined) found.push({ ...thrown, line: lineOf(statement) });
   }

@@ -244,7 +244,8 @@ export const drawChildren = (
     drawn.add(key);
     ctx.ensureFunctionNode(from.fn);
     ctx.ensureFunctionNode(to.fn);
-    ctx.builder.addEdge({ from: from.id, to: to.id, type: 'calls', confidence: 'static', file, line, meta });
+    // A page reached through a branch nothing written decides is one of two the build may make (P288).
+    ctx.builder.addEdge({ from: from.id, to: to.id, type: 'calls', confidence: meta['branch'] === true ? 'heuristic' : 'static', file, line, meta });
   };
 
   for (const { component, made, script } of components) {

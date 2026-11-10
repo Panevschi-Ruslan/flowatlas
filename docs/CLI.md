@@ -666,7 +666,7 @@ read at run time (`` `${origin}/orders` ``) may start with a host and is a
 `dynamic` row; a value glued to the end of the last segment
 (`` `/orders${query}` ``) is the query. Where some of the application's routes
 are written in a way the route reader does not place - a path built by a call
-or a template, a screen named by a member (`Scenes.Home.Component`) - an
+of a package or holding a value read at run time, a screen it cannot name - an
 address no placed page shows is `meta.why: unplaced` (info) rather than
 `missing`, since the page may be one of those. A step through the history
 (`navigate(-1)`) names no page and says nothing. An Angular class's
@@ -677,6 +677,46 @@ run time a parameter, with the same two rows; one relative to the route the
 component is shown at (`relativeTo`) is a `dynamic` row. A template's
 `routerLink` stays the template reader's, a click that triggers the screen
 (`fixtures/front-end-navigations`).
+
+A route's path and a navigation's address are read through the helpers that
+write them (P288): a call of a function of the repository that hands back
+text (`path={startPath()}`, `` `${findPath()}/:query?` ``,
+`push(adminPath('teams', id, 'members'))`) is read with its parameters
+bound to the call's arguments - a rest parameter's `join(...)` and `length`
+read off them, an `if` or a condition the arguments decide decided - and a
+`const` in a template is its text. A condition nothing written decides
+(`env.KIOSK_MODE ? '/' : '/home'`) is one address per branch: a route is
+placed at each (`meta.routeGuessed` names them), a page placed so gives way
+to one placed outright, a navigation lands on each branch that has a page and
+says nothing for a branch that has none where another does, and its edge is
+`heuristic` with `meta.branch: true`; branches that differ only in the query
+are the one address. An optional parameter (`/home/:tab?`) places the page
+with it and without it. A route's screen is read through a lazy loader
+however it is named - any call handed `() => import('./X')` is the module's
+default export, through a module that hands on another's - and through a
+member of the object one hands back (`Screens.Home.Component`). The history
+package's `createBrowserHistory()` (hash and memory too), made once and
+imported, navigates as `useHistory()`'s does. In a service holding several
+applications, a navigation's candidates are the pages of its own
+application - the nearest directory holding a manifest - where that
+application has any; a page file that hands out another file's component
+(`import Page from './[slug]/page'; export default Page`) places it at its
+own address too. A navigation written in a template's own handler is read:
+Vue's `@click="router.push('/x')"` and `$router.replace(...)`, Nuxt's
+`navigateTo`, Svelte's `on:click={() => goto('/x')}` (`meta.handler`), and a
+SvelteKit application's plain `<a href="/x">` (values in braces read as
+parameters, `meta.link: a`; a fragment says nothing). Angular's
+`(click)="router.navigate([...])"` and `navigateByUrl(...)` on a router the
+component holds are `triggers` edges from the click to the screen, as a
+`routerLink` is; a function of a module - a functional guard - that
+navigates, or hands back `router.createUrlTree([...])` or
+`router.parseUrl(...)`, is a `function` node whose `calls` edge to the screen
+carries `meta.redirects: true`, as does the same in a class's method
+(`fixtures/front-end-route-helpers`).
+
+A factory that does more than hand back its object of functions keeps its own
+body as a scope, and a call written in one of the object's members is now held
+by the member alone, not by both (P288).
 
 `onMounted` (or `onBeforeMount`) at the top of `app.vue`'s setup, or of a
 composable that setup calls, runs its function once, on the client, when the

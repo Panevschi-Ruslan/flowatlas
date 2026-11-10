@@ -1606,7 +1606,7 @@ export const extractBrokers = (ctx: PassContext): void => {
       // entry rather than a channel.
       if (isStartPattern(pattern)) starts.read(expression, pattern, spec, scope, contextOf(receiverOf(expression), scope.owner), evidence);
       else emitProducer(expression, pattern, spec, scope, scope.owner, evidence);
-    });
+    }, scope.leaveOut);
 
     readReceiving(scope);
   }

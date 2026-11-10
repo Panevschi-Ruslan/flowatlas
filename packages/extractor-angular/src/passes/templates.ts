@@ -15,7 +15,11 @@ import type { AngularExtractContext, RouteEntry } from '../context.js';
 import { componentDecorator, type IndexedClass } from '../index-classes.js';
 import { parseAngularTemplate, type TemplateEvent, type TemplateHandler } from '../template.js';
 import { metadataOf, propertyOf, stringProperty } from '../util/metadata.js';
+import { holdsRouterAs, landNavigation, writtenOfText } from './navigations.js';
 import { definePass } from './types.js';
+
+/** The router's methods a template's handler navigates with. */
+const NAVIGATING: ReadonlySet<string> = new Set(['navigate', 'navigateByUrl']);
 
 /** Framework callbacks that run a component's own code without anyone asking. */
 const LIFECYCLE = ['ngOnInit', 'ngAfterViewInit', 'ngOnDestroy'] as const;
@@ -199,6 +203,25 @@ export const templatesPass = definePass('templates', (ctx) => {
       });
       return;
     }
+
+    // `(click)="router.navigate(['/queue'])"`: the click shows the screen the route at that address shows, as a link's does (P288).
+    const navigating = event.handlers.filter(
+      (handler): handler is Extract<TemplateHandler, { kind: 'member' }> =>
+        handler.kind === 'member' && NAVIGATING.has(handler.method) && holdsRouterAs(indexed.declaration, handler.property),
+    );
+    for (const handler of navigating) {
+      landNavigation(ctx, {
+        from: id,
+        file: template.file,
+        line: event.line,
+        symbol: `${indexed.name} (${event.name})`,
+        method: handler.method,
+        written: writtenOfText(handler.method, handler.args[0]),
+        ensure: () => undefined,
+        type: 'triggers',
+      });
+    }
+    if (navigating.length > 0 && navigating.length === event.handlers.length) return;
 
     let handled = false;
     for (const handler of event.handlers) {

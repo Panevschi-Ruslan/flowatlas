@@ -86,7 +86,7 @@ const push = <T>(map: Map<string, T[]>, key: string, value: T): void => {
 };
 
 const throwsOf = (scope: Scope, leaveOut: ReadonlySet<Node>): Site[] =>
-  throwsIn(scope.body, leaveOut).map((thrown) => ({
+  throwsIn(scope.body, leaveOut, scope.leaveOut).map((thrown) => ({
     failure: {
       ...(thrown.status === undefined ? {} : { status: thrown.status }),
       exception: thrown.exception,
@@ -136,7 +136,7 @@ const functionHops = (scopes: readonly Scope[]): Map<string, string[]> => {
           : undefined;
       const to = fn === undefined ? undefined : byDeclaration.get(fn.declaration);
       if (to !== undefined && to !== scope) push(hops, scope.id, to.id);
-    });
+    }, scope.leaveOut);
   }
   return hops;
 };

@@ -19,7 +19,7 @@ client's default headers.
 | the older forms | `useHistory().push('/orders')` in `Legacy`, `<Route path="/legacy" component={Legacy}>` and `<Redirect to="/legacy">` in `LegacyRoutes` | `Legacy` is a screen at `/legacy`; `calls` from `Legacy` to `Orders`, and from `LegacyRoutes` to `Legacy`, `meta.redirects: true` |
 | shown in place of a page | `<Navigate to="/login" replace />` in `Gate` | `calls` to `Login`, `meta.redirects: true`, `meta.replace: true` |
 | out of the application | `navigate('https://help.example.com/storefront')` | `navigation-external` (note) |
-| no placed screen | `navigate('/archive')`, with one route's path built by a function (`settingsPath()`) | `navigation-unresolved` (`unplaced`, info): the page may be the route not placed |
+| no placed screen | `navigate('/archive')`, with one route's path read at run time (`import.meta.env.VITE_SETTINGS_PATH`) | `navigation-unresolved` (`unplaced`, info): the page may be the route not placed |
 | written as code, or rooted at a value read at run time | `navigate(next)`, ``navigate(`${window.location.origin}/orders`)`` | `navigation-unresolved` (`dynamic`) |
 | the query glued to the path | ``navigate(`/orders${search}`)`` | the orders screen |
 | a step back | `navigate(-1)` | nothing |

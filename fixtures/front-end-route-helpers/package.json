@@ -1,0 +1,7 @@
+{
+  "name": "front-end-route-helpers",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root. Declares the six services, and holds no code of its own.",
+  "workspaces": ["desk", "sites", "catalog", "stand", "panel", "console"]
+}

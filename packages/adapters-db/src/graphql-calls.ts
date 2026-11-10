@@ -103,6 +103,6 @@ export const graphqlCallsPass: NestExtractorPass = definePass('graphql-calls', (
         },
       });
       ctx.builder.addEdge({ from: scope.id, to: id, type: 'calls', confidence: 'static', file: scope.file, line: site.line });
-    });
+    }, scope.leaveOut);
   }
 });

@@ -50,6 +50,8 @@ export interface ProcedureCallHolder {
   readonly file: string;
   /** Puts the holder's node in the graph, once something hangs off it. */
   ensure(): void;
+  /** Parts of the body read by holders of their own: a factory's members (P288). */
+  readonly leaveOut?: ReadonlySet<TsNode>;
 }
 
 /** An address as the half reading it reads one: the browser's reader or the server's. */
@@ -1185,7 +1187,7 @@ export const readProcedureCalls = (holders: Iterable<ProcedureCallHolder>, readi
         record(holder, node, client, asked);
         return;
       }
-    });
+    }, holder.leaveOut);
   }
   return read;
 };

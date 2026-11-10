@@ -476,6 +476,25 @@ describe('a route whose work is behind an object a factory hands back, and the w
   });
 });
 
+describe('a factory that does more than hand back its object (P288)', () => {
+  it("holds a member's request once, by the member, and keeps the factory's own body", async () => {
+    const graph = await extractRepo({
+      rootDir: resolve(FIXTURES, 'front-end-route-helpers/catalog'),
+      repo: 'catalog',
+      service: { name: 'catalog', repo: resolve(FIXTURES, 'front-end-route-helpers/catalog'), type: 'nextjs' },
+      registry: registerEntryAdapters(registerDbAdapters(new AdapterRegistry())),
+      extraPasses: [leavesPass],
+    });
+    const holders = graph.edges
+      .filter((edge) => edge.type === 'calls' && edge.to.startsWith('http_out'))
+      .map((edge) => edge.from.split('#')[1])
+      .sort();
+    // `client.get('/products')` is written in `list`, inside the factory's body: the member holds it, the factory does not.
+    expect(holders).toEqual(['gateways/products.gateway.ts:ProductsGateway.list']);
+    expect(graph.edges.some((edge) => edge.type === 'calls' && edge.from.endsWith(':handler') && edge.to.endsWith(':ProductsGateway.list'))).toBe(true);
+  });
+});
+
 describe('tables named where they are set (P88)', () => {
   const recipes = (): Promise<RepoGraph> => graphOf('tables-set-elsewhere/recipes-api');
   const ratings = (): Promise<RepoGraph> => graphOf('tables-set-elsewhere/ratings-api');

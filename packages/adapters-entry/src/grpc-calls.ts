@@ -345,7 +345,7 @@ export const readGrpcCalls = (holders: Iterable<ProcedureCallHolder>, reading: G
       if (client === undefined) return;
       seen.add(node);
       record(holder, node, client, asked.method);
-    });
+    }, holder.leaveOut);
   }
   return read;
 };
