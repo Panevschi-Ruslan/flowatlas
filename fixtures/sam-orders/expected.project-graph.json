@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:39:43.082Z",
+  "builtAt": "2026-11-12T18:57:08.605Z",
   "services": [
     {
       "name": "orders",
@@ -436,6 +436,16 @@
         "function": "orders-dev-cancel-order",
         "declaredAs": "Resources.CancelOrderFunction.Events.Cancel",
         "stage": "dev",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-orders",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -455,6 +465,13 @@
         "api": "dev-orders",
         "function": "orders-dev-list-orders",
         "declaredAs": "Resources.ListOrdersFunction.Events.List",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [],
+            "api": "dev-orders"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -475,6 +492,16 @@
         "function": "orders-dev-get-order",
         "declaredAs": "Resources.GetOrderFunction.Events.Get",
         "stage": "dev",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-orders",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -495,6 +522,16 @@
         "function": "orders-dev-place-order",
         "declaredAs": "Resources.PlaceOrderFunction.Events.Place",
         "stage": "dev",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-orders",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

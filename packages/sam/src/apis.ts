@@ -1,5 +1,5 @@
-import { deployedNameIn, executeApiAddress } from '@flowatlas/aws';
-import { makeHttpEntryKey, normalizePath, type PathStep, type PositionedDocument } from '@flowatlas/core';
+import { DEFAULT_STAGE, deployedNameIn, executeApiAddress, executeApiServedAt } from '@flowatlas/aws';
+import { makeHttpEntryKey, normalizePath, type PathStep, type PositionedDocument, type ServedAt } from '@flowatlas/core';
 import { HOLE, Imported, intrinsicOf, isRecord, ServiceFileUnreadable, textOf, Unread, type ApiReference, type Deployed, type Resource } from '@flowatlas/serverless';
 import { pushRootedRoute, pushRoute, type ApiLookup, type ApiOf, type EventSite } from './events.js';
 import { withGlobals } from './functions.js';
@@ -31,6 +31,64 @@ const authOf = (properties: Record<string, unknown>): Pick<ApiOf, 'defaultAuthor
   return { ...(authorizer === undefined ? {} : { defaultAuthorizer: authorizer }), ...(auth['ApiKeyRequired'] === true ? { apiKeyRequired: true } : {}) };
 };
 
+// ------------------------------------------------ where an API is served
+
+/** A stage as `executeApiServedAt` takes it: its name where read, and whether whoever deploys chooses it. */
+interface StageAt {
+  readonly name?: string;
+  readonly chosen?: boolean;
+}
+
+/**
+ * Whether a parameter is one the deployment may be handed another value for
+ * when it is run (P294): `sam deploy --parameter-overrides` overrides its
+ * default and a samconfig's alike, and only the configuration's options - or
+ * the parent template handing it down - settle it here.
+ */
+const chosenParameter = (reading: TemplateReading, name: string): boolean => {
+  const parameter = reading.resolver.parameters.get(name);
+  return parameter !== undefined && parameter.from !== 'option' && parameter.from !== 'parent';
+};
+
+/** Whether a value as written reads such a parameter: by `Ref`, or as `${Name}` in an `Fn::Sub` (P294). */
+const readsChosenParameter = (reading: TemplateReading, value: unknown, depth = 0): boolean => {
+  if (depth > 16 || value === null || typeof value !== 'object') return false;
+  const intrinsic = intrinsicOf(value);
+  if (intrinsic?.[0] === 'Ref') return typeof intrinsic[1] === 'string' && chosenParameter(reading, intrinsic[1]);
+  if (intrinsic?.[0] === 'Fn::Sub') {
+    const [text, variables] = Array.isArray(intrinsic[1]) ? intrinsic[1] : [intrinsic[1], undefined];
+    const own = isRecord(variables) ? variables : {};
+    const named = typeof text === 'string' ? [...text.matchAll(/\$\{([^}!.]+)\}/g)].map((found) => found[1] as string) : [];
+    return named.some((name) => !(name in own) && chosenParameter(reading, name)) || readsChosenParameter(reading, variables, depth + 1);
+  }
+  return (Array.isArray(value) ? value : Object.values(value)).some((item) => readsChosenParameter(reading, item, depth + 1));
+};
+
+/** A property of a resource as the template writes it, before its parameters are put in. */
+const writtenProperty = (reading: TemplateReading, resource: Resource, property: string): unknown => {
+  const resources = reading.resolver.context.document['Resources'];
+  const written = isRecord(resources) ? resources[resource.logicalId] : undefined;
+  return isRecord(written) && isRecord(written['Properties']) ? written['Properties'][property] : undefined;
+};
+
+/** A property of the template's `Globals` for one API type, as written. */
+const writtenGlobal = (reading: TemplateReading, kind: 'rest' | 'http', property: string): unknown => {
+  const globals = reading.resolver.context.document['Globals'];
+  const section = isRecord(globals) ? globals[kind === 'rest' ? 'Api' : 'HttpApi'] : undefined;
+  return isRecord(section) ? section[property] : undefined;
+};
+
+/**
+ * A stage name as written and as read (P294): the name, chosen when the
+ * deployment is run where it reads a parameter that is, and any stage at all
+ * where it is not read.
+ */
+const stageAt = (reading: TemplateReading, written: unknown, resolved: unknown): StageAt => {
+  const name = textOf(resolved);
+  const chosen = name === undefined || readsChosenParameter(reading, written);
+  return { ...(name === undefined ? {} : { name }), ...(chosen ? { chosen } : {}) };
+};
+
 /** The resources that deploy an API written as resources to a stage, and the property naming the API. */
 const STAGES: ReadonlyMap<string, string> = new Map([
   ['AWS::ApiGateway::Stage', 'RestApiId'],
@@ -38,20 +96,39 @@ const STAGES: ReadonlyMap<string, string> = new Map([
   ['AWS::ApiGatewayV2::Stage', 'ApiId'],
 ]);
 
-/**
- * The stage an API written as resources is deployed to (P248): the one name
- * every stage and deployment of it gives, by a `Ref` of it; none where it has
- * several, or none is written.
- */
-const stageOf = (reading: TemplateReading, api: Resource): string | undefined => {
-  const names = new Set<string>();
+/** Every stage an API written as resources is deployed to, by a `Ref` of it (P248, P294). */
+const stagesOf = (reading: TemplateReading, api: Resource): StageAt[] => {
+  const stages: StageAt[] = [];
   for (const resource of reading.template.resources.values()) {
     const property = STAGES.get(resource.type);
     const ref = property === undefined ? undefined : intrinsicOf(resource.properties[property]);
-    const name = textOf(resource.properties['StageName']);
-    if (ref?.[0] === 'Ref' && ref[1] === api.logicalId && name !== undefined) names.add(name);
+    if (ref?.[0] !== 'Ref' || ref[1] !== api.logicalId || resource.properties['StageName'] === undefined) continue;
+    stages.push(stageAt(reading, writtenProperty(reading, resource, 'StageName'), resource.properties['StageName']));
   }
+  return stages;
+};
+
+/**
+ * The stage an API written as resources is deployed to (P248): the one name
+ * every stage and deployment of it gives; none where it has several, or none
+ * is written.
+ */
+const stageOf = (stages: readonly StageAt[]): string | undefined => {
+  const names = new Set(stages.flatMap((stage) => stage.name ?? []));
   return names.size === 1 ? [...names][0] : undefined;
+};
+
+/**
+ * Where an API is served (P294), as every route of it records: at the gateway
+ * host of the template's region, any region where none is given, once per
+ * stage it is deployed to - the stage `sam deploy` may choose open, with the
+ * one it deploys to where nothing chooses - and at the root for an HTTP API's
+ * default stage. An API with no stage read is served at a stage chosen when
+ * it is deployed.
+ */
+const servedOf = (reading: TemplateReading, api: string, stages: readonly StageAt[]): ServedAt[] => {
+  const all = (stages.length === 0 ? [{ chosen: true }] : stages).map((stage) => executeApiServedAt(reading.template.pseudo.region, api, stage));
+  return [...new Map(all.map((served) => [JSON.stringify(served), served])).values()];
 };
 
 /** An API resource, as an event or a route sees it. */
@@ -59,11 +136,21 @@ const apiOf = (reading: TemplateReading, resource: Resource, kind: 'rest' | 'htt
   const serverless = resource.type.startsWith('AWS::Serverless::');
   const properties = serverless ? withGlobals(reading.globals[kind === 'rest' ? 'Api' : 'HttpApi'], resource.properties) : resource.properties;
   const name = textOf(properties['Name']);
-  const stage = serverless ? textOf(properties['StageName']) : stageOf(reading, resource);
+  // The transform's API takes its stage, or its type's global one; an HTTP API with neither is served at its default stage.
+  const written = serverless ? (writtenProperty(reading, resource, 'StageName') ?? writtenGlobal(reading, kind, 'StageName')) : undefined;
+  const stages: StageAt[] = serverless
+    ? properties['StageName'] === undefined
+      ? kind === 'http'
+        ? [{}]
+        : []
+      : [stageAt(reading, written, properties['StageName'])]
+    : [...stagesOf(reading, resource), ...(resource.properties['Target'] === undefined ? [] : [{}])];
+  const stage = serverless ? textOf(properties['StageName']) : stageOf(stages);
   return {
     ...(name === undefined ? {} : { name }),
     address: `${reading.file.file}#${resource.address}`,
     ...(stage === undefined ? {} : { stage }),
+    served: servedOf(reading, name ?? resource.logicalId, stages),
     ...authOf(properties),
   };
 };
@@ -78,10 +165,14 @@ export const apiLookup =
     if (reference === undefined) {
       const globals = reading.globals[kind === 'rest' ? 'Api' : 'HttpApi'] ?? {};
       const stack = reading.template.pseudo.stackName;
+      const name = stack === undefined || reading.scope !== '' ? undefined : stack;
+      // `Prod` for a REST API and the default stage for an HTTP API, unless the globals name one (P294).
+      const stage = globals['StageName'] === undefined ? { name: kind === 'rest' ? 'Prod' : DEFAULT_STAGE } : stageAt(reading, writtenGlobal(reading, kind, 'StageName'), globals['StageName']);
       return {
-        ...(stack === undefined || reading.scope !== '' ? {} : { name: stack }),
+        ...(name === undefined ? {} : { name }),
         address: `${reading.file.file}#${reading.scope}${IMPLICIT[kind]}`,
-        stage: textOf(globals['StageName']) ?? (kind === 'rest' ? 'Prod' : '$default'),
+        stage: textOf(globals['StageName']) ?? (kind === 'rest' ? 'Prod' : DEFAULT_STAGE),
+        served: servedOf(reading, name ?? IMPLICIT[kind], [stage]),
         ...authOf(globals),
       };
     }

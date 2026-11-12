@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:41:49.423Z",
+  "builtAt": "2026-11-12T18:58:23.632Z",
   "services": [
     {
       "name": "orders",
@@ -437,6 +437,15 @@
         "api": "dev-orders",
         "function": "orders-dev-cancel-order",
         "declaredAs": "aws_api_gateway_method.cancel_order",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-orders"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -456,6 +465,15 @@
         "api": "dev-orders",
         "function": "orders-dev-list-orders",
         "declaredAs": "aws_apigatewayv2_route.list_orders",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-orders"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -475,6 +493,15 @@
         "api": "dev-orders",
         "function": "orders-dev-get-order",
         "declaredAs": "aws_api_gateway_method.get_order",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-orders"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -494,6 +521,15 @@
         "api": "dev-orders",
         "function": "orders-dev-place-order",
         "declaredAs": "aws_api_gateway_method.place_order",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-orders"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

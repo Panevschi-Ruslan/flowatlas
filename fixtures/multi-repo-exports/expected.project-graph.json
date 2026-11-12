@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:15:27.149Z",
+  "builtAt": "2026-11-12T18:51:11.220Z",
   "services": [
     {
       "name": "gateway",
@@ -418,9 +418,10 @@
           {
             "host": "*.execute-api.eu-west-1.amazonaws.com",
             "base": [
-              "prod"
+              "*"
             ],
-            "api": "shop"
+            "api": "shop",
+            "chosenDefault": "prod"
           }
         ],
         "adapter": "aws-lambda"

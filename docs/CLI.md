@@ -163,7 +163,8 @@ written as `unknown`. A directory with no manifest at all that holds a page
 (`.html`) at its top and the scripts it loads (`.js`, `.mjs`), and no
 TypeScript, JSX or component file, is `browser`: plain browser code, read by the
 browser reader for the requests its scripts send - `fetch` and
-`XMLHttpRequest`'s `open(verb, address)` - with the scripts of one page sharing
+`XMLHttpRequest`'s `open(verb, address)`, with the body its `send` is handed
+after it (P294) - with the scripts of one page sharing
 their globals as the browser runs them (P284). Those sixteen are every type there is. Hono and Telegraf have
 no type of their own: they are frameworks the server reader finds inside a
 repository whichever server type it is given, so a repository whose only
@@ -6977,6 +6978,18 @@ API another repository publishes carries the base path too. A mapping whose API
 or base path is not read is a `route-base-path-unread` row, and the routes of
 that API are at an address nothing joins to (`fixtures/lambda-terraform-base-paths`).
 
+**Where an API nothing maps is served** (P294): each of its routes also records
+`meta.servedAt`, as the Serverless reader does - the gateway host of the region
+of the `aws` provider the API is created with (`provider = aws.<alias>` names
+an aliased one; a region no file sets is any region), the id left open, once per
+stage: `$default` at the root, any other stage under its name, a stage named by
+a root module's `var.<name>` or `terraform.workspace` open with the value it has
+where nothing sets it, and a stage chosen elsewhere where none is read. A
+quick-create HTTP API (`target`) is served at its `$default` stage, and an API
+whose `disable_execute_api_endpoint` is `true` is served at none. A request
+written out with the id is joined to it as a Serverless API's is
+(`fixtures/gateway-served-everywhere`).
+
 **A shared API is joined across repositories.** A route that hangs from a
 point of an API another repository owns — looked up through a parameter
 (`data.aws_ssm_parameter.x.value`) or another state's output
@@ -7271,17 +7284,23 @@ of API Gateway or of a function URL is never read as a queue.
 **Where each API is served** (P284): every route of the service's own REST API
 records it (`meta.servedAt`) - `*.execute-api.<region>.amazonaws.com`, the id
 left open, under its stage - and every route of its HTTP API the same host with
-no stage. A stage the file leaves to the command line (`${opt:stage, 'prod'}`,
-or none written) is any stage the service may be run with, unless the
-configuration's `infra.options` names one. A request written anywhere in the
-project - a browser's or another service's - to an address with an id no file
-holds is joined to the one API served at its host and stage, asking for the
-path after the stage, `heuristic` (`meta.via: 'served-at'` on a browser's edge,
-`'servedAt'` on a service's) with a `base-url-from-files` note; of several, an
-API with a route for the request is asked before one without and a stage the
-deployment writes before one it leaves open, and several still left are an
-`ambiguous-route-target` row naming them. A host the configuration places
-(`services[].hosts`) is the configuration's answer first.
+no stage. The stage the file gives - written out (`stage: prod`), left to the
+command line (`${opt:stage, 'prod'}`), or none written - is the one deployed
+to where nothing chooses (`chosenDefault`), and any stage the service may be
+run with, since `--stage` overrides it; only the configuration's
+`infra.options` settles it (P294). A region the files do not settle is any
+region. SAM and CloudFormation templates, CDK apps and Terraform record the
+same for the APIs they create (P294): see each reader. A request written
+anywhere in the project - a browser's or another service's - to an address
+with an id no file holds is joined to the one API served at its host and
+stage, asking for the path after the stage, `heuristic` (`meta.via:
+'served-at'` on a browser's edge, `'servedAt'` on a service's) with a
+`base-url-from-files` note; of several, an API with a route for the request is
+asked before one without, a stage the deployment fixes before one it leaves
+open, and of those one deployed to by default at the stage the address writes
+before the rest; several still left are an `ambiguous-route-target` row naming
+them. A host the configuration places (`services[].hosts`) is the
+configuration's answer first.
 
 The `serverless-step-functions` plugin's `stepFunctions.stateMachines` are
 workflows: the definition is the file's own value, each state drawn at its
@@ -7326,6 +7345,16 @@ construct a helper of the same file makes is placed at the helper's call.
 | `UserPool({ lambdaTriggers })`, `addTrigger` | `cognito/<pool>/<trigger>` |
 | `onSuccess`, `onFailure` | what a run ends in |
 | `new sfn.StateMachine({ definitionBody })` | a workflow: a chain of `Pass`, `Wait`, `Choice`, `Parallel`, `Map`, `Succeed`, `Fail` and the tasks (`LambdaInvoke`, `SqsSendMessage`, `SnsPublish`, `EventBridgePutEvents`, `StepFunctionsStartExecution`, `Dynamo*`, `CallAwsService`) written out as the States Language the CDK synthesises; `DefinitionBody.fromFile` with `definitionSubstitutions`; `fromString` |
+
+**Where each API is served** (P294): every route of an API the app creates
+records `meta.servedAt`, as a Serverless API's routes do - the gateway host of
+the `env.region` of the nearest stack or stage it is made in, any region where
+none is written, the id left open - once per stage: a REST API's
+`deployOptions.stageName` (`prod` where none is written; none with `deploy:
+false`) and every `apigateway.Stage` of its deployments; an HTTP API's default
+stage at the root (unless `createDefaultStage: false`) and every stage
+`addStage` or `new HttpStage` gives it; a stage the app does not settle, or none
+at all, is any stage.
 
 **A construct with no name of its own** - a queue with no `queueName`, a
 function with no `functionName` - is named by its path,
@@ -7431,6 +7460,19 @@ the ARN of a function of the template; an HTTP or WebSocket API written as
 P248); and a REST API written as `AWS::ApiGateway` resources and methods, its
 path built up from `ParentId`, `AuthorizationType` and `ApiKeyRequired` its
 guards.
+
+**Where each API is served** (P294): every route of an API the template
+creates records `meta.servedAt`, as a Serverless API's routes do - the gateway
+host of the samconfig's or the parent's region, any region where none is
+given, the id left open - once per stage: the transform's `StageName` (`Prod`
+for the REST API it makes, the root of `$default` for its HTTP API, unless
+`Globals` names one), every `AWS::ApiGateway::Stage`, `Deployment` or
+`AWS::ApiGatewayV2::Stage` of an API written as resources, `$default` for a
+quick-create API, and a stage chosen elsewhere where none is read. A stage
+named by a parameter (`!Ref Stage`, `${Stage}` in a `!Sub`) is open, with the
+value the files give it where nothing overrides it, since `sam deploy
+--parameter-overrides` may; a parameter `services[].infra.options` sets is that
+stage.
 
 **State machines** (`AWS::Serverless::StateMachine`) are workflows: a
 `Definition` written in place, each state drawn at its line, or a

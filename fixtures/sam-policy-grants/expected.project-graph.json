@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T22:45:59.811Z",
+  "builtAt": "2026-11-12T18:57:13.285Z",
   "services": [
     {
       "name": "relay",
@@ -170,6 +170,16 @@
         "function": "Resources.PlaceOrder",
         "declaredAs": "Resources.PlaceOrder.Events.Place",
         "stage": "live",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "ShopApi",
+            "chosenDefault": "live"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

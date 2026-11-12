@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T03:50:01.379Z",
+  "builtAt": "2026-11-12T18:51:04.226Z",
   "services": [
     {
       "name": "platform-events",
@@ -377,6 +377,15 @@
         "api": "library-loans",
         "function": "library-create-loan",
         "declaredAs": "aws_apigatewayv2_route.create_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-loans"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -396,6 +405,15 @@
         "api": "library-loans",
         "function": "library-return-loan",
         "declaredAs": "aws_apigatewayv2_route.return_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-loans"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

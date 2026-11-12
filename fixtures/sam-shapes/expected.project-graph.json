@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:16:06.297Z",
+  "builtAt": "2026-11-12T18:57:18.065Z",
   "services": [
     {
       "name": "library",
@@ -519,6 +519,13 @@
         "function": "library-prod-hold",
         "declaredAs": "Resources.HoldFunction.Events.Desk",
         "stage": "$default",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-central-1.amazonaws.com",
+            "base": [],
+            "api": "library-prod"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -577,6 +584,16 @@
         "function": "library-prod-book",
         "declaredAs": "Resources.CatalogApi.paths./books/{isbn}.get",
         "stage": "prod",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-central-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-prod-catalog",
+            "chosenDefault": "prod"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -597,6 +614,16 @@
         "function": "library-prod-branch",
         "declaredAs": "Resources.BranchesApi.paths./branches/{branchId}.get",
         "stage": "prod",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-central-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-prod-branches",
+            "chosenDefault": "prod"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -617,6 +644,15 @@
         "function": "Resources.LendFunction",
         "declaredAs": "Resources.LendFunction.Events.Lend",
         "stage": "Prod",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-central-1.amazonaws.com",
+            "base": [
+              "Prod"
+            ],
+            "api": "library-prod"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -636,6 +672,15 @@
         "api": "library-prod-notices",
         "function": "library-prod-notice-sender",
         "declaredAs": "Notices.Resources.ResendMethod",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-central-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-prod-notices"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

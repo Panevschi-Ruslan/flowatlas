@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T10:11:10.115Z",
+  "builtAt": "2026-11-12T18:57:11.010Z",
   "services": [
     {
       "name": "ledger",
@@ -246,6 +246,15 @@
         "function": "Resources.Recorder",
         "declaredAs": "Resources.Recorder.Events.Record",
         "stage": "Prod",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "Prod"
+            ],
+            "api": "ServerlessRestApi"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

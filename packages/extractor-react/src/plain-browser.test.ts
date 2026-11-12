@@ -43,6 +43,44 @@ describe('plain browser code (P284)', () => {
     expect(requests(graph).map((node) => [node.meta?.['client'], node.meta?.['method'], node.meta?.['path']])).toEqual([['xhr', 'DELETE', '/orders/:param']]);
   });
 
+  it('reads the body an XMLHttpRequest is sent after it is opened, as a fetch body is read (P294)', () => {
+    const graph = read({
+      '/js/send.js': [
+        'function place(order) {',
+        '  const request = new XMLHttpRequest();',
+        "  request.open('POST', 'https://api.example.test/orders');",
+        "  request.setRequestHeader('Content-Type', 'application/json');",
+        '  request.send(JSON.stringify({ item: order.item, quantity: 2 }));',
+        '}',
+        'function upload(file) {',
+        '  const form = new FormData();',
+        "  form.append('file', file);",
+        '  const request = new XMLHttpRequest();',
+        "  request.open('PUT', 'https://api.example.test/files');",
+        '  request.send(form);',
+        '}',
+        "const NOTE = { text: 'hello' };",
+        'function note() {',
+        '  const request = new XMLHttpRequest();',
+        "  request.open('POST', 'https://api.example.test/notes');",
+        '  request.send(JSON.stringify(NOTE));',
+        '}',
+        'function ping() {',
+        '  const request = new XMLHttpRequest();',
+        "  request.open('GET', 'https://api.example.test/ping');",
+        '  request.send();',
+        '}',
+      ].join('\n'),
+    });
+    const found = requests(graph).map((node) => [node.meta?.['method'], node.meta?.['path'], node.meta?.['bodyType'], node.meta?.['bodyKeys']]);
+    expect(found.sort((a, b) => String(a[1]).localeCompare(String(b[1])))).toEqual([
+      ['PUT', '/files', 'FormData', undefined],
+      ['POST', '/notes', '{text:string}', undefined],
+      ['POST', '/orders', '{item:any;quantity:number}', ['item', 'quantity']],
+      ['GET', '/ping', null, undefined],
+    ]);
+  });
+
   it('leaves a verb it cannot read as unread', () => {
     const graph = read({ '/js/any.js': "function send(verb) {\n  const request = new XMLHttpRequest();\n  request.open(verb, 'https://api.example.test/orders');\n}\n" });
     expect(requests(graph).map((node) => node.meta?.['method'])).toEqual([null]);

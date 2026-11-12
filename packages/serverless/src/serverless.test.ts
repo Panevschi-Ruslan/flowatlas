@@ -335,8 +335,9 @@ describe('what P246 added to the CloudFormation a service file holds', () => {
     ]);
     // None written: the framework's default, chosen the same way.
     expect(servedOf(service(''))[0]?.[1]).toEqual([{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api: 'dev-shop', chosenDefault: 'dev' }]);
-    // Written as text, or named by the configuration's options: that stage.
-    expect(servedOf(service('stage: prod, '))[0]?.[1]).toEqual([{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['prod'], api: 'prod-shop' }]);
+    // Written as text: the default, which `--stage` still overrides (P294).
+    expect(servedOf(service('stage: prod, '))[0]?.[1]).toEqual([{ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod' }]);
+    // Named by the configuration's options: that stage.
     expect(servedOf(service("stage: \"${opt:stage, 'prod'}\", "), { stage: 'qa' })[0]?.[1]).toEqual([
       { host: '*.execute-api.eu-west-1.amazonaws.com', base: ['qa'], api: 'qa-shop' },
     ]);
@@ -344,5 +345,8 @@ describe('what P246 added to the CloudFormation a service file holds', () => {
     const shared = servedOf(service('stage: prod, ', ', apiGateway: { restApiId: abc123, restApiRootResourceId: def456 }'));
     expect(shared.filter(([method]) => method === 'POST').map(([, served]) => served)).toEqual(shared.some(([method]) => method === 'POST') ? [undefined] : []);
     expect(shared.find(([method]) => method === 'GET')?.[1]).toEqual([{ host: '*.execute-api.eu-west-1.amazonaws.com', base: [], api: 'prod-shop' }]);
+    // A region the files do not settle: any region (P294).
+    const unread = service('stage: prod, ').replace('region: eu-west-1', 'region: "${env:FLOWATLAS_TEST_UNSET_REGION}"');
+    expect(servedOf(unread)[0]?.[1]).toEqual([{ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'prod-shop', chosenDefault: 'prod' }]);
   });
 });

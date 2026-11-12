@@ -15,8 +15,10 @@ import { isMatch, matchRoute } from './route-match.js';
  * that API's, the path after the stage asked of its routes - a guess, because
  * another API of the same place would read the same, and the edge and a note
  * say so. Of several APIs served there, the ones with a route that answers
- * are asked before the rest, and a stage the deployment writes before one it
- * leaves to whoever runs it; where several are still left, a row names them.
+ * are asked before the rest, a stage the deployment fixes before one it
+ * leaves to whoever runs it, and of those one it deploys to by default at the
+ * stage the request writes before the rest (P294); where several are still
+ * left, a row names them.
  */
 
 /** The API a request was taken as, and what it asks of it. */
@@ -74,7 +76,9 @@ export const apiServedAt = (
   });
   const among = answering.length > 0 ? answering : all;
   const exact = among.filter((each) => each.exact);
-  const asked = exact.length > 0 ? exact : among;
+  // Of the stages left to whoever deploys, the ones deployed to where nothing chooses at the stage the request writes (P294).
+  const byDefault = among.filter((each) => !each.exact && each.found.served.chosenDefault !== undefined && each.found.written.join('/') === each.found.served.chosenDefault);
+  const asked = exact.length > 0 ? exact : byDefault.length > 0 ? byDefault : among;
   const [only] = asked;
   if (only === undefined) return undefined;
   if (asked.length === 1) return { kind: 'one', found: { ...only.found, routes: only.routes } };

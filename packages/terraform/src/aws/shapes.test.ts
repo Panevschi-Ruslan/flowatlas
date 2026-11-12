@@ -132,3 +132,55 @@ describe('base paths and stages', () => {
     expect(unread.rows).toEqual([expect.objectContaining({ reason: 'route-base-path-unread' })]);
   });
 });
+
+describe('where an API is served by its own address (P294)', () => {
+  const route = (api: string): string =>
+    `resource "aws_apigatewayv2_route" "r_${api}" {\n  api_id = aws_apigatewayv2_api.${api}.id\n  route_key = "GET /items"\n}`;
+  const http = (name: string, more = ''): string => `resource "aws_apigatewayv2_api" "${name}" {\n  name = "${name}"\n  protocol_type = "HTTP"\n${more}}`;
+  const stage = (api: string, name: string, value: string): string =>
+    `resource "aws_apigatewayv2_stage" "${name}" {\n  api_id = aws_apigatewayv2_api.${api}.id\n  name = ${value}\n}`;
+  const servedOf = (deployment: Deployment): unknown[] => deployment.routes.map((each) => [each.api, each.meta?.['servedAt']]);
+
+  it("is served in the provider's region, at the root of $default and under every other stage, a variable's stage open", () => {
+    const deployment = readFiles({
+      'main.tf': [
+        'provider "aws" {\n  region = "eu-west-1"\n}',
+        'variable "stage" {\n  default = "dev"\n}',
+        http('x'),
+        route('x'),
+        stage('x', 'root', '"$default"'),
+        stage('x', 'live', '"live"'),
+        stage('x', 'chosen', 'var.stage'),
+      ].join('\n'),
+    });
+    expect(servedOf(deployment)).toEqual([
+      [
+        'x',
+        [
+          { host: '*.execute-api.eu-west-1.amazonaws.com', base: [], api: 'x' },
+          { host: '*.execute-api.eu-west-1.amazonaws.com', base: ['live'], api: 'x' },
+          { host: '*.execute-api.eu-west-1.amazonaws.com', base: ['*'], api: 'x', chosenDefault: 'dev' },
+        ],
+      ],
+    ]);
+  });
+
+  it('takes the region of the provider a block names, any region where none is set, and a stage chosen elsewhere where none is read', () => {
+    const deployment = readFiles({
+      'main.tf': [
+        'provider "aws" {\n  alias = "west"\n  region = "us-west-2"\n}',
+        http('x', '  provider = aws.west\n'),
+        route('x'),
+        http('y'),
+        route('y'),
+        http('z', '  disable_execute_api_endpoint = true\n'),
+        route('z'),
+      ].join('\n'),
+    });
+    expect(servedOf(deployment)).toEqual([
+      ['x', [{ host: '*.execute-api.us-west-2.amazonaws.com', base: ['*'], api: 'x' }]],
+      ['y', [{ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'y' }]],
+      ['z', undefined],
+    ]);
+  });
+});

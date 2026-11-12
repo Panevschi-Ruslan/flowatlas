@@ -82,10 +82,16 @@ describe('a browser request to an address where one API of the project is served
     expect(resolveUiCall(uiCall('POST', '/prod/orders'), uiIndex({ shop: fixed, billing: other }))).toMatchObject({ kind: 'linked', targetService: 'shop' });
   });
 
-  it('is a row naming them where several APIs answer there', () => {
+  it('is, of stages left open, the one deployed to where nothing chooses at the stage the address writes (P294)', () => {
     const other = [route('billing', 'POST', '/orders', [served('dev-billing', ['*'], 'dev')])];
+    expect(resolveUiCall(uiCall('POST', '/dev/orders'), uiIndex({ shop, billing: other }))).toMatchObject({ kind: 'linked', targetService: 'billing' });
+    expect(resolveUiCall(uiCall('POST', '/prod/orders'), uiIndex({ shop, billing: other }))).toMatchObject({ kind: 'linked', targetService: 'shop' });
+  });
+
+  it('is a row naming them where several APIs answer there', () => {
+    const other = [route('billing', 'POST', '/orders', [served('qa-billing', ['*'], 'qa')])];
     const outcome = resolveUiCall(uiCall('POST', '/dev/orders'), uiIndex({ shop, billing: other }));
-    expect(outcome).toEqual({ kind: 'apiAmbiguous', method: 'POST', path: '/dev/orders', host: HOST, apis: ['billing dev-billing', 'shop prod-shop'] });
+    expect(outcome).toEqual({ kind: 'apiAmbiguous', method: 'POST', path: '/dev/orders', host: HOST, apis: ['billing qa-billing', 'shop prod-shop'] });
     expect(uiFindingFor(outcome)).toMatchObject({ reason: 'ambiguous-route-target' });
   });
 
@@ -122,7 +128,7 @@ describe('a request between services to such an address (P284)', () => {
   });
 
   it('is a row where several APIs answer, and a third party where none is served', () => {
-    const other = [route('billing', 'POST', '/orders', [served('dev-billing', ['*'], 'dev')])];
+    const other = [route('billing', 'POST', '/orders', [served('qa-billing', ['*'], 'qa')])];
     const { outcome } = resolveCall(out('POST', '/dev/orders'), index({ shop, billing: other }));
     expect(outcome.kind).toBe('apiAmbiguous');
     expect(findingFor(outcome)).toMatchObject({ reason: 'ambiguous-route-target' });

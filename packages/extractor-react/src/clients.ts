@@ -57,6 +57,13 @@ export interface CallShape {
   /** The argument holding the body, when the spelling has one. */
   readonly bodyAt?: number;
   /**
+   * The method of the same receiver the body is handed to after this call,
+   * when the call writes none of its own (P294): `xhr.send(body)` after
+   * `xhr.open('POST', url)`. Its first argument is the body, looked through
+   * `JSON.stringify` as `fetch`'s is.
+   */
+  readonly sentBy?: string;
+  /**
    * The call's own options object, and where it sits.
    *
    * Two things are read out of it, and both are facts the call may write in
@@ -290,14 +297,14 @@ export const KY: RequestClient = {
 /**
  * The browser's older client (P284): `xhr.open('POST', url)` on a value of
  * the platform's `XMLHttpRequest`, the verb and the address written in the
- * one call, the body handed to `send` afterwards and not read here.
+ * one call, the body handed to `send` afterwards (P294).
  */
 export const XHR: RequestClient = {
   name: 'xhr',
   package: null,
   receiver: {
     types: [{ package: null, typeName: 'XMLHttpRequest' }],
-    verbs: { open: { method: null, methodAt: 0, urlAt: 1 } },
+    verbs: { open: { method: null, methodAt: 0, urlAt: 1, sentBy: 'send' } },
   },
 };
 

@@ -69,14 +69,6 @@ const ownApiOf = (
   };
 };
 
-/**
- * Whether the stage a service is deployed to is chosen when it is run (P284):
- * none written, or written as the command line's option with a default.
- * The configuration's own options settle it.
- */
-const stageChosenOnRun = (from: StageFrom, written: unknown): boolean =>
-  from === 'default' || (from === 'file' && typeof written === 'string' && /^\$\{opt:stage\b[^}]*\}$/.test(written.trim()));
-
 /** `functions` as one mapping, written as one or as a list of them. */
 const functionsOf = (value: unknown): [string, Record<string, unknown>][] => {
   const maps = Array.isArray(value) ? value : [value];
@@ -204,16 +196,16 @@ export const readService = (parts: DeploymentParts, options: ServiceOptions): vo
     ...(sharedRest === undefined ? {} : { sharedRest }),
     ...(sharedHttp === undefined ? {} : { sharedHttp }),
   };
-  // Where the service's own APIs are served (P284): in its region, the REST
-  // API under its stage and the HTTP API at its default stage, which writes
-  // none. A stage the file leaves to the command line (`${opt:stage, ...}`,
-  // or none written) is any the deployment is run with, unless the
-  // configuration's options name it.
+  // Where the service's own APIs are served (P284): in its region, any where
+  // it is not read (P294), the REST API under its stage and the HTTP API at
+  // its default stage, which writes none. The stage the file gives - written
+  // out, `${opt:stage, ...}`, or none - is the one deployed to where nothing
+  // chooses, and `--stage` chooses any (P294); only the configuration's
+  // options settle it.
   const region = textOf(provider['region']) ?? (provider['region'] === undefined ? DEFAULT_REGION : undefined);
-  const writtenStage = isRecord(document.value) && isRecord(document.value['provider']) ? document.value['provider']['stage'] : undefined;
-  const chosen = stageChosenOnRun(stage.from, writtenStage);
+  const chosen = stage.from !== 'option';
   const served =
-    region === undefined || stageText === undefined
+    stageText === undefined
       ? undefined
       : {
           ...(apis.rest === undefined ? {} : { rest: executeApiServedAt(region, apis.rest, { name: stageText, chosen }) }),

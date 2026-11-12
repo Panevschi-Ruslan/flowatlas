@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:32:45.746Z",
+  "builtAt": "2026-11-12T18:45:03.112Z",
   "services": [
     {
       "name": "orders",
@@ -437,6 +437,15 @@
         "api": "dev-orders",
         "function": "orders-dev-cancel-order",
         "declaredAs": "OrdersStack/Api/Rest/Default/orders/{id}/DELETE",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "prod"
+            ],
+            "api": "dev-orders"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -456,6 +465,13 @@
         "api": "dev-orders",
         "function": "orders-dev-list-orders",
         "declaredAs": "OrdersStack/Api/Http/GET--/orders",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [],
+            "api": "dev-orders"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -475,6 +491,15 @@
         "api": "dev-orders",
         "function": "orders-dev-get-order",
         "declaredAs": "OrdersStack/Api/Rest/Default/orders/{id}/GET",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "prod"
+            ],
+            "api": "dev-orders"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -494,6 +519,15 @@
         "api": "dev-orders",
         "function": "orders-dev-place-order",
         "declaredAs": "OrdersStack/Api/Rest/Default/orders/POST",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "prod"
+            ],
+            "api": "dev-orders"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:41:13.612Z",
+  "builtAt": "2026-11-12T18:57:44.834Z",
   "services": [
     {
       "name": "returns",
@@ -162,6 +162,15 @@
         "api": "library-returns",
         "function": "library-record-return",
         "declaredAs": "aws_api_gateway_method.record_return",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-returns"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -181,6 +190,15 @@
         "api": "library-returns",
         "function": "library-bulk-return",
         "declaredAs": "aws_api_gateway_method.bulk_return",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-returns"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

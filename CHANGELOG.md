@@ -79,6 +79,20 @@ only one of them moved.
   handed a role (`role:`) carries the role's grants, statements, inline
   policies and attached `Policy`s, and `Grant.addToPrincipal` adds to the
   grantee's.
+- **Where every AWS API is served, and what `XMLHttpRequest` sends (P294).**
+  The routes of an API a SAM or CloudFormation template, a CDK app or
+  Terraform creates record where it is served (`meta.servedAt`), as a
+  Serverless API's do: the gateway host of the region the samconfig, the
+  stack's `env` or the `aws` provider states, any region where none does, once
+  per stage, the root for an HTTP API's `$default` stage, and any stage where
+  it is left to deploy time - a parameter, a root module's variable or
+  `terraform.workspace`, with the value it has where nothing overrides it - so
+  an address written out with the API's id joins them too. A Serverless
+  service's written stage (`stage: prod`) is now its default and any stage,
+  since `--stage` overrides it, and of APIs whose stage is open, one deployed
+  by default at the stage an address writes is asked first. The body an
+  `XMLHttpRequest` is handed by `send()` after `open(verb, address)` is read
+  as `fetch`'s is: `JSON.stringify(x)`, a `FormData`, a const.
 - **Plain browser code, and an API's address written out with its id (P284).**
   A directory with no manifest that holds a page and the scripts it loads, and
   nothing that builds them, is the type `browser`: `link` and `init` offer it,

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T21:47:28.007Z",
+  "builtAt": "2026-11-12T18:51:37.426Z",
   "services": [
     {
       "name": "platform",
@@ -256,6 +256,15 @@
         "api": "lending-library",
         "invokes": "library-dev-list-borrower-loans",
         "declaredAs": "aws_api_gateway_method.list_borrower_loans",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "lending-library"
+          }
+        ],
         "adapter": "aws-lambda",
         "function": "library-dev-list-borrower-loans",
         "functionService": "loans"

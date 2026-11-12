@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T15:12:41.243Z",
+  "builtAt": "2026-11-12T18:57:54.089Z",
   "services": [
     {
       "name": "lending",
@@ -26,6 +26,15 @@
         "api": "lending-loans",
         "function": "lending-create-loan",
         "declaredAs": "aws_api_gateway_method.create_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "lending-loans"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -45,6 +54,15 @@
         "api": "lending-loans",
         "function": "lending-resume-run",
         "declaredAs": "aws_api_gateway_method.resume_run",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "lending-loans"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

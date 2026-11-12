@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-14T21:46:56.152Z",
+  "builtAt": "2026-11-12T18:48:43.076Z",
   "services": [
     {
       "name": "branch",
@@ -225,6 +225,15 @@
         "api": "library-public-lb",
         "function": "library-branch-public-health",
         "declaredAs": "aws_lb_listener_rule.public_health",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-public-lb"
+          }
+        ],
         "by": "load-balancer",
         "adapter": "aws-lambda"
       }
@@ -245,6 +254,15 @@
         "api": "library-staff-lb",
         "function": "library-branch-staff-plain-health",
         "declaredAs": "aws_lb_listener_rule.staff_plain_health",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-staff-lb"
+          }
+        ],
         "by": "load-balancer",
         "listener": "HTTP:80",
         "adapter": "aws-lambda"
@@ -266,6 +284,15 @@
         "api": "library-staff-lb",
         "function": "library-branch-staff-health",
         "declaredAs": "aws_lb_listener_rule.staff_health",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-staff-lb"
+          }
+        ],
         "by": "load-balancer",
         "listener": "HTTPS:443",
         "adapter": "aws-lambda"
@@ -286,6 +313,15 @@
         "deployedBy": "terraform",
         "function": "library-branch-desk-hours",
         "declaredAs": "aws_apigatewayv2_route.desk_hours",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "aws_apigatewayv2_api.desk_hours"
+          }
+        ],
         "apiAddress": "aws_apigatewayv2_api.desk_hours",
         "adapter": "aws-lambda"
       }
@@ -305,6 +341,15 @@
         "deployedBy": "terraform",
         "function": "library-branch-lab-hours",
         "declaredAs": "aws_apigatewayv2_route.lab_hours",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "aws_apigatewayv2_api.lab_hours"
+          }
+        ],
         "apiAddress": "aws_apigatewayv2_api.lab_hours",
         "adapter": "aws-lambda"
       }
@@ -325,6 +370,15 @@
         "api": "library-events-api",
         "function": "library-branch-events-status",
         "declaredAs": "aws_apigatewayv2_route.events_status",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-events-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -344,6 +398,15 @@
         "api": "library-loans-api",
         "function": "library-branch-loans-status",
         "declaredAs": "aws_apigatewayv2_route.loans_status",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-loans-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

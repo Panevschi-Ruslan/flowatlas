@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:40:54.537Z",
+  "builtAt": "2026-11-12T18:57:15.550Z",
   "services": [
     {
       "name": "shop",
@@ -182,6 +182,15 @@
         "function": "Resources.PlaceOrder",
         "declaredAs": "Resources.PlaceOrder.Events.Place",
         "stage": "Prod",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "Prod"
+            ],
+            "api": "ServerlessRestApi"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -201,6 +210,15 @@
         "function": "Resources.SaveCart",
         "declaredAs": "Resources.SaveCart.Events.Save",
         "stage": "Prod",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "Prod"
+            ],
+            "api": "ServerlessRestApi"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

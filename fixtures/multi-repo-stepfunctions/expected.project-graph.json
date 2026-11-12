@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T11:07:33.083Z",
+  "builtAt": "2026-11-12T18:52:00.163Z",
   "services": [
     {
       "name": "circulation",
@@ -820,6 +820,15 @@
         "deployedBy": "terraform",
         "api": "members",
         "declaredAs": "aws_apigatewayv2_route.request_checkout",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "members"
+          }
+        ],
         "integration": "bus",
         "sends": "eventbridge/library/library.members/CheckoutRequested",
         "adapter": "aws-lambda"

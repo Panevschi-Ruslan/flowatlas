@@ -174,6 +174,31 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
   };
 
   /**
+   * The body a request's receiver is handed after the call that opens it
+   * (P294): the first argument of the first `<receiver>.<method>(...)` written
+   * after it in the function that opens it, looked through its serialisation
+   * as `fetch`'s is. `undefined` where it is sent with none, or not sent there.
+   */
+  const sentBodyOf = (call: CallExpression, method: string): TsNode | undefined => {
+    const callee = call.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    const receiver = callee.getExpression().getText();
+    const scope = call.getFirstAncestor((node) => Node.isFunctionLikeDeclaration(node) || Node.isArrowFunction(node) || Node.isFunctionExpression(node)) ?? call.getSourceFile();
+    let sent: CallExpression | undefined;
+    scope.forEachDescendant((node, traversal) => {
+      if (sent !== undefined) return traversal.stop();
+      if (!Node.isCallExpression(node) || node.getStart() < call.getEnd()) return undefined;
+      const each = node.getExpression();
+      if (Node.isPropertyAccessExpression(each) && each.getName() === method && each.getExpression().getText() === receiver) sent = node;
+      return undefined;
+    });
+    const written = sent?.getArguments()[0];
+    if (written === undefined || !Node.isCallExpression(written)) return written;
+    const serialiser = written.getExpression();
+    return Node.isPropertyAccessExpression(serialiser) && PLATFORM_FETCH.serialisers.includes(serialiser.getName()) ? (written.getArguments()[0] ?? written) : written;
+  };
+
+  /**
    * The shape a request puts on the wire.
    *
    * Two spellings, and the first is the interesting one: the browser's client
@@ -187,6 +212,13 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     client: RequestClient,
     shape: CallShape,
   ): { type: string | null; keys?: readonly string[] } => {
+    // Handed to the receiver afterwards, `xhr.send(JSON.stringify(order))` (P294).
+    if (shape.sentBy !== undefined) {
+      const sent = sentBodyOf(call, shape.sentBy);
+      if (sent === undefined) return { type: null };
+      const sentKeys = writtenKeysOf([sent]);
+      return { type: ctx.types.collectType(sent.getType(), sent), ...(sentKeys === undefined ? {} : { keys: sentKeys }) };
+    }
     // The body under a key of the options, `ky.post(url, { json })` (P239).
     const keyed = shape.bodyKeys === undefined || shape.optionsAt === undefined
       ? undefined

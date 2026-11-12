@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: A library's catalog, deployed to the stage its parameter names.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    CodeUri: src/
+
+Resources:
+  # Served at https://<id>.execute-api.eu-west-1.amazonaws.com/<Stage>/:
+  # `dev` where nothing chooses, any stage `sam deploy` is handed.
+  CatalogApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: library-catalog
+      StageName: !Ref Stage
+
+  ListBooksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: library-list-books
+      Handler: list-books.handler
+      Events:
+        List:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CatalogApi
+            Path: /books
+            Method: get
+
+  RateBookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: library-rate-book
+      Handler: rate-book.handler
+      Events:
+        Rate:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CatalogApi
+            Path: /books/{bookId}/ratings
+            Method: post

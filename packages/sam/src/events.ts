@@ -1,5 +1,5 @@
 import { cognitoTriggerKey, DEFAULT_EVENT_BUS, deployedNameIn, eventPatternOf } from '@flowatlas/aws';
-import { makeHttpEntryKey, normalizePath, UNREAD_SPAN, type DeliveryKind, type DeliverySource, type DeliveryTarget, type DeployedKind, type PathStep } from '@flowatlas/core';
+import { makeHttpEntryKey, normalizePath, SERVED_AT_META, UNREAD_SPAN, type DeliveryKind, type DeliverySource, type DeliveryTarget, type DeployedKind, type PathStep, type ServedAt } from '@flowatlas/core';
 import { Imported, isRecord, textOf, Unread, userPoolName, type Deployed } from '@flowatlas/serverless';
 import type { TemplateReading } from './reading.js';
 
@@ -91,6 +91,8 @@ export interface ApiOf {
   /** Where it is declared, for keying a route when the name is not read. */
   readonly address: string;
   readonly stage?: string;
+  /** Where it is served, for an address written out with its id (P294). */
+  readonly served?: readonly ServedAt[];
   /** The authoriser every route of it stands behind unless the route says otherwise. */
   readonly defaultAuthorizer?: string;
   /** Every route of it asks for an API key unless the route says otherwise. */
@@ -127,6 +129,7 @@ export const pushRoute = (reading: TemplateReading, site: EventSite, method: str
       key: makeHttpEntryKey(verb, path),
       apiAddress: api.address,
       ...(api.stage === undefined ? {} : { stage: api.stage }),
+      ...(api.served === undefined || api.served.length === 0 ? {} : { [SERVED_AT_META]: api.served }),
       ...reading.conditionOf(site.logicalId),
     },
   });

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T03:49:17.497Z",
+  "builtAt": "2026-11-12T18:45:47.762Z",
   "services": [
     {
       "name": "circulation",
@@ -594,6 +594,15 @@
         "deployedBy": "terraform",
         "api": "library-circulation",
         "declaredAs": "aws_apigatewayv2_route.request_hold",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "integration": "bus",
         "sends": "eventbridge/library/library.holds/HoldRequested",
         "adapter": "aws-lambda"
@@ -615,6 +624,15 @@
         "api": "library-circulation",
         "function": "library-create-loan",
         "declaredAs": "aws_apigatewayv2_route.create_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -634,6 +652,15 @@
         "api": "library-circulation",
         "function": "library-renew-loan",
         "declaredAs": "aws_apigatewayv2_route.renew_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -653,6 +680,15 @@
         "api": "library-circulation",
         "function": "library-record-return",
         "declaredAs": "aws_apigatewayv2_route.record_return",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

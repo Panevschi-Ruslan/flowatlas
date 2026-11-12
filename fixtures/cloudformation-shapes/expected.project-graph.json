@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:05:44.686Z",
+  "builtAt": "2026-11-12T18:45:19.493Z",
   "services": [
     {
       "name": "rides",
@@ -168,6 +168,13 @@
         "api": "rides-harbour-status",
         "function": "rides-harbour-status",
         "declaredAs": "stacks/rides.Resources.StatusApi.Target",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [],
+            "api": "rides-harbour-status"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -206,6 +213,15 @@
         "api": "rides-harbour-maps",
         "function": "rides-harbour-map",
         "declaredAs": "stacks/rides.Resources.MapsApi.paths./maps/{zone}.get",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "rides-harbour-maps"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -225,6 +241,15 @@
         "api": "rides-harbour-lookup",
         "function": "rides-harbour-get-ride",
         "declaredAs": "stacks/rides.Resources.GetRideMethod",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "rides-harbour-lookup"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -245,6 +270,15 @@
         "function": "rides-harbour-start-ride",
         "declaredAs": "stacks/rides.Resources.RidesApi.paths./rides.post",
         "stage": "v1",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "v1"
+            ],
+            "api": "rides-harbour"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

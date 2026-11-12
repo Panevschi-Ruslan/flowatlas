@@ -1,4 +1,8 @@
+import { executeApiServedAt } from '@flowatlas/aws';
+import { SERVED_AT_META, type ServedAt } from '@flowatlas/core';
 import type { Instance, Value } from '../eval/values.js';
+import { attributeOf } from '../hcl/ast.js';
+import { referencesIn } from '../hcl/walk.js';
 import { argument, textOf, unreadRow, whyNot } from './arguments.js';
 import type { ResourceReader, ResourceReading } from './reading.js';
 
@@ -92,6 +96,58 @@ const stagesOf = (api: Instance, reading: ResourceReading): string[] =>
   );
 
 /**
+ * Whether an argument is left to whoever applies the configuration (P294): a
+ * root module's `var.<name>`, which `-var` sets, or `terraform.workspace`,
+ * which the workspace selected sets.
+ */
+const chosenOnApply = (instance: Instance, name: string): boolean => {
+  const written = attributeOf(instance.block.body, name);
+  if (written === undefined || instance.module.root !== undefined) return false;
+  return [...referencesIn(written.expression)].some(
+    (reference) =>
+      reference.source.type === 'variable' &&
+      (reference.source.name === 'var' || (reference.source.name === 'terraform' && reference.steps[0]?.kind === 'attr' && reference.steps[0].name === 'workspace')),
+  );
+};
+
+/** The region the AWS provider a block is created with is configured for, where the files settle it (P294). */
+const regionOf = (instance: Instance): string | undefined => {
+  const named = attributeOf(instance.block.body, 'provider')?.source.trim();
+  const provider = instance.module.provider(named !== undefined && /^aws(\.[\w-]+)?$/.test(named) ? named : 'aws');
+  return textOf(provider?.get('region'));
+};
+
+/**
+ * Where API Gateway serves an API itself (P294), for a route written out
+ * with its id: at the gateway host of its provider's region, any region where
+ * that is not read, once per stage it is deployed to - a stage `apply` may
+ * set open, with the one it sets where nothing does - at the root for an HTTP
+ * API's `$default` stage, the one a quick-create API (`target`) makes, and at
+ * a stage chosen elsewhere where none is read. None where its own endpoint is
+ * turned off.
+ */
+const servedOf = (api: Instance, reading: ResourceReading): ServedAt[] => {
+  const disabled = argument(api, 'disable_execute_api_endpoint');
+  if (disabled?.kind === 'bool' && disabled.value) return [];
+  const stages: { name?: string; chosen?: boolean }[] = STAGES.flatMap((stage) =>
+    reading
+      .ofType('managed', stage.type)
+      .filter((instance) => referenced(argument(instance, stage.api)) === api && argument(instance, stage.name) !== undefined)
+      .map((instance) => {
+        const name = textOf(argument(instance, stage.name));
+        const chosen = name === undefined || chosenOnApply(instance, stage.name);
+        return { ...(name === undefined ? {} : { name }), ...(chosen ? { chosen } : {}) };
+      }),
+  );
+  if (api.type === 'aws_apigatewayv2_api' && argument(api, 'target') !== undefined) stages.push({});
+  if (stages.length === 0) stages.push({ chosen: true });
+  const region = regionOf(api);
+  const label = textOf(argument(api, 'name')) ?? api.address;
+  const all = stages.map((stage) => executeApiServedAt(region, label, stage));
+  return [...new Map(all.map((served) => [JSON.stringify(served), served])).values()];
+};
+
+/**
  * Every address an API is reached at: one per base path it is mapped at, or -
  * where nothing maps it - the API's own, with the stages it is deployed to.
  */
@@ -112,7 +168,8 @@ export const addressesOf = (api: Instance, reading: ResourceReading): ApiAddress
   }
   if (byPrefix.size === 0) {
     const stages = stagesOf(api, reading);
-    return [{ prefix: '', meta: stages.length === 0 ? {} : { stages } }];
+    const served = servedOf(api, reading);
+    return [{ prefix: '', meta: { ...(stages.length === 0 ? {} : { stages }), ...(served.length === 0 ? {} : { [SERVED_AT_META]: served }) } }];
   }
   return [...byPrefix.values()].map(({ prefix, domains, stages }) => ({
     prefix,

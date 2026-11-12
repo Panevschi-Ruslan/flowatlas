@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-09T16:34:20.504Z",
+  "builtAt": "2026-11-12T18:48:03.271Z",
   "services": [
     {
       "name": "desk",
@@ -274,6 +274,15 @@
         "api": "library-desk-api",
         "function": "library-desk-cancel-hold",
         "declaredAs": "aws_api_gateway_method.cancel_hold",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-desk-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -293,6 +302,15 @@
         "api": "library-desk-api",
         "function": "library-desk-place-hold",
         "declaredAs": "aws_api_gateway_method.place_hold",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-desk-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -312,6 +330,15 @@
         "api": "library-desk-api",
         "function": "library-desk-create-loan",
         "declaredAs": "aws_api_gateway_method.create_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-desk-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -331,6 +358,15 @@
         "api": "library-desk-api",
         "function": "library-desk-archive-loan",
         "declaredAs": "aws_api_gateway_method.archive_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-desk-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -350,6 +386,15 @@
         "api": "library-desk-api",
         "function": "library-desk-renew-loan",
         "declaredAs": "aws_api_gateway_method.renew_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-desk-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -369,6 +414,15 @@
         "api": "library-desk-api",
         "function": "library-desk-record-return",
         "declaredAs": "aws_api_gateway_method.record_return",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-desk-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

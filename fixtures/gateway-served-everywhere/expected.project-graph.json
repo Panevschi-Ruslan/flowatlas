@@ -1,0 +1,1142 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T18:46:14.484Z",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "loans",
+      "repo": "./loans",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/list-books.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/list-books.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/rate-book.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/rate-book.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/books",
+      "type": "entry",
+      "label": "GET /books",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 30,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/books",
+        "rawPath": "/books",
+        "deployedBy": "sam",
+        "api": "library-catalog",
+        "function": "library-list-books",
+        "declaredAs": "Resources.ListBooksFunction.Events.List",
+        "stage": "dev",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-catalog",
+            "chosenDefault": "dev"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:http:POST:/books/:param/ratings",
+      "type": "entry",
+      "label": "POST /books/:param/ratings",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 43,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/books/:param/ratings",
+        "rawPath": "/books/{bookId}/ratings",
+        "deployedBy": "sam",
+        "api": "library-catalog",
+        "function": "library-rate-book",
+        "declaredAs": "Resources.RateBookFunction.Events.Rate",
+        "stage": "dev",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-catalog",
+            "chosenDefault": "dev"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:library-list-books",
+      "type": "entry",
+      "label": "library-list-books",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-list-books",
+        "deployedBy": "sam",
+        "name": "library-list-books",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.ListBooksFunction",
+        "logicalId": "ListBooksFunction",
+        "handler": "list-books.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:library-rate-book",
+      "type": "entry",
+      "label": "library-rate-book",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 37,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-rate-book",
+        "deployedBy": "sam",
+        "name": "library-rate-book",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.RateBookFunction",
+        "logicalId": "RateBookFunction",
+        "handler": "rate-book.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:loans:http:POST:/loans",
+      "type": "entry",
+      "label": "POST /loans",
+      "repo": "loans",
+      "file": "infra/main.tf",
+      "line": 52,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/loans",
+        "rawPath": "/loans",
+        "deployedBy": "terraform",
+        "api": "library-loans",
+        "function": "library-borrow",
+        "declaredAs": "aws_apigatewayv2_route.borrow",
+        "stages": [
+          "$default"
+        ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [],
+            "api": "library-loans"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:loans:invoke:library-borrow",
+      "type": "entry",
+      "label": "library-borrow",
+      "repo": "loans",
+      "file": "infra/main.tf",
+      "line": 24,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-borrow",
+        "deployedBy": "terraform",
+        "name": "library-borrow",
+        "runtime": "nodejs20.x",
+        "declaredAs": "aws_lambda_function.borrow",
+        "handler": "borrow.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reviews:http:GET:/reviews",
+      "type": "entry",
+      "label": "GET /reviews",
+      "repo": "reviews",
+      "file": "serverless.yml",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reviews",
+        "rawPath": "reviews",
+        "deployedBy": "serverless",
+        "api": "prod-reviews",
+        "function": "reviews-prod-listReviews",
+        "declaredAs": "functions.listReviews.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "prod-reviews",
+            "chosenDefault": "prod"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:reviews:invoke:reviews-prod-listReviews",
+      "type": "entry",
+      "label": "reviews-prod-listReviews",
+      "repo": "reviews",
+      "file": "serverless.yml",
+      "line": 12,
+      "kind": "invoke",
+      "meta": {
+        "key": "reviews-prod-listReviews",
+        "deployedBy": "serverless",
+        "name": "reviews-prod-listReviews",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.listReviews",
+        "stageFrom": "file",
+        "handler": "src/list-reviews.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/copies/:param",
+      "type": "entry",
+      "label": "GET /copies/:param",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/copies/:param",
+        "rawPath": "/copies/{bookId}",
+        "deployedBy": "cdk",
+        "api": "library-stock",
+        "function": "library-count-copies",
+        "declaredAs": "StockStack/Stock/Default/copies/{bookId}/GET",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "live"
+            ],
+            "api": "library-stock"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:stock:invoke:library-count-copies",
+      "type": "entry",
+      "label": "library-count-copies",
+      "repo": "stock",
+      "file": "lib/stock-stack.ts",
+      "line": 13,
+      "kind": "invoke",
+      "meta": {
+        "key": "library-count-copies",
+        "deployedBy": "cdk",
+        "name": "library-count-copies",
+        "runtime": "nodejs20.x",
+        "declaredAs": "StockStack/CountCopies",
+        "constructPath": "StockStack/CountCopies",
+        "handler": "src/count-copies.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "loans#src/borrow.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "loans",
+      "file": "src/borrow.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:loans",
+      "type": "repo",
+      "label": "loans",
+      "repo": "loans",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:reviews",
+      "type": "repo",
+      "label": "reviews",
+      "repo": "reviews",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:sls-reviews-prod-ServiceEndpoint",
+              "stack:reviews-prod#ServiceEndpoint"
+            ],
+            "address": "Outputs.ServiceEndpoint",
+            "file": "serverless.yml",
+            "line": 3,
+            "kind": "api",
+            "value": "prod-reviews",
+            "deployedBy": "serverless"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "functions": 5,
+          "components": 0,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "browser"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "reviews#src/list-reviews.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "reviews",
+      "file": "src/list-reviews.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "stock#src/count-copies.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "stock",
+      "file": "src/count-copies.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/books.js:2:24",
+      "type": "ui_api_call",
+      "label": "GET /dev/books",
+      "repo": "web",
+      "file": "js/books.js",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://k3x9q2w7ab.execute-api.eu-west-1.amazonaws.com/dev/books",
+        "path": "/dev/books",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "k3x9q2w7ab.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/borrow.js:6:3",
+      "type": "ui_api_call",
+      "label": "POST /loans",
+      "repo": "web",
+      "file": "js/borrow.js",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://p4m8z1c6de.execute-api.eu-west-1.amazonaws.com/loans",
+        "path": "/loans",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "FormData",
+        "bodyFrom": "literal",
+        "package": null,
+        "client": "xhr",
+        "via": "literal",
+        "host": "p4m8z1c6de.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "loans"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/copies.js:2:24",
+      "type": "ui_api_call",
+      "label": "GET /live/copies/:param",
+      "repo": "web",
+      "file": "js/copies.js",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://r7t2y5u8fg.execute-api.eu-west-1.amazonaws.com/live/copies/:param",
+        "path": "/live/copies/:param",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "r7t2y5u8fg.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/rate.js:3:3",
+      "type": "ui_api_call",
+      "label": "POST /dev/books/:param/ratings",
+      "repo": "web",
+      "file": "js/rate.js",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://k3x9q2w7ab.execute-api.eu-west-1.amazonaws.com/dev/books/:param/ratings",
+        "path": "/dev/books/:param/ratings",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{stars:any;comment:any}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "comment",
+          "stars"
+        ],
+        "package": null,
+        "client": "xhr",
+        "via": "literal",
+        "host": "k3x9q2w7ab.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:web#js/reviews.js:2:24",
+      "type": "ui_api_call",
+      "label": "GET /dev/reviews",
+      "repo": "web",
+      "file": "js/reviews.js",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://s1d4f7g0hj.execute-api.eu-west-1.amazonaws.com/dev/reviews",
+        "path": "/dev/reviews",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "s1d4f7g0hj.execute-api.eu-west-1.amazonaws.com",
+        "targetService": "reviews"
+      }
+    },
+    {
+      "id": "web#js/books.js:listBooks",
+      "type": "function",
+      "label": "listBooks",
+      "repo": "web",
+      "file": "js/books.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/borrow.js:borrowBook",
+      "type": "function",
+      "label": "borrowBook",
+      "repo": "web",
+      "file": "js/borrow.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "any"
+            },
+            {
+              "name": "card",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/copies.js:countCopies",
+      "type": "function",
+      "label": "countCopies",
+      "repo": "web",
+      "file": "js/copies.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "web#js/rate.js:rateBook",
+      "type": "function",
+      "label": "rateBook",
+      "repo": "web",
+      "file": "js/rate.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "bookId",
+              "type": "any"
+            },
+            {
+              "name": "stars",
+              "type": "any"
+            },
+            {
+              "name": "comment",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#js/reviews.js:latestReviews",
+      "type": "function",
+      "label": "latestReviews",
+      "repo": "web",
+      "file": "js/reviews.js",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:catalog:http:GET:/books",
+      "to": "catalog#src/list-books.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{bookId:string;title:string}[]",
+      "file": "src/list-books.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:POST:/books/:param/ratings",
+      "to": "catalog#src/rate-book.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{bookId:unknown;stars:number}",
+      "file": "src/rate-book.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true,
+        "body": "type:catalog#Rating",
+        "params": "{bookId:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:catalog:invoke:library-list-books",
+      "to": "catalog#src/list-books.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/list-books.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:catalog:invoke:library-rate-book",
+      "to": "catalog#src/rate-book.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/rate-book.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:loans:http:POST:/loans",
+      "to": "loans#src/borrow.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{received:unknown}",
+      "file": "src/borrow.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:loans:invoke:library-borrow",
+      "to": "loans#src/borrow.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/borrow.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:reviews:http:GET:/reviews",
+      "to": "reviews#src/list-reviews.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{bookId:string;text:string}[]",
+      "file": "src/list-reviews.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:reviews:invoke:reviews-prod-listReviews",
+      "to": "reviews#src/list-reviews.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/list-reviews.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:stock:http:GET:/copies/:param",
+      "to": "stock#src/count-copies.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{bookId:unknown;copies:number}",
+      "file": "src/count-copies.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{bookId:string}"
+      }
+    },
+    {
+      "from": "entry:stock:invoke:library-count-copies",
+      "to": "stock#src/count-copies.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/count-copies.ts",
+      "line": 4
+    },
+    {
+      "from": "ui_api_call:web#js/books.js:2:24",
+      "to": "entry:catalog:http:GET:/books",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/books.js",
+      "line": 2,
+      "meta": {
+        "via": "served-at",
+        "targetService": "catalog",
+        "servedApi": "library-catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/borrow.js:6:3",
+      "to": "entry:loans:http:POST:/loans",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/borrow.js",
+      "line": 6,
+      "params": [
+        "FormData"
+      ],
+      "meta": {
+        "via": "served-at",
+        "targetService": "loans",
+        "servedApi": "library-loans"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/copies.js:2:24",
+      "to": "entry:stock:http:GET:/copies/:param",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/copies.js",
+      "line": 2,
+      "meta": {
+        "via": "served-at",
+        "targetService": "stock",
+        "servedApi": "library-stock"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/rate.js:3:3",
+      "to": "entry:catalog:http:POST:/books/:param/ratings",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/rate.js",
+      "line": 3,
+      "params": [
+        "{stars:any;comment:any}"
+      ],
+      "meta": {
+        "via": "served-at",
+        "targetService": "catalog",
+        "servedApi": "library-catalog"
+      }
+    },
+    {
+      "from": "ui_api_call:web#js/reviews.js:2:24",
+      "to": "entry:reviews:http:GET:/reviews",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "js/reviews.js",
+      "line": 2,
+      "meta": {
+        "via": "served-at",
+        "targetService": "reviews",
+        "servedApi": "prod-reviews"
+      }
+    },
+    {
+      "from": "web#js/books.js:listBooks",
+      "to": "ui_api_call:web#js/books.js:2:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/books.js",
+      "line": 2
+    },
+    {
+      "from": "web#js/borrow.js:borrowBook",
+      "to": "ui_api_call:web#js/borrow.js:6:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/borrow.js",
+      "line": 6
+    },
+    {
+      "from": "web#js/copies.js:countCopies",
+      "to": "ui_api_call:web#js/copies.js:2:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/copies.js",
+      "line": 2
+    },
+    {
+      "from": "web#js/rate.js:rateBook",
+      "to": "ui_api_call:web#js/rate.js:3:3",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/rate.js",
+      "line": 3
+    },
+    {
+      "from": "web#js/reviews.js:latestReviews",
+      "to": "ui_api_call:web#js/reviews.js:2:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "js/reviews.js",
+      "line": 2
+    }
+  ],
+  "types": {
+    "type:catalog#Rating": {
+      "name": "Rating",
+      "kind": "object",
+      "declaredIn": "catalog#src/rate-book.ts",
+      "structuralHash": "78fd7d735574273b",
+      "fields": [
+        {
+          "name": "stars",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "comment",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/list-books.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/rate-book.ts",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEvent",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/rate-book.ts",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/rate-book.ts",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/borrow.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEventV2",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "loans"
+    },
+    {
+      "file": "src/borrow.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResultV2",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "loans"
+    },
+    {
+      "file": "src/borrow.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "untyped-value"
+      },
+      "service": "loans"
+    },
+    {
+      "file": "src/list-reviews.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "reviews"
+    },
+    {
+      "file": "src/count-copies.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEvent",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "stock"
+    },
+    {
+      "file": "src/count-copies.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "stock"
+    },
+    {
+      "file": "src/count-copies.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "stock"
+    },
+    {
+      "service": "web",
+      "file": "js/books.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k3x9q2w7ab.execute-api.eu-west-1.amazonaws.com/dev/books names its API by an id no file holds; it is taken as library-catalog of catalog, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (dev where none is given), so the stage dev is taken as one of its, and the request as one for /books on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/books.js:2:24"
+    },
+    {
+      "service": "web",
+      "file": "js/borrow.js",
+      "line": 6,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://p4m8z1c6de.execute-api.eu-west-1.amazonaws.com/loans names its API by an id no file holds; it is taken as library-loans of loans, the API of the project served at *.execute-api.*.amazonaws.com with a route for it, and the request as one for /loans on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/borrow.js:6:3"
+    },
+    {
+      "service": "web",
+      "file": "js/copies.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://r7t2y5u8fg.execute-api.eu-west-1.amazonaws.com/live/copies/:param names its API by an id no file holds; it is taken as library-stock of stock, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/live with a route for it, and the request as one for /copies/:param on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/copies.js:2:24"
+    },
+    {
+      "service": "web",
+      "file": "js/rate.js",
+      "line": 3,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k3x9q2w7ab.execute-api.eu-west-1.amazonaws.com/dev/books/:param/ratings names its API by an id no file holds; it is taken as library-catalog of catalog, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (dev where none is given), so the stage dev is taken as one of its, and the request as one for /books/:param/ratings on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/rate.js:3:3"
+    },
+    {
+      "service": "web",
+      "file": "js/reviews.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://s1d4f7g0hj.execute-api.eu-west-1.amazonaws.com/dev/reviews names its API by an id no file holds; it is taken as prod-reviews of reviews, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, and the request as one for /reviews on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/reviews.js:2:24"
+    }
+  ]
+}

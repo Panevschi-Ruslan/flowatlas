@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-16T15:10:57.449Z",
+  "builtAt": "2026-11-12T18:47:41.708Z",
   "services": [
     {
       "name": "stations",
@@ -26,6 +26,15 @@
         "api": "bikes-dev-api",
         "function": "bikes-dev-get-rental",
         "declaredAs": "aws_api_gateway_method.get_rental",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "bikes-dev-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -45,6 +54,15 @@
         "api": "bikes-dev-api",
         "function": "bikes-dev-list-stations",
         "declaredAs": "aws_api_gateway_method.list_stations",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "bikes-dev-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -64,6 +82,15 @@
         "api": "bikes-dev-api",
         "function": "bikes-dev-get-station",
         "declaredAs": "aws_api_gateway_method.get_station",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "bikes-dev-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -83,6 +110,15 @@
         "api": "bikes-dev-api",
         "function": "bikes-dev-start-rental",
         "declaredAs": "aws_api_gateway_method.start_rental",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "bikes-dev-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -102,6 +138,15 @@
         "api": "bikes-dev-api",
         "function": "bikes-dev-end-rental",
         "declaredAs": "aws_api_gateway_method.end_rental",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "bikes-dev-api"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

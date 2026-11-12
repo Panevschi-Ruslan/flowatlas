@@ -3,9 +3,11 @@ import { isAbsolute, join, posix, relative } from 'node:path';
 import {
   cognitoTriggerKey,
   DEFAULT_EVENT_BUS,
+  DEFAULT_STAGE,
   deployedArn,
   deployedNameIn,
   destinationOf,
+  executeApiServedAt,
   eventPatternOf,
   S3_DETAIL_TYPES,
   grantedIn,
@@ -21,6 +23,7 @@ import {
   makeFunctionUrlEntryKey,
   makeHttpEntryKey,
   normalizePath,
+  SERVED_AT_META,
   stackOutputKey,
   toPosixPath,
   UNREAD_SPAN,
@@ -39,6 +42,7 @@ import {
   type DeployedWorkflow,
   type PublishedRoot,
   type RouteTarget,
+  type ServedAt,
   type Unresolved,
 } from '@flowatlas/core';
 import { definitionOf } from './state-machine.js';
@@ -759,8 +763,67 @@ export class AppDeployment {
       ...(typeof name === 'string' ? { api: name } : { root: { key: name.root, below } }),
       ...(target === undefined ? {} : { target }),
       ...(guards === undefined || guards.length === 0 ? {} : { guards }),
-      meta: { declaredAs, key: makeHttpEntryKey(verb, path), apiAddress: api.path, ...this.#conditional(api.conditional, conditional) },
+      meta: {
+        declaredAs,
+        key: makeHttpEntryKey(verb, path),
+        apiAddress: api.path,
+        // Where an API the app creates is served, for an address written out with its id (P294).
+        ...(typeof name === 'string' && api.imported === undefined ? { [SERVED_AT_META]: this.#servedAt(api, name) } : {}),
+        ...this.#conditional(api.conditional, conditional),
+      },
     });
+  }
+
+  /**
+   * The region an API is deployed to (P294): the `env.region` of the
+   * nearest stack or stage it is made in, where the app writes one the files
+   * settle; the platform's otherwise.
+   */
+  #regionOf(construct: Construct): string | undefined {
+    const segments = construct.path.split('/');
+    for (let depth = segments.length - 1; depth > 0; depth -= 1) {
+      const path = segments.slice(0, depth).join('/');
+      const scope = this.constructs.find((each) => each.path === path);
+      const env = scope === undefined ? undefined : prop(scope, 'env');
+      if (env instanceof ObjectValue && env.get('region') !== undefined) return textOf(env.get('region'));
+    }
+    return undefined;
+  }
+
+  /** A stage name as written: that stage, the construct's own where none is written, or any where the app does not settle it (P294). */
+  #stageAt(value: Value, fallback: string): { name?: string; chosen?: boolean } {
+    const name = value === undefined ? fallback : textOf(value);
+    return name === undefined ? { chosen: true } : { name };
+  }
+
+  /**
+   * Where an API the app creates is served (P294): at the gateway host of its
+   * stack's region, once per stage. A REST API deploys to `deployOptions.stageName`,
+   * `prod` where none is written, and to a stage chosen elsewhere where it is
+   * not deployed by itself (`deploy: false`); an HTTP API serves its default
+   * stage at the root unless `createDefaultStage: false`, and every stage it is
+   * given (`addStage`, `new HttpStage`) under that stage's name.
+   */
+  #servedAt(api: Construct, name: string): ServedAt[] {
+    const stages: { name?: string; chosen?: boolean }[] = [];
+    if (REST_APIS.has(api.type)) {
+      const options = prop(api, 'deployOptions');
+      const written = options instanceof ObjectValue ? options.get('stageName') : undefined;
+      if (prop(api, 'deploy') !== false) stages.push(this.#stageAt(written, 'prod'));
+      for (const stage of this.#ofType('aws-apigateway.Stage')) {
+        const deployment = prop(stage, 'deployment');
+        if (deployment instanceof Construct && prop(deployment, 'api') === api) stages.push(this.#stageAt(prop(stage, 'stageName'), 'prod'));
+      }
+      if (stages.length === 0) stages.push({ chosen: true });
+    } else {
+      if (prop(api, 'createDefaultStage') !== false) stages.push({});
+      for (const { args } of api.addedBy('addStage')) stages.push(this.#stageAt(args[1] instanceof ObjectValue ? args[1].get('stageName') : undefined, DEFAULT_STAGE));
+      for (const stage of this.#ofType('aws-apigatewayv2.HttpStage')) if (prop(stage, 'httpApi') === api) stages.push(this.#stageAt(prop(stage, 'stageName'), DEFAULT_STAGE));
+      if (stages.length === 0) stages.push({ chosen: true });
+    }
+    const region = this.#regionOf(api);
+    const all = stages.map((stage) => executeApiServedAt(region, name, stage));
+    return [...new Map(all.map((served) => [JSON.stringify(served), served])).values()];
   }
 
   /** What an integration hands a request to: a function, or nothing this reads. */

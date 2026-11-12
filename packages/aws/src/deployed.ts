@@ -64,23 +64,33 @@ export const executeApiAddress = (text: string): ExecuteApiAddress | undefined =
   return { id, region, segments: (path ?? '').split('/').filter((segment) => segment !== '') };
 };
 
+/** The stage an HTTP API serves at its root, which puts no segment in front of its routes. */
+export const DEFAULT_STAGE = '$default';
+
 /**
  * Where API Gateway serves an API (P284), as a route records it
- * (`ServedAt`): the id in the host is the platform's, and the base is the
- * stage - `'*'` where the stage is chosen when the deployment is run, with
- * the one it deploys to otherwise - or nothing for an HTTP API's default
- * stage, which writes none.
+ * (`ServedAt`): the id in the host is the platform's, and so is the region
+ * where the deployment does not state one (`undefined`, or text that is not
+ * one). The base is the stage: `'*'` where it is chosen when the deployment
+ * is run (`chosen`), with the one it deploys to where nothing chooses
+ * (`name`) when that is read; the stage itself where it is fixed; or nothing
+ * for an HTTP API's default stage (no name, or `$default`), which writes
+ * none (P294).
  */
 export const executeApiServedAt = (
-  region: string,
+  region: string | undefined,
   api: string,
   stage: { readonly name?: string; readonly chosen?: boolean },
-): ServedAt => ({
-  host: `*.execute-api.${region}.amazonaws.com`,
-  base: stage.name === undefined ? [] : [stage.chosen === true ? '*' : stage.name],
-  api,
-  ...(stage.chosen === true && stage.name !== undefined ? { chosenDefault: stage.name } : {}),
-});
+): ServedAt => {
+  const chosen = stage.chosen === true;
+  const name = stage.name === DEFAULT_STAGE ? undefined : stage.name;
+  return {
+    host: `*.execute-api.${region !== undefined && /^[a-z0-9-]+$/.test(region) ? region : '*'}.amazonaws.com`,
+    base: chosen ? ['*'] : name === undefined ? [] : [name],
+    api,
+    ...(chosen && name !== undefined ? { chosenDefault: name } : {}),
+  };
+};
 
 /** A table's stream of changes, which is named by the table it belongs to. */
 export const TABLE_CHANGES_FORMS: readonly string[] = ['^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)/stream/.+$'];

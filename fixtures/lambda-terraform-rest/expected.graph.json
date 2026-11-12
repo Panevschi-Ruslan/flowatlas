@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "lending-library-loans",
-  "generatedAt": "2026-10-16T11:23:27.741Z",
+  "generatedAt": "2026-11-12T18:48:36.696Z",
   "nodes": [
     {
       "id": "entry:lending-library-loans:http:GET:/loans/:param",
@@ -21,6 +21,16 @@
         "declaredAs": "aws_api_gateway_method.get_loan",
         "stages": [
           "dev"
+        ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-dev-api",
+            "chosenDefault": "dev"
+          }
         ],
         "adapter": "aws-lambda"
       }
@@ -44,6 +54,16 @@
         "stages": [
           "dev"
         ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-dev-api",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -66,6 +86,16 @@
         "stages": [
           "dev"
         ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-dev-api",
+            "chosenDefault": "dev"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -87,6 +117,16 @@
         "declaredAs": "aws_api_gateway_method.record_return",
         "stages": [
           "dev"
+        ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-dev-api",
+            "chosenDefault": "dev"
+          }
         ],
         "adapter": "aws-lambda"
       }

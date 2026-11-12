@@ -152,6 +152,12 @@ export interface ModuleInstance {
   /** Reads a file relative to the root module's directory. */
   readFile(path: string): string | undefined;
   /**
+   * The arguments of the provider configuration a resource of this module is
+   * created with, by the name a resource names it by - `aws`, `aws.west` for
+   * an alias: this module's own, else the root module's (P294).
+   */
+  provider(name: string): ReadonlyMap<string, Value> | undefined;
+  /**
    * Where `var.<name>` or `local.<name>` of this instance is written, for a
    * reader that needs the expression rather than its value - which function a
    * document was loaded with, say. `undefined` where the value is not one
