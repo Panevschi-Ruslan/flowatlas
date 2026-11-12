@@ -1,6 +1,6 @@
-import type { CallExpression, Node as TsNode, ObjectLiteralExpression, Project } from 'ts-morph';
+import type { CallExpression, Node as TsNode, ObjectLiteralExpression, Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import { codegenDocument } from './codegen.js';
+import { codegenDocument, configuresSdk, generatedSdkOf, isCodegenOutput, type SdkFactory } from './codegen.js';
 import { documentOf, type DocumentReading } from './documents.js';
 
 /**
@@ -53,7 +53,10 @@ const FACTORY = 'getSdk';
  * `getSdkWithHooks`, whose `useX` hooks send the operation `X`. A committed
  * module is known by what its function answers, whatever it is named.
  */
-const GENERATED_FACTORIES = new Set(['getSdk', 'getSdkWithHooks']);
+const GENERATED_FACTORIES: ReadonlyMap<string, SdkFactory> = new Map([
+  ['getSdk', 'getSdk'],
+  ['getSdkWithHooks', 'getSdkWithHooks'],
+]);
 
 /** Text every module the SDK plugins write holds: what spares a repository without one the walk back from each method call. */
 const SDK_TEXT = /getSdk|Requester\b|SdkFunctionWrapper/;
@@ -102,7 +105,19 @@ const answered = (fn: TsNode): TsNode[] => {
 /** Where `getSdk` comes from: the function written in the repository, or a module codegen writes and nobody committed. */
 type Factory =
   | { readonly kind: 'committed'; readonly fn: TsNode }
-  | { readonly kind: 'generated'; readonly specifier: string; readonly importingFile: string; readonly exported: string };
+  | {
+      readonly kind: 'generated';
+      readonly specifier: string;
+      readonly importingFile: string;
+      readonly exported: string;
+      /** The plugin's factory the name stands for, which may be written out again under another (P293). */
+      readonly generates: SdkFactory;
+      /** Whether the SWR plugin writes `use<Operation>Infinite` hooks too (P293). */
+      readonly infiniteHooks: boolean;
+    };
+
+/** Where a name imported from a module nobody committed is first exported. */
+type Exported = { readonly specifier: string; readonly importingFile: string; readonly exported: string };
 
 /** Whether a node names a parameter of a function. */
 const namesParameterOf = (node: TsNode, fn: TsNode): boolean => {
@@ -145,8 +160,8 @@ const sdkFactories = new WeakMap<TsNode, boolean>();
  * as createApi } from './generated/sdk'` (P285). The module that writes it,
  * where it is one nobody committed, and the name there.
  */
-const firstExported = (identifier: TsNode, depth = 0): { specifier: string; importingFile: string; exported: string } | undefined => {
-  if (depth > 4 || !Node.isIdentifier(identifier)) return undefined;
+const firstExported = (identifier: TsNode, depth = 0): Exported | undefined => {
+  if (depth > EXPORT_DEPTH || !Node.isIdentifier(identifier)) return undefined;
   for (const declaration of identifier.getSymbol()?.getDeclarations() ?? []) {
     const specifier = Node.isImportSpecifier(declaration) ? declaration : Node.isExportSpecifier(declaration) ? declaration : undefined;
     if (specifier === undefined) continue;
@@ -158,16 +173,47 @@ const firstExported = (identifier: TsNode, depth = 0): { specifier: string; impo
     // A module codegen writes at install, which the repository does not commit.
     if (module === undefined || module.isDeclarationFile()) return { specifier: from, importingFile: identifier.getSourceFile().getFilePath(), exported: name };
     if (module.isInNodeModules()) return undefined;
-    // A module of the repository that hands it on under a name of its own.
-    for (const exported of module.getExportDeclarations()) {
-      for (const each of exported.getNamedExports()) {
-        if ((each.getAliasNode()?.getText() ?? each.getName()) !== name) continue;
-        return firstExported(each.getAliasNode() ?? each.getNameNode(), depth + 1);
-      }
-    }
-    return undefined;
+    return handedOn(module, name, depth + 1);
   }
   return undefined;
+};
+
+/** How many modules a name is followed through, each handing it on. */
+const EXPORT_DEPTH = 4;
+
+/**
+ * Where a module of the repository hands on a name it does not declare: under
+ * a name of its own, `export { getSdk as createApi } from './sdk'`, or with
+ * everything another module exports, `export * from './sdk'` (P293), where
+ * that module is one nobody committed or hands it on in turn. Of several
+ * `export *` that could hold it, the output a codegen configuration writes
+ * the factory into, or the one module it generates; none where that does
+ * not settle it.
+ */
+const handedOn = (module: SourceFile, name: string, depth: number): Exported | undefined => {
+  if (depth > EXPORT_DEPTH) return undefined;
+  const everything: Exported[] = [];
+  for (const exported of module.getExportDeclarations()) {
+    for (const each of exported.getNamedExports()) {
+      if ((each.getAliasNode()?.getText() ?? each.getName()) !== name) continue;
+      return firstExported(each.getAliasNode() ?? each.getNameNode(), depth + 1);
+    }
+    const from = exported.getModuleSpecifierValue();
+    if (exported.hasNamedExports() || exported.getNamespaceExport() !== undefined || from === undefined) continue;
+    const target = exported.getModuleSpecifierSourceFile();
+    if (target === undefined || target.isDeclarationFile()) everything.push({ specifier: from, importingFile: module.getFilePath(), exported: name });
+    else if (!target.isInNodeModules() && !target.getExportedDeclarations().has(name)) {
+      const inner = handedOn(target, name, depth + 1);
+      if (inner !== undefined) everything.push(inner);
+    }
+  }
+  if (everything.length <= 1) return everything[0];
+  // The output the configuration writes this factory into, or else the one output it generates.
+  const project = module.getProject();
+  const writing = everything.filter((each) => generatedSdkOf(project, each.importingFile, each.specifier)?.factories.has(name) === true);
+  if (writing.length === 1) return writing[0];
+  const generated = everything.filter((each) => isCodegenOutput(project, each.importingFile, each.specifier));
+  return generated.length === 1 ? generated[0] : undefined;
 };
 
 const factoryOf = (callee: TsNode, depth = 0): Factory | undefined => {
@@ -176,7 +222,11 @@ const factoryOf = (callee: TsNode, depth = 0): Factory | undefined => {
   const committed = functionNamed(value);
   if (committed !== undefined) return writesSdk(committed, depth) ? { kind: 'committed', fn: committed } : undefined;
   const generated = firstExported(value);
-  return generated !== undefined && GENERATED_FACTORIES.has(generated.exported) ? { kind: 'generated', ...generated } : undefined;
+  if (generated === undefined) return undefined;
+  // The configuration that generates the module says the names it is written under (P293).
+  const said = generatedSdkOf(value.getProject(), generated.importingFile, generated.specifier);
+  const generates = said?.factories.get(generated.exported) ?? GENERATED_FACTORIES.get(generated.exported);
+  return generates === undefined ? undefined : { kind: 'generated', ...generated, generates, infiniteHooks: said?.infiniteHooks === true };
 };
 
 /** The `getSdk(...)` call an SDK value was made by, followed back from where it is used. */
@@ -307,8 +357,9 @@ const operationOf = (factory: Factory, method: string, project: Project, depth =
     if (delegated !== undefined) return operationOf(delegated.factory, delegated.method, project, depth + 1);
     return { document: undefined, reading: { kind: 'dynamic', why: `the method ${method} of ${named} sends no document this could find` } };
   }
-  // The SWR plugin's hook `useOrders` sends the operation `Orders`.
-  const hooked = /WithHooks$/.test(factory.exported) && /^use[A-Z]/.test(method) ? [method.slice(3)] : [];
+  // The SWR plugin's hook `useOrders` sends the operation `Orders`, and `useOrdersInfinite` too where it writes those (P293).
+  const hook = factory.generates === 'getSdkWithHooks' && /^use[A-Z]/.test(method) ? method.slice(3) : undefined;
+  const hooked = hook === undefined ? [] : factory.infiniteHooks && /.Infinite$/.test(hook) ? [hook, hook.slice(0, -'Infinite'.length)] : [hook];
   let generated: DocumentReading | undefined;
   for (const name of [method, ...hooked]) {
     generated = codegenDocument(project, factory.importingFile, factory.specifier, `${name}Document`);
@@ -423,7 +474,7 @@ const naming = new WeakMap<Project, boolean>();
 const namesFactory = (project: Project): boolean => {
   const known = naming.get(project);
   if (known !== undefined) return known;
-  const found = project.getSourceFiles().some((file) => !file.isInNodeModules() && SDK_TEXT.test(file.getFullText()));
+  const found = project.getSourceFiles().some((file) => !file.isInNodeModules() && SDK_TEXT.test(file.getFullText())) || configuresSdk(project);
   naming.set(project, found);
   return found;
 };

@@ -1,5 +1,5 @@
 import { dirname } from 'node:path';
-import { evaluateExpression, packageOfSpecifier, type ProtoService } from '@flowatlas/core';
+import { evaluateExpression, packageOfSpecifier, type ProtoFieldNames, type ProtoService } from '@flowatlas/core';
 import { Node, SyntaxKind, type ClassDeclaration, type Node as TsNode, type SourceFile } from 'ts-morph';
 import { contractsOf, type Contract, type Contracts, type ContractService } from './grpc-contracts.js';
 
@@ -46,6 +46,12 @@ export type ServiceReading =
       readonly paths?: ReadonlyMap<string, string>;
       /** How the name was found. */
       readonly via: 'loader' | 'generated' | 'contract-name';
+      /**
+       * How the loader that made it names the messages' fields, where it says
+       * (P293): `proto` under `keepCase: true`, `unread` where its options
+       * are not read; the libraries' camelCase otherwise.
+       */
+      readonly fieldNames?: ProtoFieldNames | 'unread';
     }
   | { readonly kind: 'unread'; readonly why: string };
 
@@ -198,6 +204,43 @@ export const protoSpecsOf = (argument: TsNode | undefined): string[] => {
   return found;
 };
 
+/**
+ * How a loader's options name the fields of the messages it hands over
+ * (P293): `@grpc/proto-loader`'s `keepCase: true` keeps them as the contract
+ * writes them, `user_id`; without it they are camelCase, `userId`. `unread`
+ * where the options are a value this cannot read, or `keepCase` one decided
+ * at run time.
+ */
+export const loaderFieldNames = (options: TsNode | undefined, option = 'keepCase', keeps = true): ProtoFieldNames | 'unread' => {
+  if (options === undefined) return keeps ? 'json' : 'proto';
+  const value = valueOf(options);
+  if (!Node.isObjectLiteralExpression(value)) return 'unread';
+  const property = value.getProperty(option);
+  if (property === undefined) {
+    if (value.getProperties().some((each) => Node.isSpreadAssignment(each))) return 'unread';
+    return keeps ? 'json' : 'proto';
+  }
+  const written = Node.isPropertyAssignment(property) ? property.getInitializer() : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : undefined;
+  const evaluated = written === undefined ? undefined : evaluateExpression(valueOf(written));
+  if (evaluated?.resolved !== true || typeof evaluated.value !== 'boolean') return 'unread';
+  return evaluated.value === keeps ? 'proto' : 'json';
+};
+
+/**
+ * How the loader a loaded contract comes from names its fields: the options
+ * handed `loadSync(file, options)` or `load(file, options)`, or the legacy
+ * `grpc.load(file, format, options)`, which keeps the contract's names unless
+ * told `convertFieldsToCamelCase` (P293).
+ */
+const loadedFieldNames = (loader: TsNode): ProtoFieldNames | 'unread' => {
+  if (!Node.isCallExpression(loader)) return 'json';
+  if (calleeNameOf(loader) === 'load') return loaderFieldNames(loader.getArguments()[2], 'convertFieldsToCamelCase', false);
+  const [definition] = loader.getArguments();
+  const made = definition === undefined ? undefined : valueOf(definition);
+  if (made === undefined || !Node.isCallExpression(made) || !['loadSync', 'load'].includes(calleeNameOf(made) ?? '')) return 'json';
+  return loaderFieldNames(made.getArguments()[1]);
+};
+
 /** The contracts a loader was handed: the call that loads the definition, `loadSync('shop.proto')`. */
 const loadedContracts = (definition: TsNode | undefined, contracts: Contracts): Contract[] => {
   if (definition === undefined) return [];
@@ -292,7 +335,8 @@ export const readServiceSpelling = (expression: TsNode, contracts: Contracts): S
     const declared =
       loaded.flatMap((contract) => contract.file.services.filter((service) => service.fullName === fullName).map((service) => ({ contract, service })))[0] ??
       contracts.byFullName(fullName);
-    return { kind: 'named', fullName, via: 'loader', ...(declared === undefined ? {} : { declared }) };
+    const fieldNames = loadedFieldNames(made);
+    return { kind: 'named', fullName, via: 'loader', ...(declared === undefined ? {} : { declared }), ...(fieldNames === 'json' ? {} : { fieldNames }) };
   }
 
   // A constructor made from a definition: `makeGenericClientConstructor(definition, 'shop.CartService')`.

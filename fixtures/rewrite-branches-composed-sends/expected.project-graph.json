@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:22:43.760Z",
+  "builtAt": "2026-11-12T19:16:29.060Z",
   "services": [
     {
       "name": "api",
@@ -1037,31 +1037,20 @@
       }
     },
     {
-      "id": "web#src/backend/client.ts:runQuery",
-      "type": "function",
-      "label": "runQuery",
-      "repo": "web",
-      "file": "src/backend/client.ts",
-      "line": 12,
-      "meta": {
-        "signature": {
-          "params": [
-            {
-              "name": "args",
-              "type": "{query:unknown;variables:V}"
-            }
-          ],
-          "returns": "unknown"
-        }
-      }
-    },
-    {
       "id": "web#src/backend/client.ts:runQuietQuery",
       "type": "function",
       "label": "runQuietQuery",
       "repo": "web",
       "file": "src/backend/client.ts",
       "line": 16
+    },
+    {
+      "id": "web#src/backend/orders.ts:OrderWatcher.load",
+      "type": "function",
+      "label": "OrderWatcher.load",
+      "repo": "web",
+      "file": "src/backend/orders.ts",
+      "line": 26
     },
     {
       "id": "web#src/backend/orders.ts:listOrders",
@@ -1529,7 +1518,7 @@
       }
     },
     {
-      "from": "web#src/backend/client.ts:runQuery",
+      "from": "web#src/backend/orders.ts:OrderWatcher.load",
       "to": "ui_api_call:web#src/backend/orders.ts:27:12@13:23",
       "type": "calls",
       "confidence": "static",
@@ -1804,35 +1793,6 @@
         "module": "GraphQLModule"
       },
       "service": "api"
-    },
-    {
-      "file": "src/backend/client.ts",
-      "line": 7,
-      "reason": "type-unresolved",
-      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "TypedDocumentNode<T, V>",
-      "meta": {
-        "cause": "module-not-installed",
-        "package": "@urql/core"
-      },
-      "service": "web"
-    },
-    {
-      "file": "src/backend/client.ts",
-      "line": 8,
-      "reason": "type-generic-uninstantiated",
-      "level": "info",
-      "hint": "The type argument is not known here, so the reference names the parameter.",
-      "symbol": "V",
-      "service": "web"
-    },
-    {
-      "file": "src/backend/client.ts",
-      "line": 12,
-      "reason": "type-unresolved",
-      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
-      "symbol": "any",
-      "service": "web"
     },
     {
       "file": "src/backend/orders.ts",

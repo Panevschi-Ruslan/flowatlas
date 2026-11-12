@@ -215,6 +215,54 @@ describe('an SDK factory known by what its module exports (P285)', () => {
     expect(operationOf(graphqlCallOf(callOf(made, '/app/src/page.ts', 'orderList')))).toBe('query orders');
   });
 
+  it('follows export * to the module nobody committed that the configuration generates (P293)', () => {
+    const made = project({
+      '/app/package.json': '{}',
+      // Two outputs nobody committed, both generated: the one the SDK plugin writes holds the factory.
+      '/app/codegen.yml': "documents: 'src/**/*.graphql'\ngenerates:\n  src/generated/scalars.ts:\n    plugins:\n      - typescript\n  src/generated/sdk.ts:\n    plugins:\n      - typescript-graphql-request\n",
+      '/app/src/orders.graphql': 'query orderList { orders { id } }',
+      '/app/src/generated/index.ts': "export * from './scalars';\nexport * from './sdk';",
+      '/app/src/api/index.ts': "export * from '../generated';",
+      '/app/src/client.ts': `
+        import { GraphQLClient } from 'graphql-request';
+        import { getSdk } from './api';
+        export const api = getSdk(new GraphQLClient('/graphql'));
+      `,
+      '/app/src/page.ts': "import { api } from './client';\nexport const a = () => api.orderList();",
+    });
+    const found = graphqlCallOf(callOf(made, '/app/src/page.ts', 'orderList'));
+    expect(operationOf(found)).toBe('query orders');
+    expect(addressOf(found as GraphqlCall)).toBe("'/graphql'");
+  });
+
+  it('reads the factory the add plugin writes out under another name, and the infinite hooks useSWRInfinite writes (P293)', () => {
+    const made = project({
+      '/app/package.json': '{}',
+      '/app/codegen.yml': [
+        "documents: 'src/**/*.graphql'",
+        'generates:',
+        '  src/generated/sdk.ts:',
+        '    plugins:',
+        '      - typescript-graphql-request',
+        '      - plugin-typescript-swr',
+        '      - add:',
+        "          content: 'export { getSdkWithHooks as createStoreHooks }'",
+        '    config:',
+        "      useSWRInfinite: ['orderList']",
+        '',
+      ].join('\n'),
+      '/app/src/orders.graphql': 'query orderList { orders { id } }',
+      '/app/src/client.ts': `
+        import { GraphQLClient } from 'graphql-request';
+        import { createStoreHooks } from './generated/sdk';
+        export const hooks = createStoreHooks(new GraphQLClient('/graphql'));
+      `,
+      '/app/src/page.ts': "import { hooks } from './client';\nexport const a = () => hooks.useOrderListInfinite('k');\nexport const b = () => hooks.useOrderList('k');",
+    });
+    expect(operationOf(graphqlCallOf(callOf(made, '/app/src/page.ts', 'useOrderListInfinite')))).toBe('query orders');
+    expect(operationOf(graphqlCallOf(callOf(made, '/app/src/page.ts', 'useOrderList')))).toBe('query orders');
+  });
+
   it('is nothing for a function answering methods that send no document through what it is handed', () => {
     const made = project({
       '/shop/src/generated/graphql.ts': GENERATED,

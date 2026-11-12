@@ -240,6 +240,25 @@ describe('an axios request interceptor that sets the base (P244)', () => {
     expect(rows(kept)).toEqual([]);
   });
 
+  it('reads a base put in front of the address chosen by a test of the address, in place or held in a const (P293)', () => {
+    const inPlace = read({
+      '/src/api.ts': AXIOS_WITH(`(config) => { config.url = (config.url.startsWith('/admin') ? '/office-rest' : '') + config.url; return config; }`),
+      '/src/Panel.tsx': PANEL(`api.get('/admin/users'); api.get('/orders');`),
+    });
+    expect(addresses(inPlace)).toEqual(['GET /office-rest/admin/users', 'GET /orders']);
+    expect(rows(inPlace)).toEqual([]);
+    const held = read({
+      '/src/api.ts': AXIOS_WITH(`(config) => { const base = config.url.includes('admin') ? '/office-rest' : '/store-rest'; config.baseURL = base; return config; }`),
+      '/src/Panel.tsx': PANEL(`api.get('/admin/users'); api.get('/orders');`),
+    });
+    expect(addresses(held)).toEqual(['GET /office-rest/admin/users', 'GET /store-rest/orders']);
+    const other = read({
+      '/src/api.ts': AXIOS_WITH(`(config) => { config.url = (config.headers.admin ? '/office-rest' : '/store-rest') + config.url; return config; }`),
+      '/src/Panel.tsx': PANEL(`api.get('/orders');`),
+    });
+    expect(rows(other)[0]?.hint).toContain('one of two bases in front of the address by a branch');
+  });
+
   it('chooses among rewrites written under tests in two places, and is partly read where two that differ both hold (P285)', () => {
     const graph = read({
       '/src/api.ts': [
@@ -273,6 +292,36 @@ describe('an axios request interceptor that sets the base (P244)', () => {
     });
     expect(addresses(graph)).toEqual(['GET https://api.example.test/api/orders', 'POST /made/health']);
     expect(requests(graph).find((node) => node.meta?.['host'] !== undefined)?.meta).toMatchObject({ client: 'ApiService', baseFrom: 'interceptor' });
+  });
+
+  it('puts the test to the address a client class with a base of its own hands the instance, under the instance base (P293)', () => {
+    const graph = read({
+      '/src/api.ts': [
+        `import axios from 'axios';`,
+        `const http = axios.create({ baseURL: '/made' });`,
+        `http.interceptors.request.use((config) => { if (config.url.startsWith('/api/')) config.baseURL = 'https://api.example.test'; return config; });`,
+        `class ApiService {`,
+        `  baseUrl = '/api';`,
+        `  get(path: string) { return http.get(this.baseUrl + path); }`,
+        `}`,
+        `class LegacyService {`,
+        `  baseUrl = '/v2';`,
+        `  get(path: string) { return http.get(this.baseUrl + path); }`,
+        `}`,
+        `export const api = new ApiService();`,
+        `export const legacy = new LegacyService();`,
+        '',
+      ].join('\n'),
+      '/src/Panel.tsx': `
+        import { api, legacy } from './api';
+        export const Panel = () => {
+          const load = () => { api.get('/orders'); legacy.get('/orders'); };
+          return <button onClick={load} />;
+        };
+      `,
+    });
+    expect(addresses(graph)).toEqual(['GET /made/v2/orders', 'GET https://api.example.test/api/orders']);
+    expect(rows(graph)).toEqual([]);
   });
 
   it('is a row where two interceptors set different bases', () => {

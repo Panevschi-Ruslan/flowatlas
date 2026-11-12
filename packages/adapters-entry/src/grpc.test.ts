@@ -313,6 +313,59 @@ describe('gRPC servers and their contracts (P287)', () => {
     expect(types['type:svc#.shop.Item']?.structuralHash).toMatch(/^[0-9a-f]{16}$/);
   });
 
+  it('names the fields as the contract writes them where the loader keeps their case, and says options it cannot read (P293)', () => {
+    const { entries, types, rows } = read({
+      '/svc/index.js': `
+        const grpc = require('@grpc/grpc-js');
+        const loader = require('@grpc/proto-loader');
+        const options = { keepCase: true, longs: String };
+        const pkg = grpc.loadPackageDefinition(loader.loadSync('shop.proto', options));
+        new grpc.Server().addService(pkg.shop.CartService.service, { getCart() {}, addItem() {} });
+      `,
+    });
+    expect(entries[1]?.meta).toMatchObject({ signature: { params: [{ name: 'request', type: 'type:svc#.shop.AddItemRequest@keepCase' }], returns: 'type:svc#.shop.Cart@keepCase' }, protoFieldNames: 'proto' });
+    expect(types['type:svc#.shop.AddItemRequest@keepCase']?.fields?.map((field) => [field.name, field.type])).toEqual([
+      ['user_id', 'string'],
+      ['item', 'type:svc#.shop.Item@keepCase'],
+    ]);
+    expect(rows.filter((row) => row.meta?.['why'] === 'field-names')).toEqual([]);
+    // Options not read: camelCase, and a row.
+    const unread = read({
+      '/svc/index.js': `
+        const grpc = require('@grpc/grpc-js');
+        const loader = require('@grpc/proto-loader');
+        const pkg = grpc.loadPackageDefinition(loader.loadSync('shop.proto', makeOptions()));
+        new grpc.Server().addService(pkg.shop.CartService.service, { getCart() {}, addItem() {} });
+      `,
+    });
+    expect(unread.entries[1]?.meta?.['signature']).toMatchObject({ returns: 'type:svc#.shop.Cart' });
+    expect(unread.rows.filter((row) => row.meta?.['why'] === 'field-names').map((row) => [row.reason, row.level, row.symbol])).toEqual([['grpc-contract-unread', 'info', 'shop.CartService']]);
+  });
+
+  it('names a NestJS transport loader that keeps the case (P293)', () => {
+    const { entries } = read(
+      {
+        '/svc/src/main.ts': `
+          import { Transport } from '@nestjs/microservices';
+          export const options = { transport: Transport.GRPC, options: { package: 'shop', protoPath: 'shop.proto', loader: { keepCase: true } } };
+        `,
+        '/svc/src/cart.controller.ts': `
+          import { Controller } from '@nestjs/common';
+          import { GrpcMethod } from '@nestjs/microservices';
+          @Controller()
+          export class CartController {
+            @GrpcMethod('CartService', 'AddItem') addItem() {}
+          }
+        `,
+      },
+      { '@grpc/grpc-js': '^1.0.0', '@nestjs/microservices': '^10.0.0' },
+    );
+    expect(entries.find((entry) => entry.key === 'grpc:shop.CartService/AddItem')?.meta).toMatchObject({
+      signature: { params: [{ name: 'request', type: 'type:svc#.shop.AddItemRequest@keepCase' }] },
+      protoFieldNames: 'proto',
+    });
+  });
+
   it('draws the health and reflection services a package hands the server, and says one it does not know', () => {
     const { entries, rows } = read({
       '/svc/src/server.ts': `
@@ -366,6 +419,24 @@ describe('gRPC calls and what they hand over (P287)', () => {
       ['grpc:shop.CartService/AddItem', ['quantity', 'userId'], null],
     ]);
     expect(calls[0]?.meta?.['inputType']).toEqual(expect.any(String));
+  });
+
+  it('says a call writes the contract own names where its loader keeps their case (P293)', () => {
+    const { calls } = calledBy(
+      {
+        '/svc/src/clients.ts': `
+          import { credentials, loadPackageDefinition } from '@grpc/grpc-js';
+          import { loadSync } from '@grpc/proto-loader';
+          const shop = loadPackageDefinition(loadSync('shop.proto', { keepCase: true })) as any;
+          const cart = new shop.shop.CartService(process.env.CART_ADDR, credentials.createInsecure());
+          export function add() { cart.addItem({ user_id: 'u' }, () => undefined); }
+        `,
+      },
+      undefined,
+      false,
+      { '/proto/shop.proto': SHOP_MESSAGES },
+    );
+    expect(calls.map((call) => [call.meta?.['procedure'], call.meta?.['inputKeys'], call.meta?.['protoFieldNames']])).toEqual([['grpc:shop.CartService/AddItem', ['user_id'], 'proto']]);
   });
 });
 

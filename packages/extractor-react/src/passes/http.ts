@@ -471,12 +471,17 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     // where none is set, or puts one in front of the address (P244).
     // A class of the project's own runs what the instance it writes through runs (P285).
     const runs = hooked ?? found.instance ?? client.runs;
+    // A class's own base is written into the address its instance sees, under
+    // the instance's own base (P293): the rewrite is put to the two together.
+    const beneath = hooked === undefined && found.instance === undefined && written === null ? client.runs?.beneath : undefined;
+    const seen = beneath === undefined ? request.address : underBase(before, request.address);
+    const opening = beneath === undefined ? before : beneath.base;
     // Under a test of the address, only where the address it writes passes;
     // and a rewrite not read leaves the opening of the address a hole (P280).
-    const applied = rewriteFor(runs, request.address);
-    const base = applied === 'unread' ? unreadOpening(before) : basedBy(applied, before);
-    const rewritten = base !== before;
-    const address = underBase(base, request.address);
+    const applied = rewriteFor(runs, seen);
+    const base = applied === 'unread' ? unreadOpening(opening) : basedBy(applied, opening);
+    const rewritten = base !== opening;
+    const address = underBase(base, seen);
     const at = siteOf(site.call);
     const leaf = makeLeafId('ui_api_call', ctx.repo, site.file, at.line, at.column);
     // One caller may reach a wrapper that writes several requests, so where the
@@ -718,6 +723,9 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     return reading;
   };
 
+  /** A class read as a client of the repository's own: its methods are no caller a request is followed out through (P293). */
+  const isClientClass = (cls: ClassDeclaration): boolean => readingOf(cls)?.kind === 'client';
+
   /**
    * Whether a call whose receiver is unread writes an address all the same.
    *
@@ -855,7 +863,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
     const callers = verbsAtCallers(parameter);
     let unnamed = callers.undecided || callers.calls.length === 0;
     for (const caller of callers.calls) {
-      const owner = enclosingIndexed(ctx, caller.site);
+      const owner = enclosingIndexed(ctx, caller.site, isClientClass);
       if (owner === undefined) {
         unnamed = true;
         continue;
@@ -879,7 +887,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
       const urlArg = call.described === undefined ? addressWrittenIn(call.call, call.shape) : (call.described.url ?? call.call);
       if (urlArg === undefined) continue;
       const site: RequestSite = { call: call.call, ownerId: indexed.id, file: indexed.file };
-      for (const request of requestsOf(ctx, urlArg, indexed, site)) {
+      for (const request of requestsOf(ctx, urlArg, indexed, site, isClientClass)) {
         ensureOwner(ctx, request.site.ownerId);
         if (request.depth === 0 && call.described === undefined && perVerbCaller(call, request)) continue;
         record(call, request);

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T04:50:58.025Z",
+  "builtAt": "2026-11-12T19:16:26.542Z",
   "services": [
     {
       "name": "web",
@@ -94,6 +94,48 @@
       }
     },
     {
+      "id": "ui_api_call:web#src/api/reports.ts:14:45",
+      "type": "ui_api_call",
+      "label": "GET ?",
+      "repo": "web",
+      "file": "src/api/reports.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "package": null,
+        "client": "fetch",
+        "via": null
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/api/reports.ts:16:61",
+      "type": "ui_api_call",
+      "label": "POST ?",
+      "repo": "web",
+      "file": "src/api/reports.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": null,
+        "path": null,
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "package": null,
+        "client": "fetch",
+        "via": null
+      }
+    },
+    {
       "id": "ui_api_call:web#src/api/transport.ts:12:24",
       "type": "ui_api_call",
       "label": "? ?",
@@ -183,6 +225,44 @@
       }
     },
     {
+      "id": "ui_api_call:web#src/screens/OrdersPanel.tsx:18:25@12:24",
+      "type": "ui_api_call",
+      "label": "GET /api/reports",
+      "repo": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/reports",
+        "path": "/api/reports",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "send"
+      }
+    },
+    {
+      "id": "web#src/api/reports.ts:ReportsClient.get",
+      "type": "function",
+      "label": "ReportsClient.get",
+      "repo": "web",
+      "file": "src/api/reports.ts",
+      "line": 14
+    },
+    {
+      "id": "web#src/api/reports.ts:ReportsClient.post",
+      "type": "function",
+      "label": "ReportsClient.post",
+      "repo": "web",
+      "file": "src/api/reports.ts",
+      "line": 16
+    },
+    {
       "id": "web#src/api/transport.ts:send",
       "type": "function",
       "label": "send",
@@ -260,6 +340,22 @@
       "line": 29
     },
     {
+      "from": "web#src/api/reports.ts:ReportsClient.get",
+      "to": "ui_api_call:web#src/api/reports.ts:14:45",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/api/reports.ts",
+      "line": 14
+    },
+    {
+      "from": "web#src/api/reports.ts:ReportsClient.post",
+      "to": "ui_api_call:web#src/api/reports.ts:16:61",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/api/reports.ts",
+      "line": 16
+    },
+    {
       "from": "web#src/api/transport.ts:send",
       "to": "ui_api_call:web#src/api/transport.ts:12:24",
       "type": "calls",
@@ -290,6 +386,14 @@
       "confidence": "static",
       "file": "src/screens/OrdersPanel.tsx",
       "line": 17
+    },
+    {
+      "from": "web#src/screens/OrdersPanel.tsx:OrdersPanel",
+      "to": "ui_api_call:web#src/screens/OrdersPanel.tsx:18:25@12:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 18
     }
   ],
   "types": {
@@ -317,6 +421,22 @@
     }
   },
   "unresolved": [
+    {
+      "file": "src/api/reports.ts",
+      "line": 14,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the function with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "fetch(path, { method, body: JSON.stringify(body) })",
+      "service": "web"
+    },
+    {
+      "file": "src/api/reports.ts",
+      "line": 16,
+      "reason": "api-path-dynamic",
+      "hint": "The address is built at run time. Annotate the function with /** @flowatlas-calls METHOD /path */.",
+      "symbol": "fetch(path, { method, body: JSON.stringify(body) })",
+      "service": "web"
+    },
     {
       "file": "src/api/transport.ts",
       "line": 12,
@@ -375,6 +495,15 @@
       "hint": "ReportsClient declares get and this reader could not follow it to a request. Add \"ReportsClient\" to adapters.frontend.localClientClasses in flowatlas.config.json if it is a client of your own; nothing is needed if it is not.",
       "symbol": "reports.get('/api/reports')",
       "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 18,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/reports",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/reports */.",
+      "symbol": "ui_api_call:web#src/screens/OrdersPanel.tsx:18:25@12:24"
     }
   ]
 }

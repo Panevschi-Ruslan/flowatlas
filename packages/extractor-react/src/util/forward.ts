@@ -1,5 +1,5 @@
-import { callSitesOf as callSitesOfFunction, evaluateExpression, wasRead, type NamedFunction } from '@flowatlas/core';
-import type { CallExpression, Node as TsNode, ObjectLiteralExpression, ParameterDeclaration } from 'ts-morph';
+import { callSitesOf as callSitesOfFunction, evaluateExpression, startLineOf, wasRead, type NamedFunction } from '@flowatlas/core';
+import type { CallExpression, ClassDeclaration, Node as TsNode, ObjectLiteralExpression, ParameterDeclaration } from 'ts-morph';
 import { Node, VariableDeclarationKind } from 'ts-morph';
 import type { ReactExtractContext } from '../context.js';
 import type { IndexedFunction } from '../index-functions.js';
@@ -163,9 +163,32 @@ const readsParameter = (value: TsNode, fn: NamedFunction): boolean => {
  */
 const callSitesOf = (fn: NamedFunction): CallExpression[] => {
   const declaration = fn.declaration;
-  return Node.isFunctionDeclaration(declaration) || Node.isVariableDeclaration(declaration)
-    ? callSitesOfFunction(declaration)
-    : [];
+  if (Node.isFunctionDeclaration(declaration) || Node.isVariableDeclaration(declaration) || Node.isMethodDeclaration(declaration)) return callSitesOfFunction(declaration);
+  // A method written as an arrow held by a field of its class (P293).
+  const holder = Node.isArrowFunction(declaration) || Node.isFunctionExpression(declaration) ? declaration.getParent() : undefined;
+  return holder !== undefined && Node.isPropertyDeclaration(holder) ? callSitesOfFunction(holder) : [];
+};
+
+/**
+ * A method of a class of the repository, indexed as a function where it is
+ * met as a caller (P293): `load() { return runQuery(OrdersDocument) }`, or
+ * `load = () => …`. Named `Class.method`, as every reader names a method; no
+ * function of a class nobody names, nor of a package.
+ */
+const methodIndexed = (ctx: ReactExtractContext, member: TsNode): IndexedFunction | undefined => {
+  if (!Node.isMethodDeclaration(member) && !Node.isPropertyDeclaration(member)) return undefined;
+  const owner = member.getParent();
+  const className = Node.isClassDeclaration(owner) ? owner.getName() : undefined;
+  if (className === undefined || member.getSourceFile().isInNodeModules() || member.getSourceFile().isDeclarationFile()) return undefined;
+  if (Node.isMethodDeclaration(member)) {
+    const body = member.getBody();
+    if (body === undefined) return undefined;
+    return ctx.functions.adoptCaller({ name: `${className}.${member.getName()}`, declaration: member, body, line: startLineOf(member) });
+  }
+  const initializer = member.getInitializer();
+  const written = initializer === undefined ? undefined : unwrapped(initializer);
+  if (written === undefined || (!Node.isArrowFunction(written) && !Node.isFunctionExpression(written))) return undefined;
+  return ctx.functions.adoptCaller({ name: `${className}.${member.getName()}`, declaration: written, body: written.getBody(), line: startLineOf(member) });
 };
 
 /** What a call passed for each of the called function's parameters. */
@@ -207,17 +230,29 @@ const withOuter = (bindings: Bindings | undefined, outer: Bindings): Bindings =>
 const outermostValues = (bindings: Bindings): TsNode[] =>
   bindings.under === undefined ? [...bindings.values.values()] : outermostValues(bindings.under);
 
+/**
+ * A class whose methods are no caller to follow out through: one the request
+ * pass reads as a client of the repository's own, whose calls are drawn at
+ * its callers already (P293).
+ */
+export type ClientClass = (cls: ClassDeclaration) => boolean;
+
 /** The indexed function a call is written inside, when this repository declares it. */
 export const enclosingIndexed = (
   ctx: ReactExtractContext,
   call: TsNode,
+  isClient: ClientClass = () => false,
 ): IndexedFunction | undefined => {
   for (let at = call.getParent(); at !== undefined; at = at.getParent()) {
     if (Node.isSourceFile(at)) return undefined;
+    if (Node.isClassDeclaration(at) && isClient(at)) return undefined;
+    const owner = at.getParent();
     const indexed =
       Node.isFunctionDeclaration(at) || Node.isVariableDeclaration(at) || Node.isPropertyAssignment(at)
         ? ctx.functions.get(at)
-        : undefined;
+        : owner !== undefined && Node.isClassDeclaration(owner) && isClient(owner)
+          ? undefined
+          : methodIndexed(ctx, at);
     if (indexed !== undefined) return indexed;
     // An arrow written inside another function belongs to whatever declares
     // that one, so the walk carries on rather than stopping at it.
@@ -245,6 +280,7 @@ export const requestsOf = (
   urlArg: TsNode,
   owner: IndexedFunction,
   site: RequestSite,
+  isClient?: ClientClass,
 ): ReadRequest[] => {
   const sharedPackages = ctx.config.sharedPackages;
 
@@ -278,7 +314,7 @@ export const requestsOf = (
     const out: ReadRequest[] = [];
     let unread = 0;
     for (const call of callSitesOf(at.fn)) {
-      const caller = enclosingIndexed(ctx, call);
+      const caller = enclosingIndexed(ctx, call, isClient);
       // A caller outside any function this repository indexes — a value written
       // at the top of a module, a call inside markup — is still a caller. It
       // cannot be attributed, so the wrapper keeps its own row rather than the
@@ -381,9 +417,12 @@ const parameterRead = (value: TsNode, depth = 0): { parameter: ParameterDeclarat
 const functionOfParameter = (ctx: ReactExtractContext, parameter: ParameterDeclaration): IndexedFunction | undefined => {
   const fn = parameter.getParent();
   if (Node.isFunctionDeclaration(fn)) return ctx.functions.get(fn);
+  // A method handing its own parameter on, followed out to its callers (P293).
+  if (Node.isMethodDeclaration(fn)) return methodIndexed(ctx, fn);
   if (!Node.isArrowFunction(fn) && !Node.isFunctionExpression(fn)) return undefined;
   let holder: TsNode | undefined = fn.getParent();
   while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder))) holder = holder.getParent();
+  if (holder !== undefined && Node.isPropertyDeclaration(holder)) return methodIndexed(ctx, holder);
   return holder !== undefined && (Node.isVariableDeclaration(holder) || Node.isPropertyAssignment(holder)) ? ctx.functions.get(holder) : undefined;
 };
 

@@ -131,6 +131,7 @@ export class ReactFunctionIndex {
   readonly #byFunction = new Map<NamedFunction, IndexedFunction>();
   readonly #byId = new Map<string, IndexedFunction>();
   readonly #byPosition = new Map<string, IndexedFunction>();
+  readonly #callersOnly = new Set<string>();
   readonly #repo: string;
   readonly #repoDir: string;
 
@@ -192,6 +193,25 @@ export class ReactFunctionIndex {
   }
 
   /**
+   * Indexes a method of a class where a pass meets it as the caller of a
+   * function it follows outward (P293): what a request or an operation its
+   * helper makes is drawn from, and followed on through. Only as a caller:
+   * {@link all} does not answer it, so no pass reads its body as it reads a
+   * function of the module, and a client class's wrapping methods are not
+   * read as requests of their own.
+   */
+  adoptCaller(fn: NamedFunction): IndexedFunction {
+    const existing = this.of(fn);
+    if (existing !== undefined) return existing;
+    const file = normalizeFilePath(fn.declaration.getSourceFile().getFilePath(), this.#repoDir);
+    // A method is neither a screen nor a hook, whatever it returns.
+    const indexed: IndexedFunction = { id: makeSymbolId(this.#repo, file, fn.name), name: fn.name, role: 'plain', file, line: fn.line, fn };
+    this.#callersOnly.add(indexed.id);
+    this.add(indexed);
+    return indexed;
+  }
+
+  /**
    * The function a declaration the checker handed back stands for: a declaration
    * this index read, or the element of a pattern one of its names is taken out of.
    */
@@ -212,12 +232,12 @@ export class ReactFunctionIndex {
     return this.#byId.get(id);
   }
 
-  all(): IterableIterator<IndexedFunction> {
-    return this.#byId.values();
+  *all(): IterableIterator<IndexedFunction> {
+    for (const indexed of this.#byId.values()) if (!this.#callersOnly.has(indexed.id)) yield indexed;
   }
 
   get size(): number {
-    return this.#byId.size;
+    return this.#byId.size - this.#callersOnly.size;
   }
 }
 

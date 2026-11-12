@@ -1,4 +1,4 @@
-import type { EntryAdapter, EntryHandler, EntryNode, ExtractContext, ProtoMethod, ProtoTypes } from '@flowatlas/core';
+import type { EntryAdapter, EntryHandler, EntryNode, ExtractContext, ProtoFieldNames, ProtoMethod, ProtoTypes } from '@flowatlas/core';
 import {
   decoratorArgs,
   evaluateExpression,
@@ -18,7 +18,7 @@ import {
 import { dirname } from 'node:path';
 import { Node, SyntaxKind, type CallExpression, type ClassDeclaration, type Node as TsNode, type SourceFile } from 'ts-morph';
 import { declaredSpelling, methodNamed, type Contract, type Contracts, type ContractService } from './grpc-contracts.js';
-import { bare, contractsFor, GRPC_PACKAGES, moduleOfName, protoSpecsOf, readServiceSpelling, valueOf, type ServiceReading } from './grpc-reading.js';
+import { bare, contractsFor, GRPC_PACKAGES, loaderFieldNames, moduleOfName, protoSpecsOf, readServiceSpelling, valueOf, type ServiceReading } from './grpc-reading.js';
 import { fileOfNode, handlerOf, handlerOfFunction, inlineHandlerOf, repoFunctionOf, repoSources } from './shared.js';
 import { unwrapWork } from './wrapped-work.js';
 
@@ -118,10 +118,14 @@ const packageTypesOf = (repo: string): ProtoTypes => {
  * signature a procedure's way in carries, which the contract check compares a
  * caller's request with.
  */
-const signatureOf = (types: ProtoTypes, pkg: string | undefined, method: ProtoMethod): { params: { name: string; type: string }[]; returns: string } => ({
-  params: [{ name: 'request', type: types.refOf(method.request, pkg) }],
-  returns: types.refOf(method.response, pkg),
-});
+const signatureOf = (declaration: Declaration, method: ProtoMethod): { params: { name: string; type: string }[]; returns: string } => {
+  // Named as the loader the service is loaded with names its fields (P293).
+  const names = declaration.fieldNames === 'proto' ? 'proto' : 'json';
+  return {
+    params: [{ name: 'request', type: declaration.types.refOf(method.request, declaration.pkg, names) }],
+    returns: declaration.types.refOf(method.response, declaration.pkg, names),
+  };
+};
 
 /** One member of an implementation: the name it is held under and what it holds. */
 interface Implemented {
@@ -232,12 +236,33 @@ interface Declaration {
   readonly path: string;
   readonly pkg: string | undefined;
   readonly types: ProtoTypes;
+  /** How the loader the service is loaded with names the messages' fields, where it is not camelCase (P293). */
+  readonly fieldNames?: ProtoFieldNames | 'unread';
 }
 
-const declarationOf = (ctx: ExtractContext, contracts: Contracts, declared: ContractService | undefined): Declaration | undefined =>
+const declarationOf = (ctx: ExtractContext, contracts: Contracts, declared: ContractService | undefined, fieldNames: ProtoFieldNames | 'unread' = 'json'): Declaration | undefined =>
   declared === undefined
     ? undefined
-    : { path: contracts.pathOf(declared.contract), pkg: declared.contract.file.package, types: contracts.types(ctx.repo) };
+    : { path: contracts.pathOf(declared.contract), pkg: declared.contract.file.package, types: contracts.types(ctx.repo), ...(fieldNames === 'json' ? {} : { fieldNames }) };
+
+/**
+ * A row where the options a service's loader is handed are not read (P293):
+ * whether its fields keep the contract's names is then not known, and they
+ * are named in camelCase, the loaders' default.
+ */
+const fieldNamesUnread = (ctx: ExtractContext, site: TsNode, fullName: string): void => {
+  ctx.builder.addUnresolved({
+    file: fileOfNode(site, ctx),
+    line: startLineOf(site),
+    reason: 'grpc-contract-unread',
+    level: 'info',
+    message: `${fullName} is loaded with options this cannot read, so whether its messages' fields keep the names the contract writes (keepCase) is not known; they are named in camelCase.`,
+    hint: 'Write the loader options as an object in place, with keepCase as true or false, so the fields are named as the loader hands them.',
+    symbol: fullName,
+    adapter: ADAPTER,
+    meta: { why: 'field-names' },
+  });
+};
 
 /** What every gRPC entry carries, from the service and the method. */
 const entryOf = (
@@ -270,7 +295,9 @@ const entryOf = (
       ...(declaredMethod === undefined ? {} : { request: declaredMethod.request, response: declaredMethod.response }),
       ...(declaration === undefined ? {} : { contract: declaration.path }),
       // The messages as a procedure's input and output (P287).
-      ...(declaration === undefined || declaredMethod === undefined ? {} : { signature: signatureOf(declaration.types, declaration.pkg, declaredMethod) }),
+      ...(declaration === undefined || declaredMethod === undefined ? {} : { signature: signatureOf(declaration, declaredMethod) }),
+      // Fields kept as the contract writes them, for the contract check to name a caller's keys by (P293).
+      ...(declaration?.fieldNames === 'proto' ? { protoFieldNames: 'proto' } : {}),
       adapter: ADAPTER,
       registration,
       handlerVia: handler.via,
@@ -409,7 +436,8 @@ const registeredOf = (call: CallExpression, ctx: ExtractContext, contracts: Cont
     return [];
   }
   const implemented = implementationOf(implementation);
-  const declaration = reading.package === undefined ? declarationOf(ctx, contracts, reading.declared) : reading.package;
+  const declaration = reading.package === undefined ? declarationOf(ctx, contracts, reading.declared, reading.fieldNames) : reading.package;
+  if (reading.fieldNames === 'unread') fieldNamesUnread(ctx, call, reading.fullName);
   const entries: EntryNode[] = [];
   if (implemented === undefined) {
     // The service is named and its implementation is not read: its methods are
@@ -485,6 +513,8 @@ export interface GrpcTransportOptions {
   readonly contracts: readonly Contract[];
   /** The `url` option, as written. */
   readonly url?: TsNode;
+  /** How its `loader` options name the messages' fields (P293). */
+  readonly fieldNames: ProtoFieldNames | 'unread';
 }
 
 /**
@@ -506,7 +536,7 @@ export const grpcTransportOptions = (ctx: Pick<ExtractContext, 'project' | 'repo
       const options = optionsProperty !== undefined && Node.isPropertyAssignment(optionsProperty) ? optionsProperty.getInitializer() : undefined;
       const value = options === undefined ? undefined : valueOf(options);
       if (value === undefined || !Node.isObjectLiteralExpression(value)) {
-        found.push({ packages: [], contracts: [] });
+        found.push({ packages: [], contracts: [], fieldNames: 'json' });
         continue;
       }
       const read = (name: string): TsNode | undefined => {
@@ -526,10 +556,22 @@ export const grpcTransportOptions = (ctx: Pick<ExtractContext, 'project' | 'repo
         packages,
         contracts: specs.map((spec) => contracts.file(spec, from)).filter((contract): contract is Contract => contract !== undefined),
         ...(url === undefined ? {} : { url }),
+        fieldNames: loaderFieldNames(read('loader')),
       });
     }
   }
   return found;
+};
+
+/**
+ * How the transports a service is answered or called through name its
+ * fields (P293): the one way they all name them, and `unread` where two
+ * disagree or one is not read.
+ */
+const agreedFieldNames = (options: readonly GrpcTransportOptions[]): ProtoFieldNames | 'unread' => {
+  const names = new Set(options.map((each) => each.fieldNames));
+  if (names.size === 0) return 'json';
+  return names.size === 1 ? ([...names][0] as ProtoFieldNames | 'unread') : 'unread';
 };
 
 /**
@@ -541,18 +583,21 @@ export const nestServiceNamed = (
   name: string,
   contracts: Contracts,
   options: readonly GrpcTransportOptions[],
-): { fullName: string; declared?: ContractService } | { why: string } => {
+): { fullName: string; declared?: ContractService; fieldNames: ProtoFieldNames | 'unread' } | { why: string } => {
   const packages = [...new Set(options.flatMap((each) => each.packages))];
   for (const pkg of packages) {
     const declared = contracts.byFullName(`${pkg}.${name}`);
-    if (declared !== undefined) return { fullName: declared.service.fullName, declared };
+    if (declared !== undefined) return { fullName: declared.service.fullName, declared, fieldNames: agreedFieldNames(options.filter((each) => each.packages.includes(pkg))) };
   }
   const loaded = options.flatMap((each) => each.contracts).flatMap((contract) => contract.file.services.filter((service) => service.name === name).map((service) => ({ contract, service })));
-  if (loaded.length === 1) return { fullName: (loaded[0] as ContractService).service.fullName, declared: loaded[0] as ContractService };
+  if (loaded.length === 1) {
+    const [only] = loaded as [ContractService];
+    return { fullName: only.service.fullName, declared: only, fieldNames: agreedFieldNames(options.filter((each) => each.contracts.includes(only.contract))) };
+  }
   const anywhere = contracts.byShortName(name);
-  if (anywhere.length === 1) return { fullName: (anywhere[0] as ContractService).service.fullName, declared: anywhere[0] as ContractService };
+  if (anywhere.length === 1) return { fullName: (anywhere[0] as ContractService).service.fullName, declared: anywhere[0] as ContractService, fieldNames: agreedFieldNames(options) };
   if (anywhere.length > 1) return { why: `${anywhere.map((each) => each.service.fullName).join(' and ')} are all named ${name}, and the transport's options name none of their packages` };
-  if (packages.length === 1) return { fullName: `${packages[0] as string}.${name}` };
+  if (packages.length === 1) return { fullName: `${packages[0] as string}.${name}`, fieldNames: agreedFieldNames(options) };
   return { why: packages.length === 0 ? `no .proto file of the repository declares a service ${name}, and no package is named in the transport's options` : `the transport's options name several packages, and no .proto file of the repository says which holds ${name}` };
 };
 
@@ -629,7 +674,8 @@ const decoratedOf = (
         const methodName = declaredMethod?.name ?? rpc;
         const call = declaredMethod === undefined ? (NEST_DECORATORS.get(decorator.getName()) ?? 'unary') : grpcCallKind(declaredMethod);
         if (named.declared === undefined) contractUnread(ctx, file, line, named.fullName, true);
-        const contract = declarationOf(ctx, contracts, named.declared);
+        const contract = declarationOf(ctx, contracts, named.declared, named.fieldNames);
+        if (named.fieldNames === 'unread' && named.declared !== undefined && !served.services.has(named.fullName)) fieldNamesUnread(ctx, method, named.fullName);
         if (named.declared !== undefined && contract !== undefined) {
           // Said once per service, at the first controller that answers it.
           const answered = served.services.get(named.fullName) ?? { declared: named.declared, declaration: contract, site: declaration, served: new Set<string>() };

@@ -651,6 +651,36 @@ describe('a function a library composes into another (P285)', () => {
     expect(sites).toEqual([`piped({ query: 'c' })`, `quiet({ query: 'b' })`, `right({ query: 'd' })`, `run({ query: 'a' })`, `twice({ query: 'e' })`]);
   });
 
+  it('is called where the composition is called in place, and through a let, a field, a member and a composition handed on (P293)', () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'held.ts': [
+        `import { flow } from 'lodash';`,
+        `import { run } from './run';`,
+        `flow(run, String)({ query: 'a' });`,
+        `let later = flow(run, String);`,
+        `later({ query: 'b' });`,
+        `export const helpers = { quiet: flow(run, String) };`,
+        `helpers.quiet({ query: 'c' });`,
+        `export class Store {`,
+        `  load = flow(run, String);`,
+        `  save: (args: { query: string }) => string;`,
+        `  constructor() { this.save = flow(run, String); }`,
+        `  go() { this.load({ query: 'd' }); this.save({ query: 'e' }); }`,
+        `}`,
+        `flow(flow(run, String), String)({ query: 'f' });`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([
+      `flow(flow(run, String), String)({ query: 'f' })`,
+      `flow(run, String)({ query: 'a' })`,
+      `helpers.quiet({ query: 'c' })`,
+      `later({ query: 'b' })`,
+      `this.load({ query: 'd' })`,
+      `this.save({ query: 'e' })`,
+    ]);
+  });
+
   it('is not called through a value-first pipe, a function handed later, or a composer of no library', () => {
     const sites = sitesOfRun({
       'run.ts': `export const run = (args: { query: string }) => args.query;`,

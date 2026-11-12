@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bySeverity, checkContracts, errorsOf, stripImpact } from './check.js';
-import type { TypeEntry, TypeRegistry } from '@flowatlas/core';
+import { parseProto, protoTypes, type TypeEntry, type TypeRegistry } from '@flowatlas/core';
 import type { ContractReport } from './types.js';
 import { edge, field, graphOf, node, object } from './test-graph.js';
 
@@ -1007,6 +1007,58 @@ describe('a procedure asked for by its path (P247)', () => {
     ]);
     expect(report.unchecked[0]?.hint).toContain('Type the client from the tree it calls');
     expect(report.unchecked[1]?.message).toBe('worker#Fulfil reads what the procedure answers with no type');
+  });
+});
+
+describe('the keys a gRPC call writes, under the names each loader gives the fields (P293)', () => {
+  const contract = parseProto(`
+    syntax = "proto3";
+    package shop;
+    message AddItemRequest { string user_id = 1; int32 quantity = 2; }
+    message Ack { bool ok = 1; }
+  `);
+  /** A call writing `keys` as an object of `sent`, its loader keeping the case or not, to a server whose loader does or does not. */
+  const keyed = (keys: string[], sent: string, callerKeeps: boolean, serverKeeps: boolean): ContractReport => {
+    const types = protoTypes([{ path: 'shop.proto', file: contract }], 'orders');
+    const names = serverKeeps ? 'proto' : 'json';
+    const signature = { params: [{ name: 'request', type: types.refOf('AddItemRequest', 'shop', names) }], returns: types.refOf('Ack', 'shop', names) };
+    const call = { inputKeys: keys, ...(callerKeeps ? { protoFieldNames: 'proto' } : {}) };
+    return checkContracts(
+      graphOf({
+        nodes: [
+          node('worker#Fulfil', 'method', 'worker'),
+          node('http_out:worker#src/orders.ts:4:5', 'http_out', 'worker', { kind: 'rpc', meta: { procedure: 'grpc:shop.Orders/AddItem', call: 'unary', client: 'grpc', ...call } }),
+          node('entry:orders:rpc:grpc:shop.Orders/AddItem', 'entry', 'orders', {
+            kind: 'rpc',
+            meta: { key: 'grpc:shop.Orders/AddItem', call: 'unary', signature, ...(serverKeeps ? { protoFieldNames: 'proto' } : {}) },
+          }),
+        ],
+        edges: [
+          edge('worker#Fulfil', 'calls', 'http_out:worker#src/orders.ts:4:5'),
+          edge('http_out:worker#src/orders.ts:4:5', 'hits', 'entry:orders:rpc:grpc:shop.Orders/AddItem', { params: [sent] }),
+        ],
+        types: types.registry(),
+      }),
+      { generatedAt: FIXED },
+    );
+  };
+  const requestFindings = (report: ContractReport) => report.findings.filter((finding) => finding.direction === 'request').map((finding) => [finding.kind, finding.field]);
+  const CAMEL = ['quantity', 'userId'];
+  const SNAKE = ['quantity', 'user_id'];
+
+  it("matches a field whichever way the caller's loader and the server's name it, and compares what it holds", () => {
+    for (const serverKeeps of [false, true]) {
+      expect(requestFindings(keyed(CAMEL, '{userId:string;quantity:number}', false, serverKeeps))).toEqual([]);
+      expect(requestFindings(keyed(SNAKE, '{user_id:string;quantity:number}', true, serverKeeps))).toEqual([]);
+    }
+    // Under the caller's names, said by the server's.
+    expect(requestFindings(keyed(SNAKE, '{user_id:number;quantity:number}', true, false))).toEqual([['type_mismatch', 'userId']]);
+    expect(requestFindings(keyed(CAMEL, '{userId:number;quantity:number}', false, true))).toEqual([['type_mismatch', 'user_id']]);
+  });
+
+  it("still says a key written under a name the caller's loader does not give the field", () => {
+    expect(requestFindings(keyed(SNAKE, '{user_id:string;quantity:number}', false, false))).toEqual([['extra_field', 'user_id']]);
+    expect(requestFindings(keyed(CAMEL, '{userId:string;quantity:number}', true, true))).toEqual([['extra_field', 'userId']]);
   });
 });
 

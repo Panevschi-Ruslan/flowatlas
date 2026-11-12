@@ -1,9 +1,11 @@
 import {
+  addressSidesOf,
   asksAbsolute,
   builtQueryOf,
   conditionsAround,
+  joinedTests,
   PLATFORM_HEADERS,
-  prefixOfRewrite,
+  prefixSidesOfRewrite,
   rewriteTestOf,
   UNREAD_SPAN,
   writtenHeaderNames,
@@ -32,7 +34,11 @@ import { analyzeBaseUrl, type ApiUrl } from './url.js';
  * own form - `if (req.url.startsWith('/api'))`, a path it skips with
  * `if (req.url.startsWith('/assets')) return next(req)` - is asked of each
  * request's written address, and the base goes in front of the ones it holds
- * for (P280). Any other condition - a header it looks for, a flag - means some
+ * for (P280). So is a branch on one in what the clone writes, `url:
+ * req.url.includes('admin') ? adminApi + req.url : shopApi + req.url`, or in
+ * the base it puts in front: each side is a rewrite of the requests on that
+ * side, as an installed client's interceptor is read (P293), and a side that
+ * writes back `req.url` rewrites nothing. Any other condition - a header it looks for, a flag - means some
  * requests go out under the base and some do not, and nothing here can tell
  * which: that is a row, and every request of the client is then partly read.
  * So is a second interceptor rewriting the address, since which runs first,
@@ -108,9 +114,16 @@ const interceptorOf = (clone: CallExpression): { fn: TsNode; request: TsNode; na
   return typed ? { fn, request, name: holder.getName() } : undefined;
 };
 
-/** The base a rewrite of the address puts in front of it, read as this reader reads every base. */
-const baseOfRewrite = (written: TsNode, request: TsNode, sharedPackages: readonly string[]): ApiUrl | undefined =>
-  prefixOfRewrite(written, (node) => isRequestUrl(node, request), (node) => analyzeBaseUrl(node, sharedPackages));
+/**
+ * The bases a rewrite of the address puts in front of it, read as this reader
+ * reads every base: one, or one per side of a base chosen by a test of the
+ * address (P293).
+ */
+const baseOfRewrite = (written: TsNode, request: TsNode, sharedPackages: readonly string[]): ReturnType<typeof prefixSidesOfRewrite> =>
+  prefixSidesOfRewrite(written, (node) => isRequestUrl(node, request), (node) => analyzeBaseUrl(node, sharedPackages));
+
+/** How much of a written expression a row quotes. */
+const quoted = (node: TsNode): string => node.getText().replace(/\s+/g, ' ').slice(0, 60);
 
 /** Whether the repository registers an interceptor of this name. */
 const registered = (name: string, texts: readonly string[]): boolean => {
@@ -147,12 +160,31 @@ export const interceptorBaseOf = (files: readonly SourceFile[], sharedPackages: 
         rewrites.push({ at: call, name: interceptor.name, why: `${interceptor.name} rewrites the address only when ${conditional[0]?.getText().slice(0, 60)}, so which requests go out under the base is not known` });
         continue;
       }
-      const base = written === undefined ? undefined : baseOfRewrite(written, interceptor.request, sharedPackages);
-      rewrites.push(
-        base === undefined
-          ? { at: call, name: interceptor.name, why: `${interceptor.name} rewrites the address and the base it puts in front could not be read` }
-          : { at: call, name: interceptor.name, base, ...(test === null ? {} : { test }) },
-      );
+      const unreadBase = { at: call, name: interceptor.name, why: `${interceptor.name} rewrites the address and the base it puts in front could not be read` };
+      // A branch whose condition is a test of the address is each side for the requests on that side (P293).
+      const sides = written === undefined ? undefined : addressSidesOf(written, isAddress, test);
+      if (sides === undefined) {
+        rewrites.push(unreadBase);
+        continue;
+      }
+      if ('unread' in sides) {
+        rewrites.push({ at: call, name: interceptor.name, why: `${interceptor.name} writes one of two addresses by a branch (${quoted(sides.unread)}), and which one a request goes out under is not read` });
+        continue;
+      }
+      for (const side of sides) {
+        // A side that writes back the request's own address rewrites nothing.
+        if (isAddress(side.value)) continue;
+        const prefixes = baseOfRewrite(side.value, interceptor.request, sharedPackages);
+        if ('unread' in prefixes) {
+          rewrites.push({ at: call, name: interceptor.name, why: `${interceptor.name} puts one of two bases in front of the address by a branch (${quoted(prefixes.unread)}), and which one a request goes out under is not read` });
+          continue;
+        }
+        for (const prefix of prefixes) {
+          if (prefix.base === null) continue;
+          const tested = prefix.test === null ? side.test : side.test === null ? prefix.test : joinedTests([side.test, prefix.test], true);
+          rewrites.push(prefix.base === undefined ? unreadBase : { at: call, name: interceptor.name, base: prefix.base, ...(tested === null ? {} : { test: tested }) });
+        }
+      }
     }
   });
   const names = new Set(rewrites.map((rewrite) => rewrite.name));

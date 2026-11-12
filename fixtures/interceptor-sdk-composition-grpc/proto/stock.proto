@@ -1,0 +1,18 @@
+// The stock contract, shared by the server and its callers.
+syntax = "proto3";
+
+package stock;
+
+service StockService {
+  rpc Reserve (ReserveRequest) returns (Reservation);
+}
+
+message ReserveRequest {
+  string product_id = 1;
+  int32 quantity = 2;
+  repeated string warehouse_ids = 3;
+}
+
+message Reservation {
+  string reservation_id = 1;
+}

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T15:22:43.760Z",
+  "builtAt": "2026-11-12T19:16:29.060Z",
   "configHash": "7bf8c1d84d05",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 10,
       "types": 4,
       "unresolved": 2,
-      "durationMs": 0,
+      "durationMs": 1237,
       "packages": {
         "name": "rewrite-branches-composed-sends-api",
         "runtime": [
@@ -33,8 +33,8 @@
       "nodes": 19,
       "edges": 15,
       "types": 0,
-      "unresolved": 7,
-      "durationMs": 0,
+      "unresolved": 4,
+      "durationMs": 980,
       "packages": {
         "name": "rewrite-branches-composed-sends-web",
         "runtime": [
@@ -58,7 +58,7 @@
       "edges": 6,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 0,
+      "durationMs": 1323,
       "packages": {
         "name": "rewrite-branches-composed-sends-worker",
         "runtime": [
@@ -150,10 +150,10 @@
     "nodes": 60,
     "edges": 45,
     "types": 4,
-    "missed": 10,
-    "sites": 10,
+    "missed": 7,
+    "sites": 7,
     "notes": 2,
     "findings": 0,
-    "unresolved": 10
+    "unresolved": 7
   }
 }

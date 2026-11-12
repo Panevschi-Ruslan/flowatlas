@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-10-17T04:50:58.025Z",
+  "builtAt": "2026-11-12T19:16:26.542Z",
   "configHash": "586a6f4aa63f",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./web",
       "type": "react",
       "extractor": "@flowatlas/extractor-react",
-      "nodes": 11,
-      "edges": 8,
+      "nodes": 16,
+      "edges": 11,
       "types": 1,
-      "unresolved": 4,
-      "durationMs": 476,
+      "unresolved": 6,
+      "durationMs": 1844,
       "packages": {
         "name": "react-local-client-web",
         "runtime": [
@@ -33,12 +33,12 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 4,
+    "total": 7,
     "resolved": 0,
-    "unresolved": 4,
+    "unresolved": 7,
     "byReason": {
-      "api-path-dynamic": 1,
-      "target-route-not-found": 3
+      "api-path-dynamic": 3,
+      "target-route-not-found": 4
     }
   },
   "channels": {
@@ -84,16 +84,25 @@
       "message": "no configured service serves PUT /api/invoices",
       "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls PUT /api/invoices */.",
       "symbol": "ui_api_call:web#src/screens/OrdersPanel.tsx:17:25"
+    },
+    {
+      "service": "web",
+      "file": "src/screens/OrdersPanel.tsx",
+      "line": 18,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/reports",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/reports */.",
+      "symbol": "ui_api_call:web#src/screens/OrdersPanel.tsx:18:25@12:24"
     }
   ],
   "totals": {
-    "nodes": 11,
-    "edges": 8,
+    "nodes": 16,
+    "edges": 11,
     "types": 1,
-    "missed": 7,
-    "sites": 7,
+    "missed": 10,
+    "sites": 10,
     "notes": 0,
     "findings": 0,
-    "unresolved": 7
+    "unresolved": 10
   }
 }

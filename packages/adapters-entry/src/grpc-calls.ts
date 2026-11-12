@@ -159,7 +159,13 @@ export const readGrpcCalls = (holders: Iterable<ProcedureCallHolder>, reading: G
       const pkg = named.fullName.slice(0, named.fullName.lastIndexOf('.'));
       const url = transportOptions().find((each) => each.url !== undefined && each.packages.includes(pkg))?.url;
       return {
-        reading: { kind: 'named', fullName: named.fullName, via: 'contract-name', ...(named.declared === undefined ? {} : { declared: named.declared }) },
+        reading: {
+          kind: 'named',
+          fullName: named.fullName,
+          via: 'contract-name',
+          ...(named.declared === undefined ? {} : { declared: named.declared }),
+          ...(named.fieldNames === 'json' ? {} : { fieldNames: named.fieldNames }),
+        },
         made,
         ...(url === undefined ? {} : { address: url }),
       };
@@ -200,6 +206,20 @@ export const readGrpcCalls = (holders: Iterable<ProcedureCallHolder>, reading: G
     const found = clientMadeBy(made, contracts);
     const client = found === 'not-a-client' || 'why' in found ? undefined : found;
     clients.set(made, client);
+    // The options its loader is handed, not read: its keys are taken as camelCase (P293).
+    if (client?.reading.fieldNames === 'unread') {
+      const at = siteOf(made);
+      reading.report({
+        file: reading.fileOf(made) || file,
+        line: at.line,
+        reason: 'grpc-contract-unread',
+        level: 'info',
+        message: `${client.reading.fullName} is loaded with options this cannot read, so whether the keys a call writes are the contract's own names (keepCase) is not known; they are taken as camelCase.`,
+        hint: 'Write the loader options as an object in place, with keepCase as true or false, so the keys a call writes are compared under the right names.',
+        symbol: client.reading.fullName,
+        meta: { why: 'field-names' },
+      });
+    }
     if (found !== 'not-a-client' && 'why' in found && !unread.has(made)) {
       unread.add(made);
       const at = siteOf(made);
@@ -311,6 +331,8 @@ export const readGrpcCalls = (holders: Iterable<ProcedureCallHolder>, reading: G
         method: methodName,
         ...(service.declared === undefined ? {} : { contract: contractsFor(call.getSourceFile(), reading.repoDir).pathOf(service.declared.contract) }),
         ...(address === undefined ? {} : { link: { protocol: 'grpc', ...address } }),
+        // The keys it writes are the contract's own names, its loader keeping them (P293).
+        ...(service.fieldNames === 'proto' ? { protoFieldNames: 'proto' } : {}),
         ...exchangedAt(call, declared, reading.types),
       },
     });

@@ -14,7 +14,9 @@
  * What a field is, as the libraries hand it to JavaScript:
  *
  * - a name as `@grpc/proto-loader` (without `keepCase`), protobuf.js and
- *   ts-proto write it, `user_id` as `userId`;
+ *   ts-proto write it, `user_id` as `userId`; and as the contract writes it
+ *   where the loader is told `keepCase: true` (P293), a message then
+ *   registered apart, under its id with `@keepCase` after it;
  * - the 32-bit numbers, `float` and `double` are `number`; the 64-bit ones are
  *   `number | string`, since a loader may be told to hand them as text and a
  *   client may write either; `bool`, `string`; `bytes` is `Buffer | string`;
@@ -59,7 +61,7 @@ export interface ProtoTypes {
    * package) as protoc resolves it; its types are registered. `unknown` for a
    * message nothing here declares.
    */
-  refOf(written: string, scope: string | undefined): string;
+  refOf(written: string, scope: string | undefined, names?: ProtoFieldNames): string;
   /** Every entry registered so far, each with its hash. */
   registry(): TypeRegistry;
 }
@@ -91,6 +93,15 @@ const UNKNOWN = 'unknown';
 /** A reference with a union in it, bracketed where an array suffix is put after it. */
 const element = (ref: string): string => (ref.includes('|') ? `(${ref})` : ref);
 
+/**
+ * How a loader names a message's fields (P293): `json`, `user_id` as
+ * `userId`, as `@grpc/proto-loader` does by default and protobuf.js and
+ * ts-proto do; `proto`, as the contract writes them, which a loader told
+ * `keepCase: true` keeps. A message read the second way is registered apart,
+ * under its id with `@keepCase` after it, its fields under their own names.
+ */
+export type ProtoFieldNames = 'json' | 'proto';
+
 /** The types of the messages and enums these files declare, registered under `repo`. */
 export const protoTypes = (sources: readonly ProtoSource[], repo: string): ProtoTypes => {
   const messages = new Map<string, { message: ProtoMessage; source: ProtoSource }>();
@@ -100,7 +111,7 @@ export const protoTypes = (sources: readonly ProtoSource[], repo: string): Proto
     for (const declared of source.file.enums) if (!enums.has(declared.fullName)) enums.set(declared.fullName, { declared, source });
   }
   const registry: TypeRegistry = {};
-  const idOf = (name: string): string => `type:${repo}#.${name}`;
+  const idOf = (name: string, keep = false): string => `type:${repo}#.${name}${keep ? '@keepCase' : ''}`;
 
   /** The full name a written type stands for, from a scope, as protoc looks it up: innermost first. */
   const resolve = (written: string, scope: string | undefined): string | undefined => {
@@ -134,8 +145,8 @@ export const protoTypes = (sources: readonly ProtoSource[], repo: string): Proto
     return id;
   };
 
-  const fieldOf = (field: ProtoField, scope: string, syntax: ProtoFile['syntax']): TypeField => {
-    const base = typeRefOf(field.type, scope);
+  const fieldOf = (field: ProtoField, scope: string, syntax: ProtoFile['syntax'], keep: boolean): TypeField => {
+    const base = typeRefOf(field.type, scope, keep);
     const type = field.mapKey !== undefined ? 'object' : field.repeated ? `${element(base)}[]` : base;
     const full = SCALARS.has(field.type) ? undefined : resolve(field.type, scope);
     // A message held in a field has presence in every syntax: it is there or it is not.
@@ -148,7 +159,7 @@ export const protoTypes = (sources: readonly ProtoSource[], repo: string): Proto
           : field.label === 'optional' || field.oneof !== undefined || isMessage || syntax !== 'proto3'
             ? 'explicit'
             : 'implicit';
-    const name = protoJsonName(field.name);
+    const name = keep ? field.name : protoJsonName(field.name);
     // A 64-bit integer, bytes and an enum reach the reader in the form its
     // library is told to hand them - a number or text, a buffer or base64, a
     // name or a number - which the contract does not say.
@@ -166,14 +177,15 @@ export const protoTypes = (sources: readonly ProtoSource[], repo: string): Proto
     };
   };
 
-  const messageRef = (full: string, depth: number): string => {
-    const id = idOf(full);
+  const messageRef = (full: string, depth: number, keep: boolean): string => {
+    const id = idOf(full, keep);
     if (registry[id] !== undefined) return id;
     const { message, source } = messages.get(full) as { message: ProtoMessage; source: ProtoSource };
     // Held before its fields are read, so a message that holds itself stops.
-    const entry: TypeEntry = { name: full, kind: 'object', declaredIn: declaredIn(source), structuralHash: '', fields: [], meta: { declaredBy: 'protobuf', protoMessage: full } };
+    const meta = { declaredBy: 'protobuf', protoMessage: full, ...(keep ? { protoFieldNames: 'proto' } : {}) };
+    const entry: TypeEntry = { name: full, kind: 'object', declaredIn: declaredIn(source), structuralHash: '', fields: [], meta };
     registry[id] = entry;
-    const fields = message.fields.map((field) => fieldOf(field, full, source.file.syntax));
+    const fields = message.fields.map((field) => fieldOf(field, full, source.file.syntax, keep));
     const groups = new Map<string, TypeField[]>();
     for (const field of fields) {
       const group = field.meta?.['oneof'];
@@ -192,8 +204,8 @@ export const protoTypes = (sources: readonly ProtoSource[], repo: string): Proto
     const members: string[] = [];
     for (const picked of chosen) {
       const armName = `${full}/${picked.map((field) => field.name).join('+')}`;
-      const armId = idOf(armName);
-      registry[armId] = { name: armName, kind: 'object', declaredIn: entry.declaredIn, structuralHash: '', fields: [...outside, ...picked], meta: { declaredBy: 'protobuf', protoMessage: full, oneofArm: picked.map((field) => field.name) } };
+      const armId = idOf(armName, keep);
+      registry[armId] = { name: armName, kind: 'object', declaredIn: entry.declaredIn, structuralHash: '', fields: [...outside, ...picked], meta: { ...meta, oneofArm: picked.map((field) => field.name) } };
       members.push(armId);
     }
     delete entry.fields;
@@ -208,7 +220,7 @@ export const protoTypes = (sources: readonly ProtoSource[], repo: string): Proto
   };
 
   let depth = 0;
-  const typeRefOf = (written: string, scope: string | undefined): string => {
+  const typeRefOf = (written: string, scope: string | undefined, keep: boolean): string => {
     const scalar = SCALARS.get(written);
     if (scalar !== undefined) return scalar;
     const full = resolve(written, scope);
@@ -218,14 +230,14 @@ export const protoTypes = (sources: readonly ProtoSource[], repo: string): Proto
     if (enums.has(full)) return enumRef(full);
     depth += 1;
     try {
-      return messageRef(full, depth);
+      return messageRef(full, depth, keep);
     } finally {
       depth -= 1;
     }
   };
 
   return {
-    refOf: (written, scope) => typeRefOf(written, scope),
+    refOf: (written, scope, names = 'json') => typeRefOf(written, scope, names === 'proto'),
     registry: () => {
       for (const entry of Object.values(registry)) entry.structuralHash = structuralHash(entry, registry);
       return registry;

@@ -66,6 +66,8 @@ interface CodegenConfig {
   readonly path?: string;
   readonly documents: readonly string[];
   readonly outputs: readonly string[];
+  /** The text it is read from, for what it says of one output (P293). */
+  readonly text: string;
 }
 
 /** One operation of the documents, with the reading of the document it is written in. */
@@ -129,9 +131,12 @@ const valuesAfter = (text: string, from: number): string[] => {
 const configOf = (text: string, dir: string, path: string | undefined): CodegenConfig => {
   const documents: string[] = [];
   for (const match of text.matchAll(/["']?\bdocuments["']?\s*:\s*/g)) documents.push(...valuesAfter(text, (match.index ?? 0) + match[0].length));
-  const outputs = [...text.matchAll(/^\s*["']?([\w@~.\-/]+(?:\.(?:d\.ts|tsx?|mts|cts|jsx?|mjs|cjs)|\/))["']?\s*:/gm)].map((match) => match[1] as string);
-  return { dir, ...(path === undefined ? {} : { path }), documents: documents.filter((glob) => glob !== '' && !glob.startsWith('!')), outputs };
+  const outputs = [...text.matchAll(OUTPUT_KEY)].map((match) => match[1] as string);
+  return { dir, ...(path === undefined ? {} : { path }), documents: documents.filter((glob) => glob !== '' && !glob.startsWith('!')), outputs, text };
 };
+
+/** A key of `generates:`, an output path. */
+const OUTPUT_KEY = /^\s*["']?([\w@~.\-/]+(?:\.(?:d\.ts|tsx?|mts|cts|jsx?|mjs|cjs)|\/))["']?\s*:/gm;
 
 /** The configuration file a package's scripts hand `graphql-codegen` with `--config` or `-c`. */
 const scriptedConfig = (files: FileSystemHost, dir: string): string | undefined => {
@@ -290,11 +295,15 @@ const candidatesOf = (project: Project, importingDir: string, specifier: string)
 const withoutExtension = (path: string): string => path.replace(/\.(d\.ts|tsx?|mts|cts|jsx?|mjs|cjs)$/, '').replace(/\/$/, '');
 
 /** Whether a module a file imports is one the configuration generates. */
-const generatedBy = (config: CodegenConfig, candidates: readonly string[]): boolean => {
-  const outputs = config.outputs.map((output) => withoutExtension(posix.join(config.dir, output)));
+const generatedBy = (config: CodegenConfig, candidates: readonly string[]): boolean =>
+  config.outputs.some((output) => namesOutput(config, output, candidates));
+
+/** Whether a module specifier's candidates are one output of a configuration, with or without its extension or `index`. */
+const namesOutput = (config: CodegenConfig, output: string, candidates: readonly string[]): boolean => {
+  const path = withoutExtension(posix.join(config.dir, output));
   return candidates.some((candidate) => {
     const bare = withoutExtension(candidate);
-    return outputs.some((output) => bare === output || bare === `${output}/index` || `${bare}/index` === output);
+    return bare === path || bare === `${path}/index` || `${bare}/index` === path;
   });
 };
 
@@ -326,4 +335,95 @@ export const codegenDocument = (project: Project, importingFile: string, specifi
   // Codegen hands an operation every fragment of every document it lists.
   const fragments = [...index.fragments, ...file.fragments];
   return { kind: 'read', document: { definitions: [only.definition] }, text: file.text, written: file.written, fragments, unread: file.unread };
+};
+
+/** Whether a module a file imports is one the codegen configuration nearest it generates (P293). */
+export const isCodegenOutput = (project: Project, importingFile: string, specifier: string): boolean => {
+  const importingDir = posix.dirname(importingFile);
+  const config = configNear(project.getFileSystem(), importingDir);
+  return config !== undefined && generatedBy(config, candidatesOf(project, importingDir, specifier));
+};
+
+/** The factories the SDK plugins write: the generic SDK's and graphql-request's, and the SWR plugin's over it. */
+export type SdkFactory = 'getSdk' | 'getSdkWithHooks';
+
+/**
+ * What the SDK plugins write into a module nobody committed, as the
+ * configuration that generates it says (P293).
+ *
+ * No option of the generic SDK, graphql-request or SWR plugins renames the
+ * factory: each writes `getSdk`, the SWR plugin `getSdkWithHooks` beside it.
+ * What does change the names is said in the configuration of the output: the
+ * `add` plugin writing the factory out again under a name of the
+ * repository's (`export const createApi = getSdk`, `export { getSdk as
+ * createApi }`), and the SWR plugin's `useSWRInfinite`, which writes a
+ * `use<Operation>Infinite` hook beside `use<Operation>`.
+ */
+export interface GeneratedSdk {
+  /** The names the module exports a factory under, each with the factory it is. */
+  readonly factories: ReadonlyMap<string, SdkFactory>;
+  /** Whether hooks are written `use<Operation>Infinite` too. */
+  readonly infiniteHooks: boolean;
+}
+
+/** The SDK plugins, by the names a configuration lists them under. */
+const SDK_PLUGIN = /\btypescript-(?:generic-sdk|graphql-request)\b/;
+const SWR_PLUGIN = /\b(?:plugin-)?typescript-swr\b/;
+
+/** What one output's entry says: the text from its key to the next output's. */
+const outputBlock = (config: CodegenConfig, candidates: readonly string[]): string | undefined => {
+  const keys = [...config.text.matchAll(OUTPUT_KEY)];
+  for (const [index, key] of keys.entries()) {
+    if (!namesOutput(config, key[1] as string, candidates)) continue;
+    const from = (key.index ?? 0) + key[0].length;
+    return config.text.slice(from, keys[index + 1]?.index ?? config.text.length);
+  }
+  return undefined;
+};
+
+/**
+ * Whether a codegen configuration near any source file of the project lists
+ * an SDK plugin (P293): what lets a factory written out under another name,
+ * which no source file spells as `getSdk`, be looked for at all.
+ */
+const sdkConfigured = new WeakMap<Project, boolean>();
+export const configuresSdk = (project: Project): boolean => {
+  const known = sdkConfigured.get(project);
+  if (known !== undefined) return known;
+  const files = project.getFileSystem();
+  const dirs = new Set(project.getSourceFiles().filter((file) => !file.isInNodeModules()).map((file) => posix.dirname(file.getFilePath())));
+  let found = false;
+  for (const dir of dirs) {
+    const config = configNear(files, dir);
+    if (config !== undefined && (SDK_PLUGIN.test(config.text) || SWR_PLUGIN.test(config.text))) {
+      found = true;
+      break;
+    }
+  }
+  sdkConfigured.set(project, found);
+  return found;
+};
+
+export const generatedSdkOf = (project: Project, importingFile: string, specifier: string): GeneratedSdk | undefined => {
+  const importingDir = posix.dirname(importingFile);
+  const config = configNear(project.getFileSystem(), importingDir);
+  if (config === undefined) return undefined;
+  const block = outputBlock(config, candidatesOf(project, importingDir, specifier));
+  if (block === undefined) return undefined;
+  const factories = new Map<string, SdkFactory>();
+  if (SDK_PLUGIN.test(block)) factories.set('getSdk', 'getSdk');
+  if (SWR_PLUGIN.test(block)) factories.set('getSdkWithHooks', 'getSdkWithHooks');
+  // What the `add` plugin writes into the module: the factory under another name.
+  const added = [...block.matchAll(/\bcontent["']?\s*:\s*/g)].flatMap((match) => valuesAfter(block, (match.index ?? 0) + match[0].length));
+  for (const text of added) {
+    for (const each of text.matchAll(/\bexport\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(getSdk(?:WithHooks)?)\b/g)) {
+      if (factories.has(each[2] as string)) factories.set(each[1] as string, each[2] as SdkFactory);
+    }
+    for (const list of text.matchAll(/\bexport\s*\{([^}]*)\}/g)) {
+      for (const each of (list[1] as string).matchAll(/\b(getSdk(?:WithHooks)?)\s+as\s+([A-Za-z_$][\w$]*)/g)) {
+        if (factories.has(each[1] as string)) factories.set(each[2] as string, each[1] as SdkFactory);
+      }
+    }
+  }
+  return { factories, infiniteHooks: SWR_PLUGIN.test(block) && /\buseSWRInfinite\b/.test(config.text) };
 };

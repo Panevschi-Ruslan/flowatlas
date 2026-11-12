@@ -13,6 +13,7 @@ import {
   envelopePath,
   formatTypeRef,
   parseTypeRef,
+  protoJsonName,
   REQUEST_READ_META,
   STATUS_UNKNOWN_META,
   STARTS_META,
@@ -221,10 +222,13 @@ const procedureExchanges = (
   const declared = signatureOf(entry);
   const schema = entry?.meta?.['input'];
   const written = asked['inputKeys'];
-  const keys = Array.isArray(written) && written.every((key) => typeof key === 'string') ? (written as string[]) : undefined;
+  const writtenKeys = Array.isArray(written) && written.every((key) => typeof key === 'string') ? (written as string[]) : undefined;
+  // A gRPC message's fields, under the names the caller's loader gives them (P293).
+  const renamed = messageNames(lookup, declared.input, asked['protoFieldNames'] === 'proto' ? 'proto' : 'json');
+  const keys = writtenKeys?.map((key) => renamed.get(key) ?? key);
 
   const sender = {
-    ...party(lookup, caller.service, edge.params?.[0], caller.symbol),
+    ...party(lookup, caller.service, renamedShape(lookup, edge.params?.[0], renamed), caller.symbol),
     ...(keys === undefined ? {} : { writes: keys, writesEvery: true }),
   };
   const receiver = party(lookup, handler.service, declared.input, handler.symbol);
@@ -257,6 +261,53 @@ const procedureExchanges = (
       : { blocked: { reason: 'procedure-output-inferred' as const, subject: edge.to, detail: asked['client'] === 'grpc' ? 'callback' : 'hook' } }),
   };
   return [request, response];
+};
+
+/**
+ * The names a caller writes a gRPC message's fields under, each with the name
+ * the message's entry gives the field, where the two differ (P293). Each
+ * side's loader names the fields its own way - camelCase, `userId`, or as the
+ * contract writes them, `user_id`, under `keepCase` - and both are the one
+ * field on the wire. Empty for any input that is no message of a contract.
+ */
+const messageNames = (lookup: GraphLookup, input: string | undefined, callerNames: 'json' | 'proto'): ReadonlyMap<string, string> => {
+  const entry = input === undefined ? undefined : lookup.type(input);
+  const renamed = new Map<string, string>();
+  if (entry?.meta?.['declaredBy'] !== 'protobuf') return renamed;
+  const shapes = entry.kind === 'union' ? (entry.members ?? []).flatMap((member) => lookup.type(member) ?? []) : [entry];
+  for (const field of shapes.flatMap((shape) => shape.fields ?? [])) {
+    const declared = field.meta?.['protoName'];
+    const proto = typeof declared === 'string' ? declared : field.name;
+    const written = callerNames === 'proto' ? proto : protoJsonName(proto);
+    if (written !== field.name) renamed.set(written, field.name);
+  }
+  return renamed;
+};
+
+/**
+ * The type a caller hands, its top-level fields under the names the message
+ * gives them (P293): the object written in place, or one its type names. As
+ * it is where nothing is renamed or it is no object.
+ */
+const renamedShape = (lookup: GraphLookup, sent: string | undefined, renamed: ReadonlyMap<string, string>): string | undefined => {
+  if (sent === undefined || renamed.size === 0) return sent;
+  let shape: TypeRefAst;
+  try {
+    shape = parseTypeRef(sent);
+  } catch {
+    return sent;
+  }
+  if (shape.kind === 'id') {
+    const entry = lookup.type(shape.id);
+    if (entry?.kind !== 'object' || entry.fields === undefined || !entry.fields.some((field) => renamed.has(field.name))) return sent;
+    try {
+      shape = { kind: 'object', fields: entry.fields.map((field) => ({ name: field.name, optional: field.optional, type: parseTypeRef(field.type) })) };
+    } catch {
+      return sent;
+    }
+  }
+  if (shape.kind !== 'object' || !shape.fields.some((field) => renamed.has(field.name))) return sent;
+  return formatTypeRef({ kind: 'object', fields: shape.fields.map((field) => ({ ...field, name: renamed.get(field.name) ?? field.name })) });
 };
 
 /** The strings a meta list holds, or nothing where it is not one. */

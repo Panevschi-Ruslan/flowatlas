@@ -223,8 +223,11 @@ const runsKey = (runs: InstanceRuns | undefined): string => {
 /** The client a class is read as, with the base it holds or the one the instance it writes through is made with. */
 const clientOfClass = (typeName: string, verbs: readonly string[], chain: readonly ClassDeclaration[], reading: ClassReading): RequestClient => {
   const own = baseOf(chain, reading);
-  const reached = own === undefined ? reachedBaseOf(chain, reading) : undefined;
-  return localClient(typeName, verbs, own ?? reached?.base, reached?.runs);
+  const reached = reachedBaseOf(chain, reading);
+  if (own === undefined) return localClient(typeName, verbs, reached?.base, reached?.runs);
+  // A base of the class's own goes into the address the instance sees, which
+  // the instance's rewrite is then put to at each call (P293).
+  return localClient(typeName, verbs, own, reached?.runs === undefined ? undefined : { ...reached.runs, beneath: { base: reached.base } });
 };
 
 /** Every class in an extends chain, the one written first. */

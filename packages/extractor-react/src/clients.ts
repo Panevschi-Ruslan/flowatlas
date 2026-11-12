@@ -28,6 +28,14 @@ import type { ApiUrl } from './util/url.js';
 export interface InstanceRuns {
   readonly rewrite?: Rewrite;
   readonly rewriteUnread?: { readonly at: TsNode; readonly why: string };
+  /**
+   * Where a class of the project's own puts a base of its own in front of the
+   * address it hands the instance (`http.get(this.baseUrl + path)`), the base
+   * the instance itself is made with (P293): the rewrite is then put to the
+   * address the instance sees, the class's base and the call's path together,
+   * and goes in front of both.
+   */
+  readonly beneath?: { readonly base: ApiUrl | undefined };
 }
 
 /** A type whose values make requests, and the package that declares it. */

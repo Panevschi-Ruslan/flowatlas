@@ -335,7 +335,7 @@ export type { DefinitionFormat, PathStep, PositionedDocument } from './positione
 export { grpcCallKind, grpcEntryKey, parseProto, sameMethodName } from './protobuf.js';
 export type { GrpcCallKind, ProtoEnum, ProtoField, ProtoFile, ProtoMessage, ProtoMethod, ProtoService } from './protobuf.js';
 export { GRPC_PACKAGE_CONTRACTS, protoJsonName, protoTypes } from './protobuf-types.js';
-export type { GrpcPackageContract, ProtoSource, ProtoTypes } from './protobuf-types.js';
+export type { GrpcPackageContract, ProtoFieldNames, ProtoSource, ProtoTypes } from './protobuf-types.js';
 export { readExpressionDocument, UnreadMember } from './positioned-expression.js';
 
 export {
@@ -765,8 +765,20 @@ export {
 } from './platform-fetch.js';
 export type { OptionsRequestShape } from './platform-fetch.js';
 export { isSomewhere, underBase } from './under-base.js';
-export { addressTestOf, asksAbsolute, conditionsAround, guardsAround, joinedTests, literalAddress, notTest, prefixOfRewrite, rewriteTestOf } from './address-rewrite.js';
-export type { AddressTest, Guard } from './address-rewrite.js';
+export {
+  addressSidesOf,
+  addressTestOf,
+  asksAbsolute,
+  conditionsAround,
+  guardsAround,
+  joinedTests,
+  literalAddress,
+  notTest,
+  prefixOfRewrite,
+  prefixSidesOfRewrite,
+  rewriteTestOf,
+} from './address-rewrite.js';
+export type { AddressSide, AddressTest, Guard, PrefixSide } from './address-rewrite.js';
 export type { ReadAddress } from './under-base.js';
 export { SERVICES_DIRECTORY, serviceDirectoryName, serviceOutputDir } from './service-output.js';
 export { callIndexOf, callShapeOf, callsOnLine, siteNodeAt } from './call-shape.js';

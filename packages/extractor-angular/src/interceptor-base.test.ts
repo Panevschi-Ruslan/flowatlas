@@ -239,6 +239,60 @@ describe("an interceptor's rewrite, read for the host it names and the addresses
     expect(rows(graph)).toEqual([]);
   });
 
+  it('applies each side of an address chosen by a test of the address to the requests on that side, nested, a side keeping the address (P293)', () => {
+    const graph = extract({
+      'catalog.service.ts': ASSETS,
+      'api.interceptor.ts': `
+        import type { HttpInterceptorFn } from '@angular/common/http';
+        export const apiInterceptor: HttpInterceptorFn = (req, next) =>
+          next(req.clone({ url: req.url.startsWith('/api/') ? 'https://api.example.test' + req.url : req.url.startsWith('/assets/') ? req.url : \`/site\${req.url}\` }));
+      `,
+      'app.config.ts': REGISTERED,
+    });
+    expect(addresses(graph)).toEqual(
+      expect.arrayContaining(['GET /assets/icons.json', 'GET https://api.example.test/api/items/:param', 'GET /site/orders', 'GET /site/pages/:param', 'GET https://status.example.test/health']),
+    );
+    expect(rows(graph)).toEqual([]);
+  });
+
+  it('applies each side of a base chosen by a test of the address, held in a const, and partly reads an address the test cannot tell (P293)', () => {
+    const graph = extract({
+      'admin.service.ts': `
+        import { HttpClient } from '@angular/common/http';
+        import { Injectable } from '@angular/core';
+        @Injectable({ providedIn: 'root' })
+        export class AdminService {
+          constructor(private readonly http: HttpClient) {}
+          users() { return this.http.get('/admin/users'); }
+          any(section: string) { return this.http.get('/' + section); }
+        }
+      `,
+      'api.interceptor.ts': `
+        import type { HttpInterceptorFn } from '@angular/common/http';
+        export const apiInterceptor: HttpInterceptorFn = (req, next) => {
+          const base = req.url.includes('admin') ? '/office-rest' : '/store-rest';
+          return next(req.clone({ url: base + req.url }));
+        };
+      `,
+      'app.config.ts': REGISTERED,
+    });
+    expect(addresses(graph)).toEqual(expect.arrayContaining(['GET /office-rest/admin/users', 'GET /store-rest/orders', 'GET ${…}/:param']));
+    expect(rows(graph)).toEqual([]);
+  });
+
+  it('is a row where the branch asks about something other than the address (P293)', () => {
+    const graph = extract({
+      'api.interceptor.ts': `
+        import type { HttpInterceptorFn } from '@angular/common/http';
+        export const apiInterceptor: HttpInterceptorFn = (req, next) => next(req.clone({ url: (req.headers.has('X-Admin') ? '/office-rest' : '/store-rest') + req.url }));
+      `,
+      'app.config.ts': REGISTERED,
+    });
+    expect(addresses(graph)).toContain('GET ${…}/orders');
+    expect(rows(graph)).toHaveLength(1);
+    expect(rows(graph)[0]?.hint).toContain("by a branch (req.headers.has('X-Admin'))");
+  });
+
   it('reads text joined to a value with + as the address a template would spell', () => {
     const graph = extract({ 'catalog.service.ts': ASSETS });
     expect(addresses(graph)).toContain('GET /api/items/:param');

@@ -1,0 +1,214 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T19:08:11.087Z",
+  "configHash": "1777537e33c3",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 11,
+      "edges": 5,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "interceptor-sdk-composition-grpc-admin",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 12,
+      "edges": 10,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "interceptor-sdk-composition-grpc-api",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "checkout",
+      "repo": "./checkout",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "interceptor-sdk-composition-grpc-checkout",
+        "runtime": [
+          "@grpc/grpc-js",
+          "@grpc/proto-loader",
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "grpc",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "interceptor-sdk-composition-grpc-stock",
+        "runtime": [
+          "@grpc/grpc-js",
+          "@grpc/proto-loader"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 15,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 2,
+      "durationMs": 0,
+      "packages": {
+        "name": "interceptor-sdk-composition-grpc-web",
+        "runtime": [
+          "graphql",
+          "graphql-request",
+          "graphql-tag",
+          "lodash",
+          "react",
+          "swr"
+        ],
+        "dev": [
+          "@graphql-codegen/cli",
+          "@graphql-codegen/typescript-graphql-request",
+          "graphql-codegen-plugin-typescript-swr"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 11,
+    "resolved": 5,
+    "unresolved": 6,
+    "byReason": {
+      "api-path-partly-read": 1,
+      "target-route-not-found": 5
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 6,
+    "called": 5,
+    "uncalled": [
+      "entry:checkout:http:POST:/checkout"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 5,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "admin",
+      "file": "src/app/directory.service.ts",
+      "line": 23,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /assets/icons.json",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /assets/icons.json */.",
+      "symbol": "ui_api_call:admin#src/app/directory.service.ts:23:12"
+    },
+    {
+      "service": "admin",
+      "file": "src/app/directory.service.ts",
+      "line": 28,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…}/:param is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:admin#src/app/directory.service.ts:28:12"
+    },
+    {
+      "service": "web",
+      "file": "src/OrdersPage.tsx",
+      "line": 6,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:web#src/OrdersPage.tsx:6:18"
+    },
+    {
+      "service": "web",
+      "file": "src/OrdersPage.tsx",
+      "line": 12,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:web#src/OrdersPage.tsx:12:5"
+    },
+    {
+      "service": "web",
+      "file": "src/orders-store.ts",
+      "line": 17,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:web#src/orders-store.ts:17:12@5:47"
+    },
+    {
+      "service": "web",
+      "file": "src/orders-store.ts",
+      "line": 22,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /graphql",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /graphql */.",
+      "symbol": "ui_api_call:web#src/orders-store.ts:22:36@5:47"
+    }
+  ],
+  "totals": {
+    "nodes": 45,
+    "edges": 34,
+    "types": 5,
+    "missed": 8,
+    "sites": 8,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 8
+  }
+}

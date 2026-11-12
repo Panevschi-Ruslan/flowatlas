@@ -1,5 +1,5 @@
 import type { Node as TsNode } from 'ts-morph';
-import { Node, SyntaxKind } from 'ts-morph';
+import { Node, SyntaxKind, VariableDeclarationKind } from 'ts-morph';
 import { isSomewhere, underBase, type ReadAddress } from './under-base.js';
 
 /**
@@ -311,4 +311,106 @@ export const rewriteTestOf = (
     tests.push(holds ? test : notTest(test));
   }
   return joinedTests(tests, true);
+};
+
+/** One value a write may put, and the test of the address it is put under: `null` where it is under none. */
+export interface AddressSide {
+  readonly value: TsNode;
+  readonly test: AddressTest | null;
+}
+
+/** A test joined onto the one around it. */
+const within = (outer: AddressTest | null, inner: AddressTest): AddressTest => (outer === null ? inner : joinedTests([outer, inner], true));
+
+/** How far a `const` holding a branch is followed, and branches nested in one another. */
+const SIDES_DEPTH = 4;
+
+/**
+ * The branch a `const` the rewrite names holds, where its condition is a test
+ * of the address: `const base = req.url.includes('admin') ? '/admin' : '/shop'`.
+ * A `const` holding a branch on anything else is read as it was, a value.
+ */
+const heldBranch = (node: TsNode, isAddress: (node: TsNode) => boolean): TsNode | undefined => {
+  if (!Node.isIdentifier(node)) return undefined;
+  const declaration = node.getSymbol()?.getDeclarations()[0];
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
+  if (declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) return undefined;
+  const initializer = declaration.getInitializer();
+  const value = initializer === undefined ? undefined : unwrap(initializer);
+  return value !== undefined && Node.isConditionalExpression(value) && addressTestOf(value.getCondition(), isAddress) !== undefined ? value : undefined;
+};
+
+/**
+ * The values a rewrite writes, each under the test of the address it is
+ * written for (P285, P293): a branch `c ? A : B` whose condition is a test of
+ * the address is each side under that test, joined with `test`, the one
+ * around the write; branches nest, and a `const` holding such a branch is
+ * the branch. `unread` names the condition of a branch on anything else,
+ * since which side a request goes out under is then not read. Read the same
+ * way by every reader of a rewrite, the framework's interceptors and an
+ * installed client's alike.
+ */
+export const addressSidesOf = (
+  written: TsNode,
+  isAddress: (node: TsNode) => boolean,
+  test: AddressTest | null = null,
+  depth = 0,
+): AddressSide[] | { readonly unread: TsNode } => {
+  const value = unwrap(written);
+  const branch = Node.isConditionalExpression(value) ? value : depth < SIDES_DEPTH ? heldBranch(value, isAddress) : undefined;
+  if (branch === undefined || !Node.isConditionalExpression(branch) || depth > SIDES_DEPTH) return [{ value: written, test }];
+  const chosen = addressTestOf(branch.getCondition(), isAddress);
+  if (chosen === undefined) return { unread: branch.getCondition() };
+  const sides: AddressSide[] = [];
+  for (const [side, holds] of [
+    [branch.getWhenTrue(), chosen],
+    [branch.getWhenFalse(), notTest(chosen)],
+  ] as const) {
+    const read = addressSidesOf(side, isAddress, within(test, holds), depth + 1);
+    if ('unread' in read) return read;
+    sides.push(...read);
+  }
+  return sides;
+};
+
+/** A base put in front of the address under its test, or `null` for a side that puts nothing there (`''`). */
+export interface PrefixSide {
+  readonly base: ReadAddress | null | undefined;
+  readonly test: AddressTest | null;
+}
+
+/** What stands in for the base while where it is written is looked for. */
+const SOMEWHERE = literalAddress('/base');
+
+/**
+ * The bases a rewrite `base + address` puts in front, where the base itself
+ * is chosen by a test of the address (P293):
+ * `(req.url.startsWith('/admin') ? adminApi : shopApi) + req.url`, or a
+ * `const` holding that branch. One side under no test where the base is no
+ * such branch, its base `undefined` where it is not read, as
+ * {@link prefixOfRewrite} answers; `unread` where the branch asks about
+ * anything else.
+ */
+export const prefixSidesOfRewrite = (
+  written: TsNode,
+  isAddress: (node: TsNode) => boolean,
+  read: (node: TsNode) => ReadAddress,
+): PrefixSide[] | { readonly unread: TsNode } => {
+  const where: { at?: TsNode } = {};
+  const probe = prefixOfRewrite(written, isAddress, (node) => {
+    where.at = node;
+    return SOMEWHERE;
+  });
+  const whole = (): PrefixSide[] => [{ base: prefixOfRewrite(written, isAddress, read), test: null }];
+  const { at } = where;
+  if (probe === undefined || at === undefined) return whole();
+  const sides = addressSidesOf(at, isAddress);
+  if ('unread' in sides) return sides;
+  if (sides.length === 1) return whole();
+  return sides.map(({ value, test }): PrefixSide => {
+    const text = unwrap(value);
+    // A side that puts nothing in front: the address goes out as written.
+    if ((Node.isStringLiteral(text) || Node.isNoSubstitutionTemplateLiteral(text)) && text.getLiteralText() === '') return { base: null, test };
+    return { base: prefixOfRewrite(written, isAddress, (node) => (node === at ? read(value) : read(node))), test };
+  });
 };

@@ -13,8 +13,8 @@ What P280, P281 and P275 left open (P285), read together.
 
 - `runQuietQuery = flow(runQuery, …)` (fp-ts): each call of `runQuietQuery`
   hands `runQuery` its document, so `Orders` and `Order` are drawn at their
-  callers, the second from the helper since a class method is no function the
-  reader indexes.
+  callers, the second from the class method `OrderWatcher.load`, a caller
+  like any function since P293.
 - `createStoreApi` is `getSdk` re-exported under another name, and
   `getSdkWithHooks` spreads it; `storeApi.SignIn(…)` and the hook
   `storeHooks.useOrders(…)` send `SignIn` and `Orders` to `/shop-graphql`.

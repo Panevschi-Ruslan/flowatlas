@@ -6,6 +6,7 @@ import type {
   ObjectLiteralExpression,
   ParameterDeclaration,
   PropertyAccessExpression,
+  PropertyAssignment,
   Symbol as TsSymbol,
   TemplateExpression,
   Node as TsNode,
@@ -1436,13 +1437,10 @@ const importedFrom = (callee: TsNode): { module: string; name: string } | undefi
 };
 
 /**
- * The `const` a composition a function is the first one called in is held
- * by (P285): `const runQuiet = flow(runQuery, silence)` is called with what
- * `runQuery` is called with, so each call of `runQuiet` is a call of it.
+ * The composition of a library a value is handed to as the function called
+ * first with what the composition is called with, where it is one.
  */
-const composedInto = (reference: TsNode): VariableDeclaration | undefined => {
-  const parent = reference.getParent();
-  const value = parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getNameNode() === reference ? parent : reference;
+const compositionHanded = (value: TsNode): CallExpression | undefined => {
   const composition = value.getParent();
   if (composition === undefined || !Node.isCallExpression(composition) || composition.getExpression() === value) return undefined;
   const handed = composition.getArguments();
@@ -1450,13 +1448,55 @@ const composedInto = (reference: TsNode): VariableDeclaration | undefined => {
   const order = from === undefined ? undefined : COMPOSERS[from.name];
   if (from === undefined || order === undefined || !COMPOSING_MODULES.test(from.module)) return undefined;
   if (from.name === 'pipe' && VALUE_FIRST_PIPE.test(from.module)) return undefined;
-  if ((order === 'first' ? handed[0] : handed[handed.length - 1]) !== value) return undefined;
-  let holder: TsNode | undefined = composition.getParent();
-  while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder))) holder = holder.getParent();
-  return holder !== undefined && Node.isVariableDeclaration(holder) && Node.isIdentifier(holder.getNameNode()) ? holder : undefined;
+  return (order === 'first' ? handed[0] : handed[handed.length - 1]) === value ? composition : undefined;
 };
 
-const callSitesThrough = (holder: Forwarder, composed: Set<Forwarder>): CallExpression[] => {
+/** What a composition is held by, or called by in place: what its callers name. */
+type Composed = { readonly holder: Forwarder | PropertyAssignment } | { readonly call: CallExpression };
+
+/** How many compositions, each handed to the next, are followed out. */
+const COMPOSED_DEPTH = 4;
+
+/**
+ * Where a composition a function is the first one called in is called from
+ * (P285, P293): `const runQuiet = flow(runQuery, silence)` is called with what
+ * `runQuery` is called with, so each call of `runQuiet` is a call of it. The
+ * composition may be held by a `let` as by a `const`, by a field of a class
+ * (`run = flow(...)`, or `this.run = flow(...)` where the class declares
+ * it), or by a member of an object (`{ run: flow(...) }`); called where it is
+ * made, `flow(runQuery, silence)(variables)`; or handed on, first again, to
+ * another composition.
+ */
+const composedInto = (reference: TsNode): Composed | undefined => {
+  const parent = reference.getParent();
+  let value: TsNode = parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getNameNode() === reference ? parent : reference;
+  for (let depth = 0; depth < COMPOSED_DEPTH; depth += 1) {
+    const composition = compositionHanded(value);
+    if (composition === undefined) return undefined;
+    let outer: TsNode = composition;
+    let holder: TsNode | undefined = composition.getParent();
+    while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder) || Node.isNonNullExpression(holder))) {
+      outer = holder;
+      holder = holder.getParent();
+    }
+    if (holder === undefined) return undefined;
+    if (Node.isCallExpression(holder) && holder.getExpression() === outer) return { call: holder };
+    if (Node.isVariableDeclaration(holder) && Node.isIdentifier(holder.getNameNode())) return { holder };
+    if (Node.isPropertyDeclaration(holder) || Node.isPropertyAssignment(holder)) return { holder };
+    if (Node.isBinaryExpression(holder) && holder.getOperatorToken().getKind() === SyntaxKind.EqualsToken && holder.getRight() === outer) {
+      // `this.run = flow(...)`, in a class that declares the field.
+      const left = holder.getLeft();
+      if (!Node.isPropertyAccessExpression(left) || !Node.isThisExpression(left.getExpression())) return undefined;
+      const declared = left.getSymbol()?.getDeclarations().find((declaration) => Node.isPropertyDeclaration(declaration));
+      return declared !== undefined && Node.isPropertyDeclaration(declared) ? { holder: declared } : undefined;
+    }
+    // Handed on to another composition: `flow(flow(runQuery, silence), log)`.
+    value = outer;
+  }
+  return undefined;
+};
+
+const callSitesThrough = (holder: Forwarder | PropertyAssignment, composed: Set<TsNode>): CallExpression[] => {
   const sites: CallExpression[] = [];
   const seen = new Set<string>();
   const add = (call: CallExpression): void => {
@@ -1469,14 +1509,15 @@ const callSitesThrough = (holder: Forwarder, composed: Set<Forwarder>): CallExpr
     const call = callOf(reference);
     if (call === undefined) {
       // A function handed to a library's composition is called by each call of what it makes (P285).
-      const made = isClassMethod(holder) || composed.size > 4 ? undefined : composedInto(reference);
-      if (made !== undefined && !composed.has(made)) {
-        composed.add(made);
-        for (const each of callSitesThrough(made, composed)) add(each);
+      const made = (!Node.isPropertyAssignment(holder) && isClassMethod(holder)) || composed.size > 4 ? undefined : composedInto(reference);
+      if (made !== undefined && 'call' in made) add(made.call);
+      else if (made !== undefined && !composed.has(made.holder)) {
+        composed.add(made.holder);
+        for (const each of callSitesThrough(made.holder, composed)) add(each);
       }
       continue;
     }
-    if (dispatchAt(call, holder) === 'elsewhere') continue;
+    if (!Node.isPropertyAssignment(holder) && dispatchAt(call, holder) === 'elsewhere') continue;
     add(call);
   }
   return sites;
