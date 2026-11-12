@@ -6005,7 +6005,13 @@ readily, a `return` of nothing no record - is each of them, a method of the
 class called on `this` is read as a function is, a record spread in that is
 written out (a `const`, what a function answers) holds the key or leaves it to
 what is written before it, and a field the class sets in one place only is
-what it is set to (P286, `fixtures/job-queue-layers`).
+what it is set to (P286, `fixtures/job-queue-layers`). A `let` is each value
+it is given by a plain `=` (one also changed in place is not read); a `*`
+step reads the elements a list is written with and those `push` and
+`unshift` add to the `const` holding it, a list spread in, each branch of a
+condition, and what a `map` callback answers; and a step written as a number
+is the element at that place of a list written out (P290,
+`fixtures/job-flows-from-callers`).
 
 **Where a send goes that does not say: what its function is granted** (P272).
 A send whose address is not read - a queue's URL looked up in a cache the code

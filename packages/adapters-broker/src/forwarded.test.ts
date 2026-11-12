@@ -289,3 +289,90 @@ class Checkout {
     expect(out.sites.map((site) => site.values.map(show).join(' '))).toEqual(["written:'carts'"]);
   });
 });
+
+describe('the jobs of a rest parameter and a list, and a way out of any length (P290)', () => {
+  const file = (source: string): SourceFile => new Project({ useInMemoryFileSystem: true }).createSourceFile('a.ts', source);
+  /** Every queue each site reads for the `type` of what `send` is handed, and why where some are not. */
+  const queues = (source: string, path: readonly string[] = ['type']): string[] => {
+    const read = file(source);
+    const call = read.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'send') as CallExpression;
+    const out = forwardedPublish([heldValues(call.getArguments()[0] as never, path, call)], new DiMap());
+    return out.sites.map((site) => {
+      const [value] = site.values;
+      if (value?.kind !== 'written') return `${value?.kind}: ${value?.kind === 'unread' ? value.why : ''}`;
+      const names = (value.choices ?? [value.expression]).map((each) => each.getText()).join(' ');
+      return value.partial === undefined ? names : `${names} | ${value.partial}`;
+    });
+  };
+
+  it('reads every job a caller hands a rest parameter a loop goes through, a spread list and nothing too', () => {
+    expect(
+      queues(`
+declare function send(job: unknown): void;
+function chain(...jobs: ({ type: string } | undefined)[]) {
+  for (const job of jobs) {
+    if (!job) continue;
+    send(job);
+  }
+}
+const publishJob = () => ({ type: 'publish' });
+chain({ type: 'resize' }, publishJob(), undefined);
+const later = [{ type: 'archive' }];
+later.push({ type: 'notify' });
+chain(...later);
+`),
+    ).toEqual(["'resize' 'publish'", "'archive' 'notify'"]);
+  });
+
+  it('reads each child a caller hands a list mapped by a callback, and says why where one is not written out', () => {
+    expect(
+      queues(`
+declare function send(job: unknown): void;
+declare const followUp: { type: string };
+function withChildren(children: { type: string }[]) {
+  children.forEach((child) => send(child));
+}
+const children = [{ type: 'archive' }];
+children.push(followUp);
+withChildren(children);
+`),
+    ).toEqual(["'archive' | followUp is not written out where type would be read."]);
+  });
+
+  it('reads each branch of a condition a const is bound to, a branch of nothing none', () => {
+    expect(
+      queues(`
+declare function send(job: unknown): void;
+declare const urgent: boolean;
+function one(job: { type: string } | undefined) { send(job); }
+const lead = urgent ? { type: 'first' } : undefined;
+one(lead);
+`),
+    ).toEqual(["'first'"]);
+  });
+
+  it('reads an element by its place in a list a caller writes', () => {
+    expect(
+      queues(`
+declare function send(job: unknown): void;
+function first(jobs: { type: string }[]) { send(jobs[0]); }
+first([{ type: 'archive' }]);
+`),
+    ).toEqual(["'archive'"]);
+  });
+
+  it('follows a value out through any number of calls, and stops a recursion where it meets it again', () => {
+    expect(
+      queues(`
+declare function send(job: unknown): void;
+const one = (job: { type: string }) => send(job);
+const two = (job: { type: string }) => one(job);
+const three = (job: { type: string }) => two(job);
+const four = (job: { type: string }) => three(job);
+const five = (job: { type: string }) => four(job);
+const six = (job: { type: string }, again: boolean): void => (again ? six(job, false) : five(job));
+six({ type: 'deep' }, true);
+`),
+    ).toEqual(["'deep'"]);
+  });
+});

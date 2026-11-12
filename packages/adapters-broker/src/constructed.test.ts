@@ -1,7 +1,7 @@
 import { Project, SyntaxKind, type NewExpression, type SourceFile } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 import { isResolved } from './channel-name.js';
-import { constructsFrom, dispatchRecord, functionBehind, handlerInRecord, namesHandedTo, type HandlerTarget } from './constructed.js';
+import { constructsFrom, dispatchRecord, functionBehind, handedAlong, handlerInRecord, namesHandedTo, type HandlerTarget } from './constructed.js';
 
 /**
  * Workers started by a construction, read once per queue their name stands
@@ -143,6 +143,45 @@ export class Lone {
 `,
     });
     expect(names(workerIn(jobs as SourceFile))[0]).toContain('nothing here builds it');
+  });
+
+  it('reads the processor each class extending the worker’s base hands it, for that class’s queue alone (P290)', () => {
+    const { 'jobs.ts': jobs } = files({
+      'jobs.ts': `
+import { Worker } from 'bullmq';
+enum Topic { Mail = 'mail', Billing = 'billing', Audit = 'audit' }
+class Client {
+  open(topic: string, processor: unknown) { return new Worker(topic, processor); }
+}
+class WorkerBase {
+  constructor(public readonly topic: Topic, private readonly client: Client) {}
+  init(processor: unknown) { this.begin(processor); }
+  private begin(processor: unknown) { this.client.open(this.topic, processor); }
+}
+class MailBase extends WorkerBase { constructor(client: Client) { super(Topic.Mail, client); } }
+class MailWorker extends MailBase {
+  constructor(client: Client) { super(client); this.init(this.processor()); }
+  private processor() { return async (job: unknown) => job; }
+}
+class BillingWorker extends WorkerBase {
+  constructor(client: Client) { super(Topic.Billing, client); this.init(this.charge.bind(this)); }
+  charge(job: unknown) { return job; }
+}
+export async function audit(job: unknown) { return job; }
+export const auditor = new WorkerBase(Topic.Audit, new Client());
+auditor.init(audit);
+`,
+    });
+    const made = workerIn(jobs as SourceFile);
+    const processor = made.getArguments()[1] as never;
+    const read = namesHandedTo(made.getArguments()[0] as never, { sharedPackages: [] }).map((reading) => {
+      const queue = isResolved(reading.resolution) ? reading.resolution.names.join() : '?';
+      const handlers = (handedAlong(processor, reading) ?? []).map((each) =>
+        nameOf(functionBehind(each, each.getFirstAncestorByKind(SyntaxKind.ClassDeclaration), new Map())),
+      );
+      return `${queue}: ${handlers.join(' ')}`;
+    });
+    expect(read.sort()).toEqual(['audit: audit', 'billing: charge', 'mail: processor']);
   });
 
   it('is not a worker unless the class is the transport’s', () => {

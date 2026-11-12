@@ -1,5 +1,6 @@
 import {
   forwardedFrom,
+  functionOf,
   importOf,
   loopOver,
   methodNamedOn,
@@ -12,7 +13,16 @@ import {
   type NamedFunction,
   type TakenElement,
 } from '@flowatlas/core';
-import { Node, SyntaxKind, VariableDeclarationKind, type ClassDeclaration, type NewExpression, type Node as TsNode, type ParameterDeclaration } from 'ts-morph';
+import {
+  Node,
+  SyntaxKind,
+  VariableDeclarationKind,
+  type CallExpression,
+  type ClassDeclaration,
+  type NewExpression,
+  type Node as TsNode,
+  type ParameterDeclaration,
+} from 'ts-morph';
 import { isResolved, resolveChannelName, type ChannelResolution } from './channel-name.js';
 import { fieldIndex } from './forwarded.js';
 
@@ -45,6 +55,17 @@ export interface NameReading {
   readonly through: readonly string[];
   /** A call on the way may run another function instead (R158). */
   readonly undecided: boolean;
+  /** The calls the name was handed out through, innermost first (P290). */
+  readonly hops?: readonly CallExpression[];
+  /**
+   * The class whose instances this queue is, where a field kept from the
+   * constructor decided it: the class whose `super(...)` hands it, or whose
+   * `new` does (P290). What else the worker is handed is read off the same
+   * instances.
+   */
+  readonly instance?: ClassDeclaration;
+  /** Whether the instances are of that class alone: a `new` of it made them, not a class extending it. */
+  readonly exact?: boolean;
 }
 
 /** How many calls out a name is followed. */
@@ -170,7 +191,8 @@ export const namesHandedTo = (
     const out: NameReading[] = [];
     for (const call of forwarded.calls) {
       for (const reading of namesHandedTo(call.argument, config, bound, named, depth + 1)) {
-        out.push(forwarded.undecided ? { ...reading, undecided: true } : reading);
+        const hopped = { ...reading, hops: [...call.hops, ...(reading.hops ?? [])] };
+        out.push(forwarded.undecided ? { ...hopped, undecided: true } : hopped);
       }
       if (out.length > MOST_READINGS) return [unread(node, `${node.getText()} stands for more queues than are read.`, bound, through)];
     }
@@ -178,6 +200,10 @@ export const namesHandedTo = (
   }
   return [{ resolution, bound, through, undecided: false }];
 };
+
+/** Readings of the instances of a class, where nothing nearer the instance decided them. */
+const ofInstances = (readings: readonly NameReading[], cls: ClassDeclaration, exact = false): NameReading[] =>
+  readings.map((reading) => (reading.instance === undefined ? { ...reading, instance: cls, ...(exact ? { exact } : {}) } : reading));
 
 /** How many classes down from a base its constructions are looked for. */
 const MOST_GENERATIONS = 4;
@@ -207,7 +233,7 @@ const builtWith = (
     if (made === undefined || !Node.isNewExpression(made) || made.getExpression() !== reference) continue;
     const argument = made.getArguments()[index];
     if (argument === undefined) continue;
-    out.push(...namesHandedTo(argument, config, bound, [...through, `new ${name}`], depth + 1));
+    out.push(...ofInstances(namesHandedTo(argument, config, bound, [...through, `new ${name}`], depth + 1), owner, true));
   }
   if (generation < MOST_GENERATIONS) {
     for (const derived of owner.getDerivedClasses()) {
@@ -222,11 +248,133 @@ const builtWith = (
         .find((call) => call.getExpression().getKind() === SyntaxKind.SuperKeyword)
         ?.getArguments()[index];
       if (handed === undefined) continue;
-      out.push(...namesHandedTo(handed, config, bound, [...through, derived.getName() ?? '?'], depth + 1));
+      out.push(...ofInstances(namesHandedTo(handed, config, bound, [...through, derived.getName() ?? '?'], depth + 1), derived));
     }
   }
   if (out.length > MOST_READINGS) return [unread(at, `${at.getText()} stands for more queues than are read.`, bound, through)];
   return out.length > 0 ? out : [unread(at, `${at.getText()} is what ${name} is built with, and nothing here builds it.`, bound, through)];
+};
+
+/** Whether a class is the other or extends it, however far up. */
+const extendsOrIs = (cls: ClassDeclaration, other: ClassDeclaration): boolean => {
+  let current: ClassDeclaration | undefined = cls;
+  for (let step = 0; step < 8 && current !== undefined; step += 1) {
+    if (current === other) return true;
+    current = current.getBaseClass();
+  }
+  return false;
+};
+
+/** The class a call's method is declared in, where it is a method of a class. */
+const classCalled = (call: CallExpression): ClassDeclaration | undefined => {
+  const callee = unwrapped(call.getExpression());
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const declared = callee.getNameNode().getSymbol()?.getDeclarations()[0];
+  const owner = declared?.getParent();
+  return owner !== undefined && Node.isClassDeclaration(owner) ? owner : undefined;
+};
+
+/** The class a `new` makes, where it names a class of the repository. */
+const classMade = (made: TsNode): ClassDeclaration | undefined => {
+  const node = unwrapped(made);
+  if (!Node.isNewExpression(node)) return undefined;
+  const declaration = node.getExpression().getSymbol()?.getDeclarations()[0];
+  return declaration !== undefined && Node.isClassDeclaration(declaration) ? declaration : undefined;
+};
+
+/**
+ * The instances a call is made on (P290): of the class it is written in, or
+ * one extending it, for `this`; of the class a `new` makes alone, for a `new`
+ * the call is made on or a `const` or field holding one; else of the class
+ * the receiver is typed as, or one extending it.
+ */
+const instancesCalledOn = (call: CallExpression): { cls: ClassDeclaration; exact: boolean } | undefined => {
+  const callee = unwrapped(call.getExpression());
+  if (!Node.isPropertyAccessExpression(callee)) return undefined;
+  const receiver = unwrapped(callee.getExpression());
+  if (Node.isThisExpression(receiver) || receiver.getKind() === SyntaxKind.SuperKeyword) {
+    const cls = call.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+    return cls === undefined ? undefined : { cls, exact: false };
+  }
+  const name = Node.isPropertyAccessExpression(receiver) ? receiver.getNameNode() : receiver;
+  const held = name.getSymbol()?.getDeclarations()[0];
+  const kept =
+    held !== undefined &&
+    ((Node.isVariableDeclaration(held) && held.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const) ||
+      (Node.isPropertyDeclaration(held) && held.isReadonly()))
+      ? held.getInitializer()
+      : undefined;
+  const made = classMade(receiver) ?? (kept === undefined ? undefined : classMade(kept));
+  if (made !== undefined) return { cls: made, exact: true };
+  const declaration = receiver
+    .getType()
+    .getSymbol()
+    ?.getDeclarations()
+    .find((each) => Node.isClassDeclaration(each));
+  return declaration !== undefined && Node.isClassDeclaration(declaration) ? { cls: declaration, exact: false } : undefined;
+};
+
+/**
+ * Whether a call may run on an instance a reading is of (P290): a call of a
+ * method of the instance's lineage made on instances some of which are the
+ * reading's - a class and those extending it, or one class alone. Any other
+ * call is no call on the instance and is not asked.
+ */
+const runsOn = (call: CallExpression, reading: NameReading): boolean => {
+  const instance = reading.instance;
+  const called = classCalled(call);
+  if (instance === undefined || called === undefined || !extendsOrIs(instance, called)) return true;
+  const on = instancesCalledOn(call);
+  if (on === undefined) return true;
+  if (reading.exact === true) return on.exact ? on.cls === instance : extendsOrIs(instance, on.cls);
+  return on.exact ? extendsOrIs(on.cls, instance) : extendsOrIs(instance, on.cls) || extendsOrIs(on.cls, instance);
+};
+
+/** The parameter a value is, where it is a parameter's name. */
+const parameterNamed = (value: TsNode): ParameterDeclaration | undefined => {
+  const declaration = declarationOf(unwrapped(value));
+  return declaration !== undefined && Node.isParameterDeclaration(declaration) ? declaration : undefined;
+};
+
+/** Whether a call calls the function a parameter belongs to. */
+const callsOwnerOf = (call: CallExpression, parameter: ParameterDeclaration): boolean => {
+  const fn = parameter.getParent();
+  const callee = unwrapped(call.getExpression());
+  const name = Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : callee;
+  const declarations = name.getSymbol()?.getDeclarations() ?? [];
+  return declarations.some(
+    (declaration) =>
+      declaration === fn ||
+      ((Node.isVariableDeclaration(declaration) || Node.isPropertyDeclaration(declaration)) && declaration.getInitializer() === fn),
+  );
+};
+
+/**
+ * What a worker made where a queue is read is handed at another argument -
+ * its processor - for that queue (P290): followed out along the very calls
+ * the queue was handed through, then, where it is still a parameter, out to
+ * every call that hands it in on an instance the queue is the queue of. A
+ * worker a base class makes from what each class extending it hands it is
+ * one worker per class, each running what that class hands. `undefined`
+ * where nothing out there hands it in.
+ */
+export const handedAlong = (value: TsNode, reading: NameReading): TsNode[] | undefined => {
+  let current = value;
+  for (const hop of reading.hops ?? []) {
+    const parameter = parameterNamed(current);
+    if (parameter === undefined) return [current];
+    if (!callsOwnerOf(hop, parameter)) break;
+    const fn = parameter.getParent();
+    const position = Node.isParametered(fn) ? fn.getParameters().indexOf(parameter) : -1;
+    const handed = (position < 0 ? undefined : hop.getArguments()[position]) ?? parameter.getInitializer();
+    if (handed === undefined || Node.isSpreadElement(handed)) return undefined;
+    current = handed;
+  }
+  const parameter = parameterNamed(current);
+  if (parameter === undefined) return [current];
+  const forwarded = forwardedFrom(parameter);
+  const calls = forwarded.calls.filter((call) => call.hops.every((hop) => runsOn(hop, reading)));
+  return calls.length === 0 ? undefined : calls.map((call) => call.argument);
 };
 
 /** The function a handler is: a method of the class, or a function of the repository's own. */
@@ -254,7 +402,14 @@ export const functionBehind = (value: TsNode, owner: ClassDeclaration | undefine
   if (depth > 4) return undefined;
   if (Node.isCallExpression(node)) {
     const callee = unwrapped(node.getExpression());
-    if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'bind') return undefined;
+    if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'bind') {
+      // A processor a function of the repository makes and answers -
+      // `this.processor()` answering `async (job) => ...` - runs as part of
+      // the function that writes it (P290).
+      const maker = functionBehind(callee, owner, bound, depth + 1);
+      const written = maker === undefined ? undefined : maker.kind === 'method' ? functionOf(maker.method) : maker.fn.declaration;
+      return written !== undefined && answersFunction(written) ? maker : undefined;
+    }
     node = unwrapped(callee.getExpression());
   }
   if (Node.isPropertyAccessExpression(node) && Node.isThisExpression(unwrapped(node.getExpression()))) {
@@ -269,6 +424,23 @@ export const functionBehind = (value: TsNode, owner: ClassDeclaration | undefine
   if (origin.kind !== 'local' || !atModuleTop(origin.declaration)) return undefined;
   const fn = namedFunction(origin.declaration);
   return fn === undefined ? undefined : { kind: 'function', fn };
+};
+
+/** Whether a function answers a function it writes: a concise arrow body, or a `return` of one of its own. */
+const answersFunction = (declaration: TsNode): boolean => {
+  const fn = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
+  if (fn === undefined || !(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn) || Node.isFunctionDeclaration(fn) || Node.isMethodDeclaration(fn))) return false;
+  const body = fn.getBody();
+  if (body === undefined) return false;
+  const isFunction = (node: TsNode | undefined): boolean => node !== undefined && (Node.isArrowFunction(unwrapped(node)) || Node.isFunctionExpression(unwrapped(node)));
+  if (!Node.isBlock(body)) return isFunction(body);
+  return body
+    .getDescendantsOfKind(SyntaxKind.ReturnStatement)
+    .some(
+      (statement) =>
+        statement.getFirstAncestor((each) => Node.isFunctionLikeDeclaration(each) || Node.isArrowFunction(each) || Node.isFunctionExpression(each)) === fn &&
+        isFunction(statement.getExpression()),
+    );
 };
 
 /** The body a declaration is visible in: the function that declares it, or its module. */

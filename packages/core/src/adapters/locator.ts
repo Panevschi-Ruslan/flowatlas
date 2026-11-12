@@ -9,6 +9,7 @@ import {
   type Node as TsNode,
   type ObjectLiteralExpression,
   type ParameterDeclaration,
+  type VariableDeclaration,
 } from 'ts-morph';
 import { classMembersOf } from '../di/class-members.js';
 import { functionOf, methodNamedOn } from '../di/member-call.js';
@@ -631,6 +632,80 @@ const assignedField = (node: TsNode): TsNode | undefined => {
   return kept !== undefined && Node.isParameterDeclaration(kept) && Node.isConstructorDeclaration(kept.getParent()) ? undefined : only;
 };
 
+/** Whether a name is written to by a destructuring assignment, `[a, b] = pair`, where it is one part of the left. */
+const destructuredInto = (reference: TsNode): boolean => {
+  let at = reference;
+  for (let depth = 0; depth < MOST_LINKS; depth += 1) {
+    const parent = at.getParent();
+    if (parent === undefined) return false;
+    if (Node.isBinaryExpression(parent)) return parent.getOperatorToken().getKind() === SyntaxKind.EqualsToken && parent.getLeft() === at && at !== reference;
+    if (
+      !Node.isArrayLiteralExpression(parent) &&
+      !Node.isObjectLiteralExpression(parent) &&
+      !Node.isPropertyAssignment(parent) &&
+      !Node.isShorthandPropertyAssignment(parent) &&
+      !Node.isSpreadElement(parent) &&
+      !Node.isSpreadAssignment(parent) &&
+      !Node.isParenthesizedExpression(parent)
+    ) {
+      return false;
+    }
+    at = parent;
+  }
+  return false;
+};
+
+/**
+ * Every value a `let` is given, where each is given whole (P290): its
+ * initialiser and the right side of every plain `=` to it, wherever written -
+ * `let last; for (const job of jobs) last = { ...job, children: last ? [last] : [] }`
+ * is each record the loop builds. A `let` also changed in place (`+=`, `++`,
+ * a destructuring) holds values no one of these is, and is not read.
+ */
+const assignedValues = (node: TsNode): TsNode[] | undefined => {
+  if (!Node.isIdentifier(node)) return undefined;
+  const declaration = declarationNamed(node);
+  if (declaration === undefined || !Node.isVariableDeclaration(declaration)) return undefined;
+  if (declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Let) return undefined;
+  const known = LET_VALUES.get(declaration);
+  if (known !== undefined) return known ?? undefined;
+  const values = valuesGiven(declaration);
+  LET_VALUES.set(declaration, values ?? null);
+  return values;
+};
+
+/** What each `let` met is given, worked out once: finding its writes asks for every reference to it. */
+const LET_VALUES = new WeakMap<TsNode, TsNode[] | null>();
+
+const valuesGiven = (declaration: VariableDeclaration): TsNode[] | undefined => {
+  const nameNode = declaration.getNameNode();
+  if (!Node.isIdentifier(nameNode)) return undefined;
+  const values: TsNode[] = [];
+  const initial = declaration.getInitializer();
+  if (initial !== undefined) values.push(initial);
+  for (const reference of nameNode.findReferencesAsNodes()) {
+    if (reference === nameNode) continue;
+    const parent = reference.getParent();
+    if (parent === undefined) continue;
+    if (Node.isBinaryExpression(parent) && parent.getLeft() === reference) {
+      const operator = parent.getOperatorToken().getKind();
+      if (operator === SyntaxKind.EqualsToken) {
+        values.push(parent.getRight());
+        continue;
+      }
+      if (operator >= SyntaxKind.FirstCompoundAssignment && operator <= SyntaxKind.LastCompoundAssignment) return undefined;
+    }
+    if (
+      (Node.isPrefixUnaryExpression(parent) || Node.isPostfixUnaryExpression(parent)) &&
+      (parent.getOperatorToken() === SyntaxKind.PlusPlusToken || parent.getOperatorToken() === SyntaxKind.MinusMinusToken)
+    ) {
+      return undefined;
+    }
+    if (destructuredInto(reference)) return undefined;
+  }
+  return values.length === 0 ? undefined : values;
+};
+
 /** Parentheses and the assertions TypeScript lets a value carry, which say nothing about the value. */
 const peeled = (node: TsNode): TsNode => {
   let current = node;
@@ -1046,6 +1121,16 @@ const followValue = (node: TsNode, bound: Bindings = NO_BINDINGS, depth = 0): Fo
       current = constant;
       continue;
     }
+    // A `let` is each value it is given (P290).
+    const assigned = assignedValues(current);
+    if (assigned !== undefined) {
+      const [only, ...more] = assigned;
+      if (only !== undefined && more.length === 0) {
+        current = only;
+        continue;
+      }
+      return { value: current, bound: held, choices: assigned.map((value) => ({ value, bound: held })) };
+    }
     const elements = elementsNamed(current, held, depth);
     // Several elements are several values: each is followed on its own by whoever asked (P272).
     if (elements !== undefined && elements.length > 1) return { value: current, bound: held, choices: elements };
@@ -1169,6 +1254,126 @@ const mappedElement = (value: TsNode, bound: Bindings): Followed | undefined => 
     : undefined;
 };
 
+/**
+ * The `const` a list written out is bound to, where the walk reaches it
+ * through names: the one whose `push` calls add to it (P290).
+ */
+const listDeclaration = (expression: TsNode, bound: Bindings): TsNode | undefined => {
+  let current = peeled(expression);
+  for (let link = 0; link < MOST_LINKS; link += 1) {
+    const handed = handedValue(current, bound);
+    if (handed !== undefined) {
+      current = peeled(handed);
+      continue;
+    }
+    const declaration = declarationNamed(current);
+    if (declaration === undefined || !isConstDeclaration(declaration) || !Node.isVariableDeclaration(declaration)) return undefined;
+    const initial = declaration.getInitializer();
+    if (initial === undefined) return undefined;
+    if (Node.isArrayLiteralExpression(peeled(initial))) return declaration;
+    current = peeled(initial);
+  }
+  return undefined;
+};
+
+/** The `const` a value is written as the initialiser of, past parentheses and assertions. */
+const constHolding = (value: TsNode): TsNode | undefined => {
+  let at = value;
+  for (let link = 0; link < MOST_LINKS; link += 1) {
+    const parent = at.getParent();
+    if (parent === undefined) return undefined;
+    if (Node.isVariableDeclaration(parent)) return parent.getInitializer() === at && isConstDeclaration(parent) ? parent : undefined;
+    if (!Node.isParenthesizedExpression(parent) && !Node.isAsExpression(parent) && !Node.isSatisfiesExpression(parent)) return undefined;
+    at = parent;
+  }
+  return undefined;
+};
+
+/** The methods of a list that add the values they are handed to it. */
+const ADDING = new Set(['push', 'unshift']);
+
+/** An element of a list, or a place in it the walk could not read. */
+type Listed = Followed | { readonly stopped: TsNode };
+
+/**
+ * What the code adds to a list bound to a `const` with `push` and `unshift`,
+ * as written: one value per argument, a spread argument the elements of its
+ * list, or one stopped place where they are not written out (P290).
+ */
+const pushedInto = (declaration: TsNode, bound: Bindings, depth: number): Listed[] => {
+  if (!Node.isVariableDeclaration(declaration)) return [];
+  const nameNode = declaration.getNameNode();
+  if (!Node.isIdentifier(nameNode)) return [];
+  const out: Listed[] = [];
+  for (const reference of nameNode.findReferencesAsNodes()) {
+    const access = reference.getParent();
+    if (access === undefined || !Node.isPropertyAccessExpression(access) || access.getExpression() !== reference || !ADDING.has(access.getName())) continue;
+    const call = access.getParent();
+    if (call === undefined || !Node.isCallExpression(call) || call.getExpression() !== access) continue;
+    for (const argument of call.getArguments()) {
+      if (!Node.isSpreadElement(argument)) {
+        out.push({ value: argument, bound });
+        continue;
+      }
+      out.push(...(elementsOfList(argument.getExpression(), bound, depth + 1) ?? [{ stopped: argument }]));
+    }
+  }
+  return out;
+};
+
+/**
+ * Every element of the list an expression is, followed to where it is
+ * written: each list a function may answer (`return []` beside `return
+ * [job]`) adding its own (P290).
+ */
+const elementsOfList = (expression: TsNode, bound: Bindings, depth: number): Listed[] | undefined => {
+  if (depth > MOST_NESTED) return undefined;
+  const followed = followValue(expression, bound, depth + 1);
+  if (followed.choices !== undefined) {
+    const each = followed.choices.map((choice) => elementsOfList(choice.value, choice.bound, depth + 1));
+    return each.some((one) => one === undefined) ? undefined : each.flatMap((one) => one ?? []);
+  }
+  return listedElements(expression, followed.value, followed.bound, depth + 1);
+};
+
+/**
+ * Every element of a list as the code writes it, for a path that steps into
+ * each (P290): the elements written out and what is pushed onto the `const`
+ * holding them, the elements of a list spread in, each branch of a
+ * condition, and what the callback of a `map` answers for each element - or
+ * once for all of them where the list mapped is not written out. A list with
+ * no elements is none; `undefined` where the list is not written out.
+ */
+const listedElements = (expression: TsNode, value: TsNode, bound: Bindings, depth: number): Listed[] | undefined => {
+  if (depth > MOST_NESTED) return undefined;
+  if (Node.isConditionalExpression(value)) {
+    const branches = [value.getWhenTrue(), value.getWhenFalse()].map((branch) => elementsOfList(branch, bound, depth + 1));
+    return branches.some((each) => each === undefined) ? undefined : branches.flatMap((each) => each ?? []);
+  }
+  if (Node.isArrayLiteralExpression(value)) {
+    const out: Listed[] = [];
+    for (const element of value.getElements()) {
+      if (!Node.isSpreadElement(element)) {
+        out.push({ value: element, bound });
+        continue;
+      }
+      out.push(...(elementsOfList(element.getExpression(), bound, depth + 1) ?? [{ stopped: element }]));
+    }
+    const declaration = listDeclaration(expression, bound) ?? constHolding(value);
+    return declaration === undefined ? out : [...out, ...pushedInto(declaration, bound, depth)];
+  }
+  if (!Node.isCallExpression(value)) return undefined;
+  const elements = elementsWithin(value, bound, depth + 1);
+  // A callback answering the element it is handed, of a list not written
+  // out, says nothing the list does not: the list is where the walk stops.
+  const [only, ...more] = elements ?? [];
+  const declaration = only === undefined || more.length > 0 ? undefined : declarationNamed(peeled(only.value));
+  return declaration !== undefined && Node.isParameterDeclaration(declaration) && only !== undefined && !only.bound.has(declaration) ? undefined : elements;
+};
+
+/** A step that names an element of a list by its place: `jobs[0]`. */
+const isIndex = (step: string): boolean => /^\d+$/.test(step);
+
 /** One step into what a slot holds. */
 const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlot[] => {
   const followed = followValue(expression, bound);
@@ -1183,12 +1388,18 @@ const stepInto = (expression: TsNode, step: string, bound: Bindings): LocatedSlo
     // every element is what the callback answers, read once for all of them (P271).
     const mapped = mappedElement(value, followed.bound);
     if (mapped !== undefined) return [carrying({ expression: mapped.value, reached: true }, mapped.bound)];
-    if (!Node.isArrayLiteralExpression(value)) return halt();
-    return value
-      .getElements()
-      .map((element) =>
-        carrying(Node.isSpreadElement(element) ? stopped(element) : { expression: element, reached: true }, followed.bound),
-      );
+    const listed = listedElements(expression, value, followed.bound, 0);
+    if (listed === undefined) return halt();
+    return listed.map((element) =>
+      'stopped' in element ? carrying(stopped(element.stopped), followed.bound) : carrying({ expression: element.value, reached: true }, element.bound),
+    );
+  }
+  // `jobs[0]` of a list written out, where nothing spread in before it moves it (P290).
+  if (isIndex(step) && Node.isArrayLiteralExpression(value)) {
+    const elements = value.getElements().slice(0, Number(step) + 1);
+    const element = elements.at(-1);
+    if (elements.length <= Number(step) || element === undefined || elements.some((each) => Node.isSpreadElement(each))) return halt();
+    return [carrying({ expression: element, reached: true }, followed.bound)];
   }
   if (!Node.isObjectLiteralExpression(value)) return halt();
   if (step === EVERY_KEY) return value.getProperties().map((property) => carrying(writtenKey(property), followed.bound));
@@ -1238,7 +1449,12 @@ const MOST_TREE_DEPTH = 4;
  * after it (P286). A list of children not written out is one place that
  * stopped, which a reader says it could not read.
  */
-const treeSlots = (node: TsNode, key: string, children: string, bound: Bindings, depth: number): LocatedSlot[] => {
+const treeSlots = (node: TsNode, key: string, children: string, bound: Bindings, depth: number, seen = new Set<string>()): LocatedSlot[] => {
+  // A node met before is read once: a tree built in a `let` the loop
+  // reassigns holds the record it was before as its child (P290).
+  const met = writtenAt(followValue(node, bound), node);
+  if (seen.has(met)) return [];
+  seen.add(met);
   const own = walkPath(node, [key], bound);
   if (depth >= MOST_TREE_DEPTH) return own;
   const under = walkPath(node, [children, EVERY_ELEMENT], bound);
@@ -1248,9 +1464,43 @@ const treeSlots = (node: TsNode, key: string, children: string, bound: Bindings,
       if (child === undefined) return [];
       // A node that is no record written out is already the place its key stopped.
       if (!child.reached) return (child.rest?.length ?? 0) > 1 ? [] : [child];
-      return treeSlots(child.expression, key, children, child.bound ?? NO_BINDINGS, depth + 1);
+      return treeSlots(child.expression, key, children, child.bound ?? NO_BINDINGS, depth + 1, seen);
     }),
   ];
+};
+
+/** Where a value followed is written, with what the walk bound on the way: one place in the source per value. */
+const writtenAt = (followed: Followed, asked: TsNode): string => {
+  const at = (node: TsNode): string => `${node.getSourceFile().getFilePath()}:${node.getStart()}`;
+  const value = followed.choices === undefined ? followed.value : asked;
+  const bound = [...followed.bound].map(([parameter, handed]) => `${at(parameter)}=${at(handed)}`).join(',');
+  return `${at(value)}|${bound}`;
+};
+
+/**
+ * The list a name is each element of, where it is one (P290): the list a
+ * `for (const job of jobs)` loop goes through, or the list whose `map`,
+ * `forEach` or other callback is handed it as its first parameter. A reader
+ * that cannot read the element where it is named reads it as an element of
+ * that list, which a caller may write out.
+ */
+export const listOfElement = (node: TsNode): TsNode | undefined => {
+  const declaration = declarationNamed(peeled(node));
+  if (declaration === undefined) return undefined;
+  if (Node.isVariableDeclaration(declaration)) {
+    const list = declaration.getParent();
+    const loop = list?.getParent();
+    return Node.isIdentifier(declaration.getNameNode()) && list !== undefined && Node.isVariableDeclarationList(list) && loop !== undefined && Node.isForOfStatement(loop)
+      ? loop.getExpression()
+      : undefined;
+  }
+  if (!Node.isParameterDeclaration(declaration) || !Node.isIdentifier(declaration.getNameNode())) return undefined;
+  const fn = declaration.getParent();
+  if (!(Node.isArrowFunction(fn) || Node.isFunctionExpression(fn)) || fn.getParameters()[0] !== declaration) return undefined;
+  const call = fn.getParent();
+  if (call === undefined || !Node.isCallExpression(call) || call.getArguments()[0] !== fn) return undefined;
+  const callee = peeled(call.getExpression());
+  return Node.isPropertyAccessExpression(callee) && ITERATING.has(callee.getName()) ? callee.getExpression() : undefined;
 };
 
 /** The name a `new` expression constructs, as written: `X` in `new X()` and in `new sdk.X()`. */

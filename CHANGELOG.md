@@ -272,6 +272,31 @@ only one of them moved.
   tree, the parent's and each child's, `name` and `data` read per node. A
   registry typed `{ [kind in JobKind]?: Queue }` states its entries are
   queues (`fixtures/job-queue-layers`).
+- **A worker's processor handed in by each class extending its base, flows
+  built from what callers hand in, and a way out of any length (P290).** A
+  worker a base class makes from the topic each class extending it hands
+  `super(...)` runs, for that topic, the processor handed to it on instances
+  of that class - followed along the calls the topic was handed through, then
+  out to each call on such an instance (`this.init(this.processor())` in the
+  class's constructor, `worker.init(handle)` outside it) - so it is one
+  consumer per queue with its own handler, where it was one consumer at the
+  construction for every queue with `consumer-handler-unresolved`; a method
+  that answers the processor it writes is the handler. A `let` is each value
+  it is given, so a flow built in a loop that makes each job the parent of
+  the one before (`last = { ...node(job), children: last ? [last] : [] }`) is
+  read node by node, each node once. An element of a list not written where
+  it is named - a `for (const job of jobs)` variable, a `map` or `forEach`
+  callback's parameter - is each element of that list as its caller writes
+  it: a rest parameter is each argument from its place on and the elements of
+  a list spread into it, a list is the elements it is written with and those
+  `push` and `unshift` add to it, `jobs[0]` the element at that place, and
+  each branch of a condition is read on its own; an element that cannot be
+  read is a `channel-dynamic` row beside the queues of those that can. The
+  walk out from a publish to the callers that decide it is no longer cut
+  after five calls, which drew a queue a layer hands through its own fallback
+  inside the layer: it reads as far out as the queue goes, stops a recursion
+  where it meets a function a second time, and stops after reading 5000
+  calls for one publish, which a row says (`fixtures/job-flows-from-callers`).
 - **An MCP client joined to the server's tools, MCP names read as far as the
   source states them, a server function reached through a client the
   repository builds, and a written return type read for a method call

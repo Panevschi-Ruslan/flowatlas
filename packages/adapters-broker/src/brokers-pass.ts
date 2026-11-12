@@ -63,8 +63,8 @@ import {
   type ReceiverEvidence,
 } from './call-site.js';
 import { addressOf, appliesAt, collapsed, messageValue, readAddress, readWritten, type AddressedElement } from './address.js';
-import { forwardedPublish, heldAtSite, heldValues, waits, type Held } from './forwarded.js';
-import { constructsFrom, dispatchRecord, functionBehind, handlerInRecord, namesHandedTo, type HandlerTarget } from './constructed.js';
+import { forwardedPublish, heldAtSite, heldValues, MOST_STEPS, waits, type Held } from './forwarded.js';
+import { constructsFrom, dispatchRecord, functionBehind, handedAlong, handlerInRecord, namesHandedTo, type HandlerTarget } from './constructed.js';
 import { payloadParameter, typeAtPath } from './payload.js';
 import { isResolved, nameForKind, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
 import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointShaping } from './endpoint.js';
@@ -470,20 +470,22 @@ export const extractBrokers = (ctx: PassContext): void => {
       const read = queues.flatMap((queue, index): AddressedElement[] => {
         // An element read where the call is written stays as it was read there.
         if (queue === undefined) return elements[index] === undefined ? [] : [elements[index] as AddressedElement];
+        const dynamic = (why: string): AddressedElement => ({
+          resolution: { unresolved: 'channel-dynamic', text: (queue.expression ?? site.site).getText().slice(0, 60), why },
+        });
         if (queue.kind === 'written' && part !== undefined) {
-          return (queue.choices ?? [queue.expression]).map((each) => readWritten(each, parts, ctx.config));
+          const read = (queue.choices ?? [queue.expression]).map((each) => readWritten(each, parts, ctx.config));
+          // The elements of a list read where they are written, and a row for those that are not (P290).
+          return queue.partial === undefined ? read : [...read, dynamic(queue.partial)];
         }
         return [
-          {
-            resolution: {
-              unresolved: 'channel-dynamic',
-              text: (queue.expression ?? site.site).getText().slice(0, 60),
-              why:
-                queue.kind === 'unread'
-                  ? queue.why
-                  : `The queue is handed in from further out than ${site.through.length} calls, which is as far as it is followed.`,
-            },
-          },
+          dynamic(
+            queue.kind === 'unread'
+              ? queue.why
+              : site.stopped === 'budget'
+                ? `The queue is handed in from further out than the ${MOST_STEPS} calls the walk out from one publish reads.`
+                : `The queue is ${queue.expression.getText().slice(0, 60)}, handed in by nothing a call names: a function no call names by itself, such as a callback, or an instance this cannot follow to where it is made.`,
+          ),
         ];
       });
       return {
@@ -1449,23 +1451,32 @@ export const extractBrokers = (ctx: PassContext): void => {
     const symbolHere = `${ctx.builder.getNode(around?.id ?? '')?.label ?? file} -> ${spelling}`;
     const record = dispatchRecord(nameArg, processor);
 
-    /** The processor itself as a handler, where it can be named. */
+    /**
+     * A processor as a handler, where it can be named: the one written at the
+     * construction, or one a caller hands in (P290), read in the class it is
+     * written in. One that does more than delegate stands for the body it is
+     * written in.
+     */
     let unfollowed = false;
-    const processorTarget = (bound: Parameters<typeof functionBehind>[2]): HandlerTarget | undefined => {
-      if (processor === undefined) return undefined;
-      const named = functionBehind(processor, owner, bound);
+    let unfollowedElsewhere = false;
+    const processorTarget = (written: TsNode | undefined, bound: Parameters<typeof functionBehind>[2]): HandlerTarget | undefined => {
+      if (written === undefined) return undefined;
+      const writtenIn = written === processor ? owner : written.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+      const named = functionBehind(written, writtenIn, bound);
       if (named !== undefined) return named;
-      const written = processor;
       if (Node.isArrowFunction(written) || Node.isFunctionExpression(written)) {
         const placed = bodies.get(written.getBody());
         if (placed?.fn !== undefined) return { kind: 'function', fn: placed.fn };
-        const delegated = owner === undefined ? undefined : targetOfHandler(written, owner);
+        const delegated = writtenIn === undefined ? undefined : targetOfHandler(written, writtenIn);
         if (delegated !== undefined) return { kind: 'method', method: delegated };
       }
-      unfollowed = true;
-      // The body the worker is made in, as the subscriptions do.
-      if (around?.method !== undefined) return { kind: 'method', method: around.method };
-      if (around?.fn !== undefined) return { kind: 'function', fn: around.fn };
+      // The body the worker is made in, as the subscriptions do, or the one
+      // a caller writes the processor in.
+      const body = written === processor ? around : holderAt(written);
+      if (written === processor) unfollowed = true;
+      else unfollowedElsewhere = true;
+      if (body?.method !== undefined) return { kind: 'method', method: body.method };
+      if (body?.fn !== undefined) return { kind: 'function', fn: body.fn };
       return undefined;
     };
 
@@ -1482,26 +1493,33 @@ export const extractBrokers = (ctx: PassContext): void => {
       const names = isResolved(resolution) ? shapeChannelNames(resolution.names, { reserved: spec.reservedChannels ?? [] }) : [];
       const [only, ...more] = names;
       const looked = record !== undefined && only !== undefined && more.length === 0 ? handlerInRecord(record, only, owner) : undefined;
-      const target = looked ?? processorTarget(reading.bound);
+      // The processor this queue's worker runs: handed along the calls the
+      // queue was, and by whoever builds the instance the queue is of (P290).
+      const handed = looked !== undefined || processor === undefined ? undefined : handedAlong(processor, reading);
+      const targets = looked !== undefined ? [looked] : (handed ?? [processor]).map((each) => processorTarget(each, reading.bound));
       if (!isResolved(resolution)) {
-        unread.push({ resolution, target });
+        unread.push({ resolution, target: targets[0] });
         continue;
       }
-      if (target === undefined) continue;
-      const drawn = drawnHandler(target);
-      if (drawn === undefined) continue;
-      const group = groups.get(drawn.id) ?? { target, names: new Set<string>(), undecided: false, through: new Set<string>() };
-      for (const name of names) group.names.add(name);
-      group.undecided ||= reading.undecided;
-      for (const each of reading.through) group.through.add(each);
-      groups.set(drawn.id, group);
+      for (const target of targets) {
+        if (target === undefined) continue;
+        const drawn = drawnHandler(target);
+        if (drawn === undefined) continue;
+        const group = groups.get(drawn.id) ?? { target, names: new Set<string>(), undecided: false, through: new Set<string>() };
+        for (const name of names) group.names.add(name);
+        group.undecided ||= reading.undecided;
+        for (const each of reading.through) group.through.add(each);
+        groups.set(drawn.id, group);
+      }
     }
-    if (unfollowed && processor !== undefined) {
+    if ((unfollowed || unfollowedElsewhere) && processor !== undefined) {
       ctx.report({
         file,
         line,
         reason: 'consumer-handler-unresolved',
-        hint: 'The processor does more than delegate, so the chain stops at the body the worker is made in.',
+        hint: unfollowed
+          ? 'The processor does more than delegate, so the chain stops at the body the worker is made in.'
+          : 'The processor a caller hands in does more than delegate, so the chain stops at the body that caller writes it in.',
         symbol: symbolHere,
       });
     }

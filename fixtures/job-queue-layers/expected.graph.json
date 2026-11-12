@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "repo": "job-queue-layers",
-  "generatedAt": "2026-11-10T15:48:26.423Z",
+  "generatedAt": "2026-11-12T19:10:39.645Z",
   "nodes": [
     {
       "id": "channel:archive-order",
@@ -219,9 +219,9 @@
       }
     },
     {
-      "id": "consumer:job-queue-layers#src/queues/bull.service.ts:BullService.openWorker@src/queues/bull.service.ts:21",
+      "id": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
       "type": "consumer",
-      "label": "BullService.openWorker",
+      "label": "startWorkers",
       "repo": "job-queue-layers",
       "file": "src/queues/bull.service.ts",
       "line": 21,
@@ -1019,6 +1019,32 @@
       }
     },
     {
+      "id": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
+      "type": "function",
+      "label": "startWorkers",
+      "repo": "job-queue-layers",
+      "file": "src/queues/queue-base.ts",
+      "line": 76,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "mail to",
+            "at": 78
+          },
+          {
+            "level": "log",
+            "text": "invoice for",
+            "at": 81
+          }
+        ]
+      }
+    },
+    {
       "id": "job-queue-layers#src/server.ts:POST /images@31",
       "type": "function",
       "label": "POST /images@31",
@@ -1401,7 +1427,7 @@
     {
       "id": "producer:job-queue-layers#src/server.ts:51:9",
       "type": "producer",
-      "label": "job nightly-report",
+      "label": "job nightly-report, archive-order",
       "repo": "job-queue-layers",
       "file": "src/server.ts",
       "line": 51,
@@ -1464,7 +1490,7 @@
     },
     {
       "from": "channel:invoices",
-      "to": "consumer:job-queue-layers#src/queues/bull.service.ts:BullService.openWorker@src/queues/bull.service.ts:21",
+      "to": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
       "type": "consumes",
       "confidence": "static",
       "file": "src/queues/bull.service.ts",
@@ -1472,7 +1498,7 @@
     },
     {
       "from": "channel:mail",
-      "to": "consumer:job-queue-layers#src/queues/bull.service.ts:BullService.openWorker@src/queues/bull.service.ts:21",
+      "to": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
       "type": "consumes",
       "confidence": "static",
       "file": "src/queues/bull.service.ts",
@@ -1567,17 +1593,12 @@
       "line": 54
     },
     {
-      "from": "consumer:job-queue-layers#src/queues/bull.service.ts:BullService.openWorker@src/queues/bull.service.ts:21",
-      "to": "job-queue-layers#src/queues/bull.service.ts:BullService.openWorker",
+      "from": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
+      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
       "type": "handles",
       "confidence": "static",
       "file": "src/queues/bull.service.ts",
-      "line": 21,
-      "params": [
-        "string",
-        "unknown"
-      ],
-      "returns": "void"
+      "line": 21
     },
     {
       "from": "entry:job-queue-layers:event:archive-order",
@@ -1623,53 +1644,29 @@
     },
     {
       "from": "entry:job-queue-layers:event:invoices",
-      "to": "job-queue-layers#src/queues/bull.service.ts:BullService.openWorker",
+      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
       "type": "handles",
       "confidence": "static",
       "file": "src/queues/bull.service.ts",
       "line": 21,
-      "params": [
-        "string",
-        "unknown"
-      ],
+      "params": [],
       "returns": "void",
       "signature": {
-        "params": [
-          {
-            "name": "topic",
-            "type": "string"
-          },
-          {
-            "name": "processor",
-            "type": "unknown"
-          }
-        ],
+        "params": [],
         "returns": "void"
       }
     },
     {
       "from": "entry:job-queue-layers:event:mail",
-      "to": "job-queue-layers#src/queues/bull.service.ts:BullService.openWorker",
+      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
       "type": "handles",
       "confidence": "static",
       "file": "src/queues/bull.service.ts",
       "line": 21,
-      "params": [
-        "string",
-        "unknown"
-      ],
+      "params": [],
       "returns": "void",
       "signature": {
-        "params": [
-          {
-            "name": "topic",
-            "type": "string"
-          },
-          {
-            "name": "processor",
-            "type": "unknown"
-          }
-        ],
+        "params": [],
         "returns": "void"
       }
     },
@@ -2360,6 +2357,14 @@
     },
     {
       "from": "producer:job-queue-layers#src/server.ts:51:9",
+      "to": "channel:archive-order",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 51
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:51:9",
       "to": "channel:nightly-report",
       "type": "emits",
       "confidence": "heuristic",
@@ -2548,7 +2553,7 @@
       "file": "src/queues/bull.service.ts",
       "line": 21,
       "reason": "consumer-handler-unresolved",
-      "hint": "The processor does more than delegate, so the chain stops at the body the worker is made in.",
+      "hint": "The processor a caller hands in does more than delegate, so the chain stops at the body that caller writes it in.",
       "symbol": "BullService.openWorker -> new Worker"
     },
     {
@@ -2561,14 +2566,6 @@
         "cause": "module-not-installed",
         "package": "bullmq"
       }
-    },
-    {
-      "file": "src/server.ts",
-      "line": 51,
-      "reason": "channel-dynamic",
-      "hint": "The channel name cannot be read here. Annotate POST /reports/nightly@48 with the channel it uses.",
-      "symbol": "producer:job-queue-layers#src/server.ts:51:9",
-      "message": "POST /reports/nightly@48 -> children.map((child) => this.flowJob(child))"
     },
     {
       "file": "src/server.ts",
