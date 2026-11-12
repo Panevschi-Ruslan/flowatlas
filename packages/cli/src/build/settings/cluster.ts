@@ -901,6 +901,8 @@ const varFieldsOf = (value: Located): Array<{ holder: Record<string | number, un
 interface FieldSpec {
   readonly kind?: string;
   readonly path: readonly string[];
+  /** Whether a transformer writing the field makes it where it is not there (P295). */
+  readonly create?: boolean;
 }
 
 /** A configuration's `nameReference` (P289): the fields of other resources that name a resource of `kind`. */
@@ -909,14 +911,65 @@ interface NameReference {
   readonly fields: readonly FieldSpec[];
 }
 
+/** A field path written `spec/rules/backendRefs/name`, a list on the way written `[]` or not. */
+const fieldPathOf = (path: string): string[] =>
+  path
+    .split('/')
+    .map((step) => step.replace(/\[\]$/, ''))
+    .filter((step) => step !== '');
+
 const fieldSpecsOf = (written: unknown): FieldSpec[] =>
   (Array.isArray(written) ? written : []).filter(isRecord).flatMap((spec) => {
     const path = text(spec['path']);
     const kind = text(spec['kind']);
-    return path === undefined ? [] : [{ ...(kind === undefined ? {} : { kind }), path: path.split('/').filter((step) => step !== '') }];
+    return path === undefined ? [] : [{ ...(kind === undefined ? {} : { kind }), path: fieldPathOf(path), ...(spec['create'] === true ? { create: true } : {}) }];
   });
 
 const specApplies = (spec: FieldSpec, value: Record<string, unknown>): boolean => spec.kind === undefined || text(value['kind']) === spec.kind;
+
+/** The field specs written as `kind: path` pairs, for the defaults below. */
+const specs = (create: boolean, kinds: readonly (string | undefined)[], ...paths: string[]): FieldSpec[] =>
+  kinds.flatMap((kind) => paths.map((path) => ({ ...(kind === undefined ? {} : { kind }), path: fieldPathOf(path), ...(create ? { create: true } : {}) })));
+
+const POD_OWNERS = ['Deployment', 'ReplicaSet', 'DaemonSet', 'StatefulSet'];
+
+/** The fields a pod template's labels or annotations are written in, by the kinds that hold one. */
+const TEMPLATE_METADATA = (field: 'labels' | 'annotations'): FieldSpec[] => [
+  ...specs(true, [...POD_OWNERS, 'Job', 'ReplicationController'], `spec/template/metadata/${field}`),
+  ...specs(true, ['CronJob'], `spec/jobTemplate/metadata/${field}`, `spec/jobTemplate/spec/template/metadata/${field}`),
+  ...specs(true, ['StatefulSet'], `spec/volumeClaimTemplates/metadata/${field}`),
+];
+
+/**
+ * The fields kustomize writes a kustomization's `commonLabels` in (P295), as
+ * its built-in configuration says: every resource's labels, a service's
+ * selector, a workload's selector and its pod template's labels.
+ */
+const COMMON_LABELS: readonly FieldSpec[] = [
+  ...specs(true, [undefined], 'metadata/labels'),
+  ...specs(true, ['Service', 'ReplicationController'], 'spec/selector'),
+  ...specs(true, POD_OWNERS, 'spec/selector/matchLabels'),
+  ...specs(false, ['Job'], 'spec/selector/matchLabels'),
+  ...specs(false, ['CronJob'], 'spec/jobTemplate/spec/selector/matchLabels'),
+  ...specs(false, ['PodDisruptionBudget'], 'spec/selector/matchLabels'),
+  ...specs(false, ['NetworkPolicy'], 'spec/podSelector/matchLabels', 'spec/ingress/from/podSelector/matchLabels', 'spec/egress/to/podSelector/matchLabels'),
+  ...TEMPLATE_METADATA('labels'),
+];
+
+/** The fields kustomize writes `commonAnnotations` in (P295): every resource's annotations and its pod template's. */
+const COMMON_ANNOTATIONS: readonly FieldSpec[] = [...specs(true, [undefined], 'metadata/annotations'), ...TEMPLATE_METADATA('annotations')];
+
+/** The fields an image is written in (P295): each container's and init container's, in any pod template. */
+const IMAGE_FIELDS: readonly FieldSpec[] = specs(false, [undefined], 'spec/containers/image', 'spec/initContainers/image', 'spec/template/spec/containers/image', 'spec/template/spec/initContainers/image', 'spec/jobTemplate/spec/template/spec/containers/image', 'spec/jobTemplate/spec/template/spec/initContainers/image');
+
+/** A resource's name, which a name prefix and suffix write by default. */
+const NAME_FIELD: readonly FieldSpec[] = specs(false, [undefined], 'metadata/name');
+
+/** The fields kustomize renames with the service object they name by default: an `Ingress`'s backends. */
+const SERVICE_REFERENCES: NameReference = {
+  kind: 'Service',
+  fields: specs(false, ['Ingress'], 'spec/defaultBackend/service/name', 'spec/rules/http/paths/backend/service/name', 'spec/backend/serviceName', 'spec/rules/http/paths/backend/serviceName'),
+};
 
 /** Every text at a kustomize field path (P289), each as its holder and key: a list on the way is every item of it, as kustomize walks one. */
 const stringsAtPath = (value: unknown, path: readonly string[]): Array<{ holder: Record<string | number, unknown>; key: string | number }> => {
@@ -930,6 +983,69 @@ const stringsAtPath = (value: unknown, path: readonly string[]): Array<{ holder:
   return Array.isArray(at) ? at.flatMap((item, index) => (typeof item === 'string' ? [{ holder: at as unknown as Record<string | number, unknown>, key: index }] : [])) : [];
 };
 
+/** Every mapping at a field path (P295), made where it is not there and `create` says so; a list on the way is every item of it. */
+const mapsAtPath = (value: unknown, path: readonly string[], create: boolean): Array<Record<string, unknown>> => {
+  if (Array.isArray(value)) return value.flatMap((item) => mapsAtPath(item, path, create));
+  if (!isRecord(value)) return [];
+  const [step, ...rest] = path;
+  if (step === undefined) return [value];
+  if (value[step] === undefined || value[step] === null) {
+    if (!create) return [];
+    value[step] = {};
+  }
+  return mapsAtPath(value[step], rest, create);
+};
+
+/** The texts at each field path of the specs that apply to a resource, and where `create` says, the field made empty. */
+const textFields = (value: Located, fields: readonly FieldSpec[]): Array<{ holder: Record<string | number, unknown>; key: string | number }> => {
+  const out: Array<{ holder: Record<string | number, unknown>; key: string | number }> = [];
+  for (const spec of fields) {
+    if (!specApplies(spec, value)) continue;
+    const last = spec.path[spec.path.length - 1];
+    if (last === undefined) continue;
+    if (spec.create === true) for (const holder of mapsAtPath(value, spec.path.slice(0, -1), true)) if (holder[last] === undefined) holder[last] = '';
+    for (const found of stringsAtPath(value, spec.path)) if (!out.some((seen) => seen.holder === found.holder && seen.key === found.key)) out.push(found);
+  }
+  return out;
+};
+
+/** Pairs written into the mappings at each field path of the specs that apply to a resource (P295): labels or annotations. */
+const pairsWritten = (value: Located, pairs: Readonly<Record<string, string>>, fields: readonly FieldSpec[]): void => {
+  if (Object.keys(pairs).length === 0) return;
+  for (const spec of fields) {
+    if (!specApplies(spec, value)) continue;
+    for (const holder of mapsAtPath(value, spec.path, spec.create === true)) Object.assign(holder, pairs);
+  }
+};
+
+/** An image written over as an `images` entry or an `ImageTagTransformer` says (P295): its new name, tag or digest, where its repository is the one named. */
+const imageWritten = (image: string, entry: Record<string, unknown>): string | undefined => {
+  const name = text(entry['name']);
+  if (name === undefined) return undefined;
+  const [repository, tag] = image.includes('@') ? [image.slice(0, image.indexOf('@')), undefined] : (/^(.*?)(?::([^:/]+))?$/.exec(image)?.slice(1) ?? [image, undefined]);
+  if (repository !== name) return undefined;
+  const newName = text(entry['newName']);
+  const newTag = text(entry['newTag']);
+  const digest = text(entry['digest']);
+  return `${newName ?? repository}${digest !== undefined ? `@${digest}` : newTag !== undefined ? `:${newTag}` : tag === undefined ? '' : `:${tag}`}`;
+};
+
+/** The fields of a configuration that add to where a kustomization's own transformers write (P295). */
+const CONFIGURED_FIELDS = ['commonLabels', 'commonAnnotations', 'namespace', 'namePrefix', 'nameSuffix', 'images'] as const;
+
+type ConfiguredField = (typeof CONFIGURED_FIELDS)[number];
+
+const emptyConfigured = (): Record<ConfiguredField, FieldSpec[]> => ({ commonLabels: [], commonAnnotations: [], namespace: [], namePrefix: [], nameSuffix: [], images: [] });
+
+/** The transformers kustomize has built in that change nothing a manifest's facts are read from (P295): replicas, hashes and order. */
+const TRANSFORMERS_NOTHING_DRAWN = new Set(['ReplicaCountTransformer', 'HashTransformer', 'SortOrderTransformer']);
+
+/** A transformer's or a generator's configuration (P295), and where it is written. */
+interface PluginConfig {
+  readonly config: Record<string, unknown>;
+  readonly at: Where;
+}
+
 /** Builds a kustomization as the tool that applies it does, for what a manifest's facts are read from. */
 class Builder {
   readonly rows: ManifestRow[] = [];
@@ -938,6 +1054,8 @@ class Builder {
   /** The name and var reference fields the kustomizations of one build add (`configurations:`, P289), its bases' included. */
   #nameReferences: NameReference[] = [];
   #varReferences: FieldSpec[] = [];
+  /** The fields the configurations of one build add to those its kustomizations' own transformers write (P295), its bases' included. */
+  #configured: Record<ConfiguredField, FieldSpec[]> = emptyConfigured();
 
   constructor(
     private readonly root: string,
@@ -965,6 +1083,7 @@ class Builder {
       this.#vars = [];
       this.#nameReferences = [];
       this.#varReferences = [];
+      this.#configured = emptyConfigured();
     }
     const inner = new Set([...seen, dir]);
     const value = kustomization.value;
@@ -980,24 +1099,35 @@ class Builder {
       if (!existsSync(path)) continue;
       resources.push(...(statSync(path).isDirectory() ? this.build(path, inner) : this.read(path)));
     }
-    // What it generates and inflates is part of what it builds, before any of it is transformed (P263).
-    this.generate(kustomization, resources, at);
-    resources.push(...this.helmCharts(kustomization, at));
-    this.patch(kustomization, resources, at);
-    this.images(value, resources);
-    const given: Kustomized = {
-      ...(text(value['namespace']) === undefined ? {} : { namespace: text(value['namespace']) as string }),
-      ...(text(value['namePrefix']) === undefined ? {} : { prefix: text(value['namePrefix']) as string }),
-      ...(text(value['nameSuffix']) === undefined ? {} : { suffix: text(value['nameSuffix']) as string }),
-    };
+    // What it generates and inflates is part of what it builds, before any of it is transformed (P263), its generator plugins' last (P295).
     this.configure(kustomization, at);
-    const services = new Set(resources.filter((each) => text(each.value['kind']) === 'Service').flatMap((each) => [...each.names]));
-    // The name each resource had before this level renamed it, for the fields its configurations say name it (P289).
-    const before = new Map(resources.map((resource) => [resource, text(isRecord(resource.value['metadata']) ? resource.value['metadata']['name'] : undefined)]));
-    for (const resource of resources) kustomizedResource(resource, given, services);
-    this.renameReferences(resources, before);
-    // Replacements are the last transformer kustomize applies.
-    this.replace(kustomization, resources, at);
+    for (const [key, kind] of [['configMapGenerator', 'ConfigMap'], ['secretGenerator', 'Secret']] as const) {
+      for (const entry of (Array.isArray(value[key]) ? value[key] : []).filter(isRecord)) this.generateOne(kustomization.dir, entry, kind, resources, at(key));
+    }
+    resources.push(...this.helmCharts(kustomization, at));
+    for (const plugin of this.pluginConfigs(kustomization, 'generators', at)) this.generator(kustomization, plugin, resources);
+    this.patch(kustomization, resources, at);
+    // Its own fields' transformers, in the order kustomize runs them, each writing the fields its configurations add (P295).
+    const namespace = text(value['namespace']);
+    if (namespace !== undefined) for (const resource of resources) namespaced(resource, namespace, [...specs(true, [undefined], 'metadata/namespace'), ...this.#configured.namespace], false);
+    const prefix = text(value['namePrefix']);
+    const suffix = text(value['nameSuffix']);
+    for (const resource of resources) affixed(resource, prefix === undefined ? [] : [...NAME_FIELD, ...this.#configured.namePrefix], prefix ?? '', suffix === undefined ? [] : [...NAME_FIELD, ...this.#configured.nameSuffix], suffix ?? '');
+    for (const resource of resources) {
+      pairsWritten(resource.value, labelsOf(value['commonLabels']), [...COMMON_LABELS, ...this.#configured.commonLabels]);
+      for (const entry of (Array.isArray(value['labels']) ? value['labels'] : []).filter(isRecord)) {
+        // `labels:` writes a resource's own labels, its pod templates' where `includeTemplates` says, and its selectors too where `includeSelectors` does.
+        const fields = entry['includeSelectors'] === true ? [...COMMON_LABELS, ...this.#configured.commonLabels] : [...specs(true, [undefined], 'metadata/labels'), ...(entry['includeTemplates'] === true ? TEMPLATE_METADATA('labels') : [])];
+        pairsWritten(resource.value, labelsOf(entry['pairs']), [...fields, ...fieldSpecsOf(entry['fields'])]);
+      }
+      pairsWritten(resource.value, labelsOf(value['commonAnnotations']), [...COMMON_ANNOTATIONS, ...this.#configured.commonAnnotations]);
+    }
+    for (const entry of (Array.isArray(value['images']) ? value['images'] : []).filter(isRecord)) this.imaged(resources, entry, [...IMAGE_FIELDS, ...this.#configured.images]);
+    // Replacements are the last of its own fields' transformers; its transformer plugins run after them (P295).
+    this.replace(kustomization, kustomization.value['replacements'], resources, at('replacements'));
+    for (const plugin of this.pluginConfigs(kustomization, 'transformers', at)) this.transformer(kustomization, plugin, resources);
+    // A field naming a resource by a name it had is renamed with it, once every transformer has run (P289).
+    this.renameReferences(resources);
     for (const entry of (Array.isArray(value['vars']) ? value['vars'] : []).filter(isRecord)) {
       const name = text(entry['name']);
       const fieldref = isRecord(entry['fieldref']) ? entry['fieldref'] : {};
@@ -1012,7 +1142,10 @@ class Builder {
    * The fields a kustomization's `configurations:` files add (P289): each
    * `nameReference` - the fields of other kinds that name a resource of its
    * kind, renamed with it - and each `varReference`, a field vars are
-   * substituted in. A file not read is a row.
+   * substituted in - and the fields its `commonLabels`, `commonAnnotations`,
+   * `namespace`, `namePrefix`, `nameSuffix` and `images` say the
+   * kustomization's own transformers write besides their own (P295). A file
+   * not read is a row.
    */
   private configure(kustomization: Kustomization, at: (key: string) => Where): void {
     const written = kustomization.value['configurations'];
@@ -1033,24 +1166,29 @@ class Builder {
           this.#nameReferences.push({ kind, fields: fieldSpecsOf(reference['fieldSpecs']) });
         }
         this.#varReferences.push(...fieldSpecsOf(document['varReference']));
+        for (const field of CONFIGURED_FIELDS) this.#configured[field].push(...fieldSpecsOf(document[field]));
       }
     }
   }
 
   /**
-   * The fields a configuration says name a resource (P289), renamed as this
-   * level renamed the resource they name: a text there that was the name of a
-   * resource of the kind referred to, before the prefix or suffix, is its name
-   * after.
+   * The fields that name a resource, renamed with it once every transformer
+   * of a level has run: an `Ingress`'s backends by default, and the fields a
+   * configuration says (P289). A text there that is a name the resource had -
+   * before this level's prefix or suffix, or a base's (P295), as kustomize
+   * keeps every name a resource had - is its name now; a name another
+   * resource of the kind has now is left as it is.
    */
-  private renameReferences(resources: readonly Resource[], before: ReadonlyMap<Resource, string | undefined>): void {
-    for (const reference of this.#nameReferences) {
+  private renameReferences(resources: readonly Resource[]): void {
+    for (const reference of [SERVICE_REFERENCES, ...this.#nameReferences]) {
+      const referred = resources.filter((resource) => text(resource.value['kind']) === reference.kind);
+      const nameOf = (resource: Resource): string | undefined => text(isRecord(resource.value['metadata']) ? resource.value['metadata']['name'] : undefined);
+      const current = new Set(referred.flatMap((resource) => nameOf(resource) ?? []));
       const renamed = new Map<string, string>();
-      for (const resource of resources) {
-        if (text(resource.value['kind']) !== reference.kind) continue;
-        const old = before.get(resource);
-        const now = text(isRecord(resource.value['metadata']) ? resource.value['metadata']['name'] : undefined);
-        if (old !== undefined && now !== undefined && old !== now) renamed.set(old, now);
+      for (const resource of referred) {
+        const now = nameOf(resource);
+        if (now === undefined) continue;
+        for (const old of resource.names) if (!current.has(old) && !renamed.has(old)) renamed.set(old, now);
       }
       if (renamed.size === 0) continue;
       for (const resource of resources) {
@@ -1115,63 +1253,57 @@ class Builder {
    * under its name, or under the key written before it (`key=path`), said at
    * the file's first line.
    */
-  private generate(kustomization: Kustomization, resources: Resource[], at: (key: string) => Where): void {
-    const value = kustomization.value;
-    for (const [key, kind] of [['configMapGenerator', 'ConfigMap'], ['secretGenerator', 'Secret']] as const) {
-      const where = at(key);
-      for (const entry of (Array.isArray(value[key]) ? value[key] : []).filter(isRecord)) {
-        const name = text(entry['name']);
-        if (name === undefined) continue;
-        const data: KeyedData = {};
-        const keysAt: Record<string, Where> = {};
-        for (const literal of Array.isArray(entry['literals']) ? entry['literals'] : []) {
-          const written = text(literal);
-          const equals = written?.indexOf('=') ?? -1;
-          if (written === undefined || equals <= 0) continue;
-          data[written.slice(0, equals)] = written.slice(equals + 1).replace(/^(['"])(.*)\1$/, '$2');
-          keysAt[written.slice(0, equals)] = where;
-        }
-        const files = [...(Array.isArray(entry['envs']) ? entry['envs'] : []), ...(text(entry['env']) === undefined ? [] : [entry['env']])];
-        for (const written of files) {
-          const path = text(written) === undefined ? undefined : resolve(kustomization.dir, text(written) as string);
-          const source = path === undefined ? undefined : readText(path);
-          if (path === undefined || source === undefined) continue;
-          source.split('\n').forEach((line, index) => {
-            const assignment = /^\s*([A-Za-z_][\w.-]*)\s*=(.*)$/.exec(line);
-            if (assignment === null || /^\s*#/.test(line)) return;
-            data[assignment[1] as string] = (assignment[2] as string).trim().replace(/^(['"])(.*)\1$/, '$2');
-            keysAt[assignment[1] as string] = { file: this.label(path), line: index + 1 };
-          });
-        }
-        for (const written of Array.isArray(entry['files']) ? entry['files'] : []) {
-          const named = text(written);
-          if (named === undefined) continue;
-          const equals = named.indexOf('=');
-          const file = equals > 0 ? named.slice(equals + 1) : named;
-          const path = resolve(kustomization.dir, file);
-          const source = readText(path);
-          if (source === undefined) continue;
-          const key = equals > 0 ? named.slice(0, equals) : basename(path);
-          data[key] = source;
-          keysAt[key] = { file: this.label(path), line: 1 };
-        }
-        Object.defineProperty(data, KEYS_AT, { value: keysAt, enumerable: false, writable: true });
-        located(data, where);
-        const behavior = text(entry['behavior']) ?? 'create';
-        const existing = behavior === 'create' ? undefined : resources.find((each) => text(each.value['kind']) === kind && each.names.has(name));
-        if (existing !== undefined) {
-          const before = isRecord(existing.value['data']) ? (existing.value['data'] as KeyedData) : {};
-          const merged: KeyedData = behavior === 'merge' ? { ...before, ...data } : data;
-          Object.defineProperty(merged, KEYS_AT, { value: { ...(behavior === 'merge' ? (before[KEYS_AT] ?? {}) : {}), ...keysAt }, enumerable: false, writable: true });
-          located(merged, where);
-          existing.value['data'] = merged;
-          continue;
-        }
-        const namespace = text(entry['namespace']);
-        const metadata = located({ name, ...(namespace === undefined ? {} : { namespace }) }, where);
-        resources.push({ value: located({ apiVersion: 'v1', kind, metadata, data }, where), file: where.file, names: new Set([name]) });
-      }
+  private generateOne(dir: string, entry: Record<string, unknown>, kind: 'ConfigMap' | 'Secret', resources: Resource[], where: Where): void {
+    const name = text(entry['name']);
+    if (name === undefined) return;
+    const data: KeyedData = {};
+    const keysAt: Record<string, Where> = {};
+    for (const literal of Array.isArray(entry['literals']) ? entry['literals'] : []) {
+      const written = text(literal);
+      const equals = written?.indexOf('=') ?? -1;
+      if (written === undefined || equals <= 0) continue;
+      data[written.slice(0, equals)] = written.slice(equals + 1).replace(/^(['"])(.*)\1$/, '$2');
+      keysAt[written.slice(0, equals)] = where;
     }
+    const files = [...(Array.isArray(entry['envs']) ? entry['envs'] : []), ...(text(entry['env']) === undefined ? [] : [entry['env']])];
+    for (const written of files) {
+      const path = text(written) === undefined ? undefined : resolve(dir, text(written) as string);
+      const source = path === undefined ? undefined : readText(path);
+      if (path === undefined || source === undefined) continue;
+      source.split('\n').forEach((line, index) => {
+        const assignment = /^\s*([A-Za-z_][\w.-]*)\s*=(.*)$/.exec(line);
+        if (assignment === null || /^\s*#/.test(line)) return;
+        data[assignment[1] as string] = (assignment[2] as string).trim().replace(/^(['"])(.*)\1$/, '$2');
+        keysAt[assignment[1] as string] = { file: this.label(path), line: index + 1 };
+      });
+    }
+    for (const written of Array.isArray(entry['files']) ? entry['files'] : []) {
+      const named = text(written);
+      if (named === undefined) continue;
+      const equals = named.indexOf('=');
+      const file = equals > 0 ? named.slice(equals + 1) : named;
+      const path = resolve(dir, file);
+      const source = readText(path);
+      if (source === undefined) continue;
+      const key = equals > 0 ? named.slice(0, equals) : basename(path);
+      data[key] = source;
+      keysAt[key] = { file: this.label(path), line: 1 };
+    }
+    Object.defineProperty(data, KEYS_AT, { value: keysAt, enumerable: false, writable: true });
+    located(data, where);
+    const behavior = text(entry['behavior']) ?? 'create';
+    const existing = behavior === 'create' ? undefined : resources.find((each) => text(each.value['kind']) === kind && each.names.has(name));
+    if (existing !== undefined) {
+      const before = isRecord(existing.value['data']) ? (existing.value['data'] as KeyedData) : {};
+      const merged: KeyedData = behavior === 'merge' ? { ...before, ...data } : data;
+      Object.defineProperty(merged, KEYS_AT, { value: { ...(behavior === 'merge' ? (before[KEYS_AT] ?? {}) : {}), ...keysAt }, enumerable: false, writable: true });
+      located(merged, where);
+      existing.value['data'] = merged;
+      return;
+    }
+    const namespace = text(entry['namespace']);
+    const metadata = located({ name, ...(namespace === undefined ? {} : { namespace }) }, where);
+    resources.push({ value: located({ apiVersion: 'v1', kind, metadata, data }, where), file: where.file, names: new Set([name]) });
   }
 
   /**
@@ -1184,34 +1316,33 @@ class Builder {
     const value = kustomization.value;
     const globals = isRecord(value['helmGlobals']) ? value['helmGlobals'] : {};
     const home = resolve(kustomization.dir, text(globals['chartHome']) ?? 'charts');
-    const out: Resource[] = [];
-    for (const entry of (Array.isArray(value['helmCharts']) ? value['helmCharts'] : []).filter(isRecord)) {
-      const name = text(entry['name']);
-      if (name === undefined) continue;
-      const version = text(entry['version']);
-      const dir = chartHomeOf(home, name, version);
-      const where = at('helmCharts');
-      if (dir === undefined) {
-        this.rows.push(row('manifest-unread', where, `${where.file} inflates the chart ${name}${text(entry['repo']) === undefined ? '' : ` from ${text(entry['repo'])}`}, which is not in the project`, 'Keep the chart in the project under helmGlobals.chartHome, or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).', [name]));
-        continue;
-      }
-      const files = [entry['valuesFile'], ...(Array.isArray(entry['additionalValuesFiles']) ? entry['additionalValuesFiles'] : [])].flatMap((each) => (text(each) === undefined ? [] : [resolve(kustomization.dir, text(each) as string)]));
-      const inline = isRecord(entry['valuesInline']) ? [entry['valuesInline']] : [];
-      const reading = chartReadingOf(dir, [...files, ...inline], [], text(entry['releaseName']) ?? name, text(entry['namespace']), `${where.file}:${where.line}`);
-      out.push(...this.inflate(dir, reading, this.rows));
+    return (Array.isArray(value['helmCharts']) ? value['helmCharts'] : []).filter(isRecord).flatMap((entry) => this.inflateOne(kustomization.dir, entry, home, at('helmCharts')));
+  }
+
+  /** One chart a kustomization inflates: a `helmCharts` entry, or a `HelmChartInflationGenerator`'s configuration (P295). */
+  private inflateOne(dir: string, entry: Record<string, unknown>, home: string, where: Where): Resource[] {
+    const name = text(entry['name']);
+    if (name === undefined) return [];
+    const chart = chartHomeOf(home, name, text(entry['version']));
+    if (chart === undefined) {
+      this.rows.push(row('manifest-unread', where, `${where.file} inflates the chart ${name}${text(entry['repo']) === undefined ? '' : ` from ${text(entry['repo'])}`}, which is not in the project`, 'Keep the chart in the project under helmGlobals.chartHome, or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).', [name]));
+      return [];
     }
-    return out;
+    const files = [entry['valuesFile'], ...(Array.isArray(entry['additionalValuesFiles']) ? entry['additionalValuesFiles'] : [])].flatMap((each) => (text(each) === undefined ? [] : [resolve(dir, text(each) as string)]));
+    const inline = isRecord(entry['valuesInline']) ? [entry['valuesInline']] : [];
+    const reading = chartReadingOf(chart, [...files, ...inline], [], text(entry['releaseName']) ?? name, text(entry['namespace']), `${where.file}:${where.line}`);
+    return this.inflate(chart, reading, this.rows);
   }
 
   /**
    * A kustomization's replacements (P263), inline or in the files `path`
    * names: the value at a source's field path, or the part of it a delimiter
    * and an index pick, written at each target's field paths, created where
-   * `create` says. What does not apply is a row.
+   * `create` says. What does not apply is a row. A `ReplacementTransformer`
+   * writes its own (P295).
    */
-  private replace(kustomization: Kustomization, resources: readonly Resource[], at: (key: string) => Where): void {
-    const where = at('replacements');
-    const entries = (Array.isArray(kustomization.value['replacements']) ? kustomization.value['replacements'] : []).filter(isRecord).flatMap((entry): unknown[] => {
+  private replace(kustomization: Kustomization, written: unknown, resources: readonly Resource[], where: Where): void {
+    const entries = (Array.isArray(written) ? written : []).filter(isRecord).flatMap((entry): unknown[] => {
       const path = text(entry['path']);
       if (path === undefined) return [entry];
       return this.readPatch(resolve(kustomization.dir, path)).flatMap((document) => (Array.isArray(document) ? document : [document]));
@@ -1254,78 +1385,244 @@ class Builder {
   private patchDocuments(dir: string, written: unknown, at: Where): unknown[] {
     const inline = text(written);
     if (inline === undefined) return [];
-    if (inline.includes('\n') || inline.trimStart().startsWith('-') || inline.trimStart().startsWith('{')) return documentsOf(inline, at.file, () => at.line);
+    if (inline.includes('\n') || inline.trimStart().startsWith('-') || inline.trimStart().startsWith('{') || inline.trimStart().startsWith('[')) return documentsOf(inline, at.file, () => at.line);
     const path = resolve(dir, inline);
     return existsSync(path) ? this.readPatch(path) : [];
   }
 
-  private patch(kustomization: Kustomization, resources: Resource[], at: (key: string) => Where): void {
-    const value = kustomization.value;
-    const strategic = (patch: unknown, chosen?: readonly Resource[]): void => {
-      if (!isRecord(patch)) return;
-      const kind = text(patch['kind']);
-      const name = text(isRecord(patch['metadata']) ? patch['metadata']['name'] : undefined);
-      for (const each of chosen ?? targets(resources, { ...(kind === undefined ? {} : { kind }), ...(name === undefined ? {} : { name }) })) {
-        const patched = copied(patch);
-        // The patch names the resource; it does not rename it.
-        if (isRecord(patched['metadata'])) delete patched['metadata']['name'];
-        each.value = strategicMerge(each.value, patched, []) as Located;
-      }
-    };
-    const operations = (patch: unknown, chosen: readonly Resource[], where: Where): void => {
-      for (const operation of (Array.isArray(patch) ? patch : []).filter(isRecord)) {
-        for (const each of chosen) {
-          const why = jsonPatch(each.value, operation);
-          if (why !== undefined) this.rows.push(row('manifest-unread', where, `${where.file} does not patch ${[...each.names][0] ?? 'a resource'} as written: ${why}`, UNREAD_HINT, [...each.names]));
-        }
-      }
-    };
-    for (const written of Array.isArray(value['patchesStrategicMerge']) ? value['patchesStrategicMerge'] : []) {
-      for (const patch of this.patchDocuments(kustomization.dir, written, at('patchesStrategicMerge'))) strategic(patch);
+  /** A strategic merge patch over the resources it names by kind and name, or over those chosen. */
+  private strategic(resources: readonly Resource[], patch: unknown, chosen?: readonly Resource[]): void {
+    if (!isRecord(patch)) return;
+    const kind = text(patch['kind']);
+    const name = text(isRecord(patch['metadata']) ? patch['metadata']['name'] : undefined);
+    for (const each of chosen ?? targets(resources, { ...(kind === undefined ? {} : { kind }), ...(name === undefined ? {} : { name }) })) {
+      const patched = copied(patch);
+      // The patch names the resource; it does not rename it.
+      if (isRecord(patched['metadata'])) delete patched['metadata']['name'];
+      each.value = strategicMerge(each.value, patched, []) as Located;
     }
-    for (const key of ['patches', 'patchesJson6902']) {
-      for (const entry of (Array.isArray(value[key]) ? value[key] : []).filter(isRecord)) {
-        const target = targetOf(entry['target']);
-        const where = at(key);
-        const written = entry['patch'] ?? entry['path'];
-        const chosen = target === undefined ? undefined : targets(resources, target);
-        const documents = this.patchDocuments(kustomization.dir, written, where);
-        // A patch written as a list of operations is a JSON 6902 one; a mapping is a strategic merge.
-        const list = documents.find((each) => Array.isArray(each));
-        if (list !== undefined || key === 'patchesJson6902') {
-          if (chosen === undefined) {
-            this.rows.push(row('manifest-unread', where, `${where.file} writes a patch of operations that names no resource it applies to`, UNREAD_HINT, []));
-            continue;
-          }
-          operations(list, chosen, whereOf(list) ?? where);
-          continue;
-        }
-        for (const patch of documents) strategic(patch, chosen);
+  }
+
+  /**
+   * One `patches` or `patchesJson6902` entry, or a `PatchTransformer` /
+   * `PatchJson6902Transformer` (P295): the patch it writes or the file it
+   * names, over the resources its target names. A list of operations is a
+   * JSON 6902 patch, a mapping a strategic merge.
+   */
+  private patchEntry(dir: string, entry: Record<string, unknown>, json6902: boolean, resources: readonly Resource[], where: Where): void {
+    const target = targetOf(entry['target']);
+    const chosen = target === undefined ? undefined : targets(resources, target);
+    const documents = this.patchDocuments(dir, entry['patch'] ?? entry['path'], where);
+    const list = documents.find((each) => Array.isArray(each));
+    if (list === undefined && !json6902) {
+      for (const patch of documents) this.strategic(resources, patch, chosen);
+      return;
+    }
+    if (chosen === undefined) {
+      this.rows.push(row('manifest-unread', where, `${where.file} writes a patch of operations that names no resource it applies to`, UNREAD_HINT, []));
+      return;
+    }
+    const at = whereOf(list) ?? where;
+    for (const operation of (Array.isArray(list) ? list : []).filter(isRecord)) {
+      for (const each of chosen) {
+        const why = jsonPatch(each.value, operation);
+        if (why !== undefined) this.rows.push(row('manifest-unread', at, `${at.file} does not patch ${[...each.names][0] ?? 'a resource'} as written: ${why}`, UNREAD_HINT, [...each.names]));
       }
     }
   }
 
-  /** An `images` entry's new name or tag, given every container running the image it names. */
-  private images(value: Record<string, unknown>, resources: readonly Resource[]): void {
-    for (const entry of (Array.isArray(value['images']) ? value['images'] : []).filter(isRecord)) {
-      const name = text(entry['name']);
-      if (name === undefined) continue;
-      const newName = text(entry['newName']);
-      const newTag = text(entry['newTag']);
-      for (const resource of resources) {
-        const spec = isRecord(resource.value['spec']) && isRecord(resource.value['spec']['template']) ? resource.value['spec']['template']['spec'] : undefined;
-        const containers = isRecord(spec) && Array.isArray(spec['containers']) ? spec['containers'].filter(isRecord) : [];
-        for (const container of containers) {
-          const image = text(container['image']);
-          if (image === undefined) continue;
-          const [repository, tag] = image.includes('@') ? [image.slice(0, image.indexOf('@')), undefined] : /^(.*?)(?::([^:/]+))?$/.exec(image)?.slice(1) ?? [image, undefined];
-          if (repository !== name) continue;
-          container['image'] = `${newName ?? repository}${newTag !== undefined ? `:${newTag}` : tag === undefined ? '' : `:${tag}`}`;
-        }
+  private patch(kustomization: Kustomization, resources: Resource[], at: (key: string) => Where): void {
+    const value = kustomization.value;
+    for (const written of Array.isArray(value['patchesStrategicMerge']) ? value['patchesStrategicMerge'] : []) {
+      for (const patch of this.patchDocuments(kustomization.dir, written, at('patchesStrategicMerge'))) this.strategic(resources, patch);
+    }
+    for (const key of ['patches', 'patchesJson6902']) {
+      for (const entry of (Array.isArray(value[key]) ? value[key] : []).filter(isRecord)) this.patchEntry(kustomization.dir, entry, key === 'patchesJson6902', resources, at(key));
+    }
+  }
+
+  /** An `images` entry, or an `ImageTagTransformer`'s `imageTag` (P295), written over every image it names at the fields given. */
+  private imaged(resources: readonly Resource[], entry: Record<string, unknown>, fields: readonly FieldSpec[]): void {
+    for (const resource of resources) {
+      for (const { holder, key } of textFields(resource.value, fields)) {
+        const now = imageWritten(holder[key] as string, entry);
+        if (now !== undefined) holder[key] = now;
       }
     }
   }
+
+  /**
+   * The configurations a kustomization's `transformers:` or `generators:`
+   * name (P295), in order: each document of a file it lists, of the files a
+   * folder's kustomization lists as its resources, or written inline. One
+   * outside the project, or not there, is a row.
+   */
+  private pluginConfigs(kustomization: Kustomization, key: 'transformers' | 'generators', at: (key: string) => Where): PluginConfig[] {
+    const where = at(key);
+    const out: PluginConfig[] = [];
+    const said = (message: string): void => {
+      this.rows.push(row('manifest-unread', where, `${where.file} ${message}`, UNREAD_HINT, []));
+    };
+    const documents = (path: string): void => {
+      const read = this.readPatch(path).filter(isRecord);
+      if (read.length === 0) said(`lists ${this.label(path)} under ${key}, which is not read`);
+      for (const config of read) out.push({ config, at: whereOf(config) ?? { file: this.label(path), line: 1 } });
+    };
+    for (const each of Array.isArray(kustomization.value[key]) ? kustomization.value[key] : []) {
+      const written = text(each);
+      if (written === undefined) continue;
+      if (written.includes('\n')) {
+        for (const config of documentsOf(written, where.file, () => where.line).filter(isRecord)) out.push({ config, at: where });
+        continue;
+      }
+      if (/^[a-z]+:\/\//i.test(written) || written.startsWith('github.com')) {
+        said(`lists ${written} under ${key}, which is not in the project`);
+        continue;
+      }
+      const path = resolve(kustomization.dir, written);
+      if (!existsSync(path)) {
+        said(`lists ${written} under ${key}, which is not in the project`);
+        continue;
+      }
+      if (!statSync(path).isDirectory()) {
+        documents(path);
+        continue;
+      }
+      // A folder is a kustomization whose resources are the configurations.
+      const inner = kustomizationAt(path);
+      if (inner === undefined) {
+        said(`lists the folder ${written} under ${key}, which holds no kustomization`);
+        continue;
+      }
+      for (const listed of Array.isArray(inner.value['resources']) ? inner.value['resources'] : []) {
+        const file = text(listed) === undefined ? undefined : resolve(path, text(listed) as string);
+        if (file !== undefined && existsSync(file) && !statSync(file).isDirectory()) documents(file);
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Whether a plugin's configuration is one of kustomize's own (`apiVersion:
+   * builtin`), which is read; an exec or Go plugin, or a KRM function, is
+   * run by kustomize rather than written in the project, and is a row.
+   */
+  private builtin(plugin: PluginConfig, role: 'transformer' | 'generator'): boolean {
+    const { config, at } = plugin;
+    const apiVersion = text(config['apiVersion']);
+    const kind = text(config['kind']) ?? 'a configuration with no kind';
+    const metadata = isRecord(config['metadata']) ? config['metadata'] : {};
+    const annotations = isRecord(metadata['annotations']) ? metadata['annotations'] : {};
+    const function_ = annotations['config.kubernetes.io/function'] !== undefined || annotations['config.k8s.io/function'] !== undefined;
+    if (apiVersion === 'builtin' && !function_) return true;
+    this.rows.push(
+      row(
+        'manifest-unread',
+        at,
+        `${at.file} configures the ${role} ${kind}${apiVersion === undefined ? '' : ` (${apiVersion})`}, ${function_ ? 'a KRM function' : 'an exec or Go plugin'} kustomize runs; what it does to the resources is not read`,
+        'Write what it does with a kustomization field or a built-in transformer (namePrefix, labels, patches, images, configMapGenerator), or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).',
+        [],
+      ),
+    );
+    return false;
+  }
+
+  /** One of a kustomization's `generators:` (P295): a `ConfigMapGenerator`, `SecretGenerator` or `HelmChartInflationGenerator`, read as the field it stands for. */
+  private generator(kustomization: Kustomization, plugin: PluginConfig, resources: Resource[]): void {
+    if (!this.builtin(plugin, 'generator')) return;
+    const { config, at } = plugin;
+    const kind = text(config['kind']);
+    const metadata = isRecord(config['metadata']) ? config['metadata'] : {};
+    if (kind === 'ConfigMapGenerator' || kind === 'SecretGenerator') {
+      this.generateOne(kustomization.dir, { ...config, name: metadata['name'], namespace: metadata['namespace'] }, kind === 'ConfigMapGenerator' ? 'ConfigMap' : 'Secret', resources, at);
+      return;
+    }
+    if (kind === 'HelmChartInflationGenerator') {
+      resources.push(...this.inflateOne(kustomization.dir, config, resolve(kustomization.dir, text(config['chartHome']) ?? 'charts'), at));
+      return;
+    }
+    this.rows.push(row('manifest-unread', at, `${at.file} configures the built-in generator ${kind ?? '?'}, which is not read`, UNREAD_HINT, []));
+  }
+
+  /**
+   * One of a kustomization's `transformers:` (P295): kustomize's built-in
+   * transformers, each over the fields its `fieldSpecs` name - a prefix and a
+   * suffix, labels, annotations, a namespace, an image - and its patches and
+   * replacements as the fields that write them. Those that change nothing
+   * read here (replicas, hashes, order) are passed; any other is a row.
+   */
+  private transformer(kustomization: Kustomization, plugin: PluginConfig, resources: Resource[]): void {
+    if (!this.builtin(plugin, 'transformer')) return;
+    const { config, at } = plugin;
+    const kind = text(config['kind']) ?? '';
+    const fields = fieldSpecsOf(config['fieldSpecs']);
+    switch (kind) {
+      case 'PrefixSuffixTransformer':
+        for (const resource of resources) affixed(resource, fields, text(config['prefix']) ?? '', fields, text(config['suffix']) ?? '');
+        return;
+      case 'LabelTransformer':
+        for (const resource of resources) pairsWritten(resource.value, labelsOf(config['labels']), fields);
+        return;
+      case 'AnnotationsTransformer':
+        for (const resource of resources) pairsWritten(resource.value, labelsOf(config['annotations']), fields);
+        return;
+      case 'NamespaceTransformer': {
+        const namespace = text(isRecord(config['metadata']) ? config['metadata']['namespace'] : undefined);
+        if (namespace !== undefined) for (const resource of resources) namespaced(resource, namespace, fields, config['unsetOnly'] === true);
+        return;
+      }
+      case 'ImageTagTransformer':
+        if (isRecord(config['imageTag'])) this.imaged(resources, config['imageTag'], fields.length === 0 ? IMAGE_FIELDS : fields);
+        return;
+      case 'PatchTransformer':
+        this.patchEntry(kustomization.dir, config, false, resources, at);
+        return;
+      case 'PatchJson6902Transformer':
+        this.patchEntry(kustomization.dir, { ...config, patch: config['jsonOp'] ?? config['patch'] }, true, resources, at);
+        return;
+      case 'PatchStrategicMergeTransformer':
+        for (const written of [...(Array.isArray(config['paths']) ? config['paths'] : []), ...(config['patches'] === undefined ? [] : [config['patches']])]) {
+          for (const patch of this.patchDocuments(kustomization.dir, written, at)) this.strategic(resources, patch);
+        }
+        return;
+      case 'ReplacementTransformer':
+        this.replace(kustomization, config['replacements'], resources, at);
+        return;
+      default:
+        if (TRANSFORMERS_NOTHING_DRAWN.has(kind)) return;
+        this.rows.push(row('manifest-unread', at, `${at.file} configures the built-in transformer ${kind || '?'}, which is not read`, UNREAD_HINT, []));
+    }
+  }
 }
+
+/**
+ * A resource's fields written with a prefix and a suffix (P295): each text
+ * at the fields its specs name (by default its name), the prefix where the
+ * prefix's specs name it and the suffix where the suffix's do. A name written
+ * is one the resource is known by.
+ */
+const affixed = (resource: Resource, before: readonly FieldSpec[], prefix: string, after: readonly FieldSpec[], suffix: string): void => {
+  // A prefix is written over what is there; it makes no field.
+  const prefixed = prefix === '' ? [] : textFields(resource.value, before.map(({ create: _, ...spec }) => spec));
+  const suffixed = suffix === '' ? [] : textFields(resource.value, after.map(({ create: _, ...spec }) => spec));
+  const same = (a: { holder: unknown; key: unknown }) => (b: { holder: unknown; key: unknown }): boolean => a.holder === b.holder && a.key === b.key;
+  for (const field of [...prefixed, ...suffixed.filter((each) => !prefixed.some(same(each)))]) {
+    const was = field.holder[field.key];
+    if (typeof was !== 'string' || was === '') continue;
+    field.holder[field.key] = `${prefixed.some(same(field)) ? prefix : ''}${was}${suffixed.some(same(field)) ? suffix : ''}`;
+  }
+  const name = text(isRecord(resource.value['metadata']) ? resource.value['metadata']['name'] : undefined);
+  if (name !== undefined) resource.names.add(name);
+};
+
+/** A namespace written at the fields its specs name (P295), made where they say; only where none is written, with `unsetOnly`. */
+const namespaced = (resource: Resource, namespace: string, fields: readonly FieldSpec[], unsetOnly: boolean): void => {
+  if (!isRecord(resource.value['metadata'])) return;
+  for (const { holder, key } of textFields(resource.value, fields)) {
+    if (unsetOnly && holder[key] !== '') continue;
+    holder[key] = namespace;
+  }
+};
 
 // ---------------------------------------------------------------- charts
 
@@ -1543,6 +1840,18 @@ const importsOf = (written: unknown): Subchart['imports'] =>
     return [{ child: text(entry['child']) as string, parent: text(entry['parent']) ?? '.' }];
   });
 
+/** A dependency of a chart only a chart repository has (P295): nothing fetched it into the project, and no repository is read. */
+interface Unfetched {
+  readonly name: string;
+  readonly repository: string;
+  readonly version?: string;
+  readonly condition?: string;
+  readonly tags: readonly string[];
+  /** The `Chart.yaml` (or `requirements.yaml`) naming it, absolute, and the line. */
+  readonly file: string;
+  readonly line: number;
+}
+
 /** The packed archive of a dependency in `charts/`: `<name>-<version>.tgz`, or the one `<name>-*.tgz` there is (P289). */
 const packedDependency = (dir: string, name: string, version: string | undefined): string | undefined => {
   const archives = chartEntries(join(dir, 'charts')).filter((entry) => entry.endsWith('.tgz') && entry.startsWith(`${name}-`));
@@ -1557,21 +1866,29 @@ const packedDependency = (dir: string, name: string, version: string | undefined
  * with a `file://` repository, unpacked in `charts/` or packed there as
  * `<name>-<version>.tgz` (P289), and every other chart unpacked or packed in
  * `charts/`, which the tool that installs it renders too. A repository's
- * chart nothing has fetched into the project is not in it.
+ * chart nothing has fetched into the project is not in it: it is handed to
+ * `unfetched`, for the caller to say so (P295).
  */
-export const subchartsOf = (dir: string): Subchart[] => {
+export const subchartsOf = (dir: string, unfetched?: Unfetched[]): Subchart[] => {
   const meta = yamlValue(join(dir, 'Chart.yaml'));
-  const written = Array.isArray(meta['dependencies']) ? meta['dependencies'] : (yamlValue(join(dir, 'requirements.yaml'))['dependencies'] as unknown);
+  const own = Array.isArray(meta['dependencies']);
+  const written = own ? meta['dependencies'] : (yamlValue(join(dir, 'requirements.yaml'))['dependencies'] as unknown);
   const out: Subchart[] = [];
   for (const dependency of (Array.isArray(written) ? written : []).filter(isRecord)) {
     const name = text(dependency['name']);
     if (name === undefined) continue;
     const repository = text(dependency['repository']) ?? '';
+    const version = text(dependency['version']);
     const unpacked = repository.startsWith('file://') ? resolve(dir, repository.slice('file://'.length)) : join(dir, 'charts', name);
-    const path = chartFileExists(join(unpacked, 'Chart.yaml')) ? unpacked : packedDependency(dir, name, text(dependency['version']));
-    if (path === undefined) continue;
+    const path = chartFileExists(join(unpacked, 'Chart.yaml')) ? unpacked : packedDependency(dir, name, version);
     const condition = text(dependency['condition']);
     const tags = (Array.isArray(dependency['tags']) ? dependency['tags'] : []).flatMap((tag) => (text(tag) === undefined ? [] : [text(tag) as string]));
+    if (path === undefined) {
+      const file = join(dir, own ? 'Chart.yaml' : 'requirements.yaml');
+      const line = (readText(file) ?? '').split('\n').findIndex((each) => each.replace(/^\s*-?\s*name:\s*/, '').replace(/^['"]|['"]?\s*$/g, '') === name && /^\s*-?\s*name:/.test(each));
+      unfetched?.push({ name, repository, ...(version === undefined ? {} : { version }), ...(condition === undefined ? {} : { condition }), tags, file, line: line < 0 ? 1 : line + 1 });
+      continue;
+    }
     out.push({ dir: path, key: text(dependency['alias']) ?? name, ...(condition === undefined ? {} : { condition }), tags, imports: importsOf(dependency['import-values']) });
   }
   for (const name of chartEntries(join(dir, 'charts'))) {
@@ -1589,7 +1906,7 @@ const CHART_DEPTH = 4;
 const valueAtPath = (values: Record<string, unknown>, path: string): unknown => path.split('.').filter((key) => key !== '').reduce<unknown>((value, key) => (isRecord(value) ? value[key] : undefined), values);
 
 /** Whether a dependency is left out by the values: its condition's first path the values set is false, or every tag it names is. */
-const leftOut = (values: Record<string, unknown>, sub: Subchart): boolean => {
+const leftOut = (values: Record<string, unknown>, sub: Pick<Subchart, 'condition' | 'tags'>): boolean => {
   for (const path of (sub.condition ?? '').split(',').map((each) => each.trim()).filter((each) => each !== '')) {
     const set = valueAtPath(values, path);
     if (typeof set === 'boolean') return !set;
@@ -1601,21 +1918,27 @@ const leftOut = (values: Record<string, unknown>, sub: Subchart): boolean => {
 /**
  * The chart and every chart it renders inside its release, with the values
  * each is given. What a dependency's `import-values` hands up is merged under
- * the parent's own values (P289), the parent's winning, as helm imports them.
+ * the parent's own values (P289), the parent's winning, as helm imports them;
+ * a dependency's own tree is settled first, so what its dependencies hand it
+ * is among what it hands up (P295). A dependency the values keep that only a
+ * chart repository has is handed to `unfetched` (P295).
  */
-const chartTree = (dir: string, reading: ChartReading, depth = 0): Array<{ dir: string; reading: ChartReading }> => {
+const chartTree = (dir: string, reading: ChartReading, unfetched: (dependency: Unfetched) => void, depth = 0): Array<{ dir: string; reading: ChartReading }> => {
   if (depth > CHART_DEPTH) return [];
   const parent = reading.context.values;
   const below: Array<{ dir: string; reading: ChartReading }> = [];
   let imported: Record<string, unknown> = {};
-  for (const sub of subchartsOf(dir)) {
+  const missing: Unfetched[] = [];
+  for (const sub of subchartsOf(dir, missing)) {
     if (leftOut(parent, sub)) continue;
     const own = yamlValue(join(sub.dir, 'values.yaml'));
     const given = isRecord(parent[sub.key]) ? (parent[sub.key] as Record<string, unknown>) : {};
     const global = mergedValues(isRecord(own['global']) ? own['global'] : {}, isRecord(parent['global']) ? parent['global'] : {});
     const values = mergedValues(mergedValues(own, given), Object.keys(global).length === 0 ? {} : { global });
+    const tree = chartTree(sub.dir, { ...reading, context: { values, release: reading.context.release, chart: chartMetaOf(sub.dir) } }, unfetched, depth + 1);
+    const settled = tree[0]?.reading.context.values ?? values;
     for (const each of sub.imports) {
-      const handed = valueAtPath(values, each.child);
+      const handed = valueAtPath(settled, each.child);
       if (handed === undefined) continue;
       const at = each.parent.split('.').filter((key) => key !== '');
       if (at.length === 0 && !isRecord(handed)) continue;
@@ -1623,11 +1946,12 @@ const chartTree = (dir: string, reading: ChartReading, depth = 0): Array<{ dir: 
       for (const key of [...at].reverse()) nested = { [key]: nested };
       imported = mergedValues(imported, nested as Record<string, unknown>);
     }
-    below.push({ dir: sub.dir, reading: { ...reading, context: { values, release: reading.context.release, chart: chartMetaOf(sub.dir) } } });
+    below.push(...tree);
   }
+  for (const each of missing) if (!leftOut(parent, each)) unfetched(each);
   const values = Object.keys(imported).length === 0 ? parent : mergedValues(imported, parent);
   const own = values === parent ? reading : { ...reading, context: { ...reading.context, values } };
-  return [{ dir, reading: own }, ...below.flatMap((each) => chartTree(each.dir, each.reading, depth + 1))];
+  return [{ dir, reading: own }, ...below];
 };
 
 const templatesOf = (dir: string): string[] => chartEntries(join(dir, 'templates'));
@@ -1635,10 +1959,16 @@ const templatesOf = (dir: string): string[] => chartEntries(join(dir, 'templates
 /**
  * Every template of a chart, and of every chart it depends on (P263),
  * rendered every way one reading makes it go; the helpers are the whole
- * tree's, as the tool that installs it shares them.
+ * tree's, as the tool that installs it shares them. A dependency only a chart
+ * repository has is a row (P295): no repository is fetched.
  */
 const chartResources = (dir: string, reading: ChartReading, label: (path: string) => string, rows: ManifestRow[]): Resource[] => {
-  const tree = chartTree(dir, reading);
+  const tree = chartTree(dir, reading, (dependency) => {
+    const file = label(dependency.file);
+    const message = `${file} depends on the chart ${dependency.name}${dependency.version === undefined ? '' : ` ${dependency.version}`}${dependency.repository === '' ? '' : ` from ${dependency.repository}`}, which nothing has fetched into the project (charts/ holds no ${dependency.name}); no chart repository is read, so its templates are not rendered`;
+    if (rows.some((seen) => seen.file === file && seen.line === dependency.line && seen.message === message)) return;
+    rows.push(row('manifest-unread', { file, line: dependency.line }, message, 'Keep the chart in the project (helm dependency build writes it to charts/), or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).', [dependency.name, ...(reading.context.release.name === undefined ? [] : [reading.context.release.name]), ...(chartMetaOf(dir).name === undefined ? [] : [chartMetaOf(dir).name as string])]));
+  });
   const helpers = definesOf(tree.flatMap((each) => templatesOf(each.dir).filter((name) => name.endsWith('.tpl')).flatMap((name) => readText(join(each.dir, 'templates', name)) ?? [])));
   return tree.flatMap((each) => templateResources(each.dir, each.reading, helpers, label, rows));
 };

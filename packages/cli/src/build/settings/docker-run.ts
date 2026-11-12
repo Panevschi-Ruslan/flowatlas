@@ -28,7 +28,7 @@ export interface DockerRun {
 }
 
 /** The words of a command, as the shared reader splits them, and where it is written. */
-export type CommandAt = Pick<Command, 'words' | 'line' | 'file'> & Partial<Pick<Command, 'dirs'>>;
+export type CommandAt = Pick<Command, 'words' | 'line' | 'file'> & Partial<Pick<Command, 'dirs' | 'env'>>;
 
 /** Where a `docker run` is written, beside what it runs. */
 export type DockerRunAt = DockerRun & { readonly file: string };
@@ -272,17 +272,33 @@ export interface HelmfileRun {
   readonly selectors: readonly string[];
   /** What else keeping releases by name keeps (P273): `--include-needs`, `--include-transitive-needs`. */
   readonly needs: 'none' | 'direct' | 'transitive';
+  /**
+   * Whether it runs with helmfile's explicit selector inheritance
+   * (`HELMFILE_EXPERIMENTAL=explicit-selector-inheritance`, or `true`, every
+   * experimental feature) (P295): a sub-helmfile writing no selectors then
+   * keeps every release of its own, unless it writes `selectorsInherited`.
+   */
+  readonly explicitSelectors: boolean;
   readonly line: number;
   readonly file: string;
   readonly dirs: readonly string[];
 }
+
+/** The value of helmfile's experimental features a command runs with, written in its environment or after `env` before it. */
+const experimentalOf = (words: readonly string[], env: CommandAt['env']): string | undefined => {
+  const at = words.findIndex((word) => isProgram(word, 'helmfile'));
+  const inline = words.slice(0, Math.max(at, 0)).find((word) => word.startsWith('HELMFILE_EXPERIMENTAL='));
+  if (inline !== undefined) return inline.slice('HELMFILE_EXPERIMENTAL='.length);
+  const set = env?.['HELMFILE_EXPERIMENTAL'];
+  return typeof set === 'string' ? set : undefined;
+};
 
 const HELMFILE_VALUED = new Set(['-f', '--file', '-e', '--environment', '--state-values-set', '--state-values-file', '-l', '--selector', '--kube-context', '-n', '--namespace', '-c', '--chart', '--helm-binary', '-b']);
 
 /** Every `helmfile` command the commands write that installs or renders releases (P263). */
 export const readHelmfileRuns = (commands: readonly CommandAt[]): HelmfileRun[] => {
   const out: HelmfileRun[] = [];
-  for (const { words, line, file, dirs } of commands) {
+  for (const { words, line, file, dirs, env } of commands) {
     const rest = argumentsOf(words, 'helmfile');
     if (rest === undefined) continue;
     const options: Array<[string, string]> = [];
@@ -310,6 +326,7 @@ export const readHelmfileRuns = (commands: readonly CommandAt[]): HelmfileRun[] 
       releases,
       selectors: valued('-l', '--selector').filter((each) => !each.includes('$')),
       needs: rest.includes('--include-transitive-needs') ? 'transitive' : rest.includes('--include-needs') ? 'direct' : 'none',
+      explicitSelectors: /^(?:true|.*\bexplicit-selector-inheritance\b.*)$/.test(experimentalOf(words, env) ?? ''),
       line,
       file,
       dirs: dirs ?? ['.'],

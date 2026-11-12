@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { commandsAround } from '@flowatlas/serverless';
 import { readManifestsUnder, type ChartInstall } from './cluster.js';
 import { readHelmfile } from './helmfile.js';
-import { readHelmInstalls, readPortForwards } from './docker-run.js';
+import { readHelmfileRuns, readHelmInstalls, readPortForwards } from './docker-run.js';
 import { renderings, setValue, UNREAD_MARK, type ChartContext } from './helm.js';
 import { readProjectSettings } from './read.js';
 
@@ -797,7 +797,7 @@ describe('sub-helmfiles, release templates, packed charts and kustomize configur
       'production stock apps/stock/helmfile.yaml:5 []',
     ]);
     expect(read.rows.map((row) => `${row.file}:${row.line} ${row.message}`)).toEqual([
-      'helmfile.yaml:13 helmfile.yaml is not read from line 13: the sub-helmfile git::https://example.test/infra.git@helmfile.yaml is not a file of the project',
+      'helmfile.yaml:13 helmfile.yaml is not read from line 13: the sub-helmfile git::https://example.test/infra.git@helmfile.yaml is fetched from outside the project when helmfile runs, and nothing remote is fetched here',
       'helmfile.yaml:14 helmfile.yaml is not read from line 14: the sub-helmfile apps/missing.yaml is not in the project',
     ]);
     // A command's selectors reach a sub-helmfile that writes none of its own; one that writes its own is read with those.
@@ -936,5 +936,250 @@ describe('sub-helmfiles, release templates, packed charts and kustomize configur
     ]);
     expect(read.workloads[0]?.containers[0]?.environment).toEqual([{ name: 'UPSTREAM', raw: 'http://orders:8080' }]);
     expect(read.rows ?? []).toEqual([]);
+  });
+});
+
+describe('kustomize transformer and generator configurations, helmfile selectors, needs and hooks, and chart imports (P295)', () => {
+  const label = (dir: string) => (path: string): string => relative(join(dir, 'deploy'), path).split(sep).join(posix.sep);
+
+  it("runs a kustomization's built-in transformers and generators from their files, and says a plugin it does not run", () => {
+    const dir = project({
+      'shop/k8s/kustomization.yaml': lines(
+        'resources:',
+        '  - orders.yaml',
+        'generators:',
+        '  - generators/settings.yaml',
+        'transformers:',
+        '  - transformers/prefix.yaml',
+        '  - transformers/labels.yaml',
+        '  - transformers/namespace.yaml',
+        '  - transformers/images.yaml',
+        '  - transformers/port.yaml',
+        '  - transformers/replicas.yaml',
+        '  - transformers/inject.yaml',
+      ),
+      'shop/k8s/orders.yaml': [
+        DEPLOYMENT('orders', 3000, ['          envFrom:', '            - configMapRef:', '                name: orders-settings']),
+        lines('apiVersion: v1', 'kind: Service', 'metadata:', '  name: orders', 'spec:', '  ports:', '    - port: 80', '      targetPort: 3000'),
+        lines(
+          'apiVersion: networking.k8s.io/v1',
+          'kind: Ingress',
+          'metadata:',
+          '  name: edge',
+          'spec:',
+          '  rules:',
+          '    - host: shop.example.test',
+          '      http:',
+          '        paths:',
+          '          - path: /orders',
+          '            pathType: Prefix',
+          '            backend:',
+          '              service:',
+          '                name: orders',
+          '                port:',
+          '                  number: 8080',
+        ),
+      ].join('\n---\n'),
+      'shop/k8s/generators/settings.yaml': lines('apiVersion: builtin', 'kind: ConfigMapGenerator', 'metadata:', '  name: orders-settings', 'literals:', '  - PORT=3000', '  - REGION=eu'),
+      'shop/k8s/transformers/prefix.yaml': lines('apiVersion: builtin', 'kind: PrefixSuffixTransformer', 'metadata:', '  name: prefix', 'prefix: shop-', 'fieldSpecs:', '  - path: metadata/name'),
+      'shop/k8s/transformers/labels.yaml': lines(
+        'apiVersion: builtin',
+        'kind: LabelTransformer',
+        'metadata:',
+        '  name: labels',
+        'labels:',
+        '  app: orders',
+        '  tier: api',
+        'fieldSpecs:',
+        '  - path: metadata/labels',
+        '    create: true',
+        '  - kind: Service',
+        '    path: spec/selector',
+        '    create: true',
+        '  - kind: Deployment',
+        '    path: spec/template/metadata/labels',
+        '    create: true',
+      ),
+      'shop/k8s/transformers/namespace.yaml': lines('apiVersion: builtin', 'kind: NamespaceTransformer', 'metadata:', '  name: namespace', '  namespace: shop', 'fieldSpecs:', '  - path: metadata/namespace', '    create: true'),
+      'shop/k8s/transformers/images.yaml': lines('apiVersion: builtin', 'kind: ImageTagTransformer', 'metadata:', '  name: images', 'imageTag:', '  name: registry.example.test/orders', '  newName: registry.example.test/orders-api'),
+      'shop/k8s/transformers/port.yaml': lines(
+        'apiVersion: builtin',
+        'kind: PatchTransformer',
+        'metadata:',
+        '  name: port',
+        'target:',
+        '  kind: Service',
+        'patch: |-',
+        '  - op: replace',
+        '    path: /spec/ports/0/port',
+        '    value: 8080',
+      ),
+      'shop/k8s/transformers/replicas.yaml': lines('apiVersion: builtin', 'kind: ReplicaCountTransformer', 'metadata:', '  name: replicas', 'replica:', '  name: orders', '  count: 3'),
+      'shop/k8s/transformers/inject.yaml': lines('apiVersion: tools.example.test/v1', 'kind: SidecarInjector', 'metadata:', '  name: inject'),
+    });
+    const read = readManifestsUnder(join(dir, 'shop'));
+    expect(read.services.map((each) => `${each.namespace}/${each.name} ${JSON.stringify(each.selector)} ${each.ports.map((port) => `${port.port}:${port.target}`).join(',')}`)).toEqual(['shop/shop-orders {"app":"orders","tier":"api"} 8080:3000']);
+    expect(read.workloads.map((each) => `${each.namespace}/${each.name} ${JSON.stringify(each.labels)} ${each.containers.map((container) => `${container.image} ${container.environment.map((env) => `${env.name}=${env.raw}`).join(',')}`).join(';')}`)).toEqual([
+      'shop/shop-orders {"app":"orders","tier":"api"} orders-api PORT=3000,REGION=eu',
+    ]);
+    expect(read.ingresses?.map((each) => `${each.namespace}/${each.name} ${each.paths.map((path) => `${path.path}>${path.backends.map((backend) => `${backend.name}:${backend.port}`).join(',')}`).join(' ')}`)).toEqual(['shop/shop-edge /orders>shop-orders:8080']);
+    expect(read.rows?.map((row) => `${row.file}:${row.line} ${row.message}`)).toEqual([
+      'k8s/transformers/inject.yaml:1 k8s/transformers/inject.yaml configures the transformer SidecarInjector (tools.example.test/v1), an exec or Go plugin kustomize runs; what it does to the resources is not read',
+    ]);
+  });
+
+  it("writes a kustomization's labels where kustomize does, and the fields its configurations add, a name prefix reaching a gateway a route names by a base's name", () => {
+    const dir = project({
+      'shop/k8s/base/kustomization.yaml': lines('resources:', '  - orders.yaml', 'commonLabels:', '  app.kubernetes.io/part-of: shop', 'configurations:', '  - gateway-names.yaml'),
+      'shop/k8s/base/gateway-names.yaml': lines(
+        'nameReference:',
+        '  - kind: Gateway',
+        '    fieldSpecs:',
+        '      - kind: HTTPRoute',
+        '        path: spec/parentRefs/name',
+        'commonLabels:',
+        '  - kind: Service',
+        '    path: metadata/annotations',
+        '    create: true',
+        'namespace:',
+        '  - kind: HTTPRoute',
+        '    path: spec/parentRefs/namespace',
+        '    create: true',
+      ),
+      'shop/k8s/base/orders.yaml': [
+        DEPLOYMENT('orders', 3000),
+        lines('apiVersion: v1', 'kind: Service', 'metadata:', '  name: orders', 'spec:', '  ports:', '    - port: 80', '      targetPort: 3000'),
+        lines('apiVersion: gateway.networking.k8s.io/v1', 'kind: Gateway', 'metadata:', '  name: edge', 'spec:', '  listeners:', '    - hostname: shop.example.test'),
+      ].join('\n---\n'),
+      'shop/k8s/production/kustomization.yaml': lines(
+        'resources:',
+        '  - ../base',
+        '  - route.yaml',
+        'namePrefix: live-',
+        'namespace: production',
+        'labels:',
+        '  - pairs:',
+        '      env: production',
+        '    includeTemplates: true',
+      ),
+      'shop/k8s/production/route.yaml': lines(
+        'apiVersion: gateway.networking.k8s.io/v1',
+        'kind: HTTPRoute',
+        'metadata:',
+        '  name: orders',
+        'spec:',
+        '  parentRefs:',
+        '    - name: edge',
+        '  rules:',
+        '    - matches:',
+        '        - path: { type: PathPrefix, value: /orders }',
+        '      backendRefs:',
+        '        - name: orders',
+        '          port: 80',
+      ),
+    });
+    const read = readManifestsUnder(join(dir, 'shop'));
+    // commonLabels reach the selector and the pod template; labels: without includeSelectors reaches the pod template only.
+    expect(read.services.map((each) => `${each.namespace}/${each.name} ${JSON.stringify(each.selector)}`)).toEqual(['production/live-orders {"app.kubernetes.io/part-of":"shop"}']);
+    expect(read.workloads.map((each) => `${each.name} ${JSON.stringify(each.labels)}`)).toEqual(['live-orders {"app":"orders","app.kubernetes.io/part-of":"shop","env":"production"}']);
+    // The route is the overlay's; the gateway it names by the base's name is renamed with the prefix, so the route takes its hosts.
+    expect(read.ingresses?.map((each) => `${each.name} ${each.hosts.join(',')} ${each.paths.map((path) => `${path.path}>${path.backends.map((backend) => backend.name).join(',')}`).join(' ')}`)).toEqual(['live-orders shop.example.test /orders>orders']);
+    expect(read.rows ?? []).toEqual([]);
+  });
+
+  it('reads a sub-helmfile with the selectors helmfile gives it under explicit selector inheritance, and says one writing both', () => {
+    const chart = (name: string): Record<string, string> => ({
+      [`deploy/charts/${name}/Chart.yaml`]: `apiVersion: v2\nname: ${name}\nversion: 0.1.0\n`,
+      [`deploy/charts/${name}/templates/service.yaml`]: SERVICE(name, 80, 3000),
+    });
+    const dir = project({
+      ...chart('orders'),
+      ...chart('stock'),
+      'deploy/helmfile.yaml': lines(
+        'helmfiles:',
+        '  - path: apps/orders.yaml',
+        '  - path: apps/stock.yaml',
+        '    selectorsInherited: true',
+        '  - path: apps/stock.yaml',
+        '    selectors: [tier=web]',
+        '    selectorsInherited: true',
+      ),
+      'deploy/apps/orders.yaml': lines('releases:', '  - name: orders', '    chart: ../charts/orders', '    labels: { tier: web }', '  - name: orders-admin', '    chart: ../charts/orders', '    labels: { tier: admin }'),
+      'deploy/apps/stock.yaml': lines('releases:', '  - name: stock', '    chart: ../charts/stock', '    labels: { tier: web }', '  - name: stock-admin', '    chart: ../charts/stock', '    labels: { tier: admin }'),
+    });
+    const releases = (explicitSelectors: boolean): string[] => readHelmfile(join(dir, 'deploy/helmfile.yaml'), label(dir), { selectors: ['tier=admin'], explicitSelectors }).installs.map((each) => each.release as string);
+    // Legacy inheritance: a sub-helmfile writing no selectors takes the command's.
+    expect(releases(false)).toEqual(['orders-admin', 'stock-admin']);
+    // Explicit inheritance: it keeps every release of its own, and only selectorsInherited takes the command's.
+    expect(releases(true)).toEqual(['orders', 'orders-admin', 'stock-admin']);
+    expect(readHelmfile(join(dir, 'deploy/helmfile.yaml'), label(dir)).rows.map((row) => `${row.file}:${row.line} ${row.message}`)).toEqual([
+      'helmfile.yaml:5 helmfile.yaml is not read from line 5: the sub-helmfile apps/stock.yaml writes both selectors and selectorsInherited, which helmfile refuses',
+    ]);
+  });
+
+  it('reads the explicit selector inheritance a command runs helmfile with', () => {
+    const runs = readHelmfileRuns([
+      { words: ['helmfile', '-l', 'tier=api', 'apply'], line: 1, file: 'deploy.sh', env: { HELMFILE_EXPERIMENTAL: 'explicit-selector-inheritance' } },
+      { words: ['env', 'HELMFILE_EXPERIMENTAL=true', 'helmfile', 'sync'], line: 2, file: 'deploy.sh' },
+      { words: ['helmfile', 'apply'], line: 3, file: 'deploy.sh' },
+    ]);
+    expect(runs.map((run) => run.explicitSelectors)).toEqual([true, true, false]);
+  });
+
+  it("answers a need from another helmfile of the state, and says a release's hooks", () => {
+    const dir = project({
+      'deploy/charts/orders/Chart.yaml': 'apiVersion: v2\nname: orders\nversion: 0.1.0\n',
+      'deploy/helmfile.yaml': lines('helmfiles:', '  - apps/data.yaml', '  - apps/orders.yaml', 'releases:', '  - name: edge', '    chart: ./charts/orders', '    needs: [shop/orders, cache]'),
+      'deploy/apps/data.yaml': lines('releases:', '  - name: db', '    namespace: shop', '    chart: ../charts/orders'),
+      'deploy/apps/orders.yaml': lines(
+        'releases:',
+        '  - name: orders',
+        '    namespace: shop',
+        '    chart: ../charts/orders',
+        '    needs: [shop/db]',
+        '    hooks:',
+        '      - events: [presync]',
+        '        command: ./scripts/migrate.sh',
+      ),
+    });
+    const read = readHelmfile(join(dir, 'deploy/helmfile.yaml'), label(dir));
+    expect(read.installs.map((each) => `${each.release} ${each.file}:${each.line} needs ${(each.needs ?? []).join(',')}`)).toEqual(['db apps/data.yaml:2 needs ', 'orders apps/orders.yaml:2 needs db', 'edge helmfile.yaml:5 needs orders']);
+    expect(read.rows.map((row) => `${row.reason} ${row.file}:${row.line} ${row.message}`)).toEqual([
+      'manifest-unread apps/orders.yaml:2 The release orders (apps/orders.yaml:2) runs a hook (presync), commands helmfile runs around the install; a hook is a program that is run, not read, so whatever it applies to the cluster is not drawn',
+      'release-need-undefined helmfile.yaml:5 The release edge (helmfile.yaml:5) needs cache, which no release of the helmfile is; helmfile refuses to apply it',
+    ]);
+  });
+
+  it('hands a chart what its own dependency imports before it hands that up, and says a dependency only a chart repository has', () => {
+    const dir = project({
+      'deploy/charts/shop/Chart.yaml': lines(
+        'apiVersion: v2',
+        'name: shop',
+        'version: 0.1.0',
+        'dependencies:',
+        '  - name: api',
+        '    repository: file://../api',
+        '    import-values:',
+        '      - child: service',
+        '        parent: api',
+        '  - name: queue',
+        '    version: 2.0.0',
+        '    repository: https://charts.example.test',
+        '  - name: metrics',
+        '    repository: https://charts.example.test',
+        '    condition: metrics.enabled',
+      ),
+      'deploy/charts/shop/values.yaml': 'metrics:\n  enabled: false\n',
+      'deploy/charts/shop/templates/web.yaml': SERVICE('web', 0, 3000).replace('port: 0', 'port: {{ .Values.api.port }}'),
+      'deploy/charts/api/Chart.yaml': lines('apiVersion: v2', 'name: api', 'version: 0.1.0', 'dependencies:', '  - name: ports', '    repository: file://../ports', '    import-values:', '      - child: exports.ports', '        parent: service'),
+      'deploy/charts/api/values.yaml': 'service:\n  name: api\n',
+      'deploy/charts/ports/Chart.yaml': 'apiVersion: v2\nname: ports\nversion: 0.1.0\n',
+      'deploy/charts/ports/values.yaml': 'exports:\n  ports:\n    port: 8443\n',
+    });
+    const read = readManifestsUnder(join(dir, 'deploy'));
+    expect(read.services.map((each) => `${each.name} ${each.ports.map((port) => `${port.port}:${port.target}`).join(',')}`)).toEqual(['web 8443:3000']);
+    expect(read.rows?.map((row) => `${row.file}:${row.line} ${row.message}`)).toEqual([
+      'charts/shop/Chart.yaml:10 charts/shop/Chart.yaml depends on the chart queue 2.0.0 from https://charts.example.test, which nothing has fetched into the project (charts/ holds no queue); no chart repository is read, so its templates are not rendered',
+    ]);
   });
 });

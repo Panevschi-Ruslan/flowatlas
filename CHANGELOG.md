@@ -8,6 +8,33 @@ only one of them moved.
 
 ### Added
 
+- **Kustomize transformer and generator files, labels, and what P289 left of
+  helmfile and charts (P295).** A kustomization's `transformers:` and
+  `generators:` are read from the files (or the folder, or the inline text)
+  they name: kustomize's built-in `PrefixSuffixTransformer`,
+  `LabelTransformer`, `AnnotationsTransformer`, `NamespaceTransformer`,
+  `ImageTagTransformer`, `PatchTransformer`, `PatchJson6902Transformer`,
+  `PatchStrategicMergeTransformer` and `ReplacementTransformer` each over the
+  fields its `fieldSpecs` name, and `ConfigMapGenerator`, `SecretGenerator`
+  and `HelmChartInflationGenerator` as the fields they stand for; an exec or
+  Go plugin or a KRM function is a `manifest-unread` row saying kustomize runs
+  it. `commonLabels`, `labels:` (`includeSelectors`, `includeTemplates`,
+  `fields`) and `commonAnnotations` are written where kustomize writes them,
+  a service's selector and a pod template's labels among them, and a
+  configuration's `commonLabels`, `commonAnnotations`, `namespace`,
+  `namePrefix`, `nameSuffix` and `images` field specs add to those. A field
+  naming a resource is renamed from any name the resource had, a base's
+  included, so an overlay's route naming a base's gateway reaches it under its
+  prefix. A sub-helmfile writing no selectors keeps every release of its own
+  where a command runs helmfile with explicit selector inheritance
+  (`HELMFILE_EXPERIMENTAL`), only `selectorsInherited` taking the command's,
+  and one writing both is a row; a release's need is answered by any helmfile
+  of the state, so a need on a sibling sub-helmfile's release is installed
+  after it rather than `release-need-undefined`. A chart's dependency settles
+  what its own dependencies import before it hands values up. Rows say why
+  what stays unread is: a release's or a helmfile's hooks (programs, run and
+  not read), a remote sub-helmfile (fetched when helmfile runs), and a chart
+  dependency only a chart repository has (no repository is read).
 - **gRPC messages as payload types, a package's health and reflection
   services, and what a server and its contract disagree on (P287).** A
   `.proto` file's messages and enums are read (nested ones, `repeated`,

@@ -66,8 +66,8 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
   command line and compared, line by line, with the snapshots named under it, on every push.</p>
   <div class="meta">
     <a href="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml"><img src="https://github.com/Panevschi-Ruslan/flowatlas/actions/workflows/check.yml/badge.svg" alt="check status" height="20"></a>
-    <span>258 fixtures</span>
-    <span>666 snapshot files</span>
+    <span>259 fixtures</span>
+    <span>669 snapshot files</span>
     <span>14 areas</span>
   </div>
   <input type="search" id="filter" placeholder="Filter by name or by what it proves — prisma, route, workspace…" aria-label="Filter fixtures">
@@ -1665,7 +1665,7 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
     </ul>
   </section>
   <section data-area>
-    <h2>Everything else <span class="count" data-total="67">67</span></h2>
+    <h2>Everything else <span class="count" data-total="68">68</span></h2>
     <ul>
       <li class="fixture" data-search="bot-registry everything else a bot whose buttons are functions in a table it keeps itself, and whose commands are registered inside module-level functions.">
         <div class="head">
@@ -1737,6 +1737,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
           <span class="kind">4 services</span>
         </div>
         <p>The deployment templating P263 left out, read as the tools that install the manifests read it (P273): a helmfile kept in a folder that a pipeline names with <code>-f</code>, layered over two <code>bases</code>, whose release <code>needs</code> another; a command that keeps one release by name and the releases it needs (<code>--include-needs</code>); and a kustomization whose deprecated <code>vars</code> give the pod its port and the way in its host.</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
+      <li class="fixture" data-search="cluster-transformer-joins everything else the deployment templating p289 left open, read as the tools that install the manifests read it (p295): a kustomization whose name, labels and port come from the transformer and generator files it lists rather than from its own fields; a helmfile whose release needs a release another of its sub-helmfiles declares; and a chart whose port comes up through `import-values` from a dependency of its dependency.">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/cluster-transformer-joins">cluster-transformer-joins</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>The deployment templating P289 left open, read as the tools that install the manifests read it (P295): a kustomization whose name, labels and port come from the transformer and generator files it lists rather than from its own fields; a helmfile whose release needs a release another of its sub-helmfiles declares; and a chart whose port comes up through <code>import-values</code> from a dependency of its dependency.</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
       <li class="fixture" data-search="custom-http everything else one repository built on a framework this tool has never heard of, read entirely from a description in `flowatlas.config.json`.">

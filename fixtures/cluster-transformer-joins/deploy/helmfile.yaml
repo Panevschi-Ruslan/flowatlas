@@ -1,0 +1,3 @@
+helmfiles:
+  - apps/stock.yaml
+  - apps/payments.yaml

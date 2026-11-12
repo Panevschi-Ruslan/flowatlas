@@ -84,6 +84,8 @@ export interface HelmfileReading {
   readonly selectors?: readonly string[];
   /** State values written inline (P289): what a sub-helmfile entry's `values` gives, over the environment's. */
   readonly stateValues?: readonly Readonly<Record<string, unknown>>[];
+  /** Whether helmfile runs with explicit selector inheritance (P295): a sub-helmfile writing no selectors then keeps every release, unless it writes `selectorsInherited`. */
+  readonly explicitSelectors?: boolean;
 }
 
 /** How deep sub-helmfiles are followed; deeper is a row. */
@@ -376,23 +378,68 @@ const needed = (need: string, declared: readonly Declared[]): Declared | undefin
   return declared.find((each) => each.name === name && (namespace === undefined || namespace === '' || each.namespace === undefined || each.namespace === namespace));
 };
 
+/** A release's need, in the environment it is read in, that no release of its own helmfile is (P295). */
+interface Pending {
+  readonly environment: string;
+  readonly release: Declared;
+  readonly need: string;
+}
+
+/** What one helmfile and its sub-helmfiles install, with every release they declare and the needs their own helmfile does not answer. */
+interface State {
+  readonly installs: ChartInstall[];
+  readonly rows: ManifestRow[];
+  readonly declared: Array<{ readonly environment: string; readonly release: Declared }>;
+  readonly pending: Pending[];
+}
+
 /**
  * Every chart install a helmfile writes, one per release per environment,
  * and a row for each part it does not read. The helmfile is read with the
  * bases it layers (P273), and each release's `needs` is kept as the releases
  * installed before it: a command keeping releases by name with
  * `--include-needs` keeps what they need too (`--include-transitive-needs`,
- * what that needs in turn), and a need no release of the helmfile is, is the
- * finding `release-need-undefined`, as helmfile refuses to apply it.
+ * what that needs in turn). A need is a release of the whole state, the
+ * helmfile's and its sub-helmfiles' (P295), and a need no release of it is,
+ * is the finding `release-need-undefined`, as helmfile refuses to apply it.
  */
-export const readHelmfile = (
+export const readHelmfile = (path: string, label: (path: string) => string, reading: HelmfileReading = {}): { installs: ChartInstall[]; rows: ManifestRow[] } => {
+  const state = readState(path, label, reading, []);
+  const installs = [...state.installs];
+  const rows = [...state.rows];
+  for (const { environment, release, need } of state.pending) {
+    const found = needed(need, state.declared.filter((each) => each.environment === environment && each.release !== release).map((each) => each.release));
+    if (found !== undefined) {
+      // A need another helmfile of the state answers is installed before it, as one of its own is.
+      installs.forEach((install, index) => {
+        if (install.file !== release.file || install.line !== release.line || install.environment !== environment || install.needs?.includes(found.name) === true) return;
+        installs[index] = { ...install, needs: [...(install.needs ?? []), found.name] };
+      });
+      continue;
+    }
+    if (rows.some((seen) => seen.reason === 'release-need-undefined' && seen.file === release.file && seen.line === release.line && seen.message.includes(`needs ${need},`))) continue;
+    rows.push({
+      reason: 'release-need-undefined',
+      file: release.file,
+      line: release.line,
+      message: `The release ${release.name} (${release.file}:${release.line}) needs ${need}, which no release of the helmfile is; helmfile refuses to apply it`,
+      hint: 'Name a release the helmfile or a base it layers declares, written namespace/name where its namespace is not the one assumed, or remove the need.',
+      about: [release.name],
+    });
+  }
+  return { installs, rows };
+};
+
+const readState = (
   path: string,
   label: (path: string) => string,
-  reading: HelmfileReading = {},
+  reading: HelmfileReading,
   /** The helmfiles naming this one as a sub-helmfile, outermost first (P289). */
-  within: readonly string[] = [],
-): { installs: ChartInstall[]; rows: ManifestRow[] } => {
-  if (readText(path) === undefined) return { installs: [], rows: [] };
+  within: readonly string[],
+): State => {
+  const declaredReleases: State['declared'] = [];
+  const pending: Pending[] = [];
+  if (readText(path) === undefined) return { installs: [], rows: [], declared: declaredReleases, pending };
   const dir = dirname(path);
   const declared = declaredEnvironments(path, dir, label);
   const environments = reading.environments ?? (declared.length === 0 ? ['default'] : declared);
@@ -408,6 +455,14 @@ export const readHelmfile = (
       hint: 'Write what the helmfile says as literals, or give the value it reads in the environment\'s values.',
       about: [...about],
     });
+  };
+  /** Hooks are programs helmfile runs around an install (P295): run, not read, so what they apply is said, never guessed. */
+  const hooksRow = (file: string, line: number, hooks: unknown, whose: string, about: readonly string[]): void => {
+    if (!Array.isArray(hooks) || hooks.length === 0) return;
+    const events = [...new Set(hooks.filter(isRecord).flatMap((hook) => (Array.isArray(hook['events']) ? hook['events'].filter((event): event is string => typeof event === 'string') : [])))];
+    const message = `${whose} runs ${hooks.length === 1 ? 'a hook' : `${hooks.length} hooks`}${events.length === 0 ? '' : ` (${events.join(', ')})`}, commands helmfile runs around the install; a hook is a program that is run, not read, so whatever it applies to the cluster is not drawn`;
+    if (rows.some((seen) => seen.file === file && seen.line === line && seen.message === message)) return;
+    rows.push({ reason: 'manifest-unread', file, line, message, hint: 'Write what the hook applies as a manifest or a release of the helmfile, or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).', about: [...about] });
   };
   for (const environment of environments) {
     // An environment the file does not declare is one helmfile refuses, `default` aside.
@@ -443,6 +498,7 @@ export const readHelmfile = (
         if (own !== undefined) stated();
         if (isRecord(value['templates'])) for (const [name, template] of Object.entries(value['templates'])) if (isRecord(template)) templates.set(name, template);
         if (isRecord(value['commonLabels'])) common = { ...common, ...textsOf(value['commonLabels']) };
+        hooksRow(file, lineOf(document.at(['hooks'])?.line ?? 1), value['hooks'], file, []);
         (Array.isArray(value['helmfiles']) ? value['helmfiles'] : []).forEach((entry, index) => {
           subs.push({ entry, file, line: lineOf(document.at(['helmfiles', index])?.line ?? 1), values });
         });
@@ -459,25 +515,16 @@ export const readHelmfile = (
           const release = releaseRendered(merged, releaseRoot, (why) => unreadRow(file, line, why, [name]));
           const renderedNamespace = typeof release['namespace'] === 'string' ? release['namespace'] : undefined;
           const needs = (Array.isArray(release['needs']) ? release['needs'] : []).filter((each): each is string => typeof each === 'string');
+          hooksRow(file, line, release['hooks'], `The release ${name} (${file}:${line})`, [name]);
           releases.push({ name, ...(renderedNamespace === undefined ? {} : { namespace: renderedNamespace }), release, file, line, values, needs, labels: labelsOf(release, common) });
         });
       },
       (file, line, why) => unreadRow(file, line, why, []),
     );
-    // A need no release of the helmfile is: helmfile refuses the whole of it.
+    // A need no release of the helmfile is, is asked of the whole state once it is read (P295).
     for (const each of releases) {
-      for (const need of each.needs) {
-        if (needed(need, releases) !== undefined) continue;
-        if (rows.some((seen) => seen.reason === 'release-need-undefined' && seen.file === each.file && seen.line === each.line && seen.message.includes(`needs ${need},`))) continue;
-        rows.push({
-          reason: 'release-need-undefined',
-          file: each.file,
-          line: each.line,
-          message: `The release ${each.name} (${each.file}:${each.line}) needs ${need}, which no release of the helmfile is; helmfile refuses to apply it`,
-          hint: 'Name a release the helmfile or a base it layers declares, written namespace/name where its namespace is not the one assumed, or remove the need.',
-          about: [each.name],
-        });
-      }
+      declaredReleases.push({ environment, release: each });
+      for (const need of each.needs) if (needed(need, releases) === undefined) pending.push({ environment, release: each, need });
     }
     // The releases a command keeps - by name, or by the labels its selectors ask (P289) - and with --include-needs what they need.
     const selectors = reading.selectors ?? [];
@@ -501,7 +548,7 @@ export const readHelmfile = (
       const entry = isRecord(sub.entry) ? sub.entry : { path: sub.entry };
       const written = entry['path'];
       if (typeof written !== 'string' || /^[a-z][\w+.-]*::|^(?:git|https?):/i.test(written)) {
-        unreadRow(sub.file, sub.line, `the sub-helmfile ${String(written)} is not a file of the project`, []);
+        unreadRow(sub.file, sub.line, typeof written === 'string' ? `the sub-helmfile ${written} is fetched from outside the project when helmfile runs, and nothing remote is fetched here` : `the sub-helmfile ${String(written)} names no path`, []);
         continue;
       }
       if (written.includes('{{')) {
@@ -520,18 +567,30 @@ export const readHelmfile = (
         return read === undefined ? [] : [read];
       });
       const own = Array.isArray(entry['selectors']) ? entry['selectors'].filter((each): each is string => typeof each === 'string') : undefined;
-      // Without selectors of its own, a sub-helmfile is read with the command's.
-      const chosen: HelmfileReading = own === undefined || entry['selectorsInherited'] === true
-        ? { ...(reading.releases === undefined ? {} : { releases: reading.releases }), ...(reading.selectors === undefined ? {} : { selectors: reading.selectors }) }
-        : { selectors: own };
+      const inherits = entry['selectorsInherited'] === true;
+      if (own !== undefined && inherits) {
+        unreadRow(sub.file, sub.line, `the sub-helmfile ${written} writes both selectors and selectorsInherited, which helmfile refuses`, []);
+        continue;
+      }
+      // The selectors a sub-helmfile is read with (P295): its own; those this helmfile is read with, where it inherits them - by
+      // `selectorsInherited`, or by writing none while helmfile runs without explicit selector inheritance; or none, every release.
+      const parents: HelmfileReading = { ...(reading.releases === undefined ? {} : { releases: reading.releases }), ...(reading.selectors === undefined ? {} : { selectors: reading.selectors }) };
+      const chosen: HelmfileReading = inherits || (own === undefined && reading.explicitSelectors !== true) ? parents : { selectors: own ?? [] };
       for (const each of found) {
         if (within.length >= MOST_SUB_HELMFILES || within.includes(each) || each === path) {
           unreadRow(sub.file, sub.line, `the sub-helmfile ${label(each)} is ${within.includes(each) || each === path ? 'one of the helmfiles naming it' : 'nested deeper than is followed'}`, []);
           continue;
         }
-        const read = readHelmfile(each, label, { environments: [environment], stateValues: given, ...chosen, ...(reading.needs === undefined ? {} : { needs: reading.needs }) }, [...within, path]);
+        const read = readState(
+          each,
+          label,
+          { environments: [environment], stateValues: given, ...chosen, ...(reading.needs === undefined ? {} : { needs: reading.needs }), ...(reading.explicitSelectors === undefined ? {} : { explicitSelectors: reading.explicitSelectors }) },
+          [...within, path],
+        );
         for (const install of read.installs) installs.push(install);
         for (const row of read.rows) if (!rows.some((seen) => seen.file === row.file && seen.line === row.line && seen.message === row.message)) rows.push(row);
+        declaredReleases.push(...read.declared);
+        pending.push(...read.pending);
       }
     }
     for (const each of releases) {
@@ -575,5 +634,5 @@ export const readHelmfile = (
       });
     }
   }
-  return { installs, rows };
+  return { installs, rows, declared: declaredReleases, pending };
 };

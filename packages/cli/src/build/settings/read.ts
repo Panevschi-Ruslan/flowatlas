@@ -502,7 +502,7 @@ const helmfileInstalls = (each: Commands, rootDir: string): { installs: ChartIns
   const label = (path: string): string => relative(each.base, path).split(sep).join('/');
   for (const path of files) {
     const own = runs.filter((found) => found.path === path);
-    const readings = own.length === 0 ? [{}] : own.map(({ run, from }) => ({ environments: [run.environment], stateSets: run.stateSets, stateFiles: run.stateFiles.map((file) => resolve(from, file)), releases: run.releases, selectors: run.selectors, needs: run.needs }));
+    const readings = own.length === 0 ? [{}] : own.map(({ run, from }) => ({ environments: [run.environment], stateSets: run.stateSets, stateFiles: run.stateFiles.map((file) => resolve(from, file)), releases: run.releases, selectors: run.selectors, needs: run.needs, explicitSelectors: run.explicitSelectors }));
     for (const reading of readings) {
       const read = readHelmfile(path, label, reading);
       for (const install of read.installs) {
