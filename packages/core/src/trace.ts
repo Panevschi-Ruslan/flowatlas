@@ -1,7 +1,9 @@
 import type {
+  ArrowFunction,
   BindingElement,
   CallExpression,
   FunctionDeclaration,
+  FunctionExpression,
   Identifier,
   ObjectLiteralExpression,
   ParameterDeclaration,
@@ -871,7 +873,7 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
 
   if (Node.isCallExpression(node)) {
     const callee = node.getExpression();
-    if (!Node.isPropertyAccessExpression(callee)) return null;
+    if (!Node.isPropertyAccessExpression(callee)) return throughFunction(node, scope, budget);
     // `base.replace(...)` and friends reshape the base, which is the half being
     // dropped anyway, so nothing is added to what follows it.
     if (PRESERVING.has(callee.getName())) return addressOf(callee.getExpression(), scope, budget - 1);
@@ -1013,6 +1015,80 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
   if (remembered !== null) return addressOf(remembered.node, remembered.scope, budget - 1);
 
   return null;
+};
+
+/** `https://${url}`: a scheme put in front of a value and nothing after it. */
+const SCHEME_ONLY = /^[a-z][a-z0-9+.-]*:\/\/$/i;
+
+/**
+ * The function of the repository a plain call reaches, `function f() {}` or a
+ * `const` holding one, imported or not; nothing for one a package declares.
+ */
+const plainFunctionOf = (call: CallExpression): FunctionDeclaration | ArrowFunction | FunctionExpression | undefined => {
+  const callee = unwrap(call.getExpression());
+  if (!Node.isIdentifier(callee)) return undefined;
+  const symbol = callee.getSymbol();
+  let declaration = symbol?.getDeclarations()[0];
+  if (declaration !== undefined && (Node.isImportSpecifier(declaration) || Node.isImportClause(declaration))) {
+    declaration = symbol?.getAliasedSymbol()?.getDeclarations()[0];
+  }
+  if (declaration === undefined) return undefined;
+  const file = declaration.getSourceFile();
+  if (file.isInNodeModules() || file.isDeclarationFile()) return undefined;
+  if (Node.isFunctionDeclaration(declaration)) return declaration;
+  if (!Node.isVariableDeclaration(declaration) || declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) return undefined;
+  const initializer = declaration.getInitializer();
+  return initializer !== undefined && (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) ? initializer : undefined;
+};
+
+/**
+ * `withScheme(process.env.APP_URL)`: a function of the repository
+ * handed a value, read with its parameters bound to what the call hands it
+ * (P292). Every return must say the same: the setting a parameter holds,
+ * with what the function writes after it (`${url}/api`), or reshaped
+ * (`url.trim()`, a scheme put in front where the value lacks one,
+ * `https://${url}`). A return of the empty text, `null` or `undefined` is no
+ * value, which a `||` after the call falls through; another text written out
+ * is what the function falls back to. Anything else is no address.
+ */
+const throughFunction = (call: CallExpression, scope: Scope, budget: number): SettingAddress | null => {
+  const fn = plainFunctionOf(call);
+  if (fn === undefined) return null;
+  const bound = new Map<ParameterDeclaration, Bound>();
+  const args = call.getArguments();
+  fn.getParameters().forEach((parameter, index) => {
+    const argument = args[index];
+    if (argument !== undefined) bound.set(parameter, { node: argument, scope });
+  });
+  if (bound.size === 0) return null;
+  const inside: Scope = { ...scope, self: enclosingClass(fn), bound };
+  const body = fn.getBody();
+  const returns = body !== undefined && !Node.isBlock(body) ? [body] : ownReturns(fn).flatMap((statement) => {
+    const returned = statement.asKind(SyntaxKind.ReturnStatement)?.getExpression();
+    return returned === undefined ? [] : [returned];
+  });
+  let found: SettingAddress | undefined;
+  let otherwise: string | undefined;
+  for (const returned of returns) {
+    const value = unwrap(returned);
+    if (Node.isNullLiteral(value) || (Node.isIdentifier(value) && value.getText() === 'undefined')) continue;
+    const written = evaluateExpression(value);
+    if (written.resolved && typeof written.value === 'string') {
+      if (written.value !== '' && otherwise === undefined) otherwise = written.value;
+      continue;
+    }
+    const [span, ...more] = Node.isTemplateExpression(value) ? value.getTemplateSpans() : [];
+    const schemed =
+      span !== undefined && more.length === 0 && SCHEME_ONLY.test((value as TemplateExpression).getHead().getLiteralText()) && span.getLiteral().getLiteralText() === ''
+        ? span.getExpression()
+        : undefined;
+    const answer = addressOf(schemed ?? value, inside, budget - 1);
+    if (answer === null) return null;
+    if (found !== undefined && (found.key !== answer.key || found.prefix !== answer.prefix)) return null;
+    found ??= answer;
+  }
+  if (found === undefined) return null;
+  return found.otherwise === undefined && otherwise !== undefined ? { ...found, otherwise } : found;
 };
 
 /**

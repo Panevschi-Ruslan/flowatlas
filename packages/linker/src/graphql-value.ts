@@ -22,9 +22,12 @@ export type LocalGraphqlAnswer =
  * answers an operation: the path its local values agree on is asked of every
  * endpoint of every configured service, and the one that serves exactly it
  * answers - a guess, as a route found by its address alone is. A value with
- * a public host is the deployment's third party and decides nothing here;
- * two endpoints at the path, or values that disagree, leave the request
- * where it was. An endpoint whose schema and resolvers declare none of the
+ * a public host is asked only where no value for this machine has a path
+ * (P292): the deployment's demo host in a platform file, where nothing else
+ * says where the operation goes, under the same rule - one path the values
+ * agree on, one endpoint of the project serving exactly it, a root field it
+ * declares. Two endpoints at the path, or values that disagree, leave the
+ * request where it was. An endpoint whose schema and resolvers declare none of the
  * root fields the operation asks for is not the one meant, or serves them
  * from code nothing here read: the request is not joined, and the row names
  * the fields.
@@ -36,20 +39,33 @@ export const localGraphqlEndpoint = (
   services: readonly string[],
   routesOf: (service: string) => readonly GraphNode[] | undefined,
 ): LocalGraphqlAnswer | undefined => {
-  if (!sendsOperation(call) || call.meta?.['method'] !== 'POST' || answer === undefined || answer.kind === 'service') return undefined;
-  const values = answer.kind === 'unsettled' ? answer.values : (answer.values ?? [answer.found]);
-  const paths = new Map<string, FoundValue>();
-  for (const found of values) {
-    const host = hostOf(found.value);
-    if (host === undefined || !isInnerHost(host.hostname)) continue;
-    const start = pathOfValue(found);
-    if (start === undefined) continue;
-    const whole = normalizePath(`${start}/${path}`);
-    if (!paths.has(whole)) paths.set(whole, found);
-  }
+  if (!sendsOperation(call) || call.meta?.['method'] !== 'POST' || answer === undefined) return undefined;
+  // Values that name a service - a port its code listens on (P292) - ask
+  // only its endpoints, under the same rule: an operation none of whose root
+  // fields the endpoint declares is not joined there for being at its address.
+  const values = answer.kind === 'unsettled' ? answer.values : answer.kind === 'service' ? [answer.found, ...answer.others] : (answer.values ?? [answer.found]);
+  const among = answer.kind === 'service' ? services.filter((service) => service === answer.service) : services;
+  /** The paths the values on one side of the machine's edge put in front, each with the first value saying so. */
+  const pathsOf = (inner: boolean): Map<string, FoundValue> => {
+    const paths = new Map<string, FoundValue>();
+    for (const found of values) {
+      const host = hostOf(found.value);
+      if (host === undefined || isInnerHost(host.hostname) !== inner) continue;
+      const start = pathOfValue(found);
+      if (start === undefined) continue;
+      const whole = normalizePath(`${start}/${path}`);
+      if (!paths.has(whole)) paths.set(whole, found);
+    }
+    return paths;
+  };
+  // The values for this machine first; where there are none, the public
+  // hosts' (P292): a project whose only value is its deployment's demo host.
+  const local = pathsOf(true);
+  // A service's public address is its deployment's, which its own join reads.
+  const paths = local.size > 0 || answer.kind === 'service' ? local : pathsOf(false);
   if (paths.size !== 1) return undefined;
   const [[at, found]] = [...paths] as [[string, FoundValue]];
-  const endpoints = services.flatMap((service) =>
+  const endpoints = among.flatMap((service) =>
     (routesOf(service) ?? [])
       .filter((route) => (route.meta?.['graphql'] as { endpoint?: boolean } | undefined)?.endpoint === true && route.meta?.['method'] === 'POST' && route.meta?.['path'] === at)
       .map((entry) => ({ service, entry })),

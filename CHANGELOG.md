@@ -53,6 +53,26 @@ only one of them moved.
   `canActivateChild` and `resolve`, its own and its parents', are `calls`
   edges from its screen (`meta.guard`, `meta.order`), whether or not they
   navigate, with a functional guard's calls on `inject(Service)`.
+- **Settings and full-stack requests left open (P292).** An address rooted
+  at a constant that is a chain of `||` over settings
+  (`withScheme(process.env.APP_URL) || PREVIEW_URL || 'http://localhost:3000'`)
+  is rooted at the first setting, read through a function of the repository
+  that only reshapes what it is handed (every return the parameter, the
+  parameter after a scheme or with a path after it, or no value), with the
+  text the chain ends in as its fallback; a browser's request carries that
+  fallback too. A value at a port of this machine is placed at the service
+  whose code listens there, where no compose file or env file says so. A
+  browser's request is placed by its setting's name as one between services
+  is, and the two halves of one call read by both halves of a full-stack
+  application go to one target: the browser's half follows the server's join
+  (`via: same-call`), save a join the configuration wrote for the browser,
+  which the server's half then follows. A GraphQL operation whose setting's
+  only values are public hosts is asked of the endpoints at the path they
+  agree on, under the rule a value for this machine has (one endpoint, a root
+  field it declares); a request between services is tried under an external
+  value's path only where the values agree on it. The coverage harness counts
+  a call read by both halves once, in a row of its own, and a hand label on
+  it is right where either half joined the right way in.
 - **gRPC messages as payload types, a package's health and reflection
   services, and what a server and its contract disagree on (P287).** A
   `.proto` file's messages and enums are read (nested ones, `repeated`,

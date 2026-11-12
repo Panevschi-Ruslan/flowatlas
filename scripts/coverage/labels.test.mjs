@@ -156,6 +156,26 @@ test('a route that answers every verb answers the one a label names', () => {
   assert.equal(row.outcome, 'right');
 });
 
+test('a call read by both halves is right where either half joined the right way in (P292)', () => {
+  const browser = node('ui_api_call', 'web', 'src/loader.ts', 4, 9, { meta: { sameCall: 'http_out:web#src/loader.ts:4:9' } });
+  const server = node('http_out', 'web', 'src/loader.ts', 4, 9, { meta: { sameCall: browser.id } });
+  const pairGraph = (to) => ({
+    nodes: [entry('api', 'http', 'GET:/api/cart'), entry('web', 'http', 'GET:/cart'), browser, server],
+    edges: to.map(([from, entryId]) => ({ from, to: entryId, type: from === browser.id ? 'hits' : 'http_calls' })),
+  });
+  const judgeOn = (pairs, label = { file: 'apps/web/src/loader.ts', line: 4, kind: 'browser', expect: 'http GET /api/cart' }) =>
+    judgeLabels({ labels: [label], graph: pairGraph(pairs), toPath: clonePaths(services), readSource }).rows[0];
+  // One half right, the other elsewhere: right, not right-and-also-elsewhere.
+  assert.equal(judgeOn([[server.id, 'entry:api:http:GET:/api/cart'], [browser.id, 'entry:web:http:GET:/cart']]).outcome, 'right');
+  // One half right, the other joined nothing: right.
+  assert.equal(judgeOn([[browser.id, 'entry:api:http:GET:/api/cart']]).outcome, 'right');
+  // Both halves elsewhere: wrong.
+  assert.equal(judgeOn([[browser.id, 'entry:web:http:GET:/cart'], [server.id, 'entry:web:http:GET:/cart']]).outcome, 'wrong');
+  // A label naming the server half's column alone still judges the pair.
+  const columned = { file: 'apps/web/src/loader.ts', line: 4, column: 9, kind: 'browser', expect: 'http GET /api/cart' };
+  assert.equal(judgeOn([[browser.id, 'entry:api:http:GET:/api/cart']], columned).outcome, 'right');
+});
+
 test('another way in is wrong, and says what it got', () => {
   const row = one({ file: 'apps/web/src/cart.ts', line: 20, kind: 'browser', expect: 'http POST /api/cart' });
   assert.equal(row.outcome, 'wrong');

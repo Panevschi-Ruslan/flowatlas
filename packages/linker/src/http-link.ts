@@ -615,7 +615,10 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
    * value names after a host no service is reached at (P285), joined there;
    * nothing where none or several serve it.
    */
-  const underExternalValue = (found: FoundValue): Resolution | undefined => {
+  const underExternalValue = (found: FoundValue, values: readonly FoundValue[]): Resolution | undefined => {
+    // Only where the values agree on that path, as for a browser's request
+    // (P281): two paths in front are two answers (P292).
+    if (new Set(values.map((value) => pathOfValue(value) ?? '')).size > 1) return undefined;
     const start = pathOfValue(found);
     if (start === undefined || typeof path !== 'string' || !wasRead(path) || !verbRead || index.services === undefined) return undefined;
     const whole = normalizePath(`${start}/${path}`);
@@ -834,7 +837,7 @@ export const resolveCall = (call: GraphNode, index: RouteIndex): Resolution => {
     // under that path is a guess at whose deployment the host is (P285, as
     // P280 for a browser's request). Only under the value's path: a route
     // the bare path matches is no evidence about a third party's host.
-    const answering = underExternalValue(valued.found);
+    const answering = underExternalValue(valued.found, valued.values ?? [valued.found]);
     if (answering !== undefined) return answering;
     return { outcome: { kind: 'external', host: valued.host }, notes, baseUrl: valued.found };
   }

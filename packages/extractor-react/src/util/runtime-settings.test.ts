@@ -40,3 +40,17 @@ describe('a settings object injected into the page at run time (P275)', () => {
     expect(address).toMatchObject({ baseUrlEnv: 'SERVER_URL', path: '/graphql' });
   });
 });
+
+describe('a constant that is a chain of || over settings (P292)', () => {
+  it('roots the address at the first setting, read through a function that only puts a scheme in front, the text it ends in its fallback', () => {
+    const address = addressIn(
+      [
+        'const ensureScheme = (url: string | undefined): string => { if (!url) return ""; if (url.startsWith("http")) return url; return `https://${url}`; };',
+        'const PREVIEW = process.env.PREVIEW_HOST ? `https://${process.env.PREVIEW_HOST}` : "";',
+        'export const APP_URL = ensureScheme(process.env.PUBLIC_APP_URL) || PREVIEW || "http://localhost:3000";',
+      ].join('\n'),
+      "import { APP_URL } from './config';\nsend(`${APP_URL}/api/me`);",
+    );
+    expect(address).toMatchObject({ baseUrlEnv: 'PUBLIC_APP_URL', baseUrlDefault: 'http://localhost:3000', path: '/api/me' });
+  });
+});

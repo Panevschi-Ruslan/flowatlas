@@ -101,6 +101,13 @@ export const ORIGINLESS_META = 'originless';
  */
 export const IN_PROCESS_META = 'inProcess';
 
+/**
+ * Where a request read by both halves of a full-stack application, reached
+ * from both sides or from neither, names the other half's node (P283): one
+ * call, which the linker joins to one target and a reader counts once (P292).
+ */
+export const SAME_CALL_META = 'sameCall';
+
 export const NO_PROXY: ProxyReading = { rules: [], rows: [] };
 
 /** A path's segments, with no empty ones. */

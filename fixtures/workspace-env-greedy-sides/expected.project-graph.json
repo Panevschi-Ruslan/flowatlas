@@ -1,6 +1,6 @@
 {
   "schemaVersion": 7,
-  "builtAt": "2026-11-10T20:44:21.582Z",
+  "builtAt": "2026-11-12T19:18:13.836Z",
   "services": [
     {
       "name": "web",
@@ -713,6 +713,7 @@
         "package": null,
         "client": "fetch",
         "via": "template-env",
+        "baseUrlFrom": "its name",
         "targetService": "files"
       }
     },
@@ -735,6 +736,7 @@
         "client": "fetch",
         "via": "template-env",
         "sameCall": "http_out:store#app/lib/files.ts:9:10",
+        "baseUrlFrom": "its name",
         "targetService": "files"
       }
     },
@@ -1141,8 +1143,9 @@
       "file": "app/lib/files.ts",
       "line": 14,
       "meta": {
-        "via": "unique-route",
-        "targetService": "files"
+        "via": "base-url-value",
+        "targetService": "files",
+        "baseUrlFrom": "its name"
       }
     },
     {
@@ -1153,8 +1156,9 @@
       "file": "app/lib/files.ts",
       "line": 9,
       "meta": {
-        "via": "unique-route",
-        "targetService": "files"
+        "via": "base-url-value",
+        "targetService": "files",
+        "baseUrlFrom": "its name"
       }
     },
     {
@@ -1346,7 +1350,7 @@
         "variable": "FILES_URL",
         "from": "its name"
       },
-      "sites": 3
+      "sites": 5
     },
     {
       "service": "store",

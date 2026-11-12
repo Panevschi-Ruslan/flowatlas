@@ -54,7 +54,11 @@
  *
  * A site is the request, client call or producer the graph recorded at that
  * file and line - a `ui_api_call`, an `http_out` or a `producer` - and what
- * it reached is where its `hits`, `http_calls` and `emits` edges go. An entry
+ * it reached is where its `hits`, `http_calls` and `emits` edges go. A call
+ * both halves of a full-stack application read (a `ui_api_call` and an
+ * `http_out` naming each other under `meta.sameCall`) is one call: the label
+ * is judged against each half and takes the better answer, so it is right
+ * where either half joined the right way in (P292). An entry
  * is the way in `<kind> <key>`; a channel is `channel <name>` and also every
  * way in its consumers answer as (a message pattern's `rpc` entry, a queue's
  * `event` entry), so a label may name either. A GraphQL request reaches its
@@ -307,8 +311,42 @@ const judge = (index, label, readSource) => {
     if (exact.length > 0) calls = exact;
   }
   const rows = index.rows.get(site) ?? [];
-  const reached = reachedFrom(index, calls);
   const moved = where.moved === undefined ? {} : { line, movedFrom: where.moved };
+  // A call read by both halves of a full-stack application is one call: the
+  // label is judged against each half and is right where either is (P292).
+  const judged = halvesOf(index, calls).map((half) => verdict(index, label, base, moved, line, half, rows));
+  return judged.reduce((best, each) => (RANK[each.outcome] < RANK[best.outcome] ? each : best));
+};
+
+/** How good an outcome is, for choosing between the two halves of one call (P292). */
+const RANK = { right: 0, ambiguous: 1, missed: 2, wrong: 3, falsely: 3, drifted: 4 };
+
+/**
+ * The calls at a site, once with each call read by both halves (`sameCall`,
+ * P283) as its browser half and once as its server half; the calls as they
+ * are where none is.
+ */
+const halvesOf = (index, calls) => {
+  const twinOf = (call) => (typeof call.meta?.sameCall === 'string' ? index.nodes.get(call.meta.sameCall) : undefined);
+  const pairs = new Map();
+  for (const call of calls) {
+    const twin = twinOf(call);
+    if (twin === undefined) continue;
+    const [browser, server] = call.type === 'ui_api_call' ? [call, twin] : [twin, call];
+    pairs.set(browser.id, { browser, server });
+  }
+  if (pairs.size === 0) return [calls];
+  const halves = new Set([...pairs.values()].flatMap(({ browser, server }) => [browser.id, server.id]));
+  const rest = calls.filter((call) => !halves.has(call.id));
+  return [
+    [...rest, ...[...pairs.values()].map(({ browser }) => browser)],
+    [...rest, ...[...pairs.values()].map(({ server }) => server)],
+  ];
+};
+
+/** One label against the calls standing for its site. */
+const verdict = (index, label, base, moved, line, calls, rows) => {
+  const reached = reachedFrom(index, calls);
   const joined = reached.all.length > 0;
   const got = joined
     ? describe(reached.principal)

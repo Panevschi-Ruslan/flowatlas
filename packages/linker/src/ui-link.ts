@@ -1,4 +1,4 @@
-import { normalizePath, wasRead, type GraphNode } from '@flowatlas/core';
+import { normalizePath, wasRead, type Confidence, type GraphNode } from '@flowatlas/core';
 import type { BaseUrlAnswer, FoundValue } from './base-url-value.js';
 import { localGraphqlEndpoint, sendsOperation, unservedFinding } from './graphql-value.js';
 import { MARKER_FINDINGS, pathOfValue, unreadRouteFinding, type Finding } from './http-link.js';
@@ -63,7 +63,10 @@ export interface UiIndex {
  * `marker` is an annotation naming the service, `@flowatlas-calls catalog GET
  * /items`, which outranks all of them (P127).
  */
-export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'proxy' | 'ingress' | 'same-service' | 'unique-route' | 'graphql-path' | 'served-at';
+export type UiVia = 'marker' | 'api-target' | 'base-url-env' | 'base-url-value' | 'host' | 'proxy' | 'ingress' | 'same-service' | 'unique-route' | 'graphql-path' | 'served-at' | 'same-call';
+
+/** The ways a browser's request is joined that the configuration wrote for it, which no other reading overrules. */
+export const CONFIGURED_UI_VIAS: ReadonlySet<UiVia> = new Set(['marker', 'api-target']);
 
 /** What each way a request can end carries with it. */
 interface Details {
@@ -84,6 +87,11 @@ interface Details {
     proxied?: Forward;
     /** The API taken as the one served where the address is written, its id not read (P284). */
     servedAt?: ServedApi;
+    /**
+     * Where the request's other half, read as one between services, was
+     * joined and how sure that join is: the one call goes where it went (P292).
+     */
+    twin?: { via: string; confidence: Confidence };
   };
   /** Several APIs of the project are served where the address is written, its id not read (P284). */
   apiAmbiguous: { method: string; path: string; host: string; apis: readonly string[] };
@@ -320,7 +328,10 @@ const byBaseUrlValue = (ask: Ask): UiOutcome | undefined => {
   const { env, index } = ask;
   if (env === undefined || index.claimantsOf(env).length > 0) return undefined;
   const answer = index.baseUrlOf?.(ask.call);
-  if (answer?.kind !== 'service') return byLocalGraphqlValue(ask, answer);
+  // An operation is asked of the endpoints at the value's path first, a
+  // service's included (P281, P292).
+  const operation = byLocalGraphqlValue(ask, answer);
+  if (operation !== undefined || answer?.kind !== 'service') return operation;
   // A value with a path of its own is where the request goes, path included
   // (P91); where that answers nothing and the path alone does, the value's
   // path is a mount and the join without it stands.

@@ -54,11 +54,24 @@ describe('an operation a server sends to a setting no value of which names a ser
     expect(findingFor(outcome)?.reason).toBe('graphql-field-no-resolver');
   });
 
-  it("reaches the one endpoint at the path a deployment's host alone names, as a guess (P285)", () => {
+  // Where no value is for this machine, the deployment's public host is asked under the same rule (P292).
+  it("reaches the one endpoint at the path a deployment's host alone names, as a guess, where it declares a field asked for", () => {
     const { outcome, baseUrl } = resolveCall(operation('signIn'), indexWith({ kind: 'external', host: 'demo.example.com', found: deployed, values: [deployed] }));
-    expect(outcome).toMatchObject({ kind: 'linked', via: 'externalValuePath' });
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'graphqlPath' });
     expect(outcome.kind === 'linked' && outcome.entry.id).toBe('entry:api:http:POST:/store-api');
     expect(baseUrl?.from).toBe('wrangler.toml');
+  });
+
+  it("is a row naming the root fields where the endpoint a deployment's host alone names declares none of them (P292)", () => {
+    const { outcome } = resolveCall(operation('payByCard'), indexWith({ kind: 'external', host: 'demo.example.com', found: deployed, values: [deployed] }));
+    expect(outcome).toMatchObject({ kind: 'noRoute', targetService: 'api', unserved: ['Mutation.payByCard'] });
+  });
+
+  // A value at a port the service's code listens on names the service (P292): its endpoints are asked under the same rule.
+  it('asks the endpoints of the service a value for this machine names, and joins nothing the endpoint does not declare', () => {
+    const named: BaseUrlAnswer = { kind: 'service', service: 'api', found: local, others: [] };
+    expect(resolveCall(operation('signIn'), indexWith(named)).outcome).toMatchObject({ kind: 'linked', via: 'graphqlPath' });
+    expect(resolveCall(operation('payByCard'), indexWith(named)).outcome).toMatchObject({ kind: 'noRoute', targetService: 'api', unserved: ['Mutation.payByCard'] });
   });
 
   it('leaves the third party a deployment names as it was where nothing serves its path', () => {

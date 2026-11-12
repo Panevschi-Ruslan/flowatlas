@@ -390,9 +390,10 @@ describe('an operation sent to a setting no value of which names a service', () 
     expect(uiFindingFor(outcome)?.reason).toBe('graphql-field-no-resolver');
   });
 
-  it('joins a public host alone only as the one route under its path, and decides nothing from local values that disagree', () => {
-    // The value's path is tried as P280 tries it for any request rooted there: a guess at whose deployment the host is.
-    expect(resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/store-api', 'wrangler.toml')]))).toMatchObject({ kind: 'linked', via: 'unique-route' });
+  it('joins a public host alone only at the one endpoint under its path, and decides nothing from local values that disagree', () => {
+    // Where no value is for this machine, the public host's path is asked of the endpoints under the same rule (P292).
+    expect(resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/store-api', 'wrangler.toml')]))).toMatchObject({ kind: 'linked', via: 'graphql-path' });
+    expect(resolveUiCall(operation('payByCard'), indexWith([value('https://demo.example.com/store-api', 'wrangler.toml')]))).toMatchObject({ kind: 'noRoute', unserved: ['Mutation.payByCard'] });
     expect(resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/graphql', 'wrangler.toml')])).kind).toBe('noRoute');
     const disagreeing = [value('http://localhost:3000/store-api', '.env'), value('http://localhost:3000/office-api', '.env.example')];
     // Values for this machine that disagree settle nothing: no value is the one the request goes under.

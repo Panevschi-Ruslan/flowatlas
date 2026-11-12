@@ -1,0 +1,1223 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T19:17:19.031Z",
+  "services": [
+    {
+      "name": "market",
+      "repo": "./market",
+      "type": "remix",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "config_key:market#LEDGER_URL",
+      "type": "config_key",
+      "label": "LEDGER_URL",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 12,
+      "meta": {
+        "key": "LEDGER_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:market#REVIEWS_API_URL",
+      "type": "config_key",
+      "label": "REVIEWS_API_URL",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 27,
+      "meta": {
+        "key": "REVIEWS_API_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:inventory:http:GET:/api/listings",
+      "type": "entry",
+      "label": "GET /api/listings",
+      "repo": "inventory",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/listings",
+        "rawPath": "/api/listings",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:ledger:http:GET:/api/entries",
+      "type": "entry",
+      "label": "GET /api/entries",
+      "repo": "ledger",
+      "file": "src/index.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/entries",
+        "rawPath": "/api/entries",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:market:http:GET:/api/entries",
+      "type": "entry",
+      "label": "GET /api/entries",
+      "repo": "market",
+      "file": "app/routes/api.entries.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/entries",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:market:http:GET:/api/listings",
+      "type": "entry",
+      "label": "GET /api/listings",
+      "repo": "market",
+      "file": "app/routes/api.listings.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/listings",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:market:http:GET:/browse",
+      "type": "entry",
+      "label": "GET /browse",
+      "repo": "market",
+      "file": "app/routes/browse.tsx",
+      "line": 3,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/browse",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:reviews:graphql:Query.reviews",
+      "type": "entry",
+      "label": "Query.reviews",
+      "repo": "reviews",
+      "file": "src/reviews.resolver.ts",
+      "line": 14,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "reviews",
+        "returns": "[Review!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:reviews:http:POST:/reviews-api",
+      "type": "entry",
+      "label": "POST /reviews-api",
+      "repo": "reviews",
+      "file": "src/app.module.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/reviews-api",
+        "adapter": "graphql-resolvers",
+        "registration": "graphql/endpoint",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Review": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "stars": {
+                    "type": "Int!"
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "reviews": {
+                    "type": "[Review!]!"
+                  }
+                }
+              }
+            }
+          },
+          "listen": [
+            {
+              "port": 4500,
+              "file": "src/main.ts",
+              "line": 7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http_out:market#app/lib/catalog.ts:12:21",
+      "type": "http_out",
+      "label": "GET /api/entries",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 12,
+      "meta": {
+        "method": "GET",
+        "url": "${LEDGER_URL}/api/entries",
+        "path": "/api/entries",
+        "baseUrlEnv": "LEDGER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:market#app/lib/catalog.ts:12:21",
+        "baseUrlFrom": "its name",
+        "targetService": "ledger"
+      }
+    },
+    {
+      "id": "http_out:market#app/lib/catalog.ts:27:10",
+      "type": "http_out",
+      "label": "query LatestReviews /",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 27,
+      "meta": {
+        "method": "POST",
+        "url": "${REVIEWS_API_URL}",
+        "path": "/",
+        "baseUrlEnv": "REVIEWS_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "client": "graphql-request",
+        "graphql": {
+          "operation": "query",
+          "name": "LatestReviews",
+          "fields": [
+            {
+              "field": "reviews",
+              "line": 18,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 19
+                },
+                {
+                  "field": "stars",
+                  "line": 20
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "app/lib/catalog.ts",
+            "line": 17
+          },
+          "library": "graphql-request"
+        },
+        "sameCall": "ui_api_call:market#app/lib/catalog.ts:27:10",
+        "baseUrl": "https://reviews.example.com/reviews-api",
+        "baseUrlFrom": "wrangler.toml",
+        "targetService": "reviews"
+      }
+    },
+    {
+      "id": "http_out:market#app/lib/catalog.ts:6:21",
+      "type": "http_out",
+      "label": "GET /api/listings",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 6,
+      "meta": {
+        "method": "GET",
+        "url": "${PUBLIC_APP_URL}/api/listings",
+        "path": "/api/listings",
+        "baseUrlEnv": "PUBLIC_APP_URL",
+        "baseUrlDefault": "http://localhost:4300",
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:market#app/lib/catalog.ts:6:21",
+        "baseUrl": "http://localhost:4300",
+        "baseUrlFrom": "app/lib/catalog.ts (the code’s own fallback)",
+        "targetService": "inventory"
+      }
+    },
+    {
+      "id": "inventory#src/index.ts:GET /api/listings@5",
+      "type": "function",
+      "label": "GET /api/listings@5",
+      "repo": "inventory",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "ledger#src/index.ts:GET /api/entries@5",
+      "type": "function",
+      "label": "GET /api/entries@5",
+      "repo": "ledger",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "market#app/lib/catalog.ts:readEntries",
+      "type": "function",
+      "label": "readEntries",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "market#app/lib/catalog.ts:readListings",
+      "type": "function",
+      "label": "readListings",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "market#app/lib/catalog.ts:readReviews",
+      "type": "function",
+      "label": "readReviews",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "market#app/routes/api.entries.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "market",
+      "file": "app/routes/api.entries.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "market#app/routes/api.listings.ts:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "market",
+      "file": "app/routes/api.listings.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "market#app/routes/browse.tsx:Browse",
+      "type": "ui_component",
+      "label": "Browse",
+      "repo": "market",
+      "file": "app/routes/browse.tsx",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "market#app/routes/browse.tsx:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "market",
+      "file": "app/routes/browse.tsx",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{listings:any;entries:any;reviews:unknown}"
+        }
+      }
+    },
+    {
+      "id": "repo:inventory",
+      "type": "repo",
+      "label": "inventory",
+      "repo": "inventory",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4300,
+            "file": "src/index.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/index.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4400,
+            "file": "src/index.ts",
+            "line": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:market",
+      "type": "repo",
+      "label": "market",
+      "repo": "market",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 8,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "remix-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:reviews",
+      "type": "repo",
+      "label": "reviews",
+      "repo": "reviews",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http",
+            "graphql-resolvers"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4500,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "reviews#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "module",
+      "label": "GraphQLModule",
+      "repo": "reviews",
+      "file": "node_modules/@nestjs/graphql",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "external": true
+      }
+    },
+    {
+      "id": "reviews#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "reviews",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "ReviewsResolver"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "reviews#src/reviews.resolver.ts:ReviewsResolver",
+      "type": "provider",
+      "label": "ReviewsResolver",
+      "repo": "reviews",
+      "file": "src/reviews.resolver.ts",
+      "line": 12,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "reviews#src/reviews.resolver.ts:ReviewsResolver.reviews",
+      "type": "method",
+      "label": "ReviewsResolver.reviews",
+      "repo": "reviews",
+      "file": "src/reviews.resolver.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:reviews#Review[]"
+        }
+      }
+    },
+    {
+      "id": "ui_action:market#app/routes/browse.tsx:13:15",
+      "type": "ui_action",
+      "label": "onClick={refresh}",
+      "repo": "market",
+      "file": "app/routes/browse.tsx",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "refresh",
+        "component": "market#app/routes/browse.tsx:Browse",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:market#app/routes/browse.tsx:14:15",
+      "type": "ui_action",
+      "label": "onClick={balance}",
+      "repo": "market",
+      "file": "app/routes/browse.tsx",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "balance",
+        "component": "market#app/routes/browse.tsx:Browse",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:market#app/routes/browse.tsx:15:15",
+      "type": "ui_action",
+      "label": "onClick={more}",
+      "repo": "market",
+      "file": "app/routes/browse.tsx",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "more",
+        "component": "market#app/routes/browse.tsx:Browse",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:market#app/lib/catalog.ts:12:21",
+      "type": "ui_api_call",
+      "label": "GET /api/entries",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${LEDGER_URL}/api/entries",
+        "path": "/api/entries",
+        "baseUrlEnv": "LEDGER_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "sameCall": "http_out:market#app/lib/catalog.ts:12:21",
+        "baseUrlFrom": "its name",
+        "targetService": "ledger"
+      }
+    },
+    {
+      "id": "ui_api_call:market#app/lib/catalog.ts:27:10",
+      "type": "ui_api_call",
+      "label": "query LatestReviews /",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 27,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "${REVIEWS_API_URL}",
+        "path": "/",
+        "baseUrlEnv": "REVIEWS_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "graphql-request",
+        "client": "graphql-request",
+        "via": "template-env",
+        "graphql": {
+          "operation": "query",
+          "name": "LatestReviews",
+          "fields": [
+            {
+              "field": "reviews",
+              "line": 18,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 19
+                },
+                {
+                  "field": "stars",
+                  "line": 20
+                }
+              ]
+            }
+          ],
+          "variables": [],
+          "document": {
+            "file": "app/lib/catalog.ts",
+            "line": 17
+          },
+          "library": "graphql-request"
+        },
+        "sameCall": "http_out:market#app/lib/catalog.ts:27:10",
+        "baseUrl": "https://reviews.example.com/reviews-api",
+        "baseUrlFrom": "wrangler.toml",
+        "targetService": "reviews"
+      }
+    },
+    {
+      "id": "ui_api_call:market#app/lib/catalog.ts:6:21",
+      "type": "ui_api_call",
+      "label": "GET /api/listings",
+      "repo": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${PUBLIC_APP_URL}/api/listings",
+        "path": "/api/listings",
+        "baseUrlEnv": "PUBLIC_APP_URL",
+        "baseUrlDefault": "http://localhost:4300",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "sameCall": "http_out:market#app/lib/catalog.ts:6:21",
+        "baseUrl": "http://localhost:4300",
+        "baseUrlFrom": "app/lib/catalog.ts (the code’s own fallback)",
+        "targetService": "inventory"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:inventory:http:GET:/api/listings",
+      "to": "inventory#src/index.ts:GET /api/listings@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:ledger:http:GET:/api/entries",
+      "to": "ledger#src/index.ts:GET /api/entries@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/index.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:market:http:GET:/api/entries",
+      "to": "market#app/routes/api.entries.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "Response",
+      "file": "app/routes/api.entries.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:market:http:GET:/api/listings",
+      "to": "market#app/routes/api.listings.ts:loader",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "Response",
+      "file": "app/routes/api.listings.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:market:http:GET:/browse",
+      "to": "market#app/routes/browse.tsx:loader",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{listings:any;entries:any;reviews:unknown}",
+      "file": "app/routes/browse.tsx",
+      "line": 3,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:reviews:graphql:Query.reviews",
+      "to": "reviews#src/reviews.resolver.ts:ReviewsResolver.reviews",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:reviews#Review[]",
+      "file": "src/reviews.resolver.ts",
+      "line": 14
+    },
+    {
+      "from": "http_out:market#app/lib/catalog.ts:12:21",
+      "to": "entry:ledger:http:GET:/api/entries",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/catalog.ts",
+      "line": 12,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "ledger",
+        "baseUrlFrom": "its name"
+      }
+    },
+    {
+      "from": "http_out:market#app/lib/catalog.ts:27:10",
+      "to": "entry:reviews:graphql:Query.reviews",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/catalog.ts",
+      "line": 18,
+      "meta": {
+        "graphql": {
+          "operation": "LatestReviews",
+          "field": "Query.reviews"
+        }
+      }
+    },
+    {
+      "from": "http_out:market#app/lib/catalog.ts:27:10",
+      "to": "entry:reviews:http:POST:/reviews-api",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/catalog.ts",
+      "line": 27,
+      "meta": {
+        "via": "graphqlPath",
+        "targetService": "reviews",
+        "baseUrl": "https://reviews.example.com/reviews-api",
+        "baseUrlFrom": "wrangler.toml"
+      }
+    },
+    {
+      "from": "http_out:market#app/lib/catalog.ts:6:21",
+      "to": "entry:inventory:http:GET:/api/listings",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/catalog.ts",
+      "line": 6,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "inventory",
+        "baseUrl": "http://localhost:4300",
+        "baseUrlFrom": "app/lib/catalog.ts (the code’s own fallback)"
+      }
+    },
+    {
+      "from": "market#app/lib/catalog.ts:readEntries",
+      "to": "config_key:market#LEDGER_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "app/lib/catalog.ts",
+      "line": 12
+    },
+    {
+      "from": "market#app/lib/catalog.ts:readEntries",
+      "to": "http_out:market#app/lib/catalog.ts:12:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/catalog.ts",
+      "line": 12
+    },
+    {
+      "from": "market#app/lib/catalog.ts:readEntries",
+      "to": "ui_api_call:market#app/lib/catalog.ts:12:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/catalog.ts",
+      "line": 12
+    },
+    {
+      "from": "market#app/lib/catalog.ts:readListings",
+      "to": "http_out:market#app/lib/catalog.ts:6:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/catalog.ts",
+      "line": 6
+    },
+    {
+      "from": "market#app/lib/catalog.ts:readListings",
+      "to": "ui_api_call:market#app/lib/catalog.ts:6:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/catalog.ts",
+      "line": 6
+    },
+    {
+      "from": "market#app/lib/catalog.ts:readReviews",
+      "to": "config_key:market#REVIEWS_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "app/lib/catalog.ts",
+      "line": 27
+    },
+    {
+      "from": "market#app/lib/catalog.ts:readReviews",
+      "to": "http_out:market#app/lib/catalog.ts:27:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/catalog.ts",
+      "line": 27
+    },
+    {
+      "from": "market#app/lib/catalog.ts:readReviews",
+      "to": "ui_api_call:market#app/lib/catalog.ts:27:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/catalog.ts",
+      "line": 27
+    },
+    {
+      "from": "market#app/routes/browse.tsx:Browse",
+      "to": "market#app/lib/catalog.ts:readEntries",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "app/routes/browse.tsx",
+      "line": 9
+    },
+    {
+      "from": "market#app/routes/browse.tsx:Browse",
+      "to": "market#app/lib/catalog.ts:readListings",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "app/routes/browse.tsx",
+      "line": 8
+    },
+    {
+      "from": "market#app/routes/browse.tsx:Browse",
+      "to": "market#app/lib/catalog.ts:readReviews",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "app/routes/browse.tsx",
+      "line": 10
+    },
+    {
+      "from": "market#app/routes/browse.tsx:loader",
+      "to": "market#app/lib/catalog.ts:readEntries",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "app/routes/browse.tsx",
+      "line": 4
+    },
+    {
+      "from": "market#app/routes/browse.tsx:loader",
+      "to": "market#app/lib/catalog.ts:readListings",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "any",
+      "file": "app/routes/browse.tsx",
+      "line": 4
+    },
+    {
+      "from": "market#app/routes/browse.tsx:loader",
+      "to": "market#app/lib/catalog.ts:readReviews",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "app/routes/browse.tsx",
+      "line": 4
+    },
+    {
+      "from": "reviews#src/app.module.ts:AppModule",
+      "to": "reviews#node_modules/@nestjs/graphql:GraphQLModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 7,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "ui_action:market#app/routes/browse.tsx:13:15",
+      "to": "market#app/routes/browse.tsx:Browse",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/browse.tsx",
+      "line": 13
+    },
+    {
+      "from": "ui_action:market#app/routes/browse.tsx:14:15",
+      "to": "market#app/routes/browse.tsx:Browse",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/browse.tsx",
+      "line": 14
+    },
+    {
+      "from": "ui_action:market#app/routes/browse.tsx:15:15",
+      "to": "market#app/routes/browse.tsx:Browse",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/browse.tsx",
+      "line": 15
+    },
+    {
+      "from": "ui_api_call:market#app/lib/catalog.ts:12:21",
+      "to": "entry:ledger:http:GET:/api/entries",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "app/lib/catalog.ts",
+      "line": 12,
+      "meta": {
+        "via": "base-url-value",
+        "targetService": "ledger",
+        "baseUrlFrom": "its name"
+      }
+    },
+    {
+      "from": "ui_api_call:market#app/lib/catalog.ts:27:10",
+      "to": "entry:reviews:graphql:Query.reviews",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "app/lib/catalog.ts",
+      "line": 18,
+      "meta": {
+        "graphql": {
+          "operation": "LatestReviews",
+          "field": "Query.reviews"
+        }
+      }
+    },
+    {
+      "from": "ui_api_call:market#app/lib/catalog.ts:27:10",
+      "to": "entry:reviews:http:POST:/reviews-api",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "app/lib/catalog.ts",
+      "line": 27,
+      "meta": {
+        "via": "graphql-path",
+        "targetService": "reviews",
+        "baseUrl": "https://reviews.example.com/reviews-api",
+        "baseUrlFrom": "wrangler.toml"
+      }
+    },
+    {
+      "from": "ui_api_call:market#app/lib/catalog.ts:6:21",
+      "to": "entry:inventory:http:GET:/api/listings",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "app/lib/catalog.ts",
+      "line": 6,
+      "meta": {
+        "via": "base-url-value",
+        "targetService": "inventory",
+        "baseUrl": "http://localhost:4300",
+        "baseUrlFrom": "app/lib/catalog.ts (the code’s own fallback)"
+      }
+    }
+  ],
+  "types": {
+    "type:reviews#Review": {
+      "name": "Review",
+      "kind": "object",
+      "declaredIn": "reviews#src/reviews.resolver.ts",
+      "structuralHash": "bc066008af1b9100",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "stars",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/listings@5 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "inventory"
+    },
+    {
+      "file": "src/index.ts",
+      "line": 6,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /api/entries@5 -> res.json",
+      "meta": {
+        "cause": "callback-param"
+      },
+      "service": "ledger"
+    },
+    {
+      "service": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 6,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "PUBLIC_APP_URL is http://localhost:4300 in app/lib/catalog.ts (the code’s own fallback), which is taken as inventory",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add PUBLIC_APP_URL to services[].baseUrlEnv of inventory to say so outright.",
+      "symbol": "http_out:market#app/lib/catalog.ts:6:21",
+      "meta": {
+        "variable": "PUBLIC_APP_URL",
+        "value": "http://localhost:4300",
+        "from": "app/lib/catalog.ts (the code’s own fallback)"
+      },
+      "sites": 2
+    },
+    {
+      "service": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 12,
+      "reason": "base-url-from-name",
+      "level": "info",
+      "message": "no service declares LEDGER_URL and nothing read gives it a value, so it is taken as ledger, the one service it is named after",
+      "hint": "Only the setting's name chose the service. Add LEDGER_URL to services[].baseUrlEnv of ledger to say so outright, or of the service it really is.",
+      "symbol": "http_out:market#app/lib/catalog.ts:12:21",
+      "meta": {
+        "variable": "LEDGER_URL",
+        "from": "its name"
+      },
+      "sites": 2
+    },
+    {
+      "file": "app/lib/catalog.ts",
+      "line": 26,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "market"
+    },
+    {
+      "service": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 27,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "REVIEWS_API_URL is https://reviews.example.com/reviews-api in wrangler.toml, which is taken as reviews",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add REVIEWS_API_URL to services[].baseUrlEnv of reviews to say so outright.",
+      "symbol": "http_out:market#app/lib/catalog.ts:27:10",
+      "meta": {
+        "variable": "REVIEWS_API_URL",
+        "value": "https://reviews.example.com/reviews-api",
+        "from": "wrangler.toml"
+      },
+      "sites": 2
+    },
+    {
+      "file": "app/routes/browse.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "market"
+    },
+    {
+      "file": "app/routes/browse.tsx",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "market"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 9,
+      "reason": "module-import-not-installed",
+      "hint": "GraphQLModule is a module of @nestjs/graphql, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports GraphQLModule",
+      "meta": {
+        "package": "@nestjs/graphql",
+        "module": "GraphQLModule"
+      },
+      "service": "reviews"
+    }
+  ]
+}

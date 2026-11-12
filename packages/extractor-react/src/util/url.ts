@@ -131,6 +131,8 @@ export interface ApiUrl {
   path: string | null;
   /** Settings key the address is rooted at, when it is. */
   baseUrlEnv: string | null;
+  /** What the code falls back to where that key is not set, when it writes one (P292). */
+  baseUrlDefault?: string;
   /** Host, when the address names one outright. */
   host: string | null;
   /** How the address was arrived at, for the reader of the node. */
@@ -226,7 +228,12 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
       });
       return inner.baseUrlEnv === null
         ? null
-        : { key: inner.baseUrlEnv, prefix: routePathOf(inner.path ?? ''), ...(inner.guessed ? { guessed: true } : {}) };
+        : {
+            key: inner.baseUrlEnv,
+            prefix: routePathOf(inner.path ?? ''),
+            ...(inner.guessed ? { guessed: true } : {}),
+            ...(inner.baseUrlDefault === undefined ? {} : { otherwise: inner.baseUrlDefault }),
+          };
     }
     // A helper that assembles the address answers with both halves: the
     // settings it is rooted at, and the part of the path it has written.
@@ -243,6 +250,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
           key,
           prefix: inner?.value ?? '',
           ...(inner?.guessed === true ? { guessed: true } : {}),
+          ...(inner?.fallback === undefined ? {} : { otherwise: inner.fallback }),
         };
       }
     }
@@ -269,6 +277,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
       url: `\${${behind.key}}${prefix}`,
       path: routePathOf(prefix),
       baseUrlEnv: behind.key,
+      ...(behind.otherwise === undefined ? {} : { baseUrlDefault: behind.otherwise }),
       host: null,
       via: 'template-env',
       guessed: behind.guessed === true,
@@ -302,6 +311,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     url: baseUrlEnv === undefined ? resolved.value : `\${${baseUrlEnv}}${resolved.value}`,
     path: routePathOf(resolved.value),
     baseUrlEnv: baseUrlEnv ?? null,
+    ...(baseUrlEnv === undefined || resolved.fallback === undefined ? {} : { baseUrlDefault: resolved.fallback }),
     host: null,
     via,
     guessed,
@@ -352,6 +362,7 @@ export const analyzeClientBase = (node: TsNode, options: ReadAddressOptions = {}
       url: `\${${behind.key}}${prefix}`,
       path: routePathOf(prefix),
       baseUrlEnv: behind.key,
+      ...(behind.otherwise === undefined ? {} : { baseUrlDefault: behind.otherwise }),
       host: null,
       via: 'template-env',
       guessed: behind.guessed === true,

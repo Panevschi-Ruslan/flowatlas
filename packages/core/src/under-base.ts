@@ -16,6 +16,11 @@ export interface ReadAddress {
   path: string | null;
   /** Settings key the address is rooted at, when it is. */
   baseUrlEnv: string | null;
+  /**
+   * What the code falls back to where that key is not set, when it writes one:
+   * `process.env.API_URL || 'http://localhost:3000'` (P77, P292).
+   */
+  baseUrlDefault?: string;
   /** Host, when the address names one outright. */
   host: string | null;
   /** How the address was arrived at, for the reader of the node. */
@@ -76,11 +81,14 @@ export const underBase = <Address extends ReadAddress>(base: ReadAddress | undef
   // base ends without is put back once, never twice.
   const written = address.url ?? address.path;
   const joint = written.startsWith('/') ? written : `/${written}`;
+  // The fallback is the setting's, so it is the base's where the base names the setting.
+  const { baseUrlDefault: _own, ...rest } = address;
   return {
-    ...address,
+    ...(rest as Address),
     url: `${(base.url ?? '').replace(/\/+$/, '')}${joint}`,
     path: routePathOf(`${opening}${address.path}`),
     baseUrlEnv: base.baseUrlEnv,
+    ...(base.baseUrlEnv === null || base.baseUrlDefault === undefined ? {} : { baseUrlDefault: base.baseUrlDefault }),
     host: base.host,
     // How the *address* was arrived at, and an address rooted at a settings key
     // is that whichever end of it the key came from.

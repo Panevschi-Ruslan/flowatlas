@@ -103,10 +103,19 @@ describe('joining a request in the browser to the route that serves it', () => {
   });
 
   it('refuses to choose when two services answer the same route', () => {
-    const result = link(request({ baseUrlEnv: 'ordersUrl' }));
+    const result = link(request({ baseUrlEnv: 'API_BASE_URL' }));
     expect(hits(result)).toEqual([]);
     expect(result.report.ui.byReason).toEqual({ 'ambiguous-route-target': 1 });
     expect(result.report.unresolved[0]?.hint).toContain('apiTarget');
+  });
+
+  // The name decides for a browser's request as for one between services (P292).
+  it('takes the one service a setting nobody claims is named after, as a guess, with the row that says so', () => {
+    const result = link(request({ baseUrlEnv: 'ordersUrl' }));
+    expect(hits(result)).toEqual([
+      expect.objectContaining({ to: 'entry:orders:http:GET:/orders/:param', confidence: 'heuristic', meta: expect.objectContaining({ via: 'base-url-value', baseUrlFrom: 'its name' }) }),
+    ]);
+    expect(result.report.unresolved.map((row) => row.reason)).toEqual(['base-url-from-name']);
   });
 
   it('says which service was asked when the route is the part that is missing', () => {

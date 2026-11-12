@@ -3,6 +3,7 @@ import {
   CONFIDENCE_RANK,
   ENVIRONMENT_META,
   ORIGINLESS_META,
+  SAME_CALL_META,
   hostOf,
   namesGivenTo,
   SCHEMA_VERSION,
@@ -77,6 +78,7 @@ import type { LinkReport, ServiceReport } from './report.js';
 import { surveyChannels, surveyRoutes } from './survey.js';
 import {
   callPerChoice,
+  CONFIGURED_UI_VIAS,
   missingChoiceFinding,
   resolveUiCall,
   uiFindingFor,
@@ -588,10 +590,11 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
     from: call.id,
     to: outcome.entry.id,
     type: 'hits',
-    confidence: boundedByMount(
-      boundedByRoute(asserted ? 'marker' : guessed ? 'heuristic' : 'static', outcome.entry),
-      outcome.mountAssumed,
-    ),
+    // The other half's join, as sure as it is (P292).
+    confidence:
+      outcome.twin !== undefined
+        ? outcome.twin.confidence
+        : boundedByMount(boundedByRoute(asserted ? 'marker' : guessed ? 'heuristic' : 'static', outcome.entry), outcome.mountAssumed),
     ...(call.file === undefined ? {} : { file: call.file }),
     ...(call.line === undefined ? {} : { line: call.line }),
     ...(typeof params === 'string' ? { params: [params] } : {}),
@@ -599,6 +602,7 @@ const uiEdge = (call: GraphNode, outcome: Extract<UiOutcome, { kind: 'linked' }>
     meta: {
       via: outcome.via,
       targetService: outcome.targetService,
+      ...(outcome.twin === undefined ? {} : { sameCallVia: outcome.twin.via }),
       ...listensMeta(outcome.listening),
       ...proxyMeta(outcome, call),
       ...mountMeta(outcome.mountAssumed),
@@ -773,10 +777,18 @@ const baseUrlLookup = (
   edges: ReadonlyMap<string, GraphEdge>,
   config: FlowatlasConfig,
   settings: Readonly<Record<string, RepoSettings>>,
-  byName: boolean,
+  ports: PortIndex,
 ): RouteIndex['baseUrlOf'] => {
   if (config.settingFiles.read === false) return undefined;
   const hosts = hostIndexOf(config, settings);
+  // The services at an address's port on this machine, the ports their code
+  // listens on among them (P292); a front end's dev server forwards what it
+  // does not serve, so it places nothing here (P254).
+  const atPort = (address: string): readonly string[] | undefined => {
+    const found = atLocalPort(address, ports);
+    if (found?.kind === 'shared') return found.services;
+    return found?.kind === 'service' && found.listening?.devServer !== true ? [found.service] : undefined;
+  };
   const names = config.services.map((service) => service.name).sort(cmp);
   const functions = [...nodes.values()].filter((node) => node.type === 'entry' && node.meta?.[ENVIRONMENT_META] !== undefined);
   const runnersOf = functions.length === 0 ? new Map<string, GraphNode[]>() : reachedBy(nodes, edges, functions);
@@ -791,7 +803,8 @@ const baseUrlLookup = (
       runners: runnersOf.get(call.id) ?? [],
       ...(own === undefined ? {} : { settings: own }),
       hosts,
-      services: byName ? names : [],
+      atPort,
+      services: names,
     });
   };
 };
@@ -962,8 +975,10 @@ export const linkGraphs = (
   const ownOrigins = ownOriginsAt(nodes);
   // What the setting files write that is not read: a template nothing decides, overlays nothing chooses (P260).
   for (const own of Object.values(settings)) found.push(...(own.rows ?? []));
-  const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, true);
-  const valuedUiBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, false);
+  // One lookup for both halves of a call: a browser's request is placed by its
+  // setting's values and, where they settle nothing, its name, as one between
+  // services is (P292).
+  const valuedBaseUrlOf = baseUrlLookup(nodes, edges, config, settings, hosts);
   const index: RouteIndex = {
     ...buildRouteIndex(nodes, edges.values(), config, routesByService, servicesByEnv),
     functionUrlsOf: (callId) => urls.get(callId) ?? [],
@@ -977,7 +992,7 @@ export const linkGraphs = (
   };
   const uiIndex: UiIndex = {
     ...buildUiIndex(config, routesByService, servicesByEnv),
-    ...(valuedUiBaseUrlOf === undefined ? {} : { baseUrlOf: valuedUiBaseUrlOf }),
+    ...(valuedBaseUrlOf === undefined ? {} : { baseUrlOf: valuedBaseUrlOf }),
     serviceAtHost: hostLookup(hosts),
     forwardOf: proxied.forwardOf,
     ingressOf: ways.ingressOf,
@@ -1052,7 +1067,8 @@ export const linkGraphs = (
     // the reader drew to it, not knowing whose it was, goes (P239).
     const host = call.meta?.['host'];
     // Forwarded by a server's proxy, the request did reach that server, which is the project's own (P257).
-    if ((outcome.via === 'host' || outcome.via === 'proxy' || outcome.via === 'ingress' || outcome.via === 'served-at') && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
+    // So is one the call's other half was joined across (P292).
+    if ((outcome.via === 'host' || outcome.via === 'proxy' || outcome.via === 'ingress' || outcome.via === 'served-at' || outcome.via === 'same-call') && typeof host === 'string') dropExternal(nodes, edges, call.id, makeExternalApiId(host));
     // Taken as an API by where it is served, its id not read: said beside the join (P284).
     if (outcome.servedAt !== undefined) {
       edge.meta = { ...edge.meta, servedApi: outcome.servedAt.api };
@@ -1082,6 +1098,42 @@ export const linkGraphs = (
     typeof call.meta?.['baseUrlEnv'] !== 'string' &&
     typeof call.meta?.['path'] === 'string' &&
     ownOrigins.has(call.repo);
+
+  /** The edge each request between services was joined by, for the browser's half of the same call (P292). */
+  const serverJoined = new Map<string, GraphEdge>();
+
+  /**
+   * One call read by both halves of a full-stack application (`sameCall`,
+   * P283) goes to one target (P292). The browser's half follows where the
+   * server's half was joined, by the evidence that half had - a deployment's
+   * value, a binding, the server's own origin - as sure as that join; save
+   * where the browser's own join was written by the configuration for it
+   * (an annotation, `apiTarget`), which the server's half then follows.
+   * A half that joined nothing leaves the other as it is.
+   */
+  const agreeWithTwin = (call: GraphNode, own: UiOutcome): UiOutcome => {
+    const twinId = call.meta?.[SAME_CALL_META];
+    const twin = typeof twinId === 'string' ? serverJoined.get(twinId) : undefined;
+    const entry = twin === undefined ? undefined : nodes.get(twin.to);
+    if (twin === undefined || entry === undefined) return own;
+    if (own.kind === 'linked' && own.entry.id === entry.id) return own;
+    if (own.kind === 'linked' && CONFIGURED_UI_VIAS.has(own.via)) {
+      edges.delete(edgeKey(twin));
+      const moved: GraphEdge = { ...twin, to: own.entry.id, confidence: uiEdge(call, own).confidence, meta: { ...twin.meta, via: 'sameCall', sameCallVia: own.via, targetService: own.entry.repo } };
+      edges.set(edgeKey(moved), moved);
+      const server = nodes.get(twin.from);
+      if (server !== undefined) server.meta = { ...server.meta, targetService: own.targetService };
+      return own;
+    }
+    return {
+      kind: 'linked',
+      via: 'same-call',
+      entry,
+      targetService: entry.repo,
+      runnersUp: [],
+      twin: { via: String(twin.meta?.['via'] ?? 'unknown'), confidence: twin.confidence },
+    };
+  };
 
   for (const call of [...nodes.values()]) {
     if (call.type !== 'http_out') continue;
@@ -1164,6 +1216,7 @@ export const linkGraphs = (
     if (outcome.kind === 'linked') {
       const edge = callEdge(call, outcome, baseUrl);
       edges.set(edgeKey(edge), edge);
+      serverJoined.set(call.id, edge);
       // The host was a configured service's, so it is no third party: the edge
       // the reader drew to it goes, as a browser request's does (P244).
       const host = call.meta?.['host'];
@@ -1290,8 +1343,9 @@ export const linkGraphs = (
       return { kind: 'some', linked, missing };
     };
 
-    const outcome = resolveUiCall(call, uiIndex);
-    const spelledOut = onlyCatchAll(outcome) ? spread(call) : undefined;
+    const outcome = agreeWithTwin(call, resolveUiCall(call, uiIndex));
+    // Following its other half, the call goes where that half went (P292).
+    const spelledOut = outcome.kind === 'linked' && outcome.via === 'same-call' ? undefined : onlyCatchAll(outcome) ? spread(call) : undefined;
 
     // Every value a closed segment can take reaches a route of its own, and
     // matching the segment as a hole reached a catch-all or nothing. The
@@ -1309,7 +1363,8 @@ export const linkGraphs = (
       joinUi(call, outcome, String(call.meta?.['path'] ?? '?'));
       ui.resolved += 1;
       const routes = routesByService.get(outcome.targetService) ?? [];
-      if (answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
+      // A join its other half made carries that half's row, said once (P292).
+      if (outcome.via !== 'same-call' && answeredOnlyByWildcard(outcome.entry, routes)) record(call, wildcardFinding(call, outcome.entry));
       call.meta = { ...call.meta, targetService: outcome.targetService };
       continue;
     }

@@ -147,10 +147,16 @@ export interface BaseUrlInput {
   readonly settings?: RepoSettings;
   readonly hosts: HostIndex;
   /**
+   * The services an address on this machine reaches by its port, the ports
+   * their code listens on among them (P250, P254): asked before the hosts,
+   * so a value only the code places is placed (P292). Nothing for an address
+   * that is not this machine's, or a port nothing is known at.
+   */
+  readonly atPort?: (address: string) => readonly string[] | undefined;
+  /**
    * Every configured service, for a setting named after one; empty where a
-   * name is not to decide. A browser's request is told which service its key
-   * names by `apiTarget`, and a guess from the name there would answer the
-   * one question the configuration is meant to.
+   * name is not to decide. Asked for a browser's request as for one between
+   * services (P292), after `apiTarget`, which the configuration writes for it.
    */
   readonly services: readonly string[];
 }
@@ -185,6 +191,9 @@ export const valuesOf = (input: BaseUrlInput): FoundValue[] => {
   return [...written, ...own];
 };
 
+/** The prefixes a build requires of the settings it hands the browser, which name no service. */
+const BROWSER_PREFIX = /^(?:NEXT_PUBLIC_|NUXT_PUBLIC_|EXPO_PUBLIC_|REACT_APP_|VUE_APP_|NG_APP_|GATSBY_|VITE_|PUBLIC_)(?=[A-Z0-9])/;
+
 /**
  * The one service a setting is named after: the words of its name, the
  * generic ones (`url`, `api`, `service`) left out, are the words of exactly
@@ -194,7 +203,9 @@ export const serviceNamed = (variables: readonly string[], services: readonly st
   const same = (a: ReadonlySet<string>, b: ReadonlySet<string>): boolean => a.size > 0 && a.size === b.size && [...a].every((word) => b.has(word));
   const matching = new Set<string>();
   for (const variable of variables) {
-    const asked = wordsOf(variable);
+    // The prefix a build requires of a setting the browser is handed says
+    // nothing of the service: `VITE_ORDERS_URL` is named after `orders` (P292).
+    const asked = wordsOf(variable.replace(BROWSER_PREFIX, ''));
     for (const service of services) if (same(asked, wordsOf(service))) matching.add(service);
   }
   return matching.size === 1 ? [...matching][0] : undefined;
@@ -228,7 +239,7 @@ export const baseUrlOf = (input: BaseUrlInput): BaseUrlAnswer | undefined => {
   const external = new Map<string, FoundValue>();
   const unsettled: string[] = [];
   for (const found of values) {
-    const at = found.service === undefined ? servicesAt(found.value, input.hosts) : [found.service];
+    const at = found.service === undefined ? (input.atPort?.(found.value) ?? servicesAt(found.value, input.hosts)) : [found.service];
     if (Array.isArray(at)) {
       if (at.length === 1) byService.set(at[0] as string, [...(byService.get(at[0] as string) ?? []), found]);
       else unsettled.push(...at);

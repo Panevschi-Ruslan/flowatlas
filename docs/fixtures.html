@@ -2115,6 +2115,14 @@ footer { margin-top: 48px; font: 14px var(--sans); color: var(--muted); }
         <p>A workspace of three configured services: a NestJS API (<code>apps/api</code>) serving GraphQL at <code>/graphql</code> and REST under a <code>v1</code> prefix, a storefront that declares nothing of it, and a back office that declares the API's package (<code>&quot;@shop/api&quot;: &quot;workspace:^&quot;</code>) to import its <code>Order</code> type and one helper (P282).</p>
         <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
       </li>
+      <li class="fixture" data-search="settings-chains-paired-calls everything else a remix `market`, read by both halves, whose three requests are each made by a route's `loader` on the server and by a click in the browser: every one is a `ui_api_call` and an `http_out` naming each other under `meta.samecall` (p283).">
+        <div class="head">
+          <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/settings-chains-paired-calls">settings-chains-paired-calls</a>
+          <span class="kind">4 services</span>
+        </div>
+        <p>A Remix <code>market</code>, read by both halves, whose three requests are each made by a route's <code>loader</code> on the server and by a click in the browser: every one is a <code>ui_api_call</code> and an <code>http_out</code> naming each other under <code>meta.sameCall</code> (P283).</p>
+        <p class="snapshots"><code>expected.contracts-report.json</code> <code>expected.link-report.json</code> <code>expected.project-graph.json</code></p>
+      </li>
       <li class="fixture" data-search="sqs-environment-fallback everything else a lending library's returns service whose code names a queue, a topic and a bus by a variable of its environment with a default beside it: `process.env.returns_queue_url ?? '&lt;url&gt;'`, `?? item_returned_topic` and `process.env.event_bus_name || 'library-events'` (r175).">
         <div class="head">
           <a class="name" href="https://github.com/Panevschi-Ruslan/flowatlas/tree/main/fixtures/sqs-environment-fallback">sqs-environment-fallback</a>

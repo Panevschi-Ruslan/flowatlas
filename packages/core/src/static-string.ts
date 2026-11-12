@@ -18,6 +18,8 @@ export interface StaticString {
   envRefs: string[];
   /** Whether a branch nobody settled was taken to arrive at the value. */
   guessed?: boolean;
+  /** What the code falls back to where the setting it opens with is not set, when it writes one (P292). */
+  fallback?: string;
 }
 
 /**
@@ -32,6 +34,8 @@ export interface SettingBehind {
   prefix?: string;
   /** Whether a branch nobody settled was taken to arrive at that text. */
   guessed?: boolean;
+  /** What the code falls back to where the setting is not set, when it writes one (P292). */
+  otherwise?: string;
 }
 
 export interface StaticStringOptions {
@@ -247,6 +251,7 @@ const fromSpans = (head: string, all: readonly Span[], options: StaticStringOpti
   let value = head;
   const envRefs: string[] = [];
   let guessed = false;
+  let fallback: string | undefined;
 
   let end = all.length;
   // Trailing holes that are only ever a query string or nothing add nothing to
@@ -276,6 +281,7 @@ const fromSpans = (head: string, all: readonly Span[], options: StaticStringOpti
       // nobody settled, and the text this returns says nothing about how it was
       // read. Carrying it is what lets the edge downstream say `heuristic`.
       if (root?.guessed === true) guessed = true;
+      fallback = root?.otherwise;
       value = (root?.prefix ?? '') + tail;
       continue;
     }
@@ -292,7 +298,7 @@ const fromSpans = (head: string, all: readonly Span[], options: StaticStringOpti
     value += (read ?? hole) + tail;
   }
 
-  return { value, via: 'template', envRefs, ...(guessed ? { guessed: true } : {}) };
+  return { value, via: 'template', envRefs, ...(guessed ? { guessed: true } : {}), ...(fallback === undefined ? {} : { fallback }) };
 };
 
 /** The two branches of a condition, written in place or held in a `const`. */

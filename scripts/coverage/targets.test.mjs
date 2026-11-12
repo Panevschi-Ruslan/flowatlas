@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { byRepository } from './figures.mjs';
+import { byRepository, figuresFrom, pairedRequests } from './figures.mjs';
 import { renderReport } from './report.mjs';
 import {
   TargetError,
@@ -206,4 +206,27 @@ test('the hand labels are a table by kind and a list of every label that was not
   assert.match(text, /\| `a\.ts:3` \| browser \| `http POST \/cart` \| http GET \/cart \|/);
   assert.match(text, /\| `b\.ts:9` \(labelled at 7\) \|/);
   assert.match(text, /### Site not found\n\n.*\n.*\n\| `c\.ts:1` \| producer \| `channel mail \(job welcome\)` \|/);
+});
+
+test('a call read by both halves of a full-stack application is counted once, joined where either half is (P292)', () => {
+  const paired = {
+    nodes: [
+      ...graph.nodes,
+      { id: 'ui_api_call:storefront#src/l.ts:4:1', type: 'ui_api_call', repo: 'storefront', meta: { sameCall: 'http_out:storefront#src/l.ts:4:1' } },
+      { id: 'http_out:storefront#src/l.ts:4:1', type: 'http_out', repo: 'storefront', meta: { sameCall: 'ui_api_call:storefront#src/l.ts:4:1' } },
+    ],
+    edges: [...graph.edges, { from: 'http_out:storefront#src/l.ts:4:1', to: 'entry:catalog:http:GET:/books', type: 'http_calls' }],
+  };
+  assert.deepEqual(pairedRequests(paired), { found: 1, joined: 1, browserJoined: 0, serviceJoined: 1 });
+  const [storefront] = byRepository({ graph: paired, services, dirs: ['storefront', 'catalog'] });
+  assert.deepEqual(
+    { requests: storefront.requests, joined: storefront.joined, joinedElsewhere: storefront.joinedElsewhere },
+    { requests: 4, joined: 3, joinedElsewhere: 2 },
+  );
+  const report = { ui: { total: 4, resolved: 2 }, httpOut: { total: 1, linked: 1 }, channels: { total: 1, linked: 1 } };
+  const figures = figuresFrom({ graph: paired, report });
+  assert.deepEqual(figures.requests, { browser: { found: 3, joined: 2 }, service: { found: 0, joined: 0 }, paired: { found: 1, joined: 1 } });
+  const text = renderReport(result(single, { figures: { ...result(single).figures, requests: figures.requests } }));
+  assert.match(text, /\| requests read by both halves, counted once \| 1 \| 1 by either half \|/);
+  assert.match(text, /Requests found, both kinds together: 4 against 1/);
 });

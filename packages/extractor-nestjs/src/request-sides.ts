@@ -35,13 +35,13 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { GraphNode, RepoGraph } from '@flowatlas/core';
+import { SAME_CALL_META, type GraphNode, type RepoGraph } from '@flowatlas/core';
 
 /** A side of the application a function runs on. */
 type Side = 'server' | 'browser';
 
-/** The key `meta` names the other half's node of one call under. */
-export const SAME_CALL_META = 'sameCall';
+/** The key `meta` names the other half's node of one call under (the core's, for the linker and every reader of the graph). */
+export { SAME_CALL_META };
 
 const REQUEST_TYPES = { browser: 'ui_api_call', server: 'http_out' } as const;
 

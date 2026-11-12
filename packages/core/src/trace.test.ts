@@ -151,6 +151,48 @@ describe('a settings value kept in a static property', () => {
     });
   });
 
+  // A constant that is a chain of `||` over settings (P292): the first
+  // setting, read through the function that only puts a scheme in front of
+  // it, is the root, and the text the chain ends in is its fallback.
+  it('roots a chain of || at its first setting, through a function that only normalises it, with the text it ends in as the fallback', () => {
+    const file = parse(`
+      declare const other: { url: string };
+      function withScheme(url: string | undefined): string {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        return \`https://\${url}\`;
+      }
+      const PREVIEW = other.url ? \`https://\${other.url}\` : '';
+      const APP_URL = withScheme(environment.apiUrl) || PREVIEW || 'http://localhost:3000';
+      http.get(\`\${APP_URL}/api/me\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '', otherwise: 'http://localhost:3000' });
+  });
+
+  it('reads no setting through a function whose returns say different things', () => {
+    const file = parse(`
+      function pick(url: string, flag: boolean): string {
+        if (flag) return \`\${url}/admin\`;
+        return url;
+      }
+      const BASE = pick(environment.apiUrl, true);
+      http.get(\`\${BASE}/orders\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toBeNull();
+  });
+
+  it('reads the path a function writes after the setting it is handed', () => {
+    const file = parse(`
+      const under = (base: string) => \`\${base}/api\`;
+      const BASE = under(environment.apiUrl);
+      http.get(\`\${BASE}/orders\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '/api' });
+  });
+
   it('holds a piece of the field nobody can read as a hole rather than dropping it', () => {
     const file = parse(`
       declare const anything: string;

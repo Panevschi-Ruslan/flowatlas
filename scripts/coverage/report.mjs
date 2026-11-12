@@ -316,7 +316,7 @@ ${rows.length === 0 ? 'No addresses.' : table(['first segment', 'addresses'], ro
 const requestsAgainstRule = (figures, truth) => {
   const expected = truth.families.requests;
   if (expected === undefined) return '';
-  const found = figures.requests.browser.found + figures.requests.service.found;
+  const found = figures.requests.browser.found + figures.requests.service.found + (figures.requests.paired?.found ?? 0);
   return `\nRequests found, both kinds together: ${of(found, expected)} places the counting rule sees a request written.\n`;
 };
 
@@ -328,6 +328,10 @@ ${table(
   [
     ['requests from a browser', String(figures.requests.browser.found), String(figures.requests.browser.joined)],
     ['requests between services', String(figures.requests.service.found), String(figures.requests.service.joined)],
+    // A call both halves of a full-stack application read, counted once (P292).
+    ...((figures.requests.paired?.found ?? 0) === 0
+      ? []
+      : [['requests read by both halves, counted once', String(figures.requests.paired.found), `${figures.requests.paired.joined} by either half`]]),
     ['channels', String(figures.channels.found), `${figures.channels.bothEnds} with both ends`],
   ],
 )}

@@ -243,6 +243,10 @@ describe('a base address from the value its setting is given (P77)', () => {
     expect(serviceNamed(['ORDERS_URL'], ['orders', 'orders-admin'])).toBe('orders');
     expect(serviceNamed(['ORDER_URL'], ['orders'])).toBeUndefined();
     expect(serviceNamed(['API_URL'], ['api'])).toBeUndefined();
+    // The prefix a build requires of a browser's setting names no service (P292).
+    expect(serviceNamed(['VITE_ORDERS_URL'], ['orders', 'web'])).toBe('orders');
+    expect(serviceNamed(['NEXT_PUBLIC_ORDERS_API_URL'], ['orders', 'web'])).toBe('orders');
+    expect(serviceNamed(['PUBLIC_URL'], ['public'])).toBeUndefined();
   });
 
   it('joins a key a settings factory builds to whoever claims the variable behind it', () => {

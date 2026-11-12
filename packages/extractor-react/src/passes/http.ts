@@ -515,6 +515,7 @@ export const httpPass = definePass('http', (ctx: ReactExtractContext) => {
         url: address.url,
         path: address.path,
         baseUrlEnv: address.baseUrlEnv,
+        ...(address.baseUrlEnv === null || address.baseUrlDefault === undefined ? {} : { baseUrlDefault: address.baseUrlDefault }),
         responseType: typeOfResponse(network),
         bodyType: body.type,
         ...(body.type === null ? {} : { bodyFrom: 'literal' }),
