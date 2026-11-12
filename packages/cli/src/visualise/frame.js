@@ -429,6 +429,7 @@ export const PAGE_WORDS = Object.freeze({
     'framework-feature-off': 'feature its build flag turns off',
     'navigation-external': 'navigation out of the application',
     'navigation-unresolved': 'navigation to no page',
+    'navigation-locale-prefixed': 'page found under its locale prefix',
     'implicit-import-overridden': 'name imported from the higher layer',
     'framework-setting-dynamic': 'framework setting not a literal',
     'package-source-ambiguous': 'two sources for one package',
