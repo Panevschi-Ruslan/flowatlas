@@ -1,0 +1,9 @@
+contracts: edges=0 shared=0 identical=0 drift=0 unchecked=2 errors=1 warnings=0 infos=0 ignored=0
+
+findings:
+  severity  kind              between       direction  field           what
+  error     missing_required  orders → web  response   order.discount  OrderBadge selects Order.discount at src/orders/queries.ts:26, and orders's Order has no such field; the server refuses the whole operation
+unchecked:
+  reason             places  first                                       what to do
+  no-type-on-sender       1  ui_api_call:web#src/orders/Search.tsx:6:20  Pass a typed value rather than a literal, so there is a declared shape to compare.
+  no-type-on-sender       1  ui_api_call:web#src/orders/Search.tsx:6:20  Give the handler a return type. A handler that answers with nothing has no contract to check.

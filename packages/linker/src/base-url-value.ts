@@ -49,12 +49,29 @@ export interface FoundValue {
   readonly namedOnly?: readonly string[];
   /** For a setting taken by its name: the values found, none of which named a configured service. */
   readonly unmatched?: readonly string[];
+  /** The service the value is an address of, where the deployment says so: an API another service publishes (P249). */
+  readonly service?: string;
+  /**
+   * For an address of an API the caller's own deployment serves, written out
+   * with an id the files do not tie to it (P268): the path it asks for on the
+   * API, after its stage, and the address as it is written.
+   */
+  readonly apiPath?: string;
+  readonly written?: string;
+  /** The address is built around a reference to the API, which says which API it is (P272). */
+  readonly referenced?: boolean;
 }
 
 /** What the values of a setting say a request's base address is. */
 export type BaseUrlAnswer =
   | { readonly kind: 'service'; readonly service: string; readonly found: FoundValue; readonly others: readonly FoundValue[] }
-  | { readonly kind: 'external'; readonly host: string; readonly found: FoundValue }
+  | {
+      readonly kind: 'external';
+      readonly host: string;
+      readonly found: FoundValue;
+      /** Every value found, among them those of this machine a third party's host outweighed (P281). */
+      readonly values?: readonly FoundValue[];
+    }
   | {
       readonly kind: 'unsettled';
       readonly values: readonly FoundValue[];
@@ -64,7 +81,7 @@ export type BaseUrlAnswer =
     };
 
 /** Every name a host is known by, and the services it names. */
-type HostIndex = ReadonlyMap<string, readonly string[]>;
+export type HostIndex = ReadonlyMap<string, readonly string[]>;
 
 const addTo = (index: Map<string, string[]>, host: string, service: string): void => {
   const key = host.toLowerCase();
@@ -90,7 +107,7 @@ export const hostIndexOf = (config: FlowatlasConfig, settings: Readonly<Record<s
 };
 
 /** The services a value's host names, by every name it may be known by. */
-const servicesAt = (address: string, index: HostIndex): readonly string[] | 'external' | 'inner' | undefined => {
+export const servicesAt = (address: string, index: HostIndex): readonly string[] | 'external' | 'inner' | undefined => {
   const host = hostOf(address);
   if (host === undefined) return undefined;
   const named =
@@ -103,6 +120,16 @@ const servicesAt = (address: string, index: HostIndex): readonly string[] | 'ext
 const deployedValues = (variable: string, runners: readonly GraphNode[]): FoundValue[] =>
   runners.flatMap((fn) => {
     const set = (fn.meta?.[ENVIRONMENT_META] as Record<string, EnvironmentValue> | undefined)?.[variable];
+    // An API another service publishes, imported by its name: that service (P249).
+    if (set?.kind === 'api' && set.service !== undefined && set.value !== undefined) {
+      return [{ variable, value: set.value, from: `the environment ${fn.label} is deployed with`, deployed: true, service: set.service }];
+    }
+    // An address of an API the function's own deployment serves (P268): its service.
+    if (set?.kind === 'api' && set.path !== undefined && set.value !== undefined) {
+      return [
+        { variable, value: set.value, from: `the environment ${fn.label} is deployed with`, deployed: true, service: fn.repo, apiPath: set.path, written: set.written, ...(set.referenced === true ? { referenced: true } : {}) },
+      ];
+    }
     // A reference to something deployed is a function URL or a queue, which
     // their own joins answer; only a value the files settle as text is an address.
     if (set?.value === undefined || set.kind !== undefined) return [];
@@ -120,10 +147,16 @@ export interface BaseUrlInput {
   readonly settings?: RepoSettings;
   readonly hosts: HostIndex;
   /**
+   * The services an address on this machine reaches by its port, the ports
+   * their code listens on among them (P250, P254): asked before the hosts,
+   * so a value only the code places is placed (P292). Nothing for an address
+   * that is not this machine's, or a port nothing is known at.
+   */
+  readonly atPort?: (address: string) => readonly string[] | undefined;
+  /**
    * Every configured service, for a setting named after one; empty where a
-   * name is not to decide. A browser's request is told which service its key
-   * names by `apiTarget`, and a guess from the name there would answer the
-   * one question the configuration is meant to.
+   * name is not to decide. Asked for a browser's request as for one between
+   * services (P292), after `apiTarget`, which the configuration writes for it.
    */
   readonly services: readonly string[];
 }
@@ -158,6 +191,9 @@ export const valuesOf = (input: BaseUrlInput): FoundValue[] => {
   return [...written, ...own];
 };
 
+/** The prefixes a build requires of the settings it hands the browser, which name no service. */
+const BROWSER_PREFIX = /^(?:NEXT_PUBLIC_|NUXT_PUBLIC_|EXPO_PUBLIC_|REACT_APP_|VUE_APP_|NG_APP_|GATSBY_|VITE_|PUBLIC_)(?=[A-Z0-9])/;
+
 /**
  * The one service a setting is named after: the words of its name, the
  * generic ones (`url`, `api`, `service`) left out, are the words of exactly
@@ -167,7 +203,9 @@ export const serviceNamed = (variables: readonly string[], services: readonly st
   const same = (a: ReadonlySet<string>, b: ReadonlySet<string>): boolean => a.size > 0 && a.size === b.size && [...a].every((word) => b.has(word));
   const matching = new Set<string>();
   for (const variable of variables) {
-    const asked = wordsOf(variable);
+    // The prefix a build requires of a setting the browser is handed says
+    // nothing of the service: `VITE_ORDERS_URL` is named after `orders` (P292).
+    const asked = wordsOf(variable.replace(BROWSER_PREFIX, ''));
     for (const service of services) if (same(asked, wordsOf(service))) matching.add(service);
   }
   return matching.size === 1 ? [...matching][0] : undefined;
@@ -201,7 +239,7 @@ export const baseUrlOf = (input: BaseUrlInput): BaseUrlAnswer | undefined => {
   const external = new Map<string, FoundValue>();
   const unsettled: string[] = [];
   for (const found of values) {
-    const at = servicesAt(found.value, input.hosts);
+    const at = found.service === undefined ? (input.atPort?.(found.value) ?? servicesAt(found.value, input.hosts)) : [found.service];
     if (Array.isArray(at)) {
       if (at.length === 1) byService.set(at[0] as string, [...(byService.get(at[0] as string) ?? []), found]);
       else unsettled.push(...at);
@@ -217,7 +255,7 @@ export const baseUrlOf = (input: BaseUrlInput): BaseUrlAnswer | undefined => {
   }
   if (byService.size === 0 && unsettled.length === 0 && external.size > 0) {
     const [[host, found]] = [...external.entries()].sort(([a], [b]) => cmp(a, b)) as [[string, FoundValue]];
-    return { kind: 'external', host, found };
+    return { kind: 'external', host, found, values };
   }
   const services = [...new Set([...byService.keys(), ...unsettled])].sort(cmp);
   // Values that name nothing configured - a port nobody is known to listen

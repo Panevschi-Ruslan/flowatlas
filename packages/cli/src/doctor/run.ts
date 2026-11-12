@@ -242,7 +242,7 @@ const GRAPH_FAULTS: ReadonlyArray<(facts: GraphFacts) => string[]> = Object.free
  * graph-wide fault — no nodes anywhere — is never narrowed away, since there is
  * no service for which it is untrue.
  */
-const graphFaults = (
+export const graphFaults = (
   db: GraphDb,
   ways: ReadonlyMap<string, WaysIn>,
   service?: string,
@@ -430,7 +430,7 @@ const EXIT_RULES: ReadonlyArray<{ applies(facts: VerdictFacts): boolean; exitCod
 const NOTHING_FAILS = { exitCode: 0 } as const;
 
 /** Ways in per service, narrowed as the run is. */
-const waysOf = (db: GraphDb, service?: string): Map<string, WaysIn> => {
+export const waysOf = (db: GraphDb, service?: string): Map<string, WaysIn> => {
   const all = waysInByService(
     db.nodesByType('entry'),
     (id) => db.edgesFrom(id, ['handles']).length > 0,
@@ -566,13 +566,19 @@ const desyncOf = (
     if (!DESYNC_REASONS.has(row.reason)) continue;
     const context = contextOf(row);
     const node = context.node;
+    // A request for a procedure has no verb and no path of its own: it names
+    // a procedure, and its link keeps the address it is sent to (P242, P256).
+    const link = node?.kind === 'rpc' ? node.meta?.['link'] : undefined;
+    const linked = link !== null && typeof link === 'object' ? (link as Record<string, unknown>) : undefined;
+    const procedure = node?.kind === 'rpc' ? text(node.meta?.['procedure']) : null;
     found.push({
       call: row.symbol ?? '',
       service: row.service ?? node?.repo ?? '',
       method: text(node?.meta?.['method']),
       path: text(node?.meta?.['path']),
-      baseUrlEnv: text(node?.meta?.['baseUrlEnv']),
+      baseUrlEnv: text(node?.meta?.['baseUrlEnv']) ?? text(linked?.['baseUrlEnv']),
       targetService: text(node?.meta?.['targetService']),
+      ...(procedure === null ? {} : { procedure, protocol: text(linked?.['protocol']) ?? 'rpc' }),
       reason: row.reason,
       file: row.file,
       line: row.line,

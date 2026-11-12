@@ -1,0 +1,529 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T19:00:04.635Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:jobs:http:POST:/jobs/run",
+      "type": "entry",
+      "label": "POST /jobs/run",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/jobs/run",
+        "rawPath": "/jobs/run",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:payments:http:POST:/payments",
+      "type": "entry",
+      "label": "POST /payments",
+      "repo": "payments",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/payments",
+        "rawPath": "/payments",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/stock",
+      "type": "entry",
+      "label": "GET /stock",
+      "repo": "stock",
+      "file": "src/server.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stock",
+        "rawPath": "/stock",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:7:9",
+      "type": "http_out",
+      "label": "GET /orders",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "method": "GET",
+        "url": "http://shop-orders:8080/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "shop-orders:8080",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:8:9",
+      "type": "http_out",
+      "label": "GET /stock",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 8,
+      "meta": {
+        "method": "GET",
+        "url": "http://stock:8443/stock",
+        "path": "/stock",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "stock:8443",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/server.ts:9:9",
+      "type": "http_out",
+      "label": "POST /payments",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "method": "POST",
+        "url": "http://payments:8082/payments",
+        "path": "/payments",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "payments:8082",
+        "targetService": "payments"
+      }
+    },
+    {
+      "id": "jobs#src/server.ts:POST /jobs/run@6",
+      "type": "function",
+      "label": "POST /jobs/run@6",
+      "repo": "jobs",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/server.ts:GET /orders@6",
+      "type": "function",
+      "label": "GET /orders@6",
+      "repo": "orders",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "payments#src/server.ts:POST /payments@6",
+      "type": "function",
+      "label": "POST /payments@6",
+      "repo": "payments",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3009,
+            "file": "src/server.ts",
+            "line": 13
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 10,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:payments",
+      "type": "repo",
+      "label": "payments",
+      "repo": "payments",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/server.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/server.ts",
+            "line": 10
+          }
+        ]
+      }
+    },
+    {
+      "id": "stock#src/server.ts:GET /stock@6",
+      "type": "function",
+      "label": "GET /stock@6",
+      "repo": "stock",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:jobs:http:POST:/jobs/run",
+      "to": "jobs#src/server.ts:POST /jobs/run@6",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders",
+      "to": "orders#src/server.ts:GET /orders@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:payments:http:POST:/payments",
+      "to": "payments#src/server.ts:POST /payments@6",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{ok:boolean}",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/stock",
+      "to": "stock#src/server.ts:GET /stock@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:7:9",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "via": "host",
+        "targetService": "orders",
+        "listensAt": "src/server.ts:10 (PORT from deploy/generators/settings.yaml (shop-orders)), behind shop-orders:8080 (deploy/orders.yaml)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:8:9",
+      "to": "entry:stock:http:GET:/stock",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/server.ts:10, behind stock:8443 (deploy/charts/stock/templates/service.yaml)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/server.ts:9:9",
+      "to": "entry:payments:http:POST:/payments",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "via": "host",
+        "targetService": "payments",
+        "listensAt": "src/server.ts:10, behind payments:8082 (deploy/charts/payments/templates/service.yaml)"
+      }
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 7
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:8:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#src/server.ts:POST /jobs/run@6",
+      "to": "http_out:jobs#src/server.ts:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 9
+    }
+  ],
+  "types": {
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "orders",
+      "file": "deploy/transformers/mesh.yaml",
+      "line": 1,
+      "reason": "manifest-unread",
+      "message": "deploy/transformers/mesh.yaml configures the transformer SidecarInjector (mesh.example.test/v1), an exec or Go plugin kustomize runs; what it does to the resources is not read",
+      "hint": "Write what it does with a kustomization field or a built-in transformer (namePrefix, labels, patches, images, configMapGenerator), or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).",
+      "symbol": "deploy/transformers/mesh.yaml:1"
+    },
+    {
+      "service": "stock",
+      "file": "deploy/apps/stock.yaml",
+      "line": 2,
+      "reason": "manifest-unread",
+      "message": "The release stock (deploy/apps/stock.yaml:2) runs a hook (presync), commands helmfile runs around the install; a hook is a program that is run, not read, so whatever it applies to the cluster is not drawn",
+      "hint": "Write what the hook applies as a manifest or a release of the helmfile, or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).",
+      "symbol": "deploy/apps/stock.yaml:2"
+    },
+    {
+      "service": "stock",
+      "file": "deploy/charts/stock/Chart.yaml",
+      "line": 11,
+      "reason": "manifest-unread",
+      "message": "deploy/charts/stock/Chart.yaml depends on the chart queue 2.0.0 from https://charts.example.test, which nothing has fetched into the project (charts/ holds no queue); no chart repository is read, so its templates are not rendered",
+      "hint": "Keep the chart in the project (helm dependency build writes it to charts/), or annotate the request with the service it reaches (/** @flowatlas-calls <service> METHOD /path */).",
+      "symbol": "deploy/charts/stock/Chart.yaml:11"
+    }
+  ]
+}

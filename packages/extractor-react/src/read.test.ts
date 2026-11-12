@@ -467,3 +467,45 @@ describe('an annotation above a function (P127)', () => {
     expect(requests(graph)[0]?.meta).toMatchObject({ path: '/items', service: 'catalog' });
   });
 });
+
+describe('several names a call built, taken out of one declaration (R180)', () => {
+  // `export const [Provider, useX] = createRequired()` is two exports of one
+  // declaration. Keyed by the declaration, the second overwrote the first, the
+  // first's edge left an id nothing wrote, and the whole service was refused.
+  const files = {
+    '/src/createRequired.ts': `
+      import { createContext, useContext } from 'react';
+      export const createRequired = <T,>(name: string) => {
+        const Context = createContext<T | undefined>(undefined);
+        const useRequired = (): T => useContext(Context) as T;
+        return [Context.Provider, useRequired] as const;
+      };
+    `,
+    '/src/OrderContext.ts': `
+      import { createRequired } from './createRequired';
+      export const [OrderProvider, useOrder] = createRequired<{ id: string }>('Order');
+    `,
+    '/src/OrderPage.tsx': `
+      import { OrderProvider, useOrder } from './OrderContext';
+      export function OrderTitle() { const order = useOrder(); return <h1>{order.id}</h1>; }
+      export function OrderPage() { return <OrderProvider value={{ id: '1' }}><OrderTitle /></OrderProvider>; }
+    `,
+  };
+
+  it('gives each name its node and its edge, and leaves no edge to nothing', () => {
+    const graph = read(files);
+    expect(reasons(graph)).not.toContain('edge-end-missing');
+    const factory = 'web#src/createRequired.ts:createRequired';
+    for (const name of ['OrderProvider', 'useOrder']) {
+      const id = `web#src/OrderContext.ts:${name}`;
+      expect(graph.nodes.some((node) => node.id === id)).toBe(true);
+      expect(edge(graph, id, factory)?.type).toBe('calls');
+    }
+  });
+
+  it('finds the name a caller writes, whichever of the pattern it is', () => {
+    const graph = read(files);
+    // The checker hands the caller the pattern's element, not the declaration.
+    expect(edge(graph, 'web#src/OrderPage.tsx:OrderTitle', 'web#src/OrderContext.ts:useOrder')).toBeDefined();
+  });
+});

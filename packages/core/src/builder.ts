@@ -1,4 +1,5 @@
 import { CAUSE_META, CAUSES_META, CauseTally, PACKAGE_META } from './cant-follow.js';
+import { attachNotes, type SourceText } from './notes.js';
 import { DanglingEdgeError, DuplicateTypeError } from './errors.js';
 import type { GraphEdge } from './model/edges.js';
 import { strongerConfidence } from './model/edges.js';
@@ -13,7 +14,21 @@ export interface GraphBuilderOptions {
   /** Fixed timestamp, for reproducible output. Defaults to now at `build()`. */
   generatedAt?: string;
   meta?: Record<string, unknown>;
+  /**
+   * Where each file's text is, for the notes a tagged comment above a
+   * declaration keeps (P234): read once per file, at `build()`.
+   */
+  notesFrom?: { text: SourceText; tags?: readonly string[] };
+  /**
+   * What `build()` does with an edge whose end was never added: leave it out
+   * and say so in a row (`row`, the default), or refuse the graph (`throw`).
+   * See {@link GraphBuilder.build} for why each.
+   */
+  dangling?: 'row' | 'throw';
 }
+
+/** The reason of the row a dangling edge leaves in its place (R180). */
+export const EDGE_END_MISSING_REASON = 'edge-end-missing';
 
 export interface GraphCounts {
   nodes: number;
@@ -107,11 +122,15 @@ export class GraphBuilder {
   readonly #unresolved = new Map<string, Unresolved>();
   readonly #generatedAt: string | undefined;
   readonly #meta: Record<string, unknown> | undefined;
+  readonly #notesFrom: GraphBuilderOptions['notesFrom'];
+  readonly #dangling: 'row' | 'throw';
 
   constructor(options: GraphBuilderOptions) {
     this.repo = options.repo;
     this.#generatedAt = options.generatedAt;
     this.#meta = options.meta;
+    this.#notesFrom = options.notesFrom;
+    this.#dangling = options.dangling ?? 'row';
   }
 
   /**
@@ -239,6 +258,27 @@ export class GraphBuilder {
     );
   }
 
+  /**
+   * The row a dangling edge leaves: at the edge's own site, about the end that
+   * is there, saying which end is not. The site falls back to the file of the
+   * end that is there, for an edge drawn without one.
+   */
+  #danglingRow(edge: GraphEdge): Unresolved {
+    const missing = [edge.from, edge.to].filter((id) => !this.#nodes.has(id));
+    const present = [edge.from, edge.to].find((id) => this.#nodes.has(id));
+    const anchor = present === undefined ? undefined : this.#nodes.get(present);
+    return {
+      file: edge.file ?? anchor?.file ?? '.',
+      line: edge.line ?? anchor?.line ?? 0,
+      reason: EDGE_END_MISSING_REASON,
+      level: 'action',
+      message: `${edge.from} -${edge.type}-> ${edge.to} was drawn and ${missing.join(' and ')} never written, so the edge is left out.`,
+      hint: 'A reader drew an edge to a node it did not write: a defect of flowatlas, not of the code. Report it with this row; the rest of the service is read.',
+      ...(present === undefined ? {} : { symbol: present }),
+      meta: { edge: { from: edge.from, type: edge.type, to: edge.to }, missing },
+    };
+  }
+
   /** Everything recorded as unresolved so far, for reporting a count. */
   get unresolved(): readonly Unresolved[] {
     return this.#rows();
@@ -256,19 +296,39 @@ export class GraphBuilder {
   /**
    * Freezes the collected state into a graph.
    *
-   * Throws {@link DanglingEdgeError} if an edge points at a node that was never
-   * added: an unreachable target belongs in `unresolved`, not in a half edge.
+   * An edge that points at a node that was never added is never written: a half
+   * edge is not a graph state, and an unreachable target belongs in `unresolved`.
+   * What happens instead depends on who filled the builder (R180).
+   *
+   * - **`row`, for a reader.** The edge is left out and one `edge-end-missing`
+   *   row at `action` stands in its place, naming the edge and the end that is
+   *   not there. It is still a defect of the reader that drew it, and the row says
+   *   so; but refusing the graph made one edge cost the whole service - a front
+   *   end of many thousand files was skipped for a handful of edges of one shape
+   *   of export - and a reader's defect is not the repository's. Every fixture is
+   *   checked for the reason (`scripts/invariants.sh`), so a reader that starts
+   *   drawing one fails the gate exactly as the throw used to.
+   * - **`throw`, for a splice.** An incremental build that leaves an edge
+   *   pointing at a node it removed has a graph that is out of date rather than a
+   *   reader that is wrong, and {@link DanglingEdgeError} is how it learns to
+   *   read the whole repository again.
    */
   build(): RepoGraph {
-    const edges = [...this.#edges.values()];
-    const dangling = edges.filter(
+    const dangling = [...this.#edges.values()].filter(
       (edge) => !this.#nodes.has(edge.from) || !this.#nodes.has(edge.to),
     );
-    if (dangling.length > 0) throw new DanglingEdgeError(dangling);
+    if (dangling.length > 0 && this.#dangling === 'throw') throw new DanglingEdgeError(dangling);
+    for (const edge of dangling) {
+      this.#edges.delete(edgeKey(edge));
+      this.addUnresolved(this.#danglingRow(edge));
+    }
+    const edges = [...this.#edges.values()];
 
     const types: TypeRegistry = Object.fromEntries(
       [...this.#types.entries()].sort((a, b) => cmp(a[0], b[0])),
     );
+    // What a comment above each declaration says about why (P234), last, once every node is in.
+    if (this.#notesFrom !== undefined) attachNotes(this.#nodes.values(), this.#notesFrom.text, this.#notesFrom.tags);
 
     const graph: RepoGraph = {
       schemaVersion: SCHEMA_VERSION,

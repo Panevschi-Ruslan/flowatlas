@@ -16,7 +16,7 @@
  *
  * A **source file** is a file the repository tracks in git, inside the
  * **extent** of the service being read, whose extension is one of
- * `SOURCE_EXTENSIONS`, and none
+ * `SOURCE_EXTENSIONS` or whose name is one of `DECLARATION_FILES`, and none
  * of whose path segments is one of `SKIPPED_SEGMENTS`, whose name does not
  * match `SKIPPED_FILES`, and which is not a test. What a test is comes from
  * `isTestFile` in `@flowatlas/core`, the definition the tool reads by, and from
@@ -87,7 +87,22 @@ export const SOURCE_EXTENSIONS = [
   '.cjs',
   '.html',
   '.prisma',
+  // Components in files of their own format (P233).
+  '.vue',
+  '.svelte',
 ];
+
+/**
+ * Files that are not code and still declare ways in, by name: a template a
+ * deployment of functions is written in (P246). A CloudFormation template may
+ * be called anything (P248), so every YAML file and every `.template` is one
+ * of these; a JSON file is only where its name says it is a template
+ * (`template.json`, `*.template.json`, `*.cfn.json`), since most JSON is
+ * something else. Only a probe that names the file by its `path` finds
+ * anything in one, and its comments - outside JSON - are a `#` to the end of
+ * the line.
+ */
+export const DECLARATION_FILES = /\.(?:ya?ml|template)$|(?:^|[/.])(?:template|cfn)\.json$/;
 
 /**
  * Path segments that take a file out of the count, a test's apart.
@@ -169,9 +184,16 @@ export const PROBES = [
     // decoration: four of a wiki app's routes are registered at `config.id`, and a
     // rule that demanded a literal would have called them something else.
     // The whitespace is permissive because the address is very often on the
-    // line after the call.
+    // line after the call. A comma with only the closing parenthesis after it
+    // is a trailing comma, `app.get(\n  Token,\n)`, and not a handler.
+    //
+    // koa-router writes the verbs as a list beside the address as well:
+    // `router.register('jobs.:interval', ['get', 'post'], [validate, run])` is
+    // the method every verb method calls, and is one declaration of its own
+    // (P270). Counted where the second argument is a list, which is what tells
+    // it from a plugin system's `app.register(plugin, { prefix })`.
     pattern:
-      /\b[\w$]*(?:app|router)\s*\.\s*(?:get|post|put|patch|delete|options|head|all)\s*\(\s*(?:['"`/[]|[A-Za-z_$][\w$.]*\s*,)/gi,
+      /\b[\w$]*(?:app|router)\s*\.\s*(?:(?:get|post|put|patch|delete|options|head|all)\s*\(\s*(?:['"`/[]|[A-Za-z_$][\w$.]*\s*,(?!\s*\)))|register\s*\(\s*(?:'[^'\n]*'|"[^"\n]*"|`[^`\n]*`|\[[^\]]*\]|[A-Za-z_$][\w$.]*)\s*,\s*\[)/gi,
   },
   {
     name: 'exported-verb-handler',
@@ -217,6 +239,300 @@ export const PROBES = [
     pattern: /\(click\)\s*=/g,
   },
   {
+    name: 'component-file',
+    family: 'screens',
+    scope: 'file',
+    what: 'a Vue or Svelte component file',
+    path: /\.(?:vue|svelte)$/,
+  },
+  {
+    name: 'component-click-binding',
+    family: 'clicks',
+    scope: 'line',
+    what: 'a click bound in a Vue or Svelte component',
+    path: /\.(?:vue|svelte)$/,
+    pattern: /(?:@click|v-on:click|on:click|\bonclick)(?=[\s.|=])|\{\s*onclick\s*\}/g,
+  },
+  {
+    name: 'graphql-resolver-field',
+    family: 'routes',
+    scope: 'line',
+    what: 'a GraphQL field a resolver method answers (`@Query`, `@Mutation`, `@Subscription`, `@ResolveField`), counted where it is written with a type, so a REST parameter decorator is not one',
+    pattern: /@(?:Query|Mutation|Subscription|ResolveField|FieldResolver)\s*\(\s*(?:\(\s*\)|[A-Za-z_$][\w$]*)\s*=>/g,
+  },
+  {
+    name: 'procedure-handler',
+    family: 'routes',
+    scope: 'line',
+    what: 'a procedure of a tRPC or oRPC tree, counted where the chain that declares it ends - `.query`, `.mutation`, `.subscription` or `.handler` - handed a function written in place; one handed a named function is not counted, because `pool.query(sql)` is spelled the same way',
+    // A procedure is a way in over HTTP too (R95, P58). The function written in
+    // place is what tells a procedure from a database call, which ends in the
+    // same word with a string or a name after it.
+    pattern: /\.\s*(?:query|mutation|subscription|handler)\s*\(\s*(?:async\s*)?(?:\(|function\b|[A-Za-z_$][\w$]*\s*=>)/g,
+  },
+  {
+    name: 'grpc-service-registration',
+    family: 'routes',
+    scope: 'line',
+    what: 'a gRPC service a server registers - `server.addService(definition, implementation)` - or a NestJS controller method answering one (`@GrpcMethod`, `@GrpcStreamMethod`, `@GrpcStreamCall`)',
+    // Each method of the service is a way in (P274). A registration is counted
+    // once whatever the service holds, as a router mount is: what the rule can
+    // see on a line is that a service is served there, not how many methods it
+    // has. `addService(` with two arguments, so a container's
+    // `addService(token)` is not one.
+    pattern: /\.\s*addService\s*\([^,()]+(?:\([^()]*\))?[^,()]*,|@Grpc(?:Method|StreamMethod|StreamCall)\s*\(/g,
+  },
+  {
+    name: 'graphql-reference-resolver',
+    family: 'routes',
+    scope: 'line',
+    what: 'the reference resolver of a federated entity (`@ResolveReference()`, `__resolveReference` in a resolver map), the way in an entity call from another subgraph reaches',
+    pattern: /@ResolveReference\s*\(|\b__resolveReference\s*[(:]/g,
+  },
+  {
+    // A function a CDK app deploys is a way in, as a route is: the platform
+    // runs it (P57). Counted where it is made with a scope and an id, so the
+    // language's own `new Function('return 1')` is not one.
+    name: 'cdk-function-construct',
+    family: 'routes',
+    scope: 'line',
+    what: 'a Lambda function an AWS CDK app makes (`new NodejsFunction(this, ...)`, `new lambda.Function(scope, ...)`)',
+    pattern: /\bnew\s+(?:[A-Za-z_$][\w$]*\.)*(?:NodejsFunction|Function|DockerImageFunction|SingletonFunction)\s*\(\s*(?:this|[A-Za-z_$][\w$]*)\s*,/g,
+  },
+  {
+    // A function a SAM template declares is a way in, as a route is: the
+    // platform runs it (P246). Counted by its `Type`, written as YAML or JSON,
+    // in any file a template may be.
+    name: 'sam-function-resource',
+    family: 'routes',
+    scope: 'line',
+    what: 'a Lambda function a SAM template declares (`Type: AWS::Serverless::Function`)',
+    path: DECLARATION_FILES,
+    pattern: /^\s*Type:\s*['"]?AWS::Serverless::Function['"]?\s*$|"Type"\s*:\s*"AWS::Serverless::Function"/gm,
+  },
+  {
+    // The plain CloudFormation function (P248), in a SAM template or a plain
+    // one, wherever the repository keeps it.
+    name: 'cloudformation-function-resource',
+    family: 'routes',
+    scope: 'line',
+    what: 'a Lambda function a CloudFormation template declares (`Type: AWS::Lambda::Function`)',
+    path: DECLARATION_FILES,
+    pattern: /^\s*Type:\s*['"]?AWS::Lambda::Function['"]?\s*$|"Type"\s*:\s*"AWS::Lambda::Function"/gm,
+  },
+  {
+    // A way in a Nuxt module adds when the application builds (P251): no file
+    // of `server/` gives it, the call does. Counted where the call hands an
+    // object with a `route`, so a handler that stands in front of every route
+    // is not one.
+    name: 'nuxt-module-server-handler',
+    family: 'routes',
+    scope: 'line',
+    what: 'a route a Nuxt module adds (`addServerHandler({ route, handler })`)',
+    pattern: /\baddServerHandler\s*\(\s*\{[^}]*?\broute\s*:/g,
+  },
+  {
+    // A handler is what the file default-exports, and what makes one is h3's
+    // own factories - `defineEventHandler`, `eventHandler`, the cached, lazy
+    // and socket ones, `fromNodeMiddleware` - or a function written in place
+    // that is handed the event. Any default export used to count, and a
+    // server of another framework that keeps its routes under `server/routes`
+    // had every middleware factory beside them (`export default function
+    // paging()`) and every router it exports counted as a file a router
+    // serves (P270). A factory taking nothing is not handed an event.
+    name: 'nitro-route-file',
+    family: 'routes',
+    scope: 'file',
+    what: 'a file under `server/api` or `server/routes` that default-exports an event handler (`defineEventHandler(...)` and the other h3 factories, or a function written in place that takes the event)',
+    path: /(^|\/)server\/(?:api|routes)\/.+\.[cm]?[jt]s$/,
+    contains:
+      /export\s+default\s+(?:(?:define[A-Za-z]*Handler|eventHandler|lazyEventHandler|fromNodeMiddleware|fromWebHandler)\s*[(<]|(?:async\s+)?(?:\(\s*[A-Za-z_$[{]|[A-Za-z_$][\w$]*\s*=>)|(?:async\s+)?function\s*[\w$]*\s*\(\s*[A-Za-z_$[{])/,
+  },
+  {
+    // A task Nitro runs by its name is a way in of its own (P258): the name
+    // is its file's path, so the file is the site. Counted where the file
+    // defines one, so a helper kept beside the tasks is not.
+    name: 'nitro-task-file',
+    family: 'routes',
+    scope: 'file',
+    what: 'a file under `server/tasks` that defines a task (`defineTask`)',
+    path: /(^|\/)server\/tasks\/.+\.[cm]?[jt]s$/,
+    contains: /\bdefineTask\s*\(/,
+  },
+  {
+    // A SvelteKit server load answers the page's address before the page is
+    // shown, and the tool draws it as a way in at its file (P42, P258): a
+    // page's `+page.server` and a layout's `+layout.server` alike (P262).
+    // Counted where the file exports a `load`, so one holding only `actions`
+    // is not; a universal `+page.ts` / `+layout.ts` load runs in the browser
+    // too and is no way in.
+    name: 'sveltekit-server-load',
+    family: 'routes',
+    scope: 'file',
+    what: 'a SvelteKit `+page.server` or `+layout.server` file that exports a `load`',
+    path: /(?:^|\/)\+(?:page|layout)\.server\.[cm]?[jt]s$/,
+    contains: /^\s*export\s+(?:const|(?:async\s+)?function)\s+load\b/m,
+  },
+  {
+    // The request families (P244). A request is written at a call, and the
+    // call is what a person sees: the platform's client by its own name, a verb
+    // on a client with the address written out beside it, or a client handed
+    // one options object holding the address. Over-counted where a receiver is
+    // only named like a client (`cacheClient.get('/k')`), which is this rule's
+    // side; under-counted where an instance has a name of its own and writes an
+    // address without its opening slash, which a probe cannot tell from a key.
+    name: 'fetch-call-site',
+    family: 'requests',
+    scope: 'line',
+    what: "a request made by calling the platform's `fetch`, `$fetch` or `ofetch` by its own name",
+    pattern: /(?<![\w$.])(?:fetch|\$fetch|ofetch)\s*\(/g,
+  },
+  {
+    name: 'client-verb-call',
+    family: 'requests',
+    scope: 'line',
+    what: 'a verb called with its address written out, on `axios` or `ky` themselves or on a receiver named like a client (`this.http.get(...)`, `api.post(...)`), the address rooted at a slash, a host or a setting',
+    pattern:
+      /(?:\b(?:axios|ky)\s*\.\s*(?:get|post|put|patch|delete|head|request)\s*(?:<[^>()]*>\s*)?\(\s*['"`]|\b[\w$]*(?:http|api|client)\s*\.\s*(?:get|post|put|patch|delete|head)\s*(?:<[^>()]*>\s*)?\(\s*['"`](?:\/|https?:|\$\{))/gi,
+  },
+  {
+    name: 'client-config-call',
+    family: 'requests',
+    scope: 'line',
+    what: 'a client handed one options object holding the address (`axios({ url })`, `api.request({ url })`)',
+    pattern: /\b(?:axios|[\w$]*(?:http|api|client))\s*(?:\.\s*request\s*)?\(\s*\{[^}]*?\burl\s*:/gi,
+  },
+  {
+    // What stands in front of every request through a client (P239, P244): the
+    // instance a client is made as, and the interceptor or hook that rewrites
+    // the address before each request. Neither is a node of its own, so the
+    // family is a denominator for the reading of bases and nothing is gated on
+    // it per file.
+    name: 'client-instance-factory',
+    family: 'bases',
+    scope: 'line',
+    what: 'a client instance made with options of its own (`axios.create(...)`, `ofetch.create(...)`, `$fetch.create(...)`, `ky.create(...)`, `ky.extend(...)`)',
+    pattern: /(?<![\w$.])(?:axios|ofetch|\$fetch|ky)\s*\.\s*(?:create|extend)\s*\(/g,
+  },
+  {
+    name: 'request-interceptor',
+    family: 'bases',
+    scope: 'line',
+    what: 'a function run before every request (`interceptors.request.use(...)`, an `onRequest` hook, `hooks.beforeRequest`, an Angular `HttpInterceptor` class or `HttpInterceptorFn`)',
+    pattern: /\binterceptors\s*\.\s*request\s*\.\s*use\s*\(|\bonRequest\s*[(:]|\bbeforeRequest\s*:|\bimplements\s+HttpInterceptor\b|:\s*HttpInterceptorFn\b/g,
+  },
+  {
+    // Where a server is started on a port (P250): what a request to this
+    // machine's port joins by. Kept on the repository node, never a node of
+    // its own, so the family is a denominator and nothing is gated on it.
+    name: 'server-listen',
+    family: 'listens',
+    scope: 'line',
+    what: 'a server started on a port (`app.listen(port)`, `serve({ fetch, port })`, `Bun.serve(...)`, `Deno.serve(...)`)',
+    pattern: /\.\s*listen\s*\(\s*[^)\s]|(?<![\w$.])serve\s*\(\s*\{|\b(?:Bun|Deno)\s*\.\s*serve\s*\(/g,
+  },
+  {
+    // A front end's dev or preview server given a port in its bundler's or
+    // framework's configuration (P254): `server: { port }`, `preview: { port }`,
+    // `devServer: { port }`. Same family, same reason nothing is gated on it.
+    name: 'dev-server-port',
+    family: 'listens',
+    scope: 'line',
+    what: 'a dev server given a port in `vite.config.*`, `astro.config.*` or `nuxt.config.*`',
+    path: /(?:^|\/)(?:vite|astro|nuxt)\.config\.[cm]?[jt]s$/,
+    pattern: /\bport\s*:/g,
+  },
+  {
+    // A server told to forward paths to another (P257): Vite's `proxy`,
+    // Nitro's `devProxy` and a route rule's `proxy`, Next's `rewrites`. One
+    // site per table or rule as the configuration writes it.
+    name: 'dev-proxy',
+    family: 'listens',
+    scope: 'line',
+    what: 'a proxy or a rewrite in `vite.config.*`, `nuxt.config.*`, `nitro.config.*` or `next.config.*`',
+    path: /(?:^|\/)(?:vite|nuxt|nitro|next)\.config\.[cm]?[jt]s$/,
+    pattern: /\b(?:proxy|devProxy)\s*:|\brewrites\s*(?:\(|:)/g,
+  },
+  {
+    // A port a cluster's service object routes to its pods (P257): what a
+    // request to its name joins by. Counted where the target is written.
+    name: 'cluster-target-port',
+    family: 'listens',
+    scope: 'line',
+    what: 'a port a cluster manifest routes to its containers (`targetPort:`)',
+    path: /\.ya?ml$/,
+    pattern: /^\s*(?:-\s+)?targetPort\s*:/gm,
+  },
+  {
+    // A way in from outside a cluster (P260): each path of an `Ingress` and
+    // each rule of an `HTTPRoute` sends a public host's requests to a
+    // service object. Counted where the backend is written.
+    name: 'ingress-route',
+    family: 'listens',
+    scope: 'line',
+    what: 'a backend an `Ingress` path or an `HTTPRoute` rule sends to (`backend:`, `defaultBackend:`, `backendRefs:`)',
+    path: /\.ya?ml$/,
+    pattern: /^\s*(?:-\s+)?(?:backend|defaultBackend|backendRefs)\s*:/gm,
+  },
+  {
+    // A value a chart's template looks up (P260), which the chart's values
+    // and its install command fill. One site per lookup.
+    name: 'chart-value',
+    family: 'listens',
+    scope: 'line',
+    what: 'a `.Values` lookup in a chart template',
+    path: /(?:^|\/)templates\/[^/]+\.ya?ml$/,
+    pattern: /\{\{[^}]*?\.Values\./g,
+  },
+  {
+    // A kustomization's patches (P260), each block of them where it is written.
+    name: 'kustomize-patch',
+    family: 'listens',
+    scope: 'line',
+    what: 'a `patches`, `patchesStrategicMerge` or `patchesJson6902` block of a kustomization',
+    path: /(?:^|\/)(?:kustomization\.ya?ml|Kustomization)$/,
+    pattern: /^\s*(?:patches|patchesStrategicMerge|patchesJson6902)\s*:/gm,
+  },
+  {
+    // A port this machine forwards to a cluster's object (P260), in a
+    // script or a Makefile.
+    name: 'port-forward',
+    family: 'listens',
+    scope: 'line',
+    what: 'a `kubectl port-forward` in a script, a Makefile, a `package.json` or a pipeline (P263)',
+    path: /(?:^|\/)(?:[Mm]akefile|GNUmakefile|[^/]+\.mk|[^/]+\.sh|package\.json|\.gitlab-ci\.ya?ml)$|(?:^|\/)\.github\/workflows\/[^/]+\.ya?ml$/,
+    pattern: /\bkubectl\b[^\n]*\bport-forward\b/g,
+  },
+  {
+    // A release a helmfile installs (P263), counted where its chart is written.
+    name: 'helmfile-release',
+    family: 'listens',
+    scope: 'line',
+    what: 'a release of a `helmfile.yaml` (its `chart:`)',
+    path: /(?:^|\/)(?:helmfile\.ya?ml(?:\.gotmpl)?|helmfile\.d\/[^/]+\.ya?ml(?:\.gotmpl)?)$/,
+    pattern: /^\s*(?:-\s+)?chart\s*:/gm,
+  },
+  {
+    // What a kustomization makes beside what it lists (P263): generated config
+    // maps and secrets, inflated charts and replacements, each block where it is written.
+    name: 'kustomize-generator',
+    family: 'listens',
+    scope: 'line',
+    what: 'a `configMapGenerator`, `secretGenerator`, `helmCharts` or `replacements` block of a kustomization',
+    path: /(?:^|\/)(?:kustomization\.ya?ml|Kustomization)$/,
+    pattern: /^\s*(?:configMapGenerator|secretGenerator|helmCharts|replacements)\s*:/gm,
+  },
+  {
+    // A command that installs a cluster's manifests (P263), in a script, a
+    // Makefile, a `package.json` or a pipeline.
+    name: 'cluster-install-command',
+    family: 'listens',
+    scope: 'line',
+    what: 'a `helm install`/`upgrade`/`template`, `helmfile` run, `kubectl apply -k` or `kustomize build` in a script, a Makefile, a `package.json` or a pipeline',
+    path: /(?:^|\/)(?:[Mm]akefile|GNUmakefile|[^/]+\.mk|[^/]+\.sh|package\.json|\.gitlab-ci\.ya?ml)$|(?:^|\/)\.github\/workflows\/[^/]+\.ya?ml$/,
+    pattern: /\bhelm\s+(?:install|upgrade|template)\b|\bhelmfile\b[^\n]*\b(?:apply|sync|template|diff|deploy)\b|\bkubectl\b[^\n]*\bapply\b[^\n]*(?:-k\b|--kustomize\b)|\bkustomize\s+build\b/g,
+  },
+  {
     name: 'prisma-call-site',
     family: 'data',
     scope: 'line',
@@ -259,6 +575,9 @@ export const FAMILIES = [
   ['routes', 'ways in over HTTP'],
   ['screens', 'screens'],
   ['clicks', 'things a person can click'],
+  ['requests', 'places a request is written'],
+  ['bases', 'client instances and functions run before every request'],
+  ['listens', 'servers started on a port'],
   ['data', 'places the code reaches storage'],
   ['models', 'tables or models declared (an upper bound)'],
 ];
@@ -270,7 +589,7 @@ const extensionOf = (path) => {
 
 /** True when the path is source under the rule above. */
 export const isSourceFile = (path) => {
-  if (!SOURCE_EXTENSIONS.includes(extensionOf(path))) return false;
+  if (!SOURCE_EXTENSIONS.includes(extensionOf(path)) && !DECLARATION_FILES.test(path)) return false;
   const segments = path.split('/');
   if (segments.some((segment) => SKIPPED_SEGMENTS.has(segment))) return false;
   return !SKIPPED_FILES.test(segments[segments.length - 1]) && !isTestFile(path);
@@ -358,13 +677,20 @@ export const withoutComments = (text) => {
  * schema, whose `//` and `///` are line comments too. A template is markup,
  * where `//` is part of an address and nothing is a comment of this kind.
  */
-const COMMENTED = new Set(SOURCE_EXTENSIONS.filter((extension) => extension !== '.html'));
+// Markup's comments are not a script's, and a template's `//` is an address.
+const COMMENTED = new Set(SOURCE_EXTENSIONS.filter((extension) => !['.html', '.vue', '.svelte'].includes(extension)));
+
+/** A template's comments, `#` to the end of the line where it starts a line or follows a space, blanked as the code's are. */
+const withoutHashComments = (text) => text.replace(/(^|\s)#[^\n]*/g, (comment, before) => before + ' '.repeat(comment.length - before.length));
 
 /** What a probe reads: the file, with its comments blanked where it has any. */
-const codeOf = (path, text) => (COMMENTED.has(extensionOf(path)) ? withoutComments(text) : text);
+const codeOf = (path, text) =>
+  COMMENTED.has(extensionOf(path)) ? withoutComments(text) : DECLARATION_FILES.test(path) && !path.endsWith('.json') ? withoutHashComments(text) : text;
 
 const countLine = (probe, path, text) => {
   if (probe.path !== undefined && !probe.path.test(path)) return 0;
+  // A declaration file is not code: a probe of code that names no path does not look in one.
+  if (probe.path === undefined && !SOURCE_EXTENSIONS.includes(extensionOf(path))) return 0;
   probe.pattern.lastIndex = 0;
   let sites = 0;
   while (probe.pattern.exec(text) !== null) sites += 1;
@@ -373,6 +699,21 @@ const countLine = (probe, path, text) => {
 
 const countFile = (probe, path, text) =>
   probe.path.test(path) && (probe.contains === undefined || probe.contains.test(text)) ? 1 : 0;
+
+/** A script line no person writes: a bundler's output keeps a module on one. */
+const BUNDLED_LINE = 2000;
+
+const SCRIPT_FILES = /\.[cm]?jsx?$/;
+
+/**
+ * A script that is a bundle's output under any name: a line longer than any
+ * written by hand. `.min.js` says so by its name; a seed project's
+ * `index.mjs` built by a bundler and committed does not, and its minified
+ * React counted as two routes nobody declared on a CRM server. The tool reads
+ * no such file as source either.
+ */
+export const isBundle = (path, text) =>
+  SCRIPT_FILES.test(path) && text.split('\n', 200).some((line) => line.length > BUNDLED_LINE);
 
 /** Strategy by scope, so adding a third kind of probe adds a row and no branch. */
 const COUNTERS = {
@@ -402,6 +743,7 @@ export const measureSites = (files) => {
   const byProbe = Object.fromEntries(PROBES.map((probe) => [probe.name, 0]));
   const perFile = new Map();
   for (const [path, source] of files) {
+    if (isBundle(path, source)) continue;
     const text = codeOf(path, source);
     let found;
     for (const probe of PROBES) {

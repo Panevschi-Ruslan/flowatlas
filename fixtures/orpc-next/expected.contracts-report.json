@@ -1,0 +1,300 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-08T12:55:59.304Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "ui_api_call:api#app/orders/page.tsx:10:23",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:api#app/orders/page.tsx:10:23|hits|entry:api:rpc:orders.get",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "api",
+        "typeId": "{id:'o-1'}",
+        "symbol": "api#app/orders/page.tsx:OrdersPage",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{id:string}",
+        "symbol": "api#src/server/orders.ts:orders.get@15"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:api#app/orders/page.tsx:9:24",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:api#app/orders/page.tsx:9:24|hits|entry:api:rpc:orders.list",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "api",
+        "typeId": "{status:'open'}",
+        "symbol": "api#app/orders/page.tsx:OrdersPage",
+        "writes": [
+          "status"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{status:'open'|'shipped'}",
+        "symbol": "api#src/server/store.ts:findOrders"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:16:42",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:16:42|hits|entry:api:rpc:orders.get",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "web",
+        "typeId": "{id:string}",
+        "symbol": "web#src/Orders.tsx:showOrder",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{id:string}",
+        "symbol": "api#src/server/orders.ts:orders.get@15"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:25:43",
+        "to": "entry:api:http:GET:/api/v1/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:25:43|hits|entry:api:http:GET:/api/v1/orders/:param",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{id:unknown}",
+        "symbol": "web#src/Orders.tsx:fetchOrder",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{id:string}",
+        "symbol": "api#src/server/orders.ts:orders.get@15"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:id"
+      ]
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:5:27",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:5:27|hits|entry:api:rpc:orders.list",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{status:'open'}",
+        "symbol": "web#src/Orders.tsx:Orders",
+        "writes": [
+          "status"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{status:'open'|'shipped'}",
+        "symbol": "api#src/server/store.ts:findOrders"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/legacy.ts:12:35",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/legacy.ts:12:35|hits|entry:api:rpc:orders.list",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "web",
+        "typeId": "{}",
+        "symbol": "web#src/legacy.ts:legacyOrders",
+        "writes": [],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "api",
+        "typeId": "{status:'open'|'shipped'}",
+        "symbol": "api#src/server/store.ts:findOrders"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "any-unknown-skip:."
+      ]
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "ui_api_call:api#app/orders/page.tsx:10:23",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:api#app/orders/page.tsx:10:23|hits|entry:api:rpc:orders.get",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "api#app/orders/page.tsx:OrdersPage reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:api#app/orders/page.tsx:9:24",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:api#app/orders/page.tsx:9:24|hits|entry:api:rpc:orders.list",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "api#app/orders/page.tsx:OrdersPage reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:16:42",
+        "to": "entry:api:rpc:orders.get",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:16:42|hits|entry:api:rpc:orders.get",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/Orders.tsx:showOrder reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:25:43",
+        "to": "entry:api:http:GET:/api/v1/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:25:43|hits|entry:api:http:GET:/api/v1/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/Orders.tsx:fetchOrder declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:5:27",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:5:27|hits|entry:api:rpc:orders.list",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:api:rpc:orders.list answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:6:29",
+        "to": "entry:api:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:6:29|hits|entry:api:rpc:orders.place",
+      "direction": "request",
+      "reason": "procedure-input-not-at-call",
+      "message": "web#src/Orders.tsx:Orders hands the input to what the call returns, later, so what it sends is not read at the call",
+      "hint": "Nothing to change: the input of a mutation hook or options object is handed to its mutate call, which this does not follow. A plain client call, `client.orders.place(input)`, is compared."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/Orders.tsx:6:29",
+        "to": "entry:api:rpc:orders.place",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/Orders.tsx:6:29|hits|entry:api:rpc:orders.place",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:api:rpc:orders.place answers reaches its caller through a hook or a query's options, typed there by inference from the tree the client is typed with, so nothing at the call states it",
+      "hint": "Nothing to compare and nothing to change: the compiler holds both ends of this to the same type wherever the client is typed from the tree it calls. A plain client call that returns the answer is compared."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/legacy.ts:10:29",
+        "to": "entry:api:rpc:health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/legacy.ts:10:29|hits|entry:api:rpc:health",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:api:rpc:health declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/legacy.ts:10:29",
+        "to": "entry:api:rpc:health",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/legacy.ts:10:29|hits|entry:api:rpc:health",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/legacy.ts:health reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/legacy.ts:12:35",
+        "to": "entry:api:rpc:orders.list",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/legacy.ts:12:35|hits|entry:api:rpc:orders.list",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/legacy.ts:legacyOrders reads what the procedure answers with no type",
+      "hint": "Type the client from the tree it calls - the server's router type, from a shared package or a copy of it - so the call has a declared input and answer to compare."
+    }
+  ],
+  "summary": {
+    "edges": 6,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 5,
+    "unchecked": 10,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

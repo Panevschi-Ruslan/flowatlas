@@ -73,6 +73,17 @@ export interface GuardRef {
   via?: string;
   /** The decorator on the handler or its class that switches this check off for it. */
   skippedBy?: string;
+  /**
+   * The service the check belongs to, where it is not the guarded node's own:
+   * a router's check in front of a subgraph's field (P245).
+   */
+  service?: string;
+  /**
+   * The parts of what the node answers the check is for, where it is not the
+   * whole of it: fields with no handler of their own the node answers (P252).
+   * On a step, the ones the request asks it for.
+   */
+  for?: string[];
 }
 
 /** A decorator on a handler or its class that lets a request past a check (P76). */

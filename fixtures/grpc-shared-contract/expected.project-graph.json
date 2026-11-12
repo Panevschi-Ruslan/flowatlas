@@ -1,0 +1,1940 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:52:11.393Z",
+  "services": [
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "payments",
+      "repo": "./payments",
+      "type": "grpc",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "grpc",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "cart",
+      "repo": "./proto",
+      "type": "declared",
+      "extractor": "protobuf-document"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "cart#proto/shop.proto:shop.CartService.AddItem",
+      "type": "method",
+      "label": "CartService.AddItem",
+      "repo": "cart",
+      "file": "proto/shop.proto",
+      "line": 9,
+      "meta": {
+        "declaredBy": "proto/shop.proto"
+      }
+    },
+    {
+      "id": "cart#proto/shop.proto:shop.CartService.EmptyCart",
+      "type": "method",
+      "label": "CartService.EmptyCart",
+      "repo": "cart",
+      "file": "proto/shop.proto",
+      "line": 11,
+      "meta": {
+        "declaredBy": "proto/shop.proto"
+      }
+    },
+    {
+      "id": "cart#proto/shop.proto:shop.CartService.GetCart",
+      "type": "method",
+      "label": "CartService.GetCart",
+      "repo": "cart",
+      "file": "proto/shop.proto",
+      "line": 10,
+      "meta": {
+        "declaredBy": "proto/shop.proto"
+      }
+    },
+    {
+      "id": "catalog#src/catalog.ts:CatalogImpl",
+      "type": "provider",
+      "label": "CatalogImpl",
+      "repo": "catalog",
+      "file": "src/catalog.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "catalog#src/catalog.ts:CatalogImpl.getProduct",
+      "type": "method",
+      "label": "CatalogImpl.getProduct",
+      "repo": "catalog",
+      "file": "src/catalog.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "call",
+              "type": "{request:{id:string}}"
+            },
+            {
+              "name": "callback",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/catalog.ts:CatalogImpl.listProducts",
+      "type": "method",
+      "label": "CatalogImpl.listProducts",
+      "repo": "catalog",
+      "file": "src/catalog.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_call",
+              "type": "unknown"
+            },
+            {
+              "name": "callback",
+              "type": "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/catalog.ts:CatalogImpl.watchPrices",
+      "type": "method",
+      "label": "CatalogImpl.watchPrices",
+      "repo": "catalog",
+      "file": "src/catalog.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "call",
+              "type": "object"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "entry:cart:rpc:grpc:shop.CartService/AddItem",
+      "type": "entry",
+      "label": "grpc shop.CartService/AddItem",
+      "repo": "cart",
+      "file": "proto/shop.proto",
+      "line": 9,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:shop.CartService/AddItem",
+        "call": "unary",
+        "service": "shop.CartService",
+        "method": "AddItem",
+        "request": "AddItemRequest",
+        "response": "google.protobuf.Empty",
+        "contract": "proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:cart#.shop.AddItemRequest"
+            }
+          ],
+          "returns": "type:cart#.google.protobuf.Empty"
+        },
+        "adapter": "protobuf-document",
+        "declaredBy": "proto/shop.proto"
+      }
+    },
+    {
+      "id": "entry:cart:rpc:grpc:shop.CartService/EmptyCart",
+      "type": "entry",
+      "label": "grpc shop.CartService/EmptyCart",
+      "repo": "cart",
+      "file": "proto/shop.proto",
+      "line": 11,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:shop.CartService/EmptyCart",
+        "call": "unary",
+        "service": "shop.CartService",
+        "method": "EmptyCart",
+        "request": "EmptyCartRequest",
+        "response": "google.protobuf.Empty",
+        "contract": "proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:cart#.shop.EmptyCartRequest"
+            }
+          ],
+          "returns": "type:cart#.google.protobuf.Empty"
+        },
+        "adapter": "protobuf-document",
+        "declaredBy": "proto/shop.proto"
+      }
+    },
+    {
+      "id": "entry:cart:rpc:grpc:shop.CartService/GetCart",
+      "type": "entry",
+      "label": "grpc shop.CartService/GetCart",
+      "repo": "cart",
+      "file": "proto/shop.proto",
+      "line": 10,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:shop.CartService/GetCart",
+        "call": "unary",
+        "service": "shop.CartService",
+        "method": "GetCart",
+        "request": "GetCartRequest",
+        "response": "Cart",
+        "contract": "proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:cart#.shop.GetCartRequest"
+            }
+          ],
+          "returns": "type:cart#.shop.Cart"
+        },
+        "adapter": "protobuf-document",
+        "declaredBy": "proto/shop.proto"
+      }
+    },
+    {
+      "id": "entry:catalog:rpc:grpc:shop.CatalogService/GetProduct",
+      "type": "entry",
+      "label": "grpc shop.CatalogService/GetProduct",
+      "repo": "catalog",
+      "file": "src/server.ts",
+      "line": 7,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:shop.CatalogService/GetProduct",
+        "call": "unary",
+        "service": "shop.CatalogService",
+        "method": "GetProduct",
+        "request": "GetProductRequest",
+        "response": "Product",
+        "contract": "../proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:catalog#.shop.GetProductRequest"
+            }
+          ],
+          "returns": "type:catalog#.shop.Product"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "method"
+      }
+    },
+    {
+      "id": "entry:catalog:rpc:grpc:shop.CatalogService/ListProducts",
+      "type": "entry",
+      "label": "grpc shop.CatalogService/ListProducts",
+      "repo": "catalog",
+      "file": "src/server.ts",
+      "line": 7,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:shop.CatalogService/ListProducts",
+        "call": "unary",
+        "service": "shop.CatalogService",
+        "method": "ListProducts",
+        "request": "ListProductsRequest",
+        "response": "ListProductsReply",
+        "contract": "../proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:catalog#.shop.ListProductsRequest"
+            }
+          ],
+          "returns": "type:catalog#.shop.ListProductsReply"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "method"
+      }
+    },
+    {
+      "id": "entry:catalog:rpc:grpc:shop.CatalogService/WatchPrices",
+      "type": "entry",
+      "label": "grpc shop.CatalogService/WatchPrices",
+      "repo": "catalog",
+      "file": "src/server.ts",
+      "line": 7,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:shop.CatalogService/WatchPrices",
+        "call": "server-stream",
+        "service": "shop.CatalogService",
+        "method": "WatchPrices",
+        "request": "WatchPricesRequest",
+        "response": "PriceChange",
+        "contract": "../proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:catalog#.shop.WatchPricesRequest"
+            }
+          ],
+          "returns": "type:catalog#.shop.PriceChange"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "method"
+      }
+    },
+    {
+      "id": "entry:payments:rpc:grpc:grpc.health.v1.Health/Check",
+      "type": "entry",
+      "label": "grpc grpc.health.v1.Health/Check",
+      "repo": "payments",
+      "file": "index.js",
+      "line": 18,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:grpc.health.v1.Health/Check",
+        "call": "unary",
+        "service": "grpc.health.v1.Health",
+        "method": "Check",
+        "request": "HealthCheckRequest",
+        "response": "HealthCheckResponse",
+        "contract": "grpc/health/v1/health.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:payments#.grpc.health.v1.HealthCheckRequest"
+            }
+          ],
+          "returns": "type:payments#.grpc.health.v1.HealthCheckResponse"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "package",
+        "implementedBy": "grpc-health-check"
+      }
+    },
+    {
+      "id": "entry:payments:rpc:grpc:grpc.health.v1.Health/Watch",
+      "type": "entry",
+      "label": "grpc grpc.health.v1.Health/Watch",
+      "repo": "payments",
+      "file": "index.js",
+      "line": 18,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:grpc.health.v1.Health/Watch",
+        "call": "server-stream",
+        "service": "grpc.health.v1.Health",
+        "method": "Watch",
+        "request": "HealthCheckRequest",
+        "response": "HealthCheckResponse",
+        "contract": "grpc/health/v1/health.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:payments#.grpc.health.v1.HealthCheckRequest"
+            }
+          ],
+          "returns": "type:payments#.grpc.health.v1.HealthCheckResponse"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "package",
+        "implementedBy": "grpc-health-check"
+      }
+    },
+    {
+      "id": "entry:payments:rpc:grpc:shop.PaymentService/Charge",
+      "type": "entry",
+      "label": "grpc shop.PaymentService/Charge",
+      "repo": "payments",
+      "file": "index.js",
+      "line": 19,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:shop.PaymentService/Charge",
+        "call": "unary",
+        "service": "shop.PaymentService",
+        "method": "Charge",
+        "request": "ChargeRequest",
+        "response": "ChargeReply",
+        "contract": "../proto/shop.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:payments#.shop.ChargeRequest"
+            }
+          ],
+          "returns": "type:payments#.shop.ChargeReply"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/cart/:param",
+      "type": "entry",
+      "label": "GET /cart/:param",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/cart/:param",
+        "rawPath": "/cart/:userId",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/shipping/:param",
+      "type": "entry",
+      "label": "GET /shipping/:param",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/shipping/:param",
+        "rawPath": "/shipping/:zip",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:storefront:http:POST:/cart/:param/items",
+      "type": "entry",
+      "label": "POST /cart/:param/items",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/cart/:param/items",
+        "rawPath": "/cart/:userId/items",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:storefront:http:POST:/checkout/:param",
+      "type": "entry",
+      "label": "POST /checkout/:param",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/checkout/:param",
+        "rawPath": "/checkout/:userId",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients.ts:27:43",
+      "type": "http_out",
+      "label": "grpc shop.CartService/GetCart",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 27,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:shop.CartService/GetCart",
+        "call": "unary",
+        "operation": "getCart",
+        "client": "grpc",
+        "service": "shop.CartService",
+        "method": "GetCart",
+        "contract": "../proto/shop.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "CART_ADDR"
+        },
+        "inputKeys": [
+          "userId"
+        ],
+        "inputType": "{userId:string}",
+        "outputType": "type:storefront#Cart",
+        "targetService": "cart"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients.ts:31:9",
+      "type": "http_out",
+      "label": "grpc shop.CartService/AddItem",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 31,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:shop.CartService/AddItem",
+        "call": "unary",
+        "operation": "addItem",
+        "client": "grpc",
+        "service": "shop.CartService",
+        "method": "AddItem",
+        "contract": "../proto/shop.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "CART_ADDR"
+        },
+        "inputKeys": [
+          "productId",
+          "quantity",
+          "userId"
+        ],
+        "inputType": "{userId:string;productId:string;quantity:1}",
+        "targetService": "cart"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients.ts:36:5",
+      "type": "http_out",
+      "label": "grpc shop.PaymentService/Charge",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 36,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:shop.PaymentService/Charge",
+        "call": "unary",
+        "operation": "charge",
+        "client": "grpc",
+        "service": "shop.PaymentService",
+        "method": "Charge",
+        "contract": "../proto/shop.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "PAYMENTS_ADDR"
+        },
+        "inputKeys": [
+          "amount",
+          "orderId"
+        ],
+        "inputType": "{orderId:string;amount:number}",
+        "targetService": "payments"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients.ts:37:5",
+      "type": "http_out",
+      "label": "grpc shop.CartService/EmptyCart",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 37,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:shop.CartService/EmptyCart",
+        "call": "unary",
+        "operation": "emptyCart",
+        "client": "grpc",
+        "service": "shop.CartService",
+        "method": "EmptyCart",
+        "contract": "../proto/shop.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "CART_ADDR"
+        },
+        "inputKeys": [
+          "userId"
+        ],
+        "inputType": "{userId:string}",
+        "targetService": "cart"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients.ts:42:35",
+      "type": "http_out",
+      "label": "grpc shop.CatalogService/ListProducts",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 42,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:shop.CatalogService/ListProducts",
+        "call": "unary",
+        "operation": "listProducts",
+        "client": "grpc",
+        "service": "shop.CatalogService",
+        "method": "ListProducts",
+        "contract": "../proto/shop.proto",
+        "link": {
+          "protocol": "grpc",
+          "host": "catalog:50051"
+        },
+        "inputKeys": [],
+        "inputType": "{}",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "http_out:storefront#src/clients.ts:46:35",
+      "type": "http_out",
+      "label": "grpc shop.ShippingService/GetQuote",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 46,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:shop.ShippingService/GetQuote",
+        "call": "unary",
+        "operation": "getQuote",
+        "client": "grpc",
+        "service": "shop.ShippingService",
+        "method": "GetQuote",
+        "contract": "../proto/shop.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "SHIPPING_ADDR"
+        },
+        "inputKeys": [
+          "zip"
+        ],
+        "inputType": "{zip:string}"
+      }
+    },
+    {
+      "id": "payments#charge.js:charge",
+      "type": "function",
+      "label": "charge",
+      "repo": "payments",
+      "file": "charge.js",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "any"
+            }
+          ],
+          "returns": "{transactionId:string}"
+        }
+      }
+    },
+    {
+      "id": "payments#index.js:chargeHandler",
+      "type": "function",
+      "label": "chargeHandler",
+      "repo": "payments",
+      "file": "index.js",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "call",
+              "type": "any"
+            },
+            {
+              "name": "callback",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "grpc-server"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:payments",
+      "type": "repo",
+      "label": "payments",
+      "repo": "payments",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "grpc-server"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes",
+            "grpc-server"
+          ]
+        },
+        "listen": [
+          {
+            "port": 8080,
+            "file": "src/server.ts",
+            "line": 30
+          }
+        ]
+      }
+    },
+    {
+      "id": "storefront#src/clients.ts:addToCart",
+      "type": "function",
+      "label": "addToCart",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            },
+            {
+              "name": "productId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients.ts:checkout",
+      "type": "function",
+      "label": "checkout",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 34,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            },
+            {
+              "name": "amount",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients.ts:getCart",
+      "type": "function",
+      "label": "getCart",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "userId",
+              "type": "string"
+            }
+          ],
+          "returns": "type:storefront#Cart"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients.ts:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients.ts:quote",
+      "type": "function",
+      "label": "quote",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 45,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "zip",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/clients.ts:record",
+      "type": "function",
+      "label": "record",
+      "repo": "storefront",
+      "file": "src/clients.ts",
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "entry",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/server.ts:GET /cart/:userId@7",
+      "type": "function",
+      "label": "GET /cart/:userId@7",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/server.ts:GET /products@22",
+      "type": "function",
+      "label": "GET /products@22",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/server.ts:GET /shipping/:zip@26",
+      "type": "function",
+      "label": "GET /shipping/:zip@26",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/server.ts:POST /cart/:userId/items@11",
+      "type": "function",
+      "label": "POST /cart/:userId/items@11",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/server.ts:POST /checkout/:userId@16",
+      "type": "function",
+      "label": "POST /checkout/:userId@16",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#src/server.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "storefront",
+      "file": "src/server.ts",
+      "line": 5,
+      "kind": "function"
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:cart:rpc:grpc:shop.CartService/AddItem",
+      "to": "cart#proto/shop.proto:shop.CartService.AddItem",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "proto/shop.proto",
+      "meta": {
+        "declaredBy": "proto/shop.proto"
+      }
+    },
+    {
+      "from": "entry:cart:rpc:grpc:shop.CartService/EmptyCart",
+      "to": "cart#proto/shop.proto:shop.CartService.EmptyCart",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "proto/shop.proto",
+      "meta": {
+        "declaredBy": "proto/shop.proto"
+      }
+    },
+    {
+      "from": "entry:cart:rpc:grpc:shop.CartService/GetCart",
+      "to": "cart#proto/shop.proto:shop.CartService.GetCart",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "proto/shop.proto",
+      "meta": {
+        "declaredBy": "proto/shop.proto"
+      }
+    },
+    {
+      "from": "entry:catalog:rpc:grpc:shop.CatalogService/GetProduct",
+      "to": "catalog#src/catalog.ts:CatalogImpl.getProduct",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{request:{id:string}}",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/catalog.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:catalog:rpc:grpc:shop.CatalogService/ListProducts",
+      "to": "catalog#src/catalog.ts:CatalogImpl.listProducts",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown",
+        "{prototype:any;length:number;arguments:any;caller:Function;name:string}"
+      ],
+      "returns": "void",
+      "file": "src/catalog.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:catalog:rpc:grpc:shop.CatalogService/WatchPrices",
+      "to": "catalog#src/catalog.ts:CatalogImpl.watchPrices",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "object"
+      ],
+      "returns": "void",
+      "file": "src/catalog.ts",
+      "line": 18
+    },
+    {
+      "from": "entry:payments:rpc:grpc:shop.PaymentService/Charge",
+      "to": "payments#index.js:chargeHandler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "index.js",
+      "line": 6
+    },
+    {
+      "from": "entry:storefront:http:GET:/cart/:param",
+      "to": "storefront#src/server.ts:GET /cart/:userId@7",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:storefront#Cart",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "params": "{userId:string}"
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/cart/:param",
+      "to": "storefront#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/products",
+      "to": "storefront#src/server.ts:GET /products@22",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 22,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/products",
+      "to": "storefront#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/shipping/:param",
+      "to": "storefront#src/server.ts:GET /shipping/:zip@26",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 26,
+      "meta": {
+        "requestRead": true,
+        "params": "{zip:string}"
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/shipping/:param",
+      "to": "storefront#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/cart/:param/items",
+      "to": "storefront#src/server.ts:POST /cart/:userId/items@11",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "params": "{userId:string}"
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/cart/:param/items",
+      "to": "storefront#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/checkout/:param",
+      "to": "storefront#src/server.ts:POST /checkout/:userId@16",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 16,
+      "meta": {
+        "requestRead": true,
+        "params": "{userId:string}"
+      }
+    },
+    {
+      "from": "entry:storefront:http:POST:/checkout/:param",
+      "to": "storefront#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients.ts:27:43",
+      "to": "entry:cart:rpc:grpc:shop.CartService/GetCart",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/clients.ts",
+      "line": 27,
+      "params": [
+        "{userId:string}"
+      ],
+      "returns": "type:storefront#Cart",
+      "meta": {
+        "via": "link-url",
+        "targetService": "cart"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients.ts:31:9",
+      "to": "entry:cart:rpc:grpc:shop.CartService/AddItem",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/clients.ts",
+      "line": 31,
+      "params": [
+        "{userId:string;productId:string;quantity:1}"
+      ],
+      "meta": {
+        "via": "link-url",
+        "targetService": "cart"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients.ts:36:5",
+      "to": "entry:payments:rpc:grpc:shop.PaymentService/Charge",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 36,
+      "params": [
+        "{orderId:string;amount:number}"
+      ],
+      "meta": {
+        "via": "link-url",
+        "targetService": "payments"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients.ts:37:5",
+      "to": "entry:cart:rpc:grpc:shop.CartService/EmptyCart",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/clients.ts",
+      "line": 37,
+      "params": [
+        "{userId:string}"
+      ],
+      "meta": {
+        "via": "link-url",
+        "targetService": "cart"
+      }
+    },
+    {
+      "from": "http_out:storefront#src/clients.ts:42:35",
+      "to": "entry:catalog:rpc:grpc:shop.CatalogService/ListProducts",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 42,
+      "params": [
+        "{}"
+      ],
+      "meta": {
+        "via": "link-url",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "from": "payments#index.js:chargeHandler",
+      "to": "payments#charge.js:charge",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "{transactionId:string}",
+      "file": "index.js",
+      "line": 8
+    },
+    {
+      "from": "storefront#src/clients.ts:addToCart",
+      "to": "http_out:storefront#src/clients.ts:31:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 31
+    },
+    {
+      "from": "storefront#src/clients.ts:checkout",
+      "to": "http_out:storefront#src/clients.ts:36:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 36
+    },
+    {
+      "from": "storefront#src/clients.ts:checkout",
+      "to": "http_out:storefront#src/clients.ts:37:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 37
+    },
+    {
+      "from": "storefront#src/clients.ts:getCart",
+      "to": "http_out:storefront#src/clients.ts:27:43",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 27
+    },
+    {
+      "from": "storefront#src/clients.ts:listProducts",
+      "to": "http_out:storefront#src/clients.ts:42:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 42
+    },
+    {
+      "from": "storefront#src/clients.ts:quote",
+      "to": "http_out:storefront#src/clients.ts:46:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 46
+    },
+    {
+      "from": "storefront#src/server.ts:GET /cart/:userId@7",
+      "to": "storefront#src/clients.ts:getCart",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:storefront#Cart",
+      "file": "src/server.ts",
+      "line": 8
+    },
+    {
+      "from": "storefront#src/server.ts:GET /products@22",
+      "to": "storefront#src/clients.ts:listProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/server.ts",
+      "line": 23
+    },
+    {
+      "from": "storefront#src/server.ts:GET /shipping/:zip@26",
+      "to": "storefront#src/clients.ts:quote",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/server.ts",
+      "line": 27
+    },
+    {
+      "from": "storefront#src/server.ts:POST /cart/:userId/items@11",
+      "to": "storefront#src/clients.ts:addToCart",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/server.ts",
+      "line": 12
+    },
+    {
+      "from": "storefront#src/server.ts:POST /checkout/:userId@16",
+      "to": "storefront#src/clients.ts:checkout",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "unknown",
+      "file": "src/server.ts",
+      "line": 17
+    },
+    {
+      "from": "storefront#src/server.ts:POST /checkout/:userId@16",
+      "to": "storefront#src/clients.ts:record",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "src/server.ts",
+      "line": 18
+    }
+  ],
+  "types": {
+    "type:cart#.google.protobuf.Empty": {
+      "name": "google.protobuf.Empty",
+      "kind": "object",
+      "declaredIn": "cart#google.protobuf.Empty",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "google.protobuf.Empty"
+      }
+    },
+    "type:cart#.shop.AddItemRequest": {
+      "name": "shop.AddItemRequest",
+      "kind": "object",
+      "declaredIn": "cart#proto/shop.proto",
+      "structuralHash": "bff72a38e5591bbe",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "user_id"
+          }
+        },
+        {
+          "name": "productId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "product_id"
+          }
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.AddItemRequest"
+      }
+    },
+    "type:cart#.shop.Cart": {
+      "name": "shop.Cart",
+      "kind": "object",
+      "declaredIn": "cart#proto/shop.proto",
+      "structuralHash": "cb9a77511e09d434",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "user_id"
+          }
+        },
+        {
+          "name": "productIds",
+          "type": "string[]",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "product_ids"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.Cart"
+      }
+    },
+    "type:cart#.shop.EmptyCartRequest": {
+      "name": "shop.EmptyCartRequest",
+      "kind": "object",
+      "declaredIn": "cart#proto/shop.proto",
+      "structuralHash": "c95ae1d48907aa54",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "user_id"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.EmptyCartRequest"
+      }
+    },
+    "type:cart#.shop.GetCartRequest": {
+      "name": "shop.GetCartRequest",
+      "kind": "object",
+      "declaredIn": "cart#proto/shop.proto",
+      "structuralHash": "c95ae1d48907aa54",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "user_id"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.GetCartRequest"
+      }
+    },
+    "type:catalog#.shop.GetProductRequest": {
+      "name": "shop.GetProductRequest",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "f130d3628fd99765",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.GetProductRequest"
+      }
+    },
+    "type:catalog#.shop.ListProductsReply": {
+      "name": "shop.ListProductsReply",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "8f2ea2b37e170803",
+      "fields": [
+        {
+          "name": "products",
+          "type": "type:catalog#.shop.Product[]",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.ListProductsReply"
+      }
+    },
+    "type:catalog#.shop.ListProductsRequest": {
+      "name": "shop.ListProductsRequest",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.ListProductsRequest"
+      }
+    },
+    "type:catalog#.shop.PriceChange": {
+      "name": "shop.PriceChange",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "0c174079cc931849",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "price",
+          "type": "number | string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.PriceChange"
+      }
+    },
+    "type:catalog#.shop.Product": {
+      "name": "shop.Product",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "517b1688238ae8a9",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "price",
+          "type": "number | string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.Product"
+      }
+    },
+    "type:catalog#.shop.WatchPricesRequest": {
+      "name": "shop.WatchPricesRequest",
+      "kind": "object",
+      "declaredIn": "catalog#../proto/shop.proto",
+      "structuralHash": "4096bfea451cef8b",
+      "fields": [
+        {
+          "name": "ids",
+          "type": "string[]",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.WatchPricesRequest"
+      }
+    },
+    "type:payments#.grpc.health.v1.HealthCheckRequest": {
+      "name": "grpc.health.v1.HealthCheckRequest",
+      "kind": "object",
+      "declaredIn": "payments#grpc/health/v1/health.proto",
+      "structuralHash": "5d2ba12e6a4bf05e",
+      "fields": [
+        {
+          "name": "service",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "grpc.health.v1.HealthCheckRequest"
+      }
+    },
+    "type:payments#.grpc.health.v1.HealthCheckResponse": {
+      "name": "grpc.health.v1.HealthCheckResponse",
+      "kind": "object",
+      "declaredIn": "payments#grpc/health/v1/health.proto",
+      "structuralHash": "d934738c8ff8e196",
+      "fields": [
+        {
+          "name": "status",
+          "type": "type:payments#.grpc.health.v1.HealthCheckResponse.ServingStatus",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "grpc.health.v1.HealthCheckResponse"
+      }
+    },
+    "type:payments#.grpc.health.v1.HealthCheckResponse.ServingStatus": {
+      "name": "grpc.health.v1.HealthCheckResponse.ServingStatus",
+      "kind": "union",
+      "declaredIn": "payments#grpc/health/v1/health.proto",
+      "structuralHash": "63f7867893079bdb",
+      "members": [
+        "'UNKNOWN'",
+        "'SERVING'",
+        "'NOT_SERVING'",
+        "'SERVICE_UNKNOWN'",
+        "number"
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoEnum": "grpc.health.v1.HealthCheckResponse.ServingStatus"
+      }
+    },
+    "type:payments#.shop.ChargeReply": {
+      "name": "shop.ChargeReply",
+      "kind": "object",
+      "declaredIn": "payments#../proto/shop.proto",
+      "structuralHash": "0f893db236aea663",
+      "fields": [
+        {
+          "name": "transactionId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "transaction_id"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.ChargeReply"
+      }
+    },
+    "type:payments#.shop.ChargeRequest": {
+      "name": "shop.ChargeRequest",
+      "kind": "object",
+      "declaredIn": "payments#../proto/shop.proto",
+      "structuralHash": "7f6862105bc45d17",
+      "fields": [
+        {
+          "name": "orderId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "order_id"
+          }
+        },
+        {
+          "name": "amount",
+          "type": "number | string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "shop.ChargeRequest"
+      }
+    },
+    "type:storefront#Cart": {
+      "name": "Cart",
+      "kind": "object",
+      "declaredIn": "storefront#src/gen/cart.ts",
+      "structuralHash": "cb9a77511e09d434",
+      "fields": [
+        {
+          "name": "userId",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "productIds",
+          "type": "string[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/catalog.ts",
+      "line": 19,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 2,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "CatalogImpl.watchPrices -> call.write",
+      "meta": {
+        "causes": [
+          {
+            "cause": "interface-type",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/catalog.ts",
+                "line": 19,
+                "symbol": "CatalogImpl.watchPrices -> call.write"
+              },
+              {
+                "file": "src/catalog.ts",
+                "line": 20,
+                "symbol": "CatalogImpl.watchPrices -> call.end"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "file": "src/clients.ts",
+      "line": 24,
+      "reason": "grpc-service-unread",
+      "message": "new LedgerServiceClient(process.env.LEDGER_ADDR, credentials.createInsecure()) makes a gRPC client of a service this cannot name: no .proto file of the repository declares a service LedgerService, so no call made through it is drawn.",
+      "hint": "Keep the .proto file the client is generated from in the repository, or name the service as text, so its calls can be named and joined.",
+      "symbol": "new LedgerServiceClient(process.env.LEDGER_ADDR, credentials.createInsecure())",
+      "meta": {
+        "why": "client"
+      },
+      "service": "storefront"
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients.ts",
+      "line": 46,
+      "reason": "grpc-method-unserved",
+      "message": "storefront calls shop.ShippingService (GetQuote), which ../proto/shop.proto declares and no configured service implements",
+      "hint": "The service that answers it is not read here: written in another language, or not configured. Declare it by that file - a service with \"document\": { \"kind\": \"protobuf\", \"path\": ..., \"services\": [\"shop.ShippingService\"] } - or add the repository that implements it to services[].",
+      "symbol": "http_out:storefront#src/clients.ts:46:35",
+      "meta": {
+        "grpcService": "shop.ShippingService",
+        "contract": "../proto/shop.proto",
+        "methods": [
+          "GetQuote"
+        ]
+      }
+    },
+    {
+      "service": "storefront",
+      "file": "src/clients.ts",
+      "line": 46,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares SHIPPING_ADDR",
+      "hint": "Add SHIPPING_ADDR to services[].baseUrlEnv of whichever service answers it.",
+      "symbol": "http_out:storefront#src/clients.ts:46:35"
+    },
+    {
+      "file": "src/clients.ts",
+      "line": 50,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 6,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "record -> ledger.append",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 5,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 8,
+                "symbol": "GET /cart/:userId@7 -> res.json"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 13,
+                "symbol": "POST /cart/:userId/items@11 -> res.sendStatus"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 19,
+                "symbol": "POST /checkout/:userId@16 -> res.json"
+              }
+            ]
+          },
+          {
+            "cause": "import-unresolved",
+            "package": "./gen/ledger_grpc_pb",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/clients.ts",
+                "line": 50,
+                "symbol": "record -> ledger.append"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "storefront"
+    }
+  ]
+}

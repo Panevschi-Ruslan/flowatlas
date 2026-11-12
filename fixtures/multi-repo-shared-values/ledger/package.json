@@ -1,0 +1,9 @@
+{
+  "name": "shop-ledger",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The ledger of a shop, written with Terraform, reading what the platform writes to parameters.",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

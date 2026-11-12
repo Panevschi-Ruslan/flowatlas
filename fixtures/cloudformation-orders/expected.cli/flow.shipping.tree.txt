@@ -1,0 +1,9 @@
+@  workflow orders-dev-shipping            orders/statemachine/shipping.asl.json:1
+  -> ReserveStock [Task lambda:invoke]     orders/statemachine/shipping.asl.json:5
+    @  orders-dev-reserve-stock            orders/stacks/orders.yaml:115
+      -> handler                           orders/src/shipping/reserve-stock.ts:4
+    -> ChargePayment [Task lambda:invoke]  orders/statemachine/shipping.asl.json:15
+      @  orders-dev-charge-payment         orders/stacks/orders.yaml:124
+        -> handler                         orders/src/shipping/charge-payment.ts:4
+      -> Done [Succeed]                    orders/statemachine/shipping.asl.json:25
+unresolved on this path: 0

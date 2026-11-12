@@ -204,12 +204,24 @@ describe('the tools a session is offered', () => {
    * and 32,652, the read ceiling holds and the full one moves to the next 50
    * above. What a project without an observed file or rules is offered is
    * measured below.
+   *
+   * P229 gave `get_flow` its `to` (the shortest ways to a node, instead of a
+   * path tool of its own): one clause on the description and the input, its
+   * meaning said once in the instructions. 13,192 read and 32,711 in all (19
+   * tools: 10,140 and 28,602), and the ceilings move
+   * to the next 50 above, here and below.
+   *
+   * P230 and P236 gave `start_here`'s output schema `moved` (a checkout on
+   * another commit than the graph) and `pulled` (the graph is the team's): one
+   * line each, which a client checks answers against and no model reads.
+   * 13,192 read as before; 32,764 and 28,655 in all, the full ceilings to the
+   * next 50.
    */
   it('cost less to read than they did', async () => {
     const { tools } = await client.listTools();
     const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-    expect(read.length).toBeLessThan(13150);
-    expect(JSON.stringify({ tools }).length).toBeLessThan(32700);
+    expect(read.length).toBeLessThan(13200);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(32800);
   });
 
   /**
@@ -229,8 +241,8 @@ describe('the tools a session is offered', () => {
       const { tools } = await plain.listTools();
       expect(tools).toHaveLength(19);
       const read = JSON.stringify(tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })));
-      expect(read.length).toBeLessThan(10100);
-      expect(JSON.stringify({ tools }).length).toBeLessThan(28550);
+      expect(read.length).toBeLessThan(10150);
+      expect(JSON.stringify({ tools }).length).toBeLessThan(28700);
     } finally {
       await plain.close();
     }
@@ -470,6 +482,41 @@ describe('following an entry across services', () => {
     const dead = flatten(flow.root).find((item) => item.node.type === 'http_out');
     expect(dead?.node.meta?.['targetService']).toBe('orders');
     expect(flow.unresolvedOnPath).toBeGreaterThan(0);
+  });
+});
+
+describe('the shortest ways from one node to another (P229)', () => {
+  it('keeps only the steps on a shortest path, across the services, from a way in to a table', async () => {
+    const path = await call('get_flow', { entry: 'entry:gateway:http:GET:/orders/:param', to: 'table:orders#orders' });
+    const ids = flatten(path.root).map((item) => item.node.id);
+    expect(ids[0]).toBe('entry:gateway:http:GET:/orders/:param');
+    expect(ids.at(-1)).toBe('table:orders#orders');
+    expect(ids).toContain('entry:orders:http:GET:/orders/:param');
+    expect(path).toMatchObject({ to: 'table:orders#orders', pathsFound: 1, unresolvedOnPath: 0 });
+    expect(path.length).toBe(ids.length - 1);
+    expect(path.none).toBeUndefined();
+    expect(path.next[0]).toBe('describe_for_prompt({id: "table:orders#orders"})');
+  });
+
+  it('starts anywhere, not only at a way in', async () => {
+    const path = await call('get_flow', { entry: 'OrdersService.findOne', to: 'table:orders#orders' });
+    expect(flatten(path.root).map((item) => item.node.label)).toEqual(['OrdersService.findOne', 'read orders', 'orders']);
+  });
+
+  it('says how far it looked and that the other way round holds, when asked the wrong way', async () => {
+    const path = await call('get_flow', { entry: 'table:orders#orders', to: 'entry:gateway:http:GET:/orders/:param' });
+    expect(path.pathsFound).toBe(0);
+    expect(path.length).toBeNull();
+    expect(path.none).toMatch(/^no path within 24 steps; searched \d+ nodes$/);
+    expect(path.reverse).toMatchObject({ paths: 1 });
+    expect(path.next).toEqual(['get_flow({entry: "entry:gateway:http:GET:/orders/:param", to: "table:orders#orders"})']);
+  });
+
+  it('names the candidates of an end that means two nodes, as the call that takes each', async () => {
+    const path = await call('get_flow', { entry: 'GET /orders/1', to: 'table:orders#orders' });
+    expect(path.entry).toBe('GET /orders/1');
+    expect(path.candidates.map((item: { service: string }) => item.service)).toEqual(['gateway', 'orders']);
+    expect(path.next[0]).toBe('get_flow({to: "table:orders#orders", entry: "entry:gateway:http:GET:/orders/:param"})');
   });
 });
 
@@ -844,8 +891,16 @@ describe('answers that hand on the id the next question needs', () => {
     const answer = await call('describe_for_prompt', { id });
     expect(answer.id).toBe(id);
     expect(answer.markdown).toMatch(/^# Check: api-path-dynamic/);
-    expect(answer.markdown).toContain('## Where · 3');
-    expect(answer.next).toEqual(['search({query: "src/app/orders-api.service.ts", kinds: ["gaps"]})']);
+    // Four rows since P279 says the address built in part that joins nothing; the
+    // request it is on is something to ask about, so the next questions start there.
+    expect(answer.markdown).toContain('## Where · 4');
+    const site = 'ui_api_call:web#src/app/orders-api.service.ts:48:12';
+    expect(answer.next).toEqual([
+      `who_calls({symbol: "${site}"})`,
+      `impact({symbol: "${site}"})`,
+      `get_source({symbol: "${site}"})`,
+      'search({query: "src/app/orders-api.service.ts", kinds: ["gaps"]})',
+    ]);
     expect((await call('describe_for_prompt', { id: 'gap:web|src/nowhere.ts|api-path-dynamic' })).error).toMatch(/no rows answer to/);
   });
 

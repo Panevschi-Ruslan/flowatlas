@@ -1,0 +1,17 @@
+environments:
+  staging:
+    values:
+      - values/env-staging.yaml
+  production:
+    values:
+      - values/env-production.yaml
+---
+releases:
+  - name: shop
+    namespace: shop
+    chart: ./charts/shop
+    values:
+      - values/shop-{{ .Environment.Name }}.yaml
+    set:
+      - name: catalog.service.port
+        value: {{ .Values.catalogPort }}

@@ -1,0 +1,1818 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T18:51:11.220Z",
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "catalog#src/get-product.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/get-product.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/list-products.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/list-products.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/list-products.ts:legacy",
+      "type": "function",
+      "label": "legacy",
+      "repo": "catalog",
+      "file": "src/list-products.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/reorder.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "catalog",
+      "file": "src/reorder.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "channel:sns/catalog-restock",
+      "type": "channel",
+      "label": "sns/catalog-restock",
+      "repo": "orders",
+      "file": "lib/orders-stack.ts",
+      "line": 55,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-sns"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/orders-placed",
+      "type": "channel",
+      "label": "sqs/orders-placed",
+      "repo": "gateway",
+      "file": "serverless.yml",
+      "line": 31,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "config_key:catalog#RESTOCK_TOPIC_ARN",
+      "type": "config_key",
+      "label": "RESTOCK_TOPIC_ARN",
+      "repo": "catalog",
+      "file": "src/reorder.ts",
+      "line": 15,
+      "meta": {
+        "key": "RESTOCK_TOPIC_ARN",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:catalog#SHOP_API_URL",
+      "type": "config_key",
+      "label": "SHOP_API_URL",
+      "repo": "catalog",
+      "file": "src/reorder.ts",
+      "line": 14,
+      "meta": {
+        "key": "SHOP_API_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:gateway#AUDIT_QUEUE_URL",
+      "type": "config_key",
+      "label": "AUDIT_QUEUE_URL",
+      "repo": "gateway",
+      "file": "src/audit.ts",
+      "line": 9,
+      "meta": {
+        "key": "AUDIT_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "config_key:orders#PLACED_QUEUE_URL",
+      "type": "config_key",
+      "label": "PLACED_QUEUE_URL",
+      "repo": "orders",
+      "file": "src/place-order.ts",
+      "line": 9,
+      "meta": {
+        "key": "PLACED_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+      "type": "consumer",
+      "label": "mapping Resources.Reorder.Events.Placed",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 79,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "Resources.Reorder.Events.Placed",
+        "deployedBy": "sam",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:gateway#serverless.yml:functions.audit.events[0]",
+      "type": "consumer",
+      "label": "mapping functions.audit.events[0]",
+      "repo": "gateway",
+      "file": "serverless.yml",
+      "line": 31,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "functions.audit.events[0]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:orders#lib/orders-stack.ts:shop-orders/Restocked/shop-orders/Restock",
+      "type": "consumer",
+      "label": "subscription shop-orders/Restocked/shop-orders/Restock",
+      "repo": "orders",
+      "file": "lib/orders-stack.ts",
+      "line": 55,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "by": "subscription",
+        "declaredAs": "shop-orders/Restocked/shop-orders/Restock",
+        "deployedBy": "cdk",
+        "protocol": "lambda",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "Sns",
+            "Message"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "deployedBy": "sam",
+        "function": "catalog-list-products",
+        "root": "export:shop-rest-api-root",
+        "below": "/products",
+        "declaredAs": "Resources.ProductsGet",
+        "adapter": "aws-lambda",
+        "rootedIn": "gateway",
+        "rootPath": "/",
+        "api": "shop"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products/:param",
+      "type": "entry",
+      "label": "GET /products/:param",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 54,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products/:param",
+        "rawPath": "/products/{id}",
+        "deployedBy": "sam",
+        "function": "catalog-get-product",
+        "root": "export:shop-http-api-id",
+        "below": "/products/:param",
+        "declaredAs": "Resources.ProductRoute",
+        "adapter": "aws-lambda",
+        "rootedIn": "gateway",
+        "rootPath": "/",
+        "api": "shop-http"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:catalog-get-product",
+      "type": "entry",
+      "label": "catalog-get-product",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 40,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalog-get-product",
+        "deployedBy": "sam",
+        "name": "catalog-get-product",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.GetProduct",
+        "logicalId": "GetProduct",
+        "handler": "get-product.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:catalog-legacy",
+      "type": "entry",
+      "label": "catalog-legacy",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 85,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalog-legacy",
+        "deployedBy": "sam",
+        "name": "catalog-legacy",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Legacy",
+        "logicalId": "Legacy",
+        "handler": "list-products.legacy",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:catalog-list-products",
+      "type": "entry",
+      "label": "catalog-list-products",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 13,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalog-list-products",
+        "deployedBy": "sam",
+        "name": "catalog-list-products",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.ListProducts",
+        "logicalId": "ListProducts",
+        "handler": "list-products.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:catalog:invoke:catalog-reorder",
+      "type": "entry",
+      "label": "catalog-reorder",
+      "repo": "catalog",
+      "file": "template.yaml",
+      "line": 69,
+      "kind": "invoke",
+      "meta": {
+        "key": "catalog-reorder",
+        "deployedBy": "sam",
+        "name": "catalog-reorder",
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Reorder",
+        "logicalId": "Reorder",
+        "handler": "reorder.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "RESTOCK_TOPIC_ARN": {
+            "written": "!Ref RestockTopic",
+            "value": "catalog-restock",
+            "kind": "topic"
+          },
+          "SHOP_API_URL": {
+            "written": "!ImportValue shop-api-url",
+            "imported": "export:shop-api-url",
+            "value": "shop",
+            "kind": "api",
+            "service": "gateway"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent",
+          "Records[].body": "{sku:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "gateway",
+      "file": "serverless.yml",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "health",
+        "deployedBy": "serverless",
+        "api": "shop",
+        "function": "shop-gateway-prod-health",
+        "declaredAs": "functions.health.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "shop",
+            "chosenDefault": "prod"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:gateway:http:GET:/status",
+      "type": "entry",
+      "label": "GET /status",
+      "repo": "gateway",
+      "file": "serverless.yml",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/status",
+        "rawPath": "/status",
+        "deployedBy": "serverless",
+        "api": "shop-http",
+        "function": "shop-gateway-prod-status",
+        "declaredAs": "functions.status.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [],
+            "api": "shop-http"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:gateway:invoke:shop-gateway-prod-audit",
+      "type": "entry",
+      "label": "shop-gateway-prod-audit",
+      "repo": "gateway",
+      "file": "serverless.yml",
+      "line": 28,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-gateway-prod-audit",
+        "deployedBy": "serverless",
+        "name": "shop-gateway-prod-audit",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.audit",
+        "stageFrom": "file",
+        "handler": "src/audit.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "${cf:billing-prod.AuditQueueUrl}",
+            "imported": "stack:billing-prod#AuditQueueUrl",
+            "unread": "the value is the output AuditQueueUrl of the stack billing-prod, which another deployment publishes",
+            "variable": "cf:billing-prod.AuditQueueUrl"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:gateway:invoke:shop-gateway-prod-health",
+      "type": "entry",
+      "label": "shop-gateway-prod-health",
+      "repo": "gateway",
+      "file": "serverless.yml",
+      "line": 17,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-gateway-prod-health",
+        "deployedBy": "serverless",
+        "name": "shop-gateway-prod-health",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.health",
+        "stageFrom": "file",
+        "handler": "src/health.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "${cf:billing-prod.AuditQueueUrl}",
+            "imported": "stack:billing-prod#AuditQueueUrl",
+            "unread": "the value is the output AuditQueueUrl of the stack billing-prod, which another deployment publishes",
+            "variable": "cf:billing-prod.AuditQueueUrl"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:gateway:invoke:shop-gateway-prod-status",
+      "type": "entry",
+      "label": "shop-gateway-prod-status",
+      "repo": "gateway",
+      "file": "serverless.yml",
+      "line": 22,
+      "kind": "invoke",
+      "meta": {
+        "key": "shop-gateway-prod-status",
+        "deployedBy": "serverless",
+        "name": "shop-gateway-prod-status",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.status",
+        "stageFrom": "file",
+        "handler": "src/health.status",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "AUDIT_QUEUE_URL": {
+            "written": "${cf:billing-prod.AuditQueueUrl}",
+            "imported": "stack:billing-prod#AuditQueueUrl",
+            "unread": "the value is the output AuditQueueUrl of the stack billing-prod, which another deployment publishes",
+            "variable": "cf:billing-prod.AuditQueueUrl"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders",
+      "file": "lib/orders-stack.ts",
+      "line": 47,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "deployedBy": "cdk",
+        "function": "orders-list-orders",
+        "root": "export:shop-http-api-id",
+        "below": "/orders",
+        "declaredAs": "shop-orders/ShopHttp/GET--/orders",
+        "adapter": "aws-lambda",
+        "rootedIn": "gateway",
+        "rootPath": "/",
+        "api": "shop-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders/:param",
+      "type": "entry",
+      "label": "GET /orders/:param",
+      "repo": "orders",
+      "file": "lib/orders-stack.ts",
+      "line": 43,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders/:param",
+        "rawPath": "/orders/{id}",
+        "deployedBy": "cdk",
+        "function": "orders-get-order",
+        "root": "export:shop-rest-api-root",
+        "below": "/orders/:param",
+        "declaredAs": "shop-orders/ShopApi/Default/orders/{id}/GET",
+        "adapter": "aws-lambda",
+        "rootedIn": "gateway",
+        "rootPath": "/",
+        "api": "shop"
+      }
+    },
+    {
+      "id": "entry:orders:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "orders",
+      "file": "lib/orders-stack.ts",
+      "line": 42,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "deployedBy": "cdk",
+        "function": "orders-place-order",
+        "root": "export:shop-rest-api-root",
+        "below": "/orders",
+        "declaredAs": "shop-orders/ShopApi/Default/orders/POST",
+        "adapter": "aws-lambda",
+        "rootedIn": "gateway",
+        "rootPath": "/",
+        "api": "shop"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-get-order",
+      "type": "entry",
+      "label": "orders-get-order",
+      "repo": "orders",
+      "file": "lib/orders-stack.ts",
+      "line": 32,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-get-order",
+        "deployedBy": "cdk",
+        "name": "orders-get-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "shop-orders/GetOrder",
+        "constructPath": "shop-orders/GetOrder",
+        "handler": "src/get-order.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-list-orders",
+      "type": "entry",
+      "label": "orders-list-orders",
+      "repo": "orders",
+      "file": "lib/orders-stack.ts",
+      "line": 33,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-list-orders",
+        "deployedBy": "cdk",
+        "name": "orders-list-orders",
+        "runtime": "nodejs20.x",
+        "declaredAs": "shop-orders/ListOrders",
+        "constructPath": "shop-orders/ListOrders",
+        "handler": "src/list-orders.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-place-order",
+      "type": "entry",
+      "label": "orders-place-order",
+      "repo": "orders",
+      "file": "lib/orders-stack.ts",
+      "line": 31,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-place-order",
+        "deployedBy": "cdk",
+        "name": "orders-place-order",
+        "runtime": "nodejs20.x",
+        "declaredAs": "shop-orders/PlaceOrder",
+        "constructPath": "shop-orders/PlaceOrder",
+        "handler": "src/place-order.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "PLACED_QUEUE_URL": {
+            "written": "shop-orders/Placed.queueUrl",
+            "value": "orders-placed",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:orders:invoke:orders-restock",
+      "type": "entry",
+      "label": "orders-restock",
+      "repo": "orders",
+      "file": "lib/orders-stack.ts",
+      "line": 34,
+      "kind": "invoke",
+      "meta": {
+        "key": "orders-restock",
+        "deployedBy": "cdk",
+        "name": "orders-restock",
+        "runtime": "nodejs20.x",
+        "declaredAs": "shop-orders/Restock",
+        "constructPath": "shop-orders/Restock",
+        "handler": "src/restock.ts:handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SNSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "gateway#src/audit.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "gateway",
+      "file": "src/audit.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/health.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "gateway",
+      "file": "src/health.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "gateway#src/health.ts:status",
+      "type": "function",
+      "label": "status",
+      "repo": "gateway",
+      "file": "src/health.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "http_out:catalog#src/reorder.ts:14:11",
+      "type": "http_out",
+      "label": "POST /orders",
+      "repo": "catalog",
+      "file": "src/reorder.ts",
+      "line": 14,
+      "meta": {
+        "method": "POST",
+        "url": "${SHOP_API_URL}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "SHOP_API_URL",
+        "responseType": null,
+        "bodyType": "{sku:string;quantity:number}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "quantity",
+          "sku"
+        ],
+        "baseUrl": "shop",
+        "baseUrlFrom": "the environment catalog-reorder is deployed with",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "orders#src/get-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/get-order.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "orders#src/list-orders.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/list-orders.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "orders#src/place-order.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/place-order.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "orders#src/restock.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "orders",
+      "file": "src/restock.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SNSEvent"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "producer:catalog#src/reorder.ts:15:11",
+      "type": "producer",
+      "label": "message sns/catalog-restock",
+      "repo": "catalog",
+      "file": "src/reorder.ts",
+      "line": 15,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sns",
+              {
+                "environment": "RESTOCK_TOPIC_ARN",
+                "forms": [
+                  "^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{sku:string}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:gateway#src/audit.ts:9:11",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "gateway",
+      "file": "src/audit.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "unresolved",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "AUDIT_QUEUE_URL",
+                "forms": [
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:orders#src/place-order.ts:9:9",
+      "type": "producer",
+      "label": "message sqs/orders-placed",
+      "repo": "orders",
+      "file": "src/place-order.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "PLACED_QUEUE_URL",
+                "forms": [
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{placedAt:number;sku:string;quantity:number}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sns": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:catalog-restock-topic-arn",
+              "stack:catalog-prod#RestockTopicArn"
+            ],
+            "address": "Outputs.RestockTopicArn",
+            "file": "template.yaml",
+            "line": 99,
+            "kind": "topic",
+            "value": "catalog-restock",
+            "deployedBy": "sam"
+          }
+        ],
+        "imports": [
+          {
+            "key": "export:shop-api-url",
+            "file": "template.yaml",
+            "line": 76,
+            "what": "the value of SHOP_API_URL Resources.Reorder is deployed with",
+            "from": "gateway"
+          },
+          {
+            "key": "export:orders-placed-queue-arn",
+            "file": "template.yaml",
+            "line": 79,
+            "what": "the queue Resources.Reorder.Events.Placed reads",
+            "kinds": [
+              "queue"
+            ],
+            "from": "orders"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:gateway",
+      "type": "repo",
+      "label": "gateway",
+      "repo": "gateway",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "apiRoots": [
+          {
+            "key": "export:shop-rest-api-id",
+            "path": "/",
+            "api": "shop",
+            "file": "serverless.yml",
+            "line": 36,
+            "deployedBy": "serverless"
+          },
+          {
+            "key": "stack:shop-gateway-prod#RestApiId",
+            "path": "/",
+            "api": "shop",
+            "file": "serverless.yml",
+            "line": 36,
+            "deployedBy": "serverless"
+          },
+          {
+            "key": "export:shop-rest-api-root",
+            "path": "/",
+            "api": "shop",
+            "file": "serverless.yml",
+            "line": 40,
+            "deployedBy": "serverless"
+          },
+          {
+            "key": "stack:shop-gateway-prod#RestApiRootResourceId",
+            "path": "/",
+            "api": "shop",
+            "file": "serverless.yml",
+            "line": 40,
+            "deployedBy": "serverless"
+          },
+          {
+            "key": "export:shop-http-api-id",
+            "path": "/",
+            "api": "shop-http",
+            "file": "serverless.yml",
+            "line": 48,
+            "deployedBy": "serverless"
+          },
+          {
+            "key": "stack:shop-gateway-prod#HttpApiExportedId",
+            "path": "/",
+            "api": "shop-http",
+            "file": "serverless.yml",
+            "line": 48,
+            "deployedBy": "serverless"
+          },
+          {
+            "key": "stack:shop-gateway-prod#HttpApiId",
+            "path": "/",
+            "api": "shop-http",
+            "file": "serverless.yml",
+            "line": 4,
+            "deployedBy": "serverless"
+          }
+        ],
+        "exports": [
+          {
+            "keys": [
+              "export:shop-rest-api-id",
+              "stack:shop-gateway-prod#RestApiId"
+            ],
+            "address": "resources.Outputs.RestApiId",
+            "file": "serverless.yml",
+            "line": 36,
+            "kind": "api",
+            "value": "shop",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "export:shop-rest-api-root",
+              "stack:shop-gateway-prod#RestApiRootResourceId"
+            ],
+            "address": "resources.Outputs.RestApiRootResourceId",
+            "file": "serverless.yml",
+            "line": 40,
+            "kind": "api",
+            "value": "shop",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "export:shop-api-url",
+              "stack:shop-gateway-prod#ApiUrl"
+            ],
+            "address": "resources.Outputs.ApiUrl",
+            "file": "serverless.yml",
+            "line": 44,
+            "kind": "api",
+            "value": "shop",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "export:shop-http-api-id",
+              "stack:shop-gateway-prod#HttpApiExportedId"
+            ],
+            "address": "resources.Outputs.HttpApiExportedId",
+            "file": "serverless.yml",
+            "line": 48,
+            "kind": "api",
+            "value": "shop-http",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "export:sls-shop-gateway-prod-ServiceEndpoint",
+              "stack:shop-gateway-prod#ServiceEndpoint"
+            ],
+            "address": "Outputs.ServiceEndpoint",
+            "file": "serverless.yml",
+            "line": 4,
+            "kind": "api",
+            "value": "shop",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "stack:shop-gateway-prod#HttpApiId"
+            ],
+            "address": "Outputs.HttpApiId",
+            "file": "serverless.yml",
+            "line": 4,
+            "kind": "api",
+            "value": "shop-http",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "stack:shop-gateway-prod#HttpApiUrl"
+            ],
+            "address": "Outputs.HttpApiUrl",
+            "file": "serverless.yml",
+            "line": 4,
+            "kind": "api",
+            "value": "shop-http",
+            "deployedBy": "serverless"
+          }
+        ],
+        "imports": [
+          {
+            "key": "stack:billing-prod#AuditQueueUrl",
+            "file": "serverless.yml",
+            "line": 14,
+            "what": "the value of AUDIT_QUEUE_URL the functions of serverless.yml are deployed with"
+          },
+          {
+            "key": "stack:shop-orders#PlacedQueueArn",
+            "file": "serverless.yml",
+            "line": 31,
+            "what": "the queue functions.audit.events[0] reads",
+            "kinds": [
+              "queue"
+            ],
+            "from": "orders"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:orders-placed-queue-arn",
+              "stack:shop-orders#PlacedQueueArn"
+            ],
+            "address": "shop-orders/PlacedQueueArn",
+            "file": "lib/orders-stack.ts",
+            "line": 57,
+            "kind": "queue",
+            "value": "orders-placed",
+            "deployedBy": "cdk"
+          }
+        ],
+        "imports": [
+          {
+            "key": "export:catalog-restock-topic-arn",
+            "file": "lib/orders-stack.ts",
+            "line": 54,
+            "what": "shop-orders/Restocked",
+            "kinds": [
+              "topic"
+            ],
+            "from": "catalog"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "catalog#src/reorder.ts:handler",
+      "to": "config_key:catalog#RESTOCK_TOPIC_ARN",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/reorder.ts",
+      "line": 15,
+      "meta": {
+        "setBy": [
+          {
+            "function": "catalog-reorder",
+            "written": "!Ref RestockTopic",
+            "value": "catalog-restock"
+          }
+        ]
+      }
+    },
+    {
+      "from": "catalog#src/reorder.ts:handler",
+      "to": "config_key:catalog#SHOP_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/reorder.ts",
+      "line": 14,
+      "meta": {
+        "setBy": [
+          {
+            "function": "catalog-reorder",
+            "written": "!ImportValue shop-api-url",
+            "value": "shop"
+          }
+        ]
+      }
+    },
+    {
+      "from": "catalog#src/reorder.ts:handler",
+      "to": "http_out:catalog#src/reorder.ts:14:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reorder.ts",
+      "line": 14,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 12
+        }
+      }
+    },
+    {
+      "from": "catalog#src/reorder.ts:handler",
+      "to": "producer:catalog#src/reorder.ts:15:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reorder.ts",
+      "line": 15,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 12
+        }
+      }
+    },
+    {
+      "from": "channel:sns/catalog-restock",
+      "to": "consumer:orders#lib/orders-stack.ts:shop-orders/Restocked/shop-orders/Restock",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "lib/orders-stack.ts",
+      "line": 55,
+      "meta": {
+        "by": "subscription"
+      }
+    },
+    {
+      "from": "channel:sqs/orders-placed",
+      "to": "consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 79,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/orders-placed",
+      "to": "consumer:gateway#serverless.yml:functions.audit.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 31,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+      "to": "entry:catalog:invoke:catalog-reorder",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 79,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:gateway#serverless.yml:functions.audit.events[0]",
+      "to": "entry:gateway:invoke:shop-gateway-prod-audit",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 31,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:orders#lib/orders-stack.ts:shop-orders/Restocked/shop-orders/Restock",
+      "to": "entry:orders:invoke:orders-restock",
+      "type": "calls",
+      "confidence": "static",
+      "file": "lib/orders-stack.ts",
+      "line": 55,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/list-products.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/list-products.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products/:param",
+      "to": "catalog#src/get-product.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id?:string}",
+      "file": "src/get-product.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:catalog:invoke:catalog-get-product",
+      "to": "catalog#src/get-product.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/get-product.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:catalog:invoke:catalog-legacy",
+      "to": "catalog#src/list-products.ts:legacy",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/list-products.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:catalog:invoke:catalog-list-products",
+      "to": "catalog#src/list-products.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/list-products.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:catalog:invoke:catalog-reorder",
+      "to": "catalog#src/reorder.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reorder.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:gateway:http:GET:/health",
+      "to": "gateway#src/health.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:gateway:http:GET:/status",
+      "to": "gateway#src/health.ts:status",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{up:boolean}",
+      "file": "src/health.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:gateway:invoke:shop-gateway-prod-audit",
+      "to": "gateway#src/audit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/audit.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:gateway:invoke:shop-gateway-prod-health",
+      "to": "gateway#src/health.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:gateway:invoke:shop-gateway-prod-status",
+      "to": "gateway#src/health.ts:status",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/health.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:orders:http:GET:/orders",
+      "to": "orders#src/list-orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/list-orders.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders/:param",
+      "to": "orders#src/get-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id?:string}",
+      "file": "src/get-order.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:orders:http:POST:/orders",
+      "to": "orders#src/place-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{placedAt:number;sku:string;quantity:number}",
+      "file": "src/place-order.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "body": "{sku:string;quantity:number}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:orders:invoke:orders-get-order",
+      "to": "orders#src/get-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/get-order.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:invoke:orders-list-orders",
+      "to": "orders#src/list-orders.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/list-orders.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:orders:invoke:orders-place-order",
+      "to": "orders#src/place-order.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/place-order.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:orders:invoke:orders-restock",
+      "to": "orders#src/restock.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/restock.ts",
+      "line": 4
+    },
+    {
+      "from": "gateway#src/audit.ts:handler",
+      "to": "config_key:gateway#AUDIT_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/audit.ts",
+      "line": 9,
+      "meta": {
+        "setBy": [
+          {
+            "function": "shop-gateway-prod-audit",
+            "written": "${cf:billing-prod.AuditQueueUrl}"
+          }
+        ]
+      }
+    },
+    {
+      "from": "gateway#src/audit.ts:handler",
+      "to": "producer:gateway#src/audit.ts:9:11",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/audit.ts",
+      "line": 9,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 8
+        }
+      }
+    },
+    {
+      "from": "http_out:catalog#src/reorder.ts:14:11",
+      "to": "entry:orders:http:POST:/orders",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/reorder.ts",
+      "line": 14,
+      "params": [
+        "{sku:string;quantity:number}"
+      ],
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "orders",
+        "baseUrl": "shop",
+        "baseUrlFrom": "the environment catalog-reorder is deployed with"
+      }
+    },
+    {
+      "from": "orders#src/place-order.ts:handler",
+      "to": "config_key:orders#PLACED_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/place-order.ts",
+      "line": 9,
+      "meta": {
+        "setBy": [
+          {
+            "function": "orders-place-order",
+            "written": "shop-orders/Placed.queueUrl",
+            "value": "orders-placed"
+          }
+        ]
+      }
+    },
+    {
+      "from": "orders#src/place-order.ts:handler",
+      "to": "producer:orders#src/place-order.ts:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/place-order.ts",
+      "line": 9
+    },
+    {
+      "from": "producer:catalog#src/reorder.ts:15:11",
+      "to": "channel:sns/catalog-restock",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/reorder.ts",
+      "line": 15,
+      "params": [
+        "{sku:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "RESTOCK_TOPIC_ARN"
+        ],
+        "functions": [
+          "catalog-reorder"
+        ]
+      }
+    },
+    {
+      "from": "producer:orders#src/place-order.ts:9:9",
+      "to": "channel:sqs/orders-placed",
+      "type": "emits",
+      "confidence": "static",
+      "file": "src/place-order.ts",
+      "line": 9,
+      "params": [
+        "{placedAt:number;sku:string;quantity:number}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "PLACED_QUEUE_URL"
+        ],
+        "functions": [
+          "orders-place-order"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SNSEvent": {
+      "name": "SNSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "17e8e52b989c5abe",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/reorder.ts",
+      "line": 12,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 HTTP call and 1 publish once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "catalog#src/reorder.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 12
+        },
+        "reaches": [
+          {
+            "id": "http_out:catalog#src/reorder.ts:14:11",
+            "type": "http_out",
+            "words": "HTTP call"
+          },
+          {
+            "id": "producer:catalog#src/reorder.ts:15:11",
+            "type": "producer",
+            "words": "publish"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 1,
+        "entries": [
+          "entry:catalog:invoke:catalog-reorder"
+        ]
+      },
+      "service": "catalog"
+    },
+    {
+      "service": "catalog",
+      "file": "src/reorder.ts",
+      "line": 14,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHOP_API_URL is the address of the API shop, which gateway publishes and the environment catalog-reorder is deployed with imports, so the request is joined among the routes on it, here one orders declares",
+      "hint": "The value is the one the function is deployed with.",
+      "symbol": "http_out:catalog#src/reorder.ts:14:11",
+      "meta": {
+        "variable": "SHOP_API_URL",
+        "value": "shop",
+        "from": "the environment catalog-reorder is deployed with"
+      }
+    },
+    {
+      "file": "template.yaml",
+      "line": 91,
+      "reason": "route-path-unread",
+      "message": "Resources.Legacy.Events.Old is a route of an API another stack creates, which the transform does not take on an event: it requires an API the same template declares",
+      "hint": "Hang the route from the shared API with AWS::ApiGateway::Resource and AWS::ApiGateway::Method (or an AWS::ApiGatewayV2::Route), whose ParentId or ApiId imports it; those are joined to it.",
+      "symbol": "Resources.Legacy.Events.Old",
+      "adapter": "aws-lambda",
+      "service": "catalog"
+    },
+    {
+      "service": "gateway",
+      "file": "serverless.yml",
+      "line": 14,
+      "reason": "export-not-found",
+      "message": "the value of AUDIT_QUEUE_URL the functions of serverless.yml are deployed with is the output AuditQueueUrl of the stack billing-prod, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment declares that output to the configuration, or check the name on both sides.",
+      "symbol": "import:stack:billing-prod#AuditQueueUrl",
+      "meta": {
+        "key": "stack:billing-prod#AuditQueueUrl"
+      }
+    },
+    {
+      "file": "src/audit.ts",
+      "line": 8,
+      "reason": "query-in-loop",
+      "level": "info",
+      "sites": 1,
+      "message": "A `for-of` loop runs 1 publish once per item: likely N+1.",
+      "hint": "Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.",
+      "symbol": "gateway#src/audit.ts:handler",
+      "meta": {
+        "loop": {
+          "kind": "for-of",
+          "line": 8
+        },
+        "reaches": [
+          {
+            "id": "producer:gateway#src/audit.ts:9:11",
+            "type": "producer",
+            "words": "publish"
+          }
+        ],
+        "severity": "likely",
+        "waysIn": 1,
+        "entries": [
+          "entry:gateway:invoke:shop-gateway-prod-audit"
+        ]
+      },
+      "service": "gateway"
+    },
+    {
+      "service": "gateway",
+      "file": "src/audit.ts",
+      "line": 9,
+      "reason": "environment-value-unread",
+      "message": "the call at src/audit.ts:9 sends to the value of AUDIT_QUEUE_URL, which shop-gateway-prod-audit is deployed with as ${cf:billing-prod.AuditQueueUrl}, and that is not read: the value is the output AuditQueueUrl of the stack billing-prod, which another deployment publishes",
+      "hint": "The value is an output another deployment publishes: add the repository that declares it to the configuration, and it is joined to what it names.",
+      "symbol": "producer:gateway#src/audit.ts:9:11",
+      "meta": {
+        "function": "entry:gateway:invoke:shop-gateway-prod-audit",
+        "variable": "AUDIT_QUEUE_URL"
+      }
+    }
+  ]
+}

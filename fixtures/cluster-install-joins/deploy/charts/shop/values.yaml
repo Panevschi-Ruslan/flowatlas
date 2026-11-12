@@ -1,0 +1,5 @@
+metrics:
+  enabled: false
+orders:
+  service:
+    port: 80

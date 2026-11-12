@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:12:43.197Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T18:48:18.623Z",
   "services": [
     {
       "name": "catalogue",
@@ -111,6 +111,15 @@
         "api": "library-dev-catalogue",
         "function": "library-dev-get-item",
         "declaredAs": "aws_apigatewayv2_route.get_item",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-dev-catalogue"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -130,6 +139,15 @@
         "api": "library-dev-catalogue",
         "function": "library-dev-add-item",
         "declaredAs": "aws_apigatewayv2_route.add_item",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "library-dev-catalogue"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

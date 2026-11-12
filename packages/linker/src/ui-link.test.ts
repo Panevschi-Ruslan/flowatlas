@@ -308,3 +308,116 @@ describe('a request behind the part of a route nobody read', () => {
     expect(uiFindingFor(outcome)?.message).toBe('no configured service serves POST /v1/invoices');
   });
 });
+
+/** A GraphQL endpoint of one service: a route carrying a schema. */
+const endpoint = (repo: string, path: string): GraphNode => {
+  const made = route(repo, 'POST', path);
+  return { ...made, meta: { ...made.meta, graphql: { endpoint: true } } };
+};
+
+/**
+ * A GraphQL operation sent under a base nothing read (P266): the read rest of
+ * its address is asked of the services' GraphQL endpoints, and of nothing else.
+ */
+describe('an operation sent under a base nothing read', () => {
+  const operation = (path: string, meta: Record<string, unknown> = {}): GraphNode =>
+    uiCall('web', 'POST', path, { graphql: { operation: 'query', fields: [] }, ...meta });
+
+  it('reaches the one endpoint whose path the read rest names', () => {
+    const index = indexOf({ api: [endpoint('api', '/graphql'), endpoint('api', '/settings'), route('api', 'POST', '/uploads')] });
+    const outcome = resolveUiCall(operation('/${…}/settings'), index);
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'graphql-path', targetService: 'api' });
+    expect(outcome.kind === 'linked' && outcome.entry.id).toBe('entry:api:http:POST:/settings');
+  });
+
+  it('names both where two endpoints end with it', () => {
+    const index = indexOf({ api: [endpoint('api', '/graphql')], legacy: [endpoint('legacy', '/v1/graphql')] });
+    const outcome = resolveUiCall(operation('/${…}/graphql'), index);
+    expect(outcome.kind).toBe('ambiguous');
+    expect(uiFindingFor(outcome)?.message).toBe('api at /graphql and legacy at /v1/graphql both answer POST /${…}/graphql');
+  });
+
+  it('asks only the service its settings key names, where it names one', () => {
+    const index = indexOf({ api: [endpoint('api', '/graphql')], legacy: [endpoint('legacy', '/graphql')] }, { 'web\0API_URL': 'legacy' });
+    const outcome = resolveUiCall(operation('/${…}/graphql', { baseUrlEnv: 'API_URL' }), index);
+    expect(outcome).toMatchObject({ kind: 'linked', targetService: 'legacy' });
+  });
+
+  it('is still partly read for a route that is no endpoint, a request that sends no operation, or a hole after the opening', () => {
+    const index = indexOf({ api: [endpoint('api', '/graphql'), route('api', 'POST', '/uploads')] });
+    expect(resolveUiCall(operation('/${…}/uploads'), index)).toEqual({ kind: 'dynamic', reason: 'api-path-partly-read' });
+    expect(resolveUiCall(uiCall('web', 'POST', '/${…}/graphql'), index)).toEqual({ kind: 'dynamic', reason: 'api-path-partly-read' });
+    expect(resolveUiCall(operation('/${…}/${…}/graphql'), index)).toEqual({ kind: 'dynamic', reason: 'api-path-partly-read' });
+  });
+
+  it('takes a request a GraphQL client sends for an operation, whose document was not read', () => {
+    const index = indexOf({ api: [endpoint('api', '/graphql')] });
+    expect(resolveUiCall(uiCall('web', 'POST', '/${…}/graphql', { client: 'apollo' }), index)).toMatchObject({ kind: 'linked', via: 'graphql-path' });
+  });
+});
+
+/**
+ * A GraphQL operation sent to a setting whose values name no configured
+ * service (P281): the path its values for this machine agree on is asked of
+ * the services' GraphQL endpoints, and joined only where the endpoint serves
+ * a root field the operation asks for.
+ */
+describe('an operation sent to a setting no value of which names a service', () => {
+  const value = (text: string, from: string) => ({ variable: 'STORE_API_URL', value: text, from, deployed: false });
+  const schemaEndpoint = (repo: string, path: string, fields: Record<string, unknown>): GraphNode => {
+    const made = endpoint(repo, path);
+    return { ...made, meta: { ...made.meta, graphql: { endpoint: true, fieldsAt: path, schema: { roots: { query: 'Query', mutation: 'Mutation' }, types: { Mutation: { fields } } } } } };
+  };
+  const operation = (field: string): GraphNode =>
+    uiCall('web', 'POST', '/', { baseUrlEnv: 'STORE_API_URL', client: 'codegen-sdk', graphql: { operation: 'mutation', fields: [{ field }] } });
+  const indexWith = (values: ReturnType<typeof value>[]): UiIndex => ({
+    ...indexOf({ api: [schemaEndpoint('api', '/store-api', { signIn: {} }), schemaEndpoint('api', '/office-api', { signIn: {} })], web: [] }),
+    baseUrlOf: () => ({ kind: 'external', host: 'demo.example.com', found: values[0] as ReturnType<typeof value>, values }),
+  });
+
+  it('reaches the endpoint at the path of the value for running it here, a third party deployment aside', () => {
+    const index = indexWith([value('https://demo.example.com/store-api', 'wrangler.toml'), value('http://localhost:3000/store-api', '.env.example')]);
+    const outcome = resolveUiCall(operation('signIn'), index);
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'graphql-path', targetService: 'api' });
+    expect(outcome.kind === 'linked' && outcome.entry.id).toBe('entry:api:http:POST:/store-api');
+    expect(outcome.kind === 'linked' && outcome.baseUrl?.from).toBe('.env.example');
+  });
+
+  it('is not joined where the endpoint declares none of the root fields, and says which', () => {
+    const index = indexWith([value('http://localhost:3000/store-api', '.env.example')]);
+    const outcome = resolveUiCall(operation('payByCard'), index);
+    expect(outcome).toMatchObject({ kind: 'noRoute', targetService: 'api', unserved: ['Mutation.payByCard'] });
+    expect(uiFindingFor(outcome)?.reason).toBe('graphql-field-no-resolver');
+  });
+
+  it('joins a public host alone only at the one endpoint under its path, and decides nothing from local values that disagree', () => {
+    // Where no value is for this machine, the public host's path is asked of the endpoints under the same rule (P292).
+    expect(resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/store-api', 'wrangler.toml')]))).toMatchObject({ kind: 'linked', via: 'graphql-path' });
+    expect(resolveUiCall(operation('payByCard'), indexWith([value('https://demo.example.com/store-api', 'wrangler.toml')]))).toMatchObject({ kind: 'noRoute', unserved: ['Mutation.payByCard'] });
+    expect(resolveUiCall(operation('signIn'), indexWith([value('https://demo.example.com/graphql', 'wrangler.toml')])).kind).toBe('noRoute');
+    const disagreeing = [value('http://localhost:3000/store-api', '.env'), value('http://localhost:3000/office-api', '.env.example')];
+    // Values for this machine that disagree settle nothing: no value is the one the request goes under.
+    const split: UiIndex = { ...indexWith(disagreeing), baseUrlOf: () => ({ kind: 'unsettled', values: disagreeing, services: [], namedOnly: [] }) };
+    expect(resolveUiCall(operation('signIn'), split)).toMatchObject({ kind: 'noRoute', targetService: null });
+  });
+});
+
+describe('a request rooted at a setting whose value is a host no service is reached at (P280)', () => {
+  const external = (value: string): UiIndex['baseUrlOf'] => () => ({
+    kind: 'external',
+    host: 'api.example.test',
+    found: { variable: 'apiUrl', value, from: 'src/environments/environment.ts', deployed: false },
+  });
+
+  it("reaches the one service serving the address under the value's path, as a guess", () => {
+    const index = { ...indexOf({ api: [route('api', 'GET', '/api/products/:param')] }), baseUrlOf: external('https://api.example.test/api') };
+    const outcome = resolveUiCall(uiCall('web', 'GET', '/products/:param', { baseUrlEnv: 'apiUrl' }), index);
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'unique-route', targetService: 'api' });
+  });
+
+  it('reaches the address as written where nothing serves it under that path', () => {
+    const index = { ...indexOf({ api: [route('api', 'GET', '/products')] }), baseUrlOf: external('https://api.example.test/v2') };
+    const outcome = resolveUiCall(uiCall('web', 'GET', '/products', { baseUrlEnv: 'apiUrl' }), index);
+    expect(outcome).toMatchObject({ kind: 'linked', via: 'unique-route', targetService: 'api' });
+  });
+});

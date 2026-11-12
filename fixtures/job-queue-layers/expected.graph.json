@@ -1,0 +1,2578 @@
+{
+  "schemaVersion": 7,
+  "repo": "job-queue-layers",
+  "generatedAt": "2026-11-12T19:10:39.645Z",
+  "nodes": [
+    {
+      "id": "channel:archive-order",
+      "type": "channel",
+      "label": "archive-order",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 22,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:close-month",
+      "type": "channel",
+      "label": "close-month",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 77,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:invoices",
+      "type": "channel",
+      "label": "invoices",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 17,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:mail",
+      "type": "channel",
+      "label": "mail",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 12,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:make-thumbnail",
+      "type": "channel",
+      "label": "make-thumbnail",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 32,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:nightly-report",
+      "type": "channel",
+      "label": "nightly-report",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 58,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:notify-staff",
+      "type": "channel",
+      "label": "notify-staff",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 32,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:ping-partner",
+      "type": "channel",
+      "label": "ping-partner",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 44,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:ping-partner-parallel",
+      "type": "channel",
+      "label": "ping-partner-parallel",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 44,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:restore-order",
+      "type": "channel",
+      "label": "restore-order",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 27,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "consumer:job-queue-layers#src/jobs/job-queue.ts:archiveOrder@src/jobs/job-queue.ts:54",
+      "type": "consumer",
+      "label": "archiveOrder",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-queue-layers:event:archive-order"
+      }
+    },
+    {
+      "id": "consumer:job-queue-layers#src/jobs/job-queue.ts:makeThumbnail@src/jobs/job-queue.ts:54",
+      "type": "consumer",
+      "label": "makeThumbnail",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-queue-layers:event:make-thumbnail"
+      }
+    },
+    {
+      "id": "consumer:job-queue-layers#src/jobs/job-queue.ts:notifyStaff@src/jobs/job-queue.ts:54",
+      "type": "consumer",
+      "label": "notifyStaff",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-queue-layers:event:notify-staff"
+      }
+    },
+    {
+      "id": "consumer:job-queue-layers#src/jobs/job-queue.ts:pingPartner@src/jobs/job-queue.ts:54",
+      "type": "consumer",
+      "label": "pingPartner",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-queue-layers:event:ping-partner"
+      }
+    },
+    {
+      "id": "consumer:job-queue-layers#src/jobs/job-queue.ts:runReport@src/jobs/job-queue.ts:54",
+      "type": "consumer",
+      "label": "runReport",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-queue-layers:event:close-month"
+      }
+    },
+    {
+      "id": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
+      "type": "consumer",
+      "label": "startWorkers",
+      "repo": "job-queue-layers",
+      "file": "src/queues/bull.service.ts",
+      "line": 21,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-queue-layers:event:invoices",
+        "through": [
+          "BullService.openWorker",
+          "MailWorker",
+          "InvoiceWorker"
+        ]
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:event:archive-order",
+      "type": "entry",
+      "label": "event archive-order",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "pattern": "archive-order",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:event:close-month",
+      "type": "entry",
+      "label": "event close-month",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "pattern": "close-month",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:event:invoices",
+      "type": "entry",
+      "label": "event invoices",
+      "repo": "job-queue-layers",
+      "file": "src/queues/bull.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "invoices",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:event:mail",
+      "type": "entry",
+      "label": "event mail",
+      "repo": "job-queue-layers",
+      "file": "src/queues/bull.service.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "mail",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:event:make-thumbnail",
+      "type": "entry",
+      "label": "event make-thumbnail",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "pattern": "make-thumbnail",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:event:nightly-report",
+      "type": "entry",
+      "label": "event nightly-report",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "pattern": "nightly-report",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:event:notify-staff",
+      "type": "entry",
+      "label": "event notify-staff",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "pattern": "notify-staff",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:event:ping-partner",
+      "type": "entry",
+      "label": "event ping-partner",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "pattern": "ping-partner",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:event:ping-partner-parallel",
+      "type": "entry",
+      "label": "event ping-partner-parallel",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "pattern": "ping-partner-parallel",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:event:restore-order",
+      "type": "entry",
+      "label": "event restore-order",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "kind": "event",
+      "meta": {
+        "pattern": "restore-order",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:http:POST:/images",
+      "type": "entry",
+      "label": "POST /images",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 31,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/images",
+        "rawPath": "/images",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:http:POST:/months/:param/close",
+      "type": "entry",
+      "label": "POST /months/:param/close",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 55,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/months/:param/close",
+        "rawPath": "/months/:month/close",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:http:POST:/orders/:param/archive",
+      "type": "entry",
+      "label": "POST /orders/:param/archive",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/archive",
+        "rawPath": "/orders/:orderId/archive",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "label": "POST /orders/:param/invoice",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/invoice",
+        "rawPath": "/orders/:orderId/invoice",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:http:POST:/orders/:param/restore",
+      "type": "entry",
+      "label": "POST /orders/:param/restore",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 26,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/restore",
+        "rawPath": "/orders/:orderId/restore",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:http:POST:/partners/:param/ping",
+      "type": "entry",
+      "label": "POST /partners/:param/ping",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 42,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/partners/:param/ping",
+        "rawPath": "/partners/:partnerId/ping",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:http:POST:/reports/nightly",
+      "type": "entry",
+      "label": "POST /reports/nightly",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 48,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/reports/nightly",
+        "rawPath": "/reports/nightly",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:http:POST:/signup",
+      "type": "entry",
+      "label": "POST /signup",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/signup",
+        "rawPath": "/signup",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-queue-layers:http:POST:/staff/notify",
+      "type": "entry",
+      "label": "POST /staff/notify",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 36,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/staff/notify",
+        "rawPath": "/staff/notify",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:JobQueue",
+      "type": "provider",
+      "label": "JobQueue",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 47,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.addAfterChildren",
+      "type": "method",
+      "label": "JobQueue.addAfterChildren",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 68,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "parent",
+              "type": "{type:type:job-queue-layers#JobType;payload:object}"
+            },
+            {
+              "name": "children",
+              "type": "{type:type:job-queue-layers#JobType;payload:object}[]"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.closeMonth",
+      "type": "method",
+      "label": "JobQueue.closeMonth",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 76,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "month",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.createJob",
+      "type": "method",
+      "label": "JobQueue.createJob",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 61,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "{type:type:job-queue-layers#JobType;payload:object}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.flowJob",
+      "type": "method",
+      "label": "JobQueue.flowJob",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 85,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "{type:type:job-queue-layers#JobType;payload:object}"
+            }
+          ],
+          "returns": "{name:'job';queueName:type:job-queue-layers#JobType;data:object}"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.init",
+      "type": "method",
+      "label": "JobQueue.init",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 51,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:archiveOrder",
+      "type": "function",
+      "label": "archiveOrder",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "archive",
+            "at": 16
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:makeThumbnail",
+      "type": "function",
+      "label": "makeThumbnail",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "thumbnail",
+            "at": 20
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:notifyStaff",
+      "type": "function",
+      "label": "notifyStaff",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "notify",
+            "at": 24
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:pingPartner",
+      "type": "function",
+      "label": "pingPartner",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 27,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "ping",
+            "at": 28
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-queue.ts:runReport",
+      "type": "function",
+      "label": "runReport",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "report",
+            "at": 32
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-records.ts:audit",
+      "type": "function",
+      "label": "audit",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-records.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "audit",
+            "at": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-records.ts:buildArchiveJob",
+      "type": "function",
+      "label": "buildArchiveJob",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-records.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "{orderId:string;type:'archive-order'|'restore-order'}"
+            }
+          ],
+          "returns": "{type:'archive-order'|'restore-order';payload:{orderId:string}}"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-records.ts:buildNotifyJob",
+      "type": "function",
+      "label": "buildNotifyJob",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-records.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "target",
+              "type": "string"
+            }
+          ],
+          "returns": "{type:type:job-queue-layers#JobType;payload:object}"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/jobs/job-records.ts:buildThumbnailJobIfNeeded",
+      "type": "function",
+      "label": "buildThumbnailJobIfNeeded",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-records.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "{imageUrl:string;notify:boolean}"
+            }
+          ],
+          "returns": "{type:type:job-queue-layers#JobType;payload:object}"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/queues/bull.service.ts:BullService",
+      "type": "provider",
+      "label": "BullService",
+      "repo": "job-queue-layers",
+      "file": "src/queues/bull.service.ts",
+      "line": 8,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-queue-layers#src/queues/bull.service.ts:BullService.add",
+      "type": "method",
+      "label": "BullService.add",
+      "repo": "job-queue-layers",
+      "file": "src/queues/bull.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/queues/bull.service.ts:BullService.openQueue",
+      "type": "method",
+      "label": "BullService.openQueue",
+      "repo": "job-queue-layers",
+      "file": "src/queues/bull.service.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "topic",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/queues/bull.service.ts:BullService.openWorker",
+      "type": "method",
+      "label": "BullService.openWorker",
+      "repo": "job-queue-layers",
+      "file": "src/queues/bull.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "topic",
+              "type": "string"
+            },
+            {
+              "name": "processor",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/queues/queue-base.ts:QueueBase",
+      "type": "provider",
+      "label": "QueueBase",
+      "repo": "job-queue-layers",
+      "file": "src/queues/queue-base.ts",
+      "line": 15,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-queue-layers#src/queues/queue-base.ts:QueueBase.add",
+      "type": "method",
+      "label": "QueueBase.add",
+      "repo": "job-queue-layers",
+      "file": "src/queues/queue-base.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:job-queue-layers#QueuedJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/queues/queue-base.ts:QueueBase.addToBull",
+      "type": "method",
+      "label": "QueueBase.addToBull",
+      "repo": "job-queue-layers",
+      "file": "src/queues/queue-base.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:job-queue-layers#QueuedJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/queues/queue-base.ts:QueueBase.open",
+      "type": "method",
+      "label": "QueueBase.open",
+      "repo": "job-queue-layers",
+      "file": "src/queues/queue-base.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/queues/queue-base.ts:WorkerBase",
+      "type": "provider",
+      "label": "WorkerBase",
+      "repo": "job-queue-layers",
+      "file": "src/queues/queue-base.ts",
+      "line": 53,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-queue-layers#src/queues/queue-base.ts:WorkerBase.start",
+      "type": "method",
+      "label": "WorkerBase.start",
+      "repo": "job-queue-layers",
+      "file": "src/queues/queue-base.ts",
+      "line": 59,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "processor",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
+      "type": "function",
+      "label": "startWorkers",
+      "repo": "job-queue-layers",
+      "file": "src/queues/queue-base.ts",
+      "line": 76,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "mail to",
+            "at": 78
+          },
+          {
+            "level": "log",
+            "text": "invoice for",
+            "at": 81
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-queue-layers#src/server.ts:POST /images@31",
+      "type": "function",
+      "label": "POST /images@31",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/server.ts:POST /months/:month/close@55",
+      "type": "function",
+      "label": "POST /months/:month/close@55",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 55,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/server.ts:POST /orders/:orderId/archive@21",
+      "type": "function",
+      "label": "POST /orders/:orderId/archive@21",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/server.ts:POST /orders/:orderId/invoice@16",
+      "type": "function",
+      "label": "POST /orders/:orderId/invoice@16",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/server.ts:POST /orders/:orderId/restore@26",
+      "type": "function",
+      "label": "POST /orders/:orderId/restore@26",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/server.ts:POST /partners/:partnerId/ping@42",
+      "type": "function",
+      "label": "POST /partners/:partnerId/ping@42",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 42,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/server.ts:POST /reports/nightly@48",
+      "type": "function",
+      "label": "POST /reports/nightly@48",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 48,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/server.ts:POST /signup@11",
+      "type": "function",
+      "label": "POST /signup@11",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-queue-layers#src/server.ts:POST /staff/notify@36",
+      "type": "function",
+      "label": "POST /staff/notify@36",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:job-queue-layers#src/jobs/job-queue.ts:58:5",
+      "type": "producer",
+      "label": "job nightly-report",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 58,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "upsertJobScheduler",
+        "jobName": null
+      }
+    },
+    {
+      "id": "producer:job-queue-layers#src/jobs/job-queue.ts:77:12",
+      "type": "producer",
+      "label": "job close-month, archive-order",
+      "repo": "job-queue-layers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 77,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": null,
+        "jobNames": [
+          "archive",
+          "close"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-queue-layers#src/server.ts:12:9",
+      "type": "producer",
+      "label": "job mail",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 12,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "add",
+        "jobName": "welcome",
+        "through": [
+          "BullService.add",
+          "QueueBase.addToBull",
+          "QueueBase.add"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-queue-layers#src/server.ts:17:9",
+      "type": "producer",
+      "label": "job invoices",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 17,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "add",
+        "jobName": "issue-invoice",
+        "through": [
+          "BullService.add",
+          "QueueBase.addToBull",
+          "QueueBase.add"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-queue-layers#src/server.ts:22:9",
+      "type": "producer",
+      "label": "job archive-order",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 22,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.createJob"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-queue-layers#src/server.ts:27:9",
+      "type": "producer",
+      "label": "job restore-order",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 27,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.createJob"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-queue-layers#src/server.ts:32:9",
+      "type": "producer",
+      "label": "job make-thumbnail, notify-staff",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 32,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.createJob"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-queue-layers#src/server.ts:38:9",
+      "type": "producer",
+      "label": "job notify-staff",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 38,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.createJob"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-queue-layers#src/server.ts:44:9",
+      "type": "producer",
+      "label": "job ping-partner-parallel, ping-partner",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 44,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.createJob"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-queue-layers#src/server.ts:51:9",
+      "type": "producer",
+      "label": "job nightly-report, archive-order",
+      "repo": "job-queue-layers",
+      "file": "src/server.ts",
+      "line": 51,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.addAfterChildren"
+        ]
+      }
+    },
+    {
+      "id": "repo:job-queue-layers",
+      "type": "repo",
+      "label": "job-queue-layers",
+      "repo": "job-queue-layers",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 8,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 62
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:archive-order",
+      "to": "consumer:job-queue-layers#src/jobs/job-queue.ts:archiveOrder@src/jobs/job-queue.ts:54",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "channel:close-month",
+      "to": "consumer:job-queue-layers#src/jobs/job-queue.ts:runReport@src/jobs/job-queue.ts:54",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "channel:invoices",
+      "to": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/queues/bull.service.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:mail",
+      "to": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/queues/bull.service.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:make-thumbnail",
+      "to": "consumer:job-queue-layers#src/jobs/job-queue.ts:makeThumbnail@src/jobs/job-queue.ts:54",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "channel:nightly-report",
+      "to": "consumer:job-queue-layers#src/jobs/job-queue.ts:runReport@src/jobs/job-queue.ts:54",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "channel:notify-staff",
+      "to": "consumer:job-queue-layers#src/jobs/job-queue.ts:notifyStaff@src/jobs/job-queue.ts:54",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "channel:ping-partner",
+      "to": "consumer:job-queue-layers#src/jobs/job-queue.ts:pingPartner@src/jobs/job-queue.ts:54",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "channel:ping-partner-parallel",
+      "to": "consumer:job-queue-layers#src/jobs/job-queue.ts:pingPartner@src/jobs/job-queue.ts:54",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "channel:restore-order",
+      "to": "consumer:job-queue-layers#src/jobs/job-queue.ts:archiveOrder@src/jobs/job-queue.ts:54",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "consumer:job-queue-layers#src/jobs/job-queue.ts:archiveOrder@src/jobs/job-queue.ts:54",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:archiveOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "consumer:job-queue-layers#src/jobs/job-queue.ts:makeThumbnail@src/jobs/job-queue.ts:54",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:makeThumbnail",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "consumer:job-queue-layers#src/jobs/job-queue.ts:notifyStaff@src/jobs/job-queue.ts:54",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:notifyStaff",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "consumer:job-queue-layers#src/jobs/job-queue.ts:pingPartner@src/jobs/job-queue.ts:54",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:pingPartner",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "consumer:job-queue-layers#src/jobs/job-queue.ts:runReport@src/jobs/job-queue.ts:54",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:runReport",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54
+    },
+    {
+      "from": "consumer:job-queue-layers#src/queues/queue-base.ts:startWorkers@src/queues/bull.service.ts:21",
+      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull.service.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:job-queue-layers:event:archive-order",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:archiveOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:event:close-month",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:runReport",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:event:invoices",
+      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull.service.ts",
+      "line": 21,
+      "params": [],
+      "returns": "void",
+      "signature": {
+        "params": [],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:event:mail",
+      "to": "job-queue-layers#src/queues/queue-base.ts:startWorkers",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull.service.ts",
+      "line": 21,
+      "params": [],
+      "returns": "void",
+      "signature": {
+        "params": [],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:event:make-thumbnail",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:makeThumbnail",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:event:nightly-report",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:runReport",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:event:notify-staff",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:notifyStaff",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:event:ping-partner",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:pingPartner",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:event:ping-partner-parallel",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:pingPartner",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:event:restore-order",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:archiveOrder",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:http:POST:/images",
+      "to": "job-queue-layers#src/server.ts:POST /images@31",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 31,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:http:POST:/months/:param/close",
+      "to": "job-queue-layers#src/server.ts:POST /months/:month/close@55",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 55,
+      "meta": {
+        "requestRead": true,
+        "params": "{month:string}"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:http:POST:/orders/:param/archive",
+      "to": "job-queue-layers#src/server.ts:POST /orders/:orderId/archive@21",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 21,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:http:POST:/orders/:param/invoice",
+      "to": "job-queue-layers#src/server.ts:POST /orders/:orderId/invoice@16",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 16,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:http:POST:/orders/:param/restore",
+      "to": "job-queue-layers#src/server.ts:POST /orders/:orderId/restore@26",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 26,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:http:POST:/partners/:param/ping",
+      "to": "job-queue-layers#src/server.ts:POST /partners/:partnerId/ping@42",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 42,
+      "meta": {
+        "requestRead": true,
+        "params": "{partnerId:string}"
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:http:POST:/reports/nightly",
+      "to": "job-queue-layers#src/server.ts:POST /reports/nightly@48",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 48,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:http:POST:/signup",
+      "to": "job-queue-layers#src/server.ts:POST /signup@11",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:job-queue-layers:http:POST:/staff/notify",
+      "to": "job-queue-layers#src/server.ts:POST /staff/notify@36",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 36,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.addAfterChildren",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.flowJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 70,
+      "params": [
+        "{type:type:job-queue-layers#JobType;payload:object}"
+      ],
+      "returns": "{name:'job';queueName:type:job-queue-layers#JobType;data:object}"
+    },
+    {
+      "from": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.closeMonth",
+      "to": "producer:job-queue-layers#src/jobs/job-queue.ts:77:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/jobs/job-queue.ts",
+      "line": 77
+    },
+    {
+      "from": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.init",
+      "to": "producer:job-queue-layers#src/jobs/job-queue.ts:58:5",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/jobs/job-queue.ts",
+      "line": 58
+    },
+    {
+      "from": "job-queue-layers#src/jobs/job-records.ts:buildArchiveJob",
+      "to": "job-queue-layers#src/jobs/job-records.ts:audit",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/jobs/job-records.ts",
+      "line": 10,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-queue-layers#src/jobs/job-records.ts:buildThumbnailJobIfNeeded",
+      "to": "job-queue-layers#src/jobs/job-records.ts:buildNotifyJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/jobs/job-records.ts",
+      "line": 19,
+      "params": [
+        "string"
+      ],
+      "returns": "{type:type:job-queue-layers#JobType;payload:object}"
+    },
+    {
+      "from": "job-queue-layers#src/queues/queue-base.ts:QueueBase.add",
+      "to": "job-queue-layers#src/queues/queue-base.ts:QueueBase.addToBull",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 30,
+      "params": [
+        "type:job-queue-layers#QueuedJob"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-queue-layers#src/queues/queue-base.ts:QueueBase.addToBull",
+      "to": "job-queue-layers#src/queues/bull.service.ts:BullService.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 34,
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-queue-layers#src/queues/queue-base.ts:QueueBase.open",
+      "to": "job-queue-layers#src/queues/bull.service.ts:BullService.openQueue",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 26,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-queue-layers#src/queues/queue-base.ts:WorkerBase.start",
+      "to": "job-queue-layers#src/queues/bull.service.ts:BullService.openWorker",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 60,
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /images@31",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.createJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 32,
+      "params": [
+        "{type:type:job-queue-layers#JobType;payload:object}"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /images@31",
+      "to": "job-queue-layers#src/jobs/job-records.ts:buildThumbnailJobIfNeeded",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 32,
+      "params": [
+        "{imageUrl:string;notify:boolean}"
+      ],
+      "returns": "{type:type:job-queue-layers#JobType;payload:object}"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /images@31",
+      "to": "producer:job-queue-layers#src/server.ts:32:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 32
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /months/:month/close@55",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.closeMonth",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 56,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /orders/:orderId/archive@21",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.createJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 22,
+      "params": [
+        "{type:type:job-queue-layers#JobType;payload:object}"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /orders/:orderId/archive@21",
+      "to": "job-queue-layers#src/jobs/job-records.ts:buildArchiveJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 22,
+      "params": [
+        "{orderId:string;type:'archive-order'|'restore-order'}"
+      ],
+      "returns": "{type:'archive-order'|'restore-order';payload:{orderId:string}}"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /orders/:orderId/archive@21",
+      "to": "producer:job-queue-layers#src/server.ts:22:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 22
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /orders/:orderId/invoice@16",
+      "to": "job-queue-layers#src/queues/queue-base.ts:QueueBase.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 17,
+      "params": [
+        "type:job-queue-layers#QueuedJob"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /orders/:orderId/invoice@16",
+      "to": "producer:job-queue-layers#src/server.ts:17:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 17
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /orders/:orderId/restore@26",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.createJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 27,
+      "params": [
+        "{type:type:job-queue-layers#JobType;payload:object}"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /orders/:orderId/restore@26",
+      "to": "job-queue-layers#src/jobs/job-records.ts:buildArchiveJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 27,
+      "params": [
+        "{orderId:string;type:'archive-order'|'restore-order'}"
+      ],
+      "returns": "{type:'archive-order'|'restore-order';payload:{orderId:string}}"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /orders/:orderId/restore@26",
+      "to": "producer:job-queue-layers#src/server.ts:27:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 27
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /partners/:partnerId/ping@42",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.createJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 44,
+      "params": [
+        "{type:type:job-queue-layers#JobType;payload:object}"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /partners/:partnerId/ping@42",
+      "to": "producer:job-queue-layers#src/server.ts:44:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 44
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /reports/nightly@48",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.addAfterChildren",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 51,
+      "params": [
+        "{type:type:job-queue-layers#JobType;payload:object}",
+        "{type:type:job-queue-layers#JobType;payload:object}[]"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /reports/nightly@48",
+      "to": "producer:job-queue-layers#src/server.ts:51:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 51
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /signup@11",
+      "to": "job-queue-layers#src/queues/queue-base.ts:QueueBase.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 12,
+      "params": [
+        "type:job-queue-layers#QueuedJob"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /signup@11",
+      "to": "producer:job-queue-layers#src/server.ts:12:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 12
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /staff/notify@36",
+      "to": "job-queue-layers#src/jobs/job-queue.ts:JobQueue.createJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 38,
+      "params": [
+        "{type:type:job-queue-layers#JobType;payload:object}"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /staff/notify@36",
+      "to": "job-queue-layers#src/jobs/job-records.ts:buildNotifyJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 37,
+      "params": [
+        "string"
+      ],
+      "returns": "{type:type:job-queue-layers#JobType;payload:object}"
+    },
+    {
+      "from": "job-queue-layers#src/server.ts:POST /staff/notify@36",
+      "to": "producer:job-queue-layers#src/server.ts:38:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 38
+    },
+    {
+      "from": "producer:job-queue-layers#src/jobs/job-queue.ts:58:5",
+      "to": "channel:nightly-report",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/jobs/job-queue.ts",
+      "line": 58,
+      "params": [
+        "object"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/jobs/job-queue.ts:77:12",
+      "to": "channel:archive-order",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/jobs/job-queue.ts",
+      "line": 77,
+      "params": [
+        "{month:string}"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/jobs/job-queue.ts:77:12",
+      "to": "channel:close-month",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/jobs/job-queue.ts",
+      "line": 77,
+      "params": [
+        "{month:string}"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:12:9",
+      "to": "channel:mail",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 12,
+      "params": [
+        "{email:string}"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:17:9",
+      "to": "channel:invoices",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 17,
+      "params": [
+        "{orderId:any}"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:22:9",
+      "to": "channel:archive-order",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 22,
+      "params": [
+        "{orderId:string}"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:27:9",
+      "to": "channel:restore-order",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 27,
+      "params": [
+        "{orderId:string}"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:32:9",
+      "to": "channel:make-thumbnail",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 32,
+      "params": [
+        "object"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:32:9",
+      "to": "channel:notify-staff",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 32,
+      "params": [
+        "object"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:38:9",
+      "to": "channel:notify-staff",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 38,
+      "params": [
+        "{target:string}"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:44:9",
+      "to": "channel:ping-partner",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 44,
+      "params": [
+        "{partnerId:any}"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:44:9",
+      "to": "channel:ping-partner-parallel",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 44,
+      "params": [
+        "{partnerId:any}"
+      ]
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:51:9",
+      "to": "channel:archive-order",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 51
+    },
+    {
+      "from": "producer:job-queue-layers#src/server.ts:51:9",
+      "to": "channel:nightly-report",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 51
+    }
+  ],
+  "types": {
+    "type:job-queue-layers#JobType": {
+      "name": "JobType",
+      "kind": "union",
+      "declaredIn": "job-queue-layers#src/jobs/job-queue.ts",
+      "structuralHash": "e8e8ba8eb98fbd10",
+      "members": [
+        "'archive-order'",
+        "'restore-order'",
+        "'make-thumbnail'",
+        "'notify-staff'",
+        "'ping-partner'",
+        "'ping-partner-parallel'",
+        "'nightly-report'",
+        "'close-month'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:job-queue-layers#QueuedJob": {
+      "name": "QueuedJob",
+      "kind": "object",
+      "declaredIn": "job-queue-layers#src/queues/queue-base.ts",
+      "structuralHash": "0919d99b59c3992a",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "data",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ orderId: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ imageUrl: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 23,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ target: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 27,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ partnerId: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 31,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 54,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The method is chosen at run time; nothing static to point at.",
+      "symbol": "JobQueue.init -> processors[type]",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 19,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 13,
+                "symbol": "POST /signup@11 -> res.status(202).end"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 13,
+                "symbol": "POST /signup@11 -> res.status"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 18,
+                "symbol": "POST /orders/:orderId/invoice@16 -> res.status(202).end"
+              }
+            ]
+          },
+          {
+            "cause": "dynamic-member",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/jobs/job-queue.ts",
+                "line": 54,
+                "symbol": "JobQueue.init -> processors[type]"
+              }
+            ]
+          }
+        ]
+      },
+      "sites": 20
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 61,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 68,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 76,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
+    {
+      "file": "src/queues/bull.service.ts",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Processor",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/bull.service.ts",
+      "line": 21,
+      "reason": "consumer-handler-unresolved",
+      "hint": "The processor a caller hands in does more than delegate, so the chain stops at the body that caller writes it in.",
+      "symbol": "BullService.openWorker -> new Worker"
+    },
+    {
+      "file": "src/queues/queue-base.ts",
+      "line": 59,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Processor",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/server.ts",
+      "line": 51,
+      "reason": "payload-type-unknown",
+      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
+      "symbol": "nightly-report"
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:45:59.811Z",
+  "configHash": "1e03572902a2",
+  "services": [
+    {
+      "name": "relay",
+      "repo": "./relay",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 34,
+      "edges": 24,
+      "types": 2,
+      "unresolved": 5,
+      "durationMs": 3785,
+      "packages": {
+        "name": "relay",
+        "runtime": [
+          "@aws-sdk/client-kinesis",
+          "@aws-sdk/client-lambda",
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 1,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 3,
+    "linked": 3,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 1,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 2,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "relay",
+      "file": "src/archiver.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/archiver.ts:9 does not say where it sends: streams.get(event.region) is looked up in streams by event.region, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; Resources.Archiver (name generated when deployed) runs it and is granted only kinesis/shop-archive, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:relay#src/archiver.ts:9:9",
+      "meta": {
+        "granted": [
+          "kinesis/shop-archive"
+        ],
+        "functions": [
+          "Resources.Archiver (name generated when deployed)"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    },
+    {
+      "service": "relay",
+      "file": "src/checkout.ts",
+      "line": 3,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHOP_API is !Sub ... in the environment Resources.Checkout (name generated when deployed) is deployed with: the address of the API template.yaml#Resources.ShopApi relay serves, built around a reference to it, so the request is joined among its routes",
+      "hint": "The value is the one the function is deployed with.",
+      "symbol": "http_out:relay#src/checkout.ts:3:26",
+      "meta": {
+        "variable": "SHOP_API",
+        "value": "template.yaml#Resources.ShopApi",
+        "from": "the environment Resources.Checkout (name generated when deployed) is deployed with"
+      }
+    },
+    {
+      "service": "relay",
+      "file": "src/dispatcher.ts",
+      "line": 19,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/dispatcher.ts:19 does not say where it sends: queueUrl is looked up in queues by event.kind, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; Resources.Dispatcher (name generated when deployed) runs it and is granted only sqs/${…}@Resources.OrdersQueue, sqs/${…}@Resources.RefundsQueue, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:relay#src/dispatcher.ts:19:9",
+      "meta": {
+        "granted": [
+          "sqs/${…}@Resources.OrdersQueue",
+          "sqs/${…}@Resources.RefundsQueue"
+        ],
+        "functions": [
+          "Resources.Dispatcher (name generated when deployed)"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    },
+    {
+      "service": "relay",
+      "file": "src/router.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/router.ts:9 does not say where it sends: The name of the function this starts is not written where it can be read; Resources.Router (name generated when deployed) runs it and is granted only ${…}@Resources.PlaceOrder, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:relay#src/router.ts:9:9",
+      "meta": {
+        "granted": [
+          "${…}@Resources.PlaceOrder"
+        ],
+        "functions": [
+          "Resources.Router (name generated when deployed)"
+        ],
+        "unread": [
+          "start-name-unread"
+        ]
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 34,
+    "edges": 29,
+    "types": 2,
+    "missed": 2,
+    "sites": 8,
+    "notes": 5,
+    "findings": 0,
+    "unresolved": 2
+  }
+}

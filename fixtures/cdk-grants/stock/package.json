@@ -1,0 +1,11 @@
+{
+  "name": "stock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A shop's stock moves as a CDK app: a function that sends where its code decides when it runs, allowed only where the app grants it.",
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.700.0",
+    "aws-cdk-lib": "^2.170.0",
+    "constructs": "^10.4.0"
+  }
+}

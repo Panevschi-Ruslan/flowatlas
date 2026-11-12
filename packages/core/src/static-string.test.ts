@@ -21,6 +21,7 @@ function query(filters?: Record<string, string>): string {
 }
 const qs = query();
 const anything = String(Math.random());
+const signup = anything ? \`/api/signup?\${anything}\` : '/api/signup';
 
 export const values = {
   literal: '/orders',
@@ -49,6 +50,8 @@ export const values = {
   joinedNumber: '/api/v' + 1,
   joinedUnreadable: '/api/' + anything,
   joinedBoolean: '/api/' + true,
+  sameRouteEitherWay: signup,
+  otherRouteEachWay: anything ? '/api/signup' : '/api/login',
 };
 `;
 
@@ -214,5 +217,11 @@ describe('a string written in two pieces with a plus', () => {
 
   it('reads nothing when a plus is doing something other than joining text', () => {
     expect(of('joinedBoolean')).toBeNull();
+  });
+
+  // P279: the query is the request's; the address it asks for is one either way.
+  it('reads a condition whose branches differ only in their query as the address with its query unread', () => {
+    expect(of('sameRouteEitherWay')?.value).toBe('/api/signup?${…}');
+    expect(of('otherRouteEachWay')).toBeNull();
   });
 });

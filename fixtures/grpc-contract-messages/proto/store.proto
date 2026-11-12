@@ -1,0 +1,65 @@
+// The store's contract, shared by every service of the project.
+syntax = "proto3";
+
+package store;
+
+import "google/protobuf/timestamp.proto";
+
+service InventoryService {
+  rpc Reserve (ReserveRequest) returns (Reservation);
+  rpc Release (ReleaseRequest) returns (Reservation);
+  rpc CountStock (CountRequest) returns (StockCount);
+}
+
+service PricingService {
+  rpc Quote (QuoteRequest) returns (PriceQuote);
+}
+
+message ReserveRequest {
+  string sku = 1;
+  int32 quantity = 2;
+  repeated string warehouse_ids = 3;
+}
+
+message Reservation {
+  string reservation_id = 1;
+  Status status = 2;
+  google.protobuf.Timestamp expires_at = 3;
+
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    HELD = 1;
+    RELEASED = 2;
+  }
+}
+
+message ReleaseRequest { string reservation_id = 1; }
+
+message CountRequest { string sku = 1; }
+
+message StockCount { int64 available = 1; }
+
+message QuoteRequest {
+  repeated Line lines = 1;
+  string currency_code = 2;
+  oneof discount {
+    string coupon_code = 3;
+    uint32 loyalty_points = 4;
+  }
+
+  message Line {
+    string sku = 1;
+    int32 quantity = 2;
+  }
+}
+
+message PriceQuote {
+  Money total = 1;
+  map<string, Money> by_line = 2;
+}
+
+message Money {
+  string currency_code = 1;
+  int64 units = 2;
+  int32 nanos = 3;
+}

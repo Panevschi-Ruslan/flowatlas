@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T19:16:29.060Z",
+  "configHash": "7bf8c1d84d05",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 29,
+      "edges": 10,
+      "types": 4,
+      "unresolved": 2,
+      "durationMs": 1237,
+      "packages": {
+        "name": "rewrite-branches-composed-sends-api",
+        "runtime": [
+          "@nestjs/apollo",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/graphql",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 19,
+      "edges": 15,
+      "types": 0,
+      "unresolved": 4,
+      "durationMs": 980,
+      "packages": {
+        "name": "rewrite-branches-composed-sends-web",
+        "runtime": [
+          "@urql/core",
+          "axios",
+          "fp-ts",
+          "graphql",
+          "graphql-request",
+          "graphql-tag",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1323,
+      "packages": {
+        "name": "rewrite-branches-composed-sends-worker",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 2,
+    "linked": 1,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 1,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 9,
+    "resolved": 8,
+    "unresolved": 1,
+    "byReason": {
+      "api-path-partly-read": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 7,
+    "called": 6,
+    "uncalled": [
+      "entry:worker:http:POST:/sync/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 4,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/pages/AccountPage.tsx",
+      "line": 14,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…}/:param/list is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/pages/AccountPage.tsx:14:11"
+    },
+    {
+      "service": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "CATALOG_URL is https://catalog.example.test/api/catalog in .env.example, which is taken as api",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add CATALOG_URL to services[].baseUrlEnv of api to say so outright.",
+      "symbol": "http_out:worker#src/sync.controller.ts:7:24",
+      "meta": {
+        "variable": "CATALOG_URL",
+        "value": "https://catalog.example.test/api/catalog",
+        "from": ".env.example"
+      }
+    },
+    {
+      "service": "worker",
+      "file": "src/sync.controller.ts",
+      "line": 8,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "RATES_URL is https://rates.example.test/v3 in .env.example, which is taken as rates.example.test",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add RATES_URL to services[].baseUrlEnv of rates.example.test to say so outright.",
+      "symbol": "http_out:worker#src/sync.controller.ts:8:25",
+      "meta": {
+        "variable": "RATES_URL",
+        "value": "https://rates.example.test/v3",
+        "from": ".env.example"
+      }
+    }
+  ],
+  "totals": {
+    "nodes": 60,
+    "edges": 45,
+    "types": 4,
+    "missed": 7,
+    "sites": 7,
+    "notes": 2,
+    "findings": 0,
+    "unresolved": 7
+  }
+}

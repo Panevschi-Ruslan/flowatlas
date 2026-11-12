@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T12:51:35.102Z",
+  "configHash": "5b50e4d34a30",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 21,
+      "edges": 18,
+      "types": 2,
+      "unresolved": 2,
+      "durationMs": 1146,
+      "packages": {
+        "name": "shop-catalog",
+        "runtime": [
+          "@aws-sdk/client-sns",
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 4,
+      "types": 2,
+      "unresolved": 1,
+      "durationMs": 1205,
+      "packages": {
+        "name": "shop-orders",
+        "runtime": [
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "platform",
+      "repo": "./platform",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 5,
+      "edges": 3,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 1143,
+      "packages": {
+        "name": "shop-platform",
+        "runtime": [
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "reports",
+      "repo": "./reports",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 17,
+      "edges": 14,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 1269,
+      "packages": {
+        "name": "shop-reports",
+        "runtime": [
+          "@aws-sdk/client-sqs"
+        ],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 5,
+    "linked": 3,
+    "noConsumers": [
+      "channel:sqs/shop-orders-audit"
+    ],
+    "noProducers": [
+      "channel:dynamodb/shop-orders"
+    ]
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:orders:http:POST:/orders"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "catalog",
+      "file": "stacks/catalog.yaml",
+      "line": 69,
+      "reason": "export-not-found",
+      "message": "the value of FEATURE_FLAGS stacks/catalog.Resources.RestockFunction is deployed with is the parameter /shop/flags, which no configured service publishes, so what it names is not joined",
+      "hint": "Add the repository whose deployment writes that parameter to the configuration, or check the name on both sides.",
+      "symbol": "import:parameter:/shop/flags",
+      "meta": {
+        "key": "parameter:/shop/flags"
+      }
+    },
+    {
+      "service": "orders",
+      "file": "serverless.yml",
+      "line": 24,
+      "reason": "stream-no-writer",
+      "level": "info",
+      "message": "dynamodb/shop-orders is read by a function and nothing in the configured services writes to it",
+      "hint": "Its writer may be in a repository the configuration does not name, or outside any: another account, a console, the platform. Nothing to fix if it is.",
+      "symbol": "channel:dynamodb/shop-orders"
+    }
+  ],
+  "totals": {
+    "nodes": 38,
+    "edges": 33,
+    "types": 6,
+    "missed": 1,
+    "sites": 1,
+    "notes": 1,
+    "findings": 2,
+    "unresolved": 1
+  }
+}

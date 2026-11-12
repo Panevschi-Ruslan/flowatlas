@@ -1,6 +1,6 @@
 import { nameInForms } from '@flowatlas/core';
 import { describe, expect, it } from 'vitest';
-import { bucketChannel, DEPLOYED_FORMS, deployedArn, deployedNameIn, eventChannel, queueChannel, topicChannel } from './index.js';
+import { bucketChannel, DEPLOYED_FORMS, deployedArn, deployedNameIn, eventChannel, executeApiAddress, executeApiServedAt, queueChannel, topicChannel } from './index.js';
 
 describe('the channel grammar', () => {
   it('names each service and the default bus explicitly', () => {
@@ -69,5 +69,40 @@ describe('batches (P89)', () => {
       .map((operation) => operation.method)
       .sort();
     expect(batches).toEqual(['batchWrite', 'batchWriteItem', 'publishBatch', 'putEvents', 'putRecords', 'sendMessageBatch', 'transactWrite', 'transactWriteItems']);
+  });
+});
+
+describe('an address API Gateway serves (P268)', () => {
+  it('is no queue, though its path has two segments as a queue URL does', () => {
+    expect(deployedNameIn('https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com/dev/ledger')).toBeUndefined();
+    expect(deployedNameIn('https://a1b2c3d4e5.lambda-url.eu-west-1.on.aws/dev/ledger')).toBeUndefined();
+    expect(deployedNameIn('http://localhost:4566/000000000000/returns')).toEqual({ kind: 'queue', name: 'returns' });
+  });
+
+  it('reads the id, the region and every segment after the host, the stage among them', () => {
+    expect(executeApiAddress('https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com/dev/ledger/entries')).toEqual({
+      id: 'a1b2c3d4e5',
+      region: 'eu-west-1',
+      segments: ['dev', 'ledger', 'entries'],
+    });
+    expect(executeApiAddress('https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com')).toEqual({ id: 'a1b2c3d4e5', region: 'eu-west-1', segments: [] });
+    expect(executeApiAddress('https://sqs.eu-west-1.amazonaws.com/111122223333/returns')).toBeUndefined();
+  });
+
+  it('says where an API is served with its id left open, its stage chosen or written, or none (P284)', () => {
+    expect(executeApiServedAt('eu-west-1', 'prod-shop', { name: 'prod', chosen: true })).toEqual({
+      host: '*.execute-api.eu-west-1.amazonaws.com',
+      base: ['*'],
+      api: 'prod-shop',
+      chosenDefault: 'prod',
+    });
+    expect(executeApiServedAt('eu-west-1', 'prod-shop', { name: 'prod' })).toEqual({ host: '*.execute-api.eu-west-1.amazonaws.com', base: ['prod'], api: 'prod-shop' });
+    expect(executeApiServedAt('eu-west-1', 'prod-shop', {})).toEqual({ host: '*.execute-api.eu-west-1.amazonaws.com', base: [], api: 'prod-shop' });
+  });
+
+  it('leaves a region nothing states open, a stage nothing reads open with no default, and $default at the root (P294)', () => {
+    expect(executeApiServedAt(undefined, 'shop', { name: 'live' })).toEqual({ host: '*.execute-api.*.amazonaws.com', base: ['live'], api: 'shop' });
+    expect(executeApiServedAt('<region>', 'shop', { chosen: true })).toEqual({ host: '*.execute-api.*.amazonaws.com', base: ['*'], api: 'shop' });
+    expect(executeApiServedAt('eu-west-1', 'shop', { name: '$default' })).toEqual({ host: '*.execute-api.eu-west-1.amazonaws.com', base: [], api: 'shop' });
   });
 });

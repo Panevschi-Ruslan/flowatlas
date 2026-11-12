@@ -1,4 +1,5 @@
 import {
+  NOTES_META,
   accessOf,
   comparisonSays,
   failuresOf,
@@ -122,6 +123,12 @@ const logsFor = (node: GraphNode | undefined): PromptLog[] => {
           },
         ],
   );
+};
+
+/** What tagged comments above a declaration say (P234), as the reader kept them. */
+const notesOf = (node: GraphNode): string[] => {
+  const notes = node.meta?.[NOTES_META];
+  return Array.isArray(notes) ? notes.filter((note): note is string => typeof note === 'string') : [];
 };
 
 /** When a scheduled way in fires, and in which zone (P71). */
@@ -326,6 +333,7 @@ export const gatherPromptSubject = (
   const fails = node.type === 'entry' ? failuresOf(node).map(failureOf) : [];
   const access = accessFor(node);
   const schedule = node.type === 'entry' ? scheduleFor(node) : undefined;
+  const notes = notesOf(node);
   const own = node.type === 'entry' ? counts?.entries[node.id] : undefined;
   const hits = own?.hits ?? 0;
   const compared = counts === undefined ? undefined : failuresSeen(counts, node);
@@ -337,6 +345,7 @@ export const gatherPromptSubject = (
     ...(compact.service === undefined ? {} : { service: compact.service }),
     ...(compact.loc === undefined ? {} : { loc: compact.loc }),
     ...(schedule === undefined ? {} : { schedule }),
+    ...(notes.length === 0 ? {} : { notes }),
     ...(hits > 0 ? { hits, ...promptFigures(own) } : {}),
     ...(access === undefined ? {} : { access }),
     ...(fails.length === 0 ? {} : { fails }),

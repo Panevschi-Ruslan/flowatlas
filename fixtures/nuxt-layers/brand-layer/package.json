@@ -1,0 +1,6 @@
+{
+  "name": "brand-layer",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./nuxt.config.ts"
+}

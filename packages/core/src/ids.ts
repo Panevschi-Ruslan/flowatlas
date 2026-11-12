@@ -56,6 +56,13 @@ const HOLES_AMONG_TEXT = /^(?!:param$).*:param(?![\w$])/;
 const isParamSegment = (segment: string): boolean => PARAM_SEGMENT.test(segment) && !HOLES_AMONG_TEXT.test(segment);
 
 /**
+ * API Gateway's greedy `{proxy+}`, which takes the rest of the path (one
+ * segment or more), not one segment: keyed `*`, as every other catch-all is,
+ * so a request deeper under it reaches it (P283).
+ */
+const GREEDY_SEGMENT = /^\{[^/{}]+\+\}$/;
+
+/**
  * How far from a route its data access is looked for.
  *
  * One number, because two checks say "this route reaches stored data" and they
@@ -125,7 +132,8 @@ const required = (part: string, value: unknown): string => {
  * Collapse a route path into the form both sides of a call can be matched on.
  *
  * Leading slash added, trailing slash removed, repeated slashes collapsed, and
- * every parameter segment replaced by `:param`. A `*` wildcard is kept as is,
+ * every parameter segment replaced by `:param`. A `*` wildcard is kept as is
+ * (a greedy `{proxy+}` becomes one),
  * and so is an `UNREAD_SPAN`, which is not a parameter and must not be filed as
  * one. Query strings are not touched — strip them before calling.
  */
@@ -135,7 +143,7 @@ export const normalizePath = (path: string): string => {
   const segments = raw
     .split('/')
     .filter((segment) => segment.length > 0)
-    .map((segment) => (isParamSegment(segment) ? PARAM_PLACEHOLDER : segment));
+    .map((segment) => (GREEDY_SEGMENT.test(segment) ? '*' : isParamSegment(segment) ? PARAM_PLACEHOLDER : segment));
   return segments.length === 0 ? '/' : `/${segments.join('/')}`;
 };
 
@@ -179,6 +187,18 @@ const rootOfPath = (path: string): string | undefined =>
   path.startsWith('/') ? '/' : DRIVE.test(path) ? path.slice(0, 2).toUpperCase() : undefined;
 
 /**
+ * The files a reading made up for the checker, by the POSIX path of each, and
+ * the file each stands for (P233, `embedded.ts`). A position in one is a
+ * position in the other, so the only thing to change is the name.
+ */
+const MADE_UP_FILES = new Map<string, string>();
+
+/** Records that `virtual` is the checker's copy of `real`: both absolute, POSIX. */
+export const nameMadeUpFile = (virtual: string, real: string): void => {
+  MADE_UP_FILES.set(virtual, real);
+};
+
+/**
  * Bring a file path into the form every id uses: POSIX separators,
  * repo-relative when `repoDir` is given, without a leading `./`.
  *
@@ -189,6 +209,8 @@ const rootOfPath = (path: string): string | undefined =>
  */
 export const normalizeFilePath = (file: string, repoDir?: string): string => {
   let out = toPosixPath(typeof file === 'string' ? file : '');
+  // A file made up for the checker is named as the file it was made from.
+  out = MADE_UP_FILES.get(out) ?? out;
   if (typeof repoDir === 'string' && repoDir !== '') {
     const base = pathKey(toPosixPath(repoDir).replace(/\/+$/, ''));
     const key = pathKey(out);
@@ -322,8 +344,103 @@ export const makeInvokeEntryKey = (name: string): string => required('name', nam
  * starts with `UNREAD_SPAN`, which no deployed name can contain, so it can never
  * be mistaken for one and `wasRead` says no to it.
  */
-export const makeUnnamedInvokeKey = (declaration: string): string =>
-  `${UNREAD_SPAN}@${required('declaration', declaration)}`;
+export const makeUnnamedInvokeKey = (declaration: string): string => `${UNREAD_SPAN}@${standIn(declaration)}`;
+
+/**
+ * A declaration spelled so it can stand where a name goes: a construct path's
+ * slashes and a site's colon, which a channel's name and an ARN are split on,
+ * are dots (P57). An address with neither is spelled as it is.
+ */
+const standIn = (declaration: string): string => required('declaration', declaration).replace(/[/:]/g, '.');
+
+/**
+ * The name a deployment gives something whose name it generates when it is
+ * deployed: a queue, a topic, a table or a function declared with no name of
+ * its own (P57).
+ *
+ * No file holds such a name, and guessing the platform's spelling of it would
+ * be a guess (I3). So it is stood in for by where it is declared, in the
+ * spelling an unnamed function's key already has: everything in the one
+ * deployment that refers to the declaration - a value a function is deployed
+ * with, a subscriber, a step - spells it the same way and joins to it, and
+ * nothing outside the deployment can, because no deployed name contains
+ * `UNREAD_SPAN` and `wasRead` says no to it.
+ */
+export const generatedName = (declaration: string): string => makeUnnamedInvokeKey(declaration);
+
+/**
+ * Whether a name is one {@link generatedName} stood in for: a reader that
+ * checks what a deployed name may be made of lets it through, because it is
+ * the one spelling every part of its deployment agrees on.
+ */
+export const isGeneratedName = (name: string): boolean => name.startsWith(`${UNREAD_SPAN}@`) && name.length > UNREAD_SPAN.length + 1;
+
+/**
+ * The key of a value one deployment publishes under a name for others to read
+ * (P249): by the name it is exported under, which is unique where both are
+ * deployed, or by the deployment's name and the value's own, which a reader of
+ * that deployment can also spell.
+ */
+export const exportKey = (name: string): string => `export:${required('name', name)}`;
+export const stackOutputKey = (stack: string, output: string): string => `stack:${required('stack', stack)}#${required('output', output)}`;
+
+/**
+ * The key of a value one deployment writes to a parameter of the account for
+ * others to read (P21, P253): by the parameter's name, which every tool that
+ * writes or reads one spells the same way.
+ */
+export const parameterKey = (name: string): string => `parameter:${required('name', name)}`;
+
+/** Where the mark of one reading of a declaration starts. */
+const ALTERNATIVE_AT = `${UNREAD_SPAN}@as.`;
+
+/**
+ * The address of one reading of a declaration that uses something another
+ * deployment publishes where the use does not say what kind of thing it is
+ * (P253): a mapping that reads a stream or a table's changes, a destination
+ * that may be a queue, a topic, a bus or a function.
+ *
+ * The reader draws the declaration once per kind it may be, each under its
+ * own address, and the linker keeps the one the publisher's value is and
+ * gives it back the address it was written at: so nothing is guessed, and
+ * nothing waits on the kind to be drawn the way that kind is.
+ */
+export const alternativeAddress = (address: string, kind: string): string => `${required('address', address)}${ALTERNATIVE_AT}${required('kind', kind)}`;
+
+/** The address an {@link alternativeAddress} was made from, and the kind it reads it as; `undefined` for any other address. */
+export const alternativeOf = (address: string): { readonly address: string; readonly kind: string } | undefined => {
+  const at = address.lastIndexOf(ALTERNATIVE_AT);
+  return at <= 0 ? undefined : { address: address.slice(0, at), kind: address.slice(at + ALTERNATIVE_AT.length) };
+};
+
+/**
+ * A {@link generatedName} as other repositories join it (P253): the name of
+ * the repository that generates it put in front, so two repositories that
+ * declare something unnamed at the same address keep two names, and what
+ * imports one meets that one.
+ */
+export const ownedGeneratedName = (repo: string, name: string): string =>
+  isGeneratedName(name) ? `${UNREAD_SPAN}@${required('repo', repo)}@${name.slice(UNREAD_SPAN.length + 1)}` : name;
+
+/** Where an imported name's stand-in starts. */
+const IMPORTED_AT = `${UNREAD_SPAN}@import.`;
+
+/**
+ * The name a reader gives something another deployment publishes and this one
+ * imports: a queue, a topic, a bus, a function known here only by the key of
+ * the value that names it (P249).
+ *
+ * Like a {@link generatedName}, it is a name nothing deployed has, so every
+ * part of the importing deployment that points at it agrees on it and nothing
+ * else joins to it by accident; unlike one, the linker can finish it, by the
+ * value another repository publishes under the same key, before the graphs
+ * are merged. The key is spelled as a declaration is, with the `#` between a
+ * stack and its output a dot too, which nothing an id is split on holds.
+ */
+export const importedName = (key: string): string => `${IMPORTED_AT}${standIn(key).replace(/#/g, '.')}`;
+
+/** Whether a name is one {@link importedName} stood in for. */
+export const isImportedName = (name: string): boolean => name.startsWith(IMPORTED_AT) && name.length > IMPORTED_AT.length;
 
 /**
  * The `key` half of a `workflow` entry id: the name the workflow is deployed
@@ -336,12 +453,20 @@ export const makeUnnamedInvokeKey = (declaration: string): string =>
 export const makeWorkflowEntryKey = (name: string): string => required('name', name);
 
 /**
+ * The `key` half of a `task` entry id: the name the task is registered and
+ * run under (P258), exactly as written - `db:migrate`.
+ *
+ * The name is the whole address, as a deployed name is: code that runs the
+ * task, and a schedule that does, names it and nothing else.
+ */
+export const makeTaskEntryKey = (name: string): string => required('name', name);
+
+/**
  * The `key` of a `workflow` entry whose deployed name was not read, for the
  * reason {@link makeUnnamedInvokeKey} gives: the steps are still worth drawing,
  * and nothing may join to them by a name made of the parts that were read.
  */
-export const makeUnnamedWorkflowKey = (declaration: string): string =>
-  `${UNREAD_SPAN}@${required('declaration', declaration)}`;
+export const makeUnnamedWorkflowKey = (declaration: string): string => `${UNREAD_SPAN}@${standIn(declaration)}`;
 
 /**
  * `<repo>#<file>:<workflow>/<state>` — one step of a workflow.
@@ -416,12 +541,13 @@ export const REACHED_AS_META = 'reachedAs';
  */
 export const RESULT_OF_META = 'resultOf';
 
-/** The kinds of entry a deployed name is the whole address of. */
-export type DeployedEntryKind = Extract<EntryKind, 'invoke' | 'workflow'>;
+/** The kinds of entry a name is the whole address of: one it is deployed under, or a task's own (P258). */
+export type DeployedEntryKind = Extract<EntryKind, 'invoke' | 'workflow' | 'task'>;
 
 const DEPLOYED_KEYS: Readonly<Record<DeployedEntryKind, (name: string) => string>> = {
   invoke: makeInvokeEntryKey,
   workflow: makeWorkflowEntryKey,
+  task: makeTaskEntryKey,
 };
 
 export const isDeployedEntryKind = (value: unknown): value is DeployedEntryKind =>
@@ -445,6 +571,23 @@ export const makeDeployedReference = (kind: DeployedEntryKind, name: string): st
  * rather than a channel.
  */
 export const STARTS_META = 'starts';
+
+/**
+ * The key of a `calls` edge's `meta` that says the call is a navigation
+ * (P265): the address or name a screen navigates by, the edge running to the
+ * screen it shows.
+ *
+ * A navigation is a call of the screen it lands on for every question about
+ * what showing a screen leads to, and for whether a screen is reached. It is
+ * not one for a cycle: two screens linking to each other is how a front end
+ * is moved through, not a recursion that never ends, so a walk for cycles
+ * leaves it out ({@link isNavigationEdge}).
+ */
+export const NAVIGATES_META = 'navigates';
+
+/** Whether an edge is a navigation from one screen to another (P265). */
+export const isNavigationEdge = (edge: { readonly type: string; readonly meta?: Readonly<Record<string, unknown>> | null | undefined }): boolean =>
+  edge.type === 'calls' && typeof edge.meta?.[NAVIGATES_META] === 'string';
 
 /**
  * The reference an entry id answers to, or `undefined` for an id that is not

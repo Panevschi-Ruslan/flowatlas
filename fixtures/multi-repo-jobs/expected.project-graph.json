@@ -1,0 +1,1216 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:48:04.647Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "mailer",
+      "repo": "./mailer",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:image-queue",
+      "type": "channel",
+      "label": "image-queue",
+      "repo": "shop",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 34,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:mail-queue",
+      "type": "channel",
+      "label": "mail-queue",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 10,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ],
+        "producers": 4,
+        "consumers": 2
+      }
+    },
+    {
+      "id": "consumer:mailer#src/image.processor.ts:ImageProcessor.process",
+      "type": "consumer",
+      "label": "ImageProcessor.process",
+      "repo": "mailer",
+      "file": "src/image.processor.ts",
+      "line": 7,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "Processor",
+        "entryId": "entry:mailer:event:image-queue"
+      }
+    },
+    {
+      "id": "consumer:mailer#src/mail.processor.ts:MailProcessor.receipt",
+      "type": "consumer",
+      "label": "MailProcessor.receipt",
+      "repo": "mailer",
+      "file": "src/mail.processor.ts",
+      "line": 14,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "Process",
+        "entryId": "entry:mailer:event:mail-queue",
+        "jobName": "send-receipt"
+      }
+    },
+    {
+      "id": "consumer:mailer#src/mail.processor.ts:MailProcessor.welcome",
+      "type": "consumer",
+      "label": "MailProcessor.welcome",
+      "repo": "mailer",
+      "file": "src/mail.processor.ts",
+      "line": 9,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "Process",
+        "entryId": "entry:mailer:event:mail-queue",
+        "jobName": "send-welcome"
+      }
+    },
+    {
+      "id": "entry:mailer:event:image-queue",
+      "type": "entry",
+      "label": "event image-queue",
+      "repo": "mailer",
+      "file": "src/image.processor.ts",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "pattern": "image-queue",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:mailer:event:mail-queue",
+      "type": "entry",
+      "label": "event mail-queue",
+      "repo": "mailer",
+      "file": "src/mail.processor.ts",
+      "line": 9,
+      "kind": "event",
+      "meta": {
+        "pattern": "mail-queue",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders/image",
+      "type": "entry",
+      "label": "POST /orders/image",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/image",
+        "rawPath": "/orders/image",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders/invoice",
+      "type": "entry",
+      "label": "POST /orders/invoice",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/invoice",
+        "rawPath": "/orders/invoice",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders/pair",
+      "type": "entry",
+      "label": "POST /orders/pair",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 24,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/pair",
+        "rawPath": "/orders/pair",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders/receipts",
+      "type": "entry",
+      "label": "POST /orders/receipts",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/receipts",
+        "rawPath": "/orders/receipts",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/orders/welcome",
+      "type": "entry",
+      "label": "POST /orders/welcome",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/welcome",
+        "rawPath": "/orders/welcome",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "mailer#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "mailer",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [
+          "MailProcessor",
+          "ImageProcessor"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "mailer#src/image.processor.ts:ImageProcessor",
+      "type": "provider",
+      "label": "ImageProcessor",
+      "repo": "mailer",
+      "file": "src/image.processor.ts",
+      "line": 5,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "mailer#src/image.processor.ts:ImageProcessor.process",
+      "type": "method",
+      "label": "ImageProcessor.process",
+      "repo": "mailer",
+      "file": "src/image.processor.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "mailer#src/mail.processor.ts:MailProcessor",
+      "type": "provider",
+      "label": "MailProcessor",
+      "repo": "mailer",
+      "file": "src/mail.processor.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "mailer#src/mail.processor.ts:MailProcessor.receipt",
+      "type": "method",
+      "label": "MailProcessor.receipt",
+      "repo": "mailer",
+      "file": "src/mail.processor.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "mailer#src/mail.processor.ts:MailProcessor.welcome",
+      "type": "method",
+      "label": "MailProcessor.welcome",
+      "repo": "mailer",
+      "file": "src/mail.processor.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:shop#src/mail/mail-queue.service.ts:27:12",
+      "type": "producer",
+      "label": "job mail-queue",
+      "repo": "shop",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 27,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "addBulk",
+        "jobName": null,
+        "jobNames": [
+          "send-digest",
+          "send-welcome"
+        ]
+      }
+    },
+    {
+      "id": "producer:shop#src/mail/mail-queue.service.ts:34:12",
+      "type": "producer",
+      "label": "job image-queue",
+      "repo": "shop",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 34,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "resize"
+      }
+    },
+    {
+      "id": "producer:shop#src/mail/orders.controller.ts:10:12",
+      "type": "producer",
+      "label": "job mail-queue",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 10,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "send-welcome",
+        "through": [
+          "MailQueueService.send"
+        ]
+      }
+    },
+    {
+      "id": "producer:shop#src/mail/orders.controller.ts:15:12",
+      "type": "producer",
+      "label": "job mail-queue",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 15,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "addBulk",
+        "jobName": "send-receipt",
+        "through": [
+          "MailQueueService.sendMany"
+        ]
+      }
+    },
+    {
+      "id": "producer:shop#src/mail/orders.controller.ts:21:12",
+      "type": "producer",
+      "label": "job mail-queue",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 21,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "send-invoice",
+        "through": [
+          "MailQueueService.send"
+        ]
+      }
+    },
+    {
+      "id": "repo:mailer",
+      "type": "repo",
+      "label": "mailer",
+      "repo": "mailer",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 3,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "shop#node_modules/@nestjs/bullmq:BullModule",
+      "type": "module",
+      "label": "BullModule",
+      "repo": "shop",
+      "file": "node_modules/@nestjs/bullmq",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/bullmq",
+        "external": true
+      }
+    },
+    {
+      "id": "shop#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "shop",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "MailQueueService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "shop#src/mail/mail-queue.service.ts:MailQueueService",
+      "type": "provider",
+      "label": "MailQueueService",
+      "repo": "shop",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/mail/mail-queue.service.ts:MailQueueService.resize",
+      "type": "method",
+      "label": "MailQueueService.resize",
+      "repo": "shop",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 33,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "url",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/mail/mail-queue.service.ts:MailQueueService.send",
+      "type": "method",
+      "label": "MailQueueService.send",
+      "repo": "shop",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "{to:string;template:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/mail/mail-queue.service.ts:MailQueueService.sendMany",
+      "type": "method",
+      "label": "MailQueueService.sendMany",
+      "repo": "shop",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "string"
+            },
+            {
+              "name": "list",
+              "type": "{to:string;template:string}[]"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/mail/mail-queue.service.ts:MailQueueService.sendPair",
+      "type": "method",
+      "label": "MailQueueService.sendPair",
+      "repo": "shop",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "first",
+              "type": "{to:string;template:string}"
+            },
+            {
+              "name": "second",
+              "type": "{to:string;template:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/mail/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "shop#src/mail/orders.controller.ts:OrdersController.image",
+      "type": "method",
+      "label": "OrdersController.image",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 29,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "body",
+              "type": "{url:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/mail/orders.controller.ts:OrdersController.invoice",
+      "type": "method",
+      "label": "OrdersController.invoice",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "{to:string;template:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/mail/orders.controller.ts:OrdersController.pair",
+      "type": "method",
+      "label": "OrdersController.pair",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "{to:string;template:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/mail/orders.controller.ts:OrdersController.receipts",
+      "type": "method",
+      "label": "OrdersController.receipts",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "list",
+              "type": "{to:string;template:string}[]"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#src/mail/orders.controller.ts:OrdersController.welcome",
+      "type": "method",
+      "label": "OrdersController.welcome",
+      "repo": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "{to:string;template:string}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:image-queue",
+      "to": "consumer:mailer#src/image.processor.ts:ImageProcessor.process",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/image.processor.ts",
+      "line": 7
+    },
+    {
+      "from": "channel:mail-queue",
+      "to": "consumer:mailer#src/mail.processor.ts:MailProcessor.receipt",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/mail.processor.ts",
+      "line": 14
+    },
+    {
+      "from": "channel:mail-queue",
+      "to": "consumer:mailer#src/mail.processor.ts:MailProcessor.welcome",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/mail.processor.ts",
+      "line": 9
+    },
+    {
+      "from": "consumer:mailer#src/image.processor.ts:ImageProcessor.process",
+      "to": "mailer#src/image.processor.ts:ImageProcessor.process",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/image.processor.ts",
+      "line": 7
+    },
+    {
+      "from": "consumer:mailer#src/mail.processor.ts:MailProcessor.receipt",
+      "to": "mailer#src/mail.processor.ts:MailProcessor.receipt",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/mail.processor.ts",
+      "line": 14
+    },
+    {
+      "from": "consumer:mailer#src/mail.processor.ts:MailProcessor.welcome",
+      "to": "mailer#src/mail.processor.ts:MailProcessor.welcome",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/mail.processor.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:mailer:event:image-queue",
+      "to": "mailer#src/image.processor.ts:ImageProcessor.process",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/image.processor.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:mailer:event:mail-queue",
+      "to": "mailer#src/mail.processor.ts:MailProcessor.receipt",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/mail.processor.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:mailer:event:mail-queue",
+      "to": "mailer#src/mail.processor.ts:MailProcessor.welcome",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "file": "src/mail.processor.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:shop:http:POST:/orders/image",
+      "to": "shop#src/mail/orders.controller.ts:OrdersController.image",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{url:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/mail/orders.controller.ts",
+      "line": 29,
+      "meta": {
+        "body": "{url:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders/invoice",
+      "to": "shop#src/mail/orders.controller.ts:OrdersController.invoice",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{to:string;template:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/mail/orders.controller.ts",
+      "line": 19,
+      "meta": {
+        "body": "{to:string;template:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders/pair",
+      "to": "shop#src/mail/orders.controller.ts:OrdersController.pair",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{to:string;template:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/mail/orders.controller.ts",
+      "line": 24,
+      "meta": {
+        "body": "{to:string;template:string}"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders/receipts",
+      "to": "shop#src/mail/orders.controller.ts:OrdersController.receipts",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{to:string;template:string}[]"
+      ],
+      "returns": "unknown",
+      "file": "src/mail/orders.controller.ts",
+      "line": 13,
+      "meta": {
+        "body": "{to:string;template:string}[]"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/orders/welcome",
+      "to": "shop#src/mail/orders.controller.ts:OrdersController.welcome",
+      "type": "handles",
+      "confidence": "static",
+      "params": [
+        "{to:string;template:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/mail/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "body": "{to:string;template:string}"
+      }
+    },
+    {
+      "from": "producer:shop#src/mail/mail-queue.service.ts:27:12",
+      "to": "channel:mail-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{name:string;data:{to:string;template:string}}[]"
+      ],
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 27
+    },
+    {
+      "from": "producer:shop#src/mail/mail-queue.service.ts:34:12",
+      "to": "channel:image-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{url:string}"
+      ],
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 34
+    },
+    {
+      "from": "producer:shop#src/mail/orders.controller.ts:10:12",
+      "to": "channel:mail-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{to:string;template:string}"
+      ],
+      "file": "src/mail/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "producer:shop#src/mail/orders.controller.ts:15:12",
+      "to": "channel:mail-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{name:string;data:{to:string;template:string}}[]"
+      ],
+      "file": "src/mail/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "producer:shop#src/mail/orders.controller.ts:21:12",
+      "to": "channel:mail-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "params": [
+        "{to:string;template:string}"
+      ],
+      "file": "src/mail/orders.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "shop#src/app.module.ts:AppModule",
+      "to": "shop#node_modules/@nestjs/bullmq:BullModule",
+      "type": "imports",
+      "confidence": "heuristic",
+      "file": "src/app.module.ts",
+      "line": 6,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "shop#src/mail/mail-queue.service.ts:MailQueueService.resize",
+      "to": "producer:shop#src/mail/mail-queue.service.ts:34:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 34
+    },
+    {
+      "from": "shop#src/mail/mail-queue.service.ts:MailQueueService.sendPair",
+      "to": "producer:shop#src/mail/mail-queue.service.ts:27:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 27
+    },
+    {
+      "from": "shop#src/mail/orders.controller.ts:OrdersController",
+      "to": "shop#src/mail/mail-queue.service.ts:MailQueueService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/mail/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "shop#src/mail/orders.controller.ts:OrdersController.image",
+      "to": "shop#src/mail/mail-queue.service.ts:MailQueueService.resize",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/mail/orders.controller.ts",
+      "line": 31
+    },
+    {
+      "from": "shop#src/mail/orders.controller.ts:OrdersController.invoice",
+      "to": "producer:shop#src/mail/orders.controller.ts:21:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mail/orders.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "shop#src/mail/orders.controller.ts:OrdersController.invoice",
+      "to": "shop#src/mail/mail-queue.service.ts:MailQueueService.send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{to:string;template:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/mail/orders.controller.ts",
+      "line": 21
+    },
+    {
+      "from": "shop#src/mail/orders.controller.ts:OrdersController.pair",
+      "to": "shop#src/mail/mail-queue.service.ts:MailQueueService.sendPair",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "{to:string;template:string}",
+        "{to:string;template:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/mail/orders.controller.ts",
+      "line": 26
+    },
+    {
+      "from": "shop#src/mail/orders.controller.ts:OrdersController.receipts",
+      "to": "producer:shop#src/mail/orders.controller.ts:15:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mail/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "shop#src/mail/orders.controller.ts:OrdersController.receipts",
+      "to": "shop#src/mail/mail-queue.service.ts:MailQueueService.sendMany",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{to:string;template:string}[]"
+      ],
+      "returns": "unknown",
+      "file": "src/mail/orders.controller.ts",
+      "line": 15
+    },
+    {
+      "from": "shop#src/mail/orders.controller.ts:OrdersController.welcome",
+      "to": "producer:shop#src/mail/orders.controller.ts:10:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/mail/orders.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "shop#src/mail/orders.controller.ts:OrdersController.welcome",
+      "to": "shop#src/mail/mail-queue.service.ts:MailQueueService.send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "{to:string;template:string}"
+      ],
+      "returns": "unknown",
+      "file": "src/mail/orders.controller.ts",
+      "line": 10
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/image.processor.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ url: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      },
+      "service": "mailer"
+    },
+    {
+      "file": "src/mail.processor.ts",
+      "line": 9,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<MailData>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bull"
+      },
+      "service": "mailer"
+    },
+    {
+      "file": "src/mail.processor.ts",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<MailData>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bull"
+      },
+      "service": "mailer"
+    },
+    {
+      "file": "src/app.module.ts",
+      "line": 7,
+      "reason": "module-import-not-installed",
+      "hint": "BullModule is a module of @nestjs/bullmq, which is not installed; it is read by its import alone. Install the dependencies where the map is built.",
+      "symbol": "AppModule imports BullModule.registerQueue({ name: 'mail-queue' }, { name: 'image-queue' })",
+      "meta": {
+        "package": "@nestjs/bullmq",
+        "module": "BullModule"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 14,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "MailQueueService.constructor[0]",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 15,
+      "reason": "di-type-unresolved",
+      "hint": "Inject a class, or name the provider with @Inject(TOKEN).",
+      "symbol": "MailQueueService.constructor[1]",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 18,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 22,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 26,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "service": "shop",
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 27,
+      "reason": "job-no-handler",
+      "level": "info",
+      "message": "the call at src/mail/mail-queue.service.ts:27 adds the job send-digest to mail-queue, and none of its 2 handler(s) takes that job",
+      "hint": "Every handler of this queue names the one job it takes, and none names this one, so nothing runs it. Add a handler for it, or add it under the name a handler takes. Nothing to fix if a handler is in a repository the configuration does not name.",
+      "symbol": "producer:shop#src/mail/mail-queue.service.ts:27:12",
+      "meta": {
+        "job": "send-digest",
+        "queue": "mail-queue",
+        "handled": [
+          "send-receipt",
+          "send-welcome"
+        ]
+      }
+    },
+    {
+      "file": "src/mail/mail-queue.service.ts",
+      "line": 33,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "src/mail/orders.controller.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "src/mail/orders.controller.ts",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "src/mail/orders.controller.ts",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "service": "shop",
+      "file": "src/mail/orders.controller.ts",
+      "line": 21,
+      "reason": "job-no-handler",
+      "level": "info",
+      "message": "the call at src/mail/orders.controller.ts:21 adds the job send-invoice to mail-queue, and none of its 2 handler(s) takes that job",
+      "hint": "Every handler of this queue names the one job it takes, and none names this one, so nothing runs it. Add a handler for it, or add it under the name a handler takes. Nothing to fix if a handler is in a repository the configuration does not name.",
+      "symbol": "producer:shop#src/mail/orders.controller.ts:21:12",
+      "meta": {
+        "job": "send-invoice",
+        "queue": "mail-queue",
+        "handled": [
+          "send-receipt",
+          "send-welcome"
+        ]
+      }
+    },
+    {
+      "file": "src/mail/orders.controller.ts",
+      "line": 24,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "src/mail/orders.controller.ts",
+      "line": 29,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    }
+  ]
+}

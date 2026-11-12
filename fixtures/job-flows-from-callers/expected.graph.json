@@ -1,0 +1,2178 @@
+{
+  "schemaVersion": 7,
+  "repo": "job-flows-from-callers",
+  "generatedAt": "2026-11-12T19:10:38.625Z",
+  "nodes": [
+    {
+      "id": "channel:archive-order",
+      "type": "channel",
+      "label": "archive-order",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 36,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:close-month",
+      "type": "channel",
+      "label": "close-month",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 46,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:invoices",
+      "type": "channel",
+      "label": "invoices",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:mail",
+      "type": "channel",
+      "label": "mail",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:notify-staff",
+      "type": "channel",
+      "label": "notify-staff",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 36,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:publish-item",
+      "type": "channel",
+      "label": "publish-item",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 23,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:receipts",
+      "type": "channel",
+      "label": "receipts",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:resize-image",
+      "type": "channel",
+      "label": "resize-image",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 23,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:retry-import",
+      "type": "channel",
+      "label": "retry-import",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 46,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "consumer:job-flows-from-callers#src/jobs/job-queue.ts:runJob@src/jobs/job-queue.ts:26",
+      "type": "consumer",
+      "label": "runJob",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-flows-from-callers:event:archive-order"
+      }
+    },
+    {
+      "id": "consumer:job-flows-from-callers#src/queues/worker-base.ts:MailWorker.processor@src/queues/bull-client.ts:21",
+      "type": "consumer",
+      "label": "MailWorker.processor",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-flows-from-callers:event:mail",
+        "through": [
+          "BullClient.openWorker",
+          "MailWorkerBase"
+        ]
+      }
+    },
+    {
+      "id": "consumer:job-flows-from-callers#src/queues/worker-base.ts:ReceiptWorker.print@src/queues/bull-client.ts:21",
+      "type": "consumer",
+      "label": "ReceiptWorker.print",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-flows-from-callers:event:receipts",
+        "through": [
+          "BullClient.openWorker",
+          "ReceiptWorker"
+        ]
+      }
+    },
+    {
+      "id": "consumer:job-flows-from-callers#src/queues/worker-base.ts:issueInvoice@src/queues/bull-client.ts:21",
+      "type": "consumer",
+      "label": "issueInvoice",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:job-flows-from-callers:event:invoices",
+        "through": [
+          "BullClient.openWorker",
+          "InvoiceWorker"
+        ]
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:event:archive-order",
+      "type": "entry",
+      "label": "event archive-order",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "pattern": "archive-order",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:event:close-month",
+      "type": "entry",
+      "label": "event close-month",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "pattern": "close-month",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:event:invoices",
+      "type": "entry",
+      "label": "event invoices",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "invoices",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:event:mail",
+      "type": "entry",
+      "label": "event mail",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "mail",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:event:notify-staff",
+      "type": "entry",
+      "label": "event notify-staff",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "pattern": "notify-staff",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:event:publish-item",
+      "type": "entry",
+      "label": "event publish-item",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "pattern": "publish-item",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:event:receipts",
+      "type": "entry",
+      "label": "event receipts",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "pattern": "receipts",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:event:resize-image",
+      "type": "entry",
+      "label": "event resize-image",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "pattern": "resize-image",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:event:retry-import",
+      "type": "entry",
+      "label": "event retry-import",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "kind": "event",
+      "meta": {
+        "pattern": "retry-import",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:http:POST:/images/:param",
+      "type": "entry",
+      "label": "POST /images/:param",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 22,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/images/:param",
+        "rawPath": "/images/:imageId",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:http:POST:/items/:param/publish",
+      "type": "entry",
+      "label": "POST /items/:param/publish",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 31,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/items/:param/publish",
+        "rawPath": "/items/:itemId/publish",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:http:POST:/months/:param/close",
+      "type": "entry",
+      "label": "POST /months/:param/close",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 40,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/months/:param/close",
+        "rawPath": "/months/:month/close",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:http:POST:/orders/:param/invoice",
+      "type": "entry",
+      "label": "POST /orders/:param/invoice",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/invoice",
+        "rawPath": "/orders/:orderId/invoice",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:job-flows-from-callers:http:POST:/signup",
+      "type": "entry",
+      "label": "POST /signup",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/signup",
+        "rawPath": "/signup",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue",
+      "type": "provider",
+      "label": "JobQueue",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 21,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue.buildFlowJob",
+      "type": "method",
+      "label": "JobQueue.buildFlowJob",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 58,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "{type:type:job-flows-from-callers#JobType;payload:object}"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue.createJobWithChildren",
+      "type": "method",
+      "label": "JobQueue.createJobWithChildren",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 51,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "parent",
+              "type": "{type:type:job-flows-from-callers#JobType;payload:object}"
+            },
+            {
+              "name": "children",
+              "type": "{type:type:job-flows-from-callers#JobType;payload:object}[]"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue.createSequentialJobFlow",
+      "type": "method",
+      "label": "JobQueue.createSequentialJobFlow",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobs",
+              "type": "{type:type:job-flows-from-callers#JobType;payload:object}[]",
+              "rest": true
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/jobs/job-queue.ts:runJob",
+      "type": "function",
+      "label": "runJob",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "run",
+            "at": 8
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/jobs/job-records.ts:buildNotifyJobs",
+      "type": "function",
+      "label": "buildNotifyJobs",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-records.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "{type:type:job-flows-from-callers#JobType;payload:object}[]"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/jobs/job-records.ts:buildPublishJob",
+      "type": "function",
+      "label": "buildPublishJob",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-records.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "itemId",
+              "type": "string"
+            }
+          ],
+          "returns": "{type:type:job-flows-from-callers#JobType;payload:object}"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/jobs/job-records.ts:buildRetryJob",
+      "type": "function",
+      "label": "buildRetryJob",
+      "repo": "job-flows-from-callers",
+      "file": "src/jobs/job-records.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "importId",
+              "type": "string"
+            }
+          ],
+          "returns": "{type:'retry-import';payload:{importId:string}}"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/bull-client.ts:BullClient",
+      "type": "provider",
+      "label": "BullClient",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 12,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/bull-client.ts:BullClient.add",
+      "type": "method",
+      "label": "BullClient.add",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/bull-client.ts:BullClient.addBulk",
+      "type": "method",
+      "label": "BullClient.addBulk",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobs",
+              "type": "type:job-flows-from-callers#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/bull-client.ts:BullClient.openQueue",
+      "type": "method",
+      "label": "BullClient.openQueue",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "topic",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/bull-client.ts:BullClient.openWorker",
+      "type": "method",
+      "label": "BullClient.openWorker",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/bull-client.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "topic",
+              "type": "string"
+            },
+            {
+              "name": "processor",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase",
+      "type": "provider",
+      "label": "QueueBase",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/queue-base.ts",
+      "line": 24,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.add",
+      "type": "method",
+      "label": "QueueBase.add",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/queue-base.ts",
+      "line": 36,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:job-flows-from-callers#QueuedJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.addAllToBull",
+      "type": "method",
+      "label": "QueueBase.addAllToBull",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/queue-base.ts",
+      "line": 54,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobs",
+              "type": "type:job-flows-from-callers#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.addToBull",
+      "type": "method",
+      "label": "QueueBase.addToBull",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/queue-base.ts",
+      "line": 59,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "type:job-flows-from-callers#QueuedJob"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.dispatch",
+      "type": "method",
+      "label": "QueueBase.dispatch",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/queue-base.ts",
+      "line": 41,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "jobs",
+              "type": "type:job-flows-from-callers#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.fallBack",
+      "type": "method",
+      "label": "QueueBase.fallBack",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/queue-base.ts",
+      "line": 49,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "error",
+              "type": "unknown"
+            },
+            {
+              "name": "jobs",
+              "type": "type:job-flows-from-callers#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "warn",
+            "text": "relay refused, falling back to the queue",
+            "at": 50
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.open",
+      "type": "method",
+      "label": "QueueBase.open",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/queue-base.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/queue-base.ts:Relay",
+      "type": "provider",
+      "label": "Relay",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/queue-base.ts",
+      "line": 10,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/queue-base.ts:Relay.send",
+      "type": "method",
+      "label": "Relay.send",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/queue-base.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "topic",
+              "type": "string"
+            },
+            {
+              "name": "jobs",
+              "type": "type:job-flows-from-callers#QueuedJob[]"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/worker-base.ts:MailWorker",
+      "type": "provider",
+      "label": "MailWorker",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/worker-base.ts",
+      "line": 32,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/worker-base.ts:MailWorker.processor",
+      "type": "method",
+      "label": "MailWorker.processor",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/worker-base.ts",
+      "line": 38,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "mail to",
+            "at": 40
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/worker-base.ts:ReceiptWorker",
+      "type": "provider",
+      "label": "ReceiptWorker",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/worker-base.ts",
+      "line": 46,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/worker-base.ts:ReceiptWorker.print",
+      "type": "method",
+      "label": "ReceiptWorker.print",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/worker-base.ts",
+      "line": 52,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "receipt for",
+            "at": 53
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/worker-base.ts:WorkerBase",
+      "type": "provider",
+      "label": "WorkerBase",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/worker-base.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/worker-base.ts:WorkerBase.init",
+      "type": "method",
+      "label": "WorkerBase.init",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/worker-base.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "processor",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/worker-base.ts:WorkerBase.startWorker",
+      "type": "method",
+      "label": "WorkerBase.startWorker",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/worker-base.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "processor",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/queues/worker-base.ts:issueInvoice",
+      "type": "function",
+      "label": "issueInvoice",
+      "repo": "job-flows-from-callers",
+      "file": "src/queues/worker-base.ts",
+      "line": 64,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "invoice for",
+            "at": 65
+          }
+        ]
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/server.ts:POST /images/:imageId@22",
+      "type": "function",
+      "label": "POST /images/:imageId@22",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/server.ts:POST /items/:itemId/publish@31",
+      "type": "function",
+      "label": "POST /items/:itemId/publish@31",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/server.ts:POST /months/:month/close@40",
+      "type": "function",
+      "label": "POST /months/:month/close@40",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/server.ts:POST /orders/:orderId/invoice@17",
+      "type": "function",
+      "label": "POST /orders/:orderId/invoice@17",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 17,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "job-flows-from-callers#src/server.ts:POST /signup@12",
+      "type": "function",
+      "label": "POST /signup@12",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:job-flows-from-callers#src/server.ts:13:9",
+      "type": "producer",
+      "label": "job mail",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 13,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "add",
+        "jobName": "welcome",
+        "through": [
+          "BullClient.add",
+          "QueueBase.addToBull",
+          "QueueBase.add"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-flows-from-callers#src/server.ts:18:9",
+      "type": "producer",
+      "label": "job invoices",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 18,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "enum",
+        "method": "add",
+        "jobName": "issue-invoice",
+        "through": [
+          "BullClient.add",
+          "QueueBase.addToBull",
+          "QueueBase.add"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-flows-from-callers#src/server.ts:23:9",
+      "type": "producer",
+      "label": "job resize-image, publish-item",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 23,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.createSequentialJobFlow"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-flows-from-callers#src/server.ts:36:9",
+      "type": "producer",
+      "label": "job archive-order, publish-item, notify-staff",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 36,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.createSequentialJobFlow"
+        ]
+      }
+    },
+    {
+      "id": "producer:job-flows-from-callers#src/server.ts:46:9",
+      "type": "producer",
+      "label": "job close-month, archive-order, retry-import",
+      "repo": "job-flows-from-callers",
+      "file": "src/server.ts",
+      "line": 46,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.createJobWithChildren"
+        ]
+      }
+    },
+    {
+      "id": "repo:job-flows-from-callers",
+      "type": "repo",
+      "label": "job-flows-from-callers",
+      "repo": "job-flows-from-callers",
+      "meta": {
+        "stats": {
+          "files": 6,
+          "filesRead": 6,
+          "filesUnreadable": 0,
+          "classes": 11,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 52
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:archive-order",
+      "to": "consumer:job-flows-from-callers#src/jobs/job-queue.ts:runJob@src/jobs/job-queue.ts:26",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26
+    },
+    {
+      "from": "channel:close-month",
+      "to": "consumer:job-flows-from-callers#src/jobs/job-queue.ts:runJob@src/jobs/job-queue.ts:26",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26
+    },
+    {
+      "from": "channel:invoices",
+      "to": "consumer:job-flows-from-callers#src/queues/worker-base.ts:issueInvoice@src/queues/bull-client.ts:21",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:mail",
+      "to": "consumer:job-flows-from-callers#src/queues/worker-base.ts:MailWorker.processor@src/queues/bull-client.ts:21",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:notify-staff",
+      "to": "consumer:job-flows-from-callers#src/jobs/job-queue.ts:runJob@src/jobs/job-queue.ts:26",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26
+    },
+    {
+      "from": "channel:publish-item",
+      "to": "consumer:job-flows-from-callers#src/jobs/job-queue.ts:runJob@src/jobs/job-queue.ts:26",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26
+    },
+    {
+      "from": "channel:receipts",
+      "to": "consumer:job-flows-from-callers#src/queues/worker-base.ts:ReceiptWorker.print@src/queues/bull-client.ts:21",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 21
+    },
+    {
+      "from": "channel:resize-image",
+      "to": "consumer:job-flows-from-callers#src/jobs/job-queue.ts:runJob@src/jobs/job-queue.ts:26",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26
+    },
+    {
+      "from": "channel:retry-import",
+      "to": "consumer:job-flows-from-callers#src/jobs/job-queue.ts:runJob@src/jobs/job-queue.ts:26",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26
+    },
+    {
+      "from": "consumer:job-flows-from-callers#src/jobs/job-queue.ts:runJob@src/jobs/job-queue.ts:26",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:runJob",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26
+    },
+    {
+      "from": "consumer:job-flows-from-callers#src/queues/worker-base.ts:MailWorker.processor@src/queues/bull-client.ts:21",
+      "to": "job-flows-from-callers#src/queues/worker-base.ts:MailWorker.processor",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "consumer:job-flows-from-callers#src/queues/worker-base.ts:ReceiptWorker.print@src/queues/bull-client.ts:21",
+      "to": "job-flows-from-callers#src/queues/worker-base.ts:ReceiptWorker.print",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "consumer:job-flows-from-callers#src/queues/worker-base.ts:issueInvoice@src/queues/bull-client.ts:21",
+      "to": "job-flows-from-callers#src/queues/worker-base.ts:issueInvoice",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 21
+    },
+    {
+      "from": "entry:job-flows-from-callers:event:archive-order",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:runJob",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:event:close-month",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:runJob",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:event:invoices",
+      "to": "job-flows-from-callers#src/queues/worker-base.ts:issueInvoice",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:event:mail",
+      "to": "job-flows-from-callers#src/queues/worker-base.ts:MailWorker.processor",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "params": [],
+      "returns": "unknown",
+      "signature": {
+        "params": [],
+        "returns": "unknown"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:event:notify-staff",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:runJob",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:event:publish-item",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:runJob",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:event:receipts",
+      "to": "job-flows-from-callers#src/queues/worker-base.ts:ReceiptWorker.print",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/queues/bull-client.ts",
+      "line": 21,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:event:resize-image",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:runJob",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:event:retry-import",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:runJob",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:http:POST:/images/:param",
+      "to": "job-flows-from-callers#src/server.ts:POST /images/:imageId@22",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 22,
+      "meta": {
+        "requestRead": true,
+        "params": "{imageId:string}"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:http:POST:/items/:param/publish",
+      "to": "job-flows-from-callers#src/server.ts:POST /items/:itemId/publish@31",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 31,
+      "meta": {
+        "requestRead": true,
+        "params": "{itemId:string}"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:http:POST:/months/:param/close",
+      "to": "job-flows-from-callers#src/server.ts:POST /months/:month/close@40",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 40,
+      "meta": {
+        "requestRead": true,
+        "params": "{month:string}"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:http:POST:/orders/:param/invoice",
+      "to": "job-flows-from-callers#src/server.ts:POST /orders/:orderId/invoice@17",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 17,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:job-flows-from-callers:http:POST:/signup",
+      "to": "job-flows-from-callers#src/server.ts:POST /signup@12",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 12,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue.createJobWithChildren",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue.buildFlowJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 53,
+      "params": [
+        "{type:type:job-flows-from-callers#JobType;payload:object}"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue.createSequentialJobFlow",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue.buildFlowJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 42,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 38
+        }
+      },
+      "params": [
+        "{type:type:job-flows-from-callers#JobType;payload:object}"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.add",
+      "to": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.addToBull",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 37,
+      "params": [
+        "type:job-flows-from-callers#QueuedJob"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.add",
+      "to": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.dispatch",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 38,
+      "params": [
+        "type:job-flows-from-callers#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.addAllToBull",
+      "to": "job-flows-from-callers#src/queues/bull-client.ts:BullClient.addBulk",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 56,
+      "params": [
+        "type:job-flows-from-callers#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.addAllToBull",
+      "to": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.addToBull",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 55,
+      "params": [
+        "type:job-flows-from-callers#QueuedJob"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.addToBull",
+      "to": "job-flows-from-callers#src/queues/bull-client.ts:BullClient.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 60,
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.dispatch",
+      "to": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.fallBack",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 45,
+      "params": [
+        "unknown",
+        "type:job-flows-from-callers#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.dispatch",
+      "to": "job-flows-from-callers#src/queues/queue-base.ts:Relay.send",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 43,
+      "params": [
+        "string",
+        "type:job-flows-from-callers#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.fallBack",
+      "to": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.addAllToBull",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 51,
+      "params": [
+        "type:job-flows-from-callers#QueuedJob[]"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.open",
+      "to": "job-flows-from-callers#src/queues/bull-client.ts:BullClient.openQueue",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/queue-base.ts",
+      "line": 33,
+      "params": [
+        "string"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/worker-base.ts:WorkerBase.init",
+      "to": "job-flows-from-callers#src/queues/worker-base.ts:WorkerBase.startWorker",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/worker-base.ts",
+      "line": 16,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/queues/worker-base.ts:WorkerBase.startWorker",
+      "to": "job-flows-from-callers#src/queues/bull-client.ts:BullClient.openWorker",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/queues/worker-base.ts",
+      "line": 20,
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /images/:imageId@22",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue.createSequentialJobFlow",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 23,
+      "params": [
+        "{type:type:job-flows-from-callers#JobType;payload:object}[]"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /images/:imageId@22",
+      "to": "job-flows-from-callers#src/jobs/job-records.ts:buildPublishJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 25,
+      "params": [
+        "string"
+      ],
+      "returns": "{type:type:job-flows-from-callers#JobType;payload:object}"
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /images/:imageId@22",
+      "to": "producer:job-flows-from-callers#src/server.ts:23:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 23
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /items/:itemId/publish@31",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue.createSequentialJobFlow",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 36,
+      "params": [
+        "{type:type:job-flows-from-callers#JobType;payload:object}[]"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /items/:itemId/publish@31",
+      "to": "job-flows-from-callers#src/jobs/job-records.ts:buildNotifyJobs",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 34,
+      "params": [
+        "string"
+      ],
+      "returns": "{type:type:job-flows-from-callers#JobType;payload:object}[]"
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /items/:itemId/publish@31",
+      "to": "job-flows-from-callers#src/jobs/job-records.ts:buildPublishJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 33,
+      "params": [
+        "string"
+      ],
+      "returns": "{type:type:job-flows-from-callers#JobType;payload:object}"
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /items/:itemId/publish@31",
+      "to": "producer:job-flows-from-callers#src/server.ts:36:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 36
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /months/:month/close@40",
+      "to": "job-flows-from-callers#src/jobs/job-queue.ts:JobQueue.createJobWithChildren",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 46,
+      "params": [
+        "{type:type:job-flows-from-callers#JobType;payload:object}",
+        "{type:type:job-flows-from-callers#JobType;payload:object}[]"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /months/:month/close@40",
+      "to": "job-flows-from-callers#src/jobs/job-records.ts:buildRetryJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 45,
+      "params": [
+        "string"
+      ],
+      "returns": "{type:'retry-import';payload:{importId:string}}"
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /months/:month/close@40",
+      "to": "producer:job-flows-from-callers#src/server.ts:46:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 46
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /orders/:orderId/invoice@17",
+      "to": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 18,
+      "params": [
+        "type:job-flows-from-callers#QueuedJob"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /orders/:orderId/invoice@17",
+      "to": "producer:job-flows-from-callers#src/server.ts:18:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 18
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /signup@12",
+      "to": "job-flows-from-callers#src/queues/queue-base.ts:QueueBase.add",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 13,
+      "params": [
+        "type:job-flows-from-callers#QueuedJob"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "job-flows-from-callers#src/server.ts:POST /signup@12",
+      "to": "producer:job-flows-from-callers#src/server.ts:13:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 13
+    },
+    {
+      "from": "producer:job-flows-from-callers#src/server.ts:13:9",
+      "to": "channel:mail",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 13,
+      "params": [
+        "{email:string}"
+      ]
+    },
+    {
+      "from": "producer:job-flows-from-callers#src/server.ts:18:9",
+      "to": "channel:invoices",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 18,
+      "params": [
+        "{orderId:any}"
+      ]
+    },
+    {
+      "from": "producer:job-flows-from-callers#src/server.ts:23:9",
+      "to": "channel:publish-item",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 23
+    },
+    {
+      "from": "producer:job-flows-from-callers#src/server.ts:23:9",
+      "to": "channel:resize-image",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 23
+    },
+    {
+      "from": "producer:job-flows-from-callers#src/server.ts:36:9",
+      "to": "channel:archive-order",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 36
+    },
+    {
+      "from": "producer:job-flows-from-callers#src/server.ts:36:9",
+      "to": "channel:notify-staff",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 36
+    },
+    {
+      "from": "producer:job-flows-from-callers#src/server.ts:36:9",
+      "to": "channel:publish-item",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 36
+    },
+    {
+      "from": "producer:job-flows-from-callers#src/server.ts:46:9",
+      "to": "channel:archive-order",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 46
+    },
+    {
+      "from": "producer:job-flows-from-callers#src/server.ts:46:9",
+      "to": "channel:close-month",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 46
+    },
+    {
+      "from": "producer:job-flows-from-callers#src/server.ts:46:9",
+      "to": "channel:retry-import",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 46
+    }
+  ],
+  "types": {
+    "type:job-flows-from-callers#JobType": {
+      "name": "JobType",
+      "kind": "union",
+      "declaredIn": "job-flows-from-callers#src/jobs/job-queue.ts",
+      "structuralHash": "240170843383496c",
+      "members": [
+        "'resize-image'",
+        "'publish-item'",
+        "'notify-staff'",
+        "'archive-order'",
+        "'close-month'",
+        "'retry-import'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:job-flows-from-callers#QueuedJob": {
+      "name": "QueuedJob",
+      "kind": "object",
+      "declaredIn": "job-flows-from-callers#src/queues/bull-client.ts",
+      "structuralHash": "0919d99b59c3992a",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "data",
+          "type": "unknown",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The method is chosen at run time; nothing static to point at.",
+      "symbol": "JobQueue.init -> processors[type]",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 10,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 14,
+                "symbol": "POST /signup@12 -> res.status(202).end"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 14,
+                "symbol": "POST /signup@12 -> res.status"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 19,
+                "symbol": "POST /orders/:orderId/invoice@17 -> res.status(202).end"
+              }
+            ]
+          },
+          {
+            "cause": "dynamic-member",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/jobs/job-queue.ts",
+                "line": 26,
+                "symbol": "JobQueue.init -> processors[type]"
+              }
+            ]
+          }
+        ]
+      },
+      "sites": 11
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 35,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 51,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 58,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "FlowJob",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/bull-client.ts",
+      "line": 20,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Processor",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/worker-base.ts",
+      "line": 15,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Processor",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/worker-base.ts",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Processor",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/worker-base.ts",
+      "line": 38,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Processor",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/worker-base.ts",
+      "line": 52,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ orderId: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/queues/worker-base.ts",
+      "line": 64,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ orderId: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/server.ts",
+      "line": 23,
+      "reason": "payload-type-unknown",
+      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
+      "symbol": "resize-image"
+    },
+    {
+      "file": "src/server.ts",
+      "line": 36,
+      "reason": "channel-dynamic",
+      "hint": "req.body.followUp, an element of jobs, is decided further out than the elements written beside it, and is not followed there. Annotate POST /items/:itemId/publish@31 with the channel it uses.",
+      "symbol": "producer:job-flows-from-callers#src/server.ts:36:9",
+      "message": "POST /items/:itemId/publish@31 -> 'archive-order'"
+    },
+    {
+      "file": "src/server.ts",
+      "line": 36,
+      "reason": "payload-type-unknown",
+      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
+      "symbol": "archive-order"
+    },
+    {
+      "file": "src/server.ts",
+      "line": 46,
+      "reason": "payload-type-unknown",
+      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
+      "symbol": "close-month"
+    }
+  ]
+}

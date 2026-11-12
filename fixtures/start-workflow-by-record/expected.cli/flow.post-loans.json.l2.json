@@ -17,6 +17,15 @@
         "api": "lending-loans",
         "function": "lending-create-loan",
         "declaredAs": "aws_api_gateway_method.create_loan",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "lending-loans"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },

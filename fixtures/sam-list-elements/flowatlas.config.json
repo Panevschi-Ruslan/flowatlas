@@ -1,0 +1,6 @@
+{
+  "services": [
+    { "name": "catalog", "repo": "./catalog", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,5 +1,7 @@
 import {
   AWAITING_META,
+  GRANTABLE_META,
+  type GrantableAddress,
   GUESSED_META,
   RECORDED_META,
   WHERE_DECLARED_META,
@@ -9,6 +11,9 @@ import {
   evaluateExpression,
   findDecorators,
   forEachCall,
+  type Forwarded,
+  forwardedFrom,
+  forwardNoWorse,
   getDecorator,
   isEntryKind,
   makeChannelId,
@@ -20,6 +25,7 @@ import {
   type AwaitedAddress,
   type CallPattern,
   type ClassMethod,
+  type NamedFunction,
   type EntryKind,
   type ExtractorPass,
   type GraphNode,
@@ -30,6 +36,8 @@ import {
   lineAndColumnAt,
   conditionsHold,
   describedCallKey,
+  locatedExpressions,
+  locatedSlots,
   precedenceOf,
   precedenceRows,
   withdrawDescribedCalls,
@@ -38,9 +46,9 @@ import {
 // import is the whole of R46's answer at this end: a channel reader is not part
 // of any extractor, so it names none, and the Angular reader that borrows its
 // name resolution no longer inherits the Nest one through it.
-import { scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/extract-scopes';
-import type { CallExpression, ClassDeclaration, MethodDeclaration, Node as TsNode } from 'ts-morph';
-import { Node } from 'ts-morph';
+import { repoSourceFiles, scopesOf, type Holder, type PassContext, type Scope } from '@flowatlas/extract-scopes';
+import type { CallExpression, ClassDeclaration, MethodDeclaration, NewExpression, Node as TsNode, ParameterDeclaration } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
 import { brokerAdapters, createCustomBrokerAdapter, type BrokerSpec, type ConsumerPattern, type SubscriberPattern } from './adapters/index.js';
 import { createStarterAdapter } from './adapters/starters.js';
 import {
@@ -54,9 +62,11 @@ import {
   targetOfHandler,
   type ReceiverEvidence,
 } from './call-site.js';
-import { addressOf, appliesAt, collapsed, readAddress, type AddressedElement } from './address.js';
+import { addressOf, appliesAt, collapsed, messageValue, readAddress, readWritten, type AddressedElement } from './address.js';
+import { forwardedPublish, heldAtSite, heldValues, MOST_STEPS, waits, type Held } from './forwarded.js';
+import { constructsFrom, dispatchRecord, functionBehind, handedAlong, handlerInRecord, namesHandedTo, type HandlerTarget } from './constructed.js';
 import { payloadParameter, typeAtPath } from './payload.js';
-import { isResolved, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
+import { isResolved, nameForKind, resolveChannelName, shapeChannelNames, type ChannelResolution } from './channel-name.js';
 import { endpointShapingAt, isUnreadable, unreadableEndpointRow, type EndpointShaping } from './endpoint.js';
 import { pairKey, readBrokerMarkers } from './markers.js';
 import { rowAbout, type RowSite } from './row-site.js';
@@ -64,6 +74,17 @@ import { isStartPattern, startReader } from './starts.js';
 
 const lineColOf = (node: TsNode): { line: number; column: number } =>
   lineAndColumnAt(node.getSourceFile(), node.getStart());
+
+/**
+ * A publish drawn at a caller of the function it is written in (P268): the
+ * call that decides which member of a record the address is read from, the
+ * body that call is written in, and the address read with the caller's value.
+ */
+interface CallerReading {
+  readonly site: CallExpression;
+  readonly holder: Holder;
+  readonly elements: readonly AddressedElement[];
+}
 
 /** What a call is made on: the receiver of a method, or the function itself. */
 const receiverOf = (call: CallExpression): TsNode => {
@@ -97,6 +118,113 @@ const channelAt = (
   collapsed(readAddress(site, addressOf(pattern), undefined, context, config, fallback));
 
 /**
+ * A publish read where a caller decided it (P267): the call the broker's
+ * client is called with stays the call the shape is read from, and these are
+ * the values read at the caller instead of at it.
+ */
+interface ForwardedReading {
+  /** The call the publish is drawn at. */
+  readonly site: CallExpression;
+  readonly elements: AddressedElement[];
+  readonly jobName: string | null | undefined;
+  /** Every job the call's entries name, where they name several (P271). */
+  readonly jobNames?: readonly string[];
+  /** What the message is written as there, where it was followed out to it. */
+  readonly payload: TsNode | undefined;
+  /** A call on the way may run another implementation instead. */
+  readonly undecided: boolean;
+  /** The functions it was handed out of, innermost first. */
+  readonly through: readonly string[];
+  /** The class the broker's call is written in. */
+  readonly writtenIn: ClassDeclaration | undefined;
+}
+
+/** Whether a description names a unit of work at all. */
+const namesJobs = (pattern: CallPattern): boolean => pattern.name !== undefined || pattern.nameArg !== undefined;
+
+/**
+ * Where a publish names its units of work: the locators first, then the plain
+ * argument. One place for most calls; one per entry for a call that sends a
+ * list of jobs, each naming its own (P271). Only places a locator reached.
+ */
+const jobNamesAt = (call: CallExpression, pattern: CallPattern, context: LocatorContext): TsNode[] => {
+  if (pattern.name !== undefined) {
+    for (const locator of pattern.name) {
+      const reached = locatedSlots(call, locator, context).flatMap((slot) => (slot !== undefined && slot.reached ? [slot.expression] : []));
+      if (reached.length > 0) return reached;
+    }
+    return [];
+  }
+  const argument = pattern.nameArg === undefined ? undefined : call.getArguments()[pattern.nameArg];
+  return argument === undefined ? [] : [argument];
+};
+
+/** A unit of work's name as the code writes it, or `null` where it is not written. */
+const jobNameOf = (expression: TsNode): string | null => {
+  const value = evaluateExpression(expression);
+  return value.resolved && typeof value.value === 'string' ? value.value : null;
+};
+
+/**
+ * The job a call names, and every job where its entries name several (P271):
+ * `null` for a name not written where it is read.
+ */
+const jobsNamed = (expressions: readonly TsNode[]): { jobName: string | null; jobNames?: string[] } => {
+  const names = expressions.map(jobNameOf);
+  const distinct = [...new Set(names)];
+  if (distinct.length === 1) return { jobName: distinct[0] ?? null };
+  if (distinct.length > 1 && distinct.every((name): name is string => name !== null)) return { jobName: null, jobNames: distinct.sort() };
+  return { jobName: null };
+};
+
+/** Whether a value followed out is several values, not one written with several branches (P286). */
+const severalOf = (held: Held): boolean =>
+  held.kind === 'written' && (held.choices?.length ?? 0) > 1 && !Node.isConditionalExpression(held.expression);
+
+/** The job a value followed out names, or each it may name (P286). */
+const jobsHeld = (held: Held | undefined): { jobName: string | null; jobNames?: string[] } =>
+  held?.kind !== 'written' ? { jobName: null } : jobsNamed(held.choices ?? [held.expression]);
+
+/**
+ * What each element of a publish's address waits on, where one of them waits
+ * on somebody further out (P267, P286): the place each locator reached for
+ * it, followed past what the walk bound and the path it did not take. An
+ * element read where the call is written is `undefined`, and stays as it
+ * was read. Absent where nothing waits.
+ */
+const addressesWaiting = (
+  call: CallExpression,
+  locators: readonly NameLocator[],
+  elements: readonly AddressedElement[],
+  context: LocatorContext,
+): (Held | undefined)[] | undefined => {
+  if (elements.length === 0 || elements.every((element) => isResolved(element.resolution))) return undefined;
+  const located = locators.map((locator) => locatedSlots(call, locator, context));
+  const held = elements.map((element, index): Held | undefined => {
+    if (isResolved(element.resolution)) return undefined;
+    for (const slots of located) {
+      const slot = slots.length === elements.length ? slots[index] : slots.length === 1 && elements.length === 1 ? slots[0] : undefined;
+      if (slot === undefined) continue;
+      const value = heldValues(slot.expression, slot.reached ? [] : (slot.rest ?? []), call, slot.bound);
+      if (waits(value)) return value;
+    }
+    return undefined;
+  });
+  return held.some((value) => value !== undefined) ? held : undefined;
+};
+
+/** Where a publish's message is written, as its description says. */
+const messageAt = (call: CallExpression, pattern: CallPattern, context: LocatorContext): TsNode | undefined => {
+  if (pattern.payload !== undefined) {
+    const slot = pattern.payload
+      .flatMap((locator) => locatedSlots(call, locator, context))
+      .find((each) => each !== undefined && each.reached);
+    return slot === undefined ? undefined : messageValue(slot.expression);
+  }
+  return pattern.payloadArg === undefined ? undefined : call.getArguments()[pattern.payloadArg];
+};
+
+/**
  * What to do about a channel named by an environment variable.
  *
  * The variable is the one thing the code says, and the value is set by whatever
@@ -108,6 +236,18 @@ const environmentHint = (variable: string): string =>
   `Where the code runs in a function whose deployment is read, the linker completes the channel from the value that function is deployed with, and this row goes; ` +
   `it stays when nothing deployed is known to run this code.`;
 
+/** A handler as written: a method of a class, or a function of the repository's own in any spelling. */
+type HandlerNode = ClassMethod | NamedFunction['declaration'];
+
+/** The function a handler's parameters and answer are read off. */
+const functionLikeOf = (handler: HandlerNode) => {
+  if (Node.isMethodDeclaration(handler) || Node.isFunctionDeclaration(handler) || Node.isArrowFunction(handler) || Node.isFunctionExpression(handler)) {
+    return handler;
+  }
+  const written = handler.getInitializer();
+  return written !== undefined && (Node.isArrowFunction(written) || Node.isFunctionExpression(written)) ? written : undefined;
+};
+
 /** Every adapter that applies: the detected ones plus any described in configuration. */
 export const brokerSpecsFor = (ctx: PassContext): BrokerSpec[] => {
   const detected = new Set(ctx.adapters.broker.map((adapter) => adapter.name));
@@ -118,6 +258,32 @@ export const brokerSpecsFor = (ctx: PassContext): BrokerSpec[] => {
     ...ctx.config.adapters.broker.custom.map(createCustomBrokerAdapter),
     ...(starters.length === 0 ? [] : [createStarterAdapter(starters)]),
   ];
+};
+
+/** How many callers a row names before it counts the rest. */
+const CALLERS_NAMED = 3;
+
+/**
+ * What a row says of an address a parameter decides that is still read
+ * where it is written (P268): which parameter, and the callers that leave it
+ * unread - each with what it hands - or that may run another function.
+ */
+const decidedByHint = (
+  parameter: ParameterDeclaration,
+  forwarded: Forwarded,
+  drawn: ReadonlySet<TsNode>,
+): string => {
+  const left = forwarded.calls.filter((hop) => !drawn.has(hop.site));
+  const named = left
+    .slice(0, CALLERS_NAMED)
+    .map((hop) => `${hop.site.getSourceFile().getBaseName()}:${hop.site.getStartLineNumber()} hands ${hop.argument.getText().slice(0, 60)}`);
+  const more = left.length > CALLERS_NAMED ? ` and ${left.length - CALLERS_NAMED} more` : '';
+  const why = [
+    ...(named.length === 0 ? [] : [`${named.join(', ')}${more}`]),
+    ...(forwarded.undecided ? ['a call that may run another function hands it'] : []),
+    ...(forwarded.calls.length === 0 && !forwarded.undecided ? ['nothing calls the function'] : []),
+  ].join('; ');
+  return `What this sends to is chosen by the parameter ${parameter.getName()}, which each caller decides; it is read where a caller writes it, and here ${why}.`;
 };
 
 /**
@@ -164,16 +330,25 @@ export const extractBrokers = (ctx: PassContext): void => {
     file: string,
     line: number,
     site: RowSite,
+    decidedBy?: string,
   ): void => {
     if (isResolved(resolution)) return;
+    const { lookup } = resolution;
     ctx.report({
       file,
       line,
       reason: resolution.unresolved,
       hint:
-        resolution.variable === undefined
-          ? `The channel name cannot be read here. Annotate ${site.named} with the channel it uses.`
-          : environmentHint(resolution.variable),
+        resolution.variable !== undefined
+          ? environmentHint(resolution.variable)
+          : decidedBy !== undefined
+            ? `${decidedBy} Hand it a name the code states, or annotate ${site.named} with the channels it may use.`
+            : lookup !== undefined
+            ? `${resolution.text} is looked up in ${lookup.collection} by ${lookup.key}, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere. ` +
+              `Send to an address the code or the deployment states, or annotate ${site.named} with the channels it may use.`
+            : resolution.why !== undefined
+            ? `${resolution.why} Annotate ${site.named} with the channel it uses.`
+            : `The channel name cannot be read here. Annotate ${site.named} with the channel it uses.`,
       ...rowAbout(site, resolution.text),
       ...(resolution.variable === undefined ? {} : { meta: { variable: resolution.variable } }),
     });
@@ -240,6 +415,97 @@ export const extractBrokers = (ctx: PassContext): void => {
   };
 
   /**
+   * The callers a publish's queue is decided at, each read, where the queue is
+   * a parameter of the function the broker's call is written in or a field its
+   * instance was built with (P267).
+   *
+   * Only a one-part address that could not be read where it is written: a
+   * queue read here is drawn here, as it always was. The job and the message
+   * are followed out along the same calls, so each reading is one caller's.
+   * Absent where there is nothing to follow.
+   */
+  const forwardedOut = (
+    call: CallExpression,
+    pattern: CallPattern,
+    spec: BrokerSpec,
+    elements: readonly AddressedElement[],
+    context: LocatorContext,
+  ): { readings: ForwardedReading[]; here: boolean } | undefined => {
+    // The job is followed out with the queue where one place names it (P271).
+    const namedAt = jobNamesAt(call, pattern, context);
+    const [first] = namedAt;
+    const named = first !== undefined && namedAt.every((each) => each.getText() === first.getText()) ? first : undefined;
+    const carried = messageAt(call, pattern, context);
+    const job = named === undefined ? undefined : heldAtSite(named, call);
+    const message = carried === undefined ? undefined : heldAtSite(carried, call);
+    // The one part of the address not written as a literal: a queue, or the table of `dynamodb/<table>` (P289).
+    const parts = addressOf(pattern);
+    const open = parts.filter((each) => !('literal' in each));
+    const [part] = open;
+    const addresses = part === undefined || open.length !== 1 || 'literal' in part ? undefined : addressesWaiting(call, part.at, elements, context);
+    if (addresses === undefined) {
+      // The queue read here and the job decided further out (P271): drawn
+      // where each caller names the job, on the queue read here.
+      if (job === undefined || !waits(job) || elements.length === 0 || !elements.every((element) => isResolved(element.resolution))) return undefined;
+      const walked = forwardedPublish([job, message], ctx.di);
+      const readings = walked.sites.map((site): ForwardedReading => {
+        const [decided, handed] = site.values;
+        return {
+          site: site.site,
+          elements: [...elements],
+          ...jobsHeld(decided),
+          payload: handed === undefined || handed.kind === 'unread' || severalOf(handed) ? undefined : messageValue(handed.expression),
+          undecided: site.undecided,
+          through: site.through,
+          writtenIn: undefined,
+        };
+      });
+      return { readings, here: walked.here };
+    }
+    const count = addresses.length;
+    const walked = forwardedPublish([...addresses, job, message], ctx.di, count + 1, count);
+    const readings = walked.sites.map((site): ForwardedReading => {
+      const queues = site.values.slice(0, count);
+      const [job, message] = site.values.slice(count);
+      const read = queues.flatMap((queue, index): AddressedElement[] => {
+        // An element read where the call is written stays as it was read there.
+        if (queue === undefined) return elements[index] === undefined ? [] : [elements[index] as AddressedElement];
+        const dynamic = (why: string): AddressedElement => ({
+          resolution: { unresolved: 'channel-dynamic', text: (queue.expression ?? site.site).getText().slice(0, 60), why },
+        });
+        if (queue.kind === 'written' && part !== undefined) {
+          const read = (queue.choices ?? [queue.expression]).map((each) => readWritten(each, parts, ctx.config));
+          // The elements of a list read where they are written, and a row for those that are not (P290).
+          return queue.partial === undefined ? read : [...read, dynamic(queue.partial)];
+        }
+        return [
+          dynamic(
+            queue.kind === 'unread'
+              ? queue.why
+              : site.stopped === 'budget'
+                ? `The queue is handed in from further out than the ${MOST_STEPS} calls the walk out from one publish reads.`
+                : `The queue is ${queue.expression.getText().slice(0, 60)}, handed in by nothing a call names: a function no call names by itself, such as a callback, or an instance this cannot follow to where it is made.`,
+          ),
+        ];
+      });
+      return {
+        site: site.site,
+        elements: read.map((element) => ({ ...element, resolution: nameForKind(element.resolution, spec.channelKind) })),
+        ...(!namesJobs(pattern)
+          ? { jobName: undefined }
+          : named === undefined && namedAt.length > 0
+            ? jobsNamed(namedAt)
+            : jobsHeld(job)),
+        payload: message === undefined || message.kind === 'unread' || severalOf(message) ? undefined : messageValue(message.expression),
+        undecided: site.undecided,
+        through: site.through,
+        writtenIn: undefined,
+      };
+    });
+    return { readings, here: walked.here };
+  };
+
+  /**
    * Records one publish, wherever it is written.
    *
    * `holder` is the body the call sits in: a method, a module-level function, a
@@ -256,53 +522,108 @@ export const extractBrokers = (ctx: PassContext): void => {
     holder: Holder,
     owner: ClassDeclaration | undefined,
     evidence: ReceiverEvidence,
+    caller?: CallerReading,
+    from?: ForwardedReading,
   ): boolean => {
-    const { id: methodId, file } = holder;
+    const { id: methodId, file } = caller?.holder ?? holder;
     const args = call.getArguments();
-    const { line, column } = lineColOf(call);
+    const { line, column } = lineColOf(caller?.site ?? from?.site ?? call);
     const callee = call.getExpression();
     const receiver = Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
-
-    // One element per address the call is sent to: one for an ordinary publish,
-    // one per entry for a call that sends a list of them.
-    const elements = readAddress(
-      call,
-      addressOf(pattern),
-      pattern.payload,
-      contextOf(receiver, owner),
-      ctx.config,
+    // The class the broker's call is written in, which says what its own
+    // receiver is; `owner` is the one the publish is drawn in.
+    const writtenIn = from === undefined ? owner : from.writtenIn;
+    const context = contextOf(receiver, writtenIn);
+    const fallback =
       // A receiver that is the channel and names nothing readable is best shown
       // as the receiver: `queue.add(job)` says nothing, and `queue` is the thing
       // a reader has to go and look at.
       pattern.channel !== undefined && pattern.address === undefined
         ? receiver.getText()
-        : call.getText().slice(0, 60),
-    );
+        : call.getText().slice(0, 60);
+
+    // One element per address the call is sent to: one for an ordinary publish,
+    // one per entry for a call that sends a list of them.
+    // A record read where a queue is named is no queue (R181).
+    const elements = (
+      caller?.elements ?? from?.elements ?? readAddress(call, addressOf(pattern), pattern.payload, context, ctx.config, fallback)
+    ).map((element) => ({ ...element, resolution: nameForKind(element.resolution, spec.channelKind) }));
+
+    // A queue its callers decide is drawn where each of them decides it, and
+    // here only where nothing calls this or the walk out stopped short (P267).
+    if (from === undefined && caller === undefined) {
+      const forwarded = forwardedOut(call, pattern, spec, elements, context);
+      if (forwarded !== undefined) {
+        for (const reading of forwarded.readings) {
+          const scope = holderAt(reading.site);
+          if (scope === undefined) continue;
+          emitProducer(call, pattern, spec, scope, scope.owner, evidence, undefined, { ...reading, writtenIn: owner });
+        }
+        if (!forwarded.here) return true;
+      }
+    }
+
+    // An address read from a record a parameter chooses, or that is one, is
+    // decided by each caller of the function the call is written in (P268):
+    // drawn there, read with the parameter bound to what that caller hands
+    // it, wherever every caller reads it in full.
+    const [selector, ...others] = new Set(elements.flatMap((element) => (element.selector === undefined ? [] : [element.selector])));
+    /** What the row says where the callers leave the address unread. */
+    let decidedBy: string | undefined;
+    if (caller === undefined && from === undefined && selector !== undefined && others.length === 0) {
+      // A caller that reads no more than the call does decides nothing anyone
+      // can name: the call keeps its own producer and its row, as it does
+      // for a caller that may run another function (R158).
+      const here: { holder: Holder; elements: readonly AddressedElement[] } = { holder, elements };
+      const sureness = (reading: typeof here): number =>
+        reading === here ? 0 : reading.elements.every((element) => isResolved(element.resolution)) ? 1 : -1;
+      const forwarded = forwardedFrom(selector);
+      const forwarding = forwardNoWorse<{ holder: Holder; elements: readonly AddressedElement[] }>(forwarded, {
+        here,
+        at: (hop) => {
+          const owned = holderAt(hop.site);
+          if (owned === undefined) return undefined;
+          const bound = new Map<TsNode, TsNode>([[selector, hop.argument]]);
+          return {
+            holder: owned,
+            elements: readAddress(call, addressOf(pattern), pattern.payload, { ...context, bound }, ctx.config, fallback),
+          };
+        },
+        sureness,
+      });
+      for (const { site, reading } of forwarding.callers) {
+        if (!Node.isCallExpression(site)) continue;
+        emitProducer(call, pattern, spec, holder, owner, evidence, { site, holder: reading.holder, elements: reading.elements });
+      }
+      if (!forwarding.here) return true;
+      decidedBy = decidedByHint(selector, forwarded, new Set(forwarding.callers.map((each) => each.site)));
+    }
 
     // Values the description keeps as written beside the address: the key a
     // write to a bucket names, which a notification of the bucket filters on
     // (P52). A value written and not read is recorded as no values, which a
     // reader further on says; a field not written at all is left out, so the
     // two stay apart: a delete naming a version nobody can read still names one
-    // (P56).
-    const recordedRead = Object.entries(pattern.recorded ?? {}).flatMap(([name, at]) => {
-      const elements = readAddress(call, [{ at }], undefined, contextOf(receiver, owner), ctx.config, '');
+    // (P56). Not read for a publish drawn at a caller: they are written where
+    // the broker's call is, about values that caller does not decide.
+    const recordedRead = Object.entries(from === undefined ? (pattern.recorded ?? {}) : {}).flatMap(([name, at]) => {
+      const elements = readAddress(call, [{ at }], undefined, context, ctx.config, '');
       const read = collapsed(elements);
       if (isResolved(read)) return [[name, [...read.names]] as const];
       return elements.some((element) => element.written !== undefined) ? [[name, [] as string[]] as const] : [];
     });
     const recorded = recordedRead.length === 0 ? undefined : Object.fromEntries(recordedRead);
 
-    const jobNameArg = pattern.nameArg === undefined ? undefined : args[pattern.nameArg];
-    const jobName =
-      jobNameArg === undefined
-        ? undefined
-        : (() => {
-            const value = evaluateExpression(jobNameArg);
-            return value.resolved && typeof value.value === 'string' ? value.value : null;
-          })();
+    const jobNameArgs = jobNamesAt(call, pattern, context);
+    const jobs =
+      from !== undefined
+        ? { jobName: from.jobName, ...(from.jobNames === undefined ? {} : { jobNames: [...from.jobNames] }) }
+        : jobNameArgs.length === 0
+          ? { jobName: pattern.name === undefined ? undefined : null }
+          : jobsNamed(jobNameArgs);
+    const { jobName } = jobs;
 
-    const exchangeArg = pattern.exchangeArg === undefined ? undefined : args[pattern.exchangeArg];
+    const exchangeArg = from !== undefined || pattern.exchangeArg === undefined ? undefined : args[pattern.exchangeArg];
     const exchange =
       exchangeArg === undefined
         ? undefined
@@ -348,9 +669,15 @@ export const extractBrokers = (ctx: PassContext): void => {
     };
     // A description that says where the message is written reads it per
     // element, as an expression; one that names an argument reads it once.
-    const shared = pattern.payload === undefined ? argumentPayload() : undefined;
+    // A publish drawn at a caller carries what that caller hands in, where the
+    // message was followed out to it, and what the broker's call declares where
+    // it was not.
+    const forwardedPayload =
+      from?.payload === undefined ? undefined : ctx.types.collectType(from.payload.getType(), from.payload);
+    const shared =
+      forwardedPayload ?? (pattern.payload === undefined ? argumentPayload() : undefined);
     const payloadOf = (element: AddressedElement): string | undefined =>
-      pattern.payload === undefined
+      forwardedPayload !== undefined || pattern.payload === undefined
         ? shared
         : element.payload === undefined
           ? undefined
@@ -359,7 +686,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     // The transport has the last word on the name the call wrote: an endpoint
     // the class declares is part of it, and a name the transport keeps for its
     // own signalling is not a channel at all.
-    const shaping = endpointShapingAt(spec, owner, receiver);
+    const shaping = endpointShapingAt(spec, writtenIn, receiver);
     const readable = !isUnreadable(shaping);
     /** Every channel reached, once, with the first element that reached it. */
     const reached = new Map<string, AddressedElement>();
@@ -404,9 +731,22 @@ export const extractBrokers = (ctx: PassContext): void => {
       const payload = payloadOf(element);
       return [{ parts: element.awaiting, ...(payload === undefined ? {} : { payload }) }];
     });
+    // An address not read, by what the part it could not read names: what a
+    // grant of the function that runs it bounds, where it grants a few (P272).
+    // One a value of the environment completes is the deployment's to say.
+    const grantable: GrantableAddress[] =
+      names.length > 0 || !readable
+        ? []
+        : unread.flatMap((element) => {
+            if (element.grantable === undefined || element.awaiting !== undefined) return [];
+            const payload = payloadOf(element);
+            return [{ parts: element.grantable, ...(payload === undefined ? {} : { payload }) }];
+          });
     // A receiver known only from what the source says it is constructed from
     // is what the author meant rather than what a compiler checked.
-    const confidence = evidence === 'checked' ? 'static' : 'heuristic';
+    // So is one drawn at a caller through a call that may run another
+    // implementation of the method instead (R158).
+    const confidence = evidence === 'checked' && from?.undecided !== true ? 'static' : 'heuristic';
     // The label names every channel the address reaches, which is how the
     // marker path already spells a producer of several (R38). `name` is the
     // representative pattern and stays the dedupe key, but showing it alone
@@ -416,7 +756,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     // The body is now known to hold a publish, which is the point at which it
     // earns a node: `ensure` is deferred precisely so that the thousands of
     // functions in a repository that publish nothing stay out of the graph.
-    holder.ensure();
+    (caller?.holder ?? holder).ensure();
     ctx.builder.addNode({
       id: producerId,
       type: 'producer',
@@ -431,6 +771,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         channelVia,
         method: pattern.method,
         ...(jobName === undefined ? {} : { jobName }),
+        ...(jobs.jobNames === undefined ? {} : { jobNames: jobs.jobNames }),
         ...(exchange === undefined ? {} : { exchange }),
         ...(recorded === undefined ? {} : { [RECORDED_META]: recorded }),
         ...(pattern.guessed === undefined ? {} : { [GUESSED_META]: pattern.guessed }),
@@ -439,11 +780,14 @@ export const extractBrokers = (ctx: PassContext): void => {
         // How far the call can be trusted once the address is complete, which
         // its edge cannot say while there is no channel to put it on.
         ...(awaiting.length === 0 ? {} : { [AWAITING_META]: awaiting, channelKind: spec.channelKind, confidence }),
+        ...(grantable.length === 0 ? {} : { [GRANTABLE_META]: grantable, channelKind: spec.channelKind, confidence }),
         // A write only some deployment makes a publish: kept or dropped by the linker.
         ...(pattern.whereDeclared === true ? { [WHERE_DECLARED_META]: true } : {}),
         // How a loop around it is read (P89): a batch, or a send with none.
         ...(pattern.batch === true ? { batch: true } : {}),
         ...(pattern.perItem === true ? { perItem: true } : {}),
+        // The functions of the repository's own it was handed out of (P267).
+        ...(from === undefined ? {} : { through: [...from.through] }),
         // Which rule of the project's patterns drew it, when one did (P121).
         ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
       },
@@ -472,7 +816,7 @@ export const extractBrokers = (ctx: PassContext): void => {
         const key = JSON.stringify(element.resolution);
         if (reported.has(key)) continue;
         reported.add(key);
-        reportChannel(element.resolution, file, line, site);
+        reportChannel(element.resolution, file, line, site, decidedBy);
       }
     }
     if (channelName === null) return true;
@@ -528,6 +872,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     pattern: ConsumerPattern,
     method: MethodDeclaration,
     owner: ClassDeclaration,
+    channelKind: string,
   ): { resolution: ChannelResolution; jobName?: string | null } => {
     const site =
       pattern.classDecorator === undefined
@@ -542,14 +887,17 @@ export const extractBrokers = (ctx: PassContext): void => {
       return { resolution: { unresolved: 'channel-dynamic', text: pattern.decorator }, ...jobName };
     }
     return {
-      resolution: channelAt(
-        site,
-        { channel: pattern.channel, channelArg: -1 },
-        {},
-        ctx.config,
-        // What a reader has to go and look at is the decorator that was supposed
-        // to name the channel, not the method under it.
-        site.getText().slice(0, 60),
+      resolution: nameForKind(
+        channelAt(
+          site,
+          { channel: pattern.channel, channelArg: -1 },
+          {},
+          ctx.config,
+          // What a reader has to go and look at is the decorator that was supposed
+          // to name the channel, not the method under it.
+          site.getText().slice(0, 60),
+        ),
+        channelKind,
       ),
       ...jobName,
     };
@@ -584,7 +932,7 @@ export const extractBrokers = (ctx: PassContext): void => {
     const methodId = ctx.methodIdOf(method);
     if (methodId === undefined) return;
     const { line } = lineColOf(method);
-    const { resolution, jobName } = consumerChannel(pattern, method, owner);
+    const { resolution, jobName } = consumerChannel(pattern, method, owner, spec.channelKind);
     const shaping = endpointShapingAt(spec, owner);
     const names = isResolved(resolution) && !isUnreadable(shaping)
       ? shapeChannelNames(resolution.names, shaping)
@@ -680,13 +1028,10 @@ export const extractBrokers = (ctx: PassContext): void => {
    * empty signature.
    */
   const signatureOf = (
-    handler: ClassMethod,
+    handler: HandlerNode,
   ): { params: TypeRef[]; returns: TypeRef } | undefined => {
-    if (Node.isMethodDeclaration(handler)) return ctx.types.collectSignature(handler);
-    const written = handler.getInitializer();
-    if (written === undefined) return undefined;
-    if (!Node.isArrowFunction(written) && !Node.isFunctionExpression(written)) return undefined;
-    return ctx.types.collectSignature(written);
+    const fn = functionLikeOf(handler);
+    return fn === undefined ? undefined : ctx.types.collectSignature(fn);
   };
 
   /**
@@ -729,7 +1074,7 @@ export const extractBrokers = (ctx: PassContext): void => {
   const entryOfHandler = (
     names: readonly string[],
     kind: string,
-    handlerMethod: ClassMethod,
+    handlerMethod: HandlerNode,
     handlerId: string,
     spec: BrokerSpec,
     file: string,
@@ -790,16 +1135,21 @@ export const extractBrokers = (ctx: PassContext): void => {
     const readBy = new Map<CallExpression, ReadonlySet<SubscriberPattern>>();
     /** Subscriptions whose receiver is known only from what the source states it is. */
     const stated = new Set<CallExpression>();
-    const subscribing = specs.flatMap((spec) => (spec.subscriberPatterns ?? []).map((pattern) => ({ spec, pattern })));
+    // A worker made by a construction is read on its own, below (P271).
+    const subscribing = specs.flatMap((spec) =>
+      (spec.subscriberPatterns ?? []).filter((pattern) => pattern.constructs === undefined).map((pattern) => ({ spec, pattern })),
+    );
     /**
      * How a subscription's receiver is the one a pattern names. A library's
      * pattern asks the checker alone, as it always has; a description the
      * project wrote - which names a type and no package - is also matched on
      * what the source states the receiver is, the way a described publish is,
      * so a bus from a package nobody installed is read at both ends (P121).
+     * So is a library's pattern whose receiver is the channel itself - a
+     * queue's `process` - as the publish on the same receiver is (P271).
      */
     const subscribedOn = (receiver: TsNode, pattern: SubscriberPattern): ReceiverEvidence | undefined =>
-      pattern.receiverPackages === undefined
+      pattern.receiverPackages === undefined || pattern.channel !== undefined
         ? receiverEvidence(receiver, pattern)
         : receiverIsFrom(receiver, pattern)
           ? 'checked'
@@ -831,12 +1181,9 @@ export const extractBrokers = (ctx: PassContext): void => {
           const spelling = callee.getName();
 
           const args = call.getArguments();
-          const resolution = channelAt(
-            call,
-            pattern,
-            contextOf(callee.getExpression(), owner),
-            ctx.config,
-            call.getText().slice(0, 60),
+          const resolution = nameForKind(
+            channelAt(call, pattern, contextOf(callee.getExpression(), owner), ctx.config, call.getText().slice(0, 60)),
+            spec.channelKind,
           );
           const { line } = lineColOf(call);
           // Read as a subscription, so the row saying its receiver could not
@@ -853,7 +1200,13 @@ export const extractBrokers = (ctx: PassContext): void => {
 
           // The handler is either this call's own argument or one registered
           // separately on the same receiver.
-          let handler = pattern.handlerArg === undefined ? undefined : args[pattern.handlerArg];
+          // Counted from the end where negative: the handler is last where the
+          // arguments before it are optional (P271).
+          let handler = pattern.handlerArg === undefined ? undefined : args.at(pattern.handlerArg);
+          // The one job it takes, where the call names one (P271).
+          const named = pattern.nameArg === undefined || args.length < 2 ? undefined : args[pattern.nameArg];
+          const jobRead = named === undefined ? undefined : evaluateExpression(named);
+          const jobName = jobRead?.resolved === true && typeof jobRead.value === 'string' ? jobRead.value : undefined;
           if (handler === undefined && pattern.listenerMethod !== undefined) {
             const receiverText = callee.getExpression().getText();
             for (const other of calls) {
@@ -914,6 +1267,7 @@ export const extractBrokers = (ctx: PassContext): void => {
               adapter: spec.name,
               decorator: spelling,
               entryId,
+              ...(jobName === undefined ? {} : { jobName }),
               ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
             },
           });
@@ -1048,6 +1402,200 @@ export const extractBrokers = (ctx: PassContext): void => {
     return undefined;
   };
   const starts = startReader(ctx, holderAt);
+
+  /** What a handler found for a worker is, as the graph names it. */
+  const drawnHandler = (target: HandlerTarget): { id: string; label: string; file: string; node: HandlerNode; ensure: () => void } | undefined => {
+    if (target.kind === 'method') {
+      const id = ctx.methodIdOf(target.method);
+      if (id === undefined) return undefined;
+      const owner = target.method.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+      const className = owner === undefined ? '?' : (ctx.classes.get(owner)?.name ?? owner.getName() ?? '?');
+      return {
+        id,
+        label: `${className}.${target.method.getName()}`,
+        file: ctx.fileOf(target.method),
+        node: target.method,
+        ensure: () => {
+          ctx.ensureMethodNode(target.method);
+        },
+      };
+    }
+    return {
+      id: ctx.functionIdOf(target.fn),
+      label: target.fn.name,
+      file: ctx.fileOf(target.fn.declaration),
+      node: target.fn.declaration,
+      ensure: () => {
+        ctx.ensureFunctionNode(target.fn);
+      },
+    };
+  };
+
+  /**
+   * A worker started by a construction (P271): `new Worker(name, processor)`,
+   * read once per queue its name stands for - each element of a loop it is
+   * made in, each caller of the function it is made in - with the handler
+   * the processor runs for that queue: the member of the record it looks its
+   * handler up in by the queue's name, or the processor itself.
+   */
+  const emitConstructed = (construction: NewExpression, spec: BrokerSpec, pattern: SubscriberPattern): void => {
+    const args = construction.getArguments();
+    const nameArg = args[pattern.channelArg];
+    if (nameArg === undefined) return;
+    const processor = pattern.handlerArg === undefined ? undefined : args.at(pattern.handlerArg);
+    const owner = construction.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+    const around = holderAt(construction);
+    const file = ctx.fileOf(construction);
+    const { line } = lineColOf(construction);
+    const spelling = `new ${pattern.constructs ?? pattern.channelArg}`;
+    const symbolHere = `${ctx.builder.getNode(around?.id ?? '')?.label ?? file} -> ${spelling}`;
+    const record = dispatchRecord(nameArg, processor);
+
+    /**
+     * A processor as a handler, where it can be named: the one written at the
+     * construction, or one a caller hands in (P290), read in the class it is
+     * written in. One that does more than delegate stands for the body it is
+     * written in.
+     */
+    let unfollowed = false;
+    let unfollowedElsewhere = false;
+    const processorTarget = (written: TsNode | undefined, bound: Parameters<typeof functionBehind>[2]): HandlerTarget | undefined => {
+      if (written === undefined) return undefined;
+      const writtenIn = written === processor ? owner : written.getFirstAncestorByKind(SyntaxKind.ClassDeclaration);
+      const named = functionBehind(written, writtenIn, bound);
+      if (named !== undefined) return named;
+      if (Node.isArrowFunction(written) || Node.isFunctionExpression(written)) {
+        const placed = bodies.get(written.getBody());
+        if (placed?.fn !== undefined) return { kind: 'function', fn: placed.fn };
+        const delegated = writtenIn === undefined ? undefined : targetOfHandler(written, writtenIn);
+        if (delegated !== undefined) return { kind: 'method', method: delegated };
+      }
+      // The body the worker is made in, as the subscriptions do, or the one
+      // a caller writes the processor in.
+      const body = written === processor ? around : holderAt(written);
+      if (written === processor) unfollowed = true;
+      else unfollowedElsewhere = true;
+      if (body?.method !== undefined) return { kind: 'method', method: body.method };
+      if (body?.fn !== undefined) return { kind: 'function', fn: body.fn };
+      return undefined;
+    };
+
+    interface Group {
+      readonly target: HandlerTarget;
+      readonly names: Set<string>;
+      undecided: boolean;
+      readonly through: Set<string>;
+    }
+    const groups = new Map<string, Group>();
+    const unread: { resolution: ChannelResolution; target: HandlerTarget | undefined }[] = [];
+    for (const reading of namesHandedTo(nameArg, ctx.config)) {
+      const resolution = nameForKind(reading.resolution, spec.channelKind);
+      const names = isResolved(resolution) ? shapeChannelNames(resolution.names, { reserved: spec.reservedChannels ?? [] }) : [];
+      const [only, ...more] = names;
+      const looked = record !== undefined && only !== undefined && more.length === 0 ? handlerInRecord(record, only, owner) : undefined;
+      // The processor this queue's worker runs: handed along the calls the
+      // queue was, and by whoever builds the instance the queue is of (P290).
+      const handed = looked !== undefined || processor === undefined ? undefined : handedAlong(processor, reading);
+      const targets = looked !== undefined ? [looked] : (handed ?? [processor]).map((each) => processorTarget(each, reading.bound));
+      if (!isResolved(resolution)) {
+        unread.push({ resolution, target: targets[0] });
+        continue;
+      }
+      for (const target of targets) {
+        if (target === undefined) continue;
+        const drawn = drawnHandler(target);
+        if (drawn === undefined) continue;
+        const group = groups.get(drawn.id) ?? { target, names: new Set<string>(), undecided: false, through: new Set<string>() };
+        for (const name of names) group.names.add(name);
+        group.undecided ||= reading.undecided;
+        for (const each of reading.through) group.through.add(each);
+        groups.set(drawn.id, group);
+      }
+    }
+    if ((unfollowed || unfollowedElsewhere) && processor !== undefined) {
+      ctx.report({
+        file,
+        line,
+        reason: 'consumer-handler-unresolved',
+        hint: unfollowed
+          ? 'The processor does more than delegate, so the chain stops at the body the worker is made in.'
+          : 'The processor a caller hands in does more than delegate, so the chain stops at the body that caller writes it in.',
+        symbol: symbolHere,
+      });
+    }
+
+    /** One consumer per handler, joined to every queue it takes. */
+    const draw = (target: HandlerTarget, names: readonly string[], undecided: boolean, through: readonly string[]): string | undefined => {
+      const drawn = drawnHandler(target);
+      if (drawn === undefined) return undefined;
+      drawn.ensure();
+      const fnNode = functionLikeOf(drawn.node);
+      const first = fnNode?.getParameters()[0];
+      const carried = first === undefined ? undefined : typeAtPath(first.getType(), pattern.payloadPath ?? [], first);
+      const body = carried === undefined || first === undefined ? undefined : ctx.types.collectType(carried, first);
+      const entryId = names.length === 0 ? null : entryOfHandler(names, pattern.kind, drawn.node, drawn.id, spec, file, line, body);
+      // One consumer per handler per worker: the same function run by two
+      // workers is two subscriptions, each drawn where it is made.
+      const consumerId = `consumer:${makeSymbolId(ctx.repo, drawn.file, drawn.label)}@${file}:${line}`;
+      ctx.builder.addNode({
+        id: consumerId,
+        type: 'consumer',
+        label: drawn.label,
+        repo: ctx.repo,
+        file,
+        line,
+        kind: pattern.kind,
+        meta: {
+          kind: pattern.kind,
+          adapter: spec.name,
+          decorator: spelling,
+          entryId,
+          ...(through.length === 0 ? {} : { through: [...through] }),
+          ...(pattern.describedBy === undefined ? {} : { describedBy: pattern.describedBy }),
+        },
+      });
+      ctx.builder.addEdge({ from: consumerId, to: drawn.id, type: 'handles', confidence: 'static', file, line });
+      for (const name of names) {
+        const channel = channelNodeOf(name, spec, file, line);
+        alreadyStatic.add(pairKey(drawn.id, name));
+        ctx.builder.addEdge({
+          from: channel.id,
+          to: consumerId,
+          type: 'consumes',
+          // Read through a call that may run another function instead (R158).
+          confidence: undecided ? 'heuristic' : 'static',
+          file,
+          line,
+        });
+      }
+      return drawn.label;
+    };
+    for (const group of groups.values()) draw(group.target, [...group.names].sort(), group.undecided, [...group.through]);
+    const reported = new Set<string>();
+    for (const { resolution, target } of unread) {
+      const key = JSON.stringify(resolution);
+      if (reported.has(key)) continue;
+      reported.add(key);
+      const label = target === undefined ? undefined : draw(target, [], false, []);
+      reportChannel(resolution, file, line, { named: label ?? symbolHere });
+    }
+  };
+
+  /** Every construction a description says starts a worker, wherever it is written. */
+  const constructing = specs.flatMap((spec) =>
+    (spec.subscriberPatterns ?? []).filter((pattern) => pattern.constructs !== undefined).map((pattern) => ({ spec, pattern })),
+  );
+  const readConstructions = (): void => {
+    if (constructing.length === 0) return;
+    for (const source of repoSourceFiles(ctx)) {
+      for (const construction of source.getDescendantsOfKind(SyntaxKind.NewExpression)) {
+        const match = constructing.find(({ pattern }) =>
+          constructsFrom(construction, pattern.constructs as string, pattern.receiverPackages ?? []),
+        );
+        if (match !== undefined) emitConstructed(construction, match.spec, match.pattern);
+      }
+    }
+  };
   /** The calls a description matched, as the calls reader names a call it could not follow. */
   const described = new Set<string>();
   /** Every description of a publish or a start, in the order they are tried. */
@@ -1079,7 +1627,7 @@ export const extractBrokers = (ctx: PassContext): void => {
       // entry rather than a channel.
       if (isStartPattern(pattern)) starts.read(expression, pattern, spec, scope, contextOf(receiverOf(expression), scope.owner), evidence);
       else emitProducer(expression, pattern, spec, scope, scope.owner, evidence);
-    });
+    }, scope.leaveOut);
 
     readReceiving(scope);
   }
@@ -1087,6 +1635,10 @@ export const extractBrokers = (ctx: PassContext): void => {
   // A call whose receiver has no type is a place static reading cannot see,
   // until a description says what it is: then it is read, as a publish or a
   // start, and the row saying it could not be goes (R173).
+  // Workers made by a construction, after every body, so a channel keeps the
+  // place it was first seen at (P271).
+  readConstructions();
+
   withdrawDescribedCalls(ctx.builder, described);
 
   readBrokerMarkers(ctx, specs[0] ?? brokerAdapters[0], alreadyStatic);

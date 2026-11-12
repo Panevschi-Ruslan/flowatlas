@@ -517,7 +517,8 @@ export const inlineHandlerOf = (
   label: string,
   ctx: ExtractContext,
 ): InlineHandler | undefined => {
-  if (argument === undefined || (!Node.isArrowFunction(argument) && !Node.isFunctionExpression(argument))) {
+  const objectMethod = argument !== undefined && Node.isMethodDeclaration(argument) && Node.isObjectLiteralExpression(argument.getParent());
+  if (argument === undefined || (!Node.isArrowFunction(argument) && !Node.isFunctionExpression(argument) && !objectMethod)) {
     return undefined;
   }
   const sourceFile = argument.getSourceFile();

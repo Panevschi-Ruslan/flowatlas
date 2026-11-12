@@ -1,0 +1,8 @@
+{
+  "services": [
+    { "name": "gateway", "repo": "./gateway", "type": "lambda" },
+    { "name": "orders", "repo": "./orders", "type": "lambda" },
+    { "name": "catalog", "repo": "./catalog", "type": "lambda" }
+  ],
+  "output": ".flowatlas"
+}

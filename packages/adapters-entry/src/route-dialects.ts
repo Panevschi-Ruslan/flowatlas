@@ -109,6 +109,14 @@ export interface MiddlewareShape {
   readonly optionKeys?: readonly string[];
 }
 
+/** Where `verbList`'s method keeps the address, the verbs and the handlers. */
+export interface VerbListShape {
+  readonly method: string;
+  readonly pathAt: number;
+  readonly verbsAt: number;
+  readonly handlersAt: number;
+}
+
 /**
  * A route declared by one object argument rather than by position.
  *
@@ -183,6 +191,13 @@ export interface RouteDialect extends StatedApps {
   readonly verbs: ReadonlyMap<string, string>;
   /** A method taking the verb as its first argument. Hono's `on`, and nobody else's. */
   readonly verbArgument?: string;
+  /**
+   * A method taking the address, a list of verbs and a list of handlers, each
+   * at a position of its own. koa-router's `register`, and nobody else's: the
+   * method its verb methods call, which a repository may call itself to give
+   * one handler two verbs (P270).
+   */
+  readonly verbList?: VerbListShape;
   /** A method returning the same application with a prefix in front of it. */
   readonly prefixMethod?: string;
   /**
@@ -277,6 +292,16 @@ export const dialectOf = (
   ),
   verbs: new Map(Object.entries(config.verbs ?? COMMON_VERBS)),
   ...(config.verbArgument === undefined ? {} : { verbArgument: config.verbArgument }),
+  ...(config.verbList === undefined
+    ? {}
+    : {
+        verbList: {
+          method: config.verbList.method,
+          pathAt: config.verbList.pathArg,
+          verbsAt: config.verbList.verbsArg,
+          handlersAt: config.verbList.handlersArg,
+        },
+      }),
   ...(config.prefixMethod === undefined ? {} : { prefixMethod: config.prefixMethod }),
   ...(config.prefixMutates ? { prefixMutates: true } : {}),
   ...(config.prefixOption === undefined ? {} : { prefixOption: config.prefixOption }),
@@ -416,6 +441,9 @@ export const KOA: RouteDialect = described({
   ],
   // `del` is koa-router's alias for `delete`, which is a reserved word.
   verbs: { ...COMMON_VERBS, del: 'DELETE' },
+  // `router.register(path, ['get', 'post'], [validate, handler])`, the method
+  // every verb method calls (P270).
+  verbList: { method: 'register', pathArg: 0, verbsArg: 1, handlersArg: 2 },
   prefixMethod: 'prefix',
   prefixMutates: true,
   prefixOption: 'prefix',

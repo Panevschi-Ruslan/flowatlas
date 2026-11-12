@@ -1,0 +1,112 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-10T15:47:25.344Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:gateway#src/orders.client.ts:26:27",
+        "to": "entry:orders:rpc:grpc:orders.OrdersService/FindOrder",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:gateway#src/orders.client.ts:26:27|hits|entry:orders:rpc:grpc:orders.OrdersService/FindOrder",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{id:string}",
+        "symbol": "gateway#src/orders.client.ts:OrdersClient.find",
+        "writes": [
+          "id"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#.orders.FindOrderRequest",
+        "symbol": "orders#src/orders.controller.ts:OrdersController.findOrder"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "proto-presence:id"
+      ]
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/orders.client.ts:26:27",
+        "to": "entry:orders:rpc:grpc:orders.OrdersService/FindOrder",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:gateway#src/orders.client.ts:26:27|hits|entry:orders:rpc:grpc:orders.OrdersService/FindOrder",
+      "direction": "response",
+      "status": "identical",
+      "sender": {
+        "service": "orders",
+        "typeId": "type:orders#.orders.Order",
+        "symbol": "orders#src/orders.controller.ts:OrdersController.findOrder"
+      },
+      "receiver": {
+        "service": "gateway",
+        "typeId": "type:gateway#Order",
+        "symbol": "gateway#src/orders.client.ts:OrdersClient.find"
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "http_out:gateway#src/orders.client.ts:30:12",
+        "to": "entry:orders:rpc:grpc:orders.OrdersService/ListOrders",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:gateway#src/orders.client.ts:30:12|hits|entry:orders:rpc:grpc:orders.OrdersService/ListOrders",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "gateway",
+        "typeId": "{customerId:string}",
+        "symbol": "gateway#src/orders.client.ts:OrdersClient.byCustomer",
+        "writes": [
+          "customerId"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "type:orders#.orders.ListOrdersRequest",
+        "symbol": "orders#src/orders.controller.ts:OrdersController.listOrders"
+      },
+      "findings": [],
+      "rulesApplied": [
+        "proto-presence:customerId"
+      ]
+    }
+  ],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:gateway#src/orders.client.ts:30:12",
+        "to": "entry:orders:rpc:grpc:orders.OrdersService/ListOrders",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:gateway#src/orders.client.ts:30:12|hits|entry:orders:rpc:grpc:orders.OrdersService/ListOrders",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:orders:rpc:grpc:orders.OrdersService/ListOrders answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it",
+      "hint": "Type the answer where it is read - the callback's parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads."
+    }
+  ],
+  "summary": {
+    "edges": 3,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 2,
+    "unchecked": 1,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

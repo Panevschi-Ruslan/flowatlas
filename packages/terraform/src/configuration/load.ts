@@ -68,6 +68,8 @@ interface ModuleSource {
   readonly resources: ReadonlyMap<string, Block>;
   readonly calls: ReadonlyMap<string, Block>;
   readonly terraform: readonly Block[];
+  /** `provider` blocks, by the name a resource names one with: `aws`, `aws.west` for an alias (P294). */
+  readonly providers: ReadonlyMap<string, Block>;
   /** The description it was built from, when it is a described module. */
   readonly described?: InfraModuleConfig;
 }
@@ -121,6 +123,7 @@ const sourceOf = (dir: string, files: readonly HclFile[], described?: InfraModul
   const resources = new Map<string, Block>();
   const calls = new Map<string, Block>();
   const terraform: Block[] = [];
+  const providers = new Map<string, Block>();
   for (const file of files) {
     for (const block of file.body.blocks) {
       const [first, second] = block.labels;
@@ -141,10 +144,14 @@ const sourceOf = (dir: string, files: readonly HclFile[], described?: InfraModul
         calls.set(first, block);
       } else if (block.type === 'terraform') {
         terraform.push(block);
+      } else if (block.type === 'provider' && first !== undefined) {
+        const alias = attributeOf(block.body, 'alias');
+        const named = alias === undefined ? undefined : templateText(alias.expression);
+        providers.set(named === undefined ? first : `${first}.${named}`, block);
       }
     }
   }
-  return { dir, variables, locals, outputs, outputSites, resources, calls, terraform, ...(described === undefined ? {} : { described }) };
+  return { dir, variables, locals, outputs, outputSites, resources, calls, terraform, providers, ...(described === undefined ? {} : { described }) };
 };
 
 /** The identity of a state backend, as both sides of a remote-state read spell it. */
@@ -246,6 +253,7 @@ class Context {
       resources,
       calls: new Map(),
       terraform: [],
+      providers: new Map(),
       described: description,
     };
     this.#described.set(description, source);
@@ -668,6 +676,17 @@ class Module implements ModuleInstance {
     if (this.root === undefined) return undefined;
     const fallback = this.source.variables.get(name)?.default;
     return fallback === undefined ? undefined : { expression: fallback, scope: { module: this } };
+  }
+
+  provider(name: string): ReadonlyMap<string, Value> | undefined {
+    for (const module of [this, this.root]) {
+      const block = module?.source.providers.get(name);
+      if (module === undefined || block === undefined) continue;
+      const entries = new Map<string, Value>();
+      for (const attribute of block.body.attributes) entries.set(attribute.name, evaluate(attribute.expression, { module }));
+      return entries;
+    }
+    return undefined;
   }
 
   readFile(path: string): string | undefined {

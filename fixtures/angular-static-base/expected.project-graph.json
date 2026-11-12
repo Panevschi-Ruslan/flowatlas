@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:32.710Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T14:15:43.093Z",
   "services": [
     {
       "name": "api",
@@ -157,7 +157,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -466,6 +473,15 @@
   ],
   "types": {},
   "unresolved": [
+    {
+      "service": "web",
+      "file": "src/app/items.service.ts",
+      "line": 75,
+      "reason": "api-path-dynamic",
+      "message": "GET /${…}/items is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/app/items.service.ts:75:12"
+    },
     {
       "file": "src/app/items.service.ts",
       "line": 85,

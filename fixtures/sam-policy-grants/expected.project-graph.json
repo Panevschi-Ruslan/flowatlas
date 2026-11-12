@@ -1,0 +1,1337 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T18:57:13.285Z",
+  "services": [
+    {
+      "name": "relay",
+      "repo": "./relay",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:kinesis/shop-archive",
+      "type": "channel",
+      "label": "kinesis/shop-archive",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 25,
+      "meta": {
+        "channelKind": "topic",
+        "adapters": [
+          "aws-kinesis"
+        ],
+        "declaredBy": "Resources.Archive",
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@Resources.OrdersQueue",
+      "type": "channel",
+      "label": "sqs/${…}@Resources.OrdersQueue",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 115,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "channel:sqs/${…}@Resources.RefundsQueue",
+      "type": "channel",
+      "label": "sqs/${…}@Resources.RefundsQueue",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 124,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 1,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:relay#SHOP_API",
+      "type": "config_key",
+      "label": "SHOP_API",
+      "repo": "relay",
+      "file": "src/checkout.ts",
+      "line": 3,
+      "meta": {
+        "key": "SHOP_API",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:relay#template.yaml:Resources.ArchiveReader.Events.Archived",
+      "type": "consumer",
+      "label": "mapping Resources.ArchiveReader.Events.Archived",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 133,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "by": "mapping",
+        "declaredAs": "Resources.ArchiveReader.Events.Archived",
+        "deployedBy": "sam"
+      }
+    },
+    {
+      "id": "consumer:relay#template.yaml:Resources.OrdersWorker.Events.Orders",
+      "type": "consumer",
+      "label": "mapping Resources.OrdersWorker.Events.Orders",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 115,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "Resources.OrdersWorker.Events.Orders",
+        "deployedBy": "sam",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "consumer:relay#template.yaml:Resources.RefundsWorker.Events.Refunds",
+      "type": "consumer",
+      "label": "mapping Resources.RefundsWorker.Events.Refunds",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 124,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "Resources.RefundsWorker.Events.Refunds",
+        "deployedBy": "sam",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:relay:event:kinesis/shop-archive",
+      "type": "entry",
+      "label": "event kinesis/shop-archive",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 133,
+      "kind": "event",
+      "meta": {
+        "key": "kinesis/shop-archive",
+        "by": "mapping",
+        "declaredAs": "Resources.ArchiveReader.Events.Archived",
+        "deployedBy": "sam",
+        "changesOf": "stream",
+        "name": "shop-archive",
+        "function": "Resources.ArchiveReader",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:relay:http:POST:/orders",
+      "type": "entry",
+      "label": "POST /orders",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 103,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "deployedBy": "sam",
+        "function": "Resources.PlaceOrder",
+        "declaredAs": "Resources.PlaceOrder.Events.Place",
+        "stage": "live",
+        "servedAt": [
+          {
+            "host": "*.execute-api.*.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "ShopApi",
+            "chosenDefault": "live"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:relay:invoke:${…}@Resources.ArchiveReader",
+      "type": "entry",
+      "label": "Resources.ArchiveReader (name generated when deployed)",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 128,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.ArchiveReader",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.ArchiveReader",
+        "logicalId": "ArchiveReader",
+        "nameGenerated": true,
+        "handler": "workers.archive",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:relay#StreamEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:relay:invoke:${…}@Resources.Archiver",
+      "type": "entry",
+      "label": "Resources.Archiver (name generated when deployed)",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 59,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Archiver",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Archiver",
+        "logicalId": "Archiver",
+        "nameGenerated": true,
+        "handler": "archiver.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "stream",
+            "name": "shop-archive",
+            "by": "Resources.ArchiverRole.Policies[0].Statement[0]"
+          }
+        ],
+        "reads": {
+          "": "{region:string;order:{id:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:relay:invoke:${…}@Resources.Broadcaster",
+      "type": "entry",
+      "label": "Resources.Broadcaster (name generated when deployed)",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 47,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Broadcaster",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Broadcaster",
+        "logicalId": "Broadcaster",
+        "nameGenerated": true,
+        "handler": "broadcaster.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "topic",
+            "any": "*",
+            "by": "Policies[0].Statement[0]"
+          }
+        ],
+        "reads": {
+          "": "{topicArn:string;notice:{text:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:relay:invoke:${…}@Resources.Checkout",
+      "type": "entry",
+      "label": "Resources.Checkout (name generated when deployed)",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 90,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Checkout",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Checkout",
+        "logicalId": "Checkout",
+        "nameGenerated": true,
+        "handler": "checkout.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {
+          "SHOP_API": {
+            "written": "!Sub ...",
+            "value": "template.yaml#Resources.ShopApi",
+            "kind": "api",
+            "path": "/",
+            "referenced": true
+          }
+        },
+        "reads": {
+          "": "{basket:{id:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:relay:invoke:${…}@Resources.Dispatcher",
+      "type": "entry",
+      "label": "Resources.Dispatcher (name generated when deployed)",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 32,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Dispatcher",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Dispatcher",
+        "logicalId": "Dispatcher",
+        "nameGenerated": true,
+        "handler": "dispatcher.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "queue",
+            "name": "${…}@Resources.OrdersQueue",
+            "by": "SQSSendMessagePolicy"
+          },
+          {
+            "kind": "queue",
+            "name": "${…}@Resources.RefundsQueue",
+            "by": "SQSSendMessagePolicy"
+          }
+        ],
+        "reads": {
+          "": "{kind:string;body:unknown}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:relay:invoke:${…}@Resources.OrdersWorker",
+      "type": "entry",
+      "label": "Resources.OrdersWorker (name generated when deployed)",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 110,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.OrdersWorker",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.OrdersWorker",
+        "logicalId": "OrdersWorker",
+        "nameGenerated": true,
+        "handler": "workers.orders",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:relay#QueueEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:relay:invoke:${…}@Resources.PlaceOrder",
+      "type": "entry",
+      "label": "Resources.PlaceOrder (name generated when deployed)",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 98,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.PlaceOrder",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.PlaceOrder",
+        "logicalId": "PlaceOrder",
+        "nameGenerated": true,
+        "handler": "orders.place",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "{body?:string;id?:string}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:relay:invoke:${…}@Resources.RefundsWorker",
+      "type": "entry",
+      "label": "Resources.RefundsWorker (name generated when deployed)",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 119,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.RefundsWorker",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.RefundsWorker",
+        "logicalId": "RefundsWorker",
+        "nameGenerated": true,
+        "handler": "workers.refunds",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:relay#QueueEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:relay:invoke:${…}@Resources.Router",
+      "type": "entry",
+      "label": "Resources.Router (name generated when deployed)",
+      "repo": "relay",
+      "file": "template.yaml",
+      "line": 81,
+      "kind": "invoke",
+      "meta": {
+        "key": "${…}@Resources.Router",
+        "deployedBy": "sam",
+        "nameRead": false,
+        "runtime": "nodejs20.x",
+        "declaredAs": "Resources.Router",
+        "logicalId": "Router",
+        "nameGenerated": true,
+        "handler": "router.handler",
+        "sourceDirectory": "src",
+        "handlerVia": "function",
+        "environment": {},
+        "grants": [
+          {
+            "kind": "function",
+            "name": "${…}@Resources.PlaceOrder",
+            "by": "LambdaInvokePolicy"
+          }
+        ],
+        "reads": {
+          "": "{channel:string;order:{id:string}}"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "http_out:relay#src/checkout.ts:3:26",
+      "type": "http_out",
+      "label": "POST /orders",
+      "repo": "relay",
+      "file": "src/checkout.ts",
+      "line": 3,
+      "meta": {
+        "method": "POST",
+        "url": "${SHOP_API}/orders",
+        "path": "/orders",
+        "baseUrlEnv": "SHOP_API",
+        "responseType": null,
+        "bodyType": "{id:string}",
+        "bodyFrom": "value",
+        "baseUrl": "template.yaml#Resources.ShopApi",
+        "baseUrlFrom": "the environment Resources.Checkout (name generated when deployed) is deployed with",
+        "targetService": "relay"
+      }
+    },
+    {
+      "id": "producer:relay#src/archiver.ts:9:9",
+      "type": "producer",
+      "label": "record kinesis/shop-archive",
+      "repo": "relay",
+      "file": "src/archiver.ts",
+      "line": 9,
+      "kind": "record",
+      "meta": {
+        "kind": "record",
+        "adapter": "aws-kinesis",
+        "channelVia": "grant",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "kinesis",
+              {
+                "granted": "stream"
+              }
+            ],
+            "payload": "{id:string}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "producer:relay#src/broadcaster.ts:9:9",
+      "type": "producer",
+      "label": "message ?",
+      "repo": "relay",
+      "file": "src/broadcaster.ts",
+      "line": 9,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sns",
+        "channelVia": "unresolved",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "sns",
+              {
+                "granted": "topic"
+              }
+            ],
+            "payload": "{text:string}"
+          }
+        ],
+        "channelKind": "topic",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "producer:relay#src/dispatcher.ts:19:9",
+      "type": "producer",
+      "label": "message sqs/${…}@Resources.OrdersQueue, sqs/${…}@Resources.RefundsQueue",
+      "repo": "relay",
+      "file": "src/dispatcher.ts",
+      "line": 19,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "grant",
+        "method": "send",
+        "grantable": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "granted": "queue"
+              }
+            ],
+            "payload": "unknown"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "producer:relay#src/router.ts:9:9",
+      "type": "producer",
+      "label": "invoke ${…}@Resources.PlaceOrder",
+      "repo": "relay",
+      "file": "src/router.ts",
+      "line": 9,
+      "kind": "invoke",
+      "meta": {
+        "kind": "invoke",
+        "adapter": "aws-lambda-invoke",
+        "method": "send",
+        "starts": "invoke",
+        "envelope": {
+          "at": [],
+          "text": false
+        },
+        "payload": "{id:string}",
+        "confidence": "heuristic",
+        "grantable": [
+          {
+            "parts": [
+              {
+                "granted": "function"
+              }
+            ]
+          }
+        ],
+        "channelVia": "grant",
+        "reaches": [
+          "invoke:${…}@Resources.PlaceOrder"
+        ]
+      }
+    },
+    {
+      "id": "relay#src/archiver.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "relay",
+      "file": "src/archiver.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{region:string;order:{id:string}}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "relay#src/broadcaster.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "relay",
+      "file": "src/broadcaster.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{topicArn:string;notice:{text:string}}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "relay#src/checkout.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "relay",
+      "file": "src/checkout.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{basket:{id:string}}"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "relay#src/dispatcher.ts:discover",
+      "type": "function",
+      "label": "discover",
+      "repo": "relay",
+      "file": "src/dispatcher.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Map<string,string>"
+        }
+      }
+    },
+    {
+      "id": "relay#src/dispatcher.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "relay",
+      "file": "src/dispatcher.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{kind:string;body:unknown}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "relay#src/orders.ts:place",
+      "type": "function",
+      "label": "place",
+      "repo": "relay",
+      "file": "src/orders.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{body?:string;id?:string}"
+            }
+          ],
+          "returns": "{statusCode:201;body:string}"
+        }
+      }
+    },
+    {
+      "id": "relay#src/router.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "relay",
+      "file": "src/router.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "{channel:string;order:{id:string}}"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "relay#src/workers.ts:archive",
+      "type": "function",
+      "label": "archive",
+      "repo": "relay",
+      "file": "src/workers.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:relay#StreamEvent"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "relay#src/workers.ts:orders",
+      "type": "function",
+      "label": "orders",
+      "repo": "relay",
+      "file": "src/workers.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:relay#QueueEvent"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "relay#src/workers.ts:refunds",
+      "type": "function",
+      "label": "refunds",
+      "repo": "relay",
+      "file": "src/workers.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:relay#QueueEvent"
+            }
+          ],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "repo:relay",
+      "type": "repo",
+      "label": "relay",
+      "repo": "relay",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:kinesis/shop-archive",
+      "to": "consumer:relay#template.yaml:Resources.ArchiveReader.Events.Archived",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 133,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/${…}@Resources.OrdersQueue",
+      "to": "consumer:relay#template.yaml:Resources.OrdersWorker.Events.Orders",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 115,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "channel:sqs/${…}@Resources.RefundsQueue",
+      "to": "consumer:relay#template.yaml:Resources.RefundsWorker.Events.Refunds",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 124,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:relay#template.yaml:Resources.ArchiveReader.Events.Archived",
+      "to": "entry:relay:event:kinesis/shop-archive",
+      "type": "triggers",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 133,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:relay#template.yaml:Resources.OrdersWorker.Events.Orders",
+      "to": "entry:relay:invoke:${…}@Resources.OrdersWorker",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 115,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "consumer:relay#template.yaml:Resources.RefundsWorker.Events.Refunds",
+      "to": "entry:relay:invoke:${…}@Resources.RefundsWorker",
+      "type": "calls",
+      "confidence": "static",
+      "file": "template.yaml",
+      "line": 124,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:relay:event:kinesis/shop-archive",
+      "to": "relay#src/workers.ts:archive",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/workers.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:relay:http:POST:/orders",
+      "to": "relay#src/orders.ts:place",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string}",
+      "file": "src/orders.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true,
+        "body": "{id:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "entry:relay:invoke:${…}@Resources.ArchiveReader",
+      "to": "relay#src/workers.ts:archive",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/workers.ts",
+      "line": 13
+    },
+    {
+      "from": "entry:relay:invoke:${…}@Resources.Archiver",
+      "to": "relay#src/archiver.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/archiver.ts",
+      "line": 8
+    },
+    {
+      "from": "entry:relay:invoke:${…}@Resources.Broadcaster",
+      "to": "relay#src/broadcaster.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/broadcaster.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:relay:invoke:${…}@Resources.Checkout",
+      "to": "relay#src/checkout.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/checkout.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:relay:invoke:${…}@Resources.Dispatcher",
+      "to": "relay#src/dispatcher.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/dispatcher.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:relay:invoke:${…}@Resources.OrdersWorker",
+      "to": "relay#src/workers.ts:orders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/workers.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:relay:invoke:${…}@Resources.PlaceOrder",
+      "to": "relay#src/orders.ts:place",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.ts",
+      "line": 2
+    },
+    {
+      "from": "entry:relay:invoke:${…}@Resources.RefundsWorker",
+      "to": "relay#src/workers.ts:refunds",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/workers.ts",
+      "line": 11
+    },
+    {
+      "from": "entry:relay:invoke:${…}@Resources.Router",
+      "to": "relay#src/router.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/router.ts",
+      "line": 8
+    },
+    {
+      "from": "http_out:relay#src/checkout.ts:3:26",
+      "to": "entry:relay:http:POST:/orders",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/checkout.ts",
+      "line": 3,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "relay",
+        "baseUrl": "template.yaml#Resources.ShopApi",
+        "baseUrlFrom": "the environment Resources.Checkout (name generated when deployed) is deployed with"
+      }
+    },
+    {
+      "from": "producer:relay#src/archiver.ts:9:9",
+      "to": "channel:kinesis/shop-archive",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/archiver.ts",
+      "line": 9,
+      "params": [
+        "{id:string}"
+      ],
+      "meta": {
+        "via": "grant",
+        "grants": [
+          "Resources.ArchiverRole.Policies[0].Statement[0]"
+        ],
+        "functions": [
+          "Resources.Archiver (name generated when deployed)"
+        ]
+      }
+    },
+    {
+      "from": "producer:relay#src/dispatcher.ts:19:9",
+      "to": "channel:sqs/${…}@Resources.OrdersQueue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/dispatcher.ts",
+      "line": 19,
+      "params": [
+        "unknown"
+      ],
+      "meta": {
+        "via": "grant",
+        "grants": [
+          "SQSSendMessagePolicy"
+        ],
+        "functions": [
+          "Resources.Dispatcher (name generated when deployed)"
+        ]
+      }
+    },
+    {
+      "from": "producer:relay#src/dispatcher.ts:19:9",
+      "to": "channel:sqs/${…}@Resources.RefundsQueue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/dispatcher.ts",
+      "line": 19,
+      "params": [
+        "unknown"
+      ],
+      "meta": {
+        "via": "grant",
+        "grants": [
+          "SQSSendMessagePolicy"
+        ],
+        "functions": [
+          "Resources.Dispatcher (name generated when deployed)"
+        ]
+      }
+    },
+    {
+      "from": "producer:relay#src/router.ts:9:9",
+      "to": "entry:relay:invoke:${…}@Resources.PlaceOrder",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/router.ts",
+      "line": 9,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "invoke:${…}@Resources.PlaceOrder"
+      }
+    },
+    {
+      "from": "relay#src/archiver.ts:handler",
+      "to": "producer:relay#src/archiver.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/archiver.ts",
+      "line": 9
+    },
+    {
+      "from": "relay#src/broadcaster.ts:handler",
+      "to": "producer:relay#src/broadcaster.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/broadcaster.ts",
+      "line": 9
+    },
+    {
+      "from": "relay#src/checkout.ts:handler",
+      "to": "config_key:relay#SHOP_API",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/checkout.ts",
+      "line": 3,
+      "meta": {
+        "setBy": [
+          {
+            "function": "Resources.Checkout (name generated when deployed)",
+            "written": "!Sub ...",
+            "value": "template.yaml#Resources.ShopApi"
+          }
+        ]
+      }
+    },
+    {
+      "from": "relay#src/checkout.ts:handler",
+      "to": "http_out:relay#src/checkout.ts:3:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/checkout.ts",
+      "line": 3
+    },
+    {
+      "from": "relay#src/dispatcher.ts:handler",
+      "to": "producer:relay#src/dispatcher.ts:19:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/dispatcher.ts",
+      "line": 19
+    },
+    {
+      "from": "relay#src/dispatcher.ts:handler",
+      "to": "relay#src/dispatcher.ts:discover",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "Map<string,string>",
+      "file": "src/dispatcher.ts",
+      "line": 17
+    },
+    {
+      "from": "relay#src/router.ts:handler",
+      "to": "producer:relay#src/router.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/router.ts",
+      "line": 9
+    }
+  ],
+  "types": {
+    "type:relay#QueueEvent": {
+      "name": "QueueEvent",
+      "kind": "object",
+      "declaredIn": "relay#src/workers.ts",
+      "structuralHash": "37be2caf4d190dc9",
+      "fields": [
+        {
+          "name": "Records",
+          "type": "{body:string}[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    },
+    "type:relay#StreamEvent": {
+      "name": "StreamEvent",
+      "kind": "object",
+      "declaredIn": "relay#src/workers.ts",
+      "structuralHash": "6f6fb5fff6171b13",
+      "fields": [
+        {
+          "name": "Records",
+          "type": "{kinesis:{data:string}}[]",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "relay",
+      "file": "src/archiver.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/archiver.ts:9 does not say where it sends: streams.get(event.region) is looked up in streams by event.region, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; Resources.Archiver (name generated when deployed) runs it and is granted only kinesis/shop-archive, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:relay#src/archiver.ts:9:9",
+      "meta": {
+        "granted": [
+          "kinesis/shop-archive"
+        ],
+        "functions": [
+          "Resources.Archiver (name generated when deployed)"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    },
+    {
+      "file": "src/archiver.ts",
+      "line": 10,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 7,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "handler -> Buffer.from",
+      "meta": {
+        "causes": [
+          {
+            "cause": "module-not-installed",
+            "package": "@types/node",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/archiver.ts",
+                "line": 10,
+                "symbol": "handler -> Buffer.from"
+              },
+              {
+                "file": "src/router.ts",
+                "line": 9,
+                "symbol": "handler -> Buffer.from"
+              },
+              {
+                "file": "src/workers.ts",
+                "line": 14,
+                "symbol": "archive -> Buffer.from(record.kinesis.data, 'base64').toString"
+              }
+            ]
+          },
+          {
+            "cause": "untyped-value",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/dispatcher.ts",
+                "line": 11,
+                "symbol": "discover -> url.split('/').pop"
+              },
+              {
+                "file": "src/dispatcher.ts",
+                "line": 11,
+                "symbol": "discover -> url.split"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "@aws-sdk/client-sqs",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/dispatcher.ts",
+                "line": 10,
+                "symbol": "discover -> sqs.send"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "relay"
+    },
+    {
+      "file": "src/broadcaster.ts",
+      "line": 9,
+      "reason": "channel-dynamic",
+      "message": "handler -> topics.get(event.notice.text)",
+      "hint": "topics.get(event.notice.text) is looked up in topics by event.notice.text, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere. Send to an address the code or the deployment states, or annotate handler with the channels it may use. What its function is granted does not narrow it: Resources.Broadcaster (name generated when deployed) is granted every topic by Policies[0].Statement[0] on *, which bounds nothing.",
+      "symbol": "producer:relay#src/broadcaster.ts:9:9",
+      "service": "relay",
+      "meta": {
+        "grantedEvery": [
+          {
+            "function": "Resources.Broadcaster (name generated when deployed)",
+            "resources": [
+              "*"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "service": "relay",
+      "file": "src/checkout.ts",
+      "line": 3,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "SHOP_API is !Sub ... in the environment Resources.Checkout (name generated when deployed) is deployed with: the address of the API template.yaml#Resources.ShopApi relay serves, built around a reference to it, so the request is joined among its routes",
+      "hint": "The value is the one the function is deployed with.",
+      "symbol": "http_out:relay#src/checkout.ts:3:26",
+      "meta": {
+        "variable": "SHOP_API",
+        "value": "template.yaml#Resources.ShopApi",
+        "from": "the environment Resources.Checkout (name generated when deployed) is deployed with"
+      }
+    },
+    {
+      "service": "relay",
+      "file": "src/dispatcher.ts",
+      "line": 19,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/dispatcher.ts:19 does not say where it sends: queueUrl is looked up in queues by event.kind, a key worked out when the code runs, in a collection the code fills when it runs, so which channel it is is written nowhere; Resources.Dispatcher (name generated when deployed) runs it and is granted only sqs/${…}@Resources.OrdersQueue, sqs/${…}@Resources.RefundsQueue, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:relay#src/dispatcher.ts:19:9",
+      "meta": {
+        "granted": [
+          "sqs/${…}@Resources.OrdersQueue",
+          "sqs/${…}@Resources.RefundsQueue"
+        ],
+        "functions": [
+          "Resources.Dispatcher (name generated when deployed)"
+        ],
+        "unread": [
+          "channel-dynamic"
+        ]
+      }
+    },
+    {
+      "service": "relay",
+      "file": "src/router.ts",
+      "line": 9,
+      "reason": "channel-from-grant",
+      "level": "info",
+      "message": "the call at src/router.ts:9 does not say where it sends: The name of the function this starts is not written where it can be read; Resources.Router (name generated when deployed) runs it and is granted only ${…}@Resources.PlaceOrder, so it is drawn to each",
+      "hint": "A grant is where the function may send, not where it does: each edge is a guess. Write the address, or one value of the environment the deployment sets, and it is read instead.",
+      "symbol": "producer:relay#src/router.ts:9:9",
+      "meta": {
+        "granted": [
+          "${…}@Resources.PlaceOrder"
+        ],
+        "functions": [
+          "Resources.Router (name generated when deployed)"
+        ],
+        "unread": [
+          "start-name-unread"
+        ]
+      }
+    },
+    {
+      "file": "template.yaml",
+      "line": 32,
+      "reason": "deployed-name-generated",
+      "level": "info",
+      "sites": 11,
+      "message": "Resources.Dispatcher is a function with no name of its own, so it is named by where it is declared; what this file points at it by joins to it, and nothing outside this deployment can",
+      "hint": "Give it a name of its own where other repositories reach it.",
+      "symbol": "entry:relay:invoke:${…}@Resources.Dispatcher",
+      "adapter": "aws-lambda",
+      "service": "relay"
+    }
+  ]
+}

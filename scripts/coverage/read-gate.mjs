@@ -83,8 +83,9 @@ const FIXTURES = join(ROOT, 'fixtures');
  * and the tool records the binding, and which binding it decided this one is is
  * not this gate's business.
  *
- * `perFile` is false for exactly one family, and the reason is a property of the
- * graph model rather than a concession. A table node's identity is
+ * `perFile` is false for two families, and the reason is a property of the
+ * graph model rather than a concession; `requests` says its own beside its
+ * entry, and `models` is this. A table node's identity is
  * `table:<repo>#<Name>` and it carries no file at all: the model asks where a
  * table is *used* and never where it was declared. There is therefore no
  * file-level answer to give about `models`, and a gate that demanded one would
@@ -111,7 +112,9 @@ const FIXTURES = join(ROOT, 'fixtures');
  * a kind or a reason written under no family speaks for nothing. A reason is an
  * open word, so one this table has never heard of speaks for nothing too, which
  * fails loudly rather than passing a file on a sentence nobody classified.
- * `models` owns no edge and no reason because nothing is asked of it per file.
+ * `models` owns no edge because nothing is asked of it per file; its reasons
+ * answer it anywhere, as a table does: the data reader saying why no table could
+ * be named is that reader's answer, where a guessed table would not be one.
  */
 const GATED = {
   routes: {
@@ -125,6 +128,15 @@ const GATED = {
       'route-verb-unread',
       'route-mount-unread',
       'route-registry-unread',
+      // An MCP server's tool, prompt or resource registered under a computed name (P270).
+      'mcp-name-dynamic',
+      // A gRPC service registered and not named, or named with no contract to say its methods (P274).
+      'grpc-service-unread',
+      'grpc-contract-unread',
+      // A gRPC service a package implements, and the methods a contract and its server disagree on (P287).
+      'grpc-package-service',
+      'grpc-method-unimplemented',
+      'grpc-method-undeclared',
       'route-file-not-served',
       'route-module-not-found',
       'route-claimed-twice',
@@ -160,13 +172,29 @@ const GATED = {
       'procedure-branch-unread',
       'procedure-key-dynamic',
       'entry-procedures-description-inactive',
+      'procedure-prefix-unread',
+      'procedure-contract-unread',
+      // A tree or a way in nothing serves, declared and left (P270).
+      'procedure-unmounted',
+      // A route a lower layer of the application serves, which the higher one's
+      // takes the place of (P243).
+      'framework-layer-overridden',
+      // A template whose functions are declared and deliberately not drawn: the
+      // copy a package command wrote of another, or types of a transform the
+      // template does not name (P248).
+      'deployment-copy-not-read',
+      'deployment-plugin-unread',
+      // A route a module adds whose address or handler is written as code (P251).
+      'framework-module-unread',
+      // A route a module would add that the options it is handed turn off (P255).
+      'framework-module-skipped',
     ],
     perFile: true,
   },
   screens: {
     types: ['ui_component'],
     edges: [],
-    reasons: ['route-config-unread', 'route-loader-unread'],
+    reasons: ['route-config-unread', 'route-loader-unread', 'framework-layer-overridden'],
     perFile: true,
   },
   clicks: {
@@ -200,7 +228,34 @@ const GATED = {
     ],
     perFile: true,
   },
-  models: { types: ['table'], edges: [], reasons: [], perFile: false },
+  // A request is recorded where it is written, which is often not where the
+  // probe sees it: a wrapper's `fetch` is read once per caller and the node
+  // sits at the caller (P91). So no file-level answer can be asked of it, and
+  // the family is held to strength 1, as `models` is (P244). `bases` (client
+  // instances and request interceptors) is not here at all: neither is a node,
+  // and the requests they stand in front of are this family's.
+  requests: {
+    types: ['ui_api_call', 'http_out'],
+    edges: [],
+    reasons: [
+      'api-path-dynamic',
+      'api-method-dynamic',
+      'api-base-override-unread',
+      'api-client-base-unread',
+      'api-base-unknown',
+      'api-client-unread',
+      'dynamic-http-url',
+    ],
+    perFile: false,
+  },
+  models: {
+    types: ['table'],
+    edges: [],
+    // The data reader was there and said why no table could be named: a store no
+    // descriptor knows, a layer nothing was read through, a table chosen at run time.
+    reasons: ['unknown-db-package', 'db-layer-unread', 'db-package-unread', 'dynamic-table-name'],
+    perFile: false,
+  },
 };
 
 /**
@@ -275,18 +330,6 @@ export const EXEMPT = [
       'the day the convention gets a reader, and the gate will then insist on it.',
   },
   {
-    where: 'nest-unknown-orm',
-    path: '(anywhere)',
-    family: 'models',
-    why:
-      'A model declared against a package nobody has described. R83 removed the ' +
-      'table nodes this used to mint - a name taken from a value the same call site ' +
-      'reported as unreadable - and the fixture exists to keep them removed. Every ' +
-      'call here carries an `unknown-db-package` row instead, which is the honest ' +
-      'output; a table would be a guess wearing a node. One descriptor turns all of ' +
-      'them into tables at once, and then this entry goes.',
-  },
-  {
     where: 'missing-repo',
     path: 'payments-api/**',
     family: 'routes',
@@ -296,6 +339,28 @@ export const EXEMPT = [
       'by `variants/linked`, which configures it and whose graph the CLI snapshots ' +
       'build on their own. Reading it here would be the very configuration the ' +
       'fixture exists to be without.',
+  },
+  {
+    where: 'next-hollow',
+    path: '(anywhere)',
+    family: 'requests',
+    why:
+      'The fixture holds a browser repository no frontend adapter claims, on purpose: ' +
+      '`widget/src/panel.ts` writes a request so that a reader which did claim it would ' +
+      'have something to find, and the fixture exists to keep `build` and `doctor` naming ' +
+      'the service that contributed nothing. The request family added by P244 is the first ' +
+      'to see that request from the counting side; the silence is the fixture, not a gap.',
+  },
+  {
+    where: 'nuxt-modules',
+    path: 'dev-layer/**',
+    family: 'screens',
+    why:
+      'A layer only the development build extends (`$development.extends`, P251). The ' +
+      "graph is the production build's, and the layer is said in the " +
+      '`framework-environment-differs` note at the configuration rather than read: ' +
+      'reading it would draw a page production never shows. The fixture holds the ' +
+      'layer there to keep that note honest, and the silence is the reading.',
   },
   // A measured target's exemptions are not here. They name files of a
   // repository this project does not own, so they live with the target itself,
@@ -536,6 +601,25 @@ const familiesOfEdge = (edge, nodes) => {
 };
 
 /**
+ * The files a folded row's sites are in (P251, P255): `meta.causes[].samples`,
+ * which the builder keeps for a row below `action` it folded over several
+ * sites, three per cause, and `meta.causes[].files`, every other file of that
+ * cause's sites, so a fourth site of one reason in one repository is read
+ * from its file as the first three are.
+ */
+const sampledFiles = (row) => {
+  const causes = Array.isArray(row.meta?.causes) ? row.meta.causes : [];
+  return [
+    ...new Set(
+      causes.flatMap((cause) => [
+        ...(Array.isArray(cause?.samples) ? cause.samples : []).map((sample) => sample?.file),
+        ...(Array.isArray(cause?.files) ? cause.files : []),
+      ]).filter((file) => typeof file === 'string'),
+    ),
+  ];
+};
+
+/**
  * What one graph says about each file: which families something in it answers.
  *
  * `toPath` turns a path as the graph spells it into a path as the counting rule
@@ -583,7 +667,20 @@ const readingOf = (graph, toPath) => {
   }
   for (const row of graph.unresolved ?? []) {
     if (typeof row.file !== 'string') continue;
-    place('row', row.file, row.service, SPOKEN_FOR_BY.reasons.get(row.reason) ?? []);
+    const families = SPOKEN_FOR_BY.reasons.get(row.reason) ?? [];
+    place('row', row.file, row.service, families);
+    // A row below `action` is folded to one per reason, and the sites it
+    // stands for are its samples (P251): each speaks for its own file, or a
+    // second overridden route in one repository would read as never read.
+    if (declared.has(row.service)) continue;
+    for (const file of sampledFiles(row)) {
+      if (file === row.file) continue;
+      const path = toPath(file, row.service);
+      if (path === undefined) continue;
+      const found = answered.get(path) ?? new Set();
+      for (const family of families) found.add(family);
+      answered.set(path, found);
+    }
   }
   // An edge recorded at a site is the reader saying it read that line, even
   // where the node it drew from lives in another file - in the service that
@@ -682,6 +779,7 @@ export const readGate = ({
   for (const [family, gated] of FAMILY) {
     if (gated.perFile || (total.get(family) ?? 0) === 0) continue;
     if (gated.types.some((type) => present.has(type))) continue;
+    if ((graph.unresolved ?? []).some((row) => gated.reasons.includes(row.reason))) continue;
     const exemption = exemptionFor(exemptions, where, '(anywhere)', family);
     if (exemption !== undefined) {
       used.add(exemptionKey(exemption));

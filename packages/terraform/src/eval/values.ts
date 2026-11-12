@@ -32,7 +32,25 @@ export type Value =
   | { readonly kind: 'ref'; readonly target: Instance; readonly attribute: readonly (string | number)[] }
   | { readonly kind: 'instance'; readonly instance: Instance }
   | { readonly kind: 'module'; readonly module: ModuleInstance }
-  | { readonly kind: 'unknown'; readonly because: Because; readonly partial?: Value };
+  | {
+      readonly kind: 'unknown';
+      readonly because: Because;
+      readonly partial?: Value;
+      /**
+       * The pieces of the string template it was rendered from, where every
+       * piece is text or a value not known (P261): the text as written, and
+       * each value as it evaluated. A reader that knows which of those values
+       * another deployment publishes reads the string around them; nothing
+       * else is read from it.
+       */
+      readonly template?: readonly (string | Value)[];
+      /**
+       * A piece of a template a `%{ if }` the files do not decide stands
+       * for (P264): the pieces each way renders, the condition's own reason
+       * why it is not known. A reader reads the template once per way.
+       */
+      readonly ways?: readonly (readonly (string | Value)[])[];
+    };
 
 /** Where a value was read from: one argument of one resource. */
 export interface Via {
@@ -60,6 +78,11 @@ export interface Because {
   readonly module?: string;
   /** Variable files and what each says, when they disagree. */
   readonly files?: Readonly<Record<string, string>>;
+  /**
+   * The key of a value another deployment publishes, when the value is that:
+   * a parameter of the account (`parameter:<name>`) a data source reads (P253).
+   */
+  readonly imported?: string;
 }
 
 /** An expression and the scope it is evaluated in: where a value is written. */
@@ -128,6 +151,12 @@ export interface ModuleInstance {
   nested(instance: Instance, name: string): readonly Value[];
   /** Reads a file relative to the root module's directory. */
   readFile(path: string): string | undefined;
+  /**
+   * The arguments of the provider configuration a resource of this module is
+   * created with, by the name a resource names it by - `aws`, `aws.west` for
+   * an alias: this module's own, else the root module's (P294).
+   */
+  provider(name: string): ReadonlyMap<string, Value> | undefined;
   /**
    * Where `var.<name>` or `local.<name>` of this instance is written, for a
    * reader that needs the expression rather than its value - which function a

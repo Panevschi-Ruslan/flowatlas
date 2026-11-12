@@ -89,6 +89,33 @@ describe('a workspace package imported by its name', () => {
     });
   });
 
+  it('lands on the source of a member whose exports name only its build, which a fresh clone has not got (R180)', () => {
+    const root = workspace({
+      'packages/stock/package.json': {
+        name: '@acme/stock',
+        exports: {
+          '.': { types: './dist/index.d.ts', require: './dist/index.cjs' },
+          './levels': { types: './dist/levels/index.d.ts', import: './dist/levels.mjs' },
+        },
+      },
+      'packages/stock/src/levels/index.ts': 'export const levels = 1;\n',
+    });
+    expect(landings(root, ['@acme/stock', '@acme/stock/levels', '@acme/stock/src/index'])).toEqual({
+      '@acme/stock': 'packages/stock/src/index.ts',
+      '@acme/stock/levels': 'packages/stock/src/levels/index.ts',
+      // A subpath the map does not name is still not importable.
+      '@acme/stock/src/index': undefined,
+    });
+  });
+
+  it('keeps a member that was built on its build (R180)', () => {
+    const root = workspace({
+      'packages/stock/package.json': { name: '@acme/stock', exports: { '.': { types: './dist/index.d.ts' } } },
+      'packages/stock/dist/index.d.ts': 'export declare const stock: number;\n',
+    });
+    expect(landings(root, ['@acme/stock'])).toEqual({ '@acme/stock': 'packages/stock/dist/index.d.ts' });
+  });
+
   it('leaves a package the service does not declare unresolved', () => {
     expect(landings(workspace(), ['@acme/ledger'])).toEqual({ '@acme/ledger': undefined });
   });
@@ -345,6 +372,44 @@ describe('the source roots of a service', () => {
       expect(files).toContain('packages/workflows/src/index.ts');
       expect(opened(root)).toEqual(files);
     });
+  });
+});
+
+describe('a repository written in JavaScript alone (P274)', () => {
+  const repo = (files: Record<string, string | object>): string => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'flowatlas-scripts-')));
+    temporary.push(root);
+    write(root, files);
+    return root;
+  };
+  const opened = (root: string): string[] =>
+    createProject({ rootDir: root })
+      .getSourceFiles()
+      .map((file) => file.getFilePath().slice(root.length + 1))
+      .filter((file) => !file.startsWith('node_modules'))
+      .sort();
+
+  it('reads its scripts where its roots hold no TypeScript, and lists the same files', () => {
+    const root = repo({
+      'package.json': { name: 'payments', main: 'index.js' },
+      'index.js': "const { charge } = require('./charge');\nmodule.exports = { charge };\n",
+      'charge.js': 'module.exports = { charge: async () => ({}) };\n',
+      'lib/util.cjs': 'exports.x = 1;\n',
+      'vendor.min.js': 'var a=1;\n',
+      'dist/out.js': 'exports.built = 1;\n',
+    });
+    expect(opened(root)).toEqual(['charge.js', 'index.js', 'lib/util.cjs']);
+    expect(listRepoSources(root)).toEqual(['charge.js', 'index.js', 'lib/util.cjs']);
+  });
+
+  it('reads TypeScript alone where there is any, its scripts left as what it compiles to', () => {
+    const root = repo({
+      'package.json': { name: 'api' },
+      'src/main.ts': 'export const main = 1;\n',
+      'src/legacy.js': 'exports.legacy = 1;\n',
+    });
+    expect(opened(root)).toEqual(['src/main.ts']);
+    expect(listRepoSources(root)).toEqual(['src/main.ts']);
   });
 });
 

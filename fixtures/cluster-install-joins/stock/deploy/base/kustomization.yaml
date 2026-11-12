@@ -1,0 +1,17 @@
+resources:
+  - stock.yaml
+configMapGenerator:
+  - name: stock-config
+    envs:
+      - stock.env
+replacements:
+  - source:
+      kind: ConfigMap
+      name: stock-config
+      fieldPath: data.PORT
+    targets:
+      - select:
+          kind: Service
+          name: stock
+        fieldPaths:
+          - spec.ports.0.targetPort

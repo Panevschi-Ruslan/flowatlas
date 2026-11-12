@@ -1,0 +1,1028 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T18:19:12.932Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./apps/web",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:web:http:ALL:/api/trpc/catalog/:param",
+      "type": "entry",
+      "label": "ALL /api/trpc/catalog/:param",
+      "repo": "web",
+      "file": "pages/api/trpc/catalog/[trpc].ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/trpc/catalog/:param",
+        "rawPath": "/api/trpc/catalog/:trpc",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:web:http:ALL:/api/trpc/orders/:param",
+      "type": "entry",
+      "label": "ALL /api/trpc/orders/:param",
+      "repo": "web",
+      "file": "pages/api/trpc/orders/[trpc].ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "ALL",
+        "path": "/api/trpc/orders/:param",
+        "rawPath": "/api/trpc/orders/:trpc",
+        "adapter": "nextjs-routes",
+        "registration": "pages/api",
+        "middlewareRead": true,
+        "handlerVia": "call"
+      }
+    },
+    {
+      "id": "entry:web:http:GET:/api/session/me",
+      "type": "entry",
+      "label": "GET /api/session/me",
+      "repo": "web",
+      "file": "app/api/session/me/route.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/session/me",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:web:http:POST:/api/session/login",
+      "type": "entry",
+      "label": "POST /api/session/login",
+      "repo": "web",
+      "file": "app/api/session/login/route.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/session/login",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:web:http:POST:/api/session/logout",
+      "type": "entry",
+      "label": "POST /api/session/logout",
+      "repo": "web",
+      "file": "app/api/session/logout/route.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/session/logout",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:web:rpc:shop.catalog.search",
+      "type": "entry",
+      "label": "rpc shop.catalog.search",
+      "repo": "web",
+      "file": "../../packages/api/src/routers/catalog/_router.ts",
+      "line": 4,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{sku:string}[]"
+        },
+        "key": "shop.catalog.search",
+        "adapter": "trpc-procedures",
+        "call": "query",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "pages/api/trpc/catalog/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc/catalog",
+            "file": "pages/api/trpc/catalog/[trpc].ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:web:rpc:shop.orders.list",
+      "type": "entry",
+      "label": "rpc shop.orders.list",
+      "repo": "web",
+      "file": "../../packages/api/src/routers/orders/_router.ts",
+      "line": 4,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string}[]"
+        },
+        "key": "shop.orders.list",
+        "adapter": "trpc-procedures",
+        "call": "query",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "pages/api/trpc/orders/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc/orders",
+            "file": "pages/api/trpc/orders/[trpc].ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:web:rpc:shop.orders.place",
+      "type": "entry",
+      "label": "rpc shop.orders.place",
+      "repo": "web",
+      "file": "../../packages/api/src/routers/orders/_router.ts",
+      "line": 5,
+      "kind": "rpc",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:'o-2'}"
+        },
+        "key": "shop.orders.place",
+        "adapter": "trpc-procedures",
+        "call": "mutation",
+        "registration": "router({ … })",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "served": [
+          "pages/api/trpc/orders/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc/orders",
+            "file": "pages/api/trpc/orders/[trpc].ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "http_out:web#components/Session.tsx:4:24",
+      "type": "http_out",
+      "label": "POST /api/session/login",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 4,
+      "meta": {
+        "method": "POST",
+        "url": "/api/session/login",
+        "path": "/api/session/login",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "originless": true,
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "http_out:web#components/Session.tsx:5:24",
+      "type": "http_out",
+      "label": "GET /api/session/me",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 5,
+      "meta": {
+        "method": "GET",
+        "url": "/api/session/me",
+        "path": "/api/session/me",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "originless": true,
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "http_out:web#components/Session.tsx:6:25",
+      "type": "http_out",
+      "label": "POST /api/session/logout",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 6,
+      "meta": {
+        "method": "POST",
+        "url": "/api/session/logout",
+        "path": "/api/session/logout",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "originless": true,
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 17,
+          "filesRead": 17,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 14,
+          "components": 2,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes",
+            "trpc-procedures"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "ui_action:web#components/Orders.tsx:9:13",
+      "type": "ui_action",
+      "label": "onClick={() => place.mutate()}",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 9,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => place.mutate()",
+        "component": "web#components/Orders.tsx:Orders",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#components/Session.tsx:10:15",
+      "type": "ui_action",
+      "label": "onClick={whoAmI}",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 10,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "whoAmI",
+        "component": "web#components/Session.tsx:Session",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#components/Session.tsx:11:15",
+      "type": "ui_action",
+      "label": "onClick={signOut}",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 11,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "signOut",
+        "component": "web#components/Session.tsx:Session",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#components/Session.tsx:9:15",
+      "type": "ui_action",
+      "label": "onClick={signIn}",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 9,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "signIn",
+        "component": "web#components/Session.tsx:Session",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:web#components/Orders.tsx:5:18",
+      "type": "ui_api_call",
+      "label": "rpc shop.orders.list",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 5,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "shop.orders.list",
+        "call": "query",
+        "operation": "useQuery",
+        "client": "trpc-client",
+        "inputNone": true,
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "ui_api_call:web#components/Orders.tsx:6:17",
+      "type": "ui_api_call",
+      "label": "rpc shop.orders.place",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 6,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "shop.orders.place",
+        "call": "mutation",
+        "operation": "useMutation",
+        "client": "trpc-client",
+        "inputLater": true,
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "ui_api_call:web#components/Orders.tsx:7:20",
+      "type": "ui_api_call",
+      "label": "rpc shop.catalog.search",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 7,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "shop.catalog.search",
+        "call": "query",
+        "operation": "useQuery",
+        "client": "trpc-client",
+        "inputNone": true,
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "ui_api_call:web#components/Session.tsx:4:24@7:26",
+      "type": "ui_api_call",
+      "label": "POST /api/session/login",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/session/login",
+        "path": "/api/session/login",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "literal",
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "send",
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "ui_api_call:web#components/Session.tsx:5:24@7:26",
+      "type": "ui_api_call",
+      "label": "GET /api/session/me",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/session/me",
+        "path": "/api/session/me",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "literal",
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "send",
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "ui_api_call:web#components/Session.tsx:6:25@7:26",
+      "type": "ui_api_call",
+      "label": "POST /api/session/logout",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/session/logout",
+        "path": "/api/session/logout",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "string",
+        "bodyFrom": "literal",
+        "headerKeys": [
+          "content-type"
+        ],
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "through": "send",
+        "targetService": "web"
+      }
+    },
+    {
+      "id": "web#../../packages/api/src/createNextApiHandler.ts:createNextApiHandler",
+      "type": "function",
+      "label": "createNextApiHandler",
+      "repo": "web",
+      "file": "../../packages/api/src/createNextApiHandler.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "router",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#../../packages/api/src/routers/catalog/_router.ts:shop.catalog.search@4",
+      "type": "function",
+      "label": "shop.catalog.search@4",
+      "repo": "web",
+      "file": "../../packages/api/src/routers/catalog/_router.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{sku:string}[]"
+        }
+      }
+    },
+    {
+      "id": "web#../../packages/api/src/routers/orders/_router.ts:shop.orders.list@4",
+      "type": "function",
+      "label": "shop.orders.list@4",
+      "repo": "web",
+      "file": "../../packages/api/src/routers/orders/_router.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string}[]"
+        }
+      }
+    },
+    {
+      "id": "web#../../packages/api/src/routers/orders/_router.ts:shop.orders.place@5",
+      "type": "function",
+      "label": "shop.orders.place@5",
+      "repo": "web",
+      "file": "../../packages/api/src/routers/orders/_router.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:'o-2'}"
+        }
+      }
+    },
+    {
+      "id": "web#app/api/session/login/route.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "web",
+      "file": "app/api/session/login/route.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "Request"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#app/api/session/logout/route.ts:POST",
+      "type": "function",
+      "label": "POST",
+      "repo": "web",
+      "file": "app/api/session/logout/route.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#app/api/session/me/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "web",
+      "file": "app/api/session/me/route.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "web#components/Orders.tsx:Orders",
+      "type": "ui_component",
+      "label": "Orders",
+      "repo": "web",
+      "file": "components/Orders.tsx",
+      "line": 4,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#components/Session.tsx:Session",
+      "type": "ui_component",
+      "label": "Session",
+      "repo": "web",
+      "file": "components/Session.tsx",
+      "line": 3,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#lib/request.ts:send",
+      "type": "function",
+      "label": "send",
+      "repo": "web",
+      "file": "lib/request.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "payload",
+              "type": "unknown",
+              "optional": true
+            },
+            {
+              "name": "init",
+              "type": "RequestInit",
+              "optional": true
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:web:http:ALL:/api/trpc/catalog/:param",
+      "to": "web#../../packages/api/src/createNextApiHandler.ts:createNextApiHandler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../../packages/api/src/createNextApiHandler.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:web:http:ALL:/api/trpc/orders/:param",
+      "to": "web#../../packages/api/src/createNextApiHandler.ts:createNextApiHandler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../../packages/api/src/createNextApiHandler.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:web:http:GET:/api/session/me",
+      "to": "web#app/api/session/me/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{user:null}",
+      "file": "app/api/session/me/route.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:web:http:POST:/api/session/login",
+      "to": "web#app/api/session/login/route.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{user:any}",
+      "file": "app/api/session/login/route.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:web:http:POST:/api/session/logout",
+      "to": "web#app/api/session/logout/route.ts:POST",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{user:null}",
+      "file": "app/api/session/logout/route.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:web:rpc:shop.catalog.search",
+      "to": "web#../../packages/api/src/routers/catalog/_router.ts:shop.catalog.search@4",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../../packages/api/src/routers/catalog/_router.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:web:rpc:shop.orders.list",
+      "to": "web#../../packages/api/src/routers/orders/_router.ts:shop.orders.list@4",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../../packages/api/src/routers/orders/_router.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:web:rpc:shop.orders.place",
+      "to": "web#../../packages/api/src/routers/orders/_router.ts:shop.orders.place@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../../packages/api/src/routers/orders/_router.ts",
+      "line": 5
+    },
+    {
+      "from": "http_out:web#components/Session.tsx:4:24",
+      "to": "entry:web:http:POST:/api/session/login",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "components/Session.tsx",
+      "line": 4,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "http_out:web#components/Session.tsx:5:24",
+      "to": "entry:web:http:GET:/api/session/me",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "components/Session.tsx",
+      "line": 5,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "http_out:web#components/Session.tsx:6:25",
+      "to": "entry:web:http:POST:/api/session/logout",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "components/Session.tsx",
+      "line": 6,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "ui_action:web#components/Orders.tsx:9:13",
+      "to": "web#components/Orders.tsx:Orders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 9
+    },
+    {
+      "from": "ui_action:web#components/Session.tsx:10:15",
+      "to": "web#components/Session.tsx:Session",
+      "type": "handles",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 10
+    },
+    {
+      "from": "ui_action:web#components/Session.tsx:11:15",
+      "to": "web#components/Session.tsx:Session",
+      "type": "handles",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 11
+    },
+    {
+      "from": "ui_action:web#components/Session.tsx:9:15",
+      "to": "web#components/Session.tsx:Session",
+      "type": "handles",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 9
+    },
+    {
+      "from": "ui_api_call:web#components/Orders.tsx:5:18",
+      "to": "entry:web:rpc:shop.orders.list",
+      "type": "hits",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 5,
+      "meta": {
+        "via": "same-service",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "ui_api_call:web#components/Orders.tsx:6:17",
+      "to": "entry:web:rpc:shop.orders.place",
+      "type": "hits",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 6,
+      "meta": {
+        "via": "same-service",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "ui_api_call:web#components/Orders.tsx:7:20",
+      "to": "entry:web:rpc:shop.catalog.search",
+      "type": "hits",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 7,
+      "meta": {
+        "via": "same-service",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "ui_api_call:web#components/Session.tsx:4:24@7:26",
+      "to": "entry:web:http:POST:/api/session/login",
+      "type": "hits",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 4,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "ui_api_call:web#components/Session.tsx:5:24@7:26",
+      "to": "entry:web:http:GET:/api/session/me",
+      "type": "hits",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 5,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "ui_api_call:web#components/Session.tsx:6:25@7:26",
+      "to": "entry:web:http:POST:/api/session/logout",
+      "type": "hits",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 6,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "web"
+      }
+    },
+    {
+      "from": "web#components/Orders.tsx:Orders",
+      "to": "ui_api_call:web#components/Orders.tsx:5:18",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 5
+    },
+    {
+      "from": "web#components/Orders.tsx:Orders",
+      "to": "ui_api_call:web#components/Orders.tsx:6:17",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 6
+    },
+    {
+      "from": "web#components/Orders.tsx:Orders",
+      "to": "ui_api_call:web#components/Orders.tsx:7:20",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Orders.tsx",
+      "line": 7
+    },
+    {
+      "from": "web#components/Session.tsx:Session",
+      "to": "http_out:web#components/Session.tsx:4:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 4
+    },
+    {
+      "from": "web#components/Session.tsx:Session",
+      "to": "http_out:web#components/Session.tsx:5:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 5
+    },
+    {
+      "from": "web#components/Session.tsx:Session",
+      "to": "http_out:web#components/Session.tsx:6:25",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 6
+    },
+    {
+      "from": "web#components/Session.tsx:Session",
+      "to": "ui_api_call:web#components/Session.tsx:4:24@7:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 4
+    },
+    {
+      "from": "web#components/Session.tsx:Session",
+      "to": "ui_api_call:web#components/Session.tsx:5:24@7:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 5
+    },
+    {
+      "from": "web#components/Session.tsx:Session",
+      "to": "ui_api_call:web#components/Session.tsx:6:25@7:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "components/Session.tsx",
+      "line": 6
+    },
+    {
+      "from": "web#components/Session.tsx:Session",
+      "to": "web#lib/request.ts:send",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "unknown",
+        "RequestInit"
+      ],
+      "returns": "unknown",
+      "file": "components/Session.tsx",
+      "line": 4
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "../../packages/api/src/createNextApiHandler.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "AnyRouter",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "@trpc/server"
+      },
+      "service": "web"
+    },
+    {
+      "file": "../../packages/api/src/createNextApiHandler.ts",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "../../packages/api/src/routers/coupons/_router.ts",
+      "line": 8,
+      "reason": "procedure-unmounted",
+      "level": "info",
+      "sites": 2,
+      "message": "couponsRouter is a tree of 2 members that no tree holds, no mount serves and nothing names, so no request reaches any of them and none is drawn.",
+      "hint": "Add it to the tree the service serves, or delete it.",
+      "symbol": "couponsRouter",
+      "adapter": "trpc-procedures",
+      "meta": {
+        "causes": [
+          {
+            "cause": "procedure-alone",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "../../packages/api/src/routers/orders/procedures/totals.ts",
+                "line": 7,
+                "symbol": "orderTotals"
+              }
+            ]
+          },
+          {
+            "cause": "tree-unmounted",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "../../packages/api/src/routers/coupons/_router.ts",
+                "line": 8,
+                "symbol": "couponsRouter"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "web"
+    },
+    {
+      "file": "components/Orders.tsx",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "file": "components/Session.tsx",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    }
+  ]
+}

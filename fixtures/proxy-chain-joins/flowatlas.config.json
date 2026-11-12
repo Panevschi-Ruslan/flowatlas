@@ -1,0 +1,50 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express"
+    },
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "nextjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react"
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

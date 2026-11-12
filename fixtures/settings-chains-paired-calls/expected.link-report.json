@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T19:17:19.031Z",
+  "configHash": "4a9eaa283634",
+  "services": [
+    {
+      "name": "inventory",
+      "repo": "./inventory",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 869,
+      "packages": {
+        "name": "inventory",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 839,
+      "packages": {
+        "name": "ledger",
+        "runtime": [
+          "express"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "market",
+      "repo": "./market",
+      "type": "remix",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 22,
+      "edges": 20,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 912,
+      "packages": {
+        "name": "market",
+        "runtime": [
+          "@remix-run/node",
+          "@remix-run/react",
+          "graphql-request",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 2,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 1070,
+      "packages": {
+        "name": "reviews",
+        "runtime": [
+          "@graphql-yoga/nestjs",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/graphql",
+          "graphql"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 3,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 3,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 6,
+    "called": 3,
+    "uncalled": [
+      "entry:market:http:GET:/api/entries",
+      "entry:market:http:GET:/api/listings",
+      "entry:market:http:GET:/browse"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 6,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "PUBLIC_APP_URL is http://localhost:4300 in app/lib/catalog.ts (the code’s own fallback), which is taken as inventory",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add PUBLIC_APP_URL to services[].baseUrlEnv of inventory to say so outright.",
+      "symbol": "http_out:market#app/lib/catalog.ts:6:21",
+      "meta": {
+        "variable": "PUBLIC_APP_URL",
+        "value": "http://localhost:4300",
+        "from": "app/lib/catalog.ts (the code’s own fallback)"
+      },
+      "sites": 2
+    },
+    {
+      "service": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 12,
+      "reason": "base-url-from-name",
+      "level": "info",
+      "message": "no service declares LEDGER_URL and nothing read gives it a value, so it is taken as ledger, the one service it is named after",
+      "hint": "Only the setting's name chose the service. Add LEDGER_URL to services[].baseUrlEnv of ledger to say so outright, or of the service it really is.",
+      "symbol": "http_out:market#app/lib/catalog.ts:12:21",
+      "meta": {
+        "variable": "LEDGER_URL",
+        "from": "its name"
+      },
+      "sites": 2
+    },
+    {
+      "service": "market",
+      "file": "app/lib/catalog.ts",
+      "line": 27,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "REVIEWS_API_URL is https://reviews.example.com/reviews-api in wrangler.toml, which is taken as reviews",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add REVIEWS_API_URL to services[].baseUrlEnv of reviews to say so outright.",
+      "symbol": "http_out:market#app/lib/catalog.ts:27:10",
+      "meta": {
+        "variable": "REVIEWS_API_URL",
+        "value": "https://reviews.example.com/reviews-api",
+        "from": "wrangler.toml"
+      },
+      "sites": 2
+    }
+  ],
+  "totals": {
+    "nodes": 35,
+    "edges": 32,
+    "types": 1,
+    "missed": 6,
+    "sites": 6,
+    "notes": 3,
+    "findings": 0,
+    "unresolved": 6
+  }
+}

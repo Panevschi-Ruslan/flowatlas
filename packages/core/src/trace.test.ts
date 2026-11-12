@@ -3,16 +3,21 @@ import { describe, expect, it } from 'vitest';
 import { UNREAD_SPAN } from './ids.js';
 import { resolveStaticString, settingKeyIn } from './static-string.js';
 import {
+  callSitesOf,
   constantMethodResult,
   constantPropertyValue,
   forwardedFrom,
   forwardNoWorse,
   parameterBehind,
   argumentAlong,
+  optionVerbAlong,
+  optionVerbOf,
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
   literalChoices,
+  memberBehind,
+  splitAtParameter,
   returnedExpression,
   rootSettingAddress,
   rootSettingKey,
@@ -144,6 +149,48 @@ describe('a settings value kept in a static property', () => {
       key: 'apiUrl',
       prefix: '/orders',
     });
+  });
+
+  // A constant that is a chain of `||` over settings (P292): the first
+  // setting, read through the function that only puts a scheme in front of
+  // it, is the root, and the text the chain ends in is its fallback.
+  it('roots a chain of || at its first setting, through a function that only normalises it, with the text it ends in as the fallback', () => {
+    const file = parse(`
+      declare const other: { url: string };
+      function withScheme(url: string | undefined): string {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        return \`https://\${url}\`;
+      }
+      const PREVIEW = other.url ? \`https://\${other.url}\` : '';
+      const APP_URL = withScheme(environment.apiUrl) || PREVIEW || 'http://localhost:3000';
+      http.get(\`\${APP_URL}/api/me\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '', otherwise: 'http://localhost:3000' });
+  });
+
+  it('reads no setting through a function whose returns say different things', () => {
+    const file = parse(`
+      function pick(url: string, flag: boolean): string {
+        if (flag) return \`\${url}/admin\`;
+        return url;
+      }
+      const BASE = pick(environment.apiUrl, true);
+      http.get(\`\${BASE}/orders\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toBeNull();
+  });
+
+  it('reads the path a function writes after the setting it is handed', () => {
+    const file = parse(`
+      const under = (base: string) => \`\${base}/api\`;
+      const BASE = under(environment.apiUrl);
+      http.get(\`\${BASE}/orders\`);
+    `);
+    const opening = address(file).getDescendantsOfKind(SyntaxKind.Identifier)[0]!;
+    expect(rootSettingAddress(opening, { readSetting })).toEqual({ key: 'apiUrl', prefix: '/api' });
   });
 
   it('holds a piece of the field nobody can read as a hole rather than dropping it', () => {
@@ -452,6 +499,69 @@ describe('the verb a wrapper is handed', () => {
 });
 
 /**
+ * A verb read out of a member of the options a wrapper is handed, with a
+ * default it falls back to (R179): left out, handed `undefined`, handed an
+ * object with no such member, one that writes it, one held by a `const`, and
+ * one spreading another that may carry it.
+ */
+describe('the verb an options member gives, or its default', () => {
+  const source = `
+    declare function fetch(url: string, init?: { method?: string }): Promise<unknown>;
+    declare const more: { method?: string };
+    const READ = { method: 'GET' };
+    const send = async (url: string, body?: unknown, options?: { method?: string }) => {
+      const method = options?.method || 'POST';
+      return fetch(url, { method, ...options });
+    };
+    const create = () => send('/api/orders', {});
+    const me = () => send('/api/orders/me', {}, { method: 'GET' });
+    const drop = () => send('/api/orders/1', undefined, { method: 'delete' });
+    const quiet = () => send('/api/orders/2', {}, undefined);
+    const tagged = () => send('/api/orders/3', {}, { cache: 'no-store' } as { method?: string });
+    const held = () => send('/api/orders/4', {}, READ);
+    const spread = () => send('/api/orders/5', {}, { ...more });
+    const along = (options?: { method?: string }) => send('/api/orders/6', {}, options);
+    const outer = () => along({ method: 'PUT' });
+  `;
+  const fetchCall = (file: SourceFile): CallExpression =>
+    file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'fetch')!;
+  const optionVerb = (file: SourceFile) => {
+    const options = fetchCall(file).getArguments()[1]!.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    return optionVerbOf(options.getProperty('method'))!;
+  };
+
+  it('finds the member and the default a `{ method }` names through its const', () => {
+    const found = optionVerb(parse(source));
+    expect([found.parameter.getName(), found.key, found.otherwise]).toEqual(['options', 'method', 'POST']);
+    // A parameter of its own is the other reading's, and a default that is no verb is nothing.
+    expect(optionVerbOf(parse(`const f = (method: string) => method;`).getDescendantsOfKind(SyntaxKind.Identifier).at(-1))).toBeUndefined();
+    const notVerb = parse(`const f = (o?: { m?: string }) => { const m = o?.m ?? 'fast'; return m; };`);
+    expect(optionVerbOf(notVerb.getDescendantsOfKind(SyntaxKind.Identifier).at(-1))).toBeUndefined();
+  });
+
+  it('reads each caller along the calls the address was followed out through', () => {
+    const file = parse(source);
+    const found = optionVerb(file);
+    const path = parameterBehind(fetchCall(file).getArguments()[0]!)!;
+    const said = forwardedFrom(path)
+      .calls.map((each) => `${each.site.getText()} ${optionVerbAlong(found, each.hops) ?? 'unread'}`)
+      .sort();
+    // The address of the sixth is settled where it is written, so its options
+    // are still a parameter there and the verb is not read further out.
+    expect(said).toEqual([
+      "send('/api/orders', {}) POST",
+      "send('/api/orders/1', undefined, { method: 'delete' }) DELETE",
+      "send('/api/orders/2', {}, undefined) POST",
+      "send('/api/orders/3', {}, { cache: 'no-store' } as { method?: string }) POST",
+      "send('/api/orders/4', {}, READ) GET",
+      "send('/api/orders/5', {}, { ...more }) unread",
+      "send('/api/orders/6', {}, options) unread",
+      "send('/api/orders/me', {}, { method: 'GET' }) GET",
+    ]);
+  });
+});
+
+/**
  * Whatever else a wrapper is handed beside the address (P128): its body, read
  * along the same calls, out through a wrapper that hands it on and stopping at
  * the caller that writes it, or at the parameter of the caller the request is
@@ -506,5 +616,126 @@ describe('an argument a caller leaves out', () => {
     expect(of(0)).toEqual(["''", "'/1'"]);
     // No default: a caller that hands nothing hands nothing worth following.
     expect(of(1)).toEqual([]);
+  });
+});
+
+/**
+ * A wrapper that takes its request as one object and its members out where the
+ * parameter is written (P269): `({ url = '', method = 'GET' }) => fetch(url,
+ * { method })`. The address and the verb are each a member of what a caller
+ * hands it, and the default where the caller's object writes none.
+ */
+describe('a member a wrapper takes out of the object it is handed', () => {
+  const source = `
+    declare function fetch(url: string, init?: { method?: string }): Promise<unknown>;
+    declare const elsewhere: { url: string };
+    const request = ({ url = '', method = 'GET' }: { url?: string; method?: string }) => fetch(\`\${url}?x=1\`, { method });
+    const list = () => request({ url: '/api/basket' });
+    const add = () => request({ url: '/api/basket', method: 'POST' });
+    const bare = () => request({});
+    const passed = (options: { url: string; method?: string }) => request(options);
+    const outer = () => passed({ url: '/api/outer', method: 'DELETE' });
+    const unknown = () => request(elsewhere);
+  `;
+  const fetchCall = (file: SourceFile): CallExpression =>
+    file.getDescendantsOfKind(SyntaxKind.CallExpression).find((each) => each.getExpression().getText() === 'fetch')!;
+
+  it('splits the address at the member and finds each caller\'s, through a wrapper that hands the object on', () => {
+    const file = parse(source);
+    const split = splitAtParameter(fetchCall(file).getArguments()[0]!, { readSetting: () => null })!;
+    expect([split.member?.key, split.before, split.after]).toEqual(['url', '', '?x=1']);
+    const verb = optionVerbOf(fetchCall(file).getArguments()[1]!.asKindOrThrow(SyntaxKind.ObjectLiteralExpression).getProperty('method'))!;
+    expect([verb.key, verb.otherwise]).toEqual(['method', 'GET']);
+    const said = forwardedFrom(split.parameter, undefined, split.member)
+      .calls.map((each) => `${each.argument.getText()} ${optionVerbAlong(verb, each.hops) ?? 'unread'}`)
+      .sort();
+    // `bare` hands an object with no `url`: the default. `unknown` hands one
+    // nobody here wrote, and is not a caller this can draw on.
+    expect(said).toEqual(["'' GET", "'/api/basket' GET", "'/api/basket' POST", "'/api/outer' DELETE"]);
+  });
+
+  it('is a member only of a parameter, not of a value destructured anywhere else', () => {
+    const file = parse(`const { url } = { url: '/x' }; export const u = url;`);
+    expect(memberBehind(file.getDescendantsOfKind(SyntaxKind.Identifier).at(-1)!)).toBeUndefined();
+  });
+});
+
+describe('a function a library composes into another (P285)', () => {
+  /** The calls `callSitesOf` finds of `run`, as the text of each. */
+  const sitesOfRun = (files: Record<string, string>): string[] => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    for (const [path, source] of Object.entries(files)) project.createSourceFile(path, source);
+    const run = project.getSourceFileOrThrow('run.ts').getVariableDeclarationOrThrow('run');
+    return callSitesOf(run)
+      .map((call) => call.getText())
+      .sort();
+  };
+
+  it('is called by each call of what flow, a namespace pipe or flowRight makes of it', () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'quiet.ts': [
+        `import { flow } from 'fp-ts/function';`,
+        `import * as R from 'ramda';`,
+        `import flowRight from 'lodash/flowRight';`,
+        `import { run } from './run';`,
+        `export const quiet = flow(run, (result) => result);`,
+        `export const piped = R.pipe(run, String);`,
+        `export const right = flowRight(String, run);`,
+        `export const twice = flow(quiet, String);`,
+      ].join('\n'),
+      'use.ts': [
+        `import { quiet, piped, right, twice } from './quiet';`,
+        `import { run } from './run';`,
+        `run({ query: 'a' }); quiet({ query: 'b' }); piped({ query: 'c' }); right({ query: 'd' }); twice({ query: 'e' });`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([`piped({ query: 'c' })`, `quiet({ query: 'b' })`, `right({ query: 'd' })`, `run({ query: 'a' })`, `twice({ query: 'e' })`]);
+  });
+
+  it('is called where the composition is called in place, and through a let, a field, a member and a composition handed on (P293)', () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'held.ts': [
+        `import { flow } from 'lodash';`,
+        `import { run } from './run';`,
+        `flow(run, String)({ query: 'a' });`,
+        `let later = flow(run, String);`,
+        `later({ query: 'b' });`,
+        `export const helpers = { quiet: flow(run, String) };`,
+        `helpers.quiet({ query: 'c' });`,
+        `export class Store {`,
+        `  load = flow(run, String);`,
+        `  save: (args: { query: string }) => string;`,
+        `  constructor() { this.save = flow(run, String); }`,
+        `  go() { this.load({ query: 'd' }); this.save({ query: 'e' }); }`,
+        `}`,
+        `flow(flow(run, String), String)({ query: 'f' });`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([
+      `flow(flow(run, String), String)({ query: 'f' })`,
+      `flow(run, String)({ query: 'a' })`,
+      `helpers.quiet({ query: 'c' })`,
+      `later({ query: 'b' })`,
+      `this.load({ query: 'd' })`,
+      `this.save({ query: 'e' })`,
+    ]);
+  });
+
+  it('is not called through a value-first pipe, a function handed later, or a composer of no library', () => {
+    const sites = sitesOfRun({
+      'run.ts': `export const run = (args: { query: string }) => args.query;`,
+      'other.ts': [
+        `import { pipe, flow } from 'fp-ts/function';`,
+        `import { run } from './run';`,
+        `declare const compose: (...fns: unknown[]) => (args: unknown) => unknown;`,
+        `export const applied = pipe(run, (fn) => fn);`,
+        `export const later = flow(String, run);`,
+        `export const own = compose(String, run);`,
+        `applied({ query: 'a' }); later('b'); own('c');`,
+      ].join('\n'),
+    });
+    expect(sites).toEqual([]);
   });
 });

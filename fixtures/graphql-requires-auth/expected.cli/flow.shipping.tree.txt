@@ -1,0 +1,17 @@
+%  Shipping                                               shop/src/Shipping.tsx:13
+  ^  query Estimate /graphql                              shop/src/Shipping.tsx:14
+    => catalog @  Query.product ?declared                 catalog/src/index.ts:21
+      -> Query.product@21                                 catalog/src/index.ts:21
+    => inventory @  Product.__resolveReference ?declared  inventory/src/index.ts:19
+      -> Product.__resolveReference@19                    inventory/src/index.ts:19
+    => inventory @  Product.weight ?declared              inventory/src/index.ts:20
+      -> Product.weight@20                                inventory/src/index.ts:20
+    => shipping @  Product.__resolveReference ?declared   shipping/src/index.ts:21
+      -> Product.__resolveReference@21                    shipping/src/index.ts:21
+    => shipping @  Product.estimate ?declared             shipping/src/index.ts:22
+      -> Product.estimate@22                              shipping/src/index.ts:22
+    => router @  POST /graphql ?declared                  router/router/supergraph.graphql
+      => catalog @  POST / ?declared                      catalog/src/index.ts:28
+      => inventory @  POST / ?declared                    inventory/src/index.ts:24
+      => shipping @  POST / ?declared                     shipping/src/index.ts:27
+unresolved on this path: 1

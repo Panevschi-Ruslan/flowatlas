@@ -1,0 +1,15 @@
+@  shop-prod-ship                                                      orders/templates/orders.yaml.j2:30
+  -> handler                                                           orders/src/ship.ts:8
+    $  JOBS_QUEUE_URL                                                  orders/src/ship.ts:9
+    ~  message sqs/shop-prod-jobs                                      orders/src/ship.ts:9
+      ~  sqs/shop-prod-jobs                                            infra/main.tf:49
+        => platform ~  mapping aws_lambda_event_source_mapping.jobs    platform/infra/main.tf:49
+          @  shop-prod-jobs                                            platform/infra/main.tf:41
+            -> handler                                                 platform/src/jobs.ts:4
+    $  ALERTS_TOPIC_ARN                                                orders/src/ship.ts:10
+    ~  message sns/shop-prod-alerts                                    orders/src/ship.ts:10
+      ~  sns/shop-prod-alerts                                          infra/main.tf:75
+        => platform ~  subscription aws_sns_topic_subscription.alerts  platform/infra/main.tf:75
+          @  shop-prod-page                                            platform/infra/main.tf:67
+            -> handler                                                 platform/src/page.ts:4
+unresolved on this path: 0

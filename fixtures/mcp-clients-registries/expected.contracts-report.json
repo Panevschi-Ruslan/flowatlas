@@ -1,0 +1,117 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-09T22:21:17.416Z",
+  "edges": [],
+  "findings": [],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:concierge#src/assistant-client.ts:12:44",
+        "to": "entry:assistant:rpc:mcp:tool:cancel_order",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:concierge#src/assistant-client.ts:12:44|hits|entry:assistant:rpc:mcp:tool:cancel_order",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:assistant:rpc:mcp:tool:cancel_order declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:concierge#src/assistant-client.ts:12:44",
+        "to": "entry:assistant:rpc:mcp:tool:cancel_order",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:concierge#src/assistant-client.ts:12:44|hits|entry:assistant:rpc:mcp:tool:cancel_order",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "assistant#src/server.ts:tool cancel_order@10 answers with no type",
+      "hint": "Give the procedure an .output(schema), or its resolver a return type, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:concierge#src/assistant-client.ts:15:34",
+        "to": "entry:assistant:rpc:mcp:tool:countOrders",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:concierge#src/assistant-client.ts:15:34|hits|entry:assistant:rpc:mcp:tool:countOrders",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:assistant:rpc:mcp:tool:countOrders declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:concierge#src/assistant-client.ts:15:34",
+        "to": "entry:assistant:rpc:mcp:tool:countOrders",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:concierge#src/assistant-client.ts:15:34|hits|entry:assistant:rpc:mcp:tool:countOrders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "assistant#src/tools/count-orders.ts:tool countOrders@4 answers with no type",
+      "hint": "Give the procedure an .output(schema), or its resolver a return type, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:concierge#src/assistant-client.ts:18:35",
+        "to": "entry:assistant:rpc:mcp:tool:find{collection}",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:concierge#src/assistant-client.ts:18:35|hits|entry:assistant:rpc:mcp:tool:find{collection}",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:assistant:rpc:mcp:tool:find{collection} declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:concierge#src/assistant-client.ts:18:35",
+        "to": "entry:assistant:rpc:mcp:tool:find{collection}",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:concierge#src/assistant-client.ts:18:35|hits|entry:assistant:rpc:mcp:tool:find{collection}",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "assistant#src/server.ts:tool find{collection}@45 answers with no type",
+      "hint": "Give the procedure an .output(schema), or its resolver a return type, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "http_out:concierge#src/assistant-client.ts:21:38",
+        "to": "entry:assistant:rpc:mcp:resource:shop://orders/{id}",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:concierge#src/assistant-client.ts:21:38|hits|entry:assistant:rpc:mcp:resource:shop://orders/{id}",
+      "direction": "request",
+      "reason": "procedure-input-undeclared",
+      "message": "entry:assistant:rpc:mcp:resource:shop://orders/{id} declares no input, so what the caller sends is not compared with anything",
+      "hint": "Nothing to change if it takes none. If it reads one, declare it with .input(schema), so what callers send is checked by the server and compared here."
+    },
+    {
+      "edge": {
+        "from": "http_out:concierge#src/assistant-client.ts:21:38",
+        "to": "entry:assistant:rpc:mcp:resource:shop://orders/{id}",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:concierge#src/assistant-client.ts:21:38|hits|entry:assistant:rpc:mcp:resource:shop://orders/{id}",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "assistant#src/server.ts:resource order@18 answers with no type",
+      "hint": "Give the procedure an .output(schema), or its resolver a return type, so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 0,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 0,
+    "unchecked": 8,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "ignored": 0
+  }
+}

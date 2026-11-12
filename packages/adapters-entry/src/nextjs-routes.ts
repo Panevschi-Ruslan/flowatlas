@@ -6,7 +6,6 @@ import {
   namedFunction,
   normalizeFilePath,
   originOfValue,
-  reachHere,
   reachMeta,
   reachOf,
   type ApplicationMap,
@@ -28,7 +27,6 @@ import {
   fsApplicationMap,
   pathPatternTest,
   readVerbFile,
-  reportUnreadHandler,
   type FsRouteVerb,
 } from './fs-routes.js';
 import { APP_ROUTER, PAGES_API } from './nextjs-paths.js';
@@ -40,6 +38,8 @@ import {
   repoSources,
   unwrapValue,
 } from './shared.js';
+import { listensByCall, nextListens } from './listen-ports.js';
+import { nextProxies } from './proxy-config.js';
 
 /** The dependency that gives the framework away. */
 const PACKAGE = 'next';
@@ -49,6 +49,12 @@ const REQUESTS: Readonly<Record<string, RequestReading | undefined>> = {
   'app/route': readingOf(APP_ROUTE_REQUEST),
   'pages/api': readingOf(PAGES_API_REQUEST),
 };
+
+/** The older router's one way in: the module's default export, which answers every verb (P269). */
+const PAGES_VERBS: ReadonlyMap<string, string> = new Map([['default', 'ALL']]);
+
+/** The export whose verbs are the ones its handler compares the request's method to (P269). */
+const PAGES_NARROWED: ReadonlySet<string> = new Set(['default']);
 
 /** The directive that turns a module, or one function, into a boundary. */
 const USE_SERVER = 'use server';
@@ -140,12 +146,15 @@ interface HttpEntryOptions {
    */
   at: Reach;
   handler?: NamedFunction;
+  /** A function written in place inside the wrappers of an export (P269). */
+  inline?: TsNode;
   via: string;
-  /**
-   * How the handler was named, where the shared verb reading said (R153). The
-   * older router has one reading only, so there it follows from the handler.
-   */
+  /** How the handler was named, as the shared verb reading said (R153). */
   handlerVia?: FsRouteVerb['handlerVia'];
+  /** What the export was built through in front of the handler (P269). */
+  wrapping?: FsRouteVerb['wrapping'];
+  /** Why a wrapper in front of the handler could not be read. */
+  wrapperUnread?: string;
   /** False when a handler was named and there is nothing behind the name. */
   bodyRead?: boolean;
   /**
@@ -187,6 +196,10 @@ const applicationsOf = (ctx: ExtractContext): ApplicationMap =>
 export const nextjsRoutesAdapter: EntryAdapter = {
   name: 'nextjs-routes',
   detect: (pkg) => hasDependency(pkg, PACKAGE),
+  // A script's `next dev -p 3020`, and a custom server's own `listen` (P250).
+  listens: (ctx) => [...nextListens(ctx), ...listensByCall(ctx)],
+  // Its rewrites to an address outside the application (P257).
+  proxies: nextProxies,
   applications: (ctx) => applicationsOf(ctx),
 
   extractEntries(ctx: ExtractContext): EntryNode[] {
@@ -244,18 +257,23 @@ export const nextjsRoutesAdapter: EntryAdapter = {
       const id = makeEntryId(ctx.repo, 'http', key, options.application);
       if (seen.has(id)) return;
       seen.add(id);
-      const gate = gateOf(options.path);
+      // The middleware file runs first, then whatever the export was built
+      // through, then the handler (P269).
+      const gate = [...gateOf(options.path), ...(options.wrapping ?? [])];
+      const label = `${options.method} ${options.path}`;
+      const handler =
+        options.handler !== undefined
+          ? handlerOfFunction(options.handler, ctx)
+          : inlineHandlerOf(options.inline, label, ctx);
       entries.push({
         id,
         kind: 'http',
-        label:
-          options.application === undefined
-            ? `${options.method} ${options.path}`
-            : `${options.method} ${options.path} (${options.application})`,
+        label: options.application === undefined ? label : `${label} (${options.application})`,
         key,
-        ...(options.handler === undefined
-          ? {}
-          : { handler: handlerOfFunction(options.handler, ctx) }),
+        ...(handler === undefined ? {} : { handler }),
+        // A wrapper nothing of which could be read makes the landing a guess,
+        // as it does for a deployed function's (R167).
+        ...(options.wrapperUnread === undefined ? {} : { handlerConfidence: 'heuristic' as const }),
         file: options.at.reached.file,
         line: options.at.reached.line,
         ...(gate.length > 0 ? { wrapping: gate } : {}),
@@ -280,6 +298,7 @@ export const nextjsRoutesAdapter: EntryAdapter = {
           // fact, and it is recorded rather than folded into the first one.
           ...reachMeta(options.at),
           handlerVia: options.handlerVia ?? (options.handler === undefined ? 'unread' : 'function'),
+          ...(options.wrapperUnread === undefined ? {} : { wrapperUnread: options.wrapperUnread }),
           // Two different facts, and the second is the one a summary must not
           // read off the first. `handlerVia` says whether a function was named;
           // this says whether there is code behind the name. A route counted as
@@ -316,42 +335,21 @@ export const nextjsRoutesAdapter: EntryAdapter = {
         continue;
       }
       if (pagesAddress !== null) {
-        // The older router answers every verb from one handler: the file is one
-        // way in, and which method arrives is the handler's own business.
-        const [declaration] = sourceFile.getExportedDeclarations().get('default') ?? [];
-        const handler = declaration === undefined ? undefined : exportedFunction(declaration);
-        const read = handler !== undefined;
-        // The declaration may be in another file entirely — one line forwarding
-        // another module's default is how a large repository keeps its addresses
-        // in the application and its bodies in a package — so the position is
-        // asked of the file being read rather than of what the compiler resolved.
-        const at =
-          declaration === undefined
-            ? reachHere(file, 1)
-            : reachOf(declaration, sourceFile, 'default', ctx.repoDir);
-        httpEntry({
-          method: 'ALL',
-          ...pagesAddress,
-          at,
-          ...(handler === undefined ? {} : { handler }),
-          via: 'pages/api',
-          bodyRead: read,
+        // The older router answers every verb from one handler, the module's
+        // default export: one way in, ALL, unless the handler compares the
+        // request's method to the verbs it answers, which is then what it
+        // answers. Read by the reading every directory-addressed route file
+        // gets, so a default export built by wrappers round a function of this
+        // repository lands on that function as a verb export does (P269).
+        readVerbFile(ctx, sourceFile, {
+          file,
+          path: pagesAddress.path,
+          rawPath: pagesAddress.rawPath,
+          adapter: 'nextjs-routes',
+          emit: (verb) => httpEntry({ ...verb, ...pagesAddress, via: 'pages/api' }),
+          verbs: PAGES_VERBS,
+          narrowed: PAGES_NARROWED,
         });
-        // A file under the older router is a way in whether or not its default
-        // export is a function this can follow, and until now the second case
-        // was the first case with a quieter graph. Only one reading applies
-        // here — a function written in place — so a handler that was found is a
-        // handler that was read, and there is one case to report rather than two.
-        if (!read) {
-          reportUnreadHandler(ctx, {
-            file: at.reached.file,
-            line: at.reached.line,
-            label: `ALL ${pagesAddress.path}`,
-            path: pagesAddress.path,
-            why: 'none',
-            adapter: 'nextjs-routes',
-          });
-        }
         continue;
       }
 

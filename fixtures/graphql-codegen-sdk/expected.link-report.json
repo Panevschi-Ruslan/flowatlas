@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T14:32:20.369Z",
+  "configHash": "d62a9901f268",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 25,
+      "edges": 9,
+      "types": 5,
+      "unresolved": 5,
+      "durationMs": 1433,
+      "packages": {
+        "name": "graphql-codegen-sdk-api",
+        "runtime": [
+          "@nestjs/apollo",
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/graphql",
+          "express",
+          "graphql"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 8,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 1002,
+      "packages": {
+        "name": "graphql-codegen-sdk-kiosk",
+        "runtime": [
+          "graphql",
+          "graphql-request",
+          "react"
+        ],
+        "dev": [
+          "@graphql-codegen/cli",
+          "@graphql-codegen/typescript-graphql-request"
+        ]
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 10,
+      "edges": 5,
+      "types": 1,
+      "unresolved": 2,
+      "durationMs": 1010,
+      "packages": {
+        "name": "graphql-codegen-sdk-shop",
+        "runtime": [
+          "graphql",
+          "graphql-tag",
+          "react"
+        ],
+        "dev": [
+          "@graphql-codegen/cli",
+          "@graphql-codegen/typescript",
+          "@graphql-codegen/typescript-generic-sdk",
+          "@graphql-codegen/typescript-operations"
+        ]
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 7,
+    "resolved": 5,
+    "unresolved": 2,
+    "byReason": {
+      "api-path-dynamic": 1,
+      "graphql-field-no-resolver": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 2,
+    "uncalled": [
+      "entry:api:http:GET:/status"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 6,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "shop",
+      "file": "app/services/account.ts",
+      "line": 5,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "STORE_API_URL is http://localhost:3000/store-api in .env.example, which is taken as api",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add STORE_API_URL to services[].baseUrlEnv of api to say so outright.",
+      "symbol": "ui_api_call:shop#app/services/account.ts:5:64",
+      "meta": {
+        "variable": "STORE_API_URL",
+        "value": "http://localhost:3000/store-api",
+        "from": ".env.example"
+      },
+      "sites": 2
+    },
+    {
+      "service": "shop",
+      "file": "app/services/account.ts",
+      "line": 12,
+      "reason": "graphql-field-no-resolver",
+      "message": "api serves the GraphQL endpoint POST /store-api the value of the request's setting names, and neither its schema nor a resolver declares Mutation.payByCard: nothing read serves the operation, so it is not joined there",
+      "hint": "A plugin or package the server loads may add the field; read it as a service, or correct the operation.",
+      "symbol": "ui_api_call:shop#app/services/account.ts:12:52"
+    }
+  ],
+  "totals": {
+    "nodes": 43,
+    "edges": 29,
+    "types": 6,
+    "missed": 11,
+    "sites": 20,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 11
+  }
+}

@@ -14,7 +14,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "invariants": "bash scripts/invariants.sh",
-    "fixtures:check": "node scripts/fixtures-check.mjs && node scripts/mcp-snapshots.mjs && node scripts/cli-snapshots.mjs && node --test scripts/coverage/counting-rule.test.mjs scripts/coverage/read-gate.test.mjs && node scripts/coverage/read-gate.mjs && node scripts/docs/fixtures-page.mjs --check",
+    "fixtures:check": "node scripts/fixtures-check.mjs && node scripts/mcp-snapshots.mjs && node scripts/cli-snapshots.mjs && node --test scripts/coverage/counting-rule.test.mjs scripts/coverage/read-gate.test.mjs scripts/coverage/extent.test.mjs scripts/coverage/labels.test.mjs scripts/coverage/targets.test.mjs scripts/deployments-agree.test.mjs && node scripts/coverage/read-gate.mjs && node scripts/docs/fixtures-page.mjs --check && node --test action/src/lib.test.mjs action/src/run.test.mjs && node scripts/json-schema.mjs --check && node --test scripts/bench-agent/generate.test.mjs scripts/bench-agent/score.test.mjs scripts/bench-agent/run.test.mjs && node scripts/bench-agent/run.mjs --dry",
     "flowatlas": "node packages/cli/bin/flowatlas.js",
     "mcp:snapshots": "node scripts/mcp-snapshots.mjs",
     "cli:snapshots": "node scripts/cli-snapshots.mjs",
@@ -25,6 +25,7 @@
     "coverage:render": "node scripts/coverage/run.mjs --render",
     "coverage:gate": "node scripts/coverage/read-gate.mjs",
     "coverage:pin": "node scripts/coverage/run.mjs --pin",
+    "bench:agent": "node scripts/bench-agent/run.mjs",
     "clean": "node scripts/clean.mjs"
   },
   "devDependencies": {

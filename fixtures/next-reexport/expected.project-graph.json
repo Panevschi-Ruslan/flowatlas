@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:12:18.380Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:12:49.543Z",
   "services": [
     {
       "name": "web",
@@ -118,27 +118,8 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
-      }
-    },
-    {
-      "id": "ui_api_call:web#../../packages/handlers/src/store.ts:15:24",
-      "type": "ui_api_call",
-      "label": "POST /deliveries",
-      "repo": "web",
-      "file": "../../packages/handlers/src/store.ts",
-      "line": 15,
-      "kind": "http",
-      "meta": {
-        "method": "POST",
-        "url": "${DELIVERIES_UPSTREAM_URL}/deliveries",
-        "path": "/deliveries",
-        "baseUrlEnv": "DELIVERIES_UPSTREAM_URL",
-        "responseType": null,
-        "bodyType": null,
-        "package": null,
-        "client": "fetch",
-        "via": "template-env"
+        },
+        "ownOrigin": true
       }
     },
     {
@@ -279,14 +260,6 @@
       "confidence": "static",
       "file": "../../packages/handlers/src/store.ts",
       "line": 15
-    },
-    {
-      "from": "web#../../packages/handlers/src/store.ts:recordDelivery",
-      "to": "ui_api_call:web#../../packages/handlers/src/store.ts:15:24",
-      "type": "calls",
-      "confidence": "static",
-      "file": "../../packages/handlers/src/store.ts",
-      "line": 15
     }
   ],
   "types": {
@@ -323,15 +296,6 @@
         "cause": "interface-type"
       },
       "service": "web"
-    },
-    {
-      "service": "web",
-      "file": "../../packages/handlers/src/store.ts",
-      "line": 15,
-      "reason": "target-route-not-found",
-      "message": "no configured service serves POST /deliveries",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /deliveries */.",
-      "symbol": "ui_api_call:web#../../packages/handlers/src/store.ts:15:24"
     },
     {
       "service": "web",

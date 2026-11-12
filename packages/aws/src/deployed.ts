@@ -1,4 +1,4 @@
-import { nameInForms, type DeployedKind } from '@flowatlas/core';
+import { nameInForms, type DeployedKind, type ServedAt } from '@flowatlas/core';
 
 /**
  * The longer spellings a deployed name is written inside: an ARN, and for a
@@ -20,8 +20,10 @@ import { nameInForms, type DeployedKind } from '@flowatlas/core';
 export const DEPLOYED_FORMS: { readonly [K in DeployedKind]: readonly string[] } = {
   function: ['^arn:[^:]+:lambda:[^:]*:[^:]*:function:([^:]+)(?::[^:]+)?$'],
   workflow: ['^arn:[^:]+:states:[^:]*:[^:]*:stateMachine:([^:]+)(?::[^:]+)?$'],
-  // The regional endpoint, the legacy one and a local emulator's alike.
-  queue: ['^https?://[^/]+/[^/]+/([^/?#]+)/?$', '^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$'],
+  // The regional endpoint, the legacy one and a local emulator's alike; never
+  // an API Gateway's address or a function's own, whose path is a route of
+  // it and no account and queue (P268).
+  queue: ['^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$', '^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$'],
   topic: ['^arn:[^:]+:sns:[^:]*:[^:]*:([^:/]+)$'],
   bus: ['^arn:[^:]+:events:[^:]*:[^:]*:event-bus/(.+)$'],
   table: ['^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)$'],
@@ -42,6 +44,53 @@ export const FUNCTION_NAME_FORMS: readonly string[] = [
   '^(?:[^:]+:)?function:([^:]+)(?::[^:]+)?$',
   '^([^:]+):[^:]+$',
 ];
+
+/** An API Gateway address written out: the API's id, its region, and every segment of the path after the host. */
+export interface ExecuteApiAddress {
+  readonly id: string;
+  readonly region: string;
+  readonly segments: readonly string[];
+}
+
+/**
+ * What an address API Gateway serves an API at says (P268):
+ * `https://<id>.execute-api.<region>.amazonaws.com/<stage>/<path>`, the stage
+ * left in the segments, because an HTTP API's default stage writes none.
+ */
+export const executeApiAddress = (text: string): ExecuteApiAddress | undefined => {
+  const found = /^https:\/\/([a-z0-9]+)\.execute-api\.([a-z0-9-]+)\.amazonaws\.com(?:\/([^?#]*))?$/.exec(text.trim());
+  if (found === null) return undefined;
+  const [, id, region, path] = found as unknown as [string, string, string, string | undefined];
+  return { id, region, segments: (path ?? '').split('/').filter((segment) => segment !== '') };
+};
+
+/** The stage an HTTP API serves at its root, which puts no segment in front of its routes. */
+export const DEFAULT_STAGE = '$default';
+
+/**
+ * Where API Gateway serves an API (P284), as a route records it
+ * (`ServedAt`): the id in the host is the platform's, and so is the region
+ * where the deployment does not state one (`undefined`, or text that is not
+ * one). The base is the stage: `'*'` where it is chosen when the deployment
+ * is run (`chosen`), with the one it deploys to where nothing chooses
+ * (`name`) when that is read; the stage itself where it is fixed; or nothing
+ * for an HTTP API's default stage (no name, or `$default`), which writes
+ * none (P294).
+ */
+export const executeApiServedAt = (
+  region: string | undefined,
+  api: string,
+  stage: { readonly name?: string; readonly chosen?: boolean },
+): ServedAt => {
+  const chosen = stage.chosen === true;
+  const name = stage.name === DEFAULT_STAGE ? undefined : stage.name;
+  return {
+    host: `*.execute-api.${region !== undefined && /^[a-z0-9-]+$/.test(region) ? region : '*'}.amazonaws.com`,
+    base: chosen ? ['*'] : name === undefined ? [] : [name],
+    api,
+    ...(chosen && name !== undefined ? { chosenDefault: name } : {}),
+  };
+};
 
 /** A table's stream of changes, which is named by the table it belongs to. */
 export const TABLE_CHANGES_FORMS: readonly string[] = ['^arn:[^:]+:dynamodb:[^:]*:[^:]*:table/([^/]+)/stream/.+$'];

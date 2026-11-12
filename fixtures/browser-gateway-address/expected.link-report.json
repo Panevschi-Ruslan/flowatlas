@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:10:09.026Z",
+  "configHash": "26a63c9d7e85",
+  "services": [
+    {
+      "name": "bookings",
+      "repo": "./bookings",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 10,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1032,
+      "packages": {
+        "name": "bookings",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 11,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1025
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 4,
+    "resolved": 3,
+    "unresolved": 1,
+    "byReason": {
+      "target-route-not-found": 1
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 3,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "js/book.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/dev/bookings names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, and the request as one for /bookings on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/book.js:2:10"
+    },
+    {
+      "service": "web",
+      "file": "js/cancel.js",
+      "line": 3,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/bookings/:param names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.eu-west-1.amazonaws.com with a route for it, and the request as one for /bookings/:param on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/cancel.js:3:3"
+    },
+    {
+      "service": "web",
+      "file": "js/slots.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k7m2p9q4r1.execute-api.eu-west-1.amazonaws.com/dev/slots names its API by an id no file holds; it is taken as prod-bookings of bookings, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, and the request as one for /slots on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/slots.js:2:24"
+    },
+    {
+      "service": "web",
+      "file": "js/weather.js",
+      "line": 2,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /dev/forecast",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /dev/forecast */.",
+      "symbol": "ui_api_call:web#js/weather.js:2:24"
+    }
+  ],
+  "totals": {
+    "nodes": 20,
+    "edges": 14,
+    "types": 0,
+    "missed": 1,
+    "sites": 1,
+    "notes": 3,
+    "findings": 0,
+    "unresolved": 1
+  }
+}

@@ -164,6 +164,12 @@ const rootOf = (expression: TsNode): { key: string; otherwise?: string } | null 
  */
 const fromConcatenation = (argument: TsNode): UrlInfo => {
   if (!Node.isBinaryExpression(argument) || argument.getOperatorToken().getText() !== '+') return EMPTY;
+  // `` `${process.env.CATALOG_URL}/search?` + params.toString() `` (P262): what
+  // is added after a `?` is the query, and the address the text before it.
+  if (!evaluateExpression(argument.getRight()).resolved) {
+    const before = analyzeUrl(argument.getLeft());
+    if (before.url !== null && before.path !== null && before.url.includes('?')) return { ...before, url: `${before.url}${HOLE}` };
+  }
   const root = rootOf(argument.getLeft());
   const rest = evaluateExpression(argument.getRight());
   if (root === null) return fromWrittenConcatenation(argument);

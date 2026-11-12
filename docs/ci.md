@@ -234,6 +234,98 @@ file, and the workflow decides where it goes. Any code host that reads SARIF
 
 ## On a pull request
 
+### The action
+
+One step, in the repository that holds the configuration:
+
+```yaml
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write          # the comment
+  security-events: write        # only with sarif: true
+jobs:
+  flowatlas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Panevschi-Ruslan/flowatlas/action@v0.7.0
+        with:
+          repositories: |
+            orders=acme/orders
+            billing=acme/billing@main
+          token: ${{ secrets.FLOWATLAS_READ_TOKEN }}   # can read those repositories
+```
+
+It installs flowatlas at the action's own version, fetches the pull request's
+base commit, clones every other service the configuration names into the
+directory the configuration expects (a service it cannot fetch is named, and
+the diff runs without it, saying what that costs), restores the base graphs from
+the cache under that commit, runs `flowatlas diff --format comment`, and keeps
+**one comment** on the pull request up to date: found by a marker that names the
+configuration, so a repository with two projects keeps two, and written by the
+action's own token. The marker can be computed from the configuration, so a
+comment somebody else wrote with it in is never the one updated: with a
+person's token the comment must be that person's (`GET /user` names them), and
+with the job's `github.token` or an app's token, which cannot ask who they are,
+it must be a bot's (`github-actions[bot]`, `<app>[bot]`). The comment opens
+with three lines:
+
+```
+Reaches 5 ways in, in 3 services.
+1 new contract break · 1 new rule break · 2 docs made stale
+Verdict: unsafe
+```
+
+and the whole report under them. With nothing to say it posts nothing, and
+updates a comment it posted before to say nothing changed. The job summary gets
+the same text every time, which is where a pull request from a fork is told:
+its token cannot comment.
+
+| Input | Default | Does |
+|---|---|---|
+| `config` | `flowatlas.config.json` | the configuration, relative to the repository |
+| `base` | the pull request's base | the commit to compare against |
+| `repositories` | none | the services not in this checkout, `name=owner/repo` or `name=owner/repo@ref`, one a line |
+| `token` | `github.token` | reads those repositories and comments; the default reads this one only |
+| `comment` | `update` | `update` one comment, post a `new` one each time, or `off` |
+| `comment-when` | `changes` | or `always` |
+| `fail-on` | `contract-break,rule-break` | fail the check on new breaks of these kinds, or `stale-docs` for doc blocks this branch makes stale; empty never fails |
+| `sarif` | `false` | also upload the new and fixed findings to code scanning |
+| `docs-check` | `true` | also `flowatlas docs --check`, as annotations, against the branch's graph `diff` built (`--head-db`); it fails nothing by itself, and one that cannot run is said under the comment |
+| `install` | `none` | `ci` runs `npm ci --ignore-scripts` in each repository first, for types the checker can follow |
+| `version` | the action's | the flowatlas version to install |
+
+Outputs: `verdict`, `reaches`, `contract-breaks`, `rule-breaks`, `stale-docs`,
+`comment-url`.
+
+The docs check never fails a pull request for a block that was stale before
+it: those are annotations, like the rest. `fail-on: stale-docs` fails it on
+the blocks the branch itself makes stale, the `stale-docs` the comment and the
+output count.
+
+The other repositories are cloned with the token as an `Authorization` header
+handed to git through its environment (`GIT_CONFIG_COUNT`, git 2.31 or later),
+the way `actions/checkout` sends it: never in the remote's address, so it is not
+left in a clone's `.git/config` on a runner that keeps its workspace, and never
+on a command line, and masked in the log.
+
+**Never run it with `pull_request_target` and `install: ci`.** flowatlas reads
+code and never runs it, and the action never runs a repository's install
+scripts, but `pull_request_target` hands a fork's code a token that can write.
+
+The action lives in this repository's `action/` folder and is tagged with the
+command, so the action and the flowatlas it installs never drift apart. It is
+not in the Marketplace; listing it there would only change the `uses:` line.
+
+**Publishing the team's graph.** On a push to the main branch, `publish: true`
+builds the graph and uploads it as the artifact `flowatlas-graph`, for
+`flowatlas pull gh:owner/repo/flowatlas-graph` ([one graph for the
+team](team.md)). `pull` takes only an artifact from a push that succeeded,
+never one a pull request's run made.
+
+### By hand
+
 `flowatlas diff` answers the question a reviewer has, which is not which lines
 moved:
 

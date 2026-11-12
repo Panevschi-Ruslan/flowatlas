@@ -1,4 +1,4 @@
-130 nodes, 114 edges, 15 types, missed: 9 · notes: 0 · findings: 4
+130 nodes, 114 edges, 15 types, missed: 11 · notes: 0 · findings: 4
 
 nodes by type
   repo          4
@@ -43,8 +43,8 @@ edges by confidence
 
 unresolved by reason, counted by site
   ambiguous-route-target  1
-  api-path-dynamic        3
-  dynamic-http-url        1
+  api-path-dynamic        4
+  dynamic-http-url        2
   target-route-not-found  3
   unknown-base-url-env    1
 receivers explained by a drawn call: 0

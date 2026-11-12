@@ -1,0 +1,1543 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:52:02.921Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "grpc",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "pricing",
+      "repo": "./proto",
+      "type": "declared",
+      "extractor": "protobuf-document"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:pricing:rpc:grpc:store.PricingService/Quote",
+      "type": "entry",
+      "label": "grpc store.PricingService/Quote",
+      "repo": "pricing",
+      "file": "proto/store.proto",
+      "line": 15,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:store.PricingService/Quote",
+        "call": "unary",
+        "service": "store.PricingService",
+        "method": "Quote",
+        "request": "QuoteRequest",
+        "response": "PriceQuote",
+        "contract": "proto/store.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:pricing#.store.QuoteRequest"
+            }
+          ],
+          "returns": "type:pricing#.store.PriceQuote"
+        },
+        "adapter": "protobuf-document",
+        "declaredBy": "proto/store.proto"
+      }
+    },
+    {
+      "id": "entry:stock:rpc:grpc:grpc.health.v1.Health/Check",
+      "type": "entry",
+      "label": "grpc grpc.health.v1.Health/Check",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 16,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:grpc.health.v1.Health/Check",
+        "call": "unary",
+        "service": "grpc.health.v1.Health",
+        "method": "Check",
+        "request": "HealthCheckRequest",
+        "response": "HealthCheckResponse",
+        "contract": "grpc/health/v1/health.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:stock#.grpc.health.v1.HealthCheckRequest"
+            }
+          ],
+          "returns": "type:stock#.grpc.health.v1.HealthCheckResponse"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "package",
+        "implementedBy": "grpc-health-check"
+      }
+    },
+    {
+      "id": "entry:stock:rpc:grpc:grpc.health.v1.Health/Watch",
+      "type": "entry",
+      "label": "grpc grpc.health.v1.Health/Watch",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 16,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:grpc.health.v1.Health/Watch",
+        "call": "server-stream",
+        "service": "grpc.health.v1.Health",
+        "method": "Watch",
+        "request": "HealthCheckRequest",
+        "response": "HealthCheckResponse",
+        "contract": "grpc/health/v1/health.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:stock#.grpc.health.v1.HealthCheckRequest"
+            }
+          ],
+          "returns": "type:stock#.grpc.health.v1.HealthCheckResponse"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "package",
+        "implementedBy": "grpc-health-check"
+      }
+    },
+    {
+      "id": "entry:stock:rpc:grpc:grpc.reflection.v1.ServerReflection/ServerReflectionInfo",
+      "type": "entry",
+      "label": "grpc grpc.reflection.v1.ServerReflection/ServerReflectionInfo",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 19,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:grpc.reflection.v1.ServerReflection/ServerReflectionInfo",
+        "call": "bidi-stream",
+        "service": "grpc.reflection.v1.ServerReflection",
+        "method": "ServerReflectionInfo",
+        "request": "ServerReflectionRequest",
+        "response": "ServerReflectionResponse",
+        "contract": "grpc/reflection/v1/reflection.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "adapter": "grpc-server",
+        "registration": "addToServer",
+        "handlerVia": "package",
+        "implementedBy": "@grpc/reflection"
+      }
+    },
+    {
+      "id": "entry:stock:rpc:grpc:grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo",
+      "type": "entry",
+      "label": "grpc grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 19,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo",
+        "call": "bidi-stream",
+        "service": "grpc.reflection.v1alpha.ServerReflection",
+        "method": "ServerReflectionInfo",
+        "request": "ServerReflectionRequest",
+        "response": "ServerReflectionResponse",
+        "contract": "grpc/reflection/v1alpha/reflection.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "adapter": "grpc-server",
+        "registration": "addToServer",
+        "handlerVia": "package",
+        "implementedBy": "@grpc/reflection"
+      }
+    },
+    {
+      "id": "entry:stock:rpc:grpc:store.InventoryService/Release",
+      "type": "entry",
+      "label": "grpc store.InventoryService/Release",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 23,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:store.InventoryService/Release",
+        "call": "unary",
+        "service": "store.InventoryService",
+        "method": "Release",
+        "request": "ReleaseRequest",
+        "response": "Reservation",
+        "contract": "../proto/store.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:stock#.store.ReleaseRequest"
+            }
+          ],
+          "returns": "type:stock#.store.Reservation"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:rpc:grpc:store.InventoryService/Reserve",
+      "type": "entry",
+      "label": "grpc store.InventoryService/Reserve",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 23,
+      "kind": "rpc",
+      "meta": {
+        "key": "grpc:store.InventoryService/Reserve",
+        "call": "unary",
+        "service": "store.InventoryService",
+        "method": "Reserve",
+        "request": "ReserveRequest",
+        "response": "Reservation",
+        "contract": "../proto/store.proto",
+        "signature": {
+          "params": [
+            {
+              "name": "request",
+              "type": "type:stock#.store.ReserveRequest"
+            }
+          ],
+          "returns": "type:stock#.store.Reservation"
+        },
+        "adapter": "grpc-server",
+        "registration": "addService",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:web:http:DELETE:/reservations/:param",
+      "type": "entry",
+      "label": "DELETE /reservations/:param",
+      "repo": "web",
+      "file": "src/server.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/reservations/:param",
+        "rawPath": "/reservations/:id",
+        "adapter": "express-routes",
+        "registration": "app.delete",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:web:http:GET:/stock/:param",
+      "type": "entry",
+      "label": "GET /stock/:param",
+      "repo": "web",
+      "file": "src/server.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stock/:param",
+        "rawPath": "/stock/:sku",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:web:http:POST:/quotes",
+      "type": "entry",
+      "label": "POST /quotes",
+      "repo": "web",
+      "file": "src/server.ts",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/quotes",
+        "rawPath": "/quotes",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:web:http:POST:/reservations",
+      "type": "entry",
+      "label": "POST /reservations",
+      "repo": "web",
+      "file": "src/server.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/reservations",
+        "rawPath": "/reservations",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "http_out:web#src/clients.ts:17:35",
+      "type": "http_out",
+      "label": "grpc store.InventoryService/Reserve",
+      "repo": "web",
+      "file": "src/clients.ts",
+      "line": 17,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:store.InventoryService/Reserve",
+        "call": "unary",
+        "operation": "reserve",
+        "client": "grpc",
+        "service": "store.InventoryService",
+        "method": "Reserve",
+        "contract": "../proto/store.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "INVENTORY_ADDR"
+        },
+        "inputKeys": [
+          "quantity",
+          "sku"
+        ],
+        "inputType": "{sku:string;quantity:string}",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "http_out:web#src/clients.ts:22:35",
+      "type": "http_out",
+      "label": "grpc store.InventoryService/Release",
+      "repo": "web",
+      "file": "src/clients.ts",
+      "line": 22,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:store.InventoryService/Release",
+        "call": "unary",
+        "operation": "release",
+        "client": "grpc",
+        "service": "store.InventoryService",
+        "method": "Release",
+        "contract": "../proto/store.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "INVENTORY_ADDR"
+        },
+        "inputKeys": [
+          "reason",
+          "reservationId"
+        ],
+        "inputType": "{reservationId:string;reason:'cancelled'}",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "http_out:web#src/clients.ts:27:35",
+      "type": "http_out",
+      "label": "grpc store.InventoryService/CountStock",
+      "repo": "web",
+      "file": "src/clients.ts",
+      "line": 27,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:store.InventoryService/CountStock",
+        "call": "unary",
+        "operation": "countStock",
+        "client": "grpc",
+        "service": "store.InventoryService",
+        "method": "CountStock",
+        "contract": "../proto/store.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "INVENTORY_ADDR"
+        },
+        "inputKeys": [
+          "sku"
+        ],
+        "inputType": "{sku:string}"
+      }
+    },
+    {
+      "id": "http_out:web#src/clients.ts:32:5",
+      "type": "http_out",
+      "label": "grpc store.PricingService/Quote",
+      "repo": "web",
+      "file": "src/clients.ts",
+      "line": 32,
+      "kind": "rpc",
+      "meta": {
+        "procedure": "grpc:store.PricingService/Quote",
+        "call": "unary",
+        "operation": "quote",
+        "client": "grpc",
+        "service": "store.PricingService",
+        "method": "Quote",
+        "contract": "../proto/store.proto",
+        "link": {
+          "protocol": "grpc",
+          "baseUrlEnv": "PRICING_ADDR"
+        },
+        "inputKeys": [
+          "couponCode",
+          "currencyCode",
+          "lines"
+        ],
+        "inputType": "type:web#QuoteRequest",
+        "outputType": "type:web#PriceQuote",
+        "targetService": "pricing"
+      }
+    },
+    {
+      "id": "pricing#proto/store.proto:store.PricingService.Quote",
+      "type": "method",
+      "label": "PricingService.Quote",
+      "repo": "pricing",
+      "file": "proto/store.proto",
+      "line": 15,
+      "meta": {
+        "declaredBy": "proto/store.proto"
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "grpc-server"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes",
+            "grpc-server"
+          ]
+        },
+        "listen": [
+          {
+            "port": 8080,
+            "file": "src/server.ts",
+            "line": 23
+          }
+        ]
+      }
+    },
+    {
+      "id": "stock#index.js:grpc store.InventoryService/Release@25",
+      "type": "function",
+      "label": "grpc store.InventoryService/Release@25",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "call",
+              "type": "any"
+            },
+            {
+              "name": "callback",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "stock#index.js:reserve",
+      "type": "function",
+      "label": "reserve",
+      "repo": "stock",
+      "file": "index.js",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "call",
+              "type": "any"
+            },
+            {
+              "name": "callback",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/clients.ts:count",
+      "type": "function",
+      "label": "count",
+      "repo": "web",
+      "file": "src/clients.ts",
+      "line": 25,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/clients.ts:quote",
+      "type": "function",
+      "label": "quote",
+      "repo": "web",
+      "file": "src/clients.ts",
+      "line": 30,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "skus",
+              "type": "string[]"
+            },
+            {
+              "name": "couponCode",
+              "type": "string"
+            }
+          ],
+          "returns": "type:web#PriceQuote"
+        }
+      }
+    },
+    {
+      "id": "web#src/clients.ts:release",
+      "type": "function",
+      "label": "release",
+      "repo": "web",
+      "file": "src/clients.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "reservationId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/clients.ts:reserve",
+      "type": "function",
+      "label": "reserve",
+      "repo": "web",
+      "file": "src/clients.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "sku",
+              "type": "string"
+            },
+            {
+              "name": "quantity",
+              "type": "number"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "web#src/server.ts:DELETE /reservations/:id@11",
+      "type": "function",
+      "label": "DELETE /reservations/:id@11",
+      "repo": "web",
+      "file": "src/server.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/server.ts:GET /stock/:sku@15",
+      "type": "function",
+      "label": "GET /stock/:sku@15",
+      "repo": "web",
+      "file": "src/server.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/server.ts:POST /quotes@19",
+      "type": "function",
+      "label": "POST /quotes@19",
+      "repo": "web",
+      "file": "src/server.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/server.ts:POST /reservations@7",
+      "type": "function",
+      "label": "POST /reservations@7",
+      "repo": "web",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/server.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "web",
+      "file": "src/server.ts",
+      "line": 5,
+      "kind": "function"
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:pricing:rpc:grpc:store.PricingService/Quote",
+      "to": "pricing#proto/store.proto:store.PricingService.Quote",
+      "type": "handles",
+      "confidence": "declared",
+      "file": "proto/store.proto",
+      "meta": {
+        "declaredBy": "proto/store.proto"
+      }
+    },
+    {
+      "from": "entry:stock:rpc:grpc:store.InventoryService/Release",
+      "to": "stock#index.js:grpc store.InventoryService/Release@25",
+      "type": "handles",
+      "confidence": "static",
+      "file": "index.js",
+      "line": 25
+    },
+    {
+      "from": "entry:stock:rpc:grpc:store.InventoryService/Reserve",
+      "to": "stock#index.js:reserve",
+      "type": "handles",
+      "confidence": "static",
+      "file": "index.js",
+      "line": 9
+    },
+    {
+      "from": "entry:web:http:DELETE:/reservations/:param",
+      "to": "web#src/server.ts:DELETE /reservations/:id@11",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:web:http:DELETE:/reservations/:param",
+      "to": "web#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:web:http:GET:/stock/:param",
+      "to": "web#src/server.ts:GET /stock/:sku@15",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 15,
+      "meta": {
+        "requestRead": true,
+        "params": "{sku:string}"
+      }
+    },
+    {
+      "from": "entry:web:http:GET:/stock/:param",
+      "to": "web#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:web:http:POST:/quotes",
+      "to": "web#src/server.ts:POST /quotes@19",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "type:web#PriceQuote",
+      "file": "src/server.ts",
+      "line": 19,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:web:http:POST:/quotes",
+      "to": "web#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:web:http:POST:/reservations",
+      "to": "web#src/server.ts:POST /reservations@7",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:web:http:POST:/reservations",
+      "to": "web#src/server.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 5,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "http_out:web#src/clients.ts:17:35",
+      "to": "entry:stock:rpc:grpc:store.InventoryService/Reserve",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 17,
+      "params": [
+        "{sku:string;quantity:string}"
+      ],
+      "meta": {
+        "via": "link-url",
+        "targetService": "stock"
+      }
+    },
+    {
+      "from": "http_out:web#src/clients.ts:22:35",
+      "to": "entry:stock:rpc:grpc:store.InventoryService/Release",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 22,
+      "params": [
+        "{reservationId:string;reason:'cancelled'}"
+      ],
+      "meta": {
+        "via": "link-url",
+        "targetService": "stock"
+      }
+    },
+    {
+      "from": "http_out:web#src/clients.ts:32:5",
+      "to": "entry:pricing:rpc:grpc:store.PricingService/Quote",
+      "type": "hits",
+      "confidence": "declared",
+      "file": "src/clients.ts",
+      "line": 32,
+      "params": [
+        "type:web#QuoteRequest"
+      ],
+      "returns": "type:web#PriceQuote",
+      "meta": {
+        "via": "link-url",
+        "targetService": "pricing"
+      }
+    },
+    {
+      "from": "web#src/clients.ts:count",
+      "to": "http_out:web#src/clients.ts:27:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 27
+    },
+    {
+      "from": "web#src/clients.ts:quote",
+      "to": "http_out:web#src/clients.ts:32:5",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 32
+    },
+    {
+      "from": "web#src/clients.ts:release",
+      "to": "http_out:web#src/clients.ts:22:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 22
+    },
+    {
+      "from": "web#src/clients.ts:reserve",
+      "to": "http_out:web#src/clients.ts:17:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/clients.ts",
+      "line": 17
+    },
+    {
+      "from": "web#src/server.ts:DELETE /reservations/:id@11",
+      "to": "web#src/clients.ts:release",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/server.ts",
+      "line": 12
+    },
+    {
+      "from": "web#src/server.ts:GET /stock/:sku@15",
+      "to": "web#src/clients.ts:count",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "src/server.ts",
+      "line": 16
+    },
+    {
+      "from": "web#src/server.ts:POST /quotes@19",
+      "to": "web#src/clients.ts:quote",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string[]",
+        "string"
+      ],
+      "returns": "type:web#PriceQuote",
+      "file": "src/server.ts",
+      "line": 20
+    },
+    {
+      "from": "web#src/server.ts:POST /reservations@7",
+      "to": "web#src/clients.ts:reserve",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "number"
+      ],
+      "returns": "unknown",
+      "file": "src/server.ts",
+      "line": 8
+    }
+  ],
+  "types": {
+    "type:pricing#.store.Money": {
+      "name": "store.Money",
+      "kind": "object",
+      "declaredIn": "pricing#proto/store.proto",
+      "structuralHash": "0bd17f56cfada083",
+      "fields": [
+        {
+          "name": "currencyCode",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "currency_code"
+          }
+        },
+        {
+          "name": "units",
+          "type": "number | string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        },
+        {
+          "name": "nanos",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "store.Money"
+      }
+    },
+    "type:pricing#.store.PriceQuote": {
+      "name": "store.PriceQuote",
+      "kind": "object",
+      "declaredIn": "pricing#proto/store.proto",
+      "structuralHash": "4ec80aa7bc5a5d4b",
+      "fields": [
+        {
+          "name": "total",
+          "type": "type:pricing#.store.Money",
+          "optional": true,
+          "meta": {
+            "protoPresence": "explicit"
+          }
+        },
+        {
+          "name": "byLine",
+          "type": "object",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "by_line"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "store.PriceQuote"
+      }
+    },
+    "type:pricing#.store.QuoteRequest": {
+      "name": "store.QuoteRequest",
+      "kind": "union",
+      "declaredIn": "pricing#proto/store.proto",
+      "structuralHash": "378074719c1d2815",
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "store.QuoteRequest"
+      },
+      "members": [
+        "type:pricing#.store.QuoteRequest/couponCode",
+        "type:pricing#.store.QuoteRequest/loyaltyPoints"
+      ]
+    },
+    "type:pricing#.store.QuoteRequest.Line": {
+      "name": "store.QuoteRequest.Line",
+      "kind": "object",
+      "declaredIn": "pricing#proto/store.proto",
+      "structuralHash": "a379d6fa9fe8e967",
+      "fields": [
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "store.QuoteRequest.Line"
+      }
+    },
+    "type:pricing#.store.QuoteRequest/couponCode": {
+      "name": "store.QuoteRequest/couponCode",
+      "kind": "object",
+      "declaredIn": "pricing#proto/store.proto",
+      "structuralHash": "6ec0eaf14737785d",
+      "fields": [
+        {
+          "name": "lines",
+          "type": "type:pricing#.store.QuoteRequest.Line[]",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "currencyCode",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "currency_code"
+          }
+        },
+        {
+          "name": "couponCode",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "protoPresence": "explicit",
+            "protoName": "coupon_code",
+            "oneof": "discount"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "store.QuoteRequest",
+        "oneofArm": [
+          "couponCode"
+        ]
+      }
+    },
+    "type:pricing#.store.QuoteRequest/loyaltyPoints": {
+      "name": "store.QuoteRequest/loyaltyPoints",
+      "kind": "object",
+      "declaredIn": "pricing#proto/store.proto",
+      "structuralHash": "b51372dac7bb95b6",
+      "fields": [
+        {
+          "name": "lines",
+          "type": "type:pricing#.store.QuoteRequest.Line[]",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "currencyCode",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "currency_code"
+          }
+        },
+        {
+          "name": "loyaltyPoints",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "protoPresence": "explicit",
+            "protoName": "loyalty_points",
+            "oneof": "discount"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "store.QuoteRequest",
+        "oneofArm": [
+          "loyaltyPoints"
+        ]
+      }
+    },
+    "type:stock#.grpc.health.v1.HealthCheckRequest": {
+      "name": "grpc.health.v1.HealthCheckRequest",
+      "kind": "object",
+      "declaredIn": "stock#grpc/health/v1/health.proto",
+      "structuralHash": "5d2ba12e6a4bf05e",
+      "fields": [
+        {
+          "name": "service",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "grpc.health.v1.HealthCheckRequest"
+      }
+    },
+    "type:stock#.grpc.health.v1.HealthCheckResponse": {
+      "name": "grpc.health.v1.HealthCheckResponse",
+      "kind": "object",
+      "declaredIn": "stock#grpc/health/v1/health.proto",
+      "structuralHash": "d934738c8ff8e196",
+      "fields": [
+        {
+          "name": "status",
+          "type": "type:stock#.grpc.health.v1.HealthCheckResponse.ServingStatus",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "grpc.health.v1.HealthCheckResponse"
+      }
+    },
+    "type:stock#.grpc.health.v1.HealthCheckResponse.ServingStatus": {
+      "name": "grpc.health.v1.HealthCheckResponse.ServingStatus",
+      "kind": "union",
+      "declaredIn": "stock#grpc/health/v1/health.proto",
+      "structuralHash": "63f7867893079bdb",
+      "members": [
+        "'UNKNOWN'",
+        "'SERVING'",
+        "'NOT_SERVING'",
+        "'SERVICE_UNKNOWN'",
+        "number"
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoEnum": "grpc.health.v1.HealthCheckResponse.ServingStatus"
+      }
+    },
+    "type:stock#.store.ReleaseRequest": {
+      "name": "store.ReleaseRequest",
+      "kind": "object",
+      "declaredIn": "stock#../proto/store.proto",
+      "structuralHash": "23d5e24cff8591d6",
+      "fields": [
+        {
+          "name": "reservationId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "reservation_id"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "store.ReleaseRequest"
+      }
+    },
+    "type:stock#.store.Reservation": {
+      "name": "store.Reservation",
+      "kind": "object",
+      "declaredIn": "stock#../proto/store.proto",
+      "structuralHash": "67982fb4eeab3704",
+      "fields": [
+        {
+          "name": "reservationId",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "reservation_id"
+          }
+        },
+        {
+          "name": "status",
+          "type": "type:stock#.store.Reservation.Status",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoForm": "library"
+          }
+        },
+        {
+          "name": "expiresAt",
+          "type": "unknown",
+          "optional": true,
+          "meta": {
+            "protoPresence": "explicit",
+            "protoName": "expires_at"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "store.Reservation"
+      }
+    },
+    "type:stock#.store.Reservation.Status": {
+      "name": "store.Reservation.Status",
+      "kind": "union",
+      "declaredIn": "stock#../proto/store.proto",
+      "structuralHash": "91fac455551c606f",
+      "members": [
+        "'STATUS_UNSPECIFIED'",
+        "'HELD'",
+        "'RELEASED'",
+        "number"
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoEnum": "store.Reservation.Status"
+      }
+    },
+    "type:stock#.store.ReserveRequest": {
+      "name": "store.ReserveRequest",
+      "kind": "object",
+      "declaredIn": "stock#../proto/store.proto",
+      "structuralHash": "56278d66e3670821",
+      "fields": [
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit"
+          }
+        },
+        {
+          "name": "warehouseIds",
+          "type": "string[]",
+          "optional": false,
+          "meta": {
+            "protoPresence": "implicit",
+            "protoName": "warehouse_ids"
+          }
+        }
+      ],
+      "meta": {
+        "declaredBy": "protobuf",
+        "protoMessage": "store.ReserveRequest"
+      }
+    },
+    "type:web#Money": {
+      "name": "Money",
+      "kind": "object",
+      "declaredIn": "web#src/gen/pricing.ts",
+      "structuralHash": "fe18fa134b8363dd",
+      "fields": [
+        {
+          "name": "currencyCode",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "units",
+          "type": "number",
+          "optional": false
+        },
+        {
+          "name": "nanos",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:web#PriceQuote": {
+      "name": "PriceQuote",
+      "kind": "object",
+      "declaredIn": "web#src/gen/pricing.ts",
+      "structuralHash": "7c74651226fde445",
+      "fields": [
+        {
+          "name": "total",
+          "type": "type:web#Money",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:web#QuoteLine": {
+      "name": "QuoteLine",
+      "kind": "object",
+      "declaredIn": "web#src/gen/pricing.ts",
+      "structuralHash": "a379d6fa9fe8e967",
+      "fields": [
+        {
+          "name": "sku",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:web#QuoteRequest": {
+      "name": "QuoteRequest",
+      "kind": "object",
+      "declaredIn": "web#src/gen/pricing.ts",
+      "structuralHash": "5928b77e335779c9",
+      "fields": [
+        {
+          "name": "lines",
+          "type": "type:web#QuoteLine[]",
+          "optional": false
+        },
+        {
+          "name": "currencyCode",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "couponCode",
+          "type": "string",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        },
+        {
+          "name": "loyaltyPoints",
+          "type": "number",
+          "optional": true,
+          "meta": {
+            "optionalBy": "question"
+          }
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "index.js",
+      "line": 23,
+      "reason": "grpc-method-unimplemented",
+      "level": "info",
+      "message": "store.InventoryService/CountStock is declared by ../proto/store.proto and the implementation registered at this call does not implement it, so a client calling it is answered UNIMPLEMENTED.",
+      "hint": "Implement the method where the service is registered, or take it out of the contract if no client is meant to call it.",
+      "symbol": "store.InventoryService/CountStock",
+      "adapter": "grpc-server",
+      "meta": {
+        "service": "store.InventoryService",
+        "method": "CountStock",
+        "contract": "../proto/store.proto"
+      },
+      "service": "stock"
+    },
+    {
+      "file": "index.js",
+      "line": 26,
+      "reason": "grpc-method-undeclared",
+      "level": "info",
+      "message": "restock is implemented for store.InventoryService and ../proto/store.proto declares no such method, so no client of the contract can call it, and it is not drawn.",
+      "hint": "Declare the method in the contract, or correct its name to the one the contract declares; a helper the implementation holds belongs outside it.",
+      "symbol": "store.InventoryService/restock",
+      "adapter": "grpc-server",
+      "meta": {
+        "service": "store.InventoryService",
+        "method": "restock",
+        "contract": "../proto/store.proto"
+      },
+      "service": "stock"
+    },
+    {
+      "service": "web",
+      "file": "src/clients.ts",
+      "line": 27,
+      "reason": "grpc-method-unserved",
+      "message": "web calls store.InventoryService (CountStock), which ../proto/store.proto declares and no configured service implements",
+      "hint": "The service that answers it is not read here: written in another language, or not configured. Declare it by that file - a service with \"document\": { \"kind\": \"protobuf\", \"path\": ..., \"services\": [\"store.InventoryService\"] } - or add the repository that implements it to services[].",
+      "symbol": "http_out:web#src/clients.ts:27:35",
+      "meta": {
+        "grpcService": "store.InventoryService",
+        "contract": "../proto/store.proto",
+        "methods": [
+          "CountStock"
+        ]
+      }
+    },
+    {
+      "service": "web",
+      "file": "src/clients.ts",
+      "line": 27,
+      "reason": "procedure-not-found",
+      "message": "no procedure grpc:store.InventoryService/CountStock in web or stock",
+      "hint": "Renamed or removed? Check the tree this client is typed from, or add the service that declares it to services[] and name it in apiTarget.",
+      "symbol": "http_out:web#src/clients.ts:27:35"
+    },
+    {
+      "file": "src/server.ts",
+      "line": 8,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 4,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "POST /reservations@7 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 8,
+                "symbol": "POST /reservations@7 -> res.json"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 12,
+                "symbol": "DELETE /reservations/:id@11 -> res.json"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 16,
+                "symbol": "GET /stock/:sku@15 -> res.json"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "web"
+    }
+  ]
+}

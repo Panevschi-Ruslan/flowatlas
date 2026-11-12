@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:29:24.329Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:12:49.543Z",
   "configHash": "ef851b9ed9cb",
   "services": [
     {
@@ -8,11 +8,11 @@
       "repo": "./apps/web",
       "type": "nextjs",
       "extractor": "@flowatlas/extractor-nestjs",
-      "nodes": 11,
-      "edges": 7,
+      "nodes": 10,
+      "edges": 6,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 483,
+      "durationMs": 771,
       "packages": {
         "name": "@next-reexport/web",
         "runtime": [
@@ -35,12 +35,10 @@
     "dynamic": 0
   },
   "ui": {
-    "total": 1,
+    "total": 0,
     "resolved": 0,
-    "unresolved": 1,
-    "byReason": {
-      "target-route-not-found": 1
-    }
+    "unresolved": 0,
+    "byReason": {}
   },
   "channels": {
     "total": 0,
@@ -71,25 +69,16 @@
       "message": "no service declares DELIVERIES_UPSTREAM_URL",
       "hint": "Add DELIVERIES_UPSTREAM_URL to services[].baseUrlEnv of whichever service answers it.",
       "symbol": "http_out:web#../../packages/handlers/src/store.ts:15:24"
-    },
-    {
-      "service": "web",
-      "file": "../../packages/handlers/src/store.ts",
-      "line": 15,
-      "reason": "target-route-not-found",
-      "message": "no configured service serves POST /deliveries",
-      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /deliveries */.",
-      "symbol": "ui_api_call:web#../../packages/handlers/src/store.ts:15:24"
     }
   ],
   "totals": {
-    "nodes": 11,
-    "edges": 7,
+    "nodes": 10,
+    "edges": 6,
     "types": 2,
-    "missed": 3,
-    "sites": 3,
+    "missed": 2,
+    "sites": 2,
     "notes": 0,
     "findings": 0,
-    "unresolved": 3
+    "unresolved": 2
   }
 }

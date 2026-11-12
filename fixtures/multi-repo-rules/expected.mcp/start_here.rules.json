@@ -18,7 +18,7 @@
         "event": 1,
         "http": 8
       },
-      "gaps": 3
+      "gaps": 4
     },
     {
       "service": "orders",
@@ -34,12 +34,12 @@
       "nodes": 32,
       "entries": 0,
       "entriesByKind": {},
-      "gaps": 5
+      "gaps": 6
     }
   ],
   "counts": {
-    "gaps": 8,
-    "sites": 8,
+    "gaps": 10,
+    "sites": 10,
     "notes": 0,
     "findings": 4,
     "nothing": 0
@@ -47,14 +47,15 @@
   "topGaps": [
     {
       "reason": "api-path-dynamic",
-      "count": 3,
+      "count": 4,
       "services": [
         "web"
       ],
       "example": {
-        "message": "this.http.get<unknown>(this.opaque())",
+        "message": "GET /orders/${…}-summary is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
         "service": "web",
-        "loc": "src/app/orders-api.service.ts:124"
+        "loc": "src/app/orders-api.service.ts:48",
+        "id": "ui_api_call:web#src/app/orders-api.service.ts:48:12"
       }
     },
     {
@@ -73,7 +74,7 @@
     },
     {
       "reason": "dynamic-http-url",
-      "count": 1,
+      "count": 2,
       "services": [
         "gateway"
       ],

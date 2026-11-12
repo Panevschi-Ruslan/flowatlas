@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "medusa-fs-router",
-  "generatedAt": "2026-10-08T18:55:38.667Z",
+  "generatedAt": "2026-11-09T21:46:13.858Z",
   "nodes": [
     {
       "id": "entry:medusa-fs-router:http:GET:/admin/orders",
@@ -208,6 +208,15 @@
       }
     },
     {
+      "id": "medusa-fs-router#src/api/admin/orders/route.ts:withAdmin",
+      "type": "middleware",
+      "label": "withAdmin",
+      "repo": "medusa-fs-router",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 17,
+      "kind": "function"
+    },
+    {
       "id": "medusa-fs-router#src/api/middlewares.ts:authenticate",
       "type": "middleware",
       "label": "authenticate",
@@ -334,6 +343,25 @@
         "signature": {
           "params": [],
           "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "medusa-fs-router#src/utils/with-admin.ts:withAdmin",
+      "type": "function",
+      "label": "withAdmin",
+      "repo": "medusa-fs-router",
+      "file": "src/utils/with-admin.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "handler",
+              "type": "T"
+            }
+          ],
+          "returns": "T"
         }
       }
     },
@@ -504,6 +532,20 @@
       }
     },
     {
+      "from": "entry:medusa-fs-router:http:POST:/admin/orders",
+      "to": "medusa-fs-router#src/api/admin/orders/route.ts:withAdmin",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 17,
+      "meta": {
+        "order": 2,
+        "scope": "route",
+        "layer": "middleware",
+        "source": "withAdmin"
+      }
+    },
+    {
       "from": "entry:medusa-fs-router:http:POST:/store/products",
       "to": "medusa-fs-router#src/api/store/products/route.ts:POST",
       "type": "handles",
@@ -537,6 +579,21 @@
         "string"
       ],
       "returns": "unknown[]"
+    },
+    {
+      "from": "medusa-fs-router#src/api/admin/orders/route.ts:withAdmin",
+      "to": "medusa-fs-router#src/utils/with-admin.ts:withAdmin",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/api/admin/orders/route.ts",
+      "line": 17,
+      "meta": {
+        "wrapper": true
+      },
+      "params": [
+        "T"
+      ],
+      "returns": "T"
     },
     {
       "from": "medusa-fs-router#src/api/store/products/route.ts:GET",
@@ -609,6 +666,14 @@
       "hint": "Nothing to do if that is deliberate; move the file out from under the underscored directory if it was meant to answer requests.",
       "symbol": "src/api/store/_helpers/route.ts",
       "adapter": "medusa-routes"
+    },
+    {
+      "file": "src/utils/with-admin.ts",
+      "line": 9,
+      "reason": "type-generic-uninstantiated",
+      "hint": "The type argument is not known here, so the reference names the parameter.",
+      "symbol": "T",
+      "level": "info"
     }
   ]
 }

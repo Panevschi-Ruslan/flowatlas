@@ -1,0 +1,10 @@
+{
+  "name": "@fixture/nest-configured-clients",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root: two procedure servers, a NestJS worker, and the clients package the worker configures.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

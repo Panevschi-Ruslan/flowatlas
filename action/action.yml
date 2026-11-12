@@ -1,0 +1,131 @@
+name: flowatlas diff
+description: What a pull request does to the whole project, across repositories, as one comment kept up to date.
+author: Panevschi Ruslan
+branding:
+  icon: git-pull-request
+  color: blue
+
+inputs:
+  config:
+    description: The flowatlas configuration, relative to the repository.
+    default: flowatlas.config.json
+  base:
+    description: The commit to compare against. Default, the pull request's base.
+    default: ''
+  repositories:
+    description: |
+      The services not in this checkout and where to get them, one a line:
+      `orders=acme/orders@main`, or `billing=acme/billing` for its default branch.
+    default: ''
+  token:
+    description: A token that can read those repositories and comment; the default reads this one only.
+    default: ${{ github.token }}
+  comment:
+    description: '`update` one comment (the default), post a `new` one every time, or `off`.'
+    default: update
+  comment-when:
+    description: '`changes`: only when the diff says something, updating one already there to say nothing changed; `always`.'
+    default: changes
+  fail-on:
+    description: 'Fail the check on new breaks: `contract-break`, `rule-break`, `stale-docs` (doc blocks this branch makes stale), comma-separated; empty never fails.'
+    default: contract-break,rule-break
+  sarif:
+    description: Also upload the new and fixed findings to code scanning (needs security-events write).
+    default: 'false'
+  docs-check:
+    description: Also run `flowatlas docs --check` against the branch's graph, as annotations; it fails nothing by itself.
+    default: 'true'
+  install:
+    description: '`none` reads the repositories as they are; `ci` runs `npm ci --ignore-scripts` in each first.'
+    default: none
+  version:
+    description: The flowatlas version to install, or `installed` for the one already on the path. Default, the one this action was released with.
+    default: ''
+  max-chars:
+    description: The most characters the comment holds (a GitHub comment holds 65,536).
+    default: '60000'
+  publish:
+    description: |
+      `true` on the main branch: build the graph and upload the team's bundle as the
+      artifact `flowatlas-graph`, for `flowatlas pull gh:owner/repo/flowatlas-graph`.
+      No comment is written.
+    default: 'false'
+  retention-days:
+    description: How long the published artifact is kept; a run on every push keeps a fresh one.
+    default: '30'
+
+outputs:
+  verdict:
+    description: '`safe`, `unsafe` or `unknown`.'
+    value: ${{ steps.run.outputs.verdict }}
+  reaches:
+    description: How many ways in the change reaches.
+    value: ${{ steps.run.outputs.reaches }}
+  contract-breaks:
+    description: New contract breaks.
+    value: ${{ steps.run.outputs.contract-breaks }}
+  rule-breaks:
+    description: New architecture rule breaks.
+    value: ${{ steps.run.outputs.rule-breaks }}
+  stale-docs:
+    description: Doc blocks this branch makes stale.
+    value: ${{ steps.run.outputs.stale-docs }}
+  comment-url:
+    description: The comment, when one was posted or updated.
+    value: ${{ steps.run.outputs.comment-url }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    - id: prepare
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/src/prepare.mjs"
+      env:
+        INPUT_PUBLISH: ${{ inputs.publish }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_BASE: ${{ inputs.base }}
+        INPUT_REPOSITORIES: ${{ inputs.repositories }}
+        INPUT_TOKEN: ${{ inputs.token }}
+        INPUT_INSTALL: ${{ inputs.install }}
+        INPUT_VERSION: ${{ inputs.version }}
+        GITHUB_ACTION_REF: ${{ github.action_ref }}
+    - if: ${{ inputs.publish != 'true' }}
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.prepare.outputs.cache-path }}
+        key: ${{ steps.prepare.outputs.cache-key }}
+    - id: publish
+      if: ${{ inputs.publish == 'true' }}
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/src/publish.mjs"
+      env:
+        FLOWATLAS_CONFIG: ${{ steps.prepare.outputs.config }}
+    - if: ${{ inputs.publish == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: flowatlas-graph
+        path: ${{ steps.publish.outputs.bundle-path }}
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: error
+    - id: run
+      if: ${{ inputs.publish != 'true' }}
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/src/run.mjs"
+      env:
+        FLOWATLAS_CONFIG: ${{ steps.prepare.outputs.config }}
+        FLOWATLAS_BASE: ${{ steps.prepare.outputs.base }}
+        INPUT_TOKEN: ${{ inputs.token }}
+        INPUT_COMMENT: ${{ inputs.comment }}
+        INPUT_COMMENT_WHEN: ${{ inputs.comment-when }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_SARIF: ${{ inputs.sarif }}
+        INPUT_DOCS_CHECK: ${{ inputs.docs-check }}
+        INPUT_MAX_CHARS: ${{ inputs.max-chars }}
+    - if: ${{ always() && inputs.sarif == 'true' && hashFiles(steps.prepare.outputs.sarif-file) != '' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ steps.prepare.outputs.sarif-file }}
+        category: flowatlas

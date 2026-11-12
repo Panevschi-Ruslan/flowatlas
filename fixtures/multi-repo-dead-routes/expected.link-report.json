@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T04:49:56.851Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T14:18:29.464Z",
   "configHash": "95fcc497df76",
   "services": [
     {
@@ -12,7 +12,7 @@
       "edges": 11,
       "types": 1,
       "unresolved": 0,
-      "durationMs": 844,
+      "durationMs": 1383,
       "packages": {
         "name": "catalog-api",
         "runtime": [
@@ -32,7 +32,7 @@
       "edges": 2,
       "types": 0,
       "unresolved": 0,
-      "durationMs": 683,
+      "durationMs": 1147,
       "packages": {
         "name": "ops-scripts",
         "runtime": [],
@@ -50,7 +50,7 @@
       "edges": 6,
       "types": 2,
       "unresolved": 1,
-      "durationMs": 570,
+      "durationMs": 938,
       "packages": {
         "name": "orders-worker",
         "runtime": [],
@@ -68,7 +68,7 @@
       "edges": 11,
       "types": 1,
       "unresolved": 1,
-      "durationMs": 606,
+      "durationMs": 1018,
       "packages": {
         "name": "storefront",
         "runtime": [
@@ -141,16 +141,25 @@
         "value": "https://catalog.internal/items/reindex",
         "from": ".env.example"
       }
+    },
+    {
+      "service": "storefront",
+      "file": "src/app/items.client.ts",
+      "line": 59,
+      "reason": "api-path-dynamic",
+      "message": "GET /items/:param/${…}${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:storefront#src/app/items.client.ts:59:12"
     }
   ],
   "totals": {
     "nodes": 57,
     "edges": 38,
     "types": 4,
-    "missed": 2,
-    "sites": 2,
+    "missed": 3,
+    "sites": 3,
     "notes": 1,
     "findings": 0,
-    "unresolved": 2
+    "unresolved": 3
   }
 }

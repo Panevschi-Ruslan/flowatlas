@@ -1,0 +1,17 @@
+@  catalog-prod-restock                                                   catalog/stacks/catalog.yaml:55
+  -> handler                                                              catalog/src/restock.ts:9
+    $  RESTOCK_TOPIC_ARN                                                  catalog/src/restock.ts:11
+    ~  message sns/${…}@catalog@stacks.catalog.Resources.RestockTopic     catalog/src/restock.ts:11
+      ~  sns/${…}@catalog@stacks.catalog.Resources.RestockTopic           infra/main.tf:75
+        => platform ~  subscription aws_sns_topic_subscription.restocked  platform/infra/main.tf:75
+          @  shop-platform-notify                                         platform/infra/main.tf:67
+            -> handler                                                    platform/src/notify.ts:4
+    $  AUDIT_QUEUE_URL                                                    catalog/src/restock.ts:12
+    ~  message sqs/shop-orders-audit                                      catalog/src/restock.ts:12
+      ~  sqs/shop-orders-audit                                            src/restock.ts:12
+  ~  message sqs/shop-orders-placed                                       catalog/stacks/catalog.yaml:73
+    ~  sqs/shop-orders-placed                                             stacks/catalog.yaml:73
+      => reports ~  mapping reports-worker/Tally/SqsEventSource:reports-worker/Placed  reports/lib/stacks.ts:53
+        @  reports-tally                                                  reports/lib/stacks.ts:52
+          -> handler                                                      reports/src/tally.ts:2
+unresolved on this path: 0

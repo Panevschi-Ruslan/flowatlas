@@ -1,0 +1,10 @@
+stages: [preview, smoke]
+preview:
+  stage: preview
+  script:
+    - helm upgrade --install catalog-preview deploy/charts/catalog --set service.port=9093
+smoke:
+  stage: smoke
+  script:
+    - kubectl -n shop port-forward svc/shop-orders 8085:8080 &
+    - curl -fsS http://localhost:8085/orders

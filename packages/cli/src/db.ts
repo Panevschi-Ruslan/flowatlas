@@ -10,7 +10,12 @@ export interface DbOptions {
   config?: string;
 }
 
-const handleFor = (options: DbOptions): DbHandle => {
+/**
+ * The configured database's handle, for a command that asks what the graph
+ * server's tools ask and so needs what they read beside the graph: the
+ * configuration's rules, the accepted and observed files (P229).
+ */
+export const handleFor = (options: DbOptions): DbHandle => {
   try {
     return new DbHandle({
       ...(options.db === undefined ? {} : { dbPath: options.db }),

@@ -58,10 +58,38 @@ export interface KindedRow {
 // How a join or a reading was made. Every one of these sits beside an edge
 // that was drawn, or a package that was read.
 const NOTES: readonly string[] = [
+  // A gRPC service no .proto file of the repository declares, drawn from what the code writes (P274)
+  'grpc-contract-unread',
+  // A gRPC service a package implements whose contract is none this knows (P287)
+  'grpc-package-service',
+  // A call of a framework module that the options it is handed rule out (P255)
+  'framework-module-skipped',
+  // A feature the files use that the build's own flag turns off: Nitro's tasks (P262)
+  'framework-feature-off',
+  // A navigation out of the application, to an address with a host (P265)
+  'navigation-external',
+  // A navigation joined to a page under the locale segment a middleware puts in front (P291)
+  'navigation-locale-prefixed',
   // Stand-ins for a package that is not installed (core/stand-ins.ts, P78)
   'package-from-repo',
   'package-version-differs',
   'shape-file-unmatched',
+  // What a framework's build would have written for the compiler, read
+  // without it (core/conventions.ts, P240): its aliases, and the imports it adds
+  'aliases-from-convention',
+  'aliases-from-config',
+  'implicit-imports-from-convention',
+  // The parts a framework builds an application from (P243): which were read,
+  // and a name, page or route one part gives in place of another
+  'implicit-import-overridden',
+  'framework-layer-read',
+  'framework-layer-overridden',
+  // What a framework still decides when it builds (P251): the modules of the
+  // repository that were read, the ones that are packages, and how another
+  // environment's build differs from the one read
+  'framework-module-read',
+  'framework-module-installed',
+  'framework-environment-differs',
   // The project's own extraction patterns (core/patterns, P121): a rule a
   // written description won over, and one nothing in its services matches
   'pattern-shadowed',
@@ -70,10 +98,30 @@ const NOTES: readonly string[] = [
   'base-url-from-files',
   'base-url-from-name',
   'environment-from-files',
+  'channel-from-grant',
+  // A container publishes a port its service's code is not read listening on (P254)
+  'published-port-unheard',
+  // A request a server's proxy forwards to a host no service of the project is reached at (P257)
+  'proxied-to-third-party',
   'route-api-guessed',
   'route-mount-assumed-empty',
   'stream-filter-not-matched',
   'workflow-named-by-file',
+  // A deployment read as far as its files go (P57): a name the platform
+  // generates, stood in for by its declaration; a declaration under a
+  // condition the files do not settle; one the program never reaches.
+  'deployed-name-generated',
+  // A name a parameter with no value gives, stood in for by the parameter's
+  // declaration (P268).
+  'deployed-name-from-parameter',
+  'construct-conditional',
+  'construct-unreached',
+  // Shared code a deployment hands its functions at run time, read as code
+  // where it is in the repository and not joined to what loads it (P246).
+  'layer-not-followed',
+  // A copy of a description a packaging step wrote, its local paths swapped
+  // for uploads, not read a second time beside the one it copies (P248).
+  'deployment-copy-not-read',
   // The route audit, where the source says what was decided
   'route-checked-in-body',
   'route-guard-skipped',
@@ -84,6 +132,10 @@ const NOTES: readonly string[] = [
   // spelling as well, since a stored row may still carry it.
   'document-age',
   'openapi-document-age',
+  // A store more than one service writes (cli/doctor/shared-store.ts, P228): sometimes the design.
+  'store-shared',
+  // A checkout that moved since the build (cli/doctor/checkout.ts, P230): the graph is of another commit.
+  'checkout-moved',
   // A declared failure no request answered in the observed window (cli/doctor/runtime.ts, P106):
   // evidence beside the code, nothing missed.
   'failure-declared-unseen',
@@ -102,6 +154,19 @@ const FINDINGS: readonly string[] = [
   'marker-reason-missing',
   // Two declarations where the framework takes one, or one it never serves
   'route-claimed-twice',
+  'graphql-field-resolved-twice',
+  // A gRPC contract's method a server does not implement, and a member it implements the contract does not declare (P287)
+  'grpc-method-unimplemented',
+  'grpc-method-undeclared',
+  // A federated graph its composition refuses, or a supergraph its subgraphs moved past (P241)
+  'graphql-composition-conflict',
+  'graphql-supergraph-drift',
+  // The router's authorization directives composed by a gateway that does not check them (P245)
+  'graphql-auth-not-checked',
+  // A field using @requires that does not carry what the fields it requires ask (P256)
+  'graphql-requires-auth-not-carried',
+  // An entity call for an interface its owner can say no concrete type of (P252)
+  'graphql-entity-type-unsaid',
   'route-file-not-served',
   'wizard-step-conflict',
   'workflow-name-duplicate',
@@ -109,17 +174,40 @@ const FINDINGS: readonly string[] = [
   'orphan-scene-decorator',
   'orphan-update-decorator',
   'procedure-call-mismatch',
+  // A client's link sent where no mount of its protocol answers (P58)
+  'procedure-link-unserved',
+  // A tree or a way in declared where no tree holds it and nothing names it (P270)
+  'procedure-unmounted',
+  // A request on a container's or a cluster's network to a port only the machine or the containers have (P257)
+  'network-port-unreachable',
+  // A server's own request with no host, made by a client with no origin to resolve it against (P263)
+  'server-request-without-origin',
+  // A helmfile release that needs one the helmfile does not declare, which helmfile refuses to apply (P273)
+  'release-need-undefined',
   'workflow-definition-invalid',
   // Ends that nothing on the other side meets
   's3-write-matches-nothing',
   'stream-no-writer',
   'subscription-matches-nothing',
+  // A job added to a queue whose every handler names another (P271)
+  'job-no-handler',
 ];
 
 // The reader could not follow something. Listed rather than left to the
 // default, so the read gate can tell a reason somebody classified as a gap from
 // one nobody looked at.
 const GAPS: readonly string[] = [
+  // A framework's conventions the reader could not read (P240): a name two
+  // files give unimported, a layer, a setting written as code
+  'implicit-import-ambiguous',
+  'framework-layer-unread',
+  'framework-setting-dynamic',
+  // An import a layer writes for its own code that the framework resolves in
+  // the application (P243)
+  'framework-layer-alias',
+  // A module of the repository, or one of its additions, the reader could not
+  // place (P251)
+  'framework-module-unread',
   // What traffic reached and no reader drew (core/blind-spots.ts, P110): asked
   // of the observed file at read time, at info, never stored in the graph.
   'seen-not-in-code',
@@ -130,6 +218,8 @@ const GAPS: readonly string[] = [
   // Reading and the build (core/project.ts, cli/commands/build.ts)
   'file-not-parsed',
   'service-read-nothing',
+  // An edge a reader drew to a node it never wrote, left out (core/builder.ts, R180)
+  'edge-end-missing',
   'test-directory-skipped',
   // Stand-ins that could not be used (core/stand-ins.ts)
   'package-source-ambiguous',
@@ -152,6 +242,7 @@ const GAPS: readonly string[] = [
   'call-through-token',
   // Modules and globals
   'module-import-dynamic',
+  'module-import-not-installed',
   'module-controllers-unread',
   'module-providers-unread',
   'global-wrapper-dynamic',
@@ -167,9 +258,15 @@ const GAPS: readonly string[] = [
   'route-mount-unread',
   'route-handler-anonymous',
   'route-handler-unread',
+  'fs-route-handler-not-read',
+  'graphql-federation-not-read',
   'route-module-not-found',
   'route-verb-unread',
   'route-registry-unread',
+  // A tool, prompt or resource an MCP server registers under a name decided at run time (P270)
+  'mcp-name-dynamic',
+  // A gRPC service a server registers or a client is made of that cannot be named (P274)
+  'grpc-service-unread',
   'registry-key-dynamic',
   'registry-handler-anonymous',
   'entry-registry-unconfigured',
@@ -186,6 +283,12 @@ const GAPS: readonly string[] = [
   'procedure-members-unmatched',
   'procedure-path-dynamic',
   'entry-procedures-description-inactive',
+  // A link, a mount's prefix and a contract's member nobody could read (P58)
+  'procedure-link-dynamic',
+  // A link that sends over a socket whose address is not read (P242)
+  'procedure-link-socket',
+  'procedure-prefix-unread',
+  'procedure-contract-unread',
   // Bots
   'dynamic-bot-trigger',
   'bot-handlers-not-found',
@@ -215,11 +318,31 @@ const GAPS: readonly string[] = [
   'dynamic-http-url',
   // The browser (the front-end readers)
   'api-path-dynamic',
+  'graphql-document-dynamic',
+  'graphql-document-not-parsed',
+  'graphql-fragment-not-read',
+  // A GraphQL client a call names that could not be followed to its address (P266)
+  'graphql-client-unread',
+  // A GraphQL endpoint's options or path, or which of them serves a resolver, not read (P266)
+  'graphql-endpoint-unread',
+  // A subgraph a gateway names whose address reaches no service (P241)
+  'graphql-subgraph-not-joined',
+  // An argument the router fills from a context no type above the field sets (P245)
+  'graphql-context-not-reached',
   'api-method-dynamic',
   'api-base-override-unread',
+  'api-client-base-unread',
   'api-base-unknown',
   'api-client-unread',
   'handler-not-found',
+  'template-handler-not-found',
+  // A child component, a layout or a route middleware a component names by a
+  // name nothing registers, or by code (P255)
+  'component-unresolved',
+  'layout-unresolved',
+  'route-middleware-unresolved',
+  // A navigation to an address no page shows, two fit, or written as code (P265)
+  'navigation-unresolved',
   'handler-not-a-method',
   'template-not-found',
   'template-not-parsed',
@@ -252,6 +375,16 @@ const GAPS: readonly string[] = [
   'event-pattern-unread',
   'api-body-unread',
   'deployment-unread',
+  // A deployment read by interpreting the program that declares it (P57)
+  'deployment-app-unread',
+  'deployment-plugin-unread',
+  'construct-repeated-unread',
+  // A deployment nested in another whose description is published elsewhere (P246)
+  'nested-deployment-unread',
+  // A service a composition of deployments lists that is not read (P249)
+  'compose-service-unread',
+  // Two files beside one deployment description each hold the values it is deployed with (P253)
+  'parameter-file-ambiguous',
   // Workflows written down as state machine definitions
   'workflow-definition-unreadable',
   'workflow-target-dynamic',
@@ -262,19 +395,39 @@ const GAPS: readonly string[] = [
   // Joining the repositories (linker)
   'route-root-not-found',
   'route-root-ambiguous',
+  // A value one deployment reads from another's outputs, joined by its name (P249)
+  'export-not-found',
+  'export-ambiguous',
+  'export-mismatched',
   'invoke-target-not-found',
   'invoke-target-ambiguous',
   'unknown-base-url-env',
   'service-binding-unknown',
   'target-route-not-found',
+  'graphql-field-no-resolver',
+  // Which subgraph answers is the router's choice at run time; every one is drawn (P241)
+  'graphql-shareable-choice',
   'ambiguous-route',
   'ambiguous-route-application',
   'ambiguous-route-api',
   'ambiguous-route-target',
+  // Two services listen on the port an address on this machine names (P250)
+  'local-port-shared',
+  // A server's proxy rule written in a way the reader does not follow (P257)
+  'proxy-rule-unread',
+  // A request forwarded through more servers than are followed, or in a circle (P260)
+  'proxy-chain-unfollowed',
+  // A cluster's manifest the reader does not follow: a template's undecided
+  // conditions, a patch, a traffic split; and overlays or installs nothing
+  // chooses among (P260)
+  'manifest-unread',
+  'manifest-overlay-unchosen',
   'route-wildcard-only',
   'marker-service-unknown',
   'marker-route-not-found',
   'procedure-not-found',
+  // A gRPC method a contract of the repository declares and nothing configured implements (P274)
+  'grpc-method-unserved',
   'procedure-ambiguous',
   'duplicate-node-id',
   'reference-not-found',
@@ -293,6 +446,9 @@ const GAPS: readonly string[] = [
   'channel-without-producer',
   'channel-without-consumer',
   'procedure-input-by-name',
+  'procedure-input-undeclared',
+  'procedure-input-unread',
+  'procedure-input-not-at-call',
   'procedure-output-inferred',
   'envelope-unread',
   'message-unparsed',
@@ -375,22 +531,34 @@ export const RISK_NAMES = ['auth', 'performance', 'wiring'] as const;
 export type Risk = (typeof RISK_NAMES)[number];
 
 const RISK_OF: ReadonlyArray<readonly [Risk, readonly string[]]> = [
-  ['auth', ['route-unguarded', 'route-shadowed', 'marker-reason-missing']],
+  ['auth', ['route-unguarded', 'route-shadowed', 'marker-reason-missing', 'graphql-auth-not-checked', 'graphql-requires-auth-not-carried']],
   ['performance', ['query-in-loop']],
   [
     'wiring',
     [
       'route-claimed-twice',
+      'graphql-field-resolved-twice',
+      'grpc-method-unimplemented',
+      'grpc-method-undeclared',
+      'graphql-composition-conflict',
+      'graphql-supergraph-drift',
+      'graphql-entity-type-unsaid',
       'route-file-not-served',
       'wizard-step-conflict',
       'workflow-name-duplicate',
       'orphan-scene-decorator',
       'orphan-update-decorator',
       'procedure-call-mismatch',
+      'procedure-link-unserved',
+      'procedure-unmounted',
+      'network-port-unreachable',
+      'server-request-without-origin',
+      'release-need-undefined',
       'workflow-definition-invalid',
       's3-write-matches-nothing',
       'stream-no-writer',
       'subscription-matches-nothing',
+      'job-no-handler',
       // A status traffic answered that no failure declares (P106): an
       // exception nobody mapped to the status it should answer.
       'failure-seen-undeclared',

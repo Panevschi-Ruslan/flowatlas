@@ -1,0 +1,11 @@
+{
+  "name": "@shop/web",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@shop/router": "workspace:*",
+    "@trpc/client": "^11.0.0",
+    "axios": "^1.7.0",
+    "react": "^19.0.0"
+  }
+}

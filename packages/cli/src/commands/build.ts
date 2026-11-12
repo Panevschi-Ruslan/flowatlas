@@ -1,5 +1,5 @@
-import { execFile } from 'node:child_process';
-import { existsSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
+import { execFile, spawn } from 'node:child_process';
+import { closeSync, existsSync, mkdirSync, openSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { cpus } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
@@ -13,6 +13,7 @@ import {
   parseRepoGraph,
   readPackageJson,
   readResolvedPackageJson,
+  readServiceManifest,
   SERVICES_DIRECTORY,
   serviceDirectoryName,
   serviceOutputDir,
@@ -42,7 +43,7 @@ import {
   type ServicePackages,
   type ServiceReport,
 } from '@flowatlas/linker';
-import type { Command } from 'commander';
+import { Option, type Command } from 'commander';
 import { partialReadNotice } from '../partial-read.js';
 import {
   CACHE_FILENAME,
@@ -87,6 +88,10 @@ import {
 import { isIncremental, type ServiceSession } from '../build/session.js';
 import { spliceRepoGraph } from '../build/splice.js';
 import { EXIT } from '../exit.js';
+import { writeFreshness } from '../build/freshness.js';
+import { namesOf, writeNames } from '../agents/names.js';
+import { PULLED_DIR, pulledServiceGraphPath } from '../team/bundle.js';
+import { acquireBuildLock, BuildBusyError, claimAgain, leaveQueue, queueAgain, rotateBuildLog, type LockHolder } from '../build/lock.js';
 import { waysInByService, waysInTotal } from '../doctor/ways-in.js';
 import { BUILD_STAMP, VERSION } from '../version.js';
 import { ownBin } from '../own-path.js';
@@ -154,6 +159,23 @@ export interface BuildOptions {
   heap?: string | number;
   /** Repositories already parsed, when a watch is driving the build. */
   sessions?: ReadonlyMap<string, ServiceSession>;
+  /**
+   * How long to wait for a build that holds the lock, in seconds (`--wait`,
+   * P230); 0, the default, says it is running and stops.
+   */
+  wait?: string | number;
+  /**
+   * Set on the build `--background` starts, with the pid of the process that
+   * queued it: once this build holds the lock it leaves the queue, so a change
+   * from then on earns one more pass.
+   */
+  queuedBy?: number;
+  /**
+   * Read only the services checked out here, and take every other one's own
+   * graph from the team's, pulled with `flowatlas pull` (P236): your branch of
+   * one repository against everyone's main.
+   */
+  onPulled?: boolean;
 }
 
 /** How long each phase of one build took, in milliseconds. */
@@ -168,6 +190,8 @@ export interface BuildTiming {
 }
 
 export interface BuildResult extends LinkResult {
+  /** A lock a build that is gone left behind, taken over by this one (P230). */
+  tookOverLock?: LockHolder;
   outputDir: string;
   graphPath: string;
   dbPath: string;
@@ -273,6 +297,8 @@ interface Extracted {
   service: ServiceConfig;
   graph?: RepoGraph;
   report: ServiceReport;
+  /** Taken from the team's pulled graph rather than read (P236): never cached as read here. */
+  pulled?: true;
   /** File hashes, imports and global files, for the next build to compare against. */
   facts?: FileFacts;
 }
@@ -351,7 +377,7 @@ const surveyService = (options: SurveyOptions): RepoSurvey => {
     adapters:
       extractor === null
         ? []
-        : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config, repoDir),
+        : adapterNames(createRegistry(), readResolvedPackageJson(repoDir) ?? {}, config, repoDir, service.type),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(repoDir, 'package.json')),
     dependencies: surveyDependencies(repoDir),
@@ -456,7 +482,7 @@ const readNothing = (
     const declared = isDeclared(item.service);
     const note = declared
       ? undefined
-      : declinedNote(item.service.type, readPackageJson(repoDirOf(item.service)) ?? {}, config, repoDirOf(item.service));
+      : declinedNote(item.service.type, readServiceManifest(repoDirOf(item.service)) ?? {}, config, repoDirOf(item.service));
     return [
       {
         service: item.service.name,
@@ -738,7 +764,7 @@ const extractOne = async (options: ExtractOneOptions): Promise<Extracted> => {
     // worth naming from the workspace it belongs to, which is the only place a
     // member of a monorepo says anything at all.
     const note =
-      noReaderNote(readPackageJson(repoDir)) ?? noReaderNote(readResolvedPackageJson(repoDir));
+      noReaderNote(readServiceManifest(repoDir)) ?? noReaderNote(readResolvedPackageJson(repoDir));
     return {
       service,
       report: { ...base, skipped: 'no-extractor', ...(note === undefined ? {} : { error: note }) },
@@ -1018,7 +1044,34 @@ export const leftoversLine = (leftovers: readonly string[]): string | undefined 
  * because linking is cheap and a partial link would be a second way for the
  * graph to be wrong.
  */
+/** `--wait`, in seconds, as a number of milliseconds. */
+const waitMsOf = (wait: string | number | undefined): number => {
+  if (wait === undefined) return 0;
+  const seconds = Number(wait);
+  if (!Number.isFinite(seconds) || seconds < 0) throw new BuildInputError(`--wait must be a number of seconds, not ${JSON.stringify(wait)}`);
+  return Math.round(seconds * 1000);
+};
+
+/**
+ * Reads every repository and joins them, holding the build lock of the output
+ * directory while it does (P230): two builds never write one database at once.
+ */
 export const buildProject = async (options: BuildOptions = {}): Promise<BuildResult> => {
+  const waitMs = waitMsOf(options.wait);
+  const loaded = loadConfig(options.config ?? process.cwd());
+  const outputDir = options.out === undefined ? loaded.outputDir : resolve(options.out);
+  await mkdir(outputDir, { recursive: true });
+  const lock = await acquireBuildLock(outputDir, waitMs);
+  if (options.queuedBy !== undefined) leaveQueue(outputDir, process.pid);
+  try {
+    const result = await buildHoldingLock(options);
+    return lock.tookOver === undefined ? result : { ...result, tookOverLock: lock.tookOver };
+  } finally {
+    lock.release();
+  }
+};
+
+const buildHoldingLock = async (options: BuildOptions): Promise<BuildResult> => {
   const startedAt = Date.now();
   const loaded = loadConfig(options.config ?? process.cwd());
 
@@ -1070,7 +1123,18 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   // A declared service has no source to survey: there are no files to hash, no
   // tsconfig to find and nothing for an incremental plan to decide. It is read
   // in full on every build, which for one document costs nothing.
-  const readable = loaded.config.services.filter((service) => !isDeclared(service));
+  // The services the team's graph stands in for (P236): not checked out here, and in the bundle.
+  const pulledFor = new Map<string, string>();
+  if (options.onPulled === true) {
+    for (const service of loaded.config.services) {
+      const path = pulledServiceGraphPath(outputDir, service.name);
+      if (!existsSync(loaded.repoDir(service)) && existsSync(path)) pulledFor.set(service.name, path);
+    }
+    if (pulledFor.size === 0 && !existsSync(join(outputDir, PULLED_DIR))) {
+      throw new BuildInputError('--on-pulled, and nothing is pulled', 'Run flowatlas pull first.');
+    }
+  }
+  const readable = loaded.config.services.filter((service) => !isDeclared(service) && !pulledFor.has(service.name));
   const surveys = readable.map((service) => {
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
@@ -1126,7 +1190,12 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
   const standInsPath = readApart ? join(outputDir, STAND_INS_FILENAME) : undefined;
   if (standInsPath !== undefined) await writeJson(standInsPath, standIns);
 
-  const extracted = await inPools(loaded.config.services, limit, (service, signal) => {
+  const extracted = await inPools(loaded.config.services, limit, async (service, signal) => {
+    const pulledPath = pulledFor.get(service.name);
+    if (pulledPath !== undefined) {
+      const graph = await readGraph(pulledPath);
+      return { service, graph, report: { ...emptyReport(service, EXTRACTORS.get(service.type) ?? null), ...repoCountsOf(graph) }, pulled: true } satisfies Extracted;
+    }
     const previous = cache?.repos[service.name];
     const session = options.sessions?.get(service.name);
     const surveyed = surveys.find((entry) => entry.service === service.name);
@@ -1179,7 +1248,7 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
     ...(options.builtAt === undefined ? {} : { builtAt: options.builtAt }),
     settings: settingsOfProject(loaded),
     services: extracted.map((item) => {
-      const packages = packagesOf(readPackageJson(loaded.repoDir(item.service)));
+      const packages = packagesOf(readServiceManifest(loaded.repoDir(item.service)));
       return packages === undefined ? item.report : { ...item.report, packages };
     }),
   });
@@ -1216,7 +1285,26 @@ export const buildProject = async (options: BuildOptions = {}): Promise<BuildRes
 
   // Written even when it was ignored: `--no-cache` means read everything now,
   // not stay slow next time.
-  saveBuildCache(cachePath, nextCache(expected, result.project.builtAt, surveys, extracted, standInsOf));
+  const next = nextCache(expected, result.project.builtAt, surveys, extracted, standInsOf);
+  saveBuildCache(cachePath, next);
+  // What this graph was read from, for an answer to say when the code moved
+  // since (P230); about the graph that is there, so not written over a kept one.
+  if (!keeping) writeFreshness(outputDir, result.project.builtAt, next, (name) => loaded.repoDir(name));
+  // The pages that describe or mention a node (P120, P234), read again against the graph just
+  // written, so the tools name them without a separate run. Read-only: nothing in a page changes.
+  if (!keeping && loaded.config.docs !== undefined) {
+    try {
+      const { runDocs } = await import('./docs.js');
+      runDocs([], { config: loaded.configPath, cwd: loaded.rootDir }, { out: () => {}, err: () => {} });
+    } catch {
+      // A page that cannot be read is `flowatlas docs`'s to say; a build is not stopped by one.
+    }
+  }
+
+  // The names a search hook can say something about (P227), from the graph just written.
+  if (!keeping) {
+    writeNames(outputDir, namesOf(result.project, Object.fromEntries(loaded.config.services.map((service) => [service.name, loaded.repoDir(service)]))));
+  }
   pruneServiceDirs(outputDir, loaded.config.services);
   const leftovers = leftoverRepoOutputs(
     readable.map((service) => loaded.repoDir(service)),
@@ -1272,7 +1360,7 @@ const nextCache = (
   const cache = emptyCache(expected, builtAt);
   for (const item of extracted) {
     const survey = surveys.find((entry) => entry.service === item.service.name);
-    if (survey === undefined || survey.extractor === null || item.graph === undefined) continue;
+    if (item.pulled === true || survey === undefined || survey.extractor === null || item.graph === undefined) continue;
     const carried = item.facts;
     // What stood in, for the names this reading wanted (P83): answered from
     // the index the build handed it, with the shape files as the survey hashed
@@ -1326,6 +1414,12 @@ export const unresolvedLine = (rows: ReadonlyArray<Pick<Unresolved, 'reason' | '
 };
 
 /** What the build found, in the order someone reading it would want. */
+/** The line a build says when it took over a lock a build that is gone left behind (P230). */
+export const tookOverLine = (result: Pick<BuildResult, 'tookOverLock'>): string | undefined =>
+  result.tookOverLock === undefined
+    ? undefined
+    : `took over the build lock left by pid ${result.tookOverLock.pid} (since ${result.tookOverLock.startedAt}), which is not running`;
+
 export const summariseBuild = (result: BuildResult): string[] => {
   const { report } = result;
   const lines: string[] = [];
@@ -1538,11 +1632,19 @@ export const registerBuild = (program: Command): void => {
     .option('--heap <megabytes>', 'heap limit for each repository read (default: a share of the machine)')
     .option('--skip-frontend', 'leave out the services a frontend extractor reads')
     .option('--json', 'print the report as JSON')
-    .action(async (dir: string | undefined, options: BuildOptions & { watch?: boolean }) => {
+    .option('--wait <seconds>', 'wait this long for a build that is running, then stop (default: stop at once)')
+    .option('--background', 'build in a process of its own and return at once; the log is <output>/build.log')
+    .option('--on-pulled', "read the repositories checked out here, and take the others from the team's pulled graph")
+    .addOption(new Option('--queued-by <pid>', 'set on the build --background starts').hideHelp().argParser(Number))
+    .action(async (dir: string | undefined, options: BuildOptions & { watch?: boolean; background?: boolean }) => {
       const settings: BuildOptions = {
         ...options,
         ...(options.config === undefined && dir !== undefined ? { config: dir } : {}),
       };
+      if (options.background === true) {
+        startInBackground(settings);
+        return;
+      }
       if (options.watch === true) {
         const { watchProject } = await import('../build/watch.js');
         const handle = await watchProject(settings);
@@ -1555,12 +1657,20 @@ export const registerBuild = (program: Command): void => {
       try {
         result = await buildProject(settings);
       } catch (error) {
+        // Another build holds the lock: the question could not be asked now (P230).
+        if (error instanceof BuildBusyError) {
+          process.stderr.write(`${error.message}; wait for it, or run again with --wait <seconds>\n`);
+          process.exitCode = EXIT.cannotRun;
+          return;
+        }
         if (!(error instanceof BuildInputError)) throw error;
         process.stderr.write(`${error.message}\n`);
         if (error.hint !== undefined) process.stderr.write(`${error.hint}\n`);
         process.exitCode = EXIT.failed;
         return;
       }
+      const tookOver = tookOverLine(result);
+      if (tookOver !== undefined) process.stderr.write(`${tookOver}\n`);
       if (options.json === true) {
         process.stdout.write(`${JSON.stringify(buildJson(result), null, 2)}\n`);
       } else {
@@ -1577,6 +1687,62 @@ export const registerBuild = (program: Command): void => {
 };
 
 const collect = (value: string, previous: string[]): string[] => [...previous, value];
+
+/** How long a background build waits for one that is running: long enough for any build this tool has been measured on. */
+const BACKGROUND_WAIT_SECONDS = 1800;
+
+/**
+ * `build --background` (P230): queues one build in a process of its own and
+ * returns at once, which is what a git hook needs - a checkout must never wait
+ * for a build. The build waits for the lock when one is running, and when one
+ * is already waiting this request is that one's too, so ten hooks during one
+ * build earn one more pass, not ten (D4). What it says goes to
+ * `<output>/build.log`.
+ */
+/**
+ * The arguments the build `--background` starts is given: every choice of
+ * what to read and how that the request made, then the wait and the queue.
+ */
+export const backgroundArgs = (settings: BuildOptions, configPath: string, outputDir: string, queuedBy: number): string[] => [
+  'build',
+  '--config',
+  configPath,
+  ...(settings.out === undefined ? [] : ['--out', outputDir]),
+  ...(settings.service ?? []).flatMap((name) => ['--service', name]),
+  ...(settings.concurrency === undefined ? [] : ['--concurrency', String(settings.concurrency)]),
+  ...(settings.heap === undefined ? [] : ['--heap', String(settings.heap)]),
+  ...(settings.skipFrontend === true ? ['--skip-frontend'] : []),
+  ...(settings.cache === false ? ['--no-cache'] : []),
+  ...(settings.onPulled === true ? ['--on-pulled'] : []),
+  '--wait',
+  String(BACKGROUND_WAIT_SECONDS),
+  '--queued-by',
+  String(queuedBy),
+];
+
+const startInBackground = (settings: BuildOptions): void => {
+  const loaded = loadConfig(settings.config ?? process.cwd());
+  const outputDir = settings.out === undefined ? loaded.outputDir : resolve(settings.out);
+  try {
+    mkdirSync(outputDir, { recursive: true });
+  } catch (cause) {
+    process.stderr.write(`cannot write ${outputDir}: ${cause instanceof Error ? cause.message : String(cause)}\n`);
+    process.exitCode = EXIT.cannotRun;
+    return;
+  }
+  if (!queueAgain(outputDir, process.pid)) {
+    process.stderr.write('a build is already waiting to run, and it will read this change too\n');
+    return;
+  }
+  const log = rotateBuildLog(outputDir);
+  const fd = openSync(log, 'a');
+  const args = [binPath(), ...backgroundArgs(settings, loaded.configPath, outputDir, process.pid)];
+  const child = spawn(process.execPath, args, { detached: true, stdio: ['ignore', fd, fd], windowsHide: true });
+  closeSync(fd);
+  if (child.pid !== undefined) claimAgain(outputDir, process.pid, child.pid);
+  child.unref();
+  process.stderr.write(`building in the background (pid ${child.pid ?? '?'}); it says what it found in ${log}\n`);
+};
 
 /**
  * What `--json` prints: the link report, and the notes the summary would have

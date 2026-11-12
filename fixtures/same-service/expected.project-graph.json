@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T06:06:51.860Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:16:28.279Z",
   "services": [
     {
       "name": "site",
@@ -57,7 +57,10 @@
         "path": "/api/things",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "originless": true,
+        "sameCall": "ui_api_call:site#lib/things-client.ts:10:24",
+        "targetService": "site"
       }
     },
     {
@@ -77,7 +80,10 @@
         "bodyFrom": "literal",
         "bodyKeys": [
           "name"
-        ]
+        ],
+        "originless": true,
+        "sameCall": "ui_api_call:site#lib/things-client.ts:15:24",
+        "targetService": "site"
       }
     },
     {
@@ -93,7 +99,10 @@
         "path": "/api/things/:param",
         "baseUrlEnv": null,
         "responseType": null,
-        "bodyType": null
+        "bodyType": null,
+        "originless": true,
+        "sameCall": "ui_api_call:site#lib/things-client.ts:21:24",
+        "targetService": "site"
       }
     },
     {
@@ -119,7 +128,8 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {
@@ -319,6 +329,7 @@
         "package": null,
         "client": "fetch",
         "via": "literal",
+        "sameCall": "http_out:site#lib/things-client.ts:10:24",
         "targetService": "site"
       }
     },
@@ -344,6 +355,7 @@
         "package": null,
         "client": "fetch",
         "via": "literal",
+        "sameCall": "http_out:site#lib/things-client.ts:15:24",
         "targetService": "site"
       }
     },
@@ -364,7 +376,8 @@
         "bodyType": null,
         "package": null,
         "client": "fetch",
-        "via": "literal"
+        "via": "literal",
+        "sameCall": "http_out:site#lib/things-client.ts:21:24"
       }
     }
   ],
@@ -391,6 +404,33 @@
       "line": 8,
       "meta": {
         "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:site#lib/things-client.ts:10:24",
+      "to": "entry:site:http:GET:/api/things",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "lib/things-client.ts",
+      "line": 10,
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "site"
+      }
+    },
+    {
+      "from": "http_out:site#lib/things-client.ts:15:24",
+      "to": "entry:site:http:POST:/api/things",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "lib/things-client.ts",
+      "line": 15,
+      "params": [
+        "{name:string}"
+      ],
+      "meta": {
+        "via": "ownOrigin",
+        "targetService": "site"
       }
     },
     {

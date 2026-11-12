@@ -1,10 +1,14 @@
 import type {
+  ArrowFunction,
+  BindingElement,
   CallExpression,
   FunctionDeclaration,
+  FunctionExpression,
   Identifier,
   ObjectLiteralExpression,
   ParameterDeclaration,
   PropertyAccessExpression,
+  PropertyAssignment,
   Symbol as TsSymbol,
   TemplateExpression,
   Node as TsNode,
@@ -482,6 +486,13 @@ const readString = (value: TsNode, scope: Scope, budget: number): string | null 
   const chosen = scope.choices?.get(node);
   if (chosen !== undefined) return chosen;
 
+  // `'/orders/' + id`, every piece read (P280).
+  if (Node.isBinaryExpression(node) && node.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
+    const left = readString(node.getLeft(), scope, budget - 1);
+    const right = left === null ? null : readString(node.getRight(), scope, budget - 1);
+    return left === null || right === null ? null : left + right;
+  }
+
   if (Node.isTemplateExpression(node)) {
     let text = node.getHead().getLiteralText();
     for (const span of node.getTemplateSpans()) {
@@ -732,6 +743,19 @@ const pathOf = (
     });
     return text;
   }
+  // `'/orders/' + id + '/items'`: the pieces of a join read as a template's
+  // text and holes are (P280).
+  if (Node.isBinaryExpression(node) && node.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
+    const pieces = joinedPieces(node);
+    let text = '';
+    pieces.forEach((piece, index) => {
+      const isLast = index === pieces.length - 1;
+      const next = pieces[index + 1];
+      const following = next === undefined ? null : readString(next, scope, budget - 1);
+      text += pathOf(piece, scope, budget - 1, before + text, isLast ? after : (following ?? ''), isLast && last);
+    });
+    return text;
+  }
   if (Node.isIdentifier(node)) {
     const declaration = node.getSymbol()?.getDeclarations()[0];
     if (declaration !== undefined && Node.isParameterDeclaration(declaration)) {
@@ -746,6 +770,14 @@ const pathOf = (
     return pathOf(remembered.node, remembered.scope, budget - 1, before, after, last);
   }
   return hole(node);
+};
+
+/** The pieces of `a + b + c`, left to right. */
+const joinedPieces = (node: TsNode): TsNode[] => {
+  const value = unwrap(node);
+  return Node.isBinaryExpression(value) && value.getOperatorToken().getKind() === SyntaxKind.PlusToken
+    ? [...joinedPieces(value.getLeft()), ...joinedPieces(value.getRight())]
+    : [value];
 };
 
 /**
@@ -841,7 +873,7 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
 
   if (Node.isCallExpression(node)) {
     const callee = node.getExpression();
-    if (!Node.isPropertyAccessExpression(callee)) return null;
+    if (!Node.isPropertyAccessExpression(callee)) return throughFunction(node, scope, budget);
     // `base.replace(...)` and friends reshape the base, which is the half being
     // dropped anyway, so nothing is added to what follows it.
     if (PRESERVING.has(callee.getName())) return addressOf(callee.getExpression(), scope, budget - 1);
@@ -962,7 +994,12 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
   }
 
   if (Node.isIdentifier(node)) {
-    const declaration = node.getSymbol()?.getDeclarations()[0];
+    const symbol = node.getSymbol();
+    let declaration = symbol?.getDeclarations()[0];
+    // A constant imported from another module of the repository is the one it declares (P275).
+    if (declaration !== undefined && (Node.isImportSpecifier(declaration) || Node.isImportClause(declaration))) {
+      declaration = symbol?.getAliasedSymbol()?.getDeclarations()[0];
+    }
     if (declaration === undefined) return null;
     if (Node.isParameterDeclaration(declaration)) {
       const bound = scope.bound.get(declaration);
@@ -978,6 +1015,80 @@ const addressOf = (value: TsNode, scope: Scope, budget: number): SettingAddress 
   if (remembered !== null) return addressOf(remembered.node, remembered.scope, budget - 1);
 
   return null;
+};
+
+/** `https://${url}`: a scheme put in front of a value and nothing after it. */
+const SCHEME_ONLY = /^[a-z][a-z0-9+.-]*:\/\/$/i;
+
+/**
+ * The function of the repository a plain call reaches, `function f() {}` or a
+ * `const` holding one, imported or not; nothing for one a package declares.
+ */
+const plainFunctionOf = (call: CallExpression): FunctionDeclaration | ArrowFunction | FunctionExpression | undefined => {
+  const callee = unwrap(call.getExpression());
+  if (!Node.isIdentifier(callee)) return undefined;
+  const symbol = callee.getSymbol();
+  let declaration = symbol?.getDeclarations()[0];
+  if (declaration !== undefined && (Node.isImportSpecifier(declaration) || Node.isImportClause(declaration))) {
+    declaration = symbol?.getAliasedSymbol()?.getDeclarations()[0];
+  }
+  if (declaration === undefined) return undefined;
+  const file = declaration.getSourceFile();
+  if (file.isInNodeModules() || file.isDeclarationFile()) return undefined;
+  if (Node.isFunctionDeclaration(declaration)) return declaration;
+  if (!Node.isVariableDeclaration(declaration) || declaration.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) return undefined;
+  const initializer = declaration.getInitializer();
+  return initializer !== undefined && (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) ? initializer : undefined;
+};
+
+/**
+ * `withScheme(process.env.APP_URL)`: a function of the repository
+ * handed a value, read with its parameters bound to what the call hands it
+ * (P292). Every return must say the same: the setting a parameter holds,
+ * with what the function writes after it (`${url}/api`), or reshaped
+ * (`url.trim()`, a scheme put in front where the value lacks one,
+ * `https://${url}`). A return of the empty text, `null` or `undefined` is no
+ * value, which a `||` after the call falls through; another text written out
+ * is what the function falls back to. Anything else is no address.
+ */
+const throughFunction = (call: CallExpression, scope: Scope, budget: number): SettingAddress | null => {
+  const fn = plainFunctionOf(call);
+  if (fn === undefined) return null;
+  const bound = new Map<ParameterDeclaration, Bound>();
+  const args = call.getArguments();
+  fn.getParameters().forEach((parameter, index) => {
+    const argument = args[index];
+    if (argument !== undefined) bound.set(parameter, { node: argument, scope });
+  });
+  if (bound.size === 0) return null;
+  const inside: Scope = { ...scope, self: enclosingClass(fn), bound };
+  const body = fn.getBody();
+  const returns = body !== undefined && !Node.isBlock(body) ? [body] : ownReturns(fn).flatMap((statement) => {
+    const returned = statement.asKind(SyntaxKind.ReturnStatement)?.getExpression();
+    return returned === undefined ? [] : [returned];
+  });
+  let found: SettingAddress | undefined;
+  let otherwise: string | undefined;
+  for (const returned of returns) {
+    const value = unwrap(returned);
+    if (Node.isNullLiteral(value) || (Node.isIdentifier(value) && value.getText() === 'undefined')) continue;
+    const written = evaluateExpression(value);
+    if (written.resolved && typeof written.value === 'string') {
+      if (written.value !== '' && otherwise === undefined) otherwise = written.value;
+      continue;
+    }
+    const [span, ...more] = Node.isTemplateExpression(value) ? value.getTemplateSpans() : [];
+    const schemed =
+      span !== undefined && more.length === 0 && SCHEME_ONLY.test((value as TemplateExpression).getHead().getLiteralText()) && span.getLiteral().getLiteralText() === ''
+        ? span.getExpression()
+        : undefined;
+    const answer = addressOf(schemed ?? value, inside, budget - 1);
+    if (answer === null) return null;
+    if (found !== undefined && (found.key !== answer.key || found.prefix !== answer.prefix)) return null;
+    found ??= answer;
+  }
+  if (found === undefined) return null;
+  return found.otherwise === undefined && otherwise !== undefined ? { ...found, otherwise } : found;
 };
 
 /**
@@ -1365,16 +1476,125 @@ const callOf = (reference: TsNode): CallExpression | undefined => {
  * a sibling stays, and `dispatchOf` tells the two apart for a caller that needs
  * to.
  */
-export const callSitesOf = (holder: Forwarder): CallExpression[] => {
+export const callSitesOf = (holder: Forwarder): CallExpression[] => callSitesThrough(holder, new Set());
+
+/**
+ * The functions of a library that compose functions into one, by which of
+ * the functions handed in is the one called with what the composition is
+ * called with (P285): `flow(f, g)` and Ramda's `pipe(f, g)` call `f` first,
+ * `compose(g, f)` and `flowRight(g, f)` call it last.
+ */
+const COMPOSERS: Readonly<Record<string, 'first' | 'last'>> = { flow: 'first', pipe: 'first', compose: 'last', flowRight: 'last' };
+
+/** The libraries those functions are taken from. */
+const COMPOSING_MODULES = /^(fp-ts|effect|lodash|lodash-es|lodash\.flow|lodash\.flowright|ramda|rambda)(\/|$)/;
+
+/** Libraries whose `pipe` hands a value first, not a function: `pipe(x, f)` is `f(x)`, no composition. */
+const VALUE_FIRST_PIPE = /^(fp-ts|effect)(\/|$)/;
+
+/** The module an imported name, or a namespace it is a member of, is taken from, and the name it has there. */
+const importedFrom = (callee: TsNode): { module: string; name: string } | undefined => {
+  const target = unwrap(callee);
+  const local = Node.isPropertyAccessExpression(target) ? target.getExpression() : target;
+  if (!Node.isIdentifier(local)) return undefined;
+  for (const declaration of local.getSymbol()?.getDeclarations() ?? []) {
+    const holder = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
+    if (holder === undefined) continue;
+    const module = holder.getModuleSpecifierValue();
+    if (Node.isPropertyAccessExpression(target)) {
+      // `F.flow`, `R.pipe`, `_.flow`: a member of the namespace or default import.
+      return Node.isNamespaceImport(declaration) || Node.isImportClause(declaration) ? { module, name: target.getName() } : undefined;
+    }
+    if (Node.isImportSpecifier(declaration)) return { module, name: declaration.getName() };
+    // `import flow from 'lodash/flow'`: the module is the function.
+    if (Node.isImportClause(declaration)) return { module, name: module.split('/').pop()?.replace(/^lodash\./, '') ?? '' };
+  }
+  return undefined;
+};
+
+/**
+ * The composition of a library a value is handed to as the function called
+ * first with what the composition is called with, where it is one.
+ */
+const compositionHanded = (value: TsNode): CallExpression | undefined => {
+  const composition = value.getParent();
+  if (composition === undefined || !Node.isCallExpression(composition) || composition.getExpression() === value) return undefined;
+  const handed = composition.getArguments();
+  const from = importedFrom(composition.getExpression());
+  const order = from === undefined ? undefined : COMPOSERS[from.name];
+  if (from === undefined || order === undefined || !COMPOSING_MODULES.test(from.module)) return undefined;
+  if (from.name === 'pipe' && VALUE_FIRST_PIPE.test(from.module)) return undefined;
+  return (order === 'first' ? handed[0] : handed[handed.length - 1]) === value ? composition : undefined;
+};
+
+/** What a composition is held by, or called by in place: what its callers name. */
+type Composed = { readonly holder: Forwarder | PropertyAssignment } | { readonly call: CallExpression };
+
+/** How many compositions, each handed to the next, are followed out. */
+const COMPOSED_DEPTH = 4;
+
+/**
+ * Where a composition a function is the first one called in is called from
+ * (P285, P293): `const runQuiet = flow(runQuery, silence)` is called with what
+ * `runQuery` is called with, so each call of `runQuiet` is a call of it. The
+ * composition may be held by a `let` as by a `const`, by a field of a class
+ * (`run = flow(...)`, or `this.run = flow(...)` where the class declares
+ * it), or by a member of an object (`{ run: flow(...) }`); called where it is
+ * made, `flow(runQuery, silence)(variables)`; or handed on, first again, to
+ * another composition.
+ */
+const composedInto = (reference: TsNode): Composed | undefined => {
+  const parent = reference.getParent();
+  let value: TsNode = parent !== undefined && Node.isPropertyAccessExpression(parent) && parent.getNameNode() === reference ? parent : reference;
+  for (let depth = 0; depth < COMPOSED_DEPTH; depth += 1) {
+    const composition = compositionHanded(value);
+    if (composition === undefined) return undefined;
+    let outer: TsNode = composition;
+    let holder: TsNode | undefined = composition.getParent();
+    while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder) || Node.isNonNullExpression(holder))) {
+      outer = holder;
+      holder = holder.getParent();
+    }
+    if (holder === undefined) return undefined;
+    if (Node.isCallExpression(holder) && holder.getExpression() === outer) return { call: holder };
+    if (Node.isVariableDeclaration(holder) && Node.isIdentifier(holder.getNameNode())) return { holder };
+    if (Node.isPropertyDeclaration(holder) || Node.isPropertyAssignment(holder)) return { holder };
+    if (Node.isBinaryExpression(holder) && holder.getOperatorToken().getKind() === SyntaxKind.EqualsToken && holder.getRight() === outer) {
+      // `this.run = flow(...)`, in a class that declares the field.
+      const left = holder.getLeft();
+      if (!Node.isPropertyAccessExpression(left) || !Node.isThisExpression(left.getExpression())) return undefined;
+      const declared = left.getSymbol()?.getDeclarations().find((declaration) => Node.isPropertyDeclaration(declaration));
+      return declared !== undefined && Node.isPropertyDeclaration(declared) ? { holder: declared } : undefined;
+    }
+    // Handed on to another composition: `flow(flow(runQuery, silence), log)`.
+    value = outer;
+  }
+  return undefined;
+};
+
+const callSitesThrough = (holder: Forwarder | PropertyAssignment, composed: Set<TsNode>): CallExpression[] => {
   const sites: CallExpression[] = [];
   const seen = new Set<string>();
-  for (const reference of holder.findReferencesAsNodes()) {
-    const call = callOf(reference);
-    if (call === undefined || dispatchAt(call, holder) === 'elsewhere') continue;
+  const add = (call: CallExpression): void => {
     const key = `${call.getSourceFile().getFilePath()}:${call.getStart()}`;
-    if (seen.has(key)) continue;
+    if (seen.has(key)) return;
     seen.add(key);
     sites.push(call);
+  };
+  for (const reference of holder.findReferencesAsNodes()) {
+    const call = callOf(reference);
+    if (call === undefined) {
+      // A function handed to a library's composition is called by each call of what it makes (P285).
+      const made = (!Node.isPropertyAssignment(holder) && isClassMethod(holder)) || composed.size > 4 ? undefined : composedInto(reference);
+      if (made !== undefined && 'call' in made) add(made.call);
+      else if (made !== undefined && !composed.has(made.holder)) {
+        composed.add(made.holder);
+        for (const each of callSitesThrough(made.holder, composed)) add(each);
+      }
+      continue;
+    }
+    if (!Node.isPropertyAssignment(holder) && dispatchAt(call, holder) === 'elsewhere') continue;
+    add(call);
   }
   return sites;
 };
@@ -1604,6 +1824,45 @@ export const parameterBehind = (value: TsNode, budget = BUDGET): ParameterDeclar
 };
 
 /**
+ * A member a function takes out of one of its parameters where the parameter is
+ * written: `({ url = '', method = 'GET' }: Options) => fetch(url, { method })`
+ * (P269). What a caller hands it is the member of the object it hands, or the
+ * default where that object writes none.
+ */
+export interface ParameterMember {
+  readonly parameter: ParameterDeclaration;
+  /** The member of the object handed in. */
+  readonly key: string;
+  /** What it holds where the object writes no such member, when the pattern writes one. */
+  readonly fallback?: TsNode;
+}
+
+/** The parameter member a value is, when it is a name taken out of a parameter's object where it is written. */
+export const memberBehind = (value: TsNode): ParameterMember | undefined => {
+  const node = unwrap(value);
+  if (!Node.isIdentifier(node)) return undefined;
+  const element = node.getSymbol()?.getDeclarations()[0];
+  if (element === undefined || !Node.isBindingElement(element) || element.getDotDotDotToken() !== undefined) return undefined;
+  const pattern = element.getParent();
+  const parameter = pattern?.getParent();
+  if (!Node.isObjectBindingPattern(pattern) || parameter === undefined || !Node.isParameterDeclaration(parameter)) return undefined;
+  const fallback = element.getInitializer();
+  return {
+    parameter,
+    key: element.getPropertyNameNode()?.getText() ?? element.getName(),
+    ...(fallback === undefined ? {} : { fallback }),
+  };
+};
+
+/** A parameter a value is, or a member taken out of one: what a caller decides it by. */
+const handedBy = (value: TsNode, budget: number): { parameter: ParameterDeclaration; member?: ParameterMember } | undefined => {
+  const parameter = parameterBehind(value, budget);
+  if (parameter !== undefined) return { parameter };
+  const member = memberBehind(value);
+  return member === undefined ? undefined : { parameter: member.parameter, member };
+};
+
+/**
  * An address whose middle is filled in by whoever makes the request.
  *
  * A shared client writes `${this.baseUrl}${path}` once: the base is settled
@@ -1612,6 +1871,8 @@ export const parameterBehind = (value: TsNode, budget = BUDGET): ParameterDeclar
  */
 export interface SplitAddress {
   parameter: ParameterDeclaration;
+  /** The member of the parameter the caller decides, where the function takes it out of an object (P269). */
+  member?: ParameterMember;
   /** Settings key the fixed half is rooted at, when it is rooted at one. */
   baseUrlEnv: string | null;
   /** What the code falls back to where that setting is not set, when it writes one (P77). */
@@ -1635,9 +1896,9 @@ export const splitAtParameter = (
   const budget = options.budget ?? BUDGET;
   const node = deref(value, budget);
 
-  // The whole address is the parameter.
-  const whole = parameterBehind(node, budget);
-  if (whole !== undefined) return { parameter: whole, baseUrlEnv: null, before: '', after: '' };
+  // The whole address is the parameter, or a member of it.
+  const whole = handedBy(node, budget);
+  if (whole !== undefined) return { ...whole, baseUrlEnv: null, before: '', after: '' };
 
   if (!Node.isTemplateExpression(node)) return undefined;
 
@@ -1654,7 +1915,7 @@ export const splitAtParameter = (
   if (
     text === '' &&
     first !== undefined &&
-    parameterBehind(first.getExpression(), budget) === undefined
+    handedBy(first.getExpression(), budget) === undefined
   ) {
     const literal = evaluateExpression(first.getExpression());
     if (!(literal.resolved && typeof literal.value === 'string')) {
@@ -1671,11 +1932,11 @@ export const splitAtParameter = (
     const span = spans[index];
     if (span === undefined) continue;
     const literal = span.getLiteral().getLiteralText();
-    const parameter = parameterBehind(span.getExpression(), budget);
+    const handed = handedBy(span.getExpression(), budget);
 
-    if (parameter !== undefined) {
+    if (handed !== undefined) {
       if (split !== undefined) return undefined;
-      split = { parameter, baseUrlEnv, ...(otherwise === undefined ? {} : { otherwise }), before: text, after: literal };
+      split = { ...handed, baseUrlEnv, ...(otherwise === undefined ? {} : { otherwise }), before: text, after: literal };
       text = '';
       continue;
     }
@@ -1732,7 +1993,7 @@ export interface Forwarded {
  * followed; a call through the interface both implement may run either, and is
  * not followed either, but it is said to be there.
  */
-export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forwarded => {
+export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4, member?: ParameterMember): Forwarded => {
   const out: Forwarded = { calls: [], undecided: false };
   if (budget <= 0) return out;
   const holder = forwarderOf(parameter);
@@ -1744,12 +2005,23 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forw
     // A caller that leaves the argument out hands the parameter its default,
     // which is written in the helper and read there (P91). One that leaves
     // out a parameter with no default hands it nothing worth following.
-    const argument = call.getArguments()[index] ?? parameter.getInitializer();
-    if (argument === undefined) continue;
+    const handed = call.getArguments()[index] ?? parameter.getInitializer();
     if (dispatchAt(call, holder) === 'undecided') {
-      out.undecided = true;
+      if (handed !== undefined || member?.fallback !== undefined) out.undecided = true;
       continue;
     }
+    if (member !== undefined && handed !== undefined) {
+      // The caller hands on an options object of its own: its callers decide the member.
+      const passed = parameterBehind(handed, budget);
+      if (passed !== undefined && passed !== parameter) {
+        const outer = forwardedFrom(passed, budget - 1, { ...member, parameter: passed });
+        out.calls.push(...outer.calls.map((each) => ({ ...each, hops: [call, ...each.hops] })));
+        out.undecided ||= outer.undecided;
+        continue;
+      }
+    }
+    const argument = member === undefined ? handed : memberHanded(handed, member);
+    if (argument === undefined) continue;
 
     // A caller that is itself forwarding is not where the address is decided.
     // If nothing calls it either, the whole chain is unused and this hop stands
@@ -1764,6 +2036,24 @@ export const forwardedFrom = (parameter: ParameterDeclaration, budget = 4): Forw
     out.calls.push({ site: call, argument, hops: [call] });
   }
   return out;
+};
+
+/**
+ * What one caller hands a parameter member (P269): the member of the object it
+ * writes, or the member's default where it hands nothing or an object without
+ * it. An object that spreads another may carry it, and one not written where
+ * it is handed carries what nobody here wrote: neither is followed.
+ */
+const memberHanded = (handed: TsNode | undefined, member: ParameterMember): TsNode | undefined => {
+  if (handed === undefined) return member.fallback;
+  const object = objectWrittenAs(unwrap(handed));
+  if (object === undefined) return undefined;
+  const property = object.getProperty(member.key);
+  if (property === undefined) {
+    return object.getProperties().some((each) => Node.isSpreadAssignment(each)) ? undefined : member.fallback;
+  }
+  if (Node.isPropertyAssignment(property)) return property.getInitializer();
+  return Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : undefined;
 };
 
 /**
@@ -1887,6 +2177,18 @@ export const argumentAlong = (
   parameter: ParameterDeclaration,
   hops: readonly CallExpression[],
 ): TsNode | null | undefined => {
+  const handed = handedAlong(parameter, hops);
+  return handed === LEFT_OUT ? null : handed;
+};
+
+/** An argument a caller leaves out, where the parameter has no default to stand in. */
+const LEFT_OUT = Symbol('left out');
+
+/** {@link argumentAlong}, telling an argument left out from one nothing can read (R179). */
+const handedAlong = (
+  parameter: ParameterDeclaration,
+  hops: readonly CallExpression[],
+): TsNode | null | undefined | typeof LEFT_OUT => {
   let current = parameter;
   let handed: TsNode | undefined;
   for (const hop of hops) {
@@ -1894,7 +2196,7 @@ export const argumentAlong = (
     if (holder === undefined) return null;
     if (calledName(hop) !== nameOf(holder)) continue;
     const argument = handedTo(hop, current);
-    if (argument === undefined) return null;
+    if (argument === undefined) return LEFT_OUT;
     handed = argument;
     const further = parameterBehind(argument);
     if (further === undefined) return argument;
@@ -1924,6 +2226,120 @@ export const verbAlong = (
   const verb = verbSpelledBy(handed);
   if (verb !== null) return verb;
   return parameterBehind(handed) === undefined ? null : undefined;
+};
+
+/**
+ * A verb a request reads out of a member of an options parameter, falling
+ * back to one it writes (R179): `const method = options?.method || 'POST'`
+ * into `fetch(url, { method, ... })`, in a wrapper its callers hand the
+ * options to - or leave them out. The verb is only real at each caller, as a
+ * verb handed in as a parameter of its own is (P91), and the default is part
+ * of what the wrapper says.
+ */
+export interface OptionVerb {
+  /** The options parameter. */
+  parameter: ParameterDeclaration;
+  /** The member of it the verb is read from: `method`. */
+  key: string;
+  /** The verb sent where a caller's options do not write one. */
+  otherwise: string;
+}
+
+/** How many names a verb is followed through to the expression that reads it. */
+const OPTION_VERB_STEPS = 4;
+
+/** Whether a declaration is a `const`, whose value is the one it was given. */
+const isConst = (declaration: VariableDeclaration): boolean =>
+  declaration.getVariableStatement()?.getDeclarationKind() === VariableDeclarationKind.Const;
+
+/**
+ * The options member and the default a verb is read from, where it is read
+ * that way (R179): `options?.method || 'POST'` or `options.method ?? 'POST'`,
+ * written where the request writes its verb or held by a `const` it names -
+ * `{ method }` names one. Nothing for anything else, a parameter of its own
+ * included, which {@link verbParameterOf} answers.
+ */
+export const optionVerbOf = (written: TsNode | undefined): OptionVerb | undefined => {
+  let value: TsNode | undefined = Node.isShorthandPropertyAssignment(written)
+    ? written.getValueSymbol()?.getDeclarations()[0]
+    : Node.isPropertyAssignment(written)
+      ? written.getInitializer()
+      : written;
+  for (let step = 0; value !== undefined && step < OPTION_VERB_STEPS; step += 1) {
+    if (Node.isBindingElement(value)) return memberVerbOf(value);
+    if (Node.isVariableDeclaration(value)) {
+      value = isConst(value) ? value.getInitializer() : undefined;
+      continue;
+    }
+    const node = unwrap(value);
+    if (Node.isIdentifier(node)) {
+      value = node.getSymbol()?.getDeclarations()[0];
+      continue;
+    }
+    if (!Node.isBinaryExpression(node)) return undefined;
+    const operator = node.getOperatorToken().getKind();
+    if (operator !== SyntaxKind.BarBarToken && operator !== SyntaxKind.QuestionQuestionToken) return undefined;
+    const otherwise = verbSpelledBy(node.getRight());
+    const member = unwrap(node.getLeft());
+    if (otherwise === null || !Node.isPropertyAccessExpression(member)) return undefined;
+    const holder = unwrap(member.getExpression());
+    const declaration = Node.isIdentifier(holder) ? holder.getSymbol()?.getDeclarations()[0] : undefined;
+    if (declaration === undefined || !Node.isParameterDeclaration(declaration)) return undefined;
+    return { parameter: declaration, key: member.getName(), otherwise };
+  }
+  return undefined;
+};
+
+/**
+ * The member a parameter takes out of its options where it is written, with the
+ * verb it defaults to (P269): `({ url, method = 'GET' }: Options) => fetch(url,
+ * { method })`, the same fact as `options.method || 'GET'` spelled in the
+ * parameter list.
+ */
+const memberVerbOf = (element: BindingElement): OptionVerb | undefined => {
+  const pattern = element.getParent();
+  const parameter = pattern?.getParent();
+  if (!Node.isObjectBindingPattern(pattern) || parameter === undefined || !Node.isParameterDeclaration(parameter)) return undefined;
+  if (element.getDotDotDotToken() !== undefined) return undefined;
+  const fallback = element.getInitializer();
+  const otherwise = fallback === undefined ? null : verbSpelledBy(fallback);
+  if (otherwise === null) return undefined;
+  return { parameter, key: element.getPropertyNameNode()?.getText() ?? element.getName(), otherwise };
+};
+
+/** The object a value is written as, in place or held by a `const` it names. */
+const objectWrittenAs = (value: TsNode): ObjectLiteralExpression | undefined => {
+  const declaration = Node.isIdentifier(value) ? value.getSymbol()?.getDeclarations()[0] : undefined;
+  const held = declaration !== undefined && Node.isVariableDeclaration(declaration) && isConst(declaration) ? declaration.getInitializer() : undefined;
+  const object = writtenObjectLiteral(value) ?? writtenObjectLiteral(held);
+  return object !== undefined && Node.isObjectLiteralExpression(object) ? object : undefined;
+};
+
+/**
+ * The verb one caller sends through an {@link OptionVerb}, read along the
+ * calls the request's address was followed out through (R179): the default
+ * where the caller leaves the options out, hands `undefined` or an object
+ * that writes no such member, the member's verb where it writes one. `null`
+ * where the options, or the member, are something nothing can read - an
+ * object spreading another may carry the member - and `undefined` where the
+ * calls run out with the options still a parameter, as {@link verbAlong}.
+ */
+export const optionVerbAlong = (source: OptionVerb, hops: readonly CallExpression[]): string | null | undefined => {
+  const handed = handedAlong(source.parameter, hops);
+  if (handed === undefined || handed === null) return handed;
+  if (handed === LEFT_OUT) return source.otherwise;
+  const value = unwrap(handed);
+  if (Node.isIdentifier(value) && value.getText() === 'undefined') return source.otherwise;
+  const object = objectWrittenAs(value);
+  if (object === undefined) return parameterBehind(value) === undefined ? null : undefined;
+  const property = object.getProperty(source.key);
+  if (property === undefined) return object.getProperties().some((each) => Node.isSpreadAssignment(each)) ? null : source.otherwise;
+  const verb = Node.isPropertyAssignment(property)
+    ? property.getInitializer()
+    : Node.isShorthandPropertyAssignment(property)
+      ? property.getNameNode()
+      : undefined;
+  return verb === undefined ? null : verbSpelledBy(verb);
 };
 
 /**
@@ -1978,7 +2394,7 @@ export const isReadable = (value: TsNode): boolean => {
   if (Node.isTemplateExpression(node)) {
     return node
       .getTemplateSpans()
-      .every((span) => parameterBehind(span.getExpression()) === undefined);
+      .every((span) => parameterBehind(span.getExpression()) === undefined && memberBehind(span.getExpression()) === undefined);
   }
   // `deref` leaves a name that can be reassigned alone, and what it was first
   // given is not what it holds here.
@@ -2179,6 +2595,29 @@ export const literalChoices = (value: TsNode, max = MOST_CHOICES): FiniteLookup[
     if (declaration === undefined || !Node.isParameterDeclaration(declaration)) continue;
     const members = literalUnionOf(identifier, max);
     if (members !== null && members.length > 1) found.set(identifier, [...members].sort());
+  }
+  return [...found].map(([node, values]) => ({ node, values }));
+};
+
+/**
+ * The branches a value chooses between where it is written as `a ? b : c`
+ * with text on both sides (P280): `'/products' + (featured ? '/featured' : '')` is two
+ * addresses, each a route of its own, and the condition is decided at run
+ * time. Read as one hole it reached neither.
+ */
+export const branchChoices = (value: TsNode): FiniteLookup[] => {
+  const top = unwrap(value);
+  const conditionals = [
+    ...(Node.isConditionalExpression(top) ? [top] : []),
+    ...value.getDescendantsOfKind(SyntaxKind.ConditionalExpression),
+  ];
+  const found = new Map<TsNode, string[]>();
+  for (const conditional of conditionals) {
+    if (found.has(conditional) || !Node.isConditionalExpression(conditional)) continue;
+    const branches = [conditional.getWhenTrue(), conditional.getWhenFalse()].map((branch) => evaluateExpression(unwrap(branch)));
+    if (!branches.every((branch) => branch.resolved && typeof branch.value === 'string')) continue;
+    const values = [...new Set(branches.map((branch) => (branch.resolved ? String(branch.value) : '')))].sort();
+    if (values.length > 1) found.set(conditional, values);
   }
   return [...found].map(([node, values]) => ({ node, values }));
 };

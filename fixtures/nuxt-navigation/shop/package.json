@@ -1,0 +1,8 @@
+{
+  "name": "navigation-shop",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "nuxt": "^4.1.0"
+  }
+}

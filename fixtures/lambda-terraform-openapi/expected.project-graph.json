@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T09:12:44.350Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T18:48:26.168Z",
   "services": [
     {
       "name": "circulation",
@@ -270,6 +270,13 @@
         "stages": [
           "$default"
         ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [],
+            "api": "library-kiosk"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -292,6 +299,15 @@
         "stages": [
           "live"
         ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "live"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -312,6 +328,13 @@
         "declaredAs": "aws_apigatewayv2_api.kiosk.body.paths[\"/holds\"].post",
         "stages": [
           "$default"
+        ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [],
+            "api": "library-kiosk"
+          }
         ],
         "integration": "queue",
         "sends": "sqs/library-hold-requests",
@@ -337,6 +360,15 @@
         "stages": [
           "live"
         ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "live"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -359,6 +391,15 @@
         "stages": [
           "live"
         ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "live"
+            ],
+            "api": "library-circulation"
+          }
+        ],
         "adapter": "aws-lambda"
       }
     },
@@ -379,6 +420,15 @@
         "declaredAs": "aws_api_gateway_rest_api.circulation.body.paths[\"/returns\"].post",
         "stages": [
           "live"
+        ],
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "live"
+            ],
+            "api": "library-circulation"
+          }
         ],
         "integration": "queue",
         "sends": "sqs/library-returns",

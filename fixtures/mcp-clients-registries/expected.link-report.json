@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T22:21:16.468Z",
+  "configHash": "684a4f745129",
+  "services": [
+    {
+      "name": "assistant",
+      "repo": "./assistant",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 6,
+      "types": 1,
+      "unresolved": 2,
+      "durationMs": 1453,
+      "packages": {
+        "name": "mcp-registries-assistant",
+        "runtime": [
+          "@modelcontextprotocol/server",
+          "zod"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "concierge",
+      "repo": "./concierge",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 13,
+      "edges": 6,
+      "types": 0,
+      "unresolved": 7,
+      "durationMs": 1276,
+      "packages": {
+        "name": "mcp-registries-concierge",
+        "runtime": [
+          "@modelcontextprotocol/client"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 6,
+    "linked": 4,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 1,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 1
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "concierge",
+      "file": "src/assistant-client.ts",
+      "line": 24,
+      "reason": "procedure-not-found",
+      "message": "no procedure mcp:prompt:summarise_order in concierge or assistant",
+      "hint": "Renamed or removed? Check the tree this client is typed from, or add the service that declares it to services[] and name it in apiTarget.",
+      "symbol": "http_out:concierge#src/assistant-client.ts:24:30"
+    }
+  ],
+  "totals": {
+    "nodes": 26,
+    "edges": 16,
+    "types": 1,
+    "missed": 10,
+    "sites": 11,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 10
+  }
+}

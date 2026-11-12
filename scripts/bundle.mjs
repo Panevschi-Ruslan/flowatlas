@@ -35,7 +35,8 @@ const external = Object.keys(manifest.dependencies ?? {});
 rmSync(join(cli, 'dist'), { recursive: true, force: true });
 
 const result = await build({
-  entryPoints: [join(cli, 'src', 'index.ts')],
+  // The search hook is an entry of its own (P227 D6): a search runs it, and it must not load the command.
+  entryPoints: [join(cli, 'src', 'index.ts'), join(cli, 'src', 'search-hook.ts')],
   outdir: join(cli, 'dist'),
   bundle: true,
   // A dynamic import stays dynamic: the graph server is loaded by `flowatlas mcp`

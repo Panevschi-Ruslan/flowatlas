@@ -1,0 +1,1712 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T12:52:57.426Z",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "audit",
+      "repo": "./audit",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#app/api/reports/route.ts:GET",
+      "type": "function",
+      "label": "GET",
+      "repo": "admin",
+      "file": "app/api/reports/route.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "audit#src/server.ts:GET /entries@13",
+      "type": "function",
+      "label": "GET /entries@13",
+      "repo": "audit",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "ctx",
+              "type": "type:koa#Context"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "catalog#src/server.ts:GET /products@7",
+      "type": "function",
+      "label": "GET /products@7",
+      "repo": "catalog",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "c",
+              "type": "type:hono#Context<object>"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "config_key:jobs#PORT",
+      "type": "config_key",
+      "label": "PORT",
+      "repo": "jobs",
+      "file": "src/main.ts",
+      "line": 7,
+      "meta": {
+        "key": "PORT",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:admin:http:GET:/api/reports",
+      "type": "entry",
+      "label": "GET /api/reports",
+      "repo": "admin",
+      "file": "app/api/reports/route.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reports",
+        "adapter": "nextjs-routes",
+        "registration": "app/route",
+        "middlewareRead": true,
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:audit:http:GET:/entries",
+      "type": "entry",
+      "label": "GET /entries",
+      "repo": "audit",
+      "file": "src/server.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/entries",
+        "rawPath": "/entries",
+        "adapter": "koa-routes",
+        "registration": "router.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:catalog:http:GET:/products",
+      "type": "entry",
+      "label": "GET /products",
+      "repo": "catalog",
+      "file": "src/server.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/products",
+        "rawPath": "/products",
+        "adapter": "hono-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/sync/ping",
+      "type": "entry",
+      "label": "POST /sync/ping",
+      "repo": "jobs",
+      "file": "src/sync.controller.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/sync/ping",
+        "rawPath": "/sync/ping",
+        "controller": "SyncController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/sync/stock",
+      "type": "entry",
+      "label": "POST /sync/stock",
+      "repo": "jobs",
+      "file": "src/sync.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/sync/stock",
+        "rawPath": "/sync/stock",
+        "controller": "SyncController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:ledger:http:GET:/entries",
+      "type": "entry",
+      "label": "GET /entries",
+      "repo": "ledger",
+      "file": "src/entries.controller.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/entries",
+        "rawPath": "/entries",
+        "controller": "EntriesController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:orders:http:GET:/orders",
+      "type": "entry",
+      "label": "GET /orders",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/orders",
+        "rawPath": "/orders",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "/health",
+        "adapter": "fastify-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:stock:http:GET:/stock/:param",
+      "type": "entry",
+      "label": "GET /stock/:param",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/stock/:param",
+        "rawPath": "/stock/:sku",
+        "adapter": "fastify-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:storefront:http:GET:/api/basket",
+      "type": "entry",
+      "label": "GET /api/basket",
+      "repo": "storefront",
+      "file": "server/api/basket.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/basket",
+        "rawPath": "/api/basket",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "external_api:localhost:4999",
+      "type": "external_api",
+      "label": "localhost:4999",
+      "repo": "jobs",
+      "meta": {
+        "host": "localhost:4999"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.controller.ts:12:28",
+      "type": "http_out",
+      "label": "GET /stock/ABC-1",
+      "repo": "jobs",
+      "file": "src/sync.controller.ts",
+      "line": 12,
+      "meta": {
+        "method": "GET",
+        "url": "http://0.0.0.0:3002/stock/ABC-1",
+        "path": "/stock/ABC-1",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "0.0.0.0:3002",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "http_out:jobs#src/sync.controller.ts:18:12",
+      "type": "http_out",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "src/sync.controller.ts",
+      "line": 18,
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:4999/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "host": "localhost:4999"
+      }
+    },
+    {
+      "id": "jobs#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "jobs",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "SyncController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "jobs#src/main.ts:start",
+      "type": "function",
+      "label": "start",
+      "repo": "jobs",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.controller.ts:SyncController",
+      "type": "provider",
+      "label": "SyncController",
+      "repo": "jobs",
+      "file": "src/sync.controller.ts",
+      "line": 8,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "jobs#src/sync.controller.ts:SyncController.ping",
+      "type": "method",
+      "label": "SyncController.ping",
+      "repo": "jobs",
+      "file": "src/sync.controller.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "jobs#src/sync.controller.ts:SyncController.stock",
+      "type": "method",
+      "label": "SyncController.stock",
+      "repo": "jobs",
+      "file": "src/sync.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "ledger#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "ledger",
+      "file": "src/app.module.ts",
+      "line": 5,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "EntriesController"
+        ],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "ledger#src/entries.controller.ts:EntriesController",
+      "type": "provider",
+      "label": "EntriesController",
+      "repo": "ledger",
+      "file": "src/entries.controller.ts",
+      "line": 3,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "ledger#src/entries.controller.ts:EntriesController.list",
+      "type": "method",
+      "label": "EntriesController.list",
+      "repo": "ledger",
+      "file": "src/entries.controller.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown[]"
+        }
+      }
+    },
+    {
+      "id": "orders#src/app.ts:GET /health@10",
+      "type": "function",
+      "label": "GET /health@10",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "orders#src/app.ts:GET /orders@6",
+      "type": "function",
+      "label": "GET /orders@6",
+      "repo": "orders",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 1,
+          "components": 0,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "nextjs-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3020,
+            "file": "package.json",
+            "line": 6
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "repo:audit",
+      "type": "repo",
+      "label": "audit",
+      "repo": "audit",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "koa-routes"
+          ]
+        },
+        "listen": [
+          {
+            "file": "src/server.ts",
+            "line": 19,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:catalog",
+      "type": "repo",
+      "label": "catalog",
+      "repo": "catalog",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "hono": 1
+          }
+        },
+        "adapters": {
+          "entry": [
+            "hono-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3003,
+            "file": "src/server.ts",
+            "line": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3009,
+            "file": "src/main.ts",
+            "line": 7,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:ledger",
+      "type": "repo",
+      "label": "ledger",
+      "repo": "ledger",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3005,
+            "file": "src/main.ts",
+            "line": 8
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:orders",
+      "type": "repo",
+      "label": "orders",
+      "repo": "orders",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/app.ts",
+            "line": 16
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:stock",
+      "type": "repo",
+      "label": "stock",
+      "repo": "stock",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "fastify-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/app.ts",
+            "line": 15,
+            "setting": "PORT"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:storefront",
+      "type": "repo",
+      "label": "storefront",
+      "repo": "storefront",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 1,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3010,
+            "file": "nuxt.config.ts",
+            "line": 3
+          }
+        ],
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "functions": 3,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {
+            "ky": 4,
+            "axios": 1
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "stock#src/app.ts:GET /health@11",
+      "type": "function",
+      "label": "GET /health@11",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{status:'ok'}"
+        }
+      }
+    },
+    {
+      "id": "stock#src/app.ts:GET /stock/:sku@9",
+      "type": "function",
+      "label": "GET /stock/:sku@9",
+      "repo": "stock",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{available:3}"
+        }
+      }
+    },
+    {
+      "id": "storefront#pages/index.vue:load",
+      "type": "function",
+      "label": "load",
+      "repo": "storefront",
+      "file": "pages/index.vue",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "storefront#pages/index.vue:pages/index",
+      "type": "ui_component",
+      "label": "pages/index",
+      "repo": "storefront",
+      "file": "pages/index.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "storefront#server/api/basket.get.ts:GET /api/basket@1",
+      "type": "function",
+      "label": "GET /api/basket@1",
+      "repo": "storefront",
+      "file": "server/api/basket.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{items:never[]}"
+        }
+      }
+    },
+    {
+      "id": "ui_action:storefront#pages/index.vue:7:13",
+      "type": "ui_action",
+      "label": "@click=\"load\"",
+      "repo": "storefront",
+      "file": "pages/index.vue",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "load",
+        "component": "storefront#pages/index.vue:pages/index",
+        "template": "pages/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:16:15",
+      "type": "ui_action",
+      "label": "onClick={loadOrders}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadOrders",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:17:15",
+      "type": "ui_action",
+      "label": "onClick={ordersHealth}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 17,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "ordersHealth",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:18:15",
+      "type": "ui_action",
+      "label": "onClick={loadProducts}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadProducts",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:19:15",
+      "type": "ui_action",
+      "label": "onClick={loadEntries}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadEntries",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:20:15",
+      "type": "ui_action",
+      "label": "onClick={loadReports}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 20,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadReports",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:21:15",
+      "type": "ui_action",
+      "label": "onClick={loadStock}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 21,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadStock",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Dashboard.tsx:22:15",
+      "type": "ui_action",
+      "label": "onClick={loadBasket}",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 22,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "loadBasket",
+        "component": "web#src/Dashboard.tsx:Dashboard",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#pages/index.vue:14:34",
+      "type": "ui_api_call",
+      "label": "GET /products",
+      "repo": "storefront",
+      "file": "pages/index.vue",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3003/products",
+        "path": "/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "baseFrom": "call-hook",
+        "via": "literal",
+        "host": "localhost:3003",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "ui_api_call:storefront#pages/index.vue:21:9",
+      "type": "ui_api_call",
+      "label": "GET /api/basket",
+      "repo": "storefront",
+      "file": "pages/index.vue",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/basket",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:10:29",
+      "type": "ui_api_call",
+      "label": "GET /entries",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3005/entries",
+        "path": "/entries",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3005"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:11:29",
+      "type": "ui_api_call",
+      "label": "GET /api/reports",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3020/api/reports",
+        "path": "/api/reports",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3020",
+        "targetService": "admin"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:12:27",
+      "type": "ui_api_call",
+      "label": "GET /stock/ABC-1",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 12,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3002/stock/ABC-1",
+        "path": "/stock/ABC-1",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "ky",
+        "client": "ky",
+        "baseFrom": "interceptor",
+        "via": "literal",
+        "host": "localhost:3002",
+        "targetService": "stock"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:13:28",
+      "type": "ui_api_call",
+      "label": "GET /api/basket",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3010/api/basket",
+        "path": "/api/basket",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "ky",
+        "client": "ky",
+        "baseFrom": "interceptor",
+        "via": "literal",
+        "host": "localhost:3010",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:7:28",
+      "type": "ui_api_call",
+      "label": "GET /orders",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3001/orders",
+        "path": "/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3001",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:8:30",
+      "type": "ui_api_call",
+      "label": "GET /health",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://localhost:3001/health",
+        "path": "/health",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal",
+        "host": "localhost:3001",
+        "targetService": "orders"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Dashboard.tsx:9:30",
+      "type": "ui_api_call",
+      "label": "GET /products",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "http://127.0.0.1:3003/products",
+        "path": "/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "literal",
+        "host": "127.0.0.1:3003",
+        "targetService": "catalog"
+      }
+    },
+    {
+      "id": "web#src/Dashboard.tsx:Dashboard",
+      "type": "ui_component",
+      "label": "Dashboard",
+      "repo": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:admin:http:GET:/api/reports",
+      "to": "admin#app/api/reports/route.ts:GET",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/api/reports/route.ts",
+      "line": 2,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:audit:http:GET:/entries",
+      "to": "audit#src/server.ts:GET /entries@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:catalog:http:GET:/products",
+      "to": "catalog#src/server.ts:GET /products@7",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:jobs:http:POST:/sync/ping",
+      "to": "jobs#src/sync.controller.ts:SyncController.ping",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "Response",
+      "file": "src/sync.controller.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:jobs:http:POST:/sync/stock",
+      "to": "jobs#src/sync.controller.ts:SyncController.stock",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "src/sync.controller.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:ledger:http:GET:/entries",
+      "to": "ledger#src/entries.controller.ts:EntriesController.list",
+      "type": "handles",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown[]",
+      "file": "src/entries.controller.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:orders:http:GET:/health",
+      "to": "orders#src/app.ts:GET /health@10",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{status:string}",
+      "file": "src/app.ts",
+      "line": 10,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:orders:http:GET:/orders",
+      "to": "orders#src/app.ts:GET /orders@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/health",
+      "to": "stock#src/app.ts:GET /health@11",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{status:'ok'}",
+      "file": "src/app.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:stock:http:GET:/stock/:param",
+      "to": "stock#src/app.ts:GET /stock/:sku@9",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{available:3}",
+      "file": "src/app.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:storefront:http:GET:/api/basket",
+      "to": "storefront#server/api/basket.get.ts:GET /api/basket@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{items:never[]}",
+      "file": "server/api/basket.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.controller.ts:12:28",
+      "to": "entry:stock:http:GET:/stock/:param",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "src/sync.controller.ts",
+      "line": 12,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/app.ts:15 (PORT)"
+      }
+    },
+    {
+      "from": "http_out:jobs#src/sync.controller.ts:18:12",
+      "to": "external_api:localhost:4999",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "jobs#src/main.ts:start",
+      "to": "config_key:jobs#PORT",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 7
+    },
+    {
+      "from": "jobs#src/sync.controller.ts:SyncController.ping",
+      "to": "http_out:jobs#src/sync.controller.ts:18:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.controller.ts",
+      "line": 18
+    },
+    {
+      "from": "jobs#src/sync.controller.ts:SyncController.stock",
+      "to": "http_out:jobs#src/sync.controller.ts:12:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/sync.controller.ts",
+      "line": 12
+    },
+    {
+      "from": "storefront#pages/index.vue:load",
+      "to": "ui_api_call:storefront#pages/index.vue:21:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 21
+    },
+    {
+      "from": "storefront#pages/index.vue:pages/index",
+      "to": "ui_api_call:storefront#pages/index.vue:14:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 14
+    },
+    {
+      "from": "storefront#pages/index.vue:pages/index",
+      "to": "ui_api_call:storefront#pages/index.vue:21:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 21
+    },
+    {
+      "from": "ui_action:storefront#pages/index.vue:7:13",
+      "to": "storefront#pages/index.vue:load",
+      "type": "handles",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 7
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:16:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 16
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:17:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 17
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:18:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 18
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:19:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 19
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:20:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 20
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:21:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 21
+    },
+    {
+      "from": "ui_action:web#src/Dashboard.tsx:22:15",
+      "to": "web#src/Dashboard.tsx:Dashboard",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 22
+    },
+    {
+      "from": "ui_api_call:storefront#pages/index.vue:14:34",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "hits",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 14,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/server.ts:9"
+      }
+    },
+    {
+      "from": "ui_api_call:storefront#pages/index.vue:21:9",
+      "to": "entry:storefront:http:GET:/api/basket",
+      "type": "hits",
+      "confidence": "static",
+      "file": "pages/index.vue",
+      "line": 21,
+      "meta": {
+        "via": "same-service",
+        "targetService": "storefront"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:11:29",
+      "to": "entry:admin:http:GET:/api/reports",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 11,
+      "meta": {
+        "via": "host",
+        "targetService": "admin",
+        "listensAt": "package.json:6"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:12:27",
+      "to": "entry:stock:http:GET:/stock/:param",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Dashboard.tsx",
+      "line": 12,
+      "meta": {
+        "via": "host",
+        "targetService": "stock",
+        "listensAt": "src/app.ts:15 (PORT)"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:13:28",
+      "to": "entry:storefront:http:GET:/api/basket",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 13,
+      "meta": {
+        "via": "host",
+        "targetService": "storefront",
+        "listensAt": "nuxt.config.ts:3"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:7:28",
+      "to": "entry:orders:http:GET:/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 7,
+      "meta": {
+        "via": "host",
+        "targetService": "orders",
+        "listensAt": "src/app.ts:16"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:8:30",
+      "to": "entry:orders:http:GET:/health",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 8,
+      "meta": {
+        "via": "host",
+        "targetService": "orders",
+        "listensAt": "src/app.ts:16"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Dashboard.tsx:9:30",
+      "to": "entry:catalog:http:GET:/products",
+      "type": "hits",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 9,
+      "meta": {
+        "via": "host",
+        "targetService": "catalog",
+        "listensAt": "src/server.ts:9"
+      }
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:10:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 10
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:11:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 11
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:12:27",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 12
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:13:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 13
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:7:28",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 7
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:8:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 8
+    },
+    {
+      "from": "web#src/Dashboard.tsx:Dashboard",
+      "to": "ui_api_call:web#src/Dashboard.tsx:9:30",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Dashboard.tsx",
+      "line": 9
+    }
+  ],
+  "types": {
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:hono#Context<object>": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "hono",
+      "structuralHash": "9245dcdd5ac0d844",
+      "meta": {
+        "declKind": "external",
+        "package": "hono"
+      }
+    },
+    "type:koa#Context": {
+      "name": "Context",
+      "kind": "external",
+      "declaredIn": "koa",
+      "structuralHash": "002a3105e543026c",
+      "meta": {
+        "declKind": "external",
+        "package": "koa"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> ., @ -> ., ~~ -> ., @@ -> ., #shared -> shared, #app -> node_modules/nuxt/dist/app resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "."
+          ],
+          "~/*": [
+            "./*"
+          ],
+          "@": [
+            "."
+          ],
+          "@/*": [
+            "./*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "shared"
+          ],
+          "#shared/*": [
+            "shared/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ]
+        }
+      },
+      "service": "storefront"
+    },
+    {
+      "service": "web",
+      "file": "src/Dashboard.tsx",
+      "line": 10,
+      "reason": "local-port-shared",
+      "message": "port 3005 on this machine is where audit (src/server.ts:19) and ledger (src/main.ts:8) each listen, so it is not one service",
+      "hint": "Name the host under services[].hosts of the service this request means (localhost:3005), or start the servers on different ports.",
+      "symbol": "ui_api_call:web#src/Dashboard.tsx:10:29"
+    }
+  ]
+}

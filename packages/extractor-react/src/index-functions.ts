@@ -1,6 +1,6 @@
 import { builtExportFunctions } from '@flowatlas/adapters-entry';
 import { makeSymbolId, moduleFunctions, normalizeFilePath, type NamedFunction, startLineOf } from '@flowatlas/core';
-import type { Project, SourceFile } from 'ts-morph';
+import type { Node as TsNode, Project, SourceFile } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
 
 /**
@@ -70,6 +70,23 @@ const returnsMarkup = (fn: NamedFunction): boolean => {
   return found;
 };
 
+/**
+ * The pattern element a function's name is taken out of, when it is one of
+ * several names a call's value was destructured into (`export const [A, B] = f()`).
+ *
+ * Only an element of the declaration's own pattern, which is the only one
+ * `builtExportFunctions` reads as a function.
+ */
+const patternElementOf = (fn: NamedFunction): TsNode | undefined => {
+  if (!Node.isVariableDeclaration(fn.declaration)) return undefined;
+  const pattern = fn.declaration.getNameNode();
+  if (!Node.isObjectBindingPattern(pattern) && !Node.isArrayBindingPattern(pattern)) return undefined;
+  for (const element of pattern.getElements()) {
+    if (Node.isBindingElement(element) && element.getNameNode().getText() === fn.name) return element;
+  }
+  return undefined;
+};
+
 const roleOf = (fn: NamedFunction): ReactRole => {
   if (HOOK_NAME.test(fn.name)) return 'hook';
   if (COMPONENT_NAME.test(fn.name) && returnsMarkup(fn)) return 'component';
@@ -92,14 +109,29 @@ export interface ReactFunctionIndexOptions {
  * exception is a function a pass hands back afterwards, which `adopt` takes,
  * because a registration is the other way a function is reachable.
  *
- * Three questions are asked of it and each has its own map: a declaration, when
- * a walk is standing on one; an id, when an adapter named a function; and a
+ * Four questions are asked of it and each has its own map: a declaration, when
+ * a walk is standing on one; the function itself, when a pass already holds
+ * one this index handed it; an id, when an adapter named a function; and a
  * position, when what is in hand is a way in rather than a name.
+ *
+ * The function and the declaration are two questions because two functions can
+ * share a declaration. `export const [OrderProvider, useOrder] = createRequired(…)`
+ * is two exports a call built out of one `VariableDeclaration`, each with a name,
+ * an id and a node of its own. Keyed by the declaration alone, the second
+ * overwrote the first, and a pass that held the first asked for its node by its
+ * declaration, was given the second's, and drew an edge from an id nothing had
+ * written: the whole service was refused for it (R180). So a pass that holds a
+ * function asks for that function ({@link of}), the declaration keeps the first
+ * of the names it carries, and each name is also found by the pattern element
+ * that declares it, which is the declaration the checker hands a caller of that
+ * name.
  */
 export class ReactFunctionIndex {
-  readonly #byDeclaration = new Map<NamedFunction['declaration'], IndexedFunction>();
+  readonly #byDeclaration = new Map<TsNode, IndexedFunction>();
+  readonly #byFunction = new Map<NamedFunction, IndexedFunction>();
   readonly #byId = new Map<string, IndexedFunction>();
   readonly #byPosition = new Map<string, IndexedFunction>();
+  readonly #callersOnly = new Set<string>();
   readonly #repo: string;
   readonly #repoDir: string;
 
@@ -109,7 +141,10 @@ export class ReactFunctionIndex {
   }
 
   add(indexed: IndexedFunction): void {
-    this.#byDeclaration.set(indexed.fn.declaration, indexed);
+    if (!this.#byDeclaration.has(indexed.fn.declaration)) this.#byDeclaration.set(indexed.fn.declaration, indexed);
+    const element = patternElementOf(indexed.fn);
+    if (element !== undefined) this.#byDeclaration.set(element, indexed);
+    this.#byFunction.set(indexed.fn, indexed);
     this.#byId.set(indexed.id, indexed);
     // Where a declaration starts is the one thing an adapter and this index
     // compute the same way from the same node, which is what `at` leans on.
@@ -142,7 +177,7 @@ export class ReactFunctionIndex {
    * the pass build an id keeps one answer to what a function's id is.
    */
   adopt(fn: NamedFunction): IndexedFunction {
-    const existing = this.#byDeclaration.get(fn.declaration);
+    const existing = this.of(fn);
     if (existing !== undefined) return existing;
     const file = normalizeFilePath(fn.declaration.getSourceFile().getFilePath(), this.#repoDir);
     const indexed: IndexedFunction = {
@@ -157,20 +192,52 @@ export class ReactFunctionIndex {
     return indexed;
   }
 
-  get(declaration: NamedFunction['declaration']): IndexedFunction | undefined {
+  /**
+   * Indexes a method of a class where a pass meets it as the caller of a
+   * function it follows outward (P293): what a request or an operation its
+   * helper makes is drawn from, and followed on through. Only as a caller:
+   * {@link all} does not answer it, so no pass reads its body as it reads a
+   * function of the module, and a client class's wrapping methods are not
+   * read as requests of their own.
+   */
+  adoptCaller(fn: NamedFunction): IndexedFunction {
+    const existing = this.of(fn);
+    if (existing !== undefined) return existing;
+    const file = normalizeFilePath(fn.declaration.getSourceFile().getFilePath(), this.#repoDir);
+    // A method is neither a screen nor a hook, whatever it returns.
+    const indexed: IndexedFunction = { id: makeSymbolId(this.#repo, file, fn.name), name: fn.name, role: 'plain', file, line: fn.line, fn };
+    this.#callersOnly.add(indexed.id);
+    this.add(indexed);
+    return indexed;
+  }
+
+  /**
+   * The function a declaration the checker handed back stands for: a declaration
+   * this index read, or the element of a pattern one of its names is taken out of.
+   */
+  get(declaration: TsNode): IndexedFunction | undefined {
     return this.#byDeclaration.get(declaration);
+  }
+
+  /**
+   * The entry for a function a pass already holds, which is that function's own
+   * even where another function shares its declaration; a function built anew
+   * from a declaration this index read is answered by the declaration.
+   */
+  of(fn: NamedFunction): IndexedFunction | undefined {
+    return this.#byFunction.get(fn) ?? this.#byDeclaration.get(fn.declaration);
   }
 
   byId(id: string): IndexedFunction | undefined {
     return this.#byId.get(id);
   }
 
-  all(): IterableIterator<IndexedFunction> {
-    return this.#byId.values();
+  *all(): IterableIterator<IndexedFunction> {
+    for (const indexed of this.#byId.values()) if (!this.#callersOnly.has(indexed.id)) yield indexed;
   }
 
   get size(): number {
-    return this.#byId.size;
+    return this.#byId.size - this.#callersOnly.size;
   }
 }
 
@@ -183,6 +250,8 @@ export interface BuildFunctionIndexOptions {
    * Every file when absent; see `extractReact` for the rule that fills it.
    */
   reads?: (file: string) => boolean;
+  /** Functions a reading wrote itself and indexes its own way: a component file's tail (P233). */
+  skip?: (fn: NamedFunction) => boolean;
 }
 
 /**
@@ -249,7 +318,7 @@ const defaultExportFunction = (sourceFile: SourceFile, file: string): NamedFunct
 export const buildReactFunctionIndex = (
   options: BuildFunctionIndexOptions,
 ): ReactFunctionIndex => {
-  const { project, repo, repoDir, reads = () => true } = options;
+  const { project, repo, repoDir, reads = () => true, skip = () => false } = options;
   const index = new ReactFunctionIndex({ repo, repoDir });
 
   for (const sourceFile of project.getSourceFiles()) {
@@ -260,6 +329,7 @@ export const buildReactFunctionIndex = (
     if (anonymous !== undefined) found.push(anonymous);
 
     for (const fn of found) {
+      if (skip(fn)) continue;
       index.add({
         id: makeSymbolId(repo, file, fn.name),
         name: fn.name,

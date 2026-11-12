@@ -66,7 +66,8 @@ export const runCycles = (options: CyclesOptions): CyclesRun => {
     const max = maxRows(options);
     const minLength = options.minLength === undefined ? 2 : Number(options.minLength);
     const edgeTypes = [...CYCLE_EDGES, ...(options.includeDi === true ? ['injects'] : [])];
-    const graph = loadGraph(db, { edgeTypes, collapseChannels: true });
+    // A navigation between screens is how a front end is moved through, no cycle (P265).
+    const graph = loadGraph(db, { edgeTypes, collapseChannels: true, withoutNavigations: true });
 
     const all = tarjanScc(graph, { minLength }).filter(
       (cycle) => options.crossService !== true || cycle.crossService,

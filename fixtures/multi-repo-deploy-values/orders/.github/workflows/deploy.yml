@@ -1,0 +1,18 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  SHOP_PREFIX: shop
+
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Launch the prod stacks
+        run: |
+          pip install sceptre
+          sceptre --var stage=prod launch -y prod

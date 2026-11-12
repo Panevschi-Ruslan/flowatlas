@@ -2,10 +2,13 @@ ops-scripts: no way in was found — it is configured as nestjs, and none of its
 
 orders-worker: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there.
 
-unresolved: total=0 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+unresolved: total=1 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
 
-unresolved: 0 to act on · missed: 2 · notes: 1 · findings: 0
+unresolved: 1 to act on · missed: 3 · notes: 1 · findings: 0
   2 missed places static reading cannot see, folded into 2 rows
+  api-path-dynamic: 1 row
+    The address is built at run time. Annotate the method with /** @flowatlas-calls GET /<path> */.
+      storefront/src/app/items.client.ts:59  GET /items/:param/${…}${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read
   base-url-from-files (note): 1 row
     The value is one the repository writes down for running it, not necessarily the deployed one. Add REINDEX_URL to services[].baseUrlEnv of catalog-api to say so outright.
       ops-scripts/src/reindex.ts:3  REINDEX_URL is https://catalog.internal/items/reindex in .env.example, which is taken as catalog-api
@@ -22,8 +25,11 @@ desync: none
 
 contracts: no errors, 0 excused, 13 boundary directions nothing could be compared on
 
-baseline: missing (0 accepted, 0 now, +0)
+baseline: missing (0 accepted, 1 now, +1)
   no baseline at <root>/fixtures/multi-repo-dead-routes/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  api-path-dynamic: 0 → 1 (+1)
+  new (1):
+    storefront|src/app/items.client.ts|ui_api_call:storefront#src/app/items.client.ts:59:12|api-path-dynamic
 
 verdict:
   ops-scripts: no way in was found — it is configured as nestjs, and none of its code declares a route, a handler or a consumer that reader recognises. Its code was read and nothing in this graph reaches it, so no flow starts there

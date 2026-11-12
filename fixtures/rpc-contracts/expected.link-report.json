@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:40:16.601Z",
+  "configHash": "eb766482cbf1",
+  "services": [
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 4,
+      "types": 2,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "rpc-contracts-billing",
+        "runtime": [
+          "@trpc/server",
+          "express",
+          "zod"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "ledger",
+      "repo": "./ledger",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 3,
+      "edges": 1,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "rpc-contracts-ledger",
+        "runtime": [
+          "@trpc/server",
+          "zod"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 4,
+      "types": 3,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "rpc-contracts-orders",
+        "runtime": [
+          "@orpc/server",
+          "express",
+          "zod"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "portal",
+      "repo": "./portal",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 6,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 0,
+      "packages": {
+        "name": "rpc-contracts-portal",
+        "runtime": [
+          "@angular/core",
+          "@trpc/client"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "worker",
+      "repo": "./worker",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 30,
+      "edges": 25,
+      "types": 4,
+      "unresolved": 0,
+      "durationMs": 0,
+      "packages": {
+        "name": "rpc-contracts-worker",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@orpc/client",
+          "@trpc/client"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 8,
+    "linked": 7,
+    "byMarker": 0,
+    "unknownEnv": 1,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 2,
+    "resolved": 2,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 0,
+    "uncalled": [
+      "entry:billing:http:GET:/health",
+      "entry:orders:http:GET:/health",
+      "entry:worker:http:POST:/fulfil/:param"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 7,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "worker",
+      "file": "src/archive.client.ts",
+      "line": 15,
+      "reason": "unknown-base-url-env",
+      "message": "no service declares ARCHIVE_URL; its value is http://archive.shop.internal:7000 in .env.example, and no configured service is reached at that host",
+      "hint": "Add ARCHIVE_URL to services[].baseUrlEnv of whichever service answers it, or the host to its services[].hosts.",
+      "symbol": "http_out:worker#src/archive.client.ts:15:12"
+    },
+    {
+      "service": "worker",
+      "file": "src/ledger.client.ts",
+      "line": 13,
+      "reason": "procedure-link-unserved",
+      "message": "entries.record is sent to /trpc and served over trpc at /api",
+      "hint": "Nothing answers a request sent there. Point the link at /api, or mount the tree where the link sends.",
+      "symbol": "http_out:worker#src/ledger.client.ts:13:12"
+    }
+  ],
+  "totals": {
+    "nodes": 57,
+    "edges": 45,
+    "types": 7,
+    "missed": 2,
+    "sites": 2,
+    "notes": 0,
+    "findings": 1,
+    "unresolved": 2
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "shop-audit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The audit of a shop, a CDK app reading the parameters the platform writes.",
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.700.0",
+    "@aws-sdk/client-sqs": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

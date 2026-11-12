@@ -34,6 +34,10 @@ const SOFTENED_BY: ReadonlyMap<string, Severity> = new Map([
   // found to disagree, and the row says what was not done rather than claiming
   // a mismatch it never established.
   ['choice-too-wide', 'info'],
+  // A response header a caller reads that the procedure's output does not
+  // declare (P265): the procedure does not send it, and a middleware or the
+  // platform may.
+  ['header-not-declared', 'warning'],
 ]);
 
 /**

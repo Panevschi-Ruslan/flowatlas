@@ -1,6 +1,10 @@
-import type { AdapterRegistry, FrontendAdapter } from '@flowatlas/core';
-import { extractReact } from './extract-repo.js';
-import { declaresReact } from './framework.js';
+import { hasDependency, type AdapterRegistry, type FrontendAdapter } from '@flowatlas/core';
+import { nuxtApplicationOf, viteConventions } from '@flowatlas/adapters-entry';
+import { extractBrowser, extractReact, type BrowserReading } from './extract-repo.js';
+import { frontEndListens } from './dev-server.js';
+import { frontEndProxies } from './dev-proxy.js';
+import { declaresReact, declaresSvelte, declaresVue, PLAIN_BROWSER_ADAPTER } from './framework.js';
+import { SVELTE_FORMAT, VUE_FORMAT } from './sfc/formats.js';
 
 /**
  * The frontend this extractor reads.
@@ -17,8 +21,75 @@ export const reactFrontendAdapter: FrontendAdapter = {
   name: 'react',
   detect: declaresReact,
   extract: (ctx, options) => extractReact(ctx, options),
+  // The aliases of `vite.config.*` that no tsconfig names (P240).
+  conventions: viteConventions,
+  // Where its dev and preview servers listen (P254), and what they forward (P257).
+  listens: frontEndListens,
+  proxies: frontEndProxies,
+};
+
+/**
+ * Vue and Nuxt (P233): components in `.vue` files, read by this reader's own
+ * passes once their scripts are files the checker can open. A Nuxt
+ * application's `server/` is the other half, which the server reader reads.
+ */
+export const VUE_READING: BrowserReading = {
+  declares: declaresVue,
+  formats: [VUE_FORMAT],
+  // Where the server is, as the Nuxt version and configuration say (P240), in
+  // the application and in each of its layers (P243), and where a module of
+  // the repository keeps a handler it serves (P251) or adds to the server's (P255).
+  elsewhere: (base) => {
+    if (!hasDependency(base.pkg, 'nuxt')) return [];
+    const { layers, modules } = nuxtApplicationOf(base.repoDir, base.pkg);
+    const handlers = modules.modules.flatMap((module) => module.additions.handlers.map((handler) => handler.handler.replace(/\/[^/]*$/, '')));
+    const scanned = modules.modules.flatMap((module) => module.additions.serverScanDirs);
+    // And a plugin of the server a module adds (P258).
+    const plugins = modules.modules.flatMap((module) => module.additions.serverPlugins.map((plugin) => plugin.file.replace(/\/[^/]*$/, '')));
+    return [...new Set([...layers.map((layer) => layer.layout.serverDir), ...handlers, ...scanned, ...plugins])];
+  },
+};
+
+/** Svelte (P233): components in `.svelte` files, SvelteKit's among them. */
+export const SVELTE_READING: BrowserReading = { declares: declaresSvelte, formats: [SVELTE_FORMAT] };
+
+export const vueFrontendAdapter: FrontendAdapter = {
+  name: 'vue',
+  detect: declaresVue,
+  extract: (ctx, options) => extractBrowser(ctx, options ?? {}, VUE_READING),
+  conventions: viteConventions,
+  listens: frontEndListens,
+  proxies: frontEndProxies,
+};
+
+export const svelteFrontendAdapter: FrontendAdapter = {
+  name: 'svelte',
+  detect: declaresSvelte,
+  extract: (ctx, options) => extractBrowser(ctx, options ?? {}, SVELTE_READING),
+  conventions: viteConventions,
+  listens: frontEndListens,
+  proxies: frontEndProxies,
+};
+
+/**
+ * Plain browser code (P284): pages and the scripts they load, no framework.
+ * Every file of the directory is its own, and what it reads of them is what
+ * any front end's scripts say: the requests they send and the calls between
+ * them. Never detected - a manifest that declares nothing says nothing - and
+ * chosen by the service's type (`forcedFor`).
+ */
+export const PLAIN_READING: BrowserReading = { declares: () => true };
+
+export const plainBrowserAdapter: FrontendAdapter = {
+  name: PLAIN_BROWSER_ADAPTER,
+  detect: () => false,
+  extract: (ctx, options) => extractBrowser(ctx, options ?? {}, PLAIN_READING),
 };
 
 /** Puts this extractor where the registry can find it, like every other adapter. */
 export const registerFrontendAdapters = (registry: AdapterRegistry): AdapterRegistry =>
-  registry.register('frontend', reactFrontendAdapter);
+  registry
+    .register('frontend', reactFrontendAdapter)
+    .register('frontend', vueFrontendAdapter)
+    .register('frontend', svelteFrontendAdapter)
+    .register('frontend', plainBrowserAdapter);

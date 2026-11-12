@@ -1,0 +1,27 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.8", import: ["@key", "@requiresScopes", "@composeDirective"])
+  @link(url: "https://example.dev/audit/v1.0", import: ["@audited"])
+  @composeDirective(name: "@audited")
+
+directive @audited(reason: String) on FIELD_DEFINITION
+
+type Query {
+  media: [Media!]!
+}
+
+interface Media @key(fields: "id") {
+  id: ID!
+  title: String!
+}
+
+type Book implements Media @key(fields: "id") {
+  id: ID!
+  title: String!
+  author: String! @audited(reason: "licensing")
+}
+
+type Movie implements Media @key(fields: "id") {
+  id: ID!
+  title: String!
+  director: String! @requiresScopes(scopes: [["media:staff"]])
+}

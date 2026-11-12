@@ -1,0 +1,10 @@
+{
+  "name": "bookshop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A catalog served as a GraphQL server made into a Lambda function, and a scheduled function that calls it.",
+  "dependencies": {
+    "apollo-server-lambda": "^3.13.0",
+    "graphql": "^16.9.0"
+  }
+}

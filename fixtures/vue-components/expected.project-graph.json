@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T12:41:51.058Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "vue",
+      "extractor": "@flowatlas/extractor-react"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 8,
+          "filesRead": 8,
+          "filesUnreadable": 0,
+          "functions": 2,
+          "components": 6,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "ui_action:web#src/components/RowActions.vue:2:11",
+      "type": "ui_action",
+      "label": "@click=\"cancel\"",
+      "repo": "web",
+      "file": "src/components/RowActions.vue",
+      "line": 2,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "cancel",
+        "component": "web#src/components/RowActions.vue:RowActions",
+        "template": "src/components/RowActions.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/components/CartSummary.vue:10:26",
+      "type": "ui_api_call",
+      "label": "GET /api/cart",
+      "repo": "web",
+      "file": "src/components/CartSummary.vue",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/cart",
+        "path": "/api/cart",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/components/RowActions.vue:9:9",
+      "type": "ui_api_call",
+      "label": "POST /api/orders/:param/cancel",
+      "repo": "web",
+      "file": "src/components/RowActions.vue",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/orders/:param/cancel",
+        "path": "/api/orders/:param/cancel",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "web#src/App.vue:App",
+      "type": "ui_component",
+      "label": "App",
+      "repo": "web",
+      "file": "src/App.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/components/AppIcon.vue:AppIcon",
+      "type": "ui_component",
+      "label": "AppIcon",
+      "repo": "web",
+      "file": "src/components/AppIcon.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/components/CartSummary.vue:CartSummary",
+      "type": "ui_component",
+      "label": "CartSummary",
+      "repo": "web",
+      "file": "src/components/CartSummary.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/components/OrderRow.vue:OrderRow",
+      "type": "ui_component",
+      "label": "OrderRow",
+      "repo": "web",
+      "file": "src/components/OrderRow.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/components/RowActions.vue:RowActions",
+      "type": "ui_component",
+      "label": "RowActions",
+      "repo": "web",
+      "file": "src/components/RowActions.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/components/RowActions.vue:cancel",
+      "type": "function",
+      "label": "cancel",
+      "repo": "web",
+      "file": "src/components/RowActions.vue",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "web#src/views/OrdersView.vue:OrdersView",
+      "type": "ui_component",
+      "label": "OrdersView",
+      "repo": "web",
+      "file": "src/views/OrdersView.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/orders"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "ui_action:web#src/components/RowActions.vue:2:11",
+      "to": "web#src/components/RowActions.vue:cancel",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/components/RowActions.vue",
+      "line": 2
+    },
+    {
+      "from": "web#src/App.vue:App",
+      "to": "web#src/components/AppIcon.vue:AppIcon",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/App.vue",
+      "line": 2,
+      "meta": {
+        "renders": "AppIcon"
+      }
+    },
+    {
+      "from": "web#src/components/CartSummary.vue:CartSummary",
+      "to": "ui_api_call:web#src/components/CartSummary.vue:10:26",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/CartSummary.vue",
+      "line": 10
+    },
+    {
+      "from": "web#src/components/OrderRow.vue:OrderRow",
+      "to": "web#src/components/RowActions.vue:RowActions",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/components/OrderRow.vue",
+      "line": 4,
+      "meta": {
+        "renders": "RowActions"
+      }
+    },
+    {
+      "from": "web#src/components/RowActions.vue:RowActions",
+      "to": "ui_api_call:web#src/components/RowActions.vue:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/RowActions.vue",
+      "line": 9
+    },
+    {
+      "from": "web#src/components/RowActions.vue:cancel",
+      "to": "ui_api_call:web#src/components/RowActions.vue:9:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/components/RowActions.vue",
+      "line": 9
+    },
+    {
+      "from": "web#src/views/OrdersView.vue:OrdersView",
+      "to": "web#src/components/AppIcon.vue:AppIcon",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/views/OrdersView.vue",
+      "line": 3,
+      "meta": {
+        "renders": "AppIcon"
+      }
+    },
+    {
+      "from": "web#src/views/OrdersView.vue:OrdersView",
+      "to": "web#src/components/CartSummary.vue:CartSummary",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/views/OrdersView.vue",
+      "line": 5,
+      "meta": {
+        "renders": "cart-summary"
+      }
+    },
+    {
+      "from": "web#src/views/OrdersView.vue:OrdersView",
+      "to": "web#src/components/OrderRow.vue:OrderRow",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "src/views/OrdersView.vue",
+      "line": 4,
+      "meta": {
+        "renders": "order-row"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/components/CartSummary.vue",
+      "line": 10,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/cart",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/cart */.",
+      "symbol": "ui_api_call:web#src/components/CartSummary.vue:10:26"
+    },
+    {
+      "service": "web",
+      "file": "src/components/RowActions.vue",
+      "line": 9,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /api/orders/:param/cancel",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /api/orders/:param/cancel */.",
+      "symbol": "ui_api_call:web#src/components/RowActions.vue:9:9"
+    },
+    {
+      "file": "src/views/OrdersView.vue",
+      "line": 7,
+      "reason": "component-unresolved",
+      "level": "info",
+      "message": "<ShippingNote> in src/views/OrdersView.vue names no component the file imports or registers, and none the framework registers by name, so what it renders is not joined",
+      "hint": "Import the component in the script, register it, or put it where the framework registers components by name.",
+      "symbol": "OrdersView <ShippingNote>",
+      "meta": {
+        "cause": "component-unresolved",
+        "why": "missing",
+        "tag": "ShippingNote"
+      },
+      "service": "web"
+    }
+  ]
+}

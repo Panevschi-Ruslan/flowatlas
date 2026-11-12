@@ -11,7 +11,7 @@ export { canAnswer, isToolName, NEEDS, TOOL_NAMES, TOOL_NEEDS } from './tool-nee
 export type { Need, NeedSource, ToolFacts, ToolName } from './tool-needs.js';
 export { LISTING_POLL_MS, listingSettingsOf, ToolListing } from './tool-listing.js';
 export type { ListingOptions, ListingSettings } from './tool-listing.js';
-export { DbHandle } from './query/db.js';
+export { DbHandle, PULLED_DIR } from './query/db.js';
 export { ruleBreaksAt, rulesReportOf, violatedHops } from './tools/rules.js';
 export type { DbHandleOptions, SourceRoots } from './query/db.js';
 export { resolveEntryRef, resolveSymbol, isResolved } from './query/entry-ref.js';
@@ -30,6 +30,22 @@ export {
   DEFAULT_WALK_NODES,
 } from './query/flow.js';
 export type { CrossingLeft, FlowOptions, FlowResult } from './query/flow.js';
+export { DEFAULT_PATH_NODES, findPath } from './query/path.js';
+export { checkoutLines, freshnessBeside, pulledLine, staleFor, withStale } from './query/fresh.js';
+export type { StaleRef } from './query/fresh.js';
+export {
+  DEFAULT_QUESTIONS_BYTES,
+  QUESTIONS_FILE,
+  loggedCall,
+  questionLogSettings,
+  questionOf,
+  questionsByGap,
+  questionsPathFor,
+  readQuestions,
+  recordQuestion,
+} from './query/questions.js';
+export type { QuestionEntry, QuestionLogSettings } from './query/questions.js';
+export type { PathOptions, PathResult, ReversePath } from './query/path.js';
 export { projectDetail, projectEdge, truncate, clampDetail, CLAMP_NOTE, MAX_DETAIL } from './query/detail.js';
 export type { Truncated } from './query/detail.js';
 export { truncationMessage } from './query/types.js';
@@ -84,7 +100,8 @@ export {
   serviceInputOf,
 } from './prompt/gather.js';
 export type { PromptScopeName, ScopeContext, ServiceCrossing, ServiceInput } from './prompt/gather.js';
-export { checkSubjectAt, promptScopeContext } from './tools/prompt.js';
+export { checkSubjectAt, describeAnswer, promptScopeContext } from './tools/prompt.js';
+export type { DescribeInput } from './tools/prompt.js';
 export { loadContractBreaks } from './query/contracts.js';
 export { deadOptionsOf, deadRows, DEAD_KINDS } from './tools/dead.js';
 export type { DeadKind } from './tools/dead.js';
@@ -113,12 +130,13 @@ export type { PromptName } from './prompts.js';
 export {
   reasonCatalogOf,
   serviceSummaryOf,
+  OVERVIEW_URI,
   REASONS_URI,
   SERVICES_URI,
   SERVICE_TEMPLATE,
   SERVICE_TOP_FINDINGS,
 } from './resources.js';
-export type { ReasonEntry, ReasonHint } from './resources.js';
+export type { OverviewWriter, ReasonEntry, ReasonHint } from './resources.js';
 export { startSummaryOf } from './tools/start.js';
 export {
   blindSpotsAsRows,
@@ -153,5 +171,7 @@ export {
   staleDocsCount,
   stopsIn,
   withDocs,
+  resolveMention,
+  MAX_MENTIONS,
 } from './query/docs.js';
 export type { DocAsk, DocCheck, DocRef, DocSubject, DocTarget } from './query/docs.js';

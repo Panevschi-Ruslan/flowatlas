@@ -6,6 +6,7 @@ import { interpolated, readComposeFile } from './compose.js';
 import { readServerlessFile, readWorkerJson, readWorkerToml } from './deployed.js';
 import { namesInEnvFile, readEnvFile } from './dotenv.js';
 import { composeEnvironment, envFileEnvironment, envFileReading } from './files.js';
+import { readEnvironmentFile } from './angular-environments.js';
 import { readProjectSettings } from './read.js';
 
 describe('which environment files may be read for values (P77)', () => {
@@ -184,9 +185,185 @@ describe('what a project’s files say its settings are', () => {
       PAYMENTS_BASE: [{ value: 'http://payments-api:4000', file: 'docker-compose.yml', within: 'shop' }],
     });
     expect(read['storefront']?.namedOnly).toEqual({ API_TOKEN: ['.env'], INVENTORY_URL: ['.env'] });
-    expect(read['payments']?.hosts.map((alias) => alias.host)).toEqual(['payments-api', 'localhost:4000', '127.0.0.1:4000', '0.0.0.0:4000']);
+    expect(read['payments']?.hosts.map((alias) => alias.host)).toEqual(['payments-api', 'localhost:4000', '127.0.0.1:4000', '0.0.0.0:4000', 'payments-api:4000']);
     expect(read['payments']?.values).toEqual({ ORDERS_API: [{ value: 'http://orders:3000', file: 'serverless.yml' }] });
     expect(read['orders']?.hosts.map((alias) => alias.host)).toEqual(['localhost:3001', '127.0.0.1:3001', '0.0.0.0:3001']);
+  });
+
+  it('reads both sides of a container’s port mappings, its environment’s ports, and a `docker run` in a script (P254)', () => {
+    const dir = project({
+      'docker-compose.yml': [
+        'services:',
+        '  orders:',
+        '    build: ./orders',
+        '    container_name: orders-api',
+        '    ports:',
+        '      - "127.0.0.1:3001:3000/tcp"',
+        '      - published: 3101',
+        '        target: 3100',
+        '      - "9229"',
+        '    environment:',
+        '      PORT: 3000',
+        '      JWT_SECRET_PORT: 1234',
+        '    env_file: ./orders/docker/.env.example',
+      ].join('\n'),
+      'orders/docker/.env.example': 'PORT=9999\nADMIN_PORT=3100\n',
+      'orders/.env.example': 'ORDERS_PORT=3006\nPORT=3005\nAPI_KEY=1234\n',
+      'stock/package.json': JSON.stringify({ name: 'stock', scripts: { docker: 'docker build -t stock . && docker run --rm -p 3002:8080 --name stock-api -e PORT=8080 stock:latest' } }, null, 2),
+    });
+    const read = readProjectSettings({ services: ['orders', 'stock'].map((name) => ({ name, dir: join(dir, name) })), rootDir: dir });
+    expect(read['orders']?.containers).toEqual([
+      {
+        name: 'orders',
+        names: ['orders', 'orders-api'],
+        file: 'docker-compose.yml',
+        ports: [
+          { published: 3001, container: 3000, file: 'docker-compose.yml', line: 6 },
+          { published: 3101, container: 3100, file: 'docker-compose.yml', line: 7 },
+        ],
+        environment: { PORT: 3000, ADMIN_PORT: 3100 },
+      },
+    ]);
+    expect(read['orders']?.hosts.filter((alias) => alias.mapped !== undefined).map((alias) => `${alias.host} ${alias.mapped?.side}`)).toEqual([
+      'localhost:3001 published',
+      '127.0.0.1:3001 published',
+      '0.0.0.0:3001 published',
+      'orders:3000 container',
+      'orders-api:3000 container',
+      'localhost:3101 published',
+      '127.0.0.1:3101 published',
+      '0.0.0.0:3101 published',
+      'orders:3100 container',
+      'orders-api:3100 container',
+    ]);
+    expect(read['orders']?.ports).toEqual({ ORDERS_PORT: [{ port: 3006, file: '.env.example' }], PORT: [{ port: 3005, file: '.env.example' }] });
+    expect(read['stock']?.containers).toEqual([
+      { name: 'stock-api', names: ['stock-api'], file: 'package.json', ports: [{ published: 3002, container: 8080, file: 'package.json', line: 4 }], environment: { PORT: 8080 } },
+    ]);
+  });
+
+  it('reads a `docker run` in a Makefile and in a shell script of the service (P257)', () => {
+    const dir = project({
+      'search/Makefile': ['IMAGE = search', '', 'run:', '\t@docker run --rm \\', '\t\t-p 4010:3000 \\', '\t\t--name search search:latest', '', 'dev:', '\tdocker run -p $(PORT):3000 search'].join('\n'),
+      'audit/scripts/run.sh': ['#!/bin/sh', '# docker run -p 1:2 ignored', 'docker run -d -p 4011:3000 -e PORT=3000 --name audit-api audit'].join('\n'),
+    });
+    const read = readProjectSettings({ services: ['search', 'audit'].map((name) => ({ name, dir: join(dir, name) })), rootDir: dir });
+    expect(read['search']?.containers).toEqual([
+      { name: 'search', names: ['search'], file: 'Makefile', ports: [{ published: 4010, container: 3000, file: 'Makefile', line: 4 }], environment: {} },
+      { name: 'search', names: [], file: 'Makefile', ports: [], environment: {} },
+    ]);
+    expect(read['audit']?.containers).toEqual([
+      { name: 'audit-api', names: ['audit-api'], file: 'scripts/run.sh', ports: [{ published: 4011, container: 3000, file: 'scripts/run.sh', line: 3 }], environment: { PORT: 3000 } },
+    ]);
+  });
+
+  it('reads the names a cluster routes to a service’s containers, from its manifests and the project’s (P257)', () => {
+    const dir = project({
+      'orders/k8s/orders.yaml': [
+        'apiVersion: apps/v1',
+        'kind: Deployment',
+        'metadata:',
+        '  name: orders',
+        'spec:',
+        '  template:',
+        '    metadata:',
+        '      labels:',
+        '        app: orders',
+        '    spec:',
+        '      containers:',
+        '        - name: api',
+        '          image: registry.example.test/shop/orders:1.4',
+        '          ports:',
+        '            - name: http',
+        '              containerPort: 3000',
+        '          env:',
+        '            - name: PORT',
+        '              value: "3000"',
+        '---',
+        'apiVersion: v1',
+        'kind: Service',
+        'metadata:',
+        '  name: orders-svc',
+        '  namespace: shop',
+        'spec:',
+        '  selector:',
+        '    app: orders',
+        '  ports:',
+        '    - port: 80',
+        '      targetPort: http',
+        '    - port: 9000',
+        '      targetPort: metrics',
+      ].join('\n'),
+      'deploy/stock.yaml': [
+        'apiVersion: v1',
+        'kind: Service',
+        'metadata:',
+        '  name: stock',
+        'spec:',
+        '  selector:',
+        '    app.kubernetes.io/name: stock',
+        '  ports:',
+        '    - port: 8080',
+        '      targetPort: 4000',
+        '---',
+        'apiVersion: apps/v1',
+        'kind: StatefulSet',
+        'metadata:',
+        '  name: stock-store',
+        'spec:',
+        '  template:',
+        '    metadata:',
+        '      labels:',
+        '        app.kubernetes.io/name: stock',
+        '    spec:',
+        '      containers:',
+        '        - name: stock',
+        '          image: stock',
+        '          env:',
+        '            - name: PORT',
+        '              value: "4000"',
+      ].join('\n'),
+      'charts/notify/templates/service.yaml': [
+        'apiVersion: v1',
+        'kind: Service',
+        'metadata:',
+        '  name: notify',
+        '  labels:',
+        '    {{- include "notify.labels" . | nindent 4 }}',
+        'spec:',
+        '  ports:',
+        '    - port: {{ .Values.service.port }}',
+        '      targetPort: 3000',
+        '    - port: 81',
+        '      targetPort: 3000',
+      ].join('\n'),
+      'kustomize/kustomization.yaml': 'namespace: billing\nnamePrefix: prod-\nresources:\n  - billing.yaml\n',
+      'kustomize/billing.yaml': 'apiVersion: v1\nkind: Service\nmetadata:\n  name: billing\nspec:\n  ports:\n    - port: 80\n      targetPort: 3004\n',
+    });
+    const names = ['orders', 'stock', 'notify', 'billing'];
+    const read = readProjectSettings({ services: names.map((name) => ({ name, dir: join(dir, name) })), rootDir: dir });
+    expect(read['orders']?.routes).toEqual([
+      {
+        name: 'orders-svc',
+        names: ['orders-svc', 'orders-svc.shop', 'orders-svc.shop.svc', 'orders-svc.shop.svc.cluster.local'],
+        file: 'k8s/orders.yaml',
+        ports: [{ port: 80, target: 3000, file: 'k8s/orders.yaml', line: 30 }],
+        environment: { PORT: 3000 },
+      },
+    ]);
+    expect(read['orders']?.hosts.filter((alias) => alias.mapped?.side === 'routed').map((alias) => alias.host)).toEqual([
+      'orders-svc:80',
+      'orders-svc.shop:80',
+      'orders-svc.shop.svc:80',
+      'orders-svc.shop.svc.cluster.local:80',
+    ]);
+    expect(read['stock']?.routes).toEqual([
+      { name: 'stock', names: ['stock'], file: 'deploy/stock.yaml', ports: [{ port: 8080, target: 4000, file: 'deploy/stock.yaml', line: 9 }], environment: { PORT: 4000 } },
+    ]);
+    // The templated port is not read; the literal one is, by the service's own name.
+    expect(read['notify']?.routes?.map((routed) => routed.ports.map((port) => `${port.port}:${port.target}`))).toEqual([['81:3000']]);
+    // A kustomization gives its namespace and prefix; the service object selects nothing and is named for no service.
+    expect(read['billing']?.routes).toBeUndefined();
   });
 
   it('never keeps a secret, a credential or a value that is not an address', () => {
@@ -306,5 +483,81 @@ describe('the workers a worker is bound to (P91)', () => {
     expect(staging['orders']?.bindings).toEqual([
       { binding: 'CATALOG', service: 'catalog-worker-staging', file: 'wrangler.json', environment: 'staging' },
     ]);
+  });
+});
+
+describe("an Angular application's environment files (P280)", () => {
+  let root: string | undefined;
+  afterEach(() => {
+    if (root !== undefined) rmSync(root, { recursive: true, force: true });
+    root = undefined;
+  });
+
+  it('reads the object a file exports, nested keys joined with dots', () => {
+    const text = "export const environment = {\n  production: false,\n  apiUrl: 'https://api.example.test/api',\n  auth: { issuer: `https://id.example.test` },\n  empty: '',\n};\n";
+    expect(readEnvironmentFile(text)).toEqual([
+      { name: 'apiUrl', raw: 'https://api.example.test/api' },
+      { name: 'auth.issuer', raw: 'https://id.example.test' },
+    ]);
+  });
+
+  it("keeps each value under the key the code reads, the file a configuration swaps in naming its environment", () => {
+    root = mkdtempSync(join(tmpdir(), 'flowatlas-settings-'));
+    const files: Record<string, string> = {
+      'web/angular.json': JSON.stringify({ projects: { web: { sourceRoot: 'app' } } }),
+      'web/app/environments/environment.ts': "export const environment = { apiUrl: 'http://localhost:3000/api', apiToken: 'https://not.kept.example.test' };\n",
+      'web/app/environments/environment.prod.ts': "export const environment = { apiUrl: 'https://api.example.test/api' };\n",
+      'web/src/environments/environment.development.ts': "export const environment = { apiUrl: 'http://localhost:4000' };\n",
+    };
+    for (const [path, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(root, path)), { recursive: true });
+      writeFileSync(join(root, path), text);
+    }
+    const read = readProjectSettings({ services: [{ name: 'web', dir: join(root, 'web') }], rootDir: root });
+    expect(read['web']?.values).toEqual({
+      apiUrl: [
+        { value: 'https://api.example.test/api', file: 'app/environments/environment.prod.ts', environment: 'production' },
+        { value: 'http://localhost:3000/api', file: 'app/environments/environment.ts' },
+        { value: 'http://localhost:4000', file: 'src/environments/environment.development.ts', environment: 'development' },
+      ],
+    });
+  });
+});
+
+describe("a workspace's own files, for the packages of it (P283)", () => {
+  let root: string | undefined;
+  afterEach(() => {
+    if (root !== undefined) rmSync(root, { recursive: true, force: true });
+    root = undefined;
+  });
+
+  it("gives a package what the workspace's example file says, where the package's own says nothing, and reads the workspace's compose file", () => {
+    root = mkdtempSync(join(tmpdir(), 'flowatlas-settings-'));
+    const files: Record<string, string> = {
+      'shop/package.json': JSON.stringify({ name: 'shop', private: true, workspaces: ['packages/*'] }),
+      'shop/.env.example': 'VITE_API_URL=http://localhost:4100/v2\nVITE_GQL_URL=http://localhost:4100/graphql\nPORT=4100\n',
+      'shop/.env': 'VITE_SECRET=x\n',
+      'shop/docker-compose.yml': 'services:\n  api:\n    build: ./packages/api\n    ports:\n      - "4100:4100"\n',
+      'shop/packages/web/package.json': JSON.stringify({ name: 'web' }),
+      'shop/packages/web/.env.example': 'VITE_GQL_URL=http://localhost:4300/graphql\n',
+      'shop/packages/api/package.json': JSON.stringify({ name: 'api' }),
+    };
+    for (const [path, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(root, path)), { recursive: true });
+      writeFileSync(join(root, path), text);
+    }
+    // The configuration kept outside the workspace, as a separate checkout of it would be.
+    const read = readProjectSettings({
+      services: ['web', 'api'].map((name) => ({ name, dir: join(root as string, 'shop', 'packages', name) })),
+      rootDir: join(root, 'config'),
+    });
+    expect(read['web']?.values).toEqual({
+      VITE_API_URL: [{ value: 'http://localhost:4100/v2', file: '../../.env.example' }],
+      VITE_GQL_URL: [{ value: 'http://localhost:4300/graphql', file: '.env.example' }],
+    });
+    expect(read['web']?.namedOnly).toEqual({ VITE_SECRET: ['../../.env'] });
+    // A port the workspace's file writes is no package's own.
+    expect(read['web']?.hosts).toEqual([]);
+    expect(read['api']?.hosts.map((each) => [each.host, each.file])).toContainEqual(['localhost:4100', '../shop/docker-compose.yml']);
   });
 });

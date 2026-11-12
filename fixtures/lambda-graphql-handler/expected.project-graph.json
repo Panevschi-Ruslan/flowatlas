@@ -1,0 +1,723 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:12:35.396Z",
+  "services": [
+    {
+      "name": "bookshop",
+      "repo": "./bookshop",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "bookshop#src/catalog/resolvers/authors.ts:author",
+      "type": "function",
+      "label": "author",
+      "repo": "bookshop",
+      "file": "src/catalog/resolvers/authors.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_parent",
+              "type": "unknown"
+            },
+            {
+              "name": "args",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "{id:string;name:string}"
+        }
+      }
+    },
+    {
+      "id": "bookshop#src/catalog/resolvers/books.ts:Mutation.addBook@9",
+      "type": "function",
+      "label": "Mutation.addBook@9",
+      "repo": "bookshop",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_parent",
+              "type": "unknown"
+            },
+            {
+              "name": "args",
+              "type": "{title:string}"
+            }
+          ],
+          "returns": "type:bookshop#Book"
+        }
+      }
+    },
+    {
+      "id": "bookshop#src/catalog/resolvers/books.ts:Query.book@5",
+      "type": "function",
+      "label": "Query.book@5",
+      "repo": "bookshop",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_parent",
+              "type": "unknown"
+            },
+            {
+              "name": "args",
+              "type": "{id:string}"
+            }
+          ],
+          "returns": "type:bookshop#Book|undefined"
+        }
+      }
+    },
+    {
+      "id": "bookshop#src/catalog/resolvers/books.ts:Query.books@6",
+      "type": "function",
+      "label": "Query.books@6",
+      "repo": "bookshop",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:bookshop#Book[]"
+        }
+      }
+    },
+    {
+      "id": "bookshop#src/catalog/store.ts:findAuthor",
+      "type": "function",
+      "label": "findAuthor",
+      "repo": "bookshop",
+      "file": "src/catalog/store.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "{id:string;name:string}"
+        }
+      }
+    },
+    {
+      "id": "bookshop#src/catalog/store.ts:findBook",
+      "type": "function",
+      "label": "findBook",
+      "repo": "bookshop",
+      "file": "src/catalog/store.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:bookshop#Book|undefined"
+        }
+      }
+    },
+    {
+      "id": "bookshop#src/catalog/store.ts:listBooks",
+      "type": "function",
+      "label": "listBooks",
+      "repo": "bookshop",
+      "file": "src/catalog/store.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:bookshop#Book[]"
+        }
+      }
+    },
+    {
+      "id": "bookshop#src/catalog/store.ts:saveBook",
+      "type": "function",
+      "label": "saveBook",
+      "repo": "bookshop",
+      "file": "src/catalog/store.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "title",
+              "type": "string"
+            }
+          ],
+          "returns": "type:bookshop#Book"
+        }
+      }
+    },
+    {
+      "id": "bookshop#src/restock/restock.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "bookshop",
+      "file": "src/restock/restock.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "config_key:bookshop#CATALOG_API_URL",
+      "type": "config_key",
+      "label": "CATALOG_API_URL",
+      "repo": "bookshop",
+      "file": "src/restock/restock.ts",
+      "line": 15,
+      "meta": {
+        "key": "CATALOG_API_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:bookshop:cron:functions.restock.events[0]",
+      "type": "entry",
+      "label": "cron functions.restock.events[0]",
+      "repo": "bookshop",
+      "file": "serverless.yml",
+      "line": 25,
+      "kind": "cron",
+      "meta": {
+        "key": "functions.restock.events[0]",
+        "by": "schedule",
+        "declaredAs": "functions.restock.events[0]",
+        "deployedBy": "serverless",
+        "schedule": "rate(1 hour)",
+        "nameRead": false,
+        "function": "bookshop-dev-restock",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:bookshop:graphql:Mutation.addBook",
+      "type": "entry",
+      "label": "Mutation.addBook",
+      "repo": "bookshop",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 9,
+      "kind": "graphql",
+      "meta": {
+        "type": "Mutation",
+        "name": "addBook",
+        "returns": "Book!",
+        "args": {
+          "title": {
+            "type": "String!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:bookshop:graphql:Query.author",
+      "type": "entry",
+      "label": "Query.author",
+      "repo": "bookshop",
+      "file": "src/catalog/resolvers/authors.ts",
+      "line": 7,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "author",
+        "returns": "Author",
+        "args": {
+          "id": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:bookshop:graphql:Query.book",
+      "type": "entry",
+      "label": "Query.book",
+      "repo": "bookshop",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 5,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "book",
+        "returns": "Book",
+        "args": {
+          "id": {
+            "type": "ID!",
+            "required": true
+          }
+        },
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:bookshop:graphql:Query.books",
+      "type": "entry",
+      "label": "Query.books",
+      "repo": "bookshop",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 6,
+      "kind": "graphql",
+      "meta": {
+        "type": "Query",
+        "name": "books",
+        "returns": "[Book!]!",
+        "adapter": "graphql-resolvers"
+      }
+    },
+    {
+      "id": "entry:bookshop:http:POST:/catalog",
+      "type": "entry",
+      "label": "POST /catalog",
+      "repo": "bookshop",
+      "file": "serverless.yml",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/catalog",
+        "rawPath": "catalog",
+        "deployedBy": "serverless",
+        "handlerVia": "graphql",
+        "graphql": {
+          "endpoint": true,
+          "schema": {
+            "roots": {
+              "query": "Query",
+              "mutation": "Mutation",
+              "subscription": "Subscription"
+            },
+            "types": {
+              "Author": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "name": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Book": {
+                "kind": "object",
+                "fields": {
+                  "id": {
+                    "type": "ID!"
+                  },
+                  "title": {
+                    "type": "String!"
+                  }
+                }
+              },
+              "Mutation": {
+                "kind": "object",
+                "fields": {
+                  "addBook": {
+                    "type": "Book!",
+                    "args": {
+                      "title": {
+                        "type": "String!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              },
+              "Query": {
+                "kind": "object",
+                "fields": {
+                  "book": {
+                    "type": "Book",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  },
+                  "books": {
+                    "type": "[Book!]!"
+                  },
+                  "author": {
+                    "type": "Author",
+                    "args": {
+                      "id": {
+                        "type": "ID!",
+                        "required": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "api": "dev-bookshop",
+        "function": "bookshop-dev-catalog",
+        "declaredAs": "functions.catalog.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-bookshop",
+            "chosenDefault": "dev"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:bookshop:invoke:bookshop-dev-catalog",
+      "type": "entry",
+      "label": "bookshop-dev-catalog",
+      "repo": "bookshop",
+      "file": "serverless.yml",
+      "line": 13,
+      "kind": "invoke",
+      "meta": {
+        "key": "bookshop-dev-catalog",
+        "deployedBy": "serverless",
+        "name": "bookshop-dev-catalog",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.catalog",
+        "stageFrom": "file",
+        "handler": "src/catalog/index.server",
+        "sourceDirectory": ".",
+        "handlerVia": "graphql",
+        "graphqlServer": "src/catalog/index.ts:10",
+        "environment": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:bookshop:invoke:bookshop-dev-restock",
+      "type": "entry",
+      "label": "bookshop-dev-restock",
+      "repo": "bookshop",
+      "file": "serverless.yml",
+      "line": 20,
+      "kind": "invoke",
+      "meta": {
+        "key": "bookshop-dev-restock",
+        "deployedBy": "serverless",
+        "name": "bookshop-dev-restock",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.restock",
+        "stageFrom": "file",
+        "handler": "src/restock/restock.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {
+          "CATALOG_API_URL": {
+            "written": "\"https://api.example.com/dev\"",
+            "value": "https://api.example.com/dev"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "http_out:bookshop#src/restock/restock.ts:15:9",
+      "type": "http_out",
+      "label": "POST /catalog",
+      "repo": "bookshop",
+      "file": "src/restock/restock.ts",
+      "line": 15,
+      "meta": {
+        "method": "POST",
+        "url": "${CATALOG_API_URL}/catalog",
+        "path": "/catalog",
+        "baseUrlEnv": "CATALOG_API_URL",
+        "responseType": null,
+        "bodyType": "{query:string;variables:{title:string}}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "query",
+          "variables"
+        ],
+        "headerKeys": [
+          "content-type"
+        ],
+        "graphql": {
+          "operation": "mutation",
+          "name": "AddBook",
+          "fields": [
+            {
+              "field": "addBook",
+              "arguments": [
+                "title"
+              ],
+              "line": 8,
+              "selections": [
+                {
+                  "field": "id",
+                  "line": 9
+                }
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "name": "title",
+              "type": "String!",
+              "required": true
+            }
+          ],
+          "document": {
+            "file": "src/restock/restock.ts",
+            "line": 7
+          },
+          "library": "fetch"
+        },
+        "targetService": "bookshop"
+      }
+    },
+    {
+      "id": "repo:bookshop",
+      "type": "repo",
+      "label": "bookshop",
+      "repo": "bookshop",
+      "meta": {
+        "stats": {
+          "files": 7,
+          "filesRead": 7,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "graphql-resolvers",
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:sls-bookshop-dev-ServiceEndpoint",
+              "stack:bookshop-dev#ServiceEndpoint"
+            ],
+            "address": "Outputs.ServiceEndpoint",
+            "file": "serverless.yml",
+            "line": 4,
+            "kind": "api",
+            "value": "dev-bookshop",
+            "deployedBy": "serverless"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "bookshop#src/catalog/resolvers/authors.ts:author",
+      "to": "bookshop#src/catalog/store.ts:findAuthor",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "{id:string;name:string}",
+      "file": "src/catalog/resolvers/authors.ts",
+      "line": 4
+    },
+    {
+      "from": "bookshop#src/catalog/resolvers/books.ts:Mutation.addBook@9",
+      "to": "bookshop#src/catalog/store.ts:saveBook",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:bookshop#Book",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 9
+    },
+    {
+      "from": "bookshop#src/catalog/resolvers/books.ts:Query.book@5",
+      "to": "bookshop#src/catalog/store.ts:findBook",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "type:bookshop#Book|undefined",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 5
+    },
+    {
+      "from": "bookshop#src/catalog/resolvers/books.ts:Query.books@6",
+      "to": "bookshop#src/catalog/store.ts:listBooks",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "type:bookshop#Book[]",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 6
+    },
+    {
+      "from": "bookshop#src/restock/restock.ts:handler",
+      "to": "config_key:bookshop#CATALOG_API_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "src/restock/restock.ts",
+      "line": 15,
+      "meta": {
+        "setBy": [
+          {
+            "function": "bookshop-dev-restock",
+            "written": "\"https://api.example.com/dev\"",
+            "value": "https://api.example.com/dev"
+          }
+        ]
+      }
+    },
+    {
+      "from": "bookshop#src/restock/restock.ts:handler",
+      "to": "http_out:bookshop#src/restock/restock.ts:15:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/restock/restock.ts",
+      "line": 15
+    },
+    {
+      "from": "entry:bookshop:cron:functions.restock.events[0]",
+      "to": "bookshop#src/restock/restock.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/restock/restock.ts",
+      "line": 14
+    },
+    {
+      "from": "entry:bookshop:graphql:Mutation.addBook",
+      "to": "bookshop#src/catalog/resolvers/books.ts:Mutation.addBook@9",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 9
+    },
+    {
+      "from": "entry:bookshop:graphql:Query.author",
+      "to": "bookshop#src/catalog/resolvers/authors.ts:author",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/resolvers/authors.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:bookshop:graphql:Query.book",
+      "to": "bookshop#src/catalog/resolvers/books.ts:Query.book@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 5
+    },
+    {
+      "from": "entry:bookshop:graphql:Query.books",
+      "to": "bookshop#src/catalog/resolvers/books.ts:Query.books@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog/resolvers/books.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:bookshop:http:POST:/catalog",
+      "to": "entry:bookshop:invoke:bookshop-dev-catalog",
+      "type": "calls",
+      "confidence": "static",
+      "file": "serverless.yml",
+      "line": 16,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:bookshop:invoke:bookshop-dev-restock",
+      "to": "bookshop#src/restock/restock.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/restock/restock.ts",
+      "line": 14
+    },
+    {
+      "from": "http_out:bookshop#src/restock/restock.ts:15:9",
+      "to": "entry:bookshop:graphql:Mutation.addBook",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/restock/restock.ts",
+      "line": 8,
+      "meta": {
+        "graphql": {
+          "operation": "AddBook",
+          "field": "Mutation.addBook"
+        }
+      }
+    },
+    {
+      "from": "http_out:bookshop#src/restock/restock.ts:15:9",
+      "to": "entry:bookshop:http:POST:/catalog",
+      "type": "http_calls",
+      "confidence": "static",
+      "file": "src/restock/restock.ts",
+      "line": 15,
+      "params": [
+        "{query:string;variables:{title:string}}"
+      ],
+      "meta": {
+        "via": "baseUrlEnv",
+        "targetService": "bookshop"
+      }
+    }
+  ],
+  "types": {
+    "type:bookshop#Book": {
+      "name": "Book",
+      "kind": "object",
+      "declaredIn": "bookshop#src/catalog/store.ts",
+      "structuralHash": "18b09d07301e3307",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": false
+      }
+    }
+  },
+  "unresolved": []
+}

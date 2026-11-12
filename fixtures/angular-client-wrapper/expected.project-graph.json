@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T16:20:16.578Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-08T12:50:09.166Z",
   "services": [
     {
       "name": "angular-client-wrapper",
@@ -1126,6 +1126,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal[]",
         "bodyType": null,
+        "queryUnread": true,
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "ApiClient.get"
@@ -1146,6 +1147,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "type:angular-client-wrapper#Deal",
         "bodyType": null,
+        "queryUnread": true,
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "ApiClient.get"
@@ -1167,6 +1169,7 @@
         "responseType": "type:angular-client-wrapper#Deal",
         "bodyType": "type:angular-client-wrapper#ClaimDealDto",
         "bodyFrom": "type",
+        "queryUnread": true,
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "ApiClient.post"
@@ -1187,6 +1190,7 @@
         "baseUrlEnv": "apiUrl",
         "responseType": "void",
         "bodyType": null,
+        "queryUnread": true,
         "package": "@angular/common/http",
         "via": "template-env",
         "through": "ApiClient.delete"

@@ -1,0 +1,981 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T12:55:28.640Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/seen",
+      "type": "entry",
+      "label": "POST /api/seen",
+      "repo": "shop",
+      "file": "server/api/seen.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/seen",
+        "rawPath": "/api/seen",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 6,
+          "components": 6,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "shop#app/app.vue:app",
+      "type": "ui_component",
+      "label": "app",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/app.vue:app middleware",
+      "type": "function",
+      "label": "app middleware",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/middleware/auth.ts:auth",
+      "type": "function",
+      "label": "auth",
+      "repo": "shop",
+      "file": "app/middleware/auth.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "any"
+            }
+          ],
+          "returns": "unknown"
+        },
+        "abortsNavigation": true
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:open",
+      "type": "function",
+      "label": "open",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:pages/index",
+      "type": "ui_component",
+      "label": "pages/index",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:pay",
+      "type": "function",
+      "label": "pay",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/login.vue:done",
+      "type": "function",
+      "label": "done",
+      "repo": "shop",
+      "file": "app/pages/login.vue",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/login.vue:login",
+      "type": "ui_component",
+      "label": "login",
+      "repo": "shop",
+      "file": "app/pages/login.vue",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/login"
+      }
+    },
+    {
+      "id": "shop#app/pages/orders/[id].vue:orders/[id]",
+      "type": "ui_component",
+      "label": "orders/[id]",
+      "repo": "shop",
+      "file": "app/pages/orders/[id].vue",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/orders/:param"
+      }
+    },
+    {
+      "id": "shop#app/pages/orders/index.vue:go",
+      "type": "function",
+      "label": "go",
+      "repo": "shop",
+      "file": "app/pages/orders/index.vue",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/orders/index.vue:lost",
+      "type": "function",
+      "label": "lost",
+      "repo": "shop",
+      "file": "app/pages/orders/index.vue",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/orders/index.vue:orders/index",
+      "type": "ui_component",
+      "label": "orders/index",
+      "repo": "shop",
+      "file": "app/pages/orders/index.vue",
+      "line": 11,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/orders"
+      }
+    },
+    {
+      "id": "shop#app/pages/orders/index.vue:show",
+      "type": "function",
+      "label": "show",
+      "repo": "shop",
+      "file": "app/pages/orders/index.vue",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/receipts/[id].vue:receipts/[id]",
+      "type": "ui_component",
+      "label": "receipts/[id]",
+      "repo": "shop",
+      "file": "app/pages/receipts/[id].vue",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/receipts/:param"
+      }
+    },
+    {
+      "id": "shop#server/api/orders.get.ts:GET /api/orders@1",
+      "type": "function",
+      "label": "GET /api/orders@1",
+      "repo": "shop",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string}[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/seen.post.ts:POST /api/seen@1",
+      "type": "function",
+      "label": "POST /api/seen@1",
+      "repo": "shop",
+      "file": "server/api/seen.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{seen:true}"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/index.vue:13:11",
+      "type": "ui_action",
+      "label": "@click=\"open('1')\"",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "open('1')",
+        "component": "shop#app/pages/index.vue:pages/index",
+        "template": "app/pages/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/index.vue:14:11",
+      "type": "ui_action",
+      "label": "@click=\"pay\"",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "pay",
+        "component": "shop#app/pages/index.vue:pages/index",
+        "template": "app/pages/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/login.vue:7:11",
+      "type": "ui_action",
+      "label": "@click=\"done\"",
+      "repo": "shop",
+      "file": "app/pages/login.vue",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "done",
+        "component": "shop#app/pages/login.vue:login",
+        "template": "app/pages/login.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/orders/index.vue:13:47",
+      "type": "ui_action",
+      "label": "@click=\"show(order.id)\"",
+      "repo": "shop",
+      "file": "app/pages/orders/index.vue",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "show(order.id)",
+        "component": "shop#app/pages/orders/index.vue:orders/index",
+        "template": "app/pages/orders/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/orders/index.vue:15:11",
+      "type": "ui_action",
+      "label": "@click=\"lost\"",
+      "repo": "shop",
+      "file": "app/pages/orders/index.vue",
+      "line": 15,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "lost",
+        "component": "shop#app/pages/orders/index.vue:orders/index",
+        "template": "app/pages/orders/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/orders/index.vue:16:11",
+      "type": "ui_action",
+      "label": "@click=\"go('/')\"",
+      "repo": "shop",
+      "file": "app/pages/orders/index.vue",
+      "line": 16,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "go('/')",
+        "component": "shop#app/pages/orders/index.vue:orders/index",
+        "template": "app/pages/orders/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/app.vue:5:11",
+      "type": "ui_api_call",
+      "label": "POST /api/seen",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/seen",
+        "path": "/api/seen",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/pages/orders/index.vue:2:24",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "app/pages/orders/index.vue",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#server/api/orders.get.ts:GET /api/orders@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string}[]",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/seen",
+      "to": "shop#server/api/seen.post.ts:POST /api/seen@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{seen:true}",
+      "file": "server/api/seen.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "shop#app/app.vue:app",
+      "to": "ui_api_call:shop#app/app.vue:5:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/app.vue",
+      "line": 5
+    },
+    {
+      "from": "shop#app/app.vue:app middleware",
+      "to": "ui_api_call:shop#app/app.vue:5:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/app.vue",
+      "line": 5
+    },
+    {
+      "from": "shop#app/middleware/auth.ts:auth",
+      "to": "shop#app/pages/login.vue:login",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/middleware/auth.ts",
+      "line": 5,
+      "meta": {
+        "navigates": "/login",
+        "route": "/login",
+        "page": "app/pages/login.vue",
+        "redirects": true
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:open",
+      "to": "shop#app/pages/orders/[id].vue:orders/[id]",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 5,
+      "meta": {
+        "navigates": "orders-id",
+        "route": "/orders/:param",
+        "page": "app/pages/orders/[id].vue",
+        "byName": true
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/app.vue:app middleware",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 2,
+      "meta": {
+        "middleware": "app middleware",
+        "order": 0,
+        "setup": "app/app.vue",
+        "addedIn": "app/app.vue",
+        "firstNavigation": false,
+        "mounted": true
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/middleware/auth.ts:auth",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "unknown",
+      "file": "app/pages/index.vue",
+      "line": 2,
+      "meta": {
+        "middleware": "auth",
+        "order": 1
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/pages/orders/index.vue:orders/index",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 11,
+      "meta": {
+        "navigates": "/orders",
+        "route": "/orders",
+        "page": "app/pages/orders/index.vue",
+        "link": "NuxtLink"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/pages/receipts/[id].vue:receipts/[id]",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 12,
+      "meta": {
+        "navigates": "receipt",
+        "route": "/receipts/:param",
+        "page": "app/pages/receipts/[id].vue",
+        "byName": true,
+        "link": "NuxtLink"
+      }
+    },
+    {
+      "from": "shop#app/pages/login.vue:done",
+      "to": "shop#app/pages/index.vue:pages/index",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/login.vue",
+      "line": 3,
+      "meta": {
+        "navigates": "/",
+        "route": "/",
+        "page": "app/pages/index.vue",
+        "replace": true
+      }
+    },
+    {
+      "from": "shop#app/pages/login.vue:login",
+      "to": "shop#app/app.vue:app middleware",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/login.vue",
+      "line": 6,
+      "meta": {
+        "middleware": "app middleware",
+        "order": 0,
+        "setup": "app/app.vue",
+        "addedIn": "app/app.vue",
+        "firstNavigation": false,
+        "mounted": true
+      }
+    },
+    {
+      "from": "shop#app/pages/orders/[id].vue:orders/[id]",
+      "to": "shop#app/app.vue:app middleware",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/orders/[id].vue",
+      "line": 5,
+      "meta": {
+        "middleware": "app middleware",
+        "order": 0,
+        "setup": "app/app.vue",
+        "addedIn": "app/app.vue",
+        "firstNavigation": false,
+        "mounted": true
+      }
+    },
+    {
+      "from": "shop#app/pages/orders/[id].vue:orders/[id]",
+      "to": "shop#app/pages/orders/index.vue:orders/index",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/orders/[id].vue",
+      "line": 7,
+      "meta": {
+        "navigates": "/orders",
+        "route": "/orders",
+        "page": "app/pages/orders/index.vue",
+        "link": "NuxtLink"
+      }
+    },
+    {
+      "from": "shop#app/pages/orders/index.vue:orders/index",
+      "to": "shop#app/app.vue:app middleware",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/orders/index.vue",
+      "line": 11,
+      "meta": {
+        "middleware": "app middleware",
+        "order": 0,
+        "setup": "app/app.vue",
+        "addedIn": "app/app.vue",
+        "firstNavigation": false,
+        "mounted": true
+      }
+    },
+    {
+      "from": "shop#app/pages/orders/index.vue:orders/index",
+      "to": "shop#app/pages/index.vue:pages/index",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/orders/index.vue",
+      "line": 18,
+      "meta": {
+        "navigates": "/",
+        "route": "/",
+        "page": "app/pages/index.vue",
+        "link": "NuxtLink"
+      }
+    },
+    {
+      "from": "shop#app/pages/orders/index.vue:orders/index",
+      "to": "ui_api_call:shop#app/pages/orders/index.vue:2:24",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/pages/orders/index.vue",
+      "line": 2
+    },
+    {
+      "from": "shop#app/pages/orders/index.vue:show",
+      "to": "shop#app/pages/orders/[id].vue:orders/[id]",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/orders/index.vue",
+      "line": 4,
+      "meta": {
+        "navigates": "/orders/${id}",
+        "route": "/orders/:param",
+        "page": "app/pages/orders/[id].vue"
+      }
+    },
+    {
+      "from": "shop#app/pages/receipts/[id].vue:receipts/[id]",
+      "to": "shop#app/app.vue:app middleware",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/receipts/[id].vue",
+      "line": 3,
+      "meta": {
+        "middleware": "app middleware",
+        "order": 0,
+        "setup": "app/app.vue",
+        "addedIn": "app/app.vue",
+        "firstNavigation": false,
+        "mounted": true
+      }
+    },
+    {
+      "from": "ui_action:shop#app/pages/index.vue:13:11",
+      "to": "shop#app/pages/index.vue:open",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 13
+    },
+    {
+      "from": "ui_action:shop#app/pages/index.vue:14:11",
+      "to": "shop#app/pages/index.vue:pay",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 14
+    },
+    {
+      "from": "ui_action:shop#app/pages/login.vue:7:11",
+      "to": "shop#app/pages/login.vue:done",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/login.vue",
+      "line": 7
+    },
+    {
+      "from": "ui_action:shop#app/pages/orders/index.vue:13:47",
+      "to": "shop#app/pages/orders/index.vue:show",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/orders/index.vue",
+      "line": 13
+    },
+    {
+      "from": "ui_action:shop#app/pages/orders/index.vue:15:11",
+      "to": "shop#app/pages/orders/index.vue:lost",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/orders/index.vue",
+      "line": 15
+    },
+    {
+      "from": "ui_action:shop#app/pages/orders/index.vue:16:11",
+      "to": "shop#app/pages/orders/index.vue:go",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/orders/index.vue",
+      "line": 16
+    },
+    {
+      "from": "ui_api_call:shop#app/app.vue:5:11",
+      "to": "entry:shop:http:POST:/api/seen",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/app.vue",
+      "line": 5,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/pages/orders/index.vue:2:24",
+      "to": "entry:shop:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/pages/orders/index.vue",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "app/middleware/auth.ts",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/index.vue",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/index.vue",
+      "line": 7,
+      "reason": "navigation-external",
+      "level": "info",
+      "message": "app/pages/index.vue navigates to https://pay.example.com/checkout, outside the application, so no page of it is joined",
+      "hint": "Nothing to do: an address with a host, or one navigated to with `{ external: true }`, leaves the application.",
+      "symbol": "pay navigates to https://pay.example.com/checkout",
+      "meta": {
+        "cause": "navigation-external",
+        "navigates": "https://pay.example.com/checkout"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/index.vue",
+      "line": 7,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/login.vue",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/orders/index.vue",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/orders/index.vue",
+      "line": 6,
+      "reason": "navigation-unresolved",
+      "level": "action",
+      "message": "app/pages/orders/index.vue navigates to /archive, which no page of the application shows, so the navigation joins nothing",
+      "hint": "Correct the address or the name, or add the page under `pages/`.",
+      "symbol": "lost navigates to /archive",
+      "meta": {
+        "cause": "navigation-unresolved",
+        "why": "missing",
+        "navigates": "/archive"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/orders/index.vue",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/orders/index.vue",
+      "line": 8,
+      "reason": "navigation-unresolved",
+      "level": "info",
+      "message": "app/pages/orders/index.vue navigates to an address written as code (to), so which page it shows is not read",
+      "hint": "Write the address as a literal or a template of one, or as `{ name: '...' }` with a literal name.",
+      "symbol": "go navigates to to",
+      "meta": {
+        "cause": "navigation-unresolved",
+        "why": "dynamic",
+        "navigates": "to"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/orders/index.vue",
+      "line": 8,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> app, @ -> app, ~~ -> ., @@ -> ., #shared -> shared, #app -> node_modules/nuxt/dist/app resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "app"
+          ],
+          "~/*": [
+            "app/*"
+          ],
+          "@": [
+            "app"
+          ],
+          "@/*": [
+            "app/*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "shared"
+          ],
+          "#shared/*": [
+            "shared/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ]
+        }
+      },
+      "service": "shop"
+    }
+  ]
+}

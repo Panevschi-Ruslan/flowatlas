@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-07T18:28:46.460Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:36:47.047Z",
   "services": [
     {
       "name": "worker",
@@ -130,7 +130,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {

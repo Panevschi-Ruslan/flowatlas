@@ -6,10 +6,16 @@ import {
   countSources,
   createProject,
   GraphBuilder,
+  LISTEN_META,
+  listeningOf,
+  OWN_ORIGIN_META,
+  PROXY_META,
+  proxiesOf,
   parseConfig,
   readResolvedPackageJson,
   recordApplications,
   closeStandIns,
+  withoutOtherServicesWaysIn,
   reportSkippedTestDirectories,
   reportPatterns,
   readPatterns,
@@ -27,12 +33,15 @@ import {
   type RepoGraph,
   type SourceRootOptions,
   type ServiceConfig,
+  projectText,
 } from '@flowatlas/core';
 import { createAngularContext } from './context.js';
 import { declaresAngular } from './framework.js';
 import { buildAngularClassIndex } from './index-classes.js';
 import { callsPass } from './passes/calls.js';
 import { classesPass } from './passes/classes.js';
+import { graphqlPass } from './passes/graphql.js';
+import { proceduresPass } from './passes/procedures.js';
 import { httpPass } from './passes/http.js';
 import { markersPass } from './passes/markers.js';
 import { modulesPass } from './passes/modules.js';
@@ -40,6 +49,8 @@ import { signaturesPass } from './passes/signatures.js';
 import { socketsPass } from './passes/sockets.js';
 import { ssePass } from './passes/sse.js';
 import { templatesPass } from './passes/templates.js';
+import { navigationsPass } from './passes/navigations.js';
+import { guardsPass } from './passes/guards.js';
 import type { AngularExtractorPass } from './passes/types.js';
 import { ANGULAR_SHAPES } from './shapes/index.js';
 
@@ -133,8 +144,16 @@ export const BUILT_IN_PASSES: readonly AngularExtractorPass[] = [
   modulesPass,
   classesPass,
   templatesPass,
+  // After the routes are read and the classes indexed: a navigation lands on a routed screen (P276).
+  navigationsPass,
+  // After the navigations, so a guard that navigates is the node they drew (P291).
+  guardsPass,
   callsPass,
   httpPass,
+  // After the requests, so a request that sends an operation is one node (P232).
+  graphqlPass,
+  // Requests for procedures, read by the reader the other halves share (P247).
+  proceduresPass,
   ssePass,
   socketsPass,
   markersPass,
@@ -194,6 +213,11 @@ export const extractAngular = (
   // that any pass collected is known.
   if (options.noTypes !== true) ctx.types.finalize();
 
+  // Where the application's dev server listens (P254).
+  const listen = listeningOf(base);
+  // What its dev server forwards to another server, and the rules not read (P257).
+  const proxy = proxiesOf(base);
+  for (const row of proxy.rows) base.builder.addUnresolved(row);
   base.builder.addNode({
     id: `repo:${base.repo}`,
     type: 'repo',
@@ -202,6 +226,9 @@ export const extractAngular = (
     meta: {
       stats: ctx.stats,
       adapters: { frontend: base.adapters.frontend.map((adapter) => adapter.name) },
+      ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
+      ...(proxy.rules.length === 0 ? {} : { [PROXY_META]: proxy.rules }),
+      ...(proxy.ownOrigin === true ? { [OWN_ORIGIN_META]: true } : {}),
     },
   });
 };
@@ -240,6 +267,11 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const builder = new GraphBuilder({
     repo,
     ...(options.generatedAt === undefined ? {} : { generatedAt: options.generatedAt }),
+    // The tagged comments above declarations (P234), from the files this reading parsed.
+    notesFrom: {
+      text: projectText(project, rootDir),
+      ...(config?.docs?.commentTags === undefined ? {} : { tags: config.docs.commentTags }),
+    },
   });
 
   const base: ExtractContext = {
@@ -283,7 +315,14 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   }
 
   closeStandIns(base);
-  return builder.build();
+  // What is written in another configured service's package is that service's
+  // way in, read there (P282).
+  return withoutOtherServicesWaysIn(builder.build(), {
+    rootDir,
+    ...(options.config === undefined ? {} : { config: options.config }),
+    ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
+    ...(options.service === undefined ? {} : { service: options.service }),
+  });
 };
 
 export const defaultOutputPath = (rootDir: string, output = '.flowatlas'): string =>

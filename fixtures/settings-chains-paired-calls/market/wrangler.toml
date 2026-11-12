@@ -1,0 +1,2 @@
+name = "market"
+vars = { REVIEWS_API_URL = "https://reviews.example.com/reviews-api" }

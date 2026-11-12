@@ -6,6 +6,7 @@ import {
   returnedExpression,
   rootSettingAddress,
   settingKeyIn,
+  takenMember,
   UNREAD_SPAN,
   type SettingBehind,
 } from '@flowatlas/core';
@@ -16,9 +17,11 @@ import { Node } from 'ts-morph';
  * Identifiers that stand for a settings object written by hand.
  *
  * The two conventions a repository that does not use the bundler's own
- * mechanism falls back on. Anything else is a hole like any other.
+ * mechanism falls back on, and Nuxt's runtime configuration (P233): its keys
+ * under `public` and beside it, read through `useRuntimeConfig()` called in
+ * place or held by a name. Anything else is a hole like any other.
  */
-export const ENV_ROOTS = ['environment', 'env', 'config'] as const;
+export const ENV_ROOTS = ['environment', 'env', 'config', 'useRuntimeConfig().public', 'useRuntimeConfig()'] as const;
 
 /**
  * Where a bundler puts the settings a build swaps out.
@@ -33,6 +36,35 @@ export const ENV_ROOTS = ['environment', 'env', 'config'] as const;
  */
 const BUNDLER_ROOTS = ['process', 'import.meta', 'globalThis.process'] as const;
 
+/** What a page is served with: the global objects a runtime settings object hangs from. */
+const PAGE_GLOBALS = new Set(['window', 'globalThis', 'self']);
+
+/**
+ * The names a settings object injected into the page at run time is given
+ * (P275): `window._env_`, `window.__ENV__`, `window.env`, `globalThis.__RUNTIME_CONFIG__`,
+ * written by an entrypoint script from the container's environment so one
+ * build serves every deployment.
+ */
+const RUNTIME_SETTINGS = /^_*(env|runtime_?env|runtime_?config|app_?config|config)_*$/i;
+
+/**
+ * The key a runtime settings object is read at: `window._env_?.SERVER_URL`
+ * answers `SERVER_URL`, the path after the object as a hand-written settings
+ * object answers. A cast round the global (`(window as any)._env_`) is taken off.
+ */
+const runtimeSettingKey = (node: TsNode): string | null => {
+  if (!Node.isPropertyAccessExpression(node)) return null;
+  const parts: string[] = [];
+  let current: TsNode = node;
+  while (Node.isPropertyAccessExpression(current)) {
+    parts.unshift(current.getName());
+    current = current.getExpression();
+    while (Node.isParenthesizedExpression(current) || Node.isAsExpression(current) || Node.isNonNullExpression(current)) current = current.getExpression();
+  }
+  if (!Node.isIdentifier(current) || !PAGE_GLOBALS.has(current.getText()) || parts.length < 2) return null;
+  return RUNTIME_SETTINGS.test(parts[0] as string) ? parts.slice(1).join('.') : null;
+};
+
 /**
  * The settings key an expression reads, when it reads one.
  *
@@ -42,7 +74,15 @@ const BUNDLER_ROOTS = ['process', 'import.meta', 'globalThis.process'] as const;
  * core's own reader does for the other front end.
  */
 export const settingKeyOf = (node: TsNode): string | null => {
-  if (!Node.isPropertyAccessExpression(node)) return null;
+  // `const { VITE_API_URL } = import.meta.env`: the member read where it is declared (P269).
+  const taken = takenMember(node);
+  if (taken !== undefined && Node.isPropertyAccessExpression(taken.from) && taken.from.getName() === 'env') {
+    const root = taken.from.getExpression().getText();
+    if ((BUNDLER_ROOTS as readonly string[]).includes(root)) return taken.key;
+  }
+  if (!Node.isPropertyAccessExpression(node)) return settingKeyIn(node, ENV_ROOTS);
+  const runtime = runtimeSettingKey(node);
+  if (runtime !== null) return runtime;
   const inner = node.getExpression();
   if (Node.isPropertyAccessExpression(inner) && inner.getName() === 'env') {
     // The root is written rather than resolved: `import.meta` is a meta
@@ -91,6 +131,8 @@ export interface ApiUrl {
   path: string | null;
   /** Settings key the address is rooted at, when it is. */
   baseUrlEnv: string | null;
+  /** What the code falls back to where that key is not set, when it writes one (P292). */
+  baseUrlDefault?: string;
   /** Host, when the address names one outright. */
   host: string | null;
   /** How the address was arrived at, for the reader of the node. */
@@ -186,7 +228,12 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
       });
       return inner.baseUrlEnv === null
         ? null
-        : { key: inner.baseUrlEnv, prefix: routePathOf(inner.path ?? ''), ...(inner.guessed ? { guessed: true } : {}) };
+        : {
+            key: inner.baseUrlEnv,
+            prefix: routePathOf(inner.path ?? ''),
+            ...(inner.guessed ? { guessed: true } : {}),
+            ...(inner.baseUrlDefault === undefined ? {} : { otherwise: inner.baseUrlDefault }),
+          };
     }
     // A helper that assembles the address answers with both halves: the
     // settings it is rooted at, and the part of the path it has written.
@@ -203,18 +250,21 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
           key,
           prefix: inner?.value ?? '',
           ...(inner?.guessed === true ? { guessed: true } : {}),
+          ...(inner?.fallback === undefined ? {} : { otherwise: inner.fallback }),
         };
       }
     }
     return rootSettingAddress(at, { readSetting: settingKeyOf });
   };
 
-  const resolved = resolveStaticString(node, {
-    sharedPackages,
-    envRoots: ENV_ROOTS,
-    settingBehind,
-    resolveSpan,
-  });
+  const reading = { sharedPackages, envRoots: ENV_ROOTS, settingBehind, resolveSpan };
+  const written = resolveStaticString(node, reading);
+  // `'/orders?' + params.toString()`, `` `${base}/orders?status=` + s `` (P262):
+  // what is added after a `?` is the query, and the address the text before it.
+  const queried = written === null ? queryAdded(node, options) : undefined;
+  if (queried !== undefined) return queried;
+  // `'/sellers/' + name`: the address a template would spell (P280).
+  const resolved = written ?? resolveStaticString(node, { ...reading, concatenation: true });
 
   if (resolved === null) {
     // Not a string this reader can put together, but perhaps a name that
@@ -227,6 +277,7 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
       url: `\${${behind.key}}${prefix}`,
       path: routePathOf(prefix),
       baseUrlEnv: behind.key,
+      ...(behind.otherwise === undefined ? {} : { baseUrlDefault: behind.otherwise }),
       host: null,
       via: 'template-env',
       guessed: behind.guessed === true,
@@ -260,10 +311,27 @@ export const analyzeApiUrl = (node: TsNode, options: ReadAddressOptions = {}): A
     url: baseUrlEnv === undefined ? resolved.value : `\${${baseUrlEnv}}${resolved.value}`,
     path: routePathOf(resolved.value),
     baseUrlEnv: baseUrlEnv ?? null,
+    ...(baseUrlEnv === undefined || resolved.fallback === undefined ? {} : { baseUrlDefault: resolved.fallback }),
     host: null,
     via,
     guessed,
   };
+};
+
+/**
+ * An address with a query added to it by `+` after its `?` (P262), read as
+ * the address its left side is with the query the right side adds unread
+ * (`${…}`); the query's keys are the request's to say, where it is built in
+ * code. Nothing where the left side holds no `?`, which leaves the right side
+ * part of the path.
+ */
+const queryAdded = (node: TsNode, options: ReadAddressOptions): ApiUrl | undefined => {
+  let value = node;
+  while (Node.isParenthesizedExpression(value) || Node.isAsExpression(value) || Node.isNonNullExpression(value)) value = value.getExpression();
+  if (!Node.isBinaryExpression(value) || value.getOperatorToken().getText() !== '+') return undefined;
+  const left = analyzeApiUrl(value.getLeft(), options);
+  if (left.url === null || left.path === null || !left.url.includes('?')) return undefined;
+  return { ...left, url: `${left.url}${UNREAD_SPAN}` };
 };
 
 /**
@@ -294,6 +362,7 @@ export const analyzeClientBase = (node: TsNode, options: ReadAddressOptions = {}
       url: `\${${behind.key}}${prefix}`,
       path: routePathOf(prefix),
       baseUrlEnv: behind.key,
+      ...(behind.otherwise === undefined ? {} : { baseUrlDefault: behind.otherwise }),
       host: null,
       via: 'template-env',
       guessed: behind.guessed === true,
@@ -313,50 +382,10 @@ export const analyzeClientBase = (node: TsNode, options: ReadAddressOptions = {}
 };
 
 /**
- * Whether an address says anything a path written under it would not.
+ * Whether an address is a base, and the address a request reaches under one.
  *
- * The test for "is this actually a base": a field or an option holding nothing,
- * or holding `/`, adds no segment to any address written under it, and treating
- * it as a base would make `underBase` a rewrite that changes nothing while
- * looking like a reading that succeeded. Asked in both places a base is written
- * — the class's own field and a call's own option — because a base is one fact
- * and two answers to what counts as one is how the two ends of a join come to
- * disagree (R114, R128).
+ * Both are the core's since P239: the Angular reader folds an interceptor's base
+ * with the same function, and a second copy is how two readers come to disagree
+ * about the same segment (R114).
  */
-export const isSomewhere = (address: ApiUrl): boolean =>
-  address.baseUrlEnv !== null ||
-  address.host !== null ||
-  (address.path !== null && address.path !== '/');
-
-/**
- * The whole address a request reaches, once the base in front of it is known.
- *
- * An address and a base are one fact read at two ends, and this is the one place
- * the two ends are put together — so what the graph records is the address the
- * request actually reaches, and everything that reads it afterwards, the linker
- * included, is looking at the same string the route side is (R114).
- *
- * The base does not apply to an address the call site rooted itself. A path
- * written with a host of its own, or rooted at a settings key of its own, is not
- * relative to anything the client holds, and putting the two together would
- * invent an address nobody writes.
- *
- * *Which* base stands in front is settled before this: the call's own option
- * where the call spells one, and the class's field where it does not (R128).
- */
-export const underBase = (base: ApiUrl | undefined, address: ApiUrl): ApiUrl => {
-  if (base === undefined || address.path === null) return address;
-  if (address.host !== null || address.baseUrlEnv !== null) return address;
-  const opening = base.path === null ? '' : base.path.replace(/\/+$/, '');
-  if (opening === '' && base.baseUrlEnv === null && base.host === null) return address;
-  return {
-    url: `${(base.url ?? '').replace(/\/+$/, '')}${address.url ?? address.path}`,
-    path: routePathOf(`${opening}${address.path}`),
-    baseUrlEnv: base.baseUrlEnv,
-    host: base.host,
-    // How the *address* was arrived at, and an address rooted at a settings key
-    // is that whichever end of it the key came from.
-    via: base.baseUrlEnv === null ? address.via : 'template-env',
-    guessed: address.guessed || base.guessed,
-  };
-};
+export { isSomewhere, underBase } from '@flowatlas/core';

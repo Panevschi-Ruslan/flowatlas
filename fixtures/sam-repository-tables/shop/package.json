@@ -1,0 +1,9 @@
+{
+  "name": "shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A shop whose functions write their tables through a repository base class each table's class extends.",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0"
+  }
+}

@@ -1,0 +1,5 @@
+fragment ProductFields on Product {
+  id
+  title
+  price
+}

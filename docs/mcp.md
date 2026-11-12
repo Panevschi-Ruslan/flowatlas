@@ -81,6 +81,63 @@ and let it talk on stdin and stdout.
 The server answers `initialize` as `flowatlas`, with the version of the command
 you installed as `serverInfo.version` (`flowatlas --version` prints the same).
 
+### Tell the assistant when to ask
+
+Registering the server tells an assistant it is there, and nothing about when
+to choose it over a search. An assistant in the `web` checkout asked who calls
+`GET /orders/:id` greps `web`, finds the browser's call, and answers from half
+the project: the other callers are in checkouts it cannot see.
+
+```sh
+flowatlas agents install                   # the guide, in the files each assistant reads
+flowatlas agents install --instructions    # and a marked block in AGENTS.md, CLAUDE.md, Copilot's file
+flowatlas agents install --hook            # and the Claude Code search hook
+flowatlas agents status
+flowatlas agents remove                    # takes out what install wrote, and nothing else
+```
+
+The guide is one short page: the project's services, the questions the graph
+answers better than a search with the tool and the command for each (who calls,
+what breaks, follow a request, who handles a message, how A reaches B, is it
+dead, why a flow stops, is a branch safe), and the rules from
+[Using it well](#using-it-well). The server's instructions name the same
+questions. Nothing in it changes with a build; counts and gaps come from
+`start_here`.
+
+| Where | Read by | Written |
+|---|---|---|
+| `.claude/skills/flowatlas/SKILL.md` | Claude Code, loaded when its description fits the question | by default |
+| `.cursor/rules/flowatlas.mdc` | Cursor, as a rule it applies when its description fits | by default |
+| `AGENTS.md` | Codex, Cursor, Copilot's agent and others; Claude Code where there is no `CLAUDE.md` | `--instructions`, made where there is none |
+| `CLAUDE.md` | Claude Code | `--instructions`, only where there is one |
+| `.github/copilot-instructions.md` | Copilot | `--instructions`, only where there is one |
+
+The first two are flowatlas's own files and are rewritten whole. One edited by
+hand is kept and named (`edited by hand`), and a file of that name that is not
+flowatlas's is left alone (`not flowatlas`); `--force` replaces either. In a
+team's own file the guide is a marked block (`<!-- flowatlas:agents -->`), and
+nothing outside it is touched. `init` prints the command; `init --agents`, with
+`--instructions`, `--hook` and `--shared`, does it.
+
+**The search hook.** With `--hook`, Claude Code runs a hook after a `Grep`, or a
+`grep`, `rg`, `ag` or `git grep` in the shell. When the pattern names a route,
+channel, deployed function or handler that something in another repository
+calls, publishes or handles, it adds a few lines beside the search's result:
+
+```
+flowatlas: this search covered the web checkout only; the project's graph sees the other repositories too.
+- `GET /orders/:param`, in orders: callers in billing (1), gateway (1). who_calls({symbol: "entry:orders:http:GET:/orders/:param"}) lists them (…)
+```
+
+Otherwise it says nothing: a search for a string, a local helper or a `TODO`
+gets no word. It never refuses a search, since a search is the way to read what
+the graph could not, and a missing index, an input it cannot read or anything
+slower than 300 ms is silence. It reads `<output>/names.json`, which `build`
+writes, and not the database, so a search pays about one process start. It goes
+into `.claude/settings.local.json`, which is yours, naming this machine's
+files; `--shared` puts it in `.claude/settings.json` for the team, as
+`flowatlas agents search-hook` with a path relative to the repository.
+
 ---
 
 ## The tools
@@ -146,7 +203,7 @@ saying what it needs, not a crash:
 The `mcp` block of `flowatlas.config.json` changes the choice:
 
 ```json
-{ "mcp": { "tools": "auto", "include": ["check_rules"], "exclude": ["get_spec"] } }
+{ "mcp": { "tools": "auto", "include": ["check_rules"], "exclude": ["get_spec"], "rebuild": "off" } }
 ```
 
 `tools` is `auto` (the default: by what each needs) or `all` (every tool).
@@ -447,7 +504,7 @@ route matched too. A helper's choices count: `423` finds the routes whose
 
 | Tool | Answers | Takes |
 |---|---|---|
-| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain | `entry` (required), `depth` (8, one more per workflow step), `maxChars` |
+| `get_flow` | one entry followed through every repository it reaches, in call order, with the guard chain; with `to`, only the shortest ways to that node | `entry` (required), `to`, `depth` (8, one more per workflow step), `maxChars` |
 | `who_calls` | everything that reaches a symbol, backwards across repositories | `symbol` (required), `depth` (3; 16 at most), `service` |
 | `impact` | every entry point that can reach a symbol, and which services they belong to | `symbol` (required), `service`, `offset` |
 
@@ -455,6 +512,16 @@ Asked about a class, `who_calls` and `impact` answer for every method of it
 something calls (P95): calls point at methods, never at the class. Each
 `who_calls` caller says the method it calls under `calls`; `impact` says how
 many methods it answered for under `forMethods`.
+
+**How one node reaches another.** With `to`, `get_flow` keeps only the shortest
+ways from `entry` to that node (P229), and both may be any node, not only a way
+in: `get_flow({entry: "OrdersService.findOne", to: "table:orders#orders"})`. It
+is the search the page's path finder and `flowatlas path` make, along the edges
+a flow walks, looking 6, 12 and then 24 steps unless `depth` says. The answer is
+the tree `get_flow` always answers with, a node met twice written once, plus
+`pathsFound`, `length` and `searched`. With no path it says `none` with how far
+it looked, and `reverse` when `to` reaches `entry` instead, with `next` asking
+the right way round.
 
 `entry` can be named the way you would say it aloud. All three of these mean the
 same route:
@@ -839,6 +906,16 @@ which line; `flowatlas docs --write` regenerates it. `start_here` says
 `service`, the blocks about its nodes). Without an index, neither appears. No
 tool is added for it.
 
+**Pages that mention a node, and comments that say why** (P234). A page needs
+no block to be found: a decision record or a README that names a node in code -
+`` `POST /orders` ``, `` `order.created` ``, `` `OrdersService.create` `` - is
+listed in the same `docs`, with `kind: "mention"` and the `heading` above it, at
+most five per answer; a doc comment's `@see docs/adr/0007.md` is `kind: "see"`.
+A comment above a declaration that starts with `WHY:`, `NOTE:`, `DECISION:`,
+`HACK:` or `SEE:` is kept on its node and written by `describe_for_prompt` under
+**Why**, in the author's words. Only exact names are linked, by the rules a
+block's id is resolved by; a word in prose never is.
+
 ### Prompts and resources
 
 Three prompts write out the calls a common review takes, with the ids already
@@ -858,6 +935,7 @@ the prompt asks which.
 |---|---|
 | `flowatlas://reasons` | every reason a row of the reading can give: its kind (gap, note, finding), the cause it is counted under, and the sentence `doctor` heads it with |
 | `flowatlas://services` | the services the graph holds, each with its resource |
+| `flowatlas://overview` | the project's overview as `flowatlas report` prints it: services, what crosses between them, what most depends on, what is worth a second look, what was not read, and questions to ask |
 | `flowatlas://services/{name}` | one service: what `start_here` says of it, its crossings to and from every other service with how each checks, and its top findings |
 
 Resources read the same database as the tools: without one, a service reads as
@@ -910,6 +988,34 @@ timestamp changes. So a rebuild is picked up without restarting anything:
 flowatlas build            # after pulling, or after your own change
 flowatlas build --watch    # rebuild on every save, project held open
 ```
+
+**When the graph is behind.** An answer whose files changed since the build says
+so in `stale`: how many of the files it cites changed, the first of them, when
+the graph was built, and `fix: "run flowatlas build"`. A fresh answer has no
+`stale`, so it costs nothing until it matters. `start_here` says under `moved`
+which checkouts are on another commit or branch than the one the graph was built
+on (`web: built on main@4f1c2a9, now feature-x@91be03d`).
+
+Three ways to keep it from falling behind, from least to most automatic:
+
+- `flowatlas build --watch` while you work: rebuilds on every save.
+- `flowatlas hook install`: git hooks that rebuild in the background after a
+  checkout, a merge or a rebase ([CLI](CLI.md#flowatlas-hook-install--status--remove)).
+- `"mcp": { "pull": "on-start" }` with a `remote` ([one graph for the team](team.md)):
+  the server pulls the team's graph when it starts; `start_here` says `pulled`,
+  with where it came from and when it was built.
+- `"mcp": { "rebuild": "on-change" }` in the configuration: an answer that finds
+  its files changed starts a background build, and says `rebuilding: true` in its
+  `stale`; the server reopens the new graph when it is written. Off by default,
+  since work that starts on its own is a surprise unless somebody chose it.
+
+- `"log": { "questions": true }` in the configuration, or
+  `FLOWATLAS_LOG_QUESTIONS=1`: every tool call adds a line to
+  `<output>/questions.jsonl` with the tool, the ids it was given, whether they
+  resolved, the size of the answer and the gaps on it. Ids and counts only,
+  kept on this machine; `flowatlas stats --questions` summarises it and
+  `doctor --unresolved` puts the gaps asked about first
+  ([the question log](CLI.md#the-question-log)).
 
 A rebuild with nothing moved reads only what changed, so it is a fraction of a
 cold build; the [README](../README.md#measured-on-the-demo-project) has both

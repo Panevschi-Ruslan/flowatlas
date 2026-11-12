@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T18:46:14.484Z",
+  "configHash": "50c8c911f4ee",
+  "services": [
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 4,
+      "types": 1,
+      "unresolved": 4,
+      "durationMs": 1348,
+      "packages": {
+        "name": "library-catalog",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "loans",
+      "repo": "./loans",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 1398,
+      "packages": {
+        "name": "library-loans",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "reviews",
+      "repo": "./reviews",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 1301,
+      "packages": {
+        "name": "library-reviews",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "stock",
+      "repo": "./stock",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 4,
+      "edges": 2,
+      "types": 0,
+      "unresolved": 3,
+      "durationMs": 1482,
+      "packages": {
+        "name": "library-stock",
+        "runtime": [],
+        "dev": [
+          "@types/aws-lambda"
+        ]
+      }
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "browser",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 15,
+      "edges": 10,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 1307
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 5,
+    "resolved": 5,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 5,
+    "called": 5,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "js/books.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k3x9q2w7ab.execute-api.eu-west-1.amazonaws.com/dev/books names its API by an id no file holds; it is taken as library-catalog of catalog, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (dev where none is given), so the stage dev is taken as one of its, and the request as one for /books on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/books.js:2:24"
+    },
+    {
+      "service": "web",
+      "file": "js/borrow.js",
+      "line": 6,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://p4m8z1c6de.execute-api.eu-west-1.amazonaws.com/loans names its API by an id no file holds; it is taken as library-loans of loans, the API of the project served at *.execute-api.*.amazonaws.com with a route for it, and the request as one for /loans on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/borrow.js:6:3"
+    },
+    {
+      "service": "web",
+      "file": "js/copies.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://r7t2y5u8fg.execute-api.eu-west-1.amazonaws.com/live/copies/:param names its API by an id no file holds; it is taken as library-stock of stock, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/live with a route for it, and the request as one for /copies/:param on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/copies.js:2:24"
+    },
+    {
+      "service": "web",
+      "file": "js/rate.js",
+      "line": 3,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://k3x9q2w7ab.execute-api.eu-west-1.amazonaws.com/dev/books/:param/ratings names its API by an id no file holds; it is taken as library-catalog of catalog, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (dev where none is given), so the stage dev is taken as one of its, and the request as one for /books/:param/ratings on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/rate.js:3:3"
+    },
+    {
+      "service": "web",
+      "file": "js/reviews.js",
+      "line": 2,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "https://s1d4f7g0hj.execute-api.eu-west-1.amazonaws.com/dev/reviews names its API by an id no file holds; it is taken as prod-reviews of reviews, the API of the project served at *.execute-api.eu-west-1.amazonaws.com/* with a route for it, at whatever stage it is run with (prod where none is given), so the stage dev is taken as one of its, and the request as one for /reviews on it",
+      "hint": "Read the address from the deployment - its endpoint output or a reference to the API - so it is said outright; another API served at the same place would read the same.",
+      "symbol": "ui_api_call:web#js/reviews.js:2:24"
+    }
+  ],
+  "totals": {
+    "nodes": 30,
+    "edges": 20,
+    "types": 1,
+    "missed": 11,
+    "sites": 11,
+    "notes": 5,
+    "findings": 0,
+    "unresolved": 11
+  }
+}

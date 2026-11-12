@@ -15,6 +15,8 @@ export interface ComposeService {
   readonly context?: string;
   /** Ports published on the machine running it. */
   readonly published: readonly number[];
+  /** Each published port with the port inside the container it reaches, and the line it is written on (P254). */
+  readonly mappings: readonly Mapping[];
   /** The environment it is started with, `${VAR:-default}` read as its default. */
   readonly environment: readonly Written[];
   /** Environment files it is started with, as written, relative to the file. */
@@ -66,24 +68,55 @@ const environmentOf = (value: unknown): Written[] => {
   return out;
 };
 
-/** `"3001:3000"`, `"127.0.0.1:3001:3000/tcp"`, `{ published: 3001 }`; a bare container port publishes nothing fixed. */
-const publishedOf = (value: unknown): number[] => {
+/** A port published on the machine, the port inside the container it reaches, and where it is written (P254). */
+export interface Mapping {
+  readonly published: number;
+  readonly container: number;
+  readonly line: number;
+}
+
+const portNumber = (value: string | undefined): number | undefined => {
+  const port = Number(value);
+  return value !== undefined && /^\d+$/.test(value.trim()) && port > 0 && port < 65536 ? port : undefined;
+};
+
+/** The line an offset of a text is on. */
+const lineAt = (text: string, offset: number): number => (offset < 0 ? 1 : text.slice(0, offset).split('\n').length);
+
+/**
+ * `"3001:3000"`, `"127.0.0.1:3001:3000/tcp"`, `{ published: 3001, target: 3000 }`:
+ * both sides of each mapping, and its line, looked for after `from` (where the
+ * container is written). A bare container port publishes nothing fixed, and a
+ * range is not one port.
+ */
+const mappingsOf = (value: unknown, text: string, from: number): Mapping[] => {
   if (!Array.isArray(value)) return [];
-  const out: number[] = [];
+  const out: Mapping[] = [];
   for (const item of value) {
     if (isRecord(item)) {
-      const port = Number(scalar(item['published']));
-      if (Number.isInteger(port) && port > 0) out.push(port);
+      const published = portNumber(scalar(item['published']));
+      const container = portNumber(scalar(item['target']));
+      if (published === undefined) continue;
+      const at = new RegExp(`published\\s*:\\s*['"]?${published}\\b`).exec(text.slice(from));
+      out.push({ published, container: container ?? published, line: lineAt(text, at === null ? -1 : from + at.index) });
       continue;
     }
-    const text = scalar(item);
-    if (text === undefined) continue;
-    const parts = text.replace(/\/\w+$/, '').split(':');
+    const written = scalar(item);
+    if (written === undefined) continue;
+    const parts = written.replace(/\/\w+$/, '').split(':');
     if (parts.length < 2) continue;
-    const port = Number(parts[parts.length - 2]);
-    if (Number.isInteger(port) && port > 0) out.push(port);
+    const published = portNumber(parts[parts.length - 2]);
+    const container = portNumber(parts[parts.length - 1]);
+    if (published === undefined || container === undefined) continue;
+    out.push({ published, container, line: lineAt(text, text.indexOf(written, from)) });
   }
   return out;
+};
+
+/** Where a container's key is written under `services:`, so its own lines are found after it. */
+const keyAt = (text: string, name: string): number => {
+  const at = new RegExp(`^\\s+['"]?${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]?\\s*:`, 'm').exec(text);
+  return at === null ? 0 : at.index;
 };
 
 const listOf = (value: unknown): string[] => {
@@ -118,12 +151,14 @@ export const readComposeFile = (text: string): ComposeService[] => {
     const context = typeof build === 'string' ? build : isRecord(build) ? scalar(build['context']) : undefined;
     const aliases = [scalar(value['container_name']), scalar(value['hostname']), ...aliasesOf(value['networks'])]
       .filter((alias): alias is string => alias !== undefined && alias !== '' && alias !== name);
+    const mappings = mappingsOf(value['ports'], text, keyAt(text, name));
     return [
       {
         name,
         aliases: [...new Set(aliases)],
         ...(context === undefined ? {} : { context }),
-        published: publishedOf(value['ports']),
+        published: [...new Set(mappings.map((mapping) => mapping.published))],
+        mappings,
         environment: environmentOf(value['environment']),
         envFiles: listOf(value['env_file']),
       },

@@ -1,0 +1,1001 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:47:31.396Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:cron:scheduledTasks 0 4 * * *",
+      "type": "entry",
+      "label": "cron 0 4 * * *",
+      "repo": "shop",
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "kind": "cron",
+      "meta": {
+        "schedule": "0 4 * * *",
+        "adapter": "nitro-routes",
+        "registration": "nitro/scheduledTasks",
+        "reaches": [
+          "task:carts:prune"
+        ],
+        "enabled": false
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/late",
+      "type": "entry",
+      "label": "GET /api/late",
+      "repo": "shop",
+      "file": "server/api/late.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/late",
+        "rawPath": "/api/late",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/tenant",
+      "type": "entry",
+      "label": "GET /api/tenant",
+      "repo": "shop",
+      "file": "server/api/tenant.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/tenant",
+        "rawPath": "/api/tenant",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/carts/prune",
+      "type": "entry",
+      "label": "POST /api/carts/prune",
+      "repo": "shop",
+      "file": "server/api/carts/prune.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/carts/prune",
+        "rawPath": "/api/carts/prune",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/visits",
+      "type": "entry",
+      "label": "POST /api/visits",
+      "repo": "shop",
+      "file": "server/api/visits.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/visits",
+        "rawPath": "/api/visits",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:task:carts:prune",
+      "type": "entry",
+      "label": "task carts:prune",
+      "repo": "shop",
+      "file": "server/tasks/carts/prune.ts",
+      "line": 3,
+      "kind": "task",
+      "meta": {
+        "task": "carts:prune",
+        "adapter": "nitro-routes",
+        "registration": "server/tasks",
+        "enabled": false
+      }
+    },
+    {
+      "id": "producer:shop#server/api/carts/prune.post.ts:3:10",
+      "type": "producer",
+      "label": "task carts:prune",
+      "repo": "shop",
+      "file": "server/api/carts/prune.post.ts",
+      "line": 3,
+      "kind": "task",
+      "meta": {
+        "kind": "task",
+        "adapter": "nitro-tasks",
+        "method": "runTask",
+        "starts": "task",
+        "envelope": {
+          "at": [
+            "payload"
+          ],
+          "text": false
+        },
+        "confidence": "heuristic",
+        "reaches": [
+          "task:carts:prune"
+        ]
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 4,
+          "components": 4,
+          "hooks": 2
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "shop#app/app.vue:app",
+      "type": "ui_component",
+      "label": "app",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 10,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/app.vue:tenant",
+      "type": "function",
+      "label": "tenant",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/components/PromoBanner.vue:PromoBanner",
+      "type": "ui_component",
+      "label": "PromoBanner",
+      "repo": "shop",
+      "file": "app/components/PromoBanner.vue",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/composables/useLateGuard.ts:useLateGuard",
+      "type": "function",
+      "label": "useLateGuard",
+      "repo": "shop",
+      "file": "app/composables/useLateGuard.ts",
+      "line": 2,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/composables/useVisitGuard.ts:useVisitGuard",
+      "type": "function",
+      "label": "useVisitGuard",
+      "repo": "shop",
+      "file": "app/composables/useVisitGuard.ts",
+      "line": 2,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/composables/useVisitGuard.ts:useVisitGuard middleware",
+      "type": "function",
+      "label": "useVisitGuard middleware",
+      "repo": "shop",
+      "file": "app/composables/useVisitGuard.ts",
+      "line": 3,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/carts.vue:carts",
+      "type": "ui_component",
+      "label": "carts",
+      "repo": "shop",
+      "file": "app/pages/carts.vue",
+      "line": 5,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/carts"
+      }
+    },
+    {
+      "id": "shop#app/pages/carts.vue:prune",
+      "type": "function",
+      "label": "prune",
+      "repo": "shop",
+      "file": "app/pages/carts.vue",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:arm",
+      "type": "function",
+      "label": "arm",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:pages/index",
+      "type": "ui_component",
+      "label": "pages/index",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 7,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "shop#server/api/carts/prune.post.ts:POST /api/carts/prune@1",
+      "type": "function",
+      "label": "POST /api/carts/prune@1",
+      "repo": "shop",
+      "file": "server/api/carts/prune.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/late.get.ts:GET /api/late@1",
+      "type": "function",
+      "label": "GET /api/late@1",
+      "repo": "shop",
+      "file": "server/api/late.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{armed:true}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/tenant.get.ts:GET /api/tenant@1",
+      "type": "function",
+      "label": "GET /api/tenant@1",
+      "repo": "shop",
+      "file": "server/api/tenant.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{tenant:'north'}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/visits.post.ts:POST /api/visits@1",
+      "type": "function",
+      "label": "POST /api/visits@1",
+      "repo": "shop",
+      "file": "server/api/visits.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{counted:true}"
+        }
+      }
+    },
+    {
+      "id": "shop#server/tasks/carts/prune.ts:task carts:prune@3",
+      "type": "function",
+      "label": "task carts:prune@3",
+      "repo": "shop",
+      "file": "server/tasks/carts/prune.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{result:'pruned'}"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/carts.vue:7:14",
+      "type": "ui_action",
+      "label": "@click=\"prune\"",
+      "repo": "shop",
+      "file": "app/pages/carts.vue",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "prune",
+        "component": "shop#app/pages/carts.vue:carts",
+        "template": "app/pages/carts.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/index.vue:9:12",
+      "type": "ui_action",
+      "label": "@click=\"arm\"",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 9,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "arm",
+        "component": "shop#app/pages/index.vue:pages/index",
+        "template": "app/pages/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/app.vue:4:9",
+      "type": "ui_api_call",
+      "label": "GET /api/tenant",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/tenant",
+        "path": "/api/tenant",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/composables/useLateGuard.ts:6:13",
+      "type": "ui_api_call",
+      "label": "GET /api/late",
+      "repo": "shop",
+      "file": "app/composables/useLateGuard.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/late",
+        "path": "/api/late",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/composables/useVisitGuard.ts:4:11",
+      "type": "ui_api_call",
+      "label": "POST /api/visits",
+      "repo": "shop",
+      "file": "app/composables/useVisitGuard.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/visits",
+        "path": "/api/visits",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/pages/carts.vue:2:21",
+      "type": "ui_api_call",
+      "label": "POST /api/carts/prune",
+      "repo": "shop",
+      "file": "app/pages/carts.vue",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/carts/prune",
+        "path": "/api/carts/prune",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:cron:scheduledTasks 0 4 * * *",
+      "to": "entry:shop:task:carts:prune",
+      "type": "calls",
+      "confidence": "static",
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "task:carts:prune"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/late",
+      "to": "shop#server/api/late.get.ts:GET /api/late@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{armed:true}",
+      "file": "server/api/late.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/tenant",
+      "to": "shop#server/api/tenant.get.ts:GET /api/tenant@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{tenant:'north'}",
+      "file": "server/api/tenant.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/carts/prune",
+      "to": "shop#server/api/carts/prune.post.ts:POST /api/carts/prune@1",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/api/carts/prune.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/visits",
+      "to": "shop#server/api/visits.post.ts:POST /api/visits@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{counted:true}",
+      "file": "server/api/visits.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:task:carts:prune",
+      "to": "shop#server/tasks/carts/prune.ts:task carts:prune@3",
+      "type": "handles",
+      "confidence": "static",
+      "file": "server/tasks/carts/prune.ts",
+      "line": 3
+    },
+    {
+      "from": "producer:shop#server/api/carts/prune.post.ts:3:10",
+      "to": "entry:shop:task:carts:prune",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "server/api/carts/prune.post.ts",
+      "line": 3,
+      "meta": {
+        "via": "deployed-name",
+        "reference": "task:carts:prune"
+      }
+    },
+    {
+      "from": "shop#app/app.vue:app",
+      "to": "shop#app/composables/useVisitGuard.ts:useVisitGuard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/app.vue",
+      "line": 7
+    },
+    {
+      "from": "shop#app/app.vue:app",
+      "to": "ui_api_call:shop#app/app.vue:4:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/app.vue",
+      "line": 4
+    },
+    {
+      "from": "shop#app/app.vue:tenant",
+      "to": "ui_api_call:shop#app/app.vue:4:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/app.vue",
+      "line": 4
+    },
+    {
+      "from": "shop#app/composables/useLateGuard.ts:useLateGuard",
+      "to": "ui_api_call:shop#app/composables/useLateGuard.ts:6:13",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/composables/useLateGuard.ts",
+      "line": 6
+    },
+    {
+      "from": "shop#app/composables/useVisitGuard.ts:useVisitGuard",
+      "to": "ui_api_call:shop#app/composables/useVisitGuard.ts:4:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/composables/useVisitGuard.ts",
+      "line": 4
+    },
+    {
+      "from": "shop#app/composables/useVisitGuard.ts:useVisitGuard middleware",
+      "to": "ui_api_call:shop#app/composables/useVisitGuard.ts:4:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/composables/useVisitGuard.ts",
+      "line": 4
+    },
+    {
+      "from": "shop#app/pages/carts.vue:carts",
+      "to": "shop#app/composables/useVisitGuard.ts:useVisitGuard middleware",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/carts.vue",
+      "line": 5,
+      "meta": {
+        "middleware": "useVisitGuard middleware",
+        "order": 0,
+        "setup": "app/app.vue",
+        "addedIn": "app/composables/useVisitGuard.ts",
+        "firstNavigation": false
+      }
+    },
+    {
+      "from": "shop#app/pages/carts.vue:carts",
+      "to": "ui_api_call:shop#app/pages/carts.vue:2:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/pages/carts.vue",
+      "line": 2
+    },
+    {
+      "from": "shop#app/pages/carts.vue:prune",
+      "to": "ui_api_call:shop#app/pages/carts.vue:2:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/pages/carts.vue",
+      "line": 2
+    },
+    {
+      "from": "shop#app/pages/index.vue:arm",
+      "to": "shop#app/composables/useLateGuard.ts:useLateGuard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 4
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/app.vue:tenant",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 2,
+      "meta": {
+        "middleware": "tenant",
+        "order": 1,
+        "setup": "app/app.vue",
+        "addedIn": "app/app.vue",
+        "firstNavigation": false
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/components/PromoBanner.vue:PromoBanner",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 8,
+      "meta": {
+        "renders": "PromoBanner"
+      }
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/composables/useLateGuard.ts:useLateGuard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 4
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/composables/useVisitGuard.ts:useVisitGuard middleware",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "app/pages/index.vue",
+      "line": 2,
+      "meta": {
+        "middleware": "useVisitGuard middleware",
+        "order": 0,
+        "setup": "app/app.vue",
+        "addedIn": "app/composables/useVisitGuard.ts",
+        "firstNavigation": false
+      }
+    },
+    {
+      "from": "shop#server/api/carts/prune.post.ts:POST /api/carts/prune@1",
+      "to": "producer:shop#server/api/carts/prune.post.ts:3:10",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "server/api/carts/prune.post.ts",
+      "line": 3
+    },
+    {
+      "from": "ui_action:shop#app/pages/carts.vue:7:14",
+      "to": "shop#app/pages/carts.vue:prune",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/carts.vue",
+      "line": 7
+    },
+    {
+      "from": "ui_action:shop#app/pages/index.vue:9:12",
+      "to": "shop#app/pages/index.vue:arm",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 9
+    },
+    {
+      "from": "ui_api_call:shop#app/app.vue:4:9",
+      "to": "entry:shop:http:GET:/api/tenant",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/app.vue",
+      "line": 4,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/composables/useLateGuard.ts:6:13",
+      "to": "entry:shop:http:GET:/api/late",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/composables/useLateGuard.ts",
+      "line": 6,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/composables/useVisitGuard.ts:4:11",
+      "to": "entry:shop:http:POST:/api/visits",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/composables/useVisitGuard.ts",
+      "line": 4,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/pages/carts.vue:2:21",
+      "to": "entry:shop:http:POST:/api/carts/prune",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/pages/carts.vue",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "app/components/PromoBanner.vue",
+      "line": 3,
+      "reason": "route-middleware-unresolved",
+      "level": "info",
+      "sites": 3,
+      "message": "app/components/PromoBanner.vue adds the route middleware promo-seen outside a plugin and not at the top of the root component's setup, so it is added only when this code runs, and which navigations it runs in front of is not read",
+      "hint": "Add it in a plugin, or at the top of `app.vue`'s setup, or put it in `middleware/`.",
+      "symbol": "app/components/PromoBanner.vue middleware promo-seen",
+      "meta": {
+        "why": "scoped",
+        "middleware": "promo-seen",
+        "causes": [
+          {
+            "cause": "route-middleware-unresolved",
+            "sites": 3,
+            "samples": [
+              {
+                "file": "app/components/PromoBanner.vue",
+                "line": 3,
+                "symbol": "app/components/PromoBanner.vue middleware promo-seen"
+              },
+              {
+                "file": "app/composables/useLateGuard.ts",
+                "line": 3,
+                "symbol": "app/composables/useLateGuard.ts middleware late"
+              },
+              {
+                "file": "app/pages/index.vue",
+                "line": 2,
+                "symbol": "pages/index middleware late"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/carts.vue",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/carts.vue",
+      "line": 10,
+      "reason": "component-unresolved",
+      "level": "info",
+      "message": "<Button> in app/pages/carts.vue names no component the file imports or registers, and none the framework registers by name, so what it renders is not joined",
+      "hint": "Import the component in the script, register it, or put it where the framework registers components by name.",
+      "symbol": "carts <Button>",
+      "meta": {
+        "cause": "component-unresolved",
+        "why": "missing",
+        "tag": "Button"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-feature-off",
+      "level": "info",
+      "message": "The server gives the task carts:prune, and nitro.experimental.tasks is not on in nuxt.config.ts, so the build registers none of them: `runTask` finds no task by its name, and `scheduledTasks` runs nothing",
+      "hint": "Set nitro.experimental.tasks: true in nuxt.config.ts to have the tasks built, or remove them.",
+      "symbol": "nitro.experimental.tasks",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-feature-off",
+        "setting": "nitro.experimental.tasks",
+        "tasks": [
+          "carts:prune"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-layer-read",
+      "level": "info",
+      "message": "1 Nuxt layer is read as part of the application, ranked after it as Nuxt ranks them: ../brand",
+      "hint": "Nothing to do. A page, route or name the application and a layer both give is the higher one's, said as a row of its own.",
+      "symbol": "../brand",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-layer-read",
+        "layers": [
+          "../brand"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-module-installed",
+      "level": "info",
+      "message": "2 Nuxt modules are packages, run when the application builds and not read as its code: @nuxt/ui adds the components of its own library by name (`U` and the prefix it is set), and its composables, none of it the repository's code; @primevue/nuxt-module adds the components of PrimeVue by name, under the prefix it is set, and its composables, none of it the repository's code",
+      "hint": "Nothing to do for the ones whose additions are their own package's. For another, an alias, name or route it adds can be named in the tsconfig's paths or described.",
+      "symbol": "@nuxt/ui",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-module-installed",
+        "modules": [
+          "@nuxt/ui",
+          "@primevue/nuxt-module"
+        ],
+        "unknown": []
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "implicit-imports-from-convention",
+      "level": "info",
+      "message": "2 names used with no import in 2 files were read as Nuxt imports them: the application's from app/composables/",
+      "hint": "Nothing to do. These are the imports Nuxt adds when it builds; a name it gives two ways is a row of its own.",
+      "symbol": "Nuxt",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "implicit-imports-from-convention",
+        "names": [
+          "useLateGuard",
+          "useVisitGuard"
+        ],
+        "files": 2
+      },
+      "service": "shop"
+    },
+    {
+      "file": "server/api/carts/prune.post.ts",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> app, @ -> app, ~~ -> ., @@ -> ., #shared -> shared, #app -> node_modules/nuxt/dist/app resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "app"
+          ],
+          "~/*": [
+            "app/*"
+          ],
+          "@": [
+            "app"
+          ],
+          "@/*": [
+            "app/*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "shared"
+          ],
+          "#shared/*": [
+            "shared/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ]
+        }
+      },
+      "service": "shop"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T11:31:42.416Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T14:18:56.477Z",
   "services": [
     {
       "name": "gateway",
@@ -1661,7 +1661,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3002,
+            "file": "src/main.ts",
+            "line": 15
+          }
+        ]
       }
     },
     {
@@ -1687,7 +1694,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 10
+          }
+        ]
       }
     },
     {
@@ -1712,7 +1726,14 @@
             "nestjs-http",
             "nestjs-microservice"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3001,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -3951,6 +3972,15 @@
     },
     {
       "service": "gateway",
+      "file": "src/clients/orders.client.ts",
+      "line": 59,
+      "reason": "dynamic-http-url",
+      "message": "GET /orders/${…}${…} is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "http_out:gateway#src/clients/orders.client.ts:59:12"
+    },
+    {
+      "service": "gateway",
       "file": "src/clients/payments.client.ts",
       "line": 24,
       "reason": "unknown-base-url-env",
@@ -4002,6 +4032,15 @@
       "message": "target service gateway has no route GET /orders/:param/receipt",
       "hint": "Route renamed? Check gateway's controllers, or annotate the method with /** @flowatlas-calls GET /orders/:param/receipt */.",
       "symbol": "ui_api_call:web#src/app/orders-api.service.ts:26:12"
+    },
+    {
+      "service": "web",
+      "file": "src/app/orders-api.service.ts",
+      "line": 48,
+      "reason": "api-path-dynamic",
+      "message": "GET /orders/${…}-summary is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "ui_api_call:web#src/app/orders-api.service.ts:48:12"
     },
     {
       "service": "web",

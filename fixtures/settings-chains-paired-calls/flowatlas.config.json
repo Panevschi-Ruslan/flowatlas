@@ -1,0 +1,9 @@
+{
+  "services": [
+    { "name": "market", "repo": "./market", "type": "remix" },
+    { "name": "inventory", "repo": "./inventory", "type": "express" },
+    { "name": "ledger", "repo": "./ledger", "type": "express" },
+    { "name": "reviews", "repo": "./reviews", "type": "nestjs" }
+  ],
+  "output": ".flowatlas"
+}

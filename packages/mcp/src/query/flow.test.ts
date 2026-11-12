@@ -117,6 +117,81 @@ describe('walking outward from an entry', () => {
     db.close();
   });
 
+  it('shows a check one service runs only on a step a request took through that service (P245)', () => {
+    const db = buildTestDb({
+      nodes: [
+        node('web#src/Shelf.tsx:Shelf', { repo: 'web', label: 'Shelf' }),
+        node('ui_api_call:web#src/Shelf.tsx:5:1', { type: 'ui_api_call', repo: 'web', label: 'query Shelf' }),
+        node('ui_api_call:web#src/Shelf.tsx:9:1', { type: 'ui_api_call', repo: 'web', label: 'query Shelf' }),
+        entry('entry:reviews:graphql:Media.rating', { kind: 'graphql', repo: 'reviews', label: 'Media.rating' }),
+        node('router#router/supergraph.graphql:@authenticated', { type: 'guard', repo: 'router', label: '@authenticated', file: 'router/supergraph.graphql', line: 20 }),
+      ],
+      edges: [
+        edge('web#src/Shelf.tsx:Shelf', 'ui_api_call:web#src/Shelf.tsx:5:1', { line: 5 }),
+        edge('web#src/Shelf.tsx:Shelf', 'ui_api_call:web#src/Shelf.tsx:9:1', { line: 9 }),
+        edge('ui_api_call:web#src/Shelf.tsx:5:1', 'entry:reviews:graphql:Media.rating', { type: 'hits', meta: { through: 'router' } }),
+        edge('ui_api_call:web#src/Shelf.tsx:9:1', 'entry:reviews:graphql:Media.rating', { type: 'hits', meta: { through: 'gateway' } }),
+        edge('entry:reviews:graphql:Media.rating', 'router#router/supergraph.graphql:@authenticated', { type: 'guarded_by', meta: { order: 0, through: 'router' } }),
+      ],
+    });
+    const { root } = buildFlowTree(db, 'web#src/Shelf.tsx:Shelf', { depth: 4, detail: 2 });
+    const [viaRouter, viaGateway] = root.children.map((call) => call.children[0]);
+    expect(viaRouter?.guards?.map((guard) => [guard.label, guard.service, (guard as { loc?: string }).loc])).toEqual([['@authenticated', 'router', 'router/supergraph.graphql:20']]);
+    expect(viaGateway?.guards).toBeUndefined();
+    // Walked from the field itself, every check in front of it is said.
+    expect(buildFlowTree(db, 'entry:reviews:graphql:Media.rating', {}).root.guards?.map((guard) => guard.label)).toEqual(['@authenticated']);
+    db.close();
+  });
+
+  it('shows a check for some of what a node answers only on a step that asks it for one of them, and says which (P252)', () => {
+    const db = buildTestDb({
+      nodes: [
+        node('web#src/Book.tsx:Book', { repo: 'web', label: 'Book' }),
+        node('ui_api_call:web#src/Book.tsx:5:1', { type: 'ui_api_call', repo: 'web', label: 'query Price' }),
+        node('ui_api_call:web#src/Book.tsx:9:1', { type: 'ui_api_call', repo: 'web', label: 'query Name' }),
+        entry('entry:catalog:graphql:Query.book', { kind: 'graphql', repo: 'catalog', label: 'Query.book' }),
+        node('router#router/supergraph.graphql:@authenticated', { type: 'guard', repo: 'router', label: '@authenticated', file: 'router/supergraph.graphql', line: 20 }),
+      ],
+      edges: [
+        edge('web#src/Book.tsx:Book', 'ui_api_call:web#src/Book.tsx:5:1', { line: 5 }),
+        edge('web#src/Book.tsx:Book', 'ui_api_call:web#src/Book.tsx:9:1', { line: 9 }),
+        edge('ui_api_call:web#src/Book.tsx:5:1', 'entry:catalog:graphql:Query.book', { type: 'hits', meta: { through: 'router', answers: ['Book.price'] } }),
+        edge('ui_api_call:web#src/Book.tsx:9:1', 'entry:catalog:graphql:Query.book', { type: 'hits', meta: { through: 'router' } }),
+        edge('entry:catalog:graphql:Query.book', 'router#router/supergraph.graphql:@authenticated', { type: 'guarded_by', meta: { order: 0, through: 'router', for: ['Book.isbn', 'Book.price'] } }),
+      ],
+    });
+    // Each request walked on its own, so neither step is a reference to the other's.
+    const [asking] = buildFlowTree(db, 'ui_api_call:web#src/Book.tsx:5:1', {}).root.children;
+    const [notAsking] = buildFlowTree(db, 'ui_api_call:web#src/Book.tsx:9:1', {}).root.children;
+    expect(asking?.guards?.map((guard) => [guard.label, guard.for])).toEqual([['@authenticated', ['Book.price']]]);
+    expect([notAsking?.node.id, (notAsking?.node as { ref?: boolean } | undefined)?.ref, notAsking?.guards]).toEqual(['entry:catalog:graphql:Query.book', undefined, undefined]);
+    // Walked from the node itself, the check is said with every field it is for.
+    expect(buildFlowTree(db, 'entry:catalog:graphql:Query.book', {}).root.guards?.map((guard) => [guard.label, guard.for])).toEqual([['@authenticated', ['Book.isbn', 'Book.price']]]);
+    db.close();
+  });
+
+  it("shows no check of the router on a step it fetches for a @requires, and the entry's own checks still (P256)", () => {
+    const db = buildTestDb({
+      nodes: [
+        node('ui_api_call:web#src/Estimate.tsx:5:1', { type: 'ui_api_call', repo: 'web', label: 'query Estimate' }),
+        entry('entry:inventory:graphql:Product.weight', { kind: 'graphql', repo: 'inventory', label: 'Product.weight' }),
+        node('router#router/supergraph.graphql:@authenticated', { type: 'guard', repo: 'router', label: '@authenticated', file: 'router/supergraph.graphql', line: 20 }),
+        node('inventory#src/auth.ts:StaffGuard', { type: 'guard', repo: 'inventory', label: 'StaffGuard' }),
+      ],
+      edges: [
+        edge('ui_api_call:web#src/Estimate.tsx:5:1', 'entry:inventory:graphql:Product.weight', {
+          type: 'hits',
+          meta: { through: 'router', graphql: { operation: 'Estimate', gateway: 'router', subgraph: 'inventory', requiredBy: 'Product.estimate' } },
+        }),
+        edge('entry:inventory:graphql:Product.weight', 'router#router/supergraph.graphql:@authenticated', { type: 'guarded_by', meta: { order: 0, through: 'router' } }),
+        edge('entry:inventory:graphql:Product.weight', 'inventory#src/auth.ts:StaffGuard', { type: 'guarded_by', meta: { order: 1 } }),
+      ],
+    });
+    const [fetched] = buildFlowTree(db, 'ui_api_call:web#src/Estimate.tsx:5:1', {}).root.children;
+    expect(fetched?.guards?.map((guard) => guard.label)).toEqual(['StaffGuard']);
+    db.close();
+  });
+
   it('walks a bot callback exactly as it walks a route', () => {
     const asRoute = buildTestDb(straightLine('http', 'GET /orders'));
     const asCallback = buildTestDb(straightLine('bot_callback', 'order_confirm'));
@@ -521,9 +596,21 @@ describe('naming an entry the way a person would', () => {
         label: 'GET /orders/latest',
         meta: { method: 'GET', path: '/orders/latest' },
       }),
+      entry('entry:billing:event:order.created', {
+        repo: 'billing',
+        kind: 'event',
+        label: 'event order.created',
+        meta: { pattern: 'order.created' },
+      }),
+      entry('entry:orders:workflow:loan-approval', {
+        kind: 'workflow',
+        label: 'loan-approval',
+        meta: { key: 'loan-approval' },
+      }),
       node('orders#src/orders.service.ts:OrdersService.create', { label: 'OrdersService.create' }),
       node('orders#src/orders.service.ts:OrdersService.cancel', { label: 'OrdersService.cancel' }),
       node('orders#src/carts.service.ts:CartsService.cancel', { label: 'CartsService.cancel' }),
+      node('gateway#src/orders.service.ts:OrdersService.create', { repo: 'gateway', label: 'OrdersService.create' }),
     ],
     edges: [],
   });
@@ -571,6 +658,14 @@ describe('naming an entry the way a person would', () => {
     ]);
   });
 
+  it('accepts a kind and the key it is registered under, as the command line always did (P229)', () => {
+    const event = resolveEntryRef(db, 'event:order.created');
+    expect(isResolved(event) && event.id).toBe('entry:billing:event:order.created');
+    const workflow = resolveEntryRef(db, 'workflow:loan-approval');
+    expect(isResolved(workflow) && workflow.id).toBe('entry:orders:workflow:loan-approval');
+    expect(isResolved(resolveEntryRef(db, 'cron:loan-approval'))).toBe(false);
+  });
+
   it('comes back empty rather than guessing', () => {
     const found = resolveEntryRef(db, 'PUT /nowhere');
     expect(!isResolved(found) && found.candidates).toEqual([]);
@@ -589,8 +684,20 @@ describe('naming an entry the way a person would', () => {
     });
 
     it('takes a name that is the only best match', () => {
-      const found = resolveSymbol(db, 'OrdersService.create');
-      expect(isResolved(found) && found.id).toBe('orders#src/orders.service.ts:OrdersService.create');
+      const found = resolveSymbol(db, 'OrdersService.cancel');
+      expect(isResolved(found) && found.id).toBe('orders#src/orders.service.ts:OrdersService.cancel');
+    });
+
+    it('gives both services for a name each holds, and narrows to one when told which (P229)', () => {
+      const both = resolveSymbol(db, 'OrdersService.create');
+      expect(!isResolved(both) && both.candidates.map((node) => node.repo).sort()).toEqual(['gateway', 'orders']);
+      const one = resolveSymbol(db, 'OrdersService.create', 'gateway');
+      expect(isResolved(one) && one.id).toBe('gateway#src/orders.service.ts:OrdersService.create');
+      const route = resolveSymbol(db, 'GET /orders/9', 'gateway');
+      expect(isResolved(route) && route.id).toBe('entry:gateway:http:GET:/orders/:param');
+      // A full id already says which node it means.
+      const id = resolveSymbol(db, 'orders#src/orders.service.ts:OrdersService.create', 'gateway');
+      expect(isResolved(id) && id.node.repo).toBe('orders');
     });
 
     it('gives the candidates for a name that means more than one', () => {

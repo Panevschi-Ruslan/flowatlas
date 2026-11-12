@@ -77,3 +77,78 @@ describe('an argument a caller leaves out (P91)', () => {
     expect(labels(graph)).toEqual(['GET /api/items', 'GET /api/items/:param']);
   });
 });
+
+describe('a verb read out of the options a wrapper is handed, or its default (R179)', () => {
+  it('is the default where a caller leaves the options out, and what they write where they write one', () => {
+    const graph = read({
+      '/src/request.ts': `
+        export const send = async (path: string, payload?: unknown, init?: RequestInit) => {
+          const method = init?.method || 'POST';
+          return fetch(path, { method, body: JSON.stringify(payload), ...init });
+        };
+      `,
+      '/src/orders.ts': `
+        import { send } from './request';
+        const base = import.meta.env.VITE_API_URL;
+        export const place = (order: unknown) => send(\`\${base}/api/orders\`, order);
+        export const list = () => send(\`\${base}/api/orders\`, undefined, { method: 'GET' });
+        export const archive = () => send(\`\${base}/api/orders/archive\`);
+      `,
+    });
+    expect(labels(graph)).toEqual(['GET /api/orders', 'POST /api/orders', 'POST /api/orders/archive']);
+    expect(graph.unresolved.map((row) => row.reason)).not.toContain('api-method-dynamic');
+  });
+
+  it('is unread where a caller hands options nothing can read', () => {
+    const graph = read({
+      '/src/api.ts': `
+        const send = (url: string, options?: RequestInit) => fetch(url, { method: options?.method ?? 'POST' });
+        declare const init: RequestInit;
+        export const save = () => send('/api/orders', init);
+      `,
+    });
+    expect(labels(graph)).toEqual(['? /api/orders']);
+    expect(graph.unresolved.map((row) => row.reason)).toContain('api-method-dynamic');
+  });
+});
+
+describe('a request handed in as one object whose members the wrapper takes out where its parameter is written (P269)', () => {
+  const REQUEST = `
+    interface Options { url: string; method?: 'GET' | 'POST' | 'DELETE'; body?: object; queryParams?: Record<string, string> }
+    const request = async <T>({ url = '', method = 'GET', body, queryParams = {} }: Options): Promise<T> => {
+      const response = await fetch(\`\${url}?\${new URLSearchParams(queryParams).toString()}\`, { method, body: JSON.stringify(body) });
+      return (await response.json()) as T;
+    };
+    export default request;
+  `;
+
+  it('reads the address and the verb at each caller, the verb defaulting to what the pattern writes', () => {
+    const graph = read({
+      '/src/request.ts': REQUEST,
+      '/src/api.ts': `
+        import request from './request';
+        const basePath = '/api';
+        const Api = () => ({
+          basket() { return request({ url: \`\${basePath}/basket\`, queryParams: { sessionId: 's' } }); },
+          add() { return request({ url: \`\${basePath}/basket\`, method: 'POST', body: {} }); },
+          empty() { return request({ url: \`\${basePath}/basket\`, method: 'DELETE' }); },
+        });
+        export default Api();
+      `,
+    });
+    expect(labels(graph)).toEqual(['DELETE /api/basket', 'GET /api/basket', 'POST /api/basket']);
+  });
+
+  it('leaves the request at the wrapper where a caller hands an object nothing here wrote', () => {
+    const graph = read({
+      '/src/request.ts': REQUEST,
+      '/src/api.ts': `
+        import request from './request';
+        declare const options: { url: string };
+        export const fetchIt = () => request(options);
+      `,
+    });
+    expect(labels(graph).every((label) => !label.includes('/api'))).toBe(true);
+    expect(labels(graph)).toHaveLength(1);
+  });
+});

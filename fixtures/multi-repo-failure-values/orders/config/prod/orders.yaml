@@ -1,0 +1,20 @@
+template_path: orders.yaml.j2
+sceptre_user_data:
+  handler: ship.handler
+  settings:
+    region_name: eu-west-1
+    team: shop
+parameters:
+{% if var.audit | default(false) %}
+  JobsName: "{{ stack_group_config.stage }}-audit"
+{% else %}
+  JobsName: !join ['-', [!stack_attr parameters.Prefix, jobs]]
+{% endif %}
+  Owner: !file owners/orders.txt
+  Build: !rcmd git rev-parse --short HEAD
+  Alerts: !no_value
+{% if environment_variable.CANARY %}
+  Colour: blue
+{% else %}
+  Colour: green
+{% endif %}

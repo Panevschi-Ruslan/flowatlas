@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "nest-basic",
-  "generatedAt": "2026-10-16T15:11:31.352Z",
+  "generatedAt": "2026-11-07T17:38:34.574Z",
   "nodes": [
     {
       "id": "entry:nest-basic:http:DELETE:/api/orders/:param",
@@ -472,7 +472,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 8
+          }
+        ]
       }
     }
   ],

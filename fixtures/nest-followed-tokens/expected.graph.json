@@ -1,0 +1,442 @@
+{
+  "schemaVersion": 7,
+  "repo": "nest-followed-tokens",
+  "generatedAt": "2026-11-08T17:05:09.136Z",
+  "nodes": [
+    {
+      "id": "entry:nest-followed-tokens:http:POST:/orders/:param",
+      "type": "entry",
+      "label": "POST /orders/:param",
+      "repo": "nest-followed-tokens",
+      "file": "src/orders.controller.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param",
+        "rawPath": "/orders/:id",
+        "controller": "OrdersController",
+        "adapter": "nestjs-http"
+      }
+    },
+    {
+      "id": "nest-followed-tokens#node_modules/@nestjs/config:ConfigModule",
+      "type": "module",
+      "label": "ConfigModule",
+      "repo": "nest-followed-tokens",
+      "file": "node_modules/@nestjs/config",
+      "kind": "external",
+      "meta": {
+        "package": "@nestjs/config",
+        "external": true
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/app.config.ts:appConfig.KEY",
+      "type": "provider",
+      "label": "appConfig.KEY",
+      "repo": "nest-followed-tokens",
+      "file": "src/app.config.ts",
+      "line": 4,
+      "kind": "factory",
+      "meta": {
+        "token": "appConfig.KEY"
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-followed-tokens",
+      "file": "src/app.module.ts",
+      "line": 14,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "OrdersController"
+        ],
+        "providers": [
+          "OrdersService"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/clients/audit.client.ts:AuditClient",
+      "type": "provider",
+      "label": "AuditClient",
+      "repo": "nest-followed-tokens",
+      "file": "src/clients/audit.client.ts",
+      "line": 4,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-followed-tokens#src/clients/audit.client.ts:AuditClient.record",
+      "type": "method",
+      "label": "AuditClient.record",
+      "repo": "nest-followed-tokens",
+      "file": "src/clients/audit.client.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/clients/clients.module.ts:ClientsModule",
+      "type": "module",
+      "label": "ClientsModule",
+      "repo": "nest-followed-tokens",
+      "file": "src/clients/clients.module.ts",
+      "line": 12,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/clients/clients.module.ts:LEDGER",
+      "type": "provider",
+      "label": "LEDGER",
+      "repo": "nest-followed-tokens",
+      "file": "src/clients/clients.module.ts",
+      "line": 19,
+      "kind": "factory",
+      "meta": {
+        "token": "LEDGER"
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/features.ts:MetricsModule",
+      "type": "module",
+      "label": "MetricsModule",
+      "repo": "nest-followed-tokens",
+      "file": "src/features.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/features.ts:NullMailModule",
+      "type": "module",
+      "label": "NullMailModule",
+      "repo": "nest-followed-tokens",
+      "file": "src/features.ts",
+      "line": 16,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/features.ts:SmtpModule",
+      "type": "module",
+      "label": "SmtpModule",
+      "repo": "nest-followed-tokens",
+      "file": "src/features.ts",
+      "line": 12,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/mail.config.ts:getConfigToken('mail')",
+      "type": "provider",
+      "label": "getConfigToken('mail')",
+      "repo": "nest-followed-tokens",
+      "file": "src/mail.config.ts",
+      "line": 4,
+      "kind": "factory",
+      "meta": {
+        "token": "getConfigToken('mail')"
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/orders.controller.ts:OrdersController",
+      "type": "provider",
+      "label": "OrdersController",
+      "repo": "nest-followed-tokens",
+      "file": "src/orders.controller.ts",
+      "line": 4,
+      "kind": "controller",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/orders.controller.ts:OrdersController.place",
+      "type": "method",
+      "label": "OrdersController.place",
+      "repo": "nest-followed-tokens",
+      "file": "src/orders.controller.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/orders.service.ts:OrdersService",
+      "type": "provider",
+      "label": "OrdersService",
+      "repo": "nest-followed-tokens",
+      "file": "src/orders.service.ts",
+      "line": 9,
+      "kind": "injectable",
+      "meta": {
+        "module": "AppModule"
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/orders.service.ts:OrdersService.place",
+      "type": "method",
+      "label": "OrdersService.place",
+      "repo": "nest-followed-tokens",
+      "file": "src/orders.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/storage/storage.module.ts:DatabaseModule",
+      "type": "module",
+      "label": "DatabaseModule",
+      "repo": "nest-followed-tokens",
+      "file": "src/storage/storage.module.ts",
+      "line": 8,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-followed-tokens#src/storage/storage.module.ts:MemoryStorageModule",
+      "type": "module",
+      "label": "MemoryStorageModule",
+      "repo": "nest-followed-tokens",
+      "file": "src/storage/storage.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "repo:nest-followed-tokens",
+      "type": "repo",
+      "label": "nest-followed-tokens",
+      "repo": "nest-followed-tokens",
+      "meta": {
+        "stats": {
+          "files": 10,
+          "filesRead": 10,
+          "filesUnreadable": 0,
+          "classes": 10,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:nest-followed-tokens:http:POST:/orders/:param",
+      "to": "nest-followed-tokens#src/orders.controller.ts:OrdersController.place",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/orders.controller.ts",
+      "line": 8,
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "meta": {
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "nest-followed-tokens#src/app.module.ts:AppModule",
+      "to": "nest-followed-tokens#node_modules/@nestjs/config:ConfigModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 14,
+      "meta": {
+        "moduleKind": "external"
+      }
+    },
+    {
+      "from": "nest-followed-tokens#src/app.module.ts:AppModule",
+      "to": "nest-followed-tokens#src/clients/clients.module.ts:ClientsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 14,
+      "meta": {
+        "moduleKind": "dynamic"
+      }
+    },
+    {
+      "from": "nest-followed-tokens#src/app.module.ts:AppModule",
+      "to": "nest-followed-tokens#src/features.ts:MetricsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 14
+    },
+    {
+      "from": "nest-followed-tokens#src/app.module.ts:AppModule",
+      "to": "nest-followed-tokens#src/storage/storage.module.ts:DatabaseModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 14,
+      "meta": {
+        "moduleKind": "dynamic"
+      }
+    },
+    {
+      "from": "nest-followed-tokens#src/orders.controller.ts:OrdersController",
+      "to": "nest-followed-tokens#src/orders.service.ts:OrdersService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders.controller.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-followed-tokens#src/orders.controller.ts:OrdersController.place",
+      "to": "nest-followed-tokens#src/orders.service.ts:OrdersService.place",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.controller.ts",
+      "line": 10,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    },
+    {
+      "from": "nest-followed-tokens#src/orders.service.ts:OrdersService",
+      "to": "nest-followed-tokens#src/app.config.ts:appConfig.KEY",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders.service.ts",
+      "line": 12,
+      "meta": {
+        "token": "appConfig.KEY",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "nest-followed-tokens#src/orders.service.ts:OrdersService",
+      "to": "nest-followed-tokens#src/clients/audit.client.ts:AuditClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders.service.ts",
+      "line": 16
+    },
+    {
+      "from": "nest-followed-tokens#src/orders.service.ts:OrdersService",
+      "to": "nest-followed-tokens#src/clients/clients.module.ts:LEDGER",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders.service.ts",
+      "line": 15,
+      "meta": {
+        "token": "LEDGER",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "nest-followed-tokens#src/orders.service.ts:OrdersService",
+      "to": "nest-followed-tokens#src/mail.config.ts:getConfigToken('mail')",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/orders.service.ts",
+      "line": 13,
+      "meta": {
+        "token": "getConfigToken('mail')",
+        "provider": "useFactory"
+      }
+    },
+    {
+      "from": "nest-followed-tokens#src/orders.service.ts:OrdersService.place",
+      "to": "nest-followed-tokens#src/clients/audit.client.ts:AuditClient.record",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/orders.service.ts",
+      "line": 20,
+      "params": [
+        "string"
+      ],
+      "returns": "string"
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/app.module.ts",
+      "line": 22,
+      "reason": "module-import-dynamic",
+      "hint": "Import a module class, or X.forRoot(...); a computed import cannot be followed.",
+      "symbol": "AppModule imports process.env.MAIL === 'smtp' ? SmtpModule : NullMailModule"
+    },
+    {
+      "file": "src/orders.service.ts",
+      "line": 14,
+      "reason": "di-token-unknown",
+      "hint": "No module in this repository provides reportsConfig.KEY. Register it with { provide, useClass } or force the adapter that does.",
+      "symbol": "OrdersService.constructor[2]"
+    }
+  ]
+}

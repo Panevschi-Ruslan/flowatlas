@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T19:08:34.327Z",
+  "configHash": "0951e08a1408",
+  "services": [
+    {
+      "name": "console",
+      "repo": "./console",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 20,
+      "edges": 16,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 2141,
+      "packages": {
+        "name": "front-end-route-branches-console",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "site",
+      "repo": "./site",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 12,
+      "types": 0,
+      "unresolved": 8,
+      "durationMs": 2252,
+      "packages": {
+        "name": "front-end-route-branches-site",
+        "runtime": [
+          "next",
+          "next-intl",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "wiki",
+      "repo": "./wiki",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 17,
+      "edges": 15,
+      "types": 1,
+      "unresolved": 13,
+      "durationMs": 2366,
+      "packages": {
+        "name": "front-end-route-branches-wiki",
+        "runtime": [
+          "history",
+          "react",
+          "react-dom",
+          "react-router-dom"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 0,
+    "called": 0,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 48,
+    "edges": 43,
+    "types": 1,
+    "missed": 22,
+    "sites": 22,
+    "notes": 1,
+    "findings": 0,
+    "unresolved": 22
+  }
+}

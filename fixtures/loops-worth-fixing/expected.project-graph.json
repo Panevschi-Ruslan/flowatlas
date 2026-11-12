@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T05:29:47.634Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:46:52.042Z",
   "services": [
     {
       "name": "parcels",
@@ -1416,7 +1416,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {
@@ -2363,6 +2370,9 @@
       "to": "channel:sqs/parcel-exports",
       "type": "emits",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
       "file": "src/parcels/export.ts",
       "line": 15
     },
@@ -2371,6 +2381,9 @@
       "to": "channel:sqs/parcel-exports",
       "type": "emits",
       "confidence": "static",
+      "params": [
+        "string"
+      ],
       "file": "src/parcels/export.ts",
       "line": 27
     }
@@ -2503,22 +2516,6 @@
           "entry:parcels:http:POST:/parcels/notify"
         ]
       },
-      "service": "parcels"
-    },
-    {
-      "file": "src/parcels/export.ts",
-      "line": 15,
-      "reason": "payload-type-unknown",
-      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
-      "symbol": "sqs/parcel-exports",
-      "service": "parcels"
-    },
-    {
-      "file": "src/parcels/export.ts",
-      "line": 27,
-      "reason": "payload-type-unknown",
-      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
-      "symbol": "sqs/parcel-exports",
       "service": "parcels"
     },
     {

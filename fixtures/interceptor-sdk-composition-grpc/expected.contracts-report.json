@@ -1,0 +1,260 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-12T19:08:12.406Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:checkout#src/app.ts:16:3",
+        "to": "entry:stock:rpc:grpc:stock.StockService/Reserve",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:checkout#src/app.ts:16:3|hits|entry:stock:rpc:grpc:stock.StockService/Reserve",
+      "direction": "request",
+      "status": "hash_differs",
+      "sender": {
+        "service": "checkout",
+        "typeId": "{product_id:any;quantity:1;productId:any}",
+        "symbol": "checkout#src/app.ts:POST /checkout@14",
+        "writes": [
+          "productId",
+          "product_id",
+          "quantity"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "stock",
+        "typeId": "type:stock#.stock.ReserveRequest@keepCase",
+        "symbol": "stock#index.js:reserve"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "http_out:checkout#src/app.ts:16:3",
+            "to": "entry:stock:rpc:grpc:stock.StockService/Reserve",
+            "type": "hits"
+          },
+          "edgeKey": "http_out:checkout#src/app.ts:16:3|hits|entry:stock:rpc:grpc:stock.StockService/Reserve",
+          "direction": "request",
+          "sender": {
+            "service": "checkout",
+            "typeId": "{product_id:any;quantity:1;productId:any}",
+            "symbol": "checkout#src/app.ts:POST /checkout@14",
+            "writes": [
+              "productId",
+              "product_id",
+              "quantity"
+            ],
+            "writesEvery": true
+          },
+          "receiver": {
+            "service": "stock",
+            "typeId": "type:stock#.stock.ReserveRequest@keepCase",
+            "symbol": "stock#index.js:reserve"
+          },
+          "typeId": "type:stock#.stock.ReserveRequest@keepCase",
+          "field": "productId",
+          "expected": null,
+          "actual": "any",
+          "rule": null,
+          "message": "sender checkout sends `productId: any`; receiver stock declares no such field",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": [
+        "any-unknown-skip:productId",
+        "any-unknown-skip:product_id",
+        "proto-presence:product_id",
+        "proto-presence:quantity",
+        "proto-presence:warehouse_ids"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "http_out:checkout#src/app.ts:16:3",
+        "to": "entry:stock:rpc:grpc:stock.StockService/Reserve",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:checkout#src/app.ts:16:3|hits|entry:stock:rpc:grpc:stock.StockService/Reserve",
+      "direction": "request",
+      "sender": {
+        "service": "checkout",
+        "typeId": "{product_id:any;quantity:1;productId:any}",
+        "symbol": "checkout#src/app.ts:POST /checkout@14",
+        "writes": [
+          "productId",
+          "product_id",
+          "quantity"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "stock",
+        "typeId": "type:stock#.stock.ReserveRequest@keepCase",
+        "symbol": "stock#index.js:reserve"
+      },
+      "typeId": "type:stock#.stock.ReserveRequest@keepCase",
+      "field": "productId",
+      "expected": null,
+      "actual": "any",
+      "rule": null,
+      "message": "sender checkout sends `productId: any`; receiver stock declares no such field",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:checkout#src/app.ts:16:3",
+        "to": "entry:stock:rpc:grpc:stock.StockService/Reserve",
+        "type": "hits"
+      },
+      "edgeKey": "http_out:checkout#src/app.ts:16:3|hits|entry:stock:rpc:grpc:stock.StockService/Reserve",
+      "direction": "response",
+      "reason": "procedure-output-inferred",
+      "message": "what entry:stock:rpc:grpc:stock.StockService/Reserve answers reaches its caller through a callback or a stream whose answer the code does not type, so nothing at the call states it",
+      "hint": "Type the answer where it is read - the callback's parameter, or the client generated from the contract - so what the method answers is compared with what the caller reads."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/directory.service.ts:15:12",
+        "to": "entry:api:http:GET:/office-rest/admin/users",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/directory.service.ts:15:12|hits|entry:api:http:GET:/office-rest/admin/users",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/app/directory.service.ts:DirectoryService.users declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/directory.service.ts:15:12",
+        "to": "entry:api:http:GET:/office-rest/admin/users",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/directory.service.ts:15:12|hits|entry:api:http:GET:/office-rest/admin/users",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/app.ts:GET /office-rest/admin/users@8 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/directory.service.ts:19:12",
+        "to": "entry:api:http:GET:/store-rest/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/directory.service.ts:19:12|hits|entry:api:http:GET:/store-rest/products",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "admin#src/app/directory.service.ts:DirectoryService.products declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:admin#src/app/directory.service.ts:19:12",
+        "to": "entry:api:http:GET:/store-rest/products",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:admin#src/app/directory.service.ts:19:12|hits|entry:api:http:GET:/store-rest/products",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/app.ts:GET /store-rest/products@11 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/OrdersPage.tsx:13:5@2:41",
+        "to": "entry:api:http:GET:/api/cart",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/OrdersPage.tsx:13:5@2:41|hits|entry:api:http:GET:/api/cart",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/OrdersPage.tsx:OrdersPage declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/OrdersPage.tsx:13:5@2:41",
+        "to": "entry:api:http:GET:/api/cart",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/OrdersPage.tsx:13:5@2:41|hits|entry:api:http:GET:/api/cart",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/OrdersPage.tsx:OrdersPage declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/orders-store.ts:11:12@2:41",
+        "to": "entry:api:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders-store.ts:11:12@2:41|hits|entry:api:http:GET:/api/orders",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/orders-store.ts:OrdersStore.load declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/orders-store.ts:11:12@2:41",
+        "to": "entry:api:http:GET:/api/orders",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders-store.ts:11:12@2:41|hits|entry:api:http:GET:/api/orders",
+      "direction": "response",
+      "reason": "no-type-on-sender",
+      "message": "api#src/app.ts:GET /api/orders@14 answers through the response it is handed, and states no type for the answer",
+      "hint": "Hand the response a typed value, or type the response itself with what it answers, so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/orders-store.ts:14:26@2:41",
+        "to": "entry:api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders-store.ts:14:26@2:41|hits|entry:api:http:GET:/api/orders/:param",
+      "direction": "request",
+      "reason": "no-type-on-sender",
+      "message": "web#src/orders-store.ts:OrdersStore.item declares no type for what it sends",
+      "hint": "Pass a typed value rather than a literal, so there is a declared shape to compare."
+    },
+    {
+      "edge": {
+        "from": "ui_api_call:web#src/orders-store.ts:14:26@2:41",
+        "to": "entry:api:http:GET:/api/orders/:param",
+        "type": "hits"
+      },
+      "edgeKey": "ui_api_call:web#src/orders-store.ts:14:26@2:41|hits|entry:api:http:GET:/api/orders/:param",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "web#src/orders-store.ts:OrdersStore.item declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    }
+  ],
+  "summary": {
+    "edges": 1,
+    "shared": 0,
+    "identical": 0,
+    "hash_differs": 1,
+    "unchecked": 11,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 1,
+    "ignored": 0
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "apiBaseEnv": [
+        "SERVER_URL"
+      ],
+      "apiTarget": {
+        "SERVER_URL": "api"
+      }
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "react",
+      "apiTarget": {
+        "VITE_API_URL": "api"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

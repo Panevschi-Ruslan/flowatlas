@@ -1,0 +1,1254 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T12:55:27.065Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:GET:/api/catalog",
+      "type": "entry",
+      "label": "GET /api/catalog",
+      "repo": "shop",
+      "file": "modules/catalog/index.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/catalog",
+        "rawPath": "/api/catalog",
+        "adapter": "nitro-routes",
+        "registration": "module/addServerHandler"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/orders",
+      "type": "entry",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/orders",
+        "rawPath": "/api/orders",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:GET:/api/reports",
+      "type": "entry",
+      "label": "GET /api/reports",
+      "repo": "shop",
+      "file": "../admin-layer/server/api/reports.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/reports",
+        "rawPath": "/api/reports",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/audit",
+      "type": "entry",
+      "label": "POST /api/audit",
+      "repo": "shop",
+      "file": "../audit-module/src/module.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/audit",
+        "rawPath": "/api/audit",
+        "adapter": "nitro-routes",
+        "registration": "module/addServerHandler"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 24,
+          "filesRead": 24,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 10,
+          "components": 6,
+          "hooks": 3
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "shop#../admin-layer/screens/admin.vue:admin",
+      "type": "ui_component",
+      "label": "admin",
+      "repo": "shop",
+      "file": "../admin-layer/screens/admin.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/admin"
+      }
+    },
+    {
+      "id": "shop#../admin-layer/screens/admin.vue:showReport",
+      "type": "function",
+      "label": "showReport",
+      "repo": "shop",
+      "file": "../admin-layer/screens/admin.vue",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#../admin-layer/server/api/reports.get.ts:GET /api/reports@1",
+      "type": "function",
+      "label": "GET /api/reports@1",
+      "repo": "shop",
+      "file": "../admin-layer/server/api/reports.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{total:0}"
+        }
+      }
+    },
+    {
+      "id": "shop#../admin-layer/tools/reports/useReports.ts:useReports",
+      "type": "function",
+      "label": "useReports",
+      "repo": "shop",
+      "file": "../admin-layer/tools/reports/useReports.ts",
+      "line": 1,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{fetchReport:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#../audit-module/src/runtime/server/audit.post.ts:POST /api/audit@1",
+      "type": "function",
+      "label": "POST /api/audit@1",
+      "repo": "shop",
+      "file": "../audit-module/src/runtime/server/audit.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "{recorded:unknown}"
+        }
+      }
+    },
+    {
+      "id": "shop#../audit-module/src/runtime/useAudit.ts:useAudit",
+      "type": "function",
+      "label": "useAudit",
+      "repo": "shop",
+      "file": "../audit-module/src/runtime/useAudit.ts",
+      "line": 1,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{record:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#app/app.vue:app",
+      "type": "ui_component",
+      "label": "app",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/legacy.vue:legacy",
+      "type": "ui_component",
+      "label": "legacy",
+      "repo": "shop",
+      "file": "app/pages/legacy.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/views/index.vue:heading",
+      "type": "function",
+      "label": "heading",
+      "repo": "shop",
+      "file": "app/views/index.vue",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop#app/views/index.vue:loadOrders",
+      "type": "function",
+      "label": "loadOrders",
+      "repo": "shop",
+      "file": "app/views/index.vue",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/views/index.vue:recordVisit",
+      "type": "function",
+      "label": "recordVisit",
+      "repo": "shop",
+      "file": "app/views/index.vue",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/views/index.vue:views/index",
+      "type": "ui_component",
+      "label": "views/index",
+      "repo": "shop",
+      "file": "app/views/index.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "shop#common/utils/slug.ts:slugify",
+      "type": "function",
+      "label": "slugify",
+      "repo": "shop",
+      "file": "common/utils/slug.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "text",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop#modules/catalog/runtime/components/CatalogCard.vue:CatalogCard",
+      "type": "ui_component",
+      "label": "CatalogCard",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/components/CatalogCard.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#modules/catalog/runtime/composables/useCatalog.ts:useCatalog",
+      "type": "function",
+      "label": "useCatalog",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/composables/useCatalog.ts",
+      "line": 1,
+      "kind": "hook",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#modules/catalog/runtime/middleware/guard.ts:catalog-guard",
+      "type": "function",
+      "label": "catalog-guard",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/middleware/guard.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "to",
+              "type": "any"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",
+      "type": "ui_component",
+      "label": "catalog",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/catalog"
+      }
+    },
+    {
+      "id": "shop#modules/catalog/runtime/pages/catalog.vue:refresh",
+      "type": "function",
+      "label": "refresh",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#modules/catalog/runtime/server/catalog.ts:GET /api/catalog@1",
+      "type": "function",
+      "label": "GET /api/catalog@1",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/server/catalog.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{id:string;name:string}[]"
+        }
+      }
+    },
+    {
+      "id": "shop#modules/catalog/runtime/title.ts:catalogTitle",
+      "type": "function",
+      "label": "catalogTitle",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/title.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "shop#server-audit/stamp.ts:stamp",
+      "type": "middleware",
+      "label": "stamp",
+      "repo": "shop",
+      "file": "server-audit/stamp.ts",
+      "line": 1,
+      "kind": "file"
+    },
+    {
+      "id": "shop#server-audit/utils/stamp.ts:stampRequest",
+      "type": "function",
+      "label": "stampRequest",
+      "repo": "shop",
+      "file": "server-audit/utils/stamp.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/orders.get.ts:GET /api/orders@1",
+      "type": "function",
+      "label": "GET /api/orders@1",
+      "repo": "shop",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "{id:string}[]"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop#../admin-layer/screens/admin.vue:3:13",
+      "type": "ui_action",
+      "label": "@click=\"showReport\"",
+      "repo": "shop",
+      "file": "../admin-layer/screens/admin.vue",
+      "line": 3,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "showReport",
+        "component": "shop#../admin-layer/screens/admin.vue:admin",
+        "template": "../admin-layer/screens/admin.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/views/index.vue:4:13",
+      "type": "ui_action",
+      "label": "@click=\"loadOrders\"",
+      "repo": "shop",
+      "file": "app/views/index.vue",
+      "line": 4,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "loadOrders",
+        "component": "shop#app/views/index.vue:views/index",
+        "template": "app/views/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/views/index.vue:5:13",
+      "type": "ui_action",
+      "label": "@click=\"recordVisit\"",
+      "repo": "shop",
+      "file": "app/views/index.vue",
+      "line": 5,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "recordVisit",
+        "component": "shop#app/views/index.vue:views/index",
+        "template": "app/views/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#modules/catalog/runtime/pages/catalog.vue:4:13",
+      "type": "ui_action",
+      "label": "@click=\"refresh\"",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 4,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "refresh",
+        "component": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",
+        "template": "modules/catalog/runtime/pages/catalog.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#../admin-layer/tools/reports/useReports.ts:2:29",
+      "type": "ui_api_call",
+      "label": "GET /api/reports",
+      "repo": "shop",
+      "file": "../admin-layer/tools/reports/useReports.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/reports",
+        "path": "/api/reports",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#../audit-module/src/runtime/useAudit.ts:2:36",
+      "type": "ui_api_call",
+      "label": "POST /api/audit",
+      "repo": "shop",
+      "file": "../audit-module/src/runtime/useAudit.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/audit",
+        "path": "/api/audit",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{what:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "what"
+        ],
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/views/index.vue:15:9",
+      "type": "ui_api_call",
+      "label": "GET /api/orders",
+      "repo": "shop",
+      "file": "app/views/index.vue",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/orders",
+        "path": "/api/orders",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#modules/catalog/runtime/composables/useCatalog.ts:2:22",
+      "type": "ui_api_call",
+      "label": "GET /api/catalog",
+      "repo": "shop",
+      "file": "modules/catalog/runtime/composables/useCatalog.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/catalog",
+        "path": "/api/catalog",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:GET:/api/catalog",
+      "to": "shop#modules/catalog/runtime/server/catalog.ts:GET /api/catalog@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string;name:string}[]",
+      "file": "modules/catalog/runtime/server/catalog.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/catalog",
+      "to": "shop#server-audit/stamp.ts:stamp",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server-audit/stamp.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "module/addServerHandler"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#server-audit/stamp.ts:stamp",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server-audit/stamp.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "module/addServerHandler"
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/orders",
+      "to": "shop#server/api/orders.get.ts:GET /api/orders@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:string}[]",
+      "file": "server/api/orders.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports",
+      "to": "shop#../admin-layer/server/api/reports.get.ts:GET /api/reports@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{total:0}",
+      "file": "../admin-layer/server/api/reports.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:GET:/api/reports",
+      "to": "shop#server-audit/stamp.ts:stamp",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server-audit/stamp.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "module/addServerHandler"
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/audit",
+      "to": "shop#../audit-module/src/runtime/server/audit.post.ts:POST /api/audit@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{recorded:unknown}",
+      "file": "../audit-module/src/runtime/server/audit.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/audit",
+      "to": "shop#server-audit/stamp.ts:stamp",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "server-audit/stamp.ts",
+      "line": 1,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "module/addServerHandler"
+      }
+    },
+    {
+      "from": "shop#../admin-layer/screens/admin.vue:admin",
+      "to": "shop#../admin-layer/tools/reports/useReports.ts:useReports",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{fetchReport:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "../admin-layer/screens/admin.vue",
+      "line": 11
+    },
+    {
+      "from": "shop#../admin-layer/screens/admin.vue:admin",
+      "to": "shop#modules/catalog/runtime/middleware/guard.ts:catalog-guard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "unknown",
+      "file": "../admin-layer/screens/admin.vue",
+      "line": 1,
+      "meta": {
+        "middleware": "catalog-guard",
+        "order": 0
+      }
+    },
+    {
+      "from": "shop#../admin-layer/screens/admin.vue:showReport",
+      "to": "shop#../admin-layer/tools/reports/useReports.ts:useReports",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{fetchReport:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "../admin-layer/screens/admin.vue",
+      "line": 11
+    },
+    {
+      "from": "shop#../admin-layer/tools/reports/useReports.ts:useReports",
+      "to": "ui_api_call:shop#../admin-layer/tools/reports/useReports.ts:2:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../admin-layer/tools/reports/useReports.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#../audit-module/src/runtime/useAudit.ts:useAudit",
+      "to": "ui_api_call:shop#../audit-module/src/runtime/useAudit.ts:2:36",
+      "type": "calls",
+      "confidence": "static",
+      "file": "../audit-module/src/runtime/useAudit.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#app/views/index.vue:heading",
+      "to": "shop#common/utils/slug.ts:slugify",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "app/views/index.vue",
+      "line": 12
+    },
+    {
+      "from": "shop#app/views/index.vue:loadOrders",
+      "to": "ui_api_call:shop#app/views/index.vue:15:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/views/index.vue",
+      "line": 15
+    },
+    {
+      "from": "shop#app/views/index.vue:recordVisit",
+      "to": "shop#../audit-module/src/runtime/useAudit.ts:useAudit",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{record:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "app/views/index.vue",
+      "line": 19
+    },
+    {
+      "from": "shop#app/views/index.vue:views/index",
+      "to": "shop#../audit-module/src/runtime/useAudit.ts:useAudit",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{record:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "app/views/index.vue",
+      "line": 19
+    },
+    {
+      "from": "shop#app/views/index.vue:views/index",
+      "to": "shop#common/utils/slug.ts:slugify",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "app/views/index.vue",
+      "line": 12
+    },
+    {
+      "from": "shop#app/views/index.vue:views/index",
+      "to": "shop#modules/catalog/runtime/middleware/guard.ts:catalog-guard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "unknown",
+      "file": "app/views/index.vue",
+      "line": 1,
+      "meta": {
+        "middleware": "catalog-guard",
+        "order": 0
+      }
+    },
+    {
+      "from": "shop#app/views/index.vue:views/index",
+      "to": "ui_api_call:shop#app/views/index.vue:15:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/views/index.vue",
+      "line": 15
+    },
+    {
+      "from": "shop#modules/catalog/runtime/composables/useCatalog.ts:useCatalog",
+      "to": "ui_api_call:shop#modules/catalog/runtime/composables/useCatalog.ts:2:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "modules/catalog/runtime/composables/useCatalog.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#modules/catalog/runtime/middleware/guard.ts:catalog-guard",
+      "to": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "void",
+      "file": "modules/catalog/runtime/middleware/guard.ts",
+      "line": 2,
+      "meta": {
+        "navigates": "/catalog",
+        "route": "/catalog",
+        "page": "modules/catalog/runtime/pages/catalog.vue",
+        "redirects": true
+      }
+    },
+    {
+      "from": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",
+      "to": "shop#modules/catalog/runtime/composables/useCatalog.ts:useCatalog",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 15
+    },
+    {
+      "from": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",
+      "to": "shop#modules/catalog/runtime/middleware/guard.ts:catalog-guard",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "any"
+      ],
+      "returns": "unknown",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 1,
+      "meta": {
+        "middleware": "catalog-guard",
+        "order": 0
+      }
+    },
+    {
+      "from": "shop#modules/catalog/runtime/pages/catalog.vue:catalog",
+      "to": "shop#modules/catalog/runtime/title.ts:catalogTitle",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 12
+    },
+    {
+      "from": "shop#modules/catalog/runtime/pages/catalog.vue:refresh",
+      "to": "shop#modules/catalog/runtime/composables/useCatalog.ts:useCatalog",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{load:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 15
+    },
+    {
+      "from": "shop#server/api/orders.get.ts:GET /api/orders@1",
+      "to": "shop#common/utils/slug.ts:slugify",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "server/api/orders.get.ts",
+      "line": 3
+    },
+    {
+      "from": "shop#server/api/orders.get.ts:GET /api/orders@1",
+      "to": "shop#server-audit/utils/stamp.ts:stampRequest",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "void",
+      "file": "server/api/orders.get.ts",
+      "line": 2
+    },
+    {
+      "from": "ui_action:shop#../admin-layer/screens/admin.vue:3:13",
+      "to": "shop#../admin-layer/screens/admin.vue:showReport",
+      "type": "handles",
+      "confidence": "static",
+      "file": "../admin-layer/screens/admin.vue",
+      "line": 3
+    },
+    {
+      "from": "ui_action:shop#app/views/index.vue:4:13",
+      "to": "shop#app/views/index.vue:loadOrders",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/views/index.vue",
+      "line": 4
+    },
+    {
+      "from": "ui_action:shop#app/views/index.vue:5:13",
+      "to": "shop#app/views/index.vue:recordVisit",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/views/index.vue",
+      "line": 5
+    },
+    {
+      "from": "ui_action:shop#modules/catalog/runtime/pages/catalog.vue:4:13",
+      "to": "shop#modules/catalog/runtime/pages/catalog.vue:refresh",
+      "type": "handles",
+      "confidence": "static",
+      "file": "modules/catalog/runtime/pages/catalog.vue",
+      "line": 4
+    },
+    {
+      "from": "ui_api_call:shop#../admin-layer/tools/reports/useReports.ts:2:29",
+      "to": "entry:shop:http:GET:/api/reports",
+      "type": "hits",
+      "confidence": "static",
+      "file": "../admin-layer/tools/reports/useReports.ts",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#../audit-module/src/runtime/useAudit.ts:2:36",
+      "to": "entry:shop:http:POST:/api/audit",
+      "type": "hits",
+      "confidence": "static",
+      "file": "../audit-module/src/runtime/useAudit.ts",
+      "line": 2,
+      "params": [
+        "{what:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/views/index.vue:15:9",
+      "to": "entry:shop:http:GET:/api/orders",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/views/index.vue",
+      "line": 15,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#modules/catalog/runtime/composables/useCatalog.ts:2:22",
+      "to": "entry:shop:http:GET:/api/catalog",
+      "type": "hits",
+      "confidence": "static",
+      "file": "modules/catalog/runtime/composables/useCatalog.ts",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "../audit-module/src/runtime/server/audit.post.ts",
+      "line": 3,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "name-undeclared"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "modules/audit.ts",
+      "line": 15,
+      "reason": "framework-module-unread",
+      "message": "addServerHandler in modules/audit.ts is handed a handler that is written as code, or as a path relative to nothing the module's own file names, so what it adds is not read",
+      "hint": "Build the path from the module's file - `createResolver(import.meta.url).resolve('./runtime')` - and write the rest as literals.",
+      "symbol": "addServerHandler",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-module-unread",
+        "why": "addition",
+        "module": "modules/audit.ts",
+        "call": "addServerHandler"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "modules/catalog/runtime/middleware/guard.ts",
+      "line": 1,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-environment-differs",
+      "level": "info",
+      "message": "The configuration overrides settings by environment, and the graph is the production build's: for development, Nuxt builds the application with ../dev-layer as a layer; for staging, Nuxt builds the application with the application's pages in app/pages (app/views in production). What only another environment builds is not read",
+      "hint": "Nothing to do. Write what every build shares outside `$development`, `$production` and `$env`, so each reads it.",
+      "symbol": "development and staging",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-environment-differs",
+        "environments": [
+          {
+            "environment": "development",
+            "only": [
+              "../dev-layer as a layer"
+            ],
+            "without": [],
+            "changed": []
+          },
+          {
+            "environment": "staging",
+            "only": [],
+            "without": [],
+            "changed": [
+              "the application's pages in app/pages (app/views in production)"
+            ]
+          }
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-layer-read",
+      "level": "info",
+      "message": "1 Nuxt layer is read as part of the application, ranked after it as Nuxt ranks them: ../admin-layer",
+      "hint": "Nothing to do. A page, route or name the application and a layer both give is the higher one's, said as a row of its own.",
+      "symbol": "../admin-layer",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-layer-read",
+        "layers": [
+          "../admin-layer"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-module-installed",
+      "level": "info",
+      "message": "2 Nuxt modules are packages, run when the application builds and not read as its code: @nuxtjs/i18n (not installed) adds at build time what is not read here: any alias, name, page or route it adds is not in the graph; @vueuse/nuxt adds the composables of `@vueuse/core`, by name, none of it the repository's code",
+      "hint": "Nothing to do for the ones whose additions are their own package's. For another, an alias, name or route it adds can be named in the tsconfig's paths or described.",
+      "symbol": "@vueuse/nuxt",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-module-installed",
+        "modules": [
+          "@vueuse/nuxt",
+          "@nuxtjs/i18n"
+        ],
+        "unknown": [
+          "@nuxtjs/i18n"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-module-read",
+      "level": "info",
+      "message": "4 Nuxt modules of the repository are read for what they add when the application builds: ../audit-module/src/module.ts adds useAudit from ../audit-module/src/runtime/useAudit.ts and POST /api/audit served by ../audit-module/src/runtime/server/audit.post.ts; modules/audit.ts adds the names server-audit/utils/ exports to the server and server-audit/stamp.ts in front of every route; modules/catalog/index.ts adds the names modules/catalog/runtime/composables/ exports, GET /api/catalog served by modules/catalog/runtime/server/catalog.ts, the page /catalog (modules/catalog/runtime/pages/catalog.vue), #catalog -> modules/catalog/runtime, the components of modules/catalog/runtime/components/ by name and the route middleware catalog-guard, in front of every page (modules/catalog/runtime/middleware/guard.ts); ../admin-layer/tools/reports.ts adds the names ../admin-layer/tools/reports/ exports and #reports -> ../admin-layer/tools/reports",
+      "hint": "Nothing to do. An addition whose argument is code is a row of its own, and one under a condition its options decide is read or left out as they say.",
+      "symbol": "../audit-module/src/module.ts",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-module-read",
+        "modules": [
+          "../audit-module/src/module.ts",
+          "modules/audit.ts",
+          "modules/catalog/index.ts",
+          "../admin-layer/tools/reports.ts"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-module-unread",
+      "message": "the modules nuxt.config.ts lists are written as code (process.env.EXTRA_MODULE ?? './modules/none'), so which they are is not known and nothing they add is read",
+      "hint": "Write `modules` as a list of literal paths or package names.",
+      "symbol": "process.env.EXTRA_MODULE ?? './modules/none'",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-module-unread",
+        "why": "dynamic",
+        "module": "process.env.EXTRA_MODULE ?? './modules/none'"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "implicit-imports-from-convention",
+      "level": "info",
+      "message": "5 names used with no import in 5 files were read as Nuxt imports them: the application's from common/utils/, modules/catalog/runtime/composables/, ../admin-layer/tools/reports/ and ../audit-module/src/runtime/useAudit.ts and the server's from common/utils/ and server-audit/utils/",
+      "hint": "Nothing to do. These are the imports Nuxt adds when it builds; a name it gives two ways is a row of its own.",
+      "symbol": "Nuxt",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "implicit-imports-from-convention",
+        "names": [
+          "slugify",
+          "stampRequest",
+          "useAudit",
+          "useCatalog",
+          "useReports"
+        ],
+        "files": 5
+      },
+      "service": "shop"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> app, @ -> app, ~~ -> ., @@ -> ., #shared -> common, #app -> node_modules/nuxt/dist/app, #catalog -> modules/catalog/runtime, #reports -> ../admin-layer/tools/reports resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "app"
+          ],
+          "~/*": [
+            "app/*"
+          ],
+          "@": [
+            "app"
+          ],
+          "@/*": [
+            "app/*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "common"
+          ],
+          "#shared/*": [
+            "common/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ],
+          "#catalog": [
+            "modules/catalog/runtime"
+          ],
+          "#catalog/*": [
+            "modules/catalog/runtime/*"
+          ],
+          "#reports": [
+            "../admin-layer/tools/reports"
+          ],
+          "#reports/*": [
+            "../admin-layer/tools/reports/*"
+          ]
+        }
+      },
+      "service": "shop"
+    }
+  ]
+}

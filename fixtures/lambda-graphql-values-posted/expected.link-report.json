@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:07:42.825Z",
+  "configHash": "208ebdce4c7a",
+  "services": [
+    {
+      "name": "bookshop",
+      "repo": "./bookshop",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 27,
+      "edges": 19,
+      "types": 1,
+      "unresolved": 1,
+      "durationMs": 934,
+      "packages": {
+        "name": "bookshop",
+        "runtime": [
+          "apollo-server-lambda",
+          "graphql",
+          "node-fetch"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 5,
+    "linked": 4,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 1
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 2,
+    "called": 2,
+    "uncalled": [],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "bookshop",
+      "file": "src/restock/restock.ts",
+      "line": 38,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /plugins/* in bookshop answers GET /plugins/:param/install${…}",
+      "hint": "No route of bookshop spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "http_out:bookshop#src/restock/restock.ts:38:9"
+    },
+    {
+      "service": "bookshop",
+      "file": "src/restock/restock.ts",
+      "line": 41,
+      "reason": "dynamic-http-url",
+      "message": "GET /reports/${…}-summary is built in part at run time, and no route is joined across the part (`${…}`) nobody read",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
+      "symbol": "http_out:bookshop#src/restock/restock.ts:41:9"
+    }
+  ],
+  "totals": {
+    "nodes": 27,
+    "edges": 25,
+    "types": 1,
+    "missed": 3,
+    "sites": 3,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 3
+  }
+}

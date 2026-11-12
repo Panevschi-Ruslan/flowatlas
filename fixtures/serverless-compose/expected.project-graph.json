@@ -1,0 +1,703 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T15:31:59.893Z",
+  "services": [
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "channel:sqs/jobs-queue",
+      "type": "channel",
+      "label": "sqs/jobs-queue",
+      "repo": "jobs",
+      "file": "shared/serverless.yml",
+      "line": 18,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "aws-sqs"
+        ],
+        "producers": 2,
+        "consumers": 1
+      }
+    },
+    {
+      "id": "config_key:jobs#JOBS_QUEUE_URL",
+      "type": "config_key",
+      "label": "JOBS_QUEUE_URL",
+      "repo": "jobs",
+      "file": "api/src/submit.ts",
+      "line": 8,
+      "meta": {
+        "key": "JOBS_QUEUE_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "consumer:jobs#shared/serverless.yml:functions.work.events[0]",
+      "type": "consumer",
+      "label": "mapping functions.work.events[0]",
+      "repo": "jobs",
+      "file": "shared/serverless.yml",
+      "line": 18,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "by": "mapping",
+        "declaredAs": "functions.work.events[0]",
+        "deployedBy": "serverless",
+        "envelope": {
+          "at": [
+            "Records",
+            "[]",
+            "body"
+          ],
+          "text": true
+        }
+      }
+    },
+    {
+      "id": "entry:jobs:cron:functions.sweep.events[0]",
+      "type": "entry",
+      "label": "cron functions.sweep.events[0]",
+      "repo": "jobs",
+      "file": "tools/serverless.yml",
+      "line": 16,
+      "kind": "cron",
+      "meta": {
+        "key": "functions.sweep.events[0]",
+        "by": "schedule",
+        "declaredAs": "functions.sweep.events[0]",
+        "deployedBy": "serverless",
+        "schedule": "rate(1 hour)",
+        "nameRead": false,
+        "function": "jobs-tools-dev-sweep",
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:jobs:http:GET:/health",
+      "type": "entry",
+      "label": "GET /health",
+      "repo": "jobs",
+      "file": "shared/serverless.yml",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/health",
+        "rawPath": "health",
+        "deployedBy": "serverless",
+        "api": "dev-jobs-shared",
+        "function": "jobs-shared-dev-health",
+        "declaredAs": "functions.health.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.eu-west-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-jobs-shared",
+            "chosenDefault": "dev"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:jobs:http:POST:/jobs",
+      "type": "entry",
+      "label": "POST /jobs",
+      "repo": "jobs",
+      "file": "api/serverless.yml",
+      "line": 19,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/jobs",
+        "rawPath": "jobs",
+        "deployedBy": "serverless",
+        "function": "jobs-api-dev-submit",
+        "root": "stack:jobs-shared-dev#RestApiRootResourceId",
+        "below": "/jobs",
+        "declaredAs": "functions.submit.events[0]",
+        "adapter": "aws-lambda",
+        "rootedIn": "jobs",
+        "rootPath": "/",
+        "api": "dev-jobs-shared"
+      }
+    },
+    {
+      "id": "entry:jobs:invoke:jobs-api-dev-submit",
+      "type": "entry",
+      "label": "jobs-api-dev-submit",
+      "repo": "jobs",
+      "file": "api/serverless.yml",
+      "line": 14,
+      "kind": "invoke",
+      "meta": {
+        "key": "jobs-api-dev-submit",
+        "deployedBy": "serverless",
+        "name": "jobs-api-dev-submit",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.submit",
+        "stageFrom": "default",
+        "composedAs": "api",
+        "handler": "src/submit.handler",
+        "sourceDirectory": "api",
+        "handlerVia": "function",
+        "environment": {
+          "JOBS_QUEUE_URL": {
+            "written": "${shared.JobsQueueUrl}",
+            "imported": "stack:jobs-shared-dev#JobsQueueUrl",
+            "value": "jobs-queue",
+            "kind": "queue"
+          }
+        },
+        "reads": {
+          "": "type:@types/aws-lambda#APIGatewayProxyEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:jobs:invoke:jobs-shared-dev-health",
+      "type": "entry",
+      "label": "jobs-shared-dev-health",
+      "repo": "jobs",
+      "file": "shared/serverless.yml",
+      "line": 10,
+      "kind": "invoke",
+      "meta": {
+        "key": "jobs-shared-dev-health",
+        "deployedBy": "serverless",
+        "name": "jobs-shared-dev-health",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.health",
+        "stageFrom": "default",
+        "composedAs": "shared",
+        "handler": "src/health.handler",
+        "sourceDirectory": "shared",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:jobs:invoke:jobs-shared-dev-work",
+      "type": "entry",
+      "label": "jobs-shared-dev-work",
+      "repo": "jobs",
+      "file": "shared/serverless.yml",
+      "line": 15,
+      "kind": "invoke",
+      "meta": {
+        "key": "jobs-shared-dev-work",
+        "deployedBy": "serverless",
+        "name": "jobs-shared-dev-work",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.work",
+        "stageFrom": "default",
+        "composedAs": "shared",
+        "handler": "src/work.handler",
+        "sourceDirectory": "shared",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {
+          "": "type:@types/aws-lambda#SQSEvent"
+        },
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:jobs:invoke:jobs-tools-dev-sweep",
+      "type": "entry",
+      "label": "jobs-tools-dev-sweep",
+      "repo": "jobs",
+      "file": "tools/serverless.yml",
+      "line": 11,
+      "kind": "invoke",
+      "meta": {
+        "key": "jobs-tools-dev-sweep",
+        "deployedBy": "serverless",
+        "name": "jobs-tools-dev-sweep",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.sweep",
+        "stageFrom": "default",
+        "handler": "src/sweep.handler",
+        "sourceDirectory": "tools",
+        "handlerVia": "function",
+        "environment": {
+          "JOBS_QUEUE_URL": {
+            "written": "${cf:jobs-shared-dev.JobsQueueUrl}",
+            "imported": "stack:jobs-shared-dev#JobsQueueUrl",
+            "value": "jobs-queue",
+            "kind": "queue"
+          }
+        },
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "jobs#api/src/submit.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "jobs",
+      "file": "api/src/submit.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#APIGatewayProxyEvent"
+            }
+          ],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "jobs#shared/src/health.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "jobs",
+      "file": "shared/src/health.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:@types/aws-lambda#APIGatewayProxyResult"
+        }
+      }
+    },
+    {
+      "id": "jobs#shared/src/work.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "jobs",
+      "file": "shared/src/work.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "type:@types/aws-lambda#SQSEvent"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "jobs#tools/src/sweep.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "jobs",
+      "file": "tools/src/sweep.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:jobs#api/src/submit.ts:8:9",
+      "type": "producer",
+      "label": "message sqs/jobs-queue",
+      "repo": "jobs",
+      "file": "api/src/submit.ts",
+      "line": 8,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "JOBS_QUEUE_URL",
+                "forms": [
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "string"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "producer:jobs#tools/src/sweep.ts:7:9",
+      "type": "producer",
+      "label": "message sqs/jobs-queue",
+      "repo": "jobs",
+      "file": "tools/src/sweep.ts",
+      "line": 7,
+      "kind": "message",
+      "meta": {
+        "kind": "message",
+        "adapter": "aws-sqs",
+        "channelVia": "environment",
+        "method": "send",
+        "awaiting": [
+          {
+            "parts": [
+              "sqs",
+              {
+                "environment": "JOBS_QUEUE_URL",
+                "forms": [
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
+                ]
+              }
+            ],
+            "payload": "{kind:string}"
+          }
+        ],
+        "channelKind": "queue",
+        "confidence": "static"
+      }
+    },
+    {
+      "id": "repo:jobs",
+      "type": "repo",
+      "label": "jobs",
+      "repo": "jobs",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "@aws-sdk/client-sqs": 2
+          }
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "apiRoots": [
+          {
+            "key": "stack:jobs-shared-dev#RestApiId",
+            "path": "/",
+            "api": "dev-jobs-shared",
+            "file": "shared/serverless.yml",
+            "line": 29,
+            "deployedBy": "serverless"
+          },
+          {
+            "key": "stack:jobs-shared-dev#RestApiRootResourceId",
+            "path": "/",
+            "api": "dev-jobs-shared",
+            "file": "shared/serverless.yml",
+            "line": 31,
+            "deployedBy": "serverless"
+          }
+        ],
+        "exports": [
+          {
+            "keys": [
+              "stack:jobs-shared-dev#RestApiId"
+            ],
+            "address": "resources.Outputs.RestApiId",
+            "file": "shared/serverless.yml",
+            "line": 29,
+            "kind": "api",
+            "value": "dev-jobs-shared",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "stack:jobs-shared-dev#RestApiRootResourceId"
+            ],
+            "address": "resources.Outputs.RestApiRootResourceId",
+            "file": "shared/serverless.yml",
+            "line": 31,
+            "kind": "api",
+            "value": "dev-jobs-shared",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "stack:jobs-shared-dev#JobsQueueUrl"
+            ],
+            "address": "resources.Outputs.JobsQueueUrl",
+            "file": "shared/serverless.yml",
+            "line": 33,
+            "kind": "queue",
+            "value": "jobs-queue",
+            "deployedBy": "serverless"
+          },
+          {
+            "keys": [
+              "export:sls-jobs-shared-dev-ServiceEndpoint",
+              "stack:jobs-shared-dev#ServiceEndpoint"
+            ],
+            "address": "Outputs.ServiceEndpoint",
+            "file": "shared/serverless.yml",
+            "line": 4,
+            "kind": "api",
+            "value": "dev-jobs-shared",
+            "deployedBy": "serverless"
+          }
+        ],
+        "imports": [
+          {
+            "key": "stack:jobs-shared-dev#JobsQueueUrl",
+            "file": "api/serverless.yml",
+            "line": 17,
+            "what": "the value of JOBS_QUEUE_URL functions.submit is deployed with",
+            "from": "jobs"
+          },
+          {
+            "key": "stack:jobs-shared-dev#JobsQueueUrl",
+            "file": "tools/serverless.yml",
+            "line": 14,
+            "what": "the value of JOBS_QUEUE_URL functions.sweep is deployed with",
+            "from": "jobs"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:sqs/jobs-queue",
+      "to": "consumer:jobs#shared/serverless.yml:functions.work.events[0]",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "shared/serverless.yml",
+      "line": 18,
+      "meta": {
+        "by": "mapping"
+      }
+    },
+    {
+      "from": "consumer:jobs#shared/serverless.yml:functions.work.events[0]",
+      "to": "entry:jobs:invoke:jobs-shared-dev-work",
+      "type": "calls",
+      "confidence": "static",
+      "file": "shared/serverless.yml",
+      "line": 18,
+      "meta": {
+        "via": "deployment"
+      }
+    },
+    {
+      "from": "entry:jobs:cron:functions.sweep.events[0]",
+      "to": "jobs#tools/src/sweep.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "tools/src/sweep.ts",
+      "line": 6
+    },
+    {
+      "from": "entry:jobs:http:GET:/health",
+      "to": "jobs#shared/src/health.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "shared/src/health.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:jobs:http:POST:/jobs",
+      "to": "jobs#api/src/submit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "api/src/submit.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:jobs:invoke:jobs-api-dev-submit",
+      "to": "jobs#api/src/submit.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "api/src/submit.ts",
+      "line": 7
+    },
+    {
+      "from": "entry:jobs:invoke:jobs-shared-dev-health",
+      "to": "jobs#shared/src/health.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "shared/src/health.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:jobs:invoke:jobs-shared-dev-work",
+      "to": "jobs#shared/src/work.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "shared/src/work.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:jobs:invoke:jobs-tools-dev-sweep",
+      "to": "jobs#tools/src/sweep.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "tools/src/sweep.ts",
+      "line": 6
+    },
+    {
+      "from": "jobs#api/src/submit.ts:handler",
+      "to": "config_key:jobs#JOBS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "api/src/submit.ts",
+      "line": 8,
+      "meta": {
+        "setBy": [
+          {
+            "function": "jobs-api-dev-submit",
+            "written": "${shared.JobsQueueUrl}",
+            "value": "jobs-queue"
+          }
+        ]
+      }
+    },
+    {
+      "from": "jobs#api/src/submit.ts:handler",
+      "to": "producer:jobs#api/src/submit.ts:8:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "api/src/submit.ts",
+      "line": 8
+    },
+    {
+      "from": "jobs#tools/src/sweep.ts:handler",
+      "to": "config_key:jobs#JOBS_QUEUE_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "tools/src/sweep.ts",
+      "line": 7,
+      "meta": {
+        "setBy": [
+          {
+            "function": "jobs-tools-dev-sweep",
+            "written": "${cf:jobs-shared-dev.JobsQueueUrl}",
+            "value": "jobs-queue"
+          }
+        ]
+      }
+    },
+    {
+      "from": "jobs#tools/src/sweep.ts:handler",
+      "to": "producer:jobs#tools/src/sweep.ts:7:9",
+      "type": "calls",
+      "confidence": "static",
+      "file": "tools/src/sweep.ts",
+      "line": 7
+    },
+    {
+      "from": "producer:jobs#api/src/submit.ts:8:9",
+      "to": "channel:sqs/jobs-queue",
+      "type": "emits",
+      "confidence": "static",
+      "file": "api/src/submit.ts",
+      "line": 8,
+      "params": [
+        "string"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "JOBS_QUEUE_URL"
+        ],
+        "functions": [
+          "jobs-api-dev-submit"
+        ]
+      }
+    },
+    {
+      "from": "producer:jobs#tools/src/sweep.ts:7:9",
+      "to": "channel:sqs/jobs-queue",
+      "type": "emits",
+      "confidence": "static",
+      "file": "tools/src/sweep.ts",
+      "line": 7,
+      "params": [
+        "{kind:string}"
+      ],
+      "meta": {
+        "via": "environment",
+        "variables": [
+          "JOBS_QUEUE_URL"
+        ],
+        "functions": [
+          "jobs-tools-dev-sweep"
+        ]
+      }
+    }
+  ],
+  "types": {
+    "type:@types/aws-lambda#APIGatewayProxyEvent": {
+      "name": "APIGatewayProxyEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "0e89cabc82169f8c",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#APIGatewayProxyResult": {
+      "name": "APIGatewayProxyResult",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "3815f989ec69758d",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    },
+    "type:@types/aws-lambda#SQSEvent": {
+      "name": "SQSEvent",
+      "kind": "external",
+      "declaredIn": "@types/aws-lambda",
+      "structuralHash": "2de913fd0acf2eaf",
+      "meta": {
+        "declKind": "external",
+        "package": "@types/aws-lambda"
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "serverless-compose.yml",
+      "line": 15,
+      "reason": "compose-service-unread",
+      "message": "serverless-compose.yml lists the service ghost, whose folder ghost is not there, so nothing it declares is read",
+      "hint": "Point path at a folder of the repository holding a service file; a service in another repository is read where that repository is.",
+      "symbol": "serverless-compose.yml#services.ghost",
+      "adapter": "aws-lambda",
+      "service": "jobs"
+    }
+  ]
+}

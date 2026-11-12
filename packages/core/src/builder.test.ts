@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GraphBuilder } from './builder.js';
+import { EDGE_END_MISSING_REASON, GraphBuilder } from './builder.js';
 import { DanglingEdgeError, DuplicateTypeError } from './errors.js';
 import type { GraphEdge } from './model/edges.js';
 import type { GraphNode } from './model/nodes.js';
@@ -217,15 +217,44 @@ describe('GraphBuilder', () => {
     ]);
   });
 
-  it('throws when an edge points at a node that was never added', () => {
+  it('leaves out an edge to a node that was never added, and names it in a row (R180)', () => {
     const b = builder();
+    b.addNode(node('a', { file: 'src/a.ts', line: 3 }));
+    b.addNode(node('b'));
+    b.addEdge(edge('a', 'b'));
+    b.addEdge(edge('a', 'missing', { file: 'src/a.ts', line: 7 }));
+    b.addEdge(edge('gone', 'a'));
+    const graph = b.build();
+    expect(graph.edges.map((e) => `${e.from}->${e.to}`)).toEqual(['a->b']);
+    expect(graph.unresolved).toEqual([
+      expect.objectContaining({
+        file: 'src/a.ts',
+        line: 3,
+        reason: EDGE_END_MISSING_REASON,
+        level: 'action',
+        symbol: 'a',
+        meta: { edge: { from: 'gone', type: 'calls', to: 'a' }, missing: ['gone'] },
+      }),
+      expect.objectContaining({
+        file: 'src/a.ts',
+        line: 7,
+        reason: EDGE_END_MISSING_REASON,
+        symbol: 'a',
+        meta: { edge: { from: 'a', type: 'calls', to: 'missing' }, missing: ['missing'] },
+      }),
+    ]);
+    expect(b.counts.edges).toBe(1);
+  });
+
+  it('throws when asked to, for a splice that has to read the repository again', () => {
+    const b = new GraphBuilder({ repo: 'orders', generatedAt: FIXED, dangling: 'throw' });
     b.addNode(node('a'));
     b.addEdge(edge('a', 'missing'));
     expect(() => b.build()).toThrow(DanglingEdgeError);
   });
 
   it('names the offending edges in the dangling error', () => {
-    const b = builder();
+    const b = new GraphBuilder({ repo: 'orders', generatedAt: FIXED, dangling: 'throw' });
     b.addNode(node('a'));
     b.addEdge(edge('a', 'missing'));
     try {

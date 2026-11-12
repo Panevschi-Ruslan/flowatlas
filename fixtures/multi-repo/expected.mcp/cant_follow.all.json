@@ -1,26 +1,30 @@
 {
   "total": {
-    "rows": 9,
-    "sites": 9,
+    "rows": 11,
+    "sites": 11,
     "causes": 5
   },
   "causes": [
     {
       "cause": "api-path-dynamic",
       "label": "api-path-dynamic",
-      "sites": 3,
+      "sites": 4,
       "reasons": [
         "api-path-dynamic"
       ],
-      "hint": "An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here.",
+      "hint": "Write the address from literals and constants, or annotate the function with /** @flowatlas-calls METHOD /path */ naming the route it reaches.",
       "services": [
         "web"
       ],
       "packages": [
         {
           "package": null,
-          "sites": 3,
+          "sites": 4,
           "samples": [
+            {
+              "loc": "src/app/orders-api.service.ts:48",
+              "id": "ui_api_call:web#src/app/orders-api.service.ts:48:12"
+            },
             {
               "loc": "src/app/orders-api.service.ts:124",
               "symbol": "this.http.get<unknown>(this.opaque())"
@@ -28,10 +32,6 @@
             {
               "loc": "src/app/orders-api.service.ts:139",
               "symbol": "this.http.post<unknown>(this.opaque(), {})"
-            },
-            {
-              "loc": "src/app/orders-api.service.ts:140",
-              "symbol": "this.http.get<unknown>(this.opaque())"
             }
           ]
         }
@@ -74,6 +74,34 @@
       ]
     },
     {
+      "cause": "dynamic-http-url",
+      "label": "dynamic-http-url",
+      "sites": 2,
+      "reasons": [
+        "dynamic-http-url"
+      ],
+      "hint": "An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here.",
+      "services": [
+        "gateway"
+      ],
+      "packages": [
+        {
+          "package": null,
+          "sites": 2,
+          "samples": [
+            {
+              "loc": "src/clients/billing.client.ts:33",
+              "symbol": "this.http.post<InvoiceDto>(this.registry.invoicesUrl(), {\n      orderId: order.i"
+            },
+            {
+              "loc": "src/clients/orders.client.ts:59",
+              "id": "http_out:gateway#src/clients/orders.client.ts:59:12"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "cause": "ambiguous-route-target",
       "label": "ambiguous-route-target",
       "sites": 1,
@@ -92,30 +120,6 @@
             {
               "loc": "src/app/orders-api.service.ts:34",
               "id": "ui_api_call:web#src/app/orders-api.service.ts:34:12"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "cause": "dynamic-http-url",
-      "label": "dynamic-http-url",
-      "sites": 1,
-      "reasons": [
-        "dynamic-http-url"
-      ],
-      "hint": "An annotation already says where this goes, so the row is a record of what could not be read. Nothing to do here.",
-      "services": [
-        "gateway"
-      ],
-      "packages": [
-        {
-          "package": null,
-          "sites": 1,
-          "samples": [
-            {
-              "loc": "src/clients/billing.client.ts:33",
-              "symbol": "this.http.post<InvoiceDto>(this.registry.invoicesUrl(), {\n      orderId: order.i"
             }
           ]
         }
@@ -152,6 +156,7 @@
     "findings": 4
   },
   "next": [
+    "get_source({symbol: \"ui_api_call:web#src/app/orders-api.service.ts:48:12\"})",
     "describe_for_prompt({id: \"gap:web|src/app/orders-api.service.ts|api-path-dynamic\"})",
     "cant_follow({cause: \"api-path-dynamic\"})"
   ]

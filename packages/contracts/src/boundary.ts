@@ -11,13 +11,18 @@
 import {
   CLAIMED_META,
   envelopePath,
+  formatTypeRef,
+  parseTypeRef,
+  protoJsonName,
   REQUEST_READ_META,
   STATUS_UNKNOWN_META,
   STARTS_META,
   type Envelope,
   type GraphEdge,
   type GraphNode,
+  type TypeRefAst,
 } from '@flowatlas/core';
+import type { MissingRule } from './compare.js';
 import { envelopeOf, readThrough, wrapped, type Blocked } from './envelope.js';
 import { edgeKeyOf } from './key.js';
 import type { ContractParty, Direction, GraphLookup, UncheckedReason } from './types.js';
@@ -56,6 +61,27 @@ export interface Exchange {
    * that could be its answer or a failure, so nothing is compared with it.
    */
   statusUnknown?: string;
+  /**
+   * The boundary is a request for a procedure (P247), so a missing type is
+   * one a client of a tree states in its own way, and the hint says that way.
+   */
+  procedure?: boolean;
+  /**
+   * The sender writes nothing at all - a `GET` of a procedure's route with
+   * no path parameter and no query (P256) - so its `{}` is an empty object
+   * on the wire, and what the receiver requires is missing.
+   */
+  sendsNothing?: boolean;
+  /**
+   * Fields the sender writes as an object with no keys - a `detailed` input's
+   * `headers` where the call sends none the procedure declares (P262) - so
+   * what the receiver requires there is missing.
+   */
+  writtenEmptyAt?: readonly string[];
+  /** Names whose absence on the sender's side is said with a rule of its own (P265). */
+  missingRules?: readonly MissingRule[];
+  /** Rules that took something out of the comparison before it began, with the path (P265). */
+  rulesApplied?: readonly string[];
 }
 
 /** References that name no shape, so there is nothing to compare against. */
@@ -156,6 +182,438 @@ const REQUEST_KIND = 'rpc';
 const asksForAnswer = (lookup: GraphLookup, emit: GraphEdge): boolean =>
   lookup.node(emit.from)?.kind === REQUEST_KIND;
 
+/** A request a client made for a procedure, by what its reader wrote on it (R95, P242). */
+const isProcedureRequest = (node: GraphNode | undefined): boolean =>
+  node !== undefined && node.kind === 'rpc' && (node.type === 'ui_api_call' || node.type === 'http_out');
+
+/** The signature a procedure's entry carries: the input a caller hands, and what it answers (P35, P247). */
+const signatureOf = (entry: GraphNode | undefined): { input?: string; returns?: string } => {
+  const signature = entry?.meta?.['signature'];
+  if (signature === null || typeof signature !== 'object') return {};
+  const { params, returns } = signature as { params?: unknown; returns?: unknown };
+  const [first] = Array.isArray(params) ? (params as Array<{ type?: unknown }>) : [];
+  return {
+    ...(typeof first?.type === 'string' ? { input: first.type } : {}),
+    ...(typeof returns === 'string' ? { returns } : {}),
+  };
+};
+
+/**
+ * The two directions of a request for a procedure (P247).
+ *
+ * Compared as a request and its answer are: what the caller hands - the type
+ * of the argument written at the call, its keys where a literal is written -
+ * against the input the procedure declares, the schema's input side; and what
+ * the procedure answers against what the call reads back, where the call
+ * returns it. Where an end says nothing to compare, the row says which end
+ * and why, rather than a verdict that compared nothing: a procedure that
+ * declares no input, an input schema whose type does not resolve here, an
+ * input the call hands to something else, an answer handed to a cache.
+ */
+const procedureExchanges = (
+  lookup: GraphLookup,
+  edge: GraphEdge,
+  both: (direction: Direction, sender: ContractParty, receiver: ContractParty) => Exchange,
+  caller: { service: string; symbol: string },
+  handler: { service: string; symbol: string },
+): Exchange[] => {
+  const asked = lookup.node(edge.from)?.meta ?? {};
+  const entry = lookup.node(edge.to);
+  const declared = signatureOf(entry);
+  const schema = entry?.meta?.['input'];
+  const written = asked['inputKeys'];
+  const writtenKeys = Array.isArray(written) && written.every((key) => typeof key === 'string') ? (written as string[]) : undefined;
+  // A gRPC message's fields, under the names the caller's loader gives them (P293).
+  const renamed = messageNames(lookup, declared.input, asked['protoFieldNames'] === 'proto' ? 'proto' : 'json');
+  const keys = writtenKeys?.map((key) => renamed.get(key) ?? key);
+
+  const sender = {
+    ...party(lookup, caller.service, renamedShape(lookup, edge.params?.[0], renamed), caller.symbol),
+    ...(keys === undefined ? {} : { writes: keys, writesEvery: true }),
+  };
+  const receiver = party(lookup, handler.service, declared.input, handler.symbol);
+  const inputBlocked: Blocked | undefined =
+    typeof schema !== 'string' && declared.input === undefined
+      ? { reason: 'procedure-input-undeclared', subject: edge.to }
+      : !namesAShape(declared.input)
+        ? { reason: 'procedure-input-unread', subject: edge.to, ...(typeof schema === 'string' ? { detail: schema } : {}) }
+        : asked['inputLater'] === true
+          ? { reason: 'procedure-input-not-at-call', subject: caller.symbol, detail: 'later' }
+          : asked['inputNone'] === true
+            ? { reason: 'procedure-input-not-at-call', subject: caller.symbol, detail: 'none' }
+            : undefined;
+  const request: Exchange = {
+    ...both('request', sender, receiver),
+    procedure: true,
+    ...(inputBlocked === undefined ? {} : { blocked: inputBlocked }),
+  };
+
+  const answering = party(lookup, handler.service, declared.returns, handler.symbol);
+  const reading = party(lookup, caller.service, edge.returns, caller.symbol);
+  // No answer type on the request: the call hands the answer to a hook or a
+  // query's options, typed there by the binding's inference (P58), or a gRPC
+  // call to a callback whose answer is not typed (P287).
+  const response: Exchange = {
+    ...both('response', answering, reading),
+    procedure: true,
+    ...(typeof asked['outputType'] === 'string'
+      ? {}
+      : { blocked: { reason: 'procedure-output-inferred' as const, subject: edge.to, detail: asked['client'] === 'grpc' ? 'callback' : 'hook' } }),
+  };
+  return [request, response];
+};
+
+/**
+ * The names a caller writes a gRPC message's fields under, each with the name
+ * the message's entry gives the field, where the two differ (P293). Each
+ * side's loader names the fields its own way - camelCase, `userId`, or as the
+ * contract writes them, `user_id`, under `keepCase` - and both are the one
+ * field on the wire. Empty for any input that is no message of a contract.
+ */
+const messageNames = (lookup: GraphLookup, input: string | undefined, callerNames: 'json' | 'proto'): ReadonlyMap<string, string> => {
+  const entry = input === undefined ? undefined : lookup.type(input);
+  const renamed = new Map<string, string>();
+  if (entry?.meta?.['declaredBy'] !== 'protobuf') return renamed;
+  const shapes = entry.kind === 'union' ? (entry.members ?? []).flatMap((member) => lookup.type(member) ?? []) : [entry];
+  for (const field of shapes.flatMap((shape) => shape.fields ?? [])) {
+    const declared = field.meta?.['protoName'];
+    const proto = typeof declared === 'string' ? declared : field.name;
+    const written = callerNames === 'proto' ? proto : protoJsonName(proto);
+    if (written !== field.name) renamed.set(written, field.name);
+  }
+  return renamed;
+};
+
+/**
+ * The type a caller hands, its top-level fields under the names the message
+ * gives them (P293): the object written in place, or one its type names. As
+ * it is where nothing is renamed or it is no object.
+ */
+const renamedShape = (lookup: GraphLookup, sent: string | undefined, renamed: ReadonlyMap<string, string>): string | undefined => {
+  if (sent === undefined || renamed.size === 0) return sent;
+  let shape: TypeRefAst;
+  try {
+    shape = parseTypeRef(sent);
+  } catch {
+    return sent;
+  }
+  if (shape.kind === 'id') {
+    const entry = lookup.type(shape.id);
+    if (entry?.kind !== 'object' || entry.fields === undefined || !entry.fields.some((field) => renamed.has(field.name))) return sent;
+    try {
+      shape = { kind: 'object', fields: entry.fields.map((field) => ({ name: field.name, optional: field.optional, type: parseTypeRef(field.type) })) };
+    } catch {
+      return sent;
+    }
+  }
+  if (shape.kind !== 'object' || !shape.fields.some((field) => renamed.has(field.name))) return sent;
+  return formatTypeRef({ kind: 'object', fields: shape.fields.map((field) => ({ ...field, name: renamed.get(field.name) ?? field.name })) });
+};
+
+/** The strings a meta list holds, or nothing where it is not one. */
+const stringsIn = (value: unknown): string[] | undefined =>
+  Array.isArray(value) && value.every((each) => typeof each === 'string') ? (value as string[]) : undefined;
+
+/** A key an address can carry, as the input's top-level field it fills: `filter[status]` fills `filter`. */
+const topKey = (key: string): string => key.replace(/[[.].*$/, '');
+
+/** The parameters a route's path names, as the procedure writes them: `{id}`, `{+path}`, `:id`. */
+const pathParamsOf = (raw: string): string[] =>
+  [...raw.matchAll(/\{\+?([A-Za-z_$][\w$]*)\}|:([A-Za-z_$][\w$]*)/g)].map((match) => (match[1] ?? match[2]) as string);
+
+/**
+ * The keys a query written in the address names (P256): `?status=open&limit=10`.
+ * Nothing where the address has no query; `unread` where a part of it is not
+ * a key written as text - a query string built elsewhere, spliced in.
+ */
+const queryOfAddress = (url: unknown, builtIn = false): { keys: string[] } | 'unread' | undefined => {
+  if (typeof url !== 'string' || !url.includes('?')) return undefined;
+  const query = url.slice(url.indexOf('?') + 1).split('#')[0] ?? '';
+  const keys: string[] = [];
+  for (const part of query.split('&')) {
+    if (part === '') continue;
+    // A query built in code and written in here, whose keys the reader recorded beside (P258).
+    if (builtIn && /^\$\{[^}]*\}$/.test(part)) continue;
+    const key = /^([A-Za-z_$][\w$\-[\].]*)(?:=|$)/.exec(part)?.[1];
+    if (key === undefined) return 'unread';
+    keys.push(topKey(key));
+  }
+  return { keys };
+};
+
+/** Presence only: a field the address carries as text, whatever the procedure coerces it to (D2). */
+const present = (name: string): { name: string; optional: false; type: TypeRefAst } => ({ name, optional: false, type: { kind: 'primitive', name: 'unknown' } });
+
+/** A shape written as fields, or nothing where it has none. */
+const fieldsShape = (names: readonly string[]): TypeRefAst | undefined =>
+  names.length === 0 ? undefined : { kind: 'object', fields: [...new Set(names)].map(present) };
+
+/** Several parts of one input, as the one type they are together. */
+const together = (parts: ReadonlyArray<TypeRefAst | undefined>): TypeRefAst | undefined => {
+  const written = parts.filter((part): part is TypeRefAst => part !== undefined);
+  if (written.length <= 1) return written[0];
+  return { kind: 'intersection', members: written };
+};
+
+/** A reference as a shape, or nothing where it is not one that parses. */
+const astOf = (ref: string | undefined): TypeRefAst | undefined => {
+  if (!namesAShape(ref)) return undefined;
+  try {
+    return parseTypeRef(ref);
+  } catch {
+    return undefined;
+  }
+};
+
+/** The type of one field of a type, written in place or in the registry: a `detailed` output's `body` (P256). */
+const fieldOfRef = (lookup: GraphLookup, ref: string | undefined, name: string): string | undefined => {
+  const ast = astOf(ref);
+  if (ast?.kind === 'object') {
+    const found = ast.fields.find((field) => field.name === name);
+    return found === undefined ? undefined : formatTypeRef(found.type);
+  }
+  if (ast?.kind === 'id') return lookup.type(ast.id)?.fields?.find((field) => field.name === name)?.type;
+  return undefined;
+};
+
+/** The names of the fields of one field of a type: the headers a `detailed` input declares (P262). */
+const fieldNamesOf = (lookup: GraphLookup, ref: string | undefined, name: string): string[] | undefined => {
+  const field = astOf(fieldOfRef(lookup, ref, name));
+  if (field?.kind === 'object') return field.fields.map((each) => each.name);
+  if (field?.kind === 'id') return lookup.type(field.id)?.fields?.map((each) => each.name);
+  return undefined;
+};
+
+/** What a field of no known type is: compared with nothing, and said so (`any-unknown-skip`). */
+const UNKNOWN: TypeRefAst = { kind: 'primitive', name: 'unknown' };
+
+/**
+ * The headers a call sends to a `detailed` input that declares some (P262).
+ *
+ * A server hands a procedure every header lower-cased, and the call's names
+ * are recorded so; only the ones the procedure declares are compared, since
+ * a request carries headers its middleware, its proxy and its platform read
+ * and no input names. Where the call's headers are not known - written in a
+ * way that is not read, or added by something that runs before the request
+ * (an instance's hook, an interceptor) - the part is `unknown`, which the
+ * comparison skips and says, rather than calling a header missing that may be
+ * sent. A call that writes none and runs through nothing that adds any sends
+ * none.
+ */
+const headersSent = (asked: Record<string, unknown>, declared: readonly string[]): TypeRefAst => {
+  if (asked['headersUnread'] === true) return UNKNOWN;
+  const written = stringsIn(asked['headerKeys']) ?? [];
+  const wanted = new Set(declared.map((name) => name.toLowerCase()));
+  return { kind: 'object', fields: [...new Set(written.map((name) => name.toLowerCase()))].filter((name) => wanted.has(name)).map(present) };
+};
+
+/**
+ * The headers a server's HTTP layer writes on an answer by itself (P265):
+ * a caller reading one is not reading anything the procedure decides.
+ */
+const HTTP_LAYER_HEADERS: ReadonlySet<string> = new Set([
+  'age',
+  'cache-control',
+  'connection',
+  'content-encoding',
+  'content-length',
+  'content-type',
+  'date',
+  'etag',
+  'expires',
+  'keep-alive',
+  'last-modified',
+  'server',
+  'transfer-encoding',
+  'vary',
+]);
+
+/** What the headers of an answer compare: both ends' fields, the names said apart, and why. */
+interface AnswerHeaders {
+  readonly sent: TypeRefAst;
+  readonly read: TypeRefAst;
+  readonly missingRules: readonly MissingRule[];
+  readonly rulesApplied: readonly string[];
+  readonly via: readonly string[];
+}
+
+/**
+ * The headers a caller reads off a `detailed` answer, against the ones the
+ * procedure's output declares (P265).
+ *
+ * Compared from the caller's end, as the request's are from the
+ * procedure's (P262): only the names the caller reads are compared, since an
+ * answer carries headers no caller reads. A name the procedure declares
+ * reaches the caller lower-cased, so a name read through `get` - looked up
+ * whatever its case - agrees with it, and one read as a key with a capital is
+ * never there. A name it reads that the procedure does not declare is
+ * missing, said as one a middleware or the platform may still set (a
+ * warning); one the HTTP layer writes by itself is not compared, and said.
+ */
+const answerHeaders = (declared: readonly string[], read: readonly string[], unread: boolean): AnswerHeaders => {
+  const sent = new Set(declared.map((name) => name.toLowerCase()));
+  const layer = read.filter((name) => HTTP_LAYER_HEADERS.has(name.toLowerCase()) && !sent.has(name.toLowerCase()));
+  const compared = [...new Set(read.filter((name) => !layer.includes(name)))];
+  const wanted = new Set(compared.map((name) => name.toLowerCase()));
+  const undeclared = compared.filter((name) => !sent.has(name.toLowerCase()));
+  const capitalised = compared.filter((name) => name !== name.toLowerCase() && sent.has(name.toLowerCase()));
+  return {
+    sent: { kind: 'object', fields: [...sent].filter((name) => wanted.has(name)).map(present) },
+    read: { kind: 'object', fields: compared.map(present) },
+    missingRules:
+      undeclared.length === 0
+        ? []
+        : [{ path: 'headers', names: undeclared, rule: 'header-not-declared', note: "the procedure's output does not declare it, so it is not sent unless a middleware or the platform sets it" }],
+    rulesApplied: [...layer.map((name) => `http-layer-header:headers.${name}`), ...(unread ? ['any-unknown-skip:headers'] : [])],
+    via:
+      capitalised.length === 0
+        ? []
+        : [`a client hands every response header lower-cased, so ${capitalised.map((name) => `\`headers.${name}\``).join(' and ')} read as a key is never there`],
+  };
+};
+
+/**
+ * A plain request to a procedure's REST route, both ways (P256).
+ *
+ * The OpenAPI handler hands the procedure one input assembled from the
+ * request: with the default structure, the route's path parameters merged
+ * with the query for a `GET` and with the body for any other verb; with the
+ * `detailed` one, `{ params, query, headers, body }`. So the caller's half is
+ * assembled the same way from what it writes, and compared with the
+ * procedure's input by the rules any request body is: a path parameter and a
+ * query key by name alone (the address carries text, and whether the schema
+ * coerces it is the schema's to say, D2), the body field by field. What the
+ * call reads back is compared with the procedure's output, or the output's
+ * `body` for a `detailed` one. Where a part cannot be read - a query built
+ * elsewhere, a body with no type - the row says so rather than calling the
+ * procedure's required keys missing.
+ */
+const twinExchanges = (
+  lookup: GraphLookup,
+  edge: GraphEdge,
+  both: (direction: Direction, sender: ContractParty, receiver: ContractParty) => Exchange,
+  caller: { service: string; symbol: string },
+  handler: { service: string; symbol: string },
+): Exchange[] => {
+  const entry = lookup.node(edge.to);
+  const route = entry?.meta ?? {};
+  const asked = lookup.node(edge.from)?.meta ?? {};
+  const declared = signatureOf(entry);
+  const schema = route['input'];
+  const detailedIn = route['inputStructure'] === 'detailed';
+  const detailedOut = route['outputStructure'] === 'detailed';
+  const verb = typeof route['method'] === 'string' ? route['method'].toUpperCase() : 'POST';
+  const params = pathParamsOf(typeof route['rawPath'] === 'string' ? route['rawPath'] : '');
+
+  // The query: keys the address writes, and what the call's options hand under their query option.
+  const addressed = queryOfAddress(asked['url'], asked['queryInAddress'] === true);
+  const optionKeys = stringsIn(asked['queryKeys'])?.map(topKey);
+  const optionType = typeof asked['queryType'] === 'string' ? asked['queryType'] : undefined;
+  const queryUnread = addressed === 'unread' || asked['queryUnread'] === true || (optionType !== undefined && optionKeys === undefined && !namesAShape(optionType));
+  const queryKeys = [...(addressed === undefined || addressed === 'unread' ? [] : addressed.keys), ...(optionKeys ?? [])];
+  const queryShape = together([fieldsShape(queryKeys), optionKeys === undefined ? astOf(optionType) : undefined]);
+  const queryKnown = optionType === undefined || optionKeys !== undefined;
+
+  // The body, where the verb carries one.
+  const bodyRef = edge.params?.[0];
+  const bodyWritten = typeof asked['bodyType'] === 'string' || namesAShape(bodyRef);
+  const bodyKeys = stringsIn(asked['bodyKeys']);
+  const bodyShape = astOf(bodyRef);
+  const usesQuery = detailedIn || verb === 'GET';
+  const usesBody = detailedIn || verb !== 'GET';
+
+  // `detailed`: each part the call writes under its own key, the headers by
+  // the names it writes (P258) where the procedure declares any, compared
+  // from its end (P262); a part nothing writes is not sent.
+  const declaredHeaders = detailedIn ? fieldNamesOf(lookup, declared.input, 'headers') : undefined;
+  const headersPart = declaredHeaders === undefined ? undefined : headersSent(asked, declaredHeaders);
+  const parts: Array<[string, TypeRefAst | undefined]> = [
+    ['params', fieldsShape(params)],
+    ['query', queryShape],
+    ['headers', headersPart],
+    ['body', bodyShape],
+  ];
+  // A name the procedure spells with a capital is never handed to it as spelled.
+  const capitalised = (declaredHeaders ?? []).filter((name) => name !== name.toLowerCase());
+  const sentParts = parts.filter((part): part is [string, TypeRefAst] => part[1] !== undefined);
+  const sent = detailedIn
+    ? sentParts.length === 0
+      ? undefined
+      : ({ kind: 'object', fields: sentParts.map(([name, type]) => ({ name, optional: false, type })) } as TypeRefAst)
+    : together([fieldsShape(params), usesQuery ? queryShape : undefined, usesBody ? bodyShape : undefined]);
+
+  // The keys the call writes, where every part it writes says them.
+  const writes = detailedIn
+    ? sentParts.map(([name]) => name)
+    : [
+        ...params,
+        ...(usesQuery && queryKnown ? queryKeys : []),
+        ...(usesBody && bodyWritten ? (bodyKeys ?? []) : []),
+      ];
+  const everyPartKnown = detailedIn || ((!usesQuery || queryKnown) && (!usesBody || !bodyWritten || bodyKeys !== undefined));
+  const literalBody = asked['bodyFrom'] === undefined || asked['bodyFrom'] === 'literal';
+
+  const sender: ContractParty = {
+    ...party(lookup, caller.service, sent === undefined ? '{}' : formatTypeRef(sent), caller.symbol),
+    ...(everyPartKnown ? { writes: [...new Set(writes)], writesEvery: literalBody } : {}),
+  };
+  const receiver = party(lookup, handler.service, declared.input, handler.symbol);
+  const inputBlocked: Blocked | undefined =
+    typeof schema !== 'string' && declared.input === undefined
+      ? { reason: 'procedure-input-undeclared', subject: edge.to }
+      : !namesAShape(declared.input)
+        ? { reason: 'procedure-input-unread', subject: edge.to, ...(typeof schema === 'string' ? { detail: schema } : {}) }
+        : usesQuery && queryUnread
+          ? { reason: 'procedure-input-by-name', subject: caller.symbol, detail: 'query' }
+          : usesBody && bodyWritten && bodyShape === undefined
+            ? { reason: 'no-type-on-sender', subject: caller.symbol }
+            : undefined;
+  const request: Exchange = {
+    ...both('request', sender, receiver),
+    ...(sent === undefined ? { sendsNothing: true } : {}),
+    ...(headersPart?.kind === 'object' && headersPart.fields.length === 0 ? { writtenEmptyAt: ['headers'] } : {}),
+    ...(inputBlocked === undefined ? {} : { blocked: inputBlocked }),
+    ...(capitalised.length === 0
+      ? {}
+      : { via: [`a server hands a procedure every header lower-cased, so ${capitalised.map((name) => `\`headers.${name}\``).join(' and ')} it declares is never handed to it as spelled`] }),
+  };
+
+  // The answer: the procedure's output, or its body, against what the call reads back.
+  const output = detailedOut ? fieldOfRef(lookup, declared.returns, 'body') : declared.returns;
+  // With the headers the caller reads, where the output declares some (P265).
+  const declaredOut = detailedOut ? fieldNamesOf(lookup, declared.returns, 'headers') : undefined;
+  const readOff = stringsIn(asked['responseHeaderKeys']) ?? [];
+  const headersOut = declaredOut === undefined || readOff.length === 0 ? undefined : answerHeaders(declaredOut, readOff, asked['responseHeadersUnread'] === true);
+  if (headersOut !== undefined) {
+    // Both parts under their own keys: a body neither end says is compared with nothing, and said.
+    const whole = (headers: TypeRefAst, body: string | undefined): TypeRefAst => ({
+      kind: 'object',
+      fields: [
+        { name: 'headers', optional: false, type: headers },
+        { name: 'body', optional: false, type: astOf(body) ?? UNKNOWN },
+      ],
+    });
+    const response: Exchange = {
+      ...both('response', party(lookup, handler.service, formatTypeRef(whole(headersOut.sent, output)), handler.symbol), party(lookup, caller.service, formatTypeRef(whole(headersOut.read, edge.returns)), caller.symbol)),
+      // None of the names read is declared: the procedure's headers are an object written with none of them.
+      ...(headersOut.sent.kind === 'object' && headersOut.sent.fields.length === 0 ? { writtenEmptyAt: ['headers'] } : {}),
+      ...(headersOut.missingRules.length === 0 ? {} : { missingRules: headersOut.missingRules }),
+      ...(headersOut.rulesApplied.length === 0 ? {} : { rulesApplied: headersOut.rulesApplied }),
+      ...(headersOut.via.length === 0 ? {} : { via: [...headersOut.via] }),
+    };
+    return [request, response];
+  }
+  const answering = party(lookup, handler.service, output, handler.symbol);
+  const reading = party(lookup, caller.service, edge.returns, caller.symbol);
+  const answerBlocked: Blocked | undefined = !namesAShape(edge.returns)
+    ? { reason: 'no-type-on-receiver', subject: caller.symbol }
+    : !namesAShape(output)
+      ? { reason: 'no-type-on-sender', subject: handler.symbol }
+      : undefined;
+  const response: Exchange = { ...both('response', answering, reading), ...(answerBlocked === undefined ? {} : { blocked: answerBlocked }) };
+  return [request, response];
+};
+
 /**
  * Both halves of a request, whichever way the request was made.
  *
@@ -181,15 +639,29 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
     symbols: [caller, handler],
   });
 
-  // A procedure asked for by its path. Neither direction has two shapes to
-  // compare: the input is on the entry by name only, and the answer is typed on
-  // the client by inference from the server's tree. Said per direction, so the
-  // report names what is missing on each rather than putting the handler's
-  // parameters — a context and an envelope — against what the caller sends.
-  if (typeof lookup.node(edge.from)?.meta?.['procedure'] === 'string') {
+  // A procedure asked for by its path (P247): the caller's input against the
+  // input the procedure declares, and what it answers against what the caller
+  // reads back, each where both ends say a type. Never the handler's own
+  // parameters, which are a context and an envelope rather than what the
+  // caller sends.
+  if (isProcedureRequest(lookup.node(edge.from))) {
+    return procedureExchanges(lookup, edge, both, { service: callerService, symbol: caller }, { service: handlerService, symbol: handler });
+  }
+  // A route that answers for a procedure (P58) is the same boundary reached by
+  // its address: its handler is handed the same envelope, and the route
+  // carries the procedure's input by name, assembled from the path, the query
+  // and the body, which a request's body alone is not compared with.
+  if (typeof lookup.node(edge.to)?.meta?.['procedure'] === 'string') {
+    // A plain request is compared with the input the route assembles from
+    // what it writes, and its own answer type with the procedure's (P256).
+    const client = typeof lookup.node(edge.from)?.meta?.['procedure'] === 'string';
+    if (!client) return twinExchanges(lookup, edge, both, { service: callerService, symbol: caller }, { service: handlerService, symbol: handler });
     const input = lookup.node(edge.to)?.meta?.['input'];
     const callerParty = party(lookup, callerService, undefined, caller);
     const handlerParty = party(lookup, handlerService, undefined, handler);
+    // A procedure's client reaching the route is typed from the server's tree
+    // (P252), and its input is the client's, not the route's.
+    const answered: Blocked = { reason: 'procedure-output-inferred' as const, subject: edge.to };
     return [
       {
         ...both('request', callerParty, handlerParty),
@@ -199,10 +671,7 @@ const requestExchanges = (lookup: GraphLookup, edge: GraphEdge): Exchange[] => {
           ...(typeof input === 'string' ? { detail: input } : {}),
         },
       },
-      {
-        ...both('response', handlerParty, callerParty),
-        blocked: { reason: 'procedure-output-inferred' as const, subject: edge.to },
-      },
+      { ...both('response', handlerParty, callerParty), blocked: answered },
     ];
   }
 
@@ -545,6 +1014,9 @@ export const boundaries = (lookup: GraphLookup): Exchange[] => {
   const found: Exchange[] = [];
   for (const edge of lookup.allEdges()) {
     if (edge.type === 'http_calls' || edge.type === 'hits') {
+      // A GraphQL operation's contract is its selection against the schema
+      // (`graphql.ts`), not a body and an answer typed in code (P232).
+      if (lookup.node(edge.from)?.meta?.['graphql'] !== undefined) continue;
       found.push(...requestExchanges(lookup, edge));
     }
   }

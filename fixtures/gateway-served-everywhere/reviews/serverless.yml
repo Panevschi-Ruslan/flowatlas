@@ -1,0 +1,17 @@
+service: reviews
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  # Written out, and still only the default: `sls deploy --stage dev` deploys
+  # the same service to `dev`.
+  stage: prod
+  region: eu-west-1
+
+functions:
+  listReviews:
+    handler: src/list-reviews.handler
+    events:
+      - http:
+          path: reviews
+          method: GET

@@ -1,0 +1,6 @@
+contracts: edges=0 shared=0 identical=0 drift=0 unchecked=0 errors=2 warnings=0 infos=0 ignored=0
+
+findings:
+  severity  kind              between        direction  field                  what
+  error     missing_required  gateway → web  response   customer.internalNote  CustomerNote selects Customer.internalNote at src/queries.ts:47, which gateway's composition marks @inaccessible; the router does not serve it and refuses the whole operation
+  error     missing_required  gateway → web  response   orders.discount        OrderBadge selects Order.discount at src/queries.ts:39, and no subgraph gateway composes has Order.discount; the router refuses the whole operation

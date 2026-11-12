@@ -1,0 +1,50 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express"
+    },
+    {
+      "name": "catalog",
+      "repo": "./catalog",
+      "type": "express"
+    },
+    {
+      "name": "billing",
+      "repo": "./billing",
+      "type": "express"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react"
+    },
+    {
+      "name": "legacy",
+      "repo": "./legacy",
+      "type": "react"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular"
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nuxt"
+    },
+    {
+      "name": "store",
+      "repo": "./store",
+      "type": "nextjs"
+    },
+    {
+      "name": "jobs",
+      "repo": "./jobs",
+      "type": "express"
+    }
+  ],
+  "output": ".flowatlas"
+}

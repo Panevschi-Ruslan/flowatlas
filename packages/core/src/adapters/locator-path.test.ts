@@ -206,3 +206,140 @@ const forward = (command: PutCommand) => client.send(command);`);
     expect(locatorApplies(callTo(file, 'send'), { kind: 'argument', index: 0 })).toBe(true);
   });
 });
+
+describe('a key of every node of a tree, and records built further in (P286)', () => {
+  const QUEUES: NameLocator = { kind: 'argument-tree', index: 0, key: 'queueName', children: 'children' };
+
+  it('reads the root first and each child after its parent', () => {
+    const file = parse(`flows.add({ queueName: 'close', children: [
+  { queueName: 'archive', children: [{ queueName: 'compress' }] },
+  { queueName: 'notify' },
+] });`);
+    expect(slots(callTo(file, 'add'), QUEUES)).toEqual(["'close'", "'archive'", "'compress'", "'notify'"]);
+  });
+
+  it('reads each tree of a list, and stops at a list of children not written out', () => {
+    const file = parse(`declare const later: unknown[];
+flows.addBulk([{ queueName: 'a' }, { queueName: 'b', children: later }]);`);
+    expect(slots(callTo(file, 'addBulk'), { ...QUEUES, path: ['*'] })).toEqual(["'a'", "'b'", 'stopped at later']);
+  });
+
+  it('reads a key through a record spread in from what a method of the class builds', () => {
+    const file = parse(`class Jobs {
+  run(type: string) { return flows.add({ ...this.node(type), children: [] }); }
+  private node(kind: string) { return { name: 'job', queueName: kind }; }
+}`);
+    // The method's parameter is what the call hands it: `run`'s own `type`.
+    expect(slots(callTo(file, 'add'), QUEUES)).toEqual(['type']);
+  });
+
+  it('reads a queue made by a class a condition chooses, set in another method', () => {
+    const file = parse(`class Client {
+  private queue: Queue;
+  open(topic: string) {
+    const Made = paid ? PaidQueue : Queue;
+    this.queue = new Made(topic);
+  }
+  add(job: string) { return this.queue.add(job); }
+}`);
+    expect(slots(callTo(file, 'add'), { kind: 'receiver-constructed-path', class: 'Queue', path: [] })).toEqual(['topic']);
+  });
+
+  it('reads each record a function may answer, awaited', () => {
+    const file = parse(`async function build(kind: boolean) {
+  if (kind) return { type: 'a' };
+  return { type: 'b' };
+}
+async function run() { queue.send(await build(true)); }`);
+    expect(slots(callTo(file, 'send'), { kind: 'argument-path', index: 0, path: ['type'] })).toEqual(["'a'", "'b'"]);
+  });
+});
+
+describe('a tree built in a loop, lists filled by push, an element by its place (P290)', () => {
+  const QUEUES: NameLocator = { kind: 'argument-tree', index: 0, key: 'queueName', children: 'children' };
+
+  it('reads a tree a let holds, reassigned in a loop, once for each record it is given', () => {
+    const file = parse(`function chain(...jobs: { type: string }[]) {
+  let last;
+  for (const job of jobs) {
+    last = { name: 'job', queueName: job.type, children: last ? [last] : [] };
+  }
+  return flows.add(last);
+}`);
+    // The child is the record the loop built before: read once, not again under itself.
+    expect(slots(callTo(file, 'add'), QUEUES)).toEqual(['job.type']);
+  });
+
+  it('reads each value a let is given, and not one also changed in place', () => {
+    const given = parse(`let kind = 'a';
+if (later) kind = 'b';
+queue.send([kind]);`);
+    expect(slots(callTo(given, 'send'), { kind: 'argument-path', index: 0, path: ['*'] })).toEqual(['kind']);
+    const counted = parse(`let kind = 'a';
+kind += 'b';
+queue.send({ type: kind });`);
+    expect(slots(callTo(counted, 'send'), { kind: 'argument-path', index: 0, path: ['type'] })).toEqual(['kind']);
+    const chosen = parse(`let record = { type: 'a' };
+if (later) record = { type: 'b' };
+queue.send(record);`);
+    expect(slots(callTo(chosen, 'send'), { kind: 'argument-path', index: 0, path: ['type'] })).toEqual(["'a'", "'b'"]);
+    const changed = parse(`let record = { type: 'a' };
+[record] = others;
+queue.send(record);`);
+    expect(slots(callTo(changed, 'send'), { kind: 'argument-path', index: 0, path: ['type'] })).toEqual(['stopped at record']);
+  });
+
+  it('reads the elements a list is written with and those pushed onto it, spread lists included', () => {
+    const file = parse(`function more() { return [{ type: 'c' }]; }
+const jobs = [{ type: 'a' }];
+jobs.push({ type: 'b' });
+jobs.push(...more());
+queue.send(jobs);`);
+    expect(slots(callTo(file, 'send'), { kind: 'argument-path', index: 0, path: ['*', 'type'] })).toEqual(["'a'", "'b'", "'c'"]);
+  });
+
+  it('reads every list a method may answer spread into a list, one it fills with push included', () => {
+    const file = parse(`class OrderUpdater {
+  private receipts(changed: boolean) {
+    const jobs = [];
+    if (changed) jobs.push({ type: 'receipt' });
+    return jobs;
+  }
+  private notices(any: boolean) {
+    if (!any) return [];
+    return [{ type: 'notice' }];
+  }
+  run() {
+    const jobs = [];
+    jobs.push(...this.receipts(true));
+    jobs.push(...this.notices(false));
+    queue.send(jobs);
+  }
+}`);
+    expect(slots(callTo(file, 'send'), { kind: 'argument-path', index: 0, path: ['*', 'type'] })).toEqual(["'receipt'", "'notice'"]);
+  });
+
+  it('reads the children of a flow mapped by a method, each child as the method builds it', () => {
+    const file = parse(`class Jobs {
+  run(parent: { type: string }, children: { type: string }[]) {
+    return flows.add({ ...this.node(parent), children: children.map((child) => this.node(child)) });
+  }
+  private node(job: { type: string }) { return { name: 'job', queueName: job.type }; }
+}`);
+    expect(slots(callTo(file, 'add'), QUEUES)).toEqual(['job.type', 'job.type']);
+  });
+
+  it('reads each branch of a condition a list is chosen by, a list of none none', () => {
+    const file = parse(`queue.send(urgent ? [{ type: 'a' }, { type: 'b' }] : []);`);
+    expect(slots(callTo(file, 'send'), { kind: 'argument-path', index: 0, path: ['*', 'type'] })).toEqual(["'a'", "'b'"]);
+  });
+
+  it('reads an element by its place, where nothing spread in before it moves it', () => {
+    const file = parse(`queue.send([{ type: 'a' }, { type: 'b' }]);
+queue.publish([...others, { type: 'b' }]);`);
+    expect(slots(callTo(file, 'send'), { kind: 'argument-path', index: 0, path: ['1', 'type'] })).toEqual(["'b'"]);
+    expect(slots(callTo(file, 'publish'), { kind: 'argument-path', index: 0, path: ['1', 'type'] })).toEqual([
+      "stopped at [...others, { type: 'b' }]",
+    ]);
+  });
+});

@@ -1,0 +1,7 @@
+{
+  "services": [
+    { "name": "assistant", "repo": "./assistant", "type": "express", "baseUrlEnv": ["ASSISTANT_URL"] },
+    { "name": "concierge", "repo": "./concierge", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-08T19:06:35.137Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:56:19.480Z",
   "services": [
     {
       "name": "api",
@@ -48,7 +48,8 @@
         "signature": {
           "params": [],
           "returns": "unknown"
-        }
+        },
+        "route": "/orders"
       }
     },
     {
@@ -166,10 +167,28 @@
         "call": "mutation",
         "registration": "router({ … })",
         "input": "OrderBody",
+        "inputAt": "src/server/root.ts:21",
         "middlewareRead": true,
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc",
+            "file": "src/pages/api/trpc/[trpc].ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:api:rpc:orders.create",
+            "file": "src/server/root.ts",
+            "line": 21,
+            "source": "pipe"
+          }
         ]
       }
     },
@@ -196,10 +215,28 @@
         "call": "query",
         "registration": "router({ … })",
         "input": "OrderQuery",
+        "inputAt": "src/server/root.ts:20",
         "middlewareRead": true,
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc",
+            "file": "src/pages/api/trpc/[trpc].ts"
+          }
+        ],
+        "fails": [
+          {
+            "status": 400,
+            "exception": "TRPCError(BAD_REQUEST)",
+            "at": "entry:api:rpc:orders.list",
+            "file": "src/server/root.ts",
+            "line": 20,
+            "source": "pipe"
+          }
         ]
       }
     },
@@ -224,6 +261,13 @@
         "handlerVia": "function",
         "served": [
           "src/pages/api/trpc/[trpc].ts"
+        ],
+        "mounted": [
+          {
+            "protocol": "trpc",
+            "prefix": "/api/trpc",
+            "file": "src/pages/api/trpc/[trpc].ts"
+          }
         ]
       }
     },
@@ -253,7 +297,8 @@
             "nextjs-routes",
             "trpc-procedures"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {
@@ -283,7 +328,8 @@
             "nextjs-routes",
             "trpc-procedures"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {
@@ -343,6 +389,7 @@
         "inputKeys": [
           "customerId"
         ],
+        "inputType": "{customerId:'c-1'}",
         "targetService": "api"
       }
     },
@@ -359,6 +406,7 @@
         "call": "query",
         "operation": "queryOptions",
         "client": "trpc-client",
+        "inputNone": true,
         "targetService": "api"
       }
     },
@@ -378,6 +426,7 @@
         "inputKeys": [
           "customerId"
         ],
+        "inputType": "{customerId:string}",
         "targetService": "api"
       }
     },
@@ -394,6 +443,7 @@
         "call": "mutation",
         "operation": "useMutation",
         "client": "trpc-client",
+        "inputLater": true,
         "targetService": "api"
       }
     },
@@ -410,6 +460,7 @@
         "call": "mutation",
         "operation": "useMutation",
         "client": "trpc-client",
+        "inputLater": true,
         "targetService": "api"
       }
     },
@@ -425,7 +476,8 @@
         "procedure": "orders.archive",
         "call": "mutation",
         "operation": "useMutation",
-        "client": "trpc-client"
+        "client": "trpc-client",
+        "inputLater": true
       }
     },
     {
@@ -440,7 +492,8 @@
         "procedure": null,
         "call": "query",
         "operation": "useQuery",
-        "client": "trpc-client"
+        "client": "trpc-client",
+        "inputNone": true
       }
     },
     {
@@ -497,6 +550,15 @@
           "returns": "unknown"
         }
       }
+    },
+    {
+      "id": "web#src/trpc.ts:useTRPC",
+      "type": "function",
+      "label": "useTRPC",
+      "repo": "web",
+      "file": "src/trpc.ts",
+      "line": 11,
+      "kind": "hook"
     }
   ],
   "edges": [
@@ -555,6 +617,9 @@
       "confidence": "static",
       "file": "src/pages/orders.tsx",
       "line": 9,
+      "params": [
+        "{customerId:'c-1'}"
+      ],
       "meta": {
         "via": "same-service",
         "targetService": "api"
@@ -579,6 +644,9 @@
       "confidence": "static",
       "file": "src/Orders.tsx",
       "line": 14,
+      "params": [
+        "{customerId:string}"
+      ],
       "meta": {
         "via": "api-target",
         "targetService": "api"
@@ -615,6 +683,14 @@
       "confidence": "static",
       "file": "src/Daily.tsx",
       "line": 6
+    },
+    {
+      "from": "web#src/Daily.tsx:Daily",
+      "to": "web#src/trpc.ts:useTRPC",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Daily.tsx",
+      "line": 5
     },
     {
       "from": "web#src/Orders.tsx:Orders",
@@ -663,7 +739,7 @@
       "file": "src/pages/api/trpc/[trpc].ts",
       "line": 4,
       "reason": "route-handler-unread",
-      "message": "ALL /api/trpc/:param is exported and nothing this could read is behind it, so the way in has no handler. It answers at /api/trpc/:param.",
+      "message": "ALL /api/trpc/:param is the value a call handed back, and neither the function called nor anything handed to it is declared in this repository, so the way in has no handler that could be read. It answers at /api/trpc/:param.",
       "hint": "Export the handler as a function declared here, or hand the work to the wrapper as a function this repository declares, so the code behind the route can be pointed at.",
       "symbol": "ALL /api/trpc/:param",
       "adapter": "nextjs-routes",

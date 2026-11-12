@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { AdapterRegistry, type GraphNode, type RepoGraph } from '@flowatlas/core';
+import { registerEntryAdapters } from '@flowatlas/adapters-entry';
 import { extractRepo } from '@flowatlas/extractor-nestjs';
 import { describe, expect, it } from 'vitest';
 import { registerDbAdapters } from './index.js';
@@ -339,6 +340,10 @@ describe('a request forwarded to its callers', () => {
         'Restocker.restock -> PATCH /items/:param/stock @ api.example.com',
         'Restocker.reserve -> POST /items/reservations @ api.example.com',
         'Restocker.settle -> ? /items/settlement @ api.example.com',
+        // A member of the options the caller hands in, or the default where
+        // it hands none (R179).
+        'Ordering.place -> POST /orders @ api.example.com',
+        'Ordering.cancel -> DELETE /orders/:param @ api.example.com',
       ].sort(),
     );
   });
@@ -349,8 +354,9 @@ describe('a request forwarded to its callers', () => {
       .filter((node) => node.type === 'http_out' && node.meta?.path !== '/items/reservations')
       .map((node) => node.meta?.bodyType ?? null);
     // The caller's second argument is `reason`, or the settings it hands
-    // over, or the path beside the verb it hands in; none is a body.
-    expect(bodies).toEqual([null, null, null, null, null, null, null]);
+    // over, or the path beside the verb it hands in, or the options it hands
+    // in; none is a body.
+    expect(bodies).toEqual([null, null, null, null, null, null, null, null, null]);
   });
 
   it('reads the body a wrapper is handed at the caller that hands it (P128)', async () => {
@@ -386,6 +392,106 @@ describe('a body handed through a verb wrapper', () => {
   it('leaves a wrapper that settles the verb on the way out as it was', async () => {
     expect((await request('/orders'))?.meta).toMatchObject({ bodyType: 'type:nest-client-wrapper#Order', bodyFrom: 'value' });
     expect((await request('/orders/:param/cancel'))?.meta).toMatchObject({ bodyFrom: 'literal', bodyKeys: ['reason'] });
+  });
+});
+
+describe('the query a request writes in its options (P256)', () => {
+  it("records the keys of a GET's params written in place", async () => {
+    const graph = await graphOf('rpc-shared-types/apps/worker');
+    const teas = graph.nodes.find((node) => node.type === 'http_out' && node.meta?.path === '/api/products');
+    expect(teas?.meta).toMatchObject({ method: 'GET', queryKeys: ['category'], queryType: '{category:string}' });
+  });
+
+  it("records a wrapper's own query keys beside the ones its caller hands it (P258)", async () => {
+    const graph = await graphOf('rpc-shared-types/apps/worker');
+    const search = graph.nodes.find((node) => node.type === 'http_out' && node.meta?.path === '/api/search');
+    expect(search?.meta).toMatchObject({ method: 'GET', queryKeys: ['limit', 'q'] });
+    expect(graph.edges.some((edge) => edge.type === 'calls' && edge.to === search?.id && edge.from.endsWith(':CatalogSearch.tea'))).toBe(true);
+  });
+
+  it('reads an address built with `+` after its `?`, keys held in constants, and says headers handed by a name (P262)', async () => {
+    const graph = await graphOf('rpc-shared-types/apps/worker');
+    const requests = graph.nodes.filter((node) => node.type === 'http_out');
+    expect(requests.find((node) => node.meta?.['url'] === '${CATALOG_URL}/api/search?${…}')?.meta).toMatchObject({ path: '/api/search', queryKeys: ['limit', 'q'], queryInAddress: true });
+    const browse = requests.find((node) => node.meta?.['path'] === '/api/browse');
+    expect(browse?.meta).toMatchObject({ queryKeys: ['category', 'page'], headersUnread: true });
+    expect(browse?.meta).not.toHaveProperty('headerKeys');
+  });
+
+  it("reads the headers a server's client adds - an instance's interceptor, the framework's module - and the ones read off the answer (P265)", async () => {
+    const graph = await graphOf('rpc-shared-types/apps/worker');
+    const from = (method: string) => {
+      const call = graph.edges.find((edge) => edge.type === 'calls' && edge.from.endsWith(`:CatalogTenant.${method}`) && edge.to.startsWith('http_out'));
+      return graph.nodes.find((node) => node.id === call?.to)?.meta ?? {};
+    };
+    expect(from('browse')).toMatchObject({ path: '/api/browse', headerKeys: ['x-tenant'] });
+    expect(from('browse')).not.toHaveProperty('headersUnread');
+    expect(from('browseShared')).toMatchObject({ path: '/api/browse', headerKeys: ['x-tenant'] });
+    expect(from('total')).toMatchObject({ path: '/api/page', headerKeys: ['x-tenant'], responseHeaderKeys: ['x-total'] });
+  });
+});
+
+describe('a route whose work is behind an object a factory hands back, and the wrapper in front of it (P276)', () => {
+  const shop = (): Promise<RepoGraph> =>
+    extractRepo({
+      rootDir: resolve(FIXTURES, 'front-end-navigations/shop'),
+      repo: 'shop',
+      service: { name: 'shop', repo: resolve(FIXTURES, 'front-end-navigations/shop'), type: 'nextjs' },
+      registry: registerEntryAdapters(registerDbAdapters(new AdapterRegistry())),
+      extraPasses: [leavesPass],
+    });
+  const calls = (graph: RepoGraph): string[] =>
+    graph.edges
+      .filter((edge) => edge.type === 'calls')
+      .map((edge) => `${edge.from.split('#')[1]} -> ${edge.to.split('#')[1]?.replace(/:\d+:\d+$/, '') ?? edge.to}`)
+      .sort();
+
+  it("follows a call through the object to the member it lands on, `this` of a member included, and walks the wrapper's body", async () => {
+    const graph = await shop();
+    const drawn = calls(graph);
+    expect(drawn).toEqual(
+      expect.arrayContaining([
+        'pages/api/orders.ts:handler -> gateways/orders.gateway.ts:OrdersGateway.list',
+        'pages/api/orders.ts:handler -> gateways/orders.gateway.ts:OrdersGateway.latest',
+        'pages/api/orders.ts:handler -> gateways/orders.gateway.ts:OrdersGateway.remove',
+        'gateways/orders.gateway.ts:OrdersGateway.latest -> gateways/orders.gateway.ts:OrdersGateway.list',
+        'pages/api/orders.ts:withAudit -> lib/with-audit.ts:withAudit',
+        'lib/with-audit.ts:withAudit -> lib/audit.ts:recordVisit',
+      ]),
+    );
+    // The factory that only hands the object back holds nothing of its own.
+    expect(graph.nodes.some((node) => node.id.endsWith(':OrdersGateway'))).toBe(false);
+    expect(graph.unresolved.flatMap((row) => (row.meta?.['causes'] as Array<{ cause: string }> | undefined) ?? [{ cause: String(row.meta?.['cause']) }]).some((cause) => cause.cause === 'object-literal')).toBe(false);
+  });
+
+  it("puts the members' requests on them, with the header written to the client's defaults", async () => {
+    const graph = await shop();
+    const request = (holder: string) => {
+      const edge = graph.edges.find((each) => each.type === 'calls' && each.from.endsWith(`:${holder}`) && each.to.startsWith('http_out'));
+      return graph.nodes.find((node) => node.id === edge?.to)?.meta ?? {};
+    };
+    expect(request('OrdersGateway.list')).toMatchObject({ method: 'GET', path: '/orders', headerKeys: ['x-shop'] });
+    expect(request('OrdersGateway.remove')).toMatchObject({ method: 'DELETE', headerKeys: ['x-shop'] });
+    expect(request('recordVisit')).toMatchObject({ method: 'POST', path: '/visits' });
+  });
+});
+
+describe('a factory that does more than hand back its object (P288)', () => {
+  it("holds a member's request once, by the member, and keeps the factory's own body", async () => {
+    const graph = await extractRepo({
+      rootDir: resolve(FIXTURES, 'front-end-route-helpers/catalog'),
+      repo: 'catalog',
+      service: { name: 'catalog', repo: resolve(FIXTURES, 'front-end-route-helpers/catalog'), type: 'nextjs' },
+      registry: registerEntryAdapters(registerDbAdapters(new AdapterRegistry())),
+      extraPasses: [leavesPass],
+    });
+    const holders = graph.edges
+      .filter((edge) => edge.type === 'calls' && edge.to.startsWith('http_out'))
+      .map((edge) => edge.from.split('#')[1])
+      .sort();
+    // `client.get('/products')` is written in `list`, inside the factory's body: the member holds it, the factory does not.
+    expect(holders).toEqual(['gateways/products.gateway.ts:ProductsGateway.list']);
+    expect(graph.edges.some((edge) => edge.type === 'calls' && edge.from.endsWith(':handler') && edge.to.endsWith(':ProductsGateway.list'))).toBe(true);
   });
 });
 
@@ -589,5 +695,26 @@ describe("TypeORM's raw SQL, read as a statement (P126)", () => {
       .map((row) => row.reason);
     expect(reasons).toContain('dynamic-table-name');
     expect(reasons).not.toContain('sql-parse-failed');
+  });
+});
+
+describe("a server's own requests with no host (P263)", () => {
+  it("reads Nitro's $fetch as a call its routes answer in process, and the platform fetch and ofetch as having no origin", async () => {
+    const graph = await graphOf('own-origin-requests/shop');
+    const requests = graph.nodes
+      .filter((node) => node.type === 'http_out')
+      .map((node) => `${node.file}:${node.line} ${String(node.meta?.['method'])} ${String(node.meta?.['path'])} ${node.meta?.['inProcess'] === true ? 'in process' : node.meta?.['originless'] === true ? 'no origin' : '-'}`);
+    // `$fetch('/items', { baseURL })` writes a base the reader does not follow, and is not read.
+    expect(requests.sort()).toEqual([
+      'server/api/legacy.get.ts:3 GET /api/orders no origin',
+      'server/api/remote.get.ts:6 GET /api/orders no origin',
+      'server/api/summary.get.ts:3 GET /api/orders in process',
+      'server/api/summary.get.ts:4 GET /catalog/items in process',
+    ]);
+  });
+
+  it('marks nothing where the address has a host', async () => {
+    const graph = await graphOf('own-origin-requests/catalog');
+    expect(graph.nodes.filter((node) => node.meta?.['originless'] === true || node.meta?.['inProcess'] === true)).toEqual([]);
   });
 });

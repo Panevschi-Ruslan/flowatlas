@@ -547,8 +547,51 @@ export const couldReach = (method: string | null | undefined, partialPath: strin
   return spellingsOf(routePath, route.meta?.['rawPath']).some((spelling) => partialShapeOf(partialPath).test(spelling.path));
 };
 
+/**
+ * The catch-all a request read in part reaches whatever its unread part holds
+ * (P279): `GET /api/integrations/:param/add${…}` and `/api/integrations/*`.
+ *
+ * A catch-all answers every address under its prefix, so where the segments
+ * before the first hole are read and spell the prefix out, and the request
+ * goes on past it, the route answers - unless a route of the same routes that
+ * spells its address out could answer too, which only the unread part would
+ * decide, or two catch-alls tie on the longest prefix. Undefined then, and
+ * the request stays unjoined with its row. The join rests on a path read in
+ * part, so it is drawn `heuristic` as every such join is.
+ */
+export const catchAllBehind = (method: string, partialPath: string, routes: readonly GraphNode[], from?: string): GraphNode | undefined => {
+  if (wasRead(partialPath) || !saysSomething(partialPath)) return undefined;
+  const asked = normalizePath(partialPath).split('/').filter((segment) => segment.length > 0);
+  const firstHole = asked.findIndex((segment) => segment.includes(UNREAD_SPAN));
+  const read = asked.slice(0, firstHole);
+  const answering = routes.filter((route) => {
+    if (route.type !== 'entry' || route.kind !== 'http' || route.meta?.['contributes'] !== undefined) return false;
+    if (!methodAnswers(String(route.meta?.['method'] ?? ''), method)) return false;
+    return wasRead(String(route.meta?.['path'] ?? ''));
+  });
+  // The caller's own application's routes, where it has any, as `matchRoute` reads them.
+  const own = from === undefined ? [] : answering.filter((route) => applicationOf(route) === from);
+  const candidates = own.length === 0 ? answering : own;
+  const catchAlls = candidates.flatMap((route) => {
+    const segments = segmentsOf(String(route.meta?.['path'] ?? ''));
+    const prefix = segments.slice(0, -1);
+    if (segments[segments.length - 1] !== '*' || prefix.includes('*')) return [];
+    if (prefix.length > read.length || asked.length <= prefix.length) return [];
+    const spelled = prefix.every((segment, at) => {
+      const other = read[at] ?? '';
+      return segment.includes(PARAM_PLACEHOLDER) ? true : other !== PARAM_PLACEHOLDER && segment.toLowerCase() === other.toLowerCase();
+    });
+    return spelled ? [{ route, length: prefix.length }] : [];
+  });
+  if (catchAlls.length === 0) return undefined;
+  if (candidates.some((route) => !segmentsOf(String(route.meta?.['path'] ?? '')).includes('*') && couldReach(method, partialPath, route))) return undefined;
+  const longest = Math.max(...catchAlls.map((each) => each.length));
+  const best = catchAlls.filter((each) => each.length === longest);
+  return best.length === 1 ? best[0]?.route : undefined;
+};
+
 /** A segment that stands for a value: a route's hole, a request's read-as-a-value, a wildcard. */
-const isHole = (segment: string): boolean => segment.startsWith(':') || segment === '*';
+const isHole =(segment: string): boolean => segment.startsWith(':') || segment === '*';
 
 const sameSegment = (route: string, asked: string): boolean =>
   isHole(route) || isHole(asked) || route.toLowerCase() === asked.toLowerCase();

@@ -1,0 +1,10 @@
+{
+  "services": [
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "nextjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

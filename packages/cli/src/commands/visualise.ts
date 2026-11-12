@@ -33,12 +33,14 @@ const part = (name: string): string => {
 };
 
 /**
- * Core's prompt renderer (P97), the one the MCP server writes with: copied
+ * Core's modules the page runs as they are: the prompt renderer the MCP server
+ * writes with (P97), and the path search `flowatlas path` asks (P229). Copied
  * beside the page when the command is built, and read from core itself when it
  * runs from source.
  */
-const promptPart = (): string => {
-  const name = 'prompt-text.js';
+export const CORE_PARTS: ReadonlySet<string> = new Set(['prompt-text.js', 'shortest-ways.js']);
+
+const corePart = (name: string): string => {
   const beside = shipped(import.meta.url, `visualise/${name}`, `../visualise/${name}`, `../../../core/src/${name}`);
   try {
     return readFileSync(beside, 'utf8');
@@ -54,12 +56,14 @@ const promptPart = (): string => {
 /**
  * What `page.html` is made of besides its markup (P103), in the order the page
  * holds them: each placeholder and the file written in its place. The styles;
- * the logic - what to draw, the frame around it, the map of the whole project,
- * core's renderer for a copied prompt, the steps of a way in; then the page's
+ * the logic - core's path search, what to draw, the frame around it, the map of
+ * the whole project, core's renderer for a copied prompt, the steps of a way in;
+ * then the page's
  * context, one factory per panel, and the boot that calls them in order.
  */
 export const PAGE_PARTS: readonly (readonly [placeholder: string, file: string])[] = [
   ['__PAGE_CSS__', 'page.css'],
+  ['__PATHS_LOGIC__', 'shortest-ways.js'],
   ['__GRAPH_LOGIC__', 'graph.js'],
   ['__FRAME_LOGIC__', 'frame.js'],
   ['__MAP_LOGIC__', 'map.js'],
@@ -87,18 +91,19 @@ export const PAGE_PARTS: readonly (readonly [placeholder: string, file: string])
   ['__BOOT_LOGIC__', 'panels/boot.js'],
 ];
 
-/** A panel's imports, one statement each: `import { a, b } from '../graph.js';`. */
+/** A module's imports, one statement each: `import { a, b } from '../graph.js';`. */
 const PANEL_IMPORT = /^import \{([^}]*)\} from '[^']+';\n/gm;
 
 /**
  * A part as the page holds it. A panel imports what it uses so that a test can
- * load it alone; in the page every part shares one script, where those names
- * are already declared, so its imports are dropped. An import the page could
- * not drop - a default, a namespace, a name taken under another - is refused
- * rather than written in broken.
+ * load it alone, and so does a logic module that uses core's (graph.js asks
+ * core's path search, P229); in the page every part shares one script, where
+ * those names are already declared, so the imports of every module are
+ * dropped. An import the page could not drop - a default, a namespace, a name
+ * taken under another - is refused rather than written in broken.
  */
 export const inlined = (file: string, text: string): string => {
-  if (!file.startsWith('panels/')) return text;
+  if (!file.endsWith('.js')) return text;
   const bare = text.replace(PANEL_IMPORT, (_statement, names: string) => {
     if (/\bas\b/.test(names)) throw cannotRun(`the page's ${file} imports a name under another; rebuild the command`);
     return '';
@@ -131,7 +136,7 @@ export const writeParts = (html: string, read: (file: string) => string): string
 
 /** The page as the command ships it, every part read from beside the code. */
 export const template = (): string =>
-  writeParts(part('page.html'), (file) => (file === 'prompt-text.js' ? promptPart() : part(file)));
+  writeParts(part('page.html'), (file) => (CORE_PARTS.has(file) ? corePart(file) : part(file)));
 
 /**
  * A name for the project, since the configuration does not carry one.

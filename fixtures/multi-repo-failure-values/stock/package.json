@@ -1,0 +1,13 @@
+{
+  "name": "shop-stock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The stock of a shop, written with Terraform: names built in templates with directives around the platform's parameters.",
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.700.0",
+    "@aws-sdk/client-sqs": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

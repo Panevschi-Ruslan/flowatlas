@@ -1,7 +1,9 @@
+import type { DetailLevel, GraphNode } from '@flowatlas/core';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { projectDetail } from '../query/detail.js';
-import { isResolved, resolveEntryRef } from '../query/entry-ref.js';
+import { isResolved, resolveEntryRef, resolveSymbol } from '../query/entry-ref.js';
+import { findPath, type PathResult } from '../query/path.js';
 import { withDocs } from '../query/docs.js';
 import { buildFlowTree, type FlowResult } from '../query/flow.js';
 import { failuresSeenRef, markFailsSeen } from '../query/fails.js';
@@ -70,14 +72,65 @@ const flowNext = (id: string, flow: FlowResult): string[] => {
   ].slice(0, MAX_NEXT);
 };
 
+/** The deepest a path search looks when it widens by itself: the last of `PATH_DEPTHS`. */
+const WIDEST_PATH = 24;
+
+/**
+ * `get_flow` with `to` (P229): the flow cut down to the shortest ways that
+ * reach `to`, from the entry or from any node, in the tree `get_flow` answers
+ * with. No path is said with how far was looked and how much was searched, and
+ * with the other way round when that holds, so the next call is the right one.
+ */
+const pathAnswer = (fromId: string, toId: string, path: PathResult, depth: number | undefined) => {
+  const asked = depth === undefined ? {} : { depth };
+  const next = path.found
+    ? [callOf('describe_for_prompt', { id: toId }), callOf('impact', { symbol: toId }), callOf('get_flow', { entry: fromId })]
+    : path.reverse !== undefined
+      ? [callOf('get_flow', { entry: toId, to: fromId, ...asked })]
+      : path.depth < WIDEST_PATH
+        ? [callOf('get_flow', { entry: fromId, to: toId, depth: WIDEST_PATH })]
+        : [callOf('get_flow', { entry: fromId }), callOf('impact', { symbol: toId })];
+  return withNext(
+    {
+      root: slimTree(path.root),
+      to: toId,
+      pathsFound: path.paths,
+      length: path.length,
+      searched: path.searched,
+      depth: path.depth,
+      unresolvedOnPath: path.unresolvedOnPath,
+      ...(path.left === 0 ? {} : { truncated: `${path.left} more nodes on a shortest path (raise maxNodes)`, stoppedBy: ['maxNodes'] }),
+      ...(path.found ? {} : { none: `no path within ${path.depth} steps; searched ${path.searched} nodes` }),
+      ...(path.reverse === undefined ? {} : { reverse: { ...path.reverse, note: `${toId} reaches ${fromId} instead` } }),
+    },
+    next,
+  );
+};
+
+/** One end of a path that named several nodes or none: the candidates, each as the call that takes it. */
+const endUnresolved = (
+  end: { candidates: GraphNode[] },
+  key: 'entry' | 'to',
+  said: string,
+  keep: Record<string, string>,
+  detail: DetailLevel,
+) =>
+  end.candidates.length > 0
+    ? withNext(
+        { [key]: said, candidates: end.candidates.map((node) => projectDetail(node, detail)) },
+        end.candidates.slice(0, MAX_NEXT).map((node) => callOf('get_flow', { ...keep, [key]: node.id })),
+      )
+    : { error: `nothing matches ${JSON.stringify(said)}`, [key]: said };
+
 export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
   server.registerTool(
     'get_flow',
     {
       title: 'Trace an entry point',
-      description: 'One entry followed across repositories, as a call-order tree with guards.',
+      description: 'One entry followed across repositories, as a call-order tree with guards; with `to`, the shortest ways there.',
       inputSchema: {
         entry: z.string().describe('"POST /orders" or an entry id'),
+        to: z.string().optional(),
         depth: z.number().int().min(1).max(32).optional().describe('hops; default 8, +1 per workflow step'),
         detail: commonInput.detail,
         maxNodes: z.number().int().min(1).max(2000).default(FLOW_DEFAULTS.maxNodes),
@@ -88,6 +141,19 @@ export const registerFlow = (server: McpServer, ctx: ToolContext): void => {
     (input) =>
       withDb(ctx.handle, (db) => {
         const { detail, maxNodes, note } = bound(input);
+        if (input.to !== undefined) {
+          // A path may start anywhere, so both ends resolve as any tool resolves a name.
+          const from = resolveSymbol(db, input.entry);
+          const to = resolveSymbol(db, input.to);
+          if (!isResolved(from)) return endUnresolved(from, 'entry', input.entry, { to: input.to }, detail);
+          if (!isResolved(to)) return endUnresolved(to, 'to', input.to, { entry: input.entry }, detail);
+          const path = findPath(db, from.id, to.id, {
+            ...(input.depth === undefined ? {} : { depth: input.depth }),
+            maxNodes,
+            detail,
+          });
+          return { ...pathAnswer(from.id, to.id, path, input.depth), ...(note === undefined ? {} : { note }) };
+        }
         const ref = resolveEntryRef(db, input.entry);
 
         if (!isResolved(ref)) {

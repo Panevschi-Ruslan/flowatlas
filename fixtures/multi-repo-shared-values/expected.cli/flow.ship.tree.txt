@@ -1,0 +1,22 @@
+@  orders-prod-ship                                                       orders/stacks/orders.yaml:25
+  -> handler                                                              orders/src/ship.ts:8
+    $  EVENTS_TOPIC_ARN                                                   orders/src/ship.ts:9
+    ~  message sns/orders-prod-events                                     orders/src/ship.ts:9
+      ~  sns/orders-prod-events                                           stacks/orders.yaml:65
+        ~  subscription stacks/orders.Resources.JobsSubscription          orders/stacks/orders.yaml:65
+          ~  message sqs/shop-prod-jobs                                   orders/stacks/orders.yaml:65
+            ~  sqs/shop-prod-jobs                                         templates/platform.yaml:51
+              => platform ~  mapping templates/platform.Resources.JobsMapping  platform/templates/platform.yaml:51
+                @  shop-prod-jobs                                         platform/templates/platform.yaml:42
+    $  AUDIT_QUEUE_URL                                                    orders/src/ship.ts:10
+    ~  message sqs/shop-orders-audit                                      orders/src/ship.ts:10
+      ~  sqs/shop-orders-audit                                            templates/platform.yaml:71
+        => platform ~  mapping templates/platform.Resources.AuditMapping  platform/templates/platform.yaml:71
+          @  shop-prod-audit                                              platform/templates/platform.yaml:62
+            -> handler                                                    platform/src/audit.ts:4
+    $  ALERTS_TOPIC_ARN                                                   orders/src/ship.ts:11
+    ~  message sns/shop-prod-alerts                                       orders/src/ship.ts:11
+      ~  sns/shop-prod-alerts                                             templates/platform.yaml:77
+        => platform ~  subscription templates/platform.Resources.AlertsTopic.Subscription[0]  platform/templates/platform.yaml:77
+... truncated: 1 more nodes (raise --depth)
+unresolved on this path: 0

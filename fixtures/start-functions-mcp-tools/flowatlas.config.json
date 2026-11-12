@@ -1,0 +1,7 @@
+{
+  "services": [
+    { "name": "storefront", "repo": "./storefront", "type": "react" },
+    { "name": "assistant", "repo": "./assistant", "type": "express" }
+  ],
+  "output": ".flowatlas"
+}

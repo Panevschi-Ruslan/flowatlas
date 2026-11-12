@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T23:29:52.041Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-07T17:41:40.504Z",
   "services": [
     {
       "name": "loans-api",
@@ -218,7 +218,14 @@
           "entry": [
             "nestjs-http"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 7
+          }
+        ]
       }
     },
     {

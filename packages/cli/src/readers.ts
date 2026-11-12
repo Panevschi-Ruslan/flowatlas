@@ -63,8 +63,12 @@ const HALF_OF_READER: Readonly<Record<string, Half>> = Object.freeze({
   [REACT_EXTRACTOR]: 'browser',
 });
 
-/** One framework: its type, the dependency that gives it away, and its reader. */
-export type ReaderRow = readonly [type: string, dependency: string, reader: string];
+/**
+ * One framework: its type, the dependency that gives it away, and its reader.
+ * `null` for a type no manifest gives away (P284), which only the
+ * configuration, `link` or `init` looking at the directory writes.
+ */
+export type ReaderRow = readonly [type: string, dependency: string | null, reader: string];
 
 /**
  * Every framework this tool reads, in the order a manifest is asked about them.
@@ -108,6 +112,9 @@ export const READERS: readonly ReaderRow[] = [
   ['remix', '@remix-run/react', NESTJS_EXTRACTOR],
   // Remix's successor, whose routes are declared in `app/routes.ts` (P43).
   ['react-router', '@react-router/dev', NESTJS_EXTRACTOR],
+  // Nuxt (P233): Nitro's routes are the server half, its `.vue` components
+  // the browser half, one directory read by the server reader for both.
+  ['nuxt', 'nuxt', NESTJS_EXTRACTOR],
   ['express', 'express', NESTJS_EXTRACTOR],
   ['fastify', 'fastify', NESTJS_EXTRACTOR],
   ['koa', 'koa', NESTJS_EXTRACTOR],
@@ -121,11 +128,26 @@ export const READERS: readonly ReaderRow[] = [
   ['lambda', '@types/aws-lambda', NESTJS_EXTRACTOR],
   ['lambda', 'aws-lambda', NESTJS_EXTRACTOR],
   ['lambda', '@middy/core', NESTJS_EXTRACTOR],
+  // A gRPC server written on the libraries themselves (P274). Below every
+  // framework and every function: a NestJS microservice speaking gRPC, an
+  // Express server or a front end with a gRPC client among its dependencies
+  // is that framework's, and its gRPC ways in and calls are read whichever
+  // type is written, by the adapters that detect the library.
+  ['grpc', '@grpc/grpc-js', NESTJS_EXTRACTOR],
+  ['grpc', 'grpc', NESTJS_EXTRACTOR],
   ['angular', '@angular/core', ANGULAR_EXTRACTOR],
   // A repository that is only a browser. It has no ways in for the server reader
   // to find, so reading it there would add passes with nothing to read and a
   // slower run to show for it.
   ['react', 'react', REACT_EXTRACTOR],
+  // Components in files of their own format, whose scripts the browser reader
+  // reads as TypeScript (P233).
+  ['vue', 'vue', REACT_EXTRACTOR],
+  ['svelte', 'svelte', REACT_EXTRACTOR],
+  // Plain browser code (P284): pages and the scripts they load, with no
+  // manifest and no framework. Nothing declares it, so no manifest is asked
+  // about it; `link` and `init` offer it for a directory of pages and scripts.
+  ['browser', null, REACT_EXTRACTOR],
 ];
 
 /**

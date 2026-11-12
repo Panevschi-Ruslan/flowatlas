@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "trpc-inferred-context",
-  "generatedAt": "2026-10-17T03:51:18.892Z",
+  "generatedAt": "2026-11-05T22:27:41.689Z",
   "nodes": [
     {
       "id": "db_query:trpc-inferred-context#src/procedures.ts:10:23",
@@ -160,7 +160,18 @@
         "call": "query",
         "registration": "router({ … })",
         "middlewareRead": true,
-        "handlerVia": "inline"
+        "handlerVia": "inline",
+        "fails": [
+          {
+            "status": 500,
+            "exception": "Error",
+            "at": "trpc-inferred-context#src/procedures.ts:orderOwnerProcedure.use@9",
+            "file": "src/procedures.ts",
+            "line": 11,
+            "source": "throw",
+            "assumed": true
+          }
+        ]
       }
     },
     {

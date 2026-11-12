@@ -1,0 +1,1075 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T14:22:04.214Z",
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    },
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "admin#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "admin",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "admin#src/app/sellers.service.ts:SellersService",
+      "type": "provider",
+      "label": "SellersService",
+      "repo": "admin",
+      "file": "src/app/sellers.service.ts",
+      "line": 11,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "admin#src/app/sellers.service.ts:SellersService.seller",
+      "type": "method",
+      "label": "SellersService.seller",
+      "repo": "admin",
+      "file": "src/app/sellers.service.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:admin#Seller"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "api#src/app.ts:express.json()",
+      "type": "middleware",
+      "label": "express.json()",
+      "repo": "api",
+      "file": "src/app.ts",
+      "line": 6,
+      "kind": "function"
+    },
+    {
+      "id": "api#src/catalog.routes.ts:GET /products/:id@9",
+      "type": "function",
+      "label": "GET /products/:id@9",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        }
+      }
+    },
+    {
+      "id": "api#src/catalog.routes.ts:GET /products/featured@7",
+      "type": "function",
+      "label": "GET /products/featured@7",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        }
+      }
+    },
+    {
+      "id": "api#src/catalog.routes.ts:GET /products@5",
+      "type": "function",
+      "label": "GET /products@5",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        }
+      }
+    },
+    {
+      "id": "api#src/catalog.routes.ts:GET /sellers/:name@11",
+      "type": "function",
+      "label": "GET /sellers/:name@11",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        }
+      }
+    },
+    {
+      "id": "api#src/catalog.routes.ts:POST /sellers/:name/follow@13",
+      "type": "function",
+      "label": "POST /sellers/:name/follow@13",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "type:express#Request<any,any,any>"
+            },
+            {
+              "name": "res",
+              "type": "type:express#Response<unknown>"
+            }
+          ],
+          "returns": "type:express#Response<unknown>"
+        }
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/products",
+      "type": "entry",
+      "label": "GET /api/products",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products",
+        "rawPath": "/api/products",
+        "adapter": "express-routes",
+        "registration": "catalogRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/products/:param",
+      "type": "entry",
+      "label": "GET /api/products/:param",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products/:param",
+        "rawPath": "/api/products/:id",
+        "adapter": "express-routes",
+        "registration": "catalogRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/products/featured",
+      "type": "entry",
+      "label": "GET /api/products/featured",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products/featured",
+        "rawPath": "/api/products/featured",
+        "adapter": "express-routes",
+        "registration": "catalogRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/api/sellers/:param",
+      "type": "entry",
+      "label": "GET /api/sellers/:param",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/sellers/:param",
+        "rawPath": "/api/sellers/:name",
+        "adapter": "express-routes",
+        "registration": "catalogRouter.get",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "entry:api:http:POST:/api/sellers/:param/follow",
+      "type": "entry",
+      "label": "POST /api/sellers/:param/follow",
+      "repo": "api",
+      "file": "src/catalog.routes.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/sellers/:param/follow",
+        "rawPath": "/api/sellers/:name/follow",
+        "adapter": "express-routes",
+        "registration": "catalogRouter.post",
+        "middlewareRead": true,
+        "handlerVia": "inline"
+      }
+    },
+    {
+      "id": "external_api:catalog.example.test",
+      "type": "external_api",
+      "label": "catalog.example.test",
+      "repo": "web",
+      "meta": {
+        "host": "catalog.example.test"
+      }
+    },
+    {
+      "id": "repo:admin",
+      "type": "repo",
+      "label": "admin",
+      "repo": "admin",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "templates": 0,
+          "skippedExternalCalls": {
+            "@angular/common": 1
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {
+            "express": 5
+          }
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/app.ts",
+            "line": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 4,
+          "filesRead": 4,
+          "filesUnreadable": 0,
+          "classes": 1,
+          "templates": 0,
+          "skippedExternalCalls": {
+            "@angular/common": 5
+          }
+        },
+        "adapters": {
+          "frontend": [
+            "angular"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ui_api_call:admin#src/app/sellers.service.ts:16:12",
+      "type": "ui_api_call",
+      "label": "GET /sellers/:param",
+      "repo": "admin",
+      "file": "src/app/sellers.service.ts",
+      "line": 16,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${apiUrl}/sellers/:param",
+        "path": "/sellers/:param",
+        "baseUrlEnv": "apiUrl",
+        "responseType": "type:admin#Seller",
+        "bodyType": null,
+        "package": "@angular/common/http",
+        "via": "template-env",
+        "baseFrom": "interceptor",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/catalog.service.ts:21:12#",
+      "type": "ui_api_call",
+      "label": "GET /api/products",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://catalog.example.test/api/products",
+        "path": "/api/products",
+        "baseUrlEnv": null,
+        "responseType": "type:web#Product[]",
+        "bodyType": null,
+        "headersUnread": true,
+        "package": "@angular/common/http",
+        "via": "literal",
+        "baseFrom": "interceptor",
+        "host": "catalog.example.test",
+        "guessed": true,
+        "choice": "",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/catalog.service.ts:21:12#/featured",
+      "type": "ui_api_call",
+      "label": "GET /api/products/featured",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 21,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://catalog.example.test/api/products/featured",
+        "path": "/api/products/featured",
+        "baseUrlEnv": null,
+        "responseType": "type:web#Product[]",
+        "bodyType": null,
+        "headersUnread": true,
+        "package": "@angular/common/http",
+        "via": "literal",
+        "baseFrom": "interceptor",
+        "host": "catalog.example.test",
+        "guessed": true,
+        "choice": "/featured",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/catalog.service.ts:25:12",
+      "type": "ui_api_call",
+      "label": "GET /api/products/:param",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 25,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://catalog.example.test/api/products/:param",
+        "path": "/api/products/:param",
+        "baseUrlEnv": null,
+        "responseType": "type:web#Product",
+        "bodyType": null,
+        "headersUnread": true,
+        "package": "@angular/common/http",
+        "via": "literal",
+        "baseFrom": "interceptor",
+        "host": "catalog.example.test",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/catalog.service.ts:29:12",
+      "type": "ui_api_call",
+      "label": "GET /api/sellers/:param",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 29,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "https://catalog.example.test/api/sellers/:param",
+        "path": "/api/sellers/:param",
+        "baseUrlEnv": null,
+        "responseType": "type:web#Seller",
+        "bodyType": null,
+        "headersUnread": true,
+        "package": "@angular/common/http",
+        "via": "literal",
+        "baseFrom": "interceptor",
+        "host": "catalog.example.test",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/catalog.service.ts:33:12",
+      "type": "ui_api_call",
+      "label": "POST /api/sellers/:param/follow",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 33,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "https://catalog.example.test/api/sellers/:param/follow",
+        "path": "/api/sellers/:param/follow",
+        "baseUrlEnv": null,
+        "responseType": "type:web#Seller",
+        "bodyType": "object",
+        "bodyFrom": "literal",
+        "bodyKeys": [],
+        "headersUnread": true,
+        "package": "@angular/common/http",
+        "via": "literal",
+        "baseFrom": "interceptor",
+        "host": "catalog.example.test",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/app/catalog.service.ts:38:12",
+      "type": "ui_api_call",
+      "label": "GET /assets/labels.json",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 38,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/assets/labels.json",
+        "path": "/assets/labels.json",
+        "baseUrlEnv": null,
+        "responseType": "object",
+        "bodyType": null,
+        "headersUnread": true,
+        "package": "@angular/common/http",
+        "via": "literal"
+      }
+    },
+    {
+      "id": "web#node_modules/@angular/common:HttpClient",
+      "type": "provider",
+      "label": "HttpClient",
+      "repo": "web",
+      "file": "node_modules/@angular/common",
+      "kind": "external",
+      "meta": {
+        "package": "@angular/common",
+        "external": true
+      }
+    },
+    {
+      "id": "web#src/app/catalog.service.ts:CatalogService",
+      "type": "provider",
+      "label": "CatalogService",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 16,
+      "kind": "injectable",
+      "meta": {
+        "providedIn": "root"
+      }
+    },
+    {
+      "id": "web#src/app/catalog.service.ts:CatalogService.follow",
+      "type": "method",
+      "label": "CatalogService.follow",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 32,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:web#Seller"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/catalog.service.ts:CatalogService.get",
+      "type": "method",
+      "label": "CatalogService.get",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ],
+          "returns": "type:web#Product"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/catalog.service.ts:CatalogService.labels",
+      "type": "method",
+      "label": "CatalogService.labels",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 37,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "object"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/catalog.service.ts:CatalogService.list",
+      "type": "method",
+      "label": "CatalogService.list",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "featured",
+              "type": "boolean"
+            }
+          ],
+          "returns": "type:web#Product[]"
+        },
+        "unreferenced": true
+      }
+    },
+    {
+      "id": "web#src/app/catalog.service.ts:CatalogService.seller",
+      "type": "method",
+      "label": "CatalogService.seller",
+      "repo": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 28,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "type:web#Seller"
+        },
+        "unreferenced": true
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "admin#src/app/sellers.service.ts:SellersService",
+      "to": "admin#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/sellers.service.ts",
+      "line": 13
+    },
+    {
+      "from": "admin#src/app/sellers.service.ts:SellersService.seller",
+      "to": "ui_api_call:admin#src/app/sellers.service.ts:16:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/sellers.service.ts",
+      "line": 16
+    },
+    {
+      "from": "entry:api:http:GET:/api/products",
+      "to": "api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/products",
+      "to": "api#src/catalog.routes.ts:GET /products@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog.routes.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/products/:param",
+      "to": "api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/products/:param",
+      "to": "api#src/catalog.routes.ts:GET /products/:id@9",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:any;name:string}",
+      "file": "src/catalog.routes.ts",
+      "line": 9,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/products/featured",
+      "to": "api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/products/featured",
+      "to": "api#src/catalog.routes.ts:GET /products/featured@7",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/catalog.routes.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/sellers/:param",
+      "to": "api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/api/sellers/:param",
+      "to": "api#src/catalog.routes.ts:GET /sellers/:name@11",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{name:any;following:boolean}",
+      "file": "src/catalog.routes.ts",
+      "line": 11,
+      "meta": {
+        "requestRead": true,
+        "params": "{name:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/sellers/:param/follow",
+      "to": "api#src/app.ts:express.json()",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/app.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "global",
+        "layer": "middleware",
+        "source": "app.use"
+      }
+    },
+    {
+      "from": "entry:api:http:POST:/api/sellers/:param/follow",
+      "to": "api#src/catalog.routes.ts:POST /sellers/:name/follow@13",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{name:any;following:boolean}",
+      "file": "src/catalog.routes.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true,
+        "params": "{name:string}"
+      }
+    },
+    {
+      "from": "ui_api_call:admin#src/app/sellers.service.ts:16:12",
+      "to": "entry:api:http:GET:/api/sellers/:param",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/app/sellers.service.ts",
+      "line": 16,
+      "returns": "type:admin#Seller",
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/catalog.service.ts:21:12#",
+      "to": "entry:api:http:GET:/api/products",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/app/catalog.service.ts",
+      "line": 21,
+      "returns": "type:web#Product[]",
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/catalog.service.ts:21:12#",
+      "to": "external_api:catalog.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 21
+    },
+    {
+      "from": "ui_api_call:web#src/app/catalog.service.ts:21:12#/featured",
+      "to": "entry:api:http:GET:/api/products/featured",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/app/catalog.service.ts",
+      "line": 21,
+      "returns": "type:web#Product[]",
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api",
+        "note": "chosen over entry:api:http:GET:/api/products/:param for being more specific; the framework decides by registration order"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/catalog.service.ts:21:12#/featured",
+      "to": "external_api:catalog.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 21
+    },
+    {
+      "from": "ui_api_call:web#src/app/catalog.service.ts:25:12",
+      "to": "entry:api:http:GET:/api/products/:param",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/app/catalog.service.ts",
+      "line": 25,
+      "returns": "type:web#Product",
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/catalog.service.ts:25:12",
+      "to": "external_api:catalog.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 25
+    },
+    {
+      "from": "ui_api_call:web#src/app/catalog.service.ts:29:12",
+      "to": "entry:api:http:GET:/api/sellers/:param",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/app/catalog.service.ts",
+      "line": 29,
+      "returns": "type:web#Seller",
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/catalog.service.ts:29:12",
+      "to": "external_api:catalog.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 29
+    },
+    {
+      "from": "ui_api_call:web#src/app/catalog.service.ts:33:12",
+      "to": "entry:api:http:POST:/api/sellers/:param/follow",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/app/catalog.service.ts",
+      "line": 33,
+      "params": [
+        "object"
+      ],
+      "returns": "type:web#Seller",
+      "meta": {
+        "via": "unique-route",
+        "targetService": "api"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/app/catalog.service.ts:33:12",
+      "to": "external_api:catalog.example.test",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 33
+    },
+    {
+      "from": "web#src/app/catalog.service.ts:CatalogService",
+      "to": "web#node_modules/@angular/common:HttpClient",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 18
+    },
+    {
+      "from": "web#src/app/catalog.service.ts:CatalogService.follow",
+      "to": "ui_api_call:web#src/app/catalog.service.ts:33:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 33
+    },
+    {
+      "from": "web#src/app/catalog.service.ts:CatalogService.get",
+      "to": "ui_api_call:web#src/app/catalog.service.ts:25:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 25
+    },
+    {
+      "from": "web#src/app/catalog.service.ts:CatalogService.labels",
+      "to": "ui_api_call:web#src/app/catalog.service.ts:38:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 38
+    },
+    {
+      "from": "web#src/app/catalog.service.ts:CatalogService.list",
+      "to": "ui_api_call:web#src/app/catalog.service.ts:21:12#",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 21
+    },
+    {
+      "from": "web#src/app/catalog.service.ts:CatalogService.list",
+      "to": "ui_api_call:web#src/app/catalog.service.ts:21:12#/featured",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 21
+    },
+    {
+      "from": "web#src/app/catalog.service.ts:CatalogService.seller",
+      "to": "ui_api_call:web#src/app/catalog.service.ts:29:12",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/app/catalog.service.ts",
+      "line": 29
+    }
+  ],
+  "types": {
+    "type:admin#Seller": {
+      "name": "Seller",
+      "kind": "object",
+      "declaredIn": "admin#src/app/sellers.service.ts",
+      "structuralHash": "f9436ef88c6e9b8d",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "following",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:express#Request<any,any,any>": {
+      "name": "Request",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "07bcb106faffa4ee",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:express#Response<unknown>": {
+      "name": "Response",
+      "kind": "external",
+      "declaredIn": "express",
+      "structuralHash": "3b5c57f0cd6a1150",
+      "meta": {
+        "declKind": "external",
+        "package": "express"
+      }
+    },
+    "type:web#Product": {
+      "name": "Product",
+      "kind": "object",
+      "declaredIn": "web#src/app/catalog.service.ts",
+      "structuralHash": "213496a79f4f0101",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    },
+    "type:web#Seller": {
+      "name": "Seller",
+      "kind": "object",
+      "declaredIn": "web#src/app/catalog.service.ts",
+      "structuralHash": "f9436ef88c6e9b8d",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "following",
+          "type": "boolean",
+          "optional": false
+        }
+      ],
+      "meta": {
+        "declKind": "interface",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "service": "web",
+      "file": "src/app/catalog.service.ts",
+      "line": 38,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /assets/labels.json",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /assets/labels.json */.",
+      "symbol": "ui_api_call:web#src/app/catalog.service.ts:38:12"
+    }
+  ]
+}

@@ -101,12 +101,12 @@ describe('the type the source states for a receiver', () => {
     ).toBeNull();
   });
 
-  it('says nothing about a receiver that is not a name', () => {
+  it('says nothing about a receiver that is not a name and states no type', () => {
     expect(
       statedOrigin(
         receiverIn(`
           import { Kysely } from 'kysely';
-          declare const of: (n: number) => Kysely<unknown>;
+          declare const of: any;
           const rows = of(1).selectFrom('asset');
         `),
       ),
@@ -227,6 +227,146 @@ describe('a Prisma client whose generated code does not exist', () => {
         ),
       ),
     ).toBeNull();
+  });
+
+  /**
+   * The same trace through a bare specifier the project's compiler options
+   * place in the repository (P270): `src/generated/prisma/client` under
+   * `baseUrl`, or an alias under `paths`.
+   */
+  const placedClientIn = (specifier: string, compilerOptions: { baseUrl: string; paths?: Record<string, string[]> }): TsNode => {
+    const project = new Project({ useInMemoryFileSystem: true, compilerOptions });
+    project.getFileSystem().writeFileSync('/app/prisma/schema.prisma', SCHEMA.replace('./generated/prisma', '../src/generated/prisma'));
+    project.createSourceFile(
+      '/app/src/db.service.ts',
+      `
+        import { PrismaClient } from '${specifier}';
+        export class DbService extends PrismaClient {}
+      `,
+    );
+    const file = project.createSourceFile(
+      '/app/src/orders.service.ts',
+      `
+        import { DbService } from './db.service';
+        export class OrdersService {
+          constructor(private readonly db: DbService) {}
+          all() { return this.db.order.findMany(); }
+        }
+      `,
+    );
+    for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const callee = call.getExpression();
+      if (Node.isPropertyAccessExpression(callee) && Node.isPropertyAccessExpression(callee.getExpression())) {
+        return callee.getExpression().asKindOrThrow(SyntaxKind.PropertyAccessExpression).getExpression();
+      }
+    }
+    throw new Error('the source must hold a call through a delegate');
+  };
+
+  it('reads a generated client imported by the path baseUrl places it at', () => {
+    const origin = statedOrigin(placedClientIn('src/generated/prisma/client', { baseUrl: '/app' }));
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('reads a generated client imported through a paths alias', () => {
+    const origin = statedOrigin(
+      placedClientIn('@db/client', { baseUrl: '/app', paths: { '@db/*': ['src/generated/prisma/*'] } }),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('reads a client kept by a function of the repository that writes its return type', () => {
+    const origin = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        let shared: PrismaClient | undefined;
+        function sharedClient(): PrismaClient {
+          shared ??= new PrismaClient();
+          return shared;
+        }
+        const loadClient = async (): Promise<PrismaClient> => sharedClient();
+        export const all = async () => {
+          const db = sharedClient();
+          const later = await loadClient();
+          return [db.order.findMany(), later.order.count()];
+        };
+      `),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('reads a client a method of the repository returns, held or called in place (P277)', () => {
+    const held = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        class ClientFactory {
+          private shared?: PrismaClient;
+          client(): PrismaClient { return (this.shared ??= new PrismaClient()); }
+        }
+        export const all = (factory: ClientFactory) => {
+          const db = factory.client();
+          return db.order.findMany();
+        };
+      `),
+    );
+    expect(held?.package).toBe('@prisma/client');
+    const inPlace = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        interface Registry { db(): Promise<PrismaClient>; }
+        declare const registry: Registry;
+        export const all = async () => (await registry.db()).order.findMany();
+      `),
+    );
+    expect(inPlace?.package).toBe('@prisma/client');
+  });
+
+  it('reads a return type that is a type parameter as the type the call hands it (P277)', () => {
+    const origin = statedOrigin(
+      clientIn(`
+        import { PrismaClient } from '@prisma/client';
+        abstract class Base { protected pick<T>(): T { return undefined as T; } }
+        export class Orders extends Base {
+          all() {
+            const db = this.pick<PrismaClient>();
+            return db.order.findMany();
+          }
+        }
+      `),
+    );
+    expect(origin?.package).toBe('@prisma/client');
+  });
+
+  it('does not read a method call whose method writes no return type (P277)', () => {
+    expect(
+      statedOrigin(
+        clientIn(`
+          import { PrismaClient } from '@prisma/client';
+          class ClientFactory { client() { return new PrismaClient(); } }
+          export const all = (factory: ClientFactory) => factory.client().order.findMany();
+        `),
+      ),
+    ).toBeNull();
+  });
+
+  it('does not read a call of a function that writes no return type', () => {
+    expect(
+      statedOrigin(
+        clientIn(`
+          import { PrismaClient } from '@prisma/client';
+          function sharedClient() { return new PrismaClient(); }
+          export const all = () => {
+            const db = sharedClient();
+            return db.order.findMany();
+          };
+        `),
+      ),
+    ).toBeNull();
+  });
+
+  it('keeps a bare specifier a package where nothing the schema generates is under baseUrl', () => {
+    const origin = statedOrigin(placedClientIn('src/zod/client', { baseUrl: '/app' }));
+    expect(origin?.package).not.toBe('@prisma/client');
   });
 
   it('does not read a value named prisma that nothing traces to a client', () => {

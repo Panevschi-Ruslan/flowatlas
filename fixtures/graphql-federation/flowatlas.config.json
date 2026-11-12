@@ -1,0 +1,31 @@
+{
+  "services": [
+    {
+      "name": "gateway",
+      "repo": "./gateway",
+      "type": "express"
+    },
+    {
+      "name": "orders",
+      "repo": "./orders",
+      "type": "express"
+    },
+    {
+      "name": "customers",
+      "repo": "./customers",
+      "type": "nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_API_URL"
+      ],
+      "apiTarget": {
+        "VITE_API_URL": "gateway"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -1,0 +1,226 @@
+{
+  "contractsFormatVersion": 5,
+  "schemaVersion": 7,
+  "generatedAt": "2026-11-07T17:34:30.935Z",
+  "edges": [
+    {
+      "edge": {
+        "from": "http_out:catalog#src/reorder.ts:14:11",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:catalog#src/reorder.ts:14:11|http_calls|entry:orders:http:POST:/orders",
+      "direction": "request",
+      "status": "identical",
+      "sender": {
+        "service": "catalog",
+        "typeId": "{sku:string;quantity:number}",
+        "symbol": "catalog#src/reorder.ts:handler",
+        "writes": [
+          "quantity",
+          "sku"
+        ],
+        "writesEvery": true
+      },
+      "receiver": {
+        "service": "orders",
+        "typeId": "{sku:string;quantity:number}",
+        "symbol": "orders#src/place-order.ts:handler",
+        "claimed": true
+      },
+      "findings": [],
+      "rulesApplied": []
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/place-order.ts:9:9",
+        "to": "consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/place-order.ts:9:9|emits|consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+      "direction": "payload",
+      "status": "hash_differs",
+      "sender": {
+        "service": "orders",
+        "typeId": "{placedAt:number;sku:string;quantity:number}",
+        "symbol": "orders#src/place-order.ts:handler"
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{sku:string}",
+        "symbol": "catalog#src/reorder.ts:handler"
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:orders#src/place-order.ts:9:9",
+            "to": "consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+            "type": "emits"
+          },
+          "edgeKey": "producer:orders#src/place-order.ts:9:9|emits|consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+          "direction": "payload",
+          "sender": {
+            "service": "orders",
+            "typeId": "{placedAt:number;sku:string;quantity:number}",
+            "symbol": "orders#src/place-order.ts:handler"
+          },
+          "receiver": {
+            "service": "catalog",
+            "typeId": "{sku:string}",
+            "symbol": "catalog#src/reorder.ts:handler"
+          },
+          "typeId": "{sku:string}",
+          "field": "placedAt",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender orders sends `placedAt: number`; receiver catalog declares no such field; catalog reads the message at Records[].body of what it is handed, as text it parses",
+          "ignored": false,
+          "ignoredBy": null
+        },
+        {
+          "severity": "info",
+          "kind": "extra_field",
+          "edge": {
+            "from": "producer:orders#src/place-order.ts:9:9",
+            "to": "consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+            "type": "emits"
+          },
+          "edgeKey": "producer:orders#src/place-order.ts:9:9|emits|consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+          "direction": "payload",
+          "sender": {
+            "service": "orders",
+            "typeId": "{placedAt:number;sku:string;quantity:number}",
+            "symbol": "orders#src/place-order.ts:handler"
+          },
+          "receiver": {
+            "service": "catalog",
+            "typeId": "{sku:string}",
+            "symbol": "catalog#src/reorder.ts:handler"
+          },
+          "typeId": "{sku:string}",
+          "field": "quantity",
+          "expected": null,
+          "actual": "number",
+          "rule": null,
+          "message": "sender orders sends `quantity: number`; receiver catalog declares no such field; catalog reads the message at Records[].body of what it is handed, as text it parses",
+          "ignored": false,
+          "ignoredBy": null
+        }
+      ],
+      "rulesApplied": []
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:orders#src/place-order.ts:9:9",
+        "to": "consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/place-order.ts:9:9|emits|consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+      "direction": "payload",
+      "sender": {
+        "service": "orders",
+        "typeId": "{placedAt:number;sku:string;quantity:number}",
+        "symbol": "orders#src/place-order.ts:handler"
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{sku:string}",
+        "symbol": "catalog#src/reorder.ts:handler"
+      },
+      "typeId": "{sku:string}",
+      "field": "placedAt",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender orders sends `placedAt: number`; receiver catalog declares no such field; catalog reads the message at Records[].body of what it is handed, as text it parses",
+      "ignored": false,
+      "ignoredBy": null
+    },
+    {
+      "severity": "info",
+      "kind": "extra_field",
+      "edge": {
+        "from": "producer:orders#src/place-order.ts:9:9",
+        "to": "consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/place-order.ts:9:9|emits|consumer:catalog#template.yaml:Resources.Reorder.Events.Placed",
+      "direction": "payload",
+      "sender": {
+        "service": "orders",
+        "typeId": "{placedAt:number;sku:string;quantity:number}",
+        "symbol": "orders#src/place-order.ts:handler"
+      },
+      "receiver": {
+        "service": "catalog",
+        "typeId": "{sku:string}",
+        "symbol": "catalog#src/reorder.ts:handler"
+      },
+      "typeId": "{sku:string}",
+      "field": "quantity",
+      "expected": null,
+      "actual": "number",
+      "rule": null,
+      "message": "sender orders sends `quantity: number`; receiver catalog declares no such field; catalog reads the message at Records[].body of what it is handed, as text it parses",
+      "ignored": false,
+      "ignoredBy": null
+    }
+  ],
+  "ignored": [],
+  "unchecked": [
+    {
+      "edge": {
+        "from": "http_out:catalog#src/reorder.ts:14:11",
+        "to": "entry:orders:http:POST:/orders",
+        "type": "http_calls"
+      },
+      "edgeKey": "http_out:catalog#src/reorder.ts:14:11|http_calls|entry:orders:http:POST:/orders",
+      "direction": "response",
+      "reason": "no-type-on-receiver",
+      "message": "catalog#src/reorder.ts:handler declares no type for what it expects",
+      "hint": "Say what the call expects back: a generic on the request — `this.http.get<OrderDto>(…)`, `client.send<OrderDto>(…)` — or a typed parameter on the callback the answer is handed to."
+    },
+    {
+      "edge": {
+        "from": "producer:catalog#src/reorder.ts:15:11",
+        "to": "consumer:orders#lib/orders-stack.ts:shop-orders/Restocked/shop-orders/Restock",
+        "type": "emits"
+      },
+      "edgeKey": "producer:catalog#src/reorder.ts:15:11|emits|consumer:orders#lib/orders-stack.ts:shop-orders/Restocked/shop-orders/Restock",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "orders#src/restock.ts:handler does not parse the text at Records[].Sns.Message of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    },
+    {
+      "edge": {
+        "from": "producer:orders#src/place-order.ts:9:9",
+        "to": "consumer:gateway#serverless.yml:functions.audit.events[0]",
+        "type": "emits"
+      },
+      "edgeKey": "producer:orders#src/place-order.ts:9:9|emits|consumer:gateway#serverless.yml:functions.audit.events[0]",
+      "direction": "payload",
+      "reason": "message-unparsed",
+      "message": "gateway#src/audit.ts:handler does not parse the text at Records[].body of what it is handed into a declared type",
+      "hint": "Parse the message into a declared type where the handler reads it - `JSON.parse(text) as Order`, or into a variable declared with one - so there is a shape to compare."
+    }
+  ],
+  "summary": {
+    "edges": 2,
+    "shared": 0,
+    "identical": 1,
+    "hash_differs": 1,
+    "unchecked": 3,
+    "errors": 0,
+    "warnings": 0,
+    "infos": 2,
+    "ignored": 0
+  }
+}

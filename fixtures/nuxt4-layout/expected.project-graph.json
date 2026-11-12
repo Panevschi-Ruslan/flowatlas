@@ -1,0 +1,763 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T11:47:33.025Z",
+  "services": [
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nuxt",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "entry:shop:http:GET:/api/products",
+      "type": "entry",
+      "label": "GET /api/products",
+      "repo": "shop",
+      "file": "server/api/products.get.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/api/products",
+        "rawPath": "/api/products",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "entry:shop:http:POST:/api/cart",
+      "type": "entry",
+      "label": "POST /api/cart",
+      "repo": "shop",
+      "file": "server/api/cart.post.ts",
+      "line": 1,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/api/cart",
+        "rawPath": "/api/cart",
+        "adapter": "nitro-routes",
+        "registration": "server/file"
+      }
+    },
+    {
+      "id": "repo:shop",
+      "type": "repo",
+      "label": "shop",
+      "repo": "shop",
+      "meta": {
+        "stats": {
+          "files": 13,
+          "filesRead": 13,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 9,
+          "components": 2,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "vue"
+          ],
+          "entry": [
+            "nitro-routes"
+          ]
+        },
+        "ownOrigin": true
+      }
+    },
+    {
+      "id": "shop#app/app.vue:app",
+      "type": "ui_component",
+      "label": "app",
+      "repo": "shop",
+      "file": "app/app.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/catalog/products.ts:listProducts",
+      "type": "function",
+      "label": "listProducts",
+      "repo": "shop",
+      "file": "app/catalog/products.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#app/composables/useCart.ts:composables/useCart",
+      "type": "function",
+      "label": "composables/useCart",
+      "repo": "shop",
+      "file": "app/composables/useCart.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "{add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:addSelected",
+      "type": "function",
+      "label": "addSelected",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:pages/index",
+      "type": "ui_component",
+      "label": "pages/index",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 1,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        },
+        "route": "/"
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:reload",
+      "type": "function",
+      "label": "reload",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 22,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/pages/index.vue:search",
+      "type": "function",
+      "label": "search",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "shop#app/queries/search.ts:searchProducts",
+      "type": "function",
+      "label": "searchProducts",
+      "repo": "shop",
+      "file": "app/queries/search.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "q",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/cart.post.ts:POST /api/cart@1",
+      "type": "function",
+      "label": "POST /api/cart@1",
+      "repo": "shop",
+      "file": "server/api/cart.post.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/api/products.get.ts:GET /api/products@1",
+      "type": "function",
+      "label": "GET /api/products@1",
+      "repo": "shop",
+      "file": "server/api/products.get.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "any"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/utils/cart.ts:addLine",
+      "type": "function",
+      "label": "addLine",
+      "repo": "shop",
+      "file": "server/utils/cart.ts",
+      "line": 3,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "item",
+              "type": "string"
+            }
+          ],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop#server/utils/products.ts:allProducts",
+      "type": "function",
+      "label": "allProducts",
+      "repo": "shop",
+      "file": "server/utils/products.ts",
+      "line": 1,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "shop#shared/utils/slug.ts:slugify",
+      "type": "function",
+      "label": "slugify",
+      "repo": "shop",
+      "file": "shared/utils/slug.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/index.vue:5:13",
+      "type": "ui_action",
+      "label": "@click=\"search\"",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 5,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "search",
+        "component": "shop#app/pages/index.vue:pages/index",
+        "template": "app/pages/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/index.vue:6:13",
+      "type": "ui_action",
+      "label": "@click=\"reload\"",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 6,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "reload",
+        "component": "shop#app/pages/index.vue:pages/index",
+        "template": "app/pages/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_action:shop#app/pages/index.vue:7:13",
+      "type": "ui_action",
+      "label": "@click=\"addSelected\"",
+      "repo": "shop",
+      "file": "app/pages/index.vue",
+      "line": 7,
+      "kind": "event",
+      "meta": {
+        "event": "click",
+        "handler": "addSelected",
+        "component": "shop#app/pages/index.vue:pages/index",
+        "template": "app/pages/index.vue",
+        "handlerVia": "named"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/catalog/products.ts:2:35",
+      "type": "ui_api_call",
+      "label": "GET /api/products",
+      "repo": "shop",
+      "file": "app/catalog/products.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/products",
+        "path": "/api/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/composables/useCart.ts:4:11",
+      "type": "ui_api_call",
+      "label": "POST /api/cart",
+      "repo": "shop",
+      "file": "app/composables/useCart.ts",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "url": "/api/cart",
+        "path": "/api/cart",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": "{item:string}",
+        "bodyFrom": "literal",
+        "bodyKeys": [
+          "item"
+        ],
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    },
+    {
+      "id": "ui_api_call:shop#app/queries/search.ts:2:46",
+      "type": "ui_api_call",
+      "label": "GET /api/products",
+      "repo": "shop",
+      "file": "app/queries/search.ts",
+      "line": 2,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "/api/products",
+        "path": "/api/products",
+        "baseUrlEnv": null,
+        "responseType": null,
+        "bodyType": null,
+        "queryType": "{q:string}",
+        "queryKeys": [
+          "q"
+        ],
+        "package": null,
+        "client": "ofetch",
+        "via": "literal",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:shop:http:GET:/api/products",
+      "to": "shop#server/api/products.get.ts:GET /api/products@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string[]",
+      "file": "server/api/products.get.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:shop:http:POST:/api/cart",
+      "to": "shop#server/api/cart.post.ts:POST /api/cart@1",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "string[]",
+      "file": "server/api/cart.post.ts",
+      "line": 1,
+      "meta": {
+        "requestRead": true,
+        "body": "{item:string}",
+        "claimed": [
+          "body"
+        ]
+      }
+    },
+    {
+      "from": "shop#app/catalog/products.ts:listProducts",
+      "to": "ui_api_call:shop#app/catalog/products.ts:2:35",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/catalog/products.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#app/composables/useCart.ts:composables/useCart",
+      "to": "shop#shared/utils/slug.ts:slugify",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "app/composables/useCart.ts",
+      "line": 4
+    },
+    {
+      "from": "shop#app/composables/useCart.ts:composables/useCart",
+      "to": "ui_api_call:shop#app/composables/useCart.ts:4:11",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/composables/useCart.ts",
+      "line": 4
+    },
+    {
+      "from": "shop#app/pages/index.vue:addSelected",
+      "to": "shop#app/composables/useCart.ts:composables/useCart",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "app/pages/index.vue",
+      "line": 27
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/catalog/products.ts:listProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "app/pages/index.vue",
+      "line": 23
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/composables/useCart.ts:composables/useCart",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "{add:{prototype:any;length:number;arguments:any;caller:Function;name:string}}",
+      "file": "app/pages/index.vue",
+      "line": 27
+    },
+    {
+      "from": "shop#app/pages/index.vue:pages/index",
+      "to": "shop#app/queries/search.ts:searchProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "app/pages/index.vue",
+      "line": 19
+    },
+    {
+      "from": "shop#app/pages/index.vue:reload",
+      "to": "shop#app/catalog/products.ts:listProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "unknown",
+      "file": "app/pages/index.vue",
+      "line": 23
+    },
+    {
+      "from": "shop#app/pages/index.vue:search",
+      "to": "shop#app/queries/search.ts:searchProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "file": "app/pages/index.vue",
+      "line": 19
+    },
+    {
+      "from": "shop#app/queries/search.ts:searchProducts",
+      "to": "ui_api_call:shop#app/queries/search.ts:2:46",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/queries/search.ts",
+      "line": 2
+    },
+    {
+      "from": "shop#server/api/cart.post.ts:POST /api/cart@1",
+      "to": "shop#server/utils/cart.ts:addLine",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string[]",
+      "file": "server/api/cart.post.ts",
+      "line": 3
+    },
+    {
+      "from": "shop#server/api/cart.post.ts:POST /api/cart@1",
+      "to": "shop#shared/utils/slug.ts:slugify",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "string",
+      "file": "server/api/cart.post.ts",
+      "line": 3
+    },
+    {
+      "from": "shop#server/api/products.get.ts:GET /api/products@1",
+      "to": "shop#server/utils/products.ts:allProducts",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "string[]",
+      "file": "server/api/products.get.ts",
+      "line": 3
+    },
+    {
+      "from": "ui_action:shop#app/pages/index.vue:5:13",
+      "to": "shop#app/pages/index.vue:search",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 5
+    },
+    {
+      "from": "ui_action:shop#app/pages/index.vue:6:13",
+      "to": "shop#app/pages/index.vue:reload",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 6
+    },
+    {
+      "from": "ui_action:shop#app/pages/index.vue:7:13",
+      "to": "shop#app/pages/index.vue:addSelected",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/pages/index.vue",
+      "line": 7
+    },
+    {
+      "from": "ui_api_call:shop#app/catalog/products.ts:2:35",
+      "to": "entry:shop:http:GET:/api/products",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/catalog/products.ts",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/composables/useCart.ts:4:11",
+      "to": "entry:shop:http:POST:/api/cart",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/composables/useCart.ts",
+      "line": 4,
+      "params": [
+        "{item:string}"
+      ],
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    },
+    {
+      "from": "ui_api_call:shop#app/queries/search.ts:2:46",
+      "to": "entry:shop:http:GET:/api/products",
+      "type": "hits",
+      "confidence": "static",
+      "file": "app/queries/search.ts",
+      "line": 2,
+      "meta": {
+        "via": "same-service",
+        "targetService": "shop"
+      }
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "app/catalog/products.ts",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "app/pages/index.vue",
+      "line": 28,
+      "reason": "implicit-import-ambiguous",
+      "message": "formatPrice is used with no import, and app/composables/price.ts and app/utils/price.ts both export it, so a call to it is not joined to either",
+      "hint": "Rename one of them, or import formatPrice from the file meant.",
+      "symbol": "formatPrice",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "implicit-import-ambiguous",
+        "candidates": [
+          "app/composables/price.ts",
+          "app/utils/price.ts"
+        ]
+      },
+      "service": "shop"
+    },
+    {
+      "file": "app/queries/search.ts",
+      "line": 2,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "framework-layer-unread",
+      "message": "github:example/storefront-base is a Nuxt layer the application downloads when it builds, so nothing of it is read: its pages, routes, composables and aliases are not in the graph",
+      "hint": "Check the layer out beside the application and extend it by its path, or read it as a service of its own.",
+      "symbol": "github:example/storefront-base",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "framework-layer-unread",
+        "layer": "github:example/storefront-base",
+        "why": "remote"
+      },
+      "service": "shop"
+    },
+    {
+      "file": "nuxt.config.ts",
+      "line": 1,
+      "reason": "implicit-imports-from-convention",
+      "level": "info",
+      "message": "5 names used with no import in 4 files were read as Nuxt imports them: the application's from app/composables/, app/utils/, app/queries/ and shared/utils/ and the server's from server/utils/ and shared/utils/",
+      "hint": "Nothing to do. These are the imports Nuxt adds when it builds; a name it gives two ways is a row of its own.",
+      "symbol": "Nuxt",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "implicit-imports-from-convention",
+        "names": [
+          "addLine",
+          "allProducts",
+          "searchProducts",
+          "slugify",
+          "useCart"
+        ],
+        "files": 4
+      },
+      "service": "shop"
+    },
+    {
+      "file": "tsconfig.json",
+      "line": 1,
+      "reason": "aliases-from-convention",
+      "level": "info",
+      "message": ".nuxt/tsconfig.json is not there (`nuxi prepare` writes it), so ~ -> app, @ -> app, ~~ -> ., @@ -> ., #shared -> shared, #app -> node_modules/nuxt/dist/app, #catalog -> app/catalog resolve as Nuxt documents them",
+      "hint": "Nothing to do. Run `nuxi prepare` before building to read the aliases the framework writes, which win over these.",
+      "symbol": ".nuxt/tsconfig.json",
+      "adapter": "nitro-routes",
+      "meta": {
+        "cause": "aliases-from-convention",
+        "by": [
+          "Nuxt"
+        ],
+        "aliases": {
+          "~": [
+            "app"
+          ],
+          "~/*": [
+            "app/*"
+          ],
+          "@": [
+            "app"
+          ],
+          "@/*": [
+            "app/*"
+          ],
+          "~~": [
+            "."
+          ],
+          "~~/*": [
+            "./*"
+          ],
+          "@@": [
+            "."
+          ],
+          "@@/*": [
+            "./*"
+          ],
+          "#shared": [
+            "shared"
+          ],
+          "#shared/*": [
+            "shared/*"
+          ],
+          "#app": [
+            "node_modules/nuxt/dist/app"
+          ],
+          "#app/*": [
+            "node_modules/nuxt/dist/app/*"
+          ],
+          "#catalog": [
+            "app/catalog"
+          ],
+          "#catalog/*": [
+            "app/catalog/*"
+          ]
+        }
+      },
+      "service": "shop"
+    }
+  ]
+}

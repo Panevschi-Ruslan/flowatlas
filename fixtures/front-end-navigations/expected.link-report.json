@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-10T16:14:18.803Z",
+  "configHash": "e53814a49045",
+  "services": [
+    {
+      "name": "admin",
+      "repo": "./admin",
+      "type": "angular",
+      "extractor": "@flowatlas/extractor-angular",
+      "nodes": 12,
+      "edges": 7,
+      "types": 0,
+      "unresolved": 5,
+      "durationMs": 909,
+      "packages": {
+        "name": "front-end-navigations-admin",
+        "runtime": [
+          "@angular/common",
+          "@angular/core",
+          "@angular/router",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "backoffice",
+      "repo": "./backoffice",
+      "type": "vue",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 12,
+      "edges": 8,
+      "types": 0,
+      "unresolved": 1,
+      "durationMs": 884,
+      "packages": {
+        "name": "front-end-navigations-backoffice",
+        "runtime": [
+          "vue",
+          "vue-router"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "kiosk",
+      "repo": "./kiosk",
+      "type": "sveltekit",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 7,
+      "edges": 5,
+      "types": 0,
+      "unresolved": 0,
+      "durationMs": 916,
+      "packages": {
+        "name": "front-end-navigations-kiosk",
+        "runtime": [],
+        "dev": [
+          "@sveltejs/kit",
+          "svelte"
+        ]
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./shop",
+      "type": "nextjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 24,
+      "edges": 25,
+      "types": 0,
+      "unresolved": 5,
+      "durationMs": 953,
+      "packages": {
+        "name": "front-end-navigations-shop",
+        "runtime": [
+          "axios",
+          "next",
+          "react"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "storefront",
+      "repo": "./storefront",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react",
+      "nodes": 20,
+      "edges": 21,
+      "types": 0,
+      "unresolved": 9,
+      "durationMs": 908,
+      "packages": {
+        "name": "front-end-navigations-storefront",
+        "runtime": [
+          "axios",
+          "react",
+          "react-dom",
+          "react-router-dom"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 3,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 2,
+    "ambiguous": 0,
+    "external": 1,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 3,
+    "resolved": 0,
+    "unresolved": 3,
+    "byReason": {
+      "target-route-not-found": 3
+    }
+  },
+  "channels": {
+    "total": 0,
+    "linked": 0,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 3,
+    "called": 0,
+    "uncalled": [
+      "entry:kiosk:http:GET:/menu",
+      "entry:shop:http:DELETE:/api/orders",
+      "entry:shop:http:GET:/api/orders"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 0,
+    "sharedPackage": 0
+  },
+  "unresolved": [
+    {
+      "service": "admin",
+      "file": "src/app/invoices.service.ts",
+      "line": 11,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/invoices",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/invoices */.",
+      "symbol": "ui_api_call:admin#src/app/invoices.service.ts:11:12"
+    },
+    {
+      "service": "shop",
+      "file": "gateways/orders.gateway.ts",
+      "line": 14,
+      "reason": "target-route-not-found",
+      "message": "target service shop has no route GET /orders",
+      "hint": "Route renamed? Check shop's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:shop#gateways/orders.gateway.ts:14:28"
+    },
+    {
+      "service": "shop",
+      "file": "gateways/orders.gateway.ts",
+      "line": 22,
+      "reason": "target-route-not-found",
+      "message": "target service shop has no route DELETE /orders/:param",
+      "hint": "Route renamed? Check shop's controllers, or annotate the call with @CallsService.",
+      "symbol": "http_out:shop#gateways/orders.gateway.ts:22:11"
+    },
+    {
+      "service": "shop",
+      "file": "lib/audit.ts",
+      "line": 3,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves POST /visits",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls POST /visits */.",
+      "symbol": "ui_api_call:shop#lib/audit.ts:3:9"
+    },
+    {
+      "service": "storefront",
+      "file": "src/pages/Home.tsx",
+      "line": 10,
+      "reason": "target-route-not-found",
+      "message": "no configured service serves GET /api/orders/latest",
+      "hint": "Add the service that answers it to services[], or annotate the method with /** @flowatlas-calls GET /api/orders/latest */.",
+      "symbol": "ui_api_call:storefront#src/pages/Home.tsx:10:28"
+    }
+  ],
+  "totals": {
+    "nodes": 75,
+    "edges": 66,
+    "types": 0,
+    "missed": 25,
+    "sites": 34,
+    "notes": 2,
+    "findings": 0,
+    "unresolved": 25
+  }
+}

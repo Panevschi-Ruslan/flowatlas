@@ -1,5 +1,7 @@
 import {
   applicationOfFile,
+  builtQueryInAddress,
+  builtQueryOf,
   declaredParameterType,
   enclosingMethod,
   evaluateExpression,
@@ -11,10 +13,18 @@ import {
   narrowUnionByLiteral,
   parametersOf,
   PLATFORM_FETCH,
+  PLATFORM_HEADERS,
+  PLATFORM_QUERY,
+  writtenHeaderNames,
+  writtenKey,
+  responseHeadersRead,
+  type AnswerHanded,
   requestBodyOf,
   requestVerbOf,
   resolveTypeOrigin,
   siteOf,
+  toPosixPath,
+  underBase,
   verbAlong,
   verbParameterOf,
   verbsAtCallers,
@@ -27,6 +37,7 @@ import {
   type DescribedRequest,
   type CallFrame,
   type ClassMethod,
+  type QueryBuilder,
   type TypeOrigin,
 } from '@flowatlas/core';
 import type { CallExpression, Node as TsNode } from 'ts-morph';
@@ -34,6 +45,7 @@ import { Node, SyntaxKind } from 'ts-morph';
 import type { AngularExtractContext } from '../context.js';
 import { ANGULAR_HTTP } from '../index-classes.js';
 import { noteIfUnreferenced, requestIdOf, requestsOf, wrapperOf, type RequestSite } from '../util/forward.js';
+import { interceptedBase, interceptorBaseOf, interceptorHeadersOf, type InterceptorBase, type InterceptorHeaders } from '../util/interceptor-base.js';
 import type { ApiUrl } from '../util/url.js';
 import { definePass } from './types.js';
 
@@ -43,17 +55,17 @@ import { definePass } from './types.js';
  * A `Map`, because it is asked about every method called on the client and an
  * object literal answers `toString` with the language's own function (R130).
  */
-const VERBS: ReadonlyMap<string, { method: string; urlIndex: number; bodyIndex: number | null }> = new Map([
-  ['get', { method: 'GET', urlIndex: 0, bodyIndex: null }],
-  ['post', { method: 'POST', urlIndex: 0, bodyIndex: 1 }],
-  ['put', { method: 'PUT', urlIndex: 0, bodyIndex: 1 }],
-  ['patch', { method: 'PATCH', urlIndex: 0, bodyIndex: 1 }],
-  ['delete', { method: 'DELETE', urlIndex: 0, bodyIndex: null }],
-  ['head', { method: 'HEAD', urlIndex: 0, bodyIndex: null }],
-  ['options', { method: 'OPTIONS', urlIndex: 0, bodyIndex: null }],
-  ['jsonp', { method: 'GET', urlIndex: 0, bodyIndex: null }],
+const VERBS: ReadonlyMap<string, { method: string; urlIndex: number; bodyIndex: number | null; optionsIndex: number | null }> = new Map([
+  ['get', { method: 'GET', urlIndex: 0, bodyIndex: null, optionsIndex: 1 }],
+  ['post', { method: 'POST', urlIndex: 0, bodyIndex: 1, optionsIndex: 2 }],
+  ['put', { method: 'PUT', urlIndex: 0, bodyIndex: 1, optionsIndex: 2 }],
+  ['patch', { method: 'PATCH', urlIndex: 0, bodyIndex: 1, optionsIndex: 2 }],
+  ['delete', { method: 'DELETE', urlIndex: 0, bodyIndex: null, optionsIndex: 1 }],
+  ['head', { method: 'HEAD', urlIndex: 0, bodyIndex: null, optionsIndex: 1 }],
+  ['options', { method: 'OPTIONS', urlIndex: 0, bodyIndex: null, optionsIndex: 1 }],
+  ['jsonp', { method: 'GET', urlIndex: 0, bodyIndex: null, optionsIndex: null }],
   // The verb of a generic request is its first argument, not its name.
-  ['request', { method: '', urlIndex: 1, bodyIndex: null }],
+  ['request', { method: '', urlIndex: 1, bodyIndex: null, optionsIndex: 2 }],
 ]);
 
 /**
@@ -99,6 +111,42 @@ interface Spelling {
   readonly client: Readonly<Record<string, unknown>>;
   /** Where the address is, when it is not an argument at `urlIndex`: a described client's (P121). */
   readonly url?: (network: CallExpression) => TsNode | undefined;
+  /** Whether the repository's interceptors rewrite what this client sends (P239): the framework's client only. */
+  readonly intercepted?: true;
+  /** The query the call writes among its options, where its client has one (P256). */
+  readonly query?: (network: CallExpression) => QueryShape;
+  /** The names of the headers the call writes among its options (P258), or `unread` where they are written and cannot be read (P262). */
+  readonly headers?: (network: CallExpression) => readonly string[] | 'unread' | undefined;
+  /**
+   * How the answer reaches the caller, where its headers can be read off it
+   * (P265): the platform's as a promise, the framework's as an observable
+   * only where the call observes the whole response.
+   */
+  readonly answer?: (network: CallExpression) => AnswerHanded | undefined;
+}
+
+/**
+ * What builds a query in code here (P258): the framework's `HttpParams`,
+ * whose `set` and `append` hand back a new one, and the platform's own.
+ */
+const QUERY_BUILDERS: readonly QueryBuilder[] = [
+  { class: 'HttpParams', object: 'fromObject', text: 'fromString', adds: ['set', 'append'], immutable: true },
+  PLATFORM_QUERY,
+];
+
+/** What builds headers in code here (P258): the framework's `HttpHeaders`, and the platform's own. */
+const HEADER_BUILDERS: readonly QueryBuilder[] = [
+  { class: 'HttpHeaders', object: '', adds: ['set', 'append'], immutable: true },
+  PLATFORM_HEADERS,
+];
+
+/** A query written among a request's options: its type, its keys where an object is written, or `unread` (P256). */
+interface QueryShape {
+  readonly type?: string;
+  readonly keys?: readonly string[];
+  readonly unread?: true;
+  /** Its keys include those of a query built into the address (P258). */
+  readonly inAddress?: true;
 }
 
 /**
@@ -137,7 +185,68 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
           : bodyThrough(network, shape.bodyIndex, frames),
       typedAnswer: true,
       client: { package: ANGULAR_HTTP },
+      intercepted: true,
+      ...(shape.optionsIndex === null
+        ? {}
+        : {
+            query: (network: CallExpression) => queryAt(network, shape.optionsIndex as number, shape.urlIndex),
+            headers: (network: CallExpression) => headersAt(network, shape.optionsIndex as number),
+            answer: (network: CallExpression) => (observesResponse(network, shape.optionsIndex as number) ? ('observable' as const) : undefined),
+          }),
     };
+  };
+
+  /** Whether a call's options ask for the whole response, `observe: 'response'`, whose headers can be read (P265). */
+  const observesResponse = (network: CallExpression, index: number): boolean => {
+    const options = network.getArguments()[index];
+    if (options === undefined || !Node.isObjectLiteralExpression(options)) return false;
+    const property = options.getProperty('observe');
+    const value = property !== undefined && Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+    return value !== undefined && writtenKey(value) === 'response';
+  };
+
+  /**
+   * The names of the headers an options object written at `index` writes: an
+   * object, or `HttpHeaders` built by calls (P258); `unread` where they are
+   * written and cannot be read - held in a field, built from code (P262).
+   */
+  const headersAt = (network: CallExpression, index: number): readonly string[] | 'unread' | undefined => {
+    const options = network.getArguments()[index];
+    if (options === undefined || !Node.isObjectLiteralExpression(options)) return undefined;
+    const property = options.getProperty('headers');
+    if (property === undefined) return options.getProperties().some((each) => Node.isSpreadAssignment(each)) ? 'unread' : undefined;
+    const written = Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+    return (written === undefined ? undefined : writtenHeaderNames(written, HEADER_BUILDERS)) ?? 'unread';
+  };
+
+  /**
+   * The framework client's query, its options' `params` (P256): the keys of
+   * an object written there, its type either way; `unread` where the options
+   * are handed by a name. `HttpParams` built by calls - a chain of `.set`,
+   * `params = params.append(...)`, `{ fromObject }` - and `URLSearchParams`
+   * carry the keys each call writes (P258), and a query built so into the
+   * address its keys too.
+   */
+  const queryAt = (network: CallExpression, index: number, urlIndex: number): QueryShape => {
+    const address = network.getArguments()[urlIndex];
+    const inAddress = address === undefined ? undefined : builtQueryInAddress(address, QUERY_BUILDERS);
+    const withAddress = (among: QueryShape): QueryShape => {
+      if (inAddress === undefined) return among;
+      if ('unread' in inAddress || among.unread === true) return { ...(among.type === undefined ? {} : { type: among.type }), unread: true };
+      if (among.type !== undefined && among.keys === undefined) return among;
+      return { ...(among.type === undefined ? {} : { type: among.type }), keys: [...new Set([...inAddress.keys, ...(among.keys ?? [])])].sort(), inAddress: true };
+    };
+    const options = network.getArguments()[index];
+    if (options === undefined) return withAddress({});
+    if (!Node.isObjectLiteralExpression(options)) return withAddress({ unread: true });
+    const property = options.getProperty('params');
+    const written = property === undefined ? undefined : Node.isShorthandPropertyAssignment(property) ? property.getNameNode() : Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+    if (written === undefined) return withAddress({});
+    const type = ctx.types.collectType(written.getType(), written);
+    const built = builtQueryOf(written, QUERY_BUILDERS);
+    if (built !== undefined) return withAddress('unread' in built ? { type, unread: true } : { type, keys: built.keys });
+    const keys = writtenKeysOf([written]);
+    return withAddress({ type, ...(keys === undefined ? {} : { keys }) });
   };
 
   /** The platform's client, read through the one description of it. */
@@ -159,6 +268,8 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     },
     typedAnswer: false,
     client: { package: null, client: PLATFORM_FETCH.name },
+    headers: (network) => headersAt(network, PLATFORM_FETCH.optionsAt),
+    answer: () => 'promise',
   };
 
   const typeOfResponse = (call: CallExpression): string | null => {
@@ -249,17 +360,74 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     return node === undefined ? NO_BODY : typeOfBody(at, position);
   };
 
+  /**
+   * The base the repository's interceptors put in front of every request of the
+   * framework's client (P239), read the first time one is recorded, and the
+   * rewrites nothing could be taken from said once, where they are written.
+   */
+  let intercepting: InterceptorBase | undefined;
+  const interceptorBase = (): InterceptorBase => {
+    if (intercepting !== undefined) return intercepting;
+    const repoDir = toPosixPath(ctx.repoDir).replace(/[/]+$/, '');
+    const files = ctx.project.getSourceFiles().filter((file) => {
+      const path = toPosixPath(file.getFilePath());
+      return path.startsWith(`${repoDir}/`) && !path.includes('/node_modules/');
+    });
+    intercepting = interceptorBaseOf(files, ctx.config.sharedPackages);
+    for (const { at, why } of intercepting.unread) {
+      ctx.report({
+        file: ctx.fileOf(at),
+        line: siteOf(at).line,
+        reason: 'api-client-base-unread',
+        hint: `${why}. Requests through the framework's client are recorded with an opening not read, \`\${…}\` before the path each call writes, and join nothing. Write the base as a literal or a setting, and the rewrite unconditionally or under a test of the address.`,
+        symbol: at.getText().slice(0, 80),
+      });
+    }
+    return intercepting;
+  };
+
+  /** The headers the repository's interceptors put on every request of the framework's client (P262), read once. */
+  let interceptorHeaders: InterceptorHeaders | undefined;
+  const headersIntercepted = (): InterceptorHeaders => {
+    if (interceptorHeaders !== undefined) return interceptorHeaders;
+    const repoDir = toPosixPath(ctx.repoDir).replace(/[/]+$/, '');
+    const files = ctx.project.getSourceFiles().filter((file) => {
+      const path = toPosixPath(file.getFilePath());
+      return path.startsWith(`${repoDir}/`) && !path.includes('/node_modules/');
+    });
+    interceptorHeaders = interceptorHeadersOf(files);
+    return interceptorHeaders;
+  };
+
+  /** What a request's headers are: its own and its interceptors', and whether more may be added that are not read (P262). */
+  const headersOf = (network: CallExpression, spelling: Spelling): { keys?: readonly string[]; unread?: true } => {
+    const own = spelling.headers?.(network);
+    const added: InterceptorHeaders = spelling.intercepted === true ? headersIntercepted() : { keys: [], unread: false };
+    // A set an interceptor writes in place of the request's own is all it carries (P265).
+    const ownKeys = added.replaces === true ? [] : Array.isArray(own) ? own : [];
+    const keys = [...ownKeys, ...added.keys];
+    const unread = (own === 'unread' && added.replaces !== true) || (added.unread && (own !== undefined || keys.length > 0));
+    if (own === undefined && added.keys.length === 0) return added.unread ? { unread: true } : {};
+    return { ...(keys.length === 0 && unread ? {} : { keys: [...new Set(keys)].sort() }), ...(unread ? { unread: true as const } : {}) };
+  };
+
   const record = (
     network: CallExpression,
     spelling: Spelling,
     site: RequestSite,
-    address: ApiUrl,
+    written: ApiUrl,
     frames: readonly CallFrame[],
     choice?: string,
     pathChoices?: readonly string[],
     handedIn?: string | null,
   ): void => {
     const { call, methodId, file } = site;
+    // The address the call writes, under the base an interceptor puts in front
+    // of every request the framework's client makes (P239), or of the ones a
+    // test of the address holds for (P280).
+    const interceptor = spelling.intercepted === true ? interceptedBase(interceptorBase(), written) : undefined;
+    const address = underBase(interceptor, written);
+    const intercepted = address !== written;
 
     // A verb a wrapper is handed is read at the caller the address was read
     // at, along the same frames (P91); one handed in where the address was
@@ -273,6 +441,11 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
     const responseType = spelling.typedAnswer && Node.isCallExpression(call) ? typeOfResponse(call) : null;
     const body = spelling.body(network, frames);
     const bodyType = body.type;
+    const query = spelling.query?.(network) ?? {};
+    const headers = headersOf(network, spelling);
+    // The headers the caller reads off the answer, where the request is made where it is read (P265).
+    const handed = call === network ? spelling.answer?.(network) : undefined;
+    const answerHeaders = handed === undefined ? undefined : responseHeadersRead(network, handed);
     const application = applicationOfFile(ctx.meta, file);
 
     ctx.builder.addNode({
@@ -297,12 +470,27 @@ export const httpPass = definePass('http', (ctx: AngularExtractContext) => {
         // source says. A declared type says what is permitted; this says what
         // is sent, and the checker compares only these (R34).
         ...(body.keys === undefined ? {} : { bodyKeys: body.keys }),
+        // The query it writes, for a route that assembles its input from it (P256).
+        ...(query.type === undefined ? {} : { queryType: query.type }),
+        ...(query.keys === undefined ? {} : { queryKeys: query.keys }),
+        ...(query.unread === true ? { queryUnread: true } : {}),
+        ...(query.inAddress === true ? { queryInAddress: true } : {}),
+        // The headers it writes, for a procedure whose input takes them (P258),
+        // and whether more may be added that are not read (P262).
+        ...(headers.keys === undefined ? {} : { headerKeys: headers.keys }),
+        ...(headers.unread === true ? { headersUnread: true } : {}),
+        // The headers it reads off the answer, for a procedure whose output declares them (P265).
+        ...(answerHeaders === undefined || answerHeaders.keys.length === 0 ? {} : { responseHeaderKeys: answerHeaders.keys }),
+        ...(answerHeaders?.unread === true ? { responseHeadersUnread: true } : {}),
         ...spelling.client,
         // Which application this request is written in, where the service holds
         // more than one; the other half of what an entry records about its own
         // address (R132).
         ...(application === undefined ? {} : { application }),
         via: address.via,
+        // Where the opening of the address came from, said only when it is not
+        // the call's own: an interceptor in another file (P239).
+        ...(intercepted ? { baseFrom: 'interceptor' } : {}),
         ...(address.host === null ? {} : { host: address.host }),
         // Only ever set, never set to false: it is a mark on the few addresses
         // a branch was guessed for, and the linker lowers the edge it draws

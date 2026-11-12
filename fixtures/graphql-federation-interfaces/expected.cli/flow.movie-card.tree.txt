@@ -1,0 +1,22 @@
+%  MovieCard                                        kiosk/src/MovieCard.tsx:14
+  ^  query Movies /graphql                          kiosk/src/MovieCard.tsx:15
+    => reviews @  Query.topRated ?declared          reviews/src/index.ts:30
+      -> Query.topRated@30                          reviews/src/index.ts:30
+        -> topRated                                 reviews/src/reviews.ts:15
+    => media @  Media.__resolveReference ?declared  media/src/index.ts:16
+      -> Media.__resolveReference@16                media/src/index.ts:16
+        -> mediaById                                media/src/catalog.ts:13
+    => media @  Movie.director ?declared            media/src/index.ts:19
+      !  @requiresScopes(media:staff)
+      -> Movie.director@19                          media/src/index.ts:19
+        -> directorOf                               media/src/catalog.ts:15
+    => reviews @  Media.rating ?declared            reviews/src/index.ts:35
+      !  @authenticated
+      -> Media.rating@35                            reviews/src/index.ts:35
+        -> ratingOf                                 reviews/src/reviews.ts:10
+          -> reviewsOf                              reviews/src/reviews.ts:8
+    => router @  POST /graphql ?declared            router/router/supergraph.graphql
+      => accounts @  POST /graphql ~heuristic       accounts/src/app.module.ts:9
+      => media @  POST / ?declared                  media/src/index.ts:23
+      => reviews @  POST /graphql ?declared         reviews/src/index.ts:39
+unresolved on this path: 1

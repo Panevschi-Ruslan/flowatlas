@@ -10,10 +10,12 @@ import {
   readResolvedPackageJson,
   type FlowatlasConfig,
   type ServiceConfig,
+  workspaceApplicationOf,
 } from '@flowatlas/core';
 import type { Command } from 'commander';
 import { CliError, EXIT } from '../exit.js';
-import { declaresDeployment, guessDirectoryType, guessType, UNKNOWN_TYPE } from '../stacks.js';
+import { declaresDeployment, guessDirectoryType, guessType, isPlainBrowserCode, PLAIN_BROWSER_TYPE, UNKNOWN_TYPE } from '../stacks.js';
+import { describedProject } from '../workspace-projects.js';
 import { runMissingCommand } from './doctor.js';
 import { repoPathFor, suggestName } from './init.js';
 import { installMcp, MCP_FILE, SERVER_KEY } from './mcp.js';
@@ -55,6 +57,28 @@ const openProject = (configPath: string): { config: FlowatlasConfig; existed: bo
 };
 
 /**
+ * An application of a workspace that keeps one manifest for everything (R180):
+ * `apps/orders` with a tsconfig that extends the root's and no `package.json`.
+ *
+ * Taken when the core says the directory is such an application and either the
+ * workspace's own description names it as one (`nest-cli.json`, `angular.json`,
+ * `workspace.json`, a `project.json`), or the root's manifest declares a
+ * framework a reader reads. The name is the one the description gives it, or the
+ * directory's; never the root's, which every application of the workspace would share. The type
+ * is the root's, which is where an application of such a workspace declares its
+ * dependencies.
+ */
+const describeApplication = (dir: string): { name: string; type: string } | undefined => {
+  const application = workspaceApplicationOf(dir);
+  if (application === undefined) return undefined;
+  const described = describedProject(application);
+  if (described !== undefined && !described.application) return undefined;
+  const type = guessType(readResolvedPackageJson(dir) ?? {});
+  if (described === undefined && type === UNKNOWN_TYPE) return undefined;
+  return { name: described?.name ?? basename(dir), type };
+};
+
+/**
  * What a repository should be called and what it is, read from its manifest.
  *
  * The name is the package's own, always. The type is guessed from its own
@@ -64,12 +88,17 @@ const openProject = (configPath: string): { config: FlowatlasConfig; existed: bo
  * nothing at all and the workspace is the only thing left to ask.
  */
 const describe = (dir: string): { name: string; type: string } => {
+  const application = describeApplication(dir);
+  if (application !== undefined) return application;
   const pkg = readPackageJson(dir) ?? (declaresDeployment(dir) ? {} : undefined);
+  // Pages and the scripts they load, with nothing to build them (P284): a
+  // front end of its own, read for the requests its scripts send.
+  if (pkg === undefined && isPlainBrowserCode(dir)) return { name: basename(dir), type: PLAIN_BROWSER_TYPE };
   if (pkg === undefined) {
     throw new FlowatlasError(
       'not-a-repository',
-      `${dir} has no package.json and no Terraform that declares a function or a route`,
-      'Point at the root of a repository: the directory holding its package.json, or its Terraform.',
+      `${dir} has no package.json, is no application of a workspace, has no Terraform that declares a function or a route, and is no directory of pages and the scripts they load`,
+      'Point at the root of a repository (the directory holding its package.json, or its Terraform), at an application of a workspace: a directory with a tsconfig of its own that extends the root\'s, or at a directory of plain browser code: .html pages and .js scripts.',
     );
   }
   const declared = guessType(pkg);

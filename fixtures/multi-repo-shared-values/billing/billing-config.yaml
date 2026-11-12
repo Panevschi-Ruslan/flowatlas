@@ -1,0 +1,5 @@
+# What `rain deploy --config` reads: a template configuration, in YAML.
+Parameters:
+  Prefix: shop
+Tags:
+  team: billing

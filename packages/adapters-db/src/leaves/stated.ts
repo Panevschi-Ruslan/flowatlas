@@ -74,16 +74,24 @@ import { besidePath } from './prisma-schema.js';
  *
  * `new PrismaClient()` names its class as plainly as an annotation does, and
  * `x as PrismaClient` is an annotation written after the value. A call states
- * nothing: `const db = makeDb()` says what function ran, not what came back,
- * and following it is the checker's work. A fallback - `cached ?? new Client()`,
- * the ordinary way a client is kept across reloads - states its type on the
- * side that constructs, since the other side is the same value remembered.
+ * nothing of itself: `const db = makeDb()` says what function ran, not what
+ * came back. What does state it is the function, where it is this
+ * repository's and writes its return type - `function sharedDb(): DbService`,
+ * the ordinary way one instance is kept for code outside the container (P270)
+ * - and that annotation is read as the value's; a function that writes none is
+ * the checker's work. A fallback - `cached ?? new Client()`, the ordinary way a
+ * client is kept across reloads - states its type on the side that constructs,
+ * since the other side is the same value remembered.
  */
 const constructedBy = (initializer: TsNode | undefined): TsNode | undefined => {
   if (initializer === undefined) return undefined;
   if (Node.isParenthesizedExpression(initializer)) return constructedBy(initializer.getExpression());
   if (Node.isAsExpression(initializer)) return initializer.getTypeNode();
   if (Node.isNewExpression(initializer)) return initializer.getExpression();
+  if (Node.isCallExpression(initializer)) return returnTypeWritten(initializer, false);
+  if (Node.isAwaitExpression(initializer) && Node.isCallExpression(initializer.getExpression())) {
+    return returnTypeWritten(initializer.getExpression(), true);
+  }
   if (Node.isBinaryExpression(initializer)) {
     const operator = initializer.getOperatorToken().getKind();
     if (operator === SyntaxKind.QuestionQuestionToken || operator === SyntaxKind.BarBarToken) {
@@ -91,6 +99,85 @@ const constructedBy = (initializer: TsNode | undefined): TsNode | undefined => {
     }
   }
   return undefined;
+};
+
+/**
+ * The return type a function of this repository writes, for a call of it by
+ * name, or of a method of a value whose type the checker reads here (P277):
+ * `sharedDb()`, and `this.factory.client()` or `Container.get(Db).db()` where
+ * the class or interface declaring `client` is the repository's. Awaited, a
+ * written `Promise<T>` is `T`. A function of a package, or one that writes no
+ * return type, states nothing here.
+ */
+const returnTypeWritten = (call: TsNode, awaited: boolean): TsNode | undefined => {
+  if (!Node.isCallExpression(call)) return undefined;
+  const callee = call.getExpression();
+  const named = Node.isIdentifier(callee) ? callee : Node.isPropertyAccessExpression(callee) ? callee.getNameNode() : undefined;
+  if (named === undefined) return undefined;
+  const symbol = named.getSymbol();
+  const declaration = (symbol?.getAliasedSymbol() ?? symbol)?.getDeclarations()[0];
+  if (declaration === undefined || declaration.getSourceFile().getFilePath().includes('/node_modules/')) return undefined;
+  const returned = writtenReturnOf(declaration);
+  const written = returned === undefined ? undefined : typeArgumentFor(returned, declaration, call);
+  if (!awaited || written === undefined || !Node.isTypeReference(written) || written.getTypeName().getText() !== 'Promise') {
+    return written;
+  }
+  return written.getTypeArguments()[0];
+};
+
+/**
+ * A return type that is a type parameter of the function states what the call
+ * hands it - `getActiveManager<SqlEntityManager>()` returns
+ * `SqlEntityManager` - and nothing where the call hands none (P277).
+ */
+const typeArgumentFor = (returned: TsNode, declaration: TsNode, call: TsNode): TsNode | undefined => {
+  if (!Node.isTypeReference(returned) || !Node.isCallExpression(call)) return returned;
+  const holder = Node.isVariableDeclaration(declaration) || Node.isPropertyDeclaration(declaration) || Node.isPropertyAssignment(declaration)
+    ? declaration.getInitializer()
+    : declaration;
+  const parameters =
+    holder !== undefined && 'getTypeParameters' in holder && typeof holder.getTypeParameters === 'function'
+      ? (holder.getTypeParameters() as TsNode[])
+      : [];
+  const name = returned.getTypeName().getText();
+  const index = parameters.findIndex((parameter) => Node.isTypeParameterDeclaration(parameter) && parameter.getName() === name);
+  return index < 0 ? returned : call.getTypeArguments()[index];
+};
+
+/**
+ * The return type a declaration of something callable writes: a function, a
+ * method of a class or of an interface, or a member holding an arrow or typed
+ * as a function (`client: () => Db`) (P277).
+ */
+const writtenReturnOf = (declaration: TsNode): TsNode | undefined => {
+  if (
+    Node.isFunctionDeclaration(declaration) ||
+    Node.isMethodDeclaration(declaration) ||
+    Node.isMethodSignature(declaration)
+  ) {
+    return declaration.getReturnTypeNode();
+  }
+  if (!Node.isVariableDeclaration(declaration) && !Node.isPropertyDeclaration(declaration) && !Node.isPropertyAssignment(declaration) && !Node.isPropertySignature(declaration)) {
+    return undefined;
+  }
+  const initializer = Node.isPropertySignature(declaration) ? undefined : declaration.getInitializer();
+  if (initializer !== undefined && (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer))) {
+    return initializer.getReturnTypeNode();
+  }
+  const typed = Node.isPropertyAssignment(declaration) ? undefined : declaration.getTypeNode();
+  return typed !== undefined && Node.isFunctionTypeNode(typed) ? typed.getReturnTypeNode() : undefined;
+};
+
+/**
+ * The type a call written where a client is used states -
+ * `this.factory.client().order.findMany()` - by the return type its function
+ * writes (P277): the reading a variable holding the call's value gets.
+ */
+const callStated = (receiver: TsNode): TsNode | undefined => {
+  let at = receiver;
+  while (Node.isParenthesizedExpression(at) || Node.isNonNullExpression(at)) at = at.getExpression();
+  if (Node.isAwaitExpression(at)) return returnTypeWritten(at.getExpression(), true);
+  return Node.isCallExpression(at) ? returnTypeWritten(at, false) : undefined;
 };
 
 /**
@@ -445,10 +532,60 @@ const referenced = (reference: ModuleReference, hops: number): Step => {
         ? undefined
         : workspaceEntry(specifier, from);
   if (local !== undefined) return exported(local, name, hops + 1);
+  // A bare specifier the project's own compiler options place in the
+  // repository (P270): `src/generated/prisma/client` under `baseUrl: "./"`, or
+  // `@db/client` under a `paths` entry. It reads like a package, and the
+  // compiler would look for it beside the project's files first; asked of the
+  // generators before it is taken for one, so a client `prisma generate` writes
+  // there is the generating library's client on the schema's word.
+  const placed = pkg === undefined ? [] : projectPathsOf(specifier, from);
+  const generated = generatedAt(from, placed);
+  if (generated !== null) return generated;
   if (pkg !== undefined) return { package: pkg, site: from };
-  const target = besidePath(dirname(from.getFilePath()), specifier);
-  const generator = generatedModules.find((entry) => entry.generates(from, target));
-  return generator === undefined ? null : { package: generator.package, site: from };
+  return generatedAt(from, [besidePath(dirname(from.getFilePath()), specifier)]);
+};
+
+/** The generating library whose client one of these module paths is, or nothing. */
+const generatedAt = (from: SourceFile, targets: readonly string[]): Step => {
+  for (const target of targets) {
+    const generator = generatedModules.find((entry) => entry.generates(from, target));
+    if (generator !== undefined) return { package: generator.package, site: from };
+  }
+  return null;
+};
+
+/**
+ * Where the compiler would look for a bare specifier inside the project, by
+ * the options the project was read with: each `paths` pattern it matches, with
+ * its `*` filled, and the specifier under `baseUrl`. Relative entries are
+ * relative to `baseUrl`, or to the configuration that declared them where it
+ * has none, which is what the compiler records as `pathsBasePath`.
+ */
+const projectPathsOf = (specifier: string, from: SourceFile): string[] => {
+  const options = from.getProject().getCompilerOptions();
+  const base =
+    typeof options.baseUrl === 'string'
+      ? options.baseUrl
+      : typeof options['pathsBasePath'] === 'string'
+        ? (options['pathsBasePath'] as string)
+        : undefined;
+  if (base === undefined) return [];
+  const found: string[] = [];
+  for (const [pattern, targets] of Object.entries(options.paths ?? {})) {
+    const star = pattern.indexOf('*');
+    const filled =
+      star < 0
+        ? specifier === pattern
+          ? ''
+          : undefined
+        : specifier.startsWith(pattern.slice(0, star)) && specifier.endsWith(pattern.slice(star + 1))
+          ? specifier.slice(star, specifier.length - (pattern.length - star - 1))
+          : undefined;
+    if (filled === undefined) continue;
+    for (const target of targets) found.push(besidePath(base, target.replace('*', filled)));
+  }
+  if (typeof options.baseUrl === 'string') found.push(besidePath(options.baseUrl, specifier));
+  return found;
 };
 
 /**
@@ -683,17 +820,20 @@ export interface StatedOrigin extends TypeOrigin {
  */
 export const statedOrigin = (receiver: TsNode): StatedOrigin | null => {
   const start = Node.isIdentifier(receiver) ? followName(receiver) : null;
+  // A call written in place states what its function writes it returns (P277).
+  let called = start === null ? callStated(receiver) : undefined;
   let declaration =
     start !== null && 'declaration' in start
       ? start.declaration
-      : (declarationOf(receiver) ?? memberReachedBy(receiver));
+      : (called ?? declarationOf(receiver) ?? memberReachedBy(receiver));
   for (let depth = 0; declaration !== undefined && depth < MAX_HOPS; depth += 1) {
-    const through = STATED_THROUGH[declaration.getKind()]?.(declaration);
+    const through = called === undefined ? STATED_THROUGH[declaration.getKind()]?.(declaration) : undefined;
     if (through !== undefined) {
       declaration = through;
       continue;
     }
-    const name = nameNodeOf(STATED_TYPE[declaration.getKind()]?.(declaration));
+    const name = nameNodeOf(called ?? STATED_TYPE[declaration.getKind()]?.(declaration));
+    called = undefined;
     if (name === undefined) return null;
     const step = followName(name);
     if (step === null) return null;

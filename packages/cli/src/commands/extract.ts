@@ -54,7 +54,7 @@ import { hashGraphFile } from '../build/incremental.js';
 import { adapterNames, createRegistry, EXTRA_PASSES, readerRootsOf, sourceRootOptionsOf } from '../build/extractor.js';
 import { deploymentFiles } from '../build/deployment-files.js';
 import { stampPackageFiles } from '../build/dependencies.js';
-import { ANGULAR_EXTRACTOR, NESTJS_EXTRACTOR, REACT_EXTRACTOR } from '../readers.js';
+import { ANGULAR_EXTRACTOR, NESTJS_EXTRACTOR, READERS, REACT_EXTRACTOR } from '../readers.js';
 
 /**
  * The browser readers, by the name of the half each one reads.
@@ -83,10 +83,22 @@ export interface BrowserReader {
   readonly read: (options: ExtractRepoOptions) => Promise<RepoGraph>;
 }
 
-export const BROWSER_READERS: ReadonlyMap<string, BrowserReader> = new Map([
-  ['angular', { extractor: ANGULAR_EXTRACTOR, open: openAngularProject, read: extractAngularRepo }],
-  ['react', { extractor: REACT_EXTRACTOR, open: openReactProject, read: extractReactRepo }],
+const BROWSER_OF_READER: ReadonlyMap<string, BrowserReader> = new Map([
+  [ANGULAR_EXTRACTOR, { extractor: ANGULAR_EXTRACTOR, open: openAngularProject, read: extractAngularRepo }],
+  [REACT_EXTRACTOR, { extractor: REACT_EXTRACTOR, open: openReactProject, read: extractReactRepo }],
 ]);
+
+/**
+ * The browser reader of each type, from the readers' own rows: a type the
+ * browser reader reads (`vue`, `svelte`, P233) is read by it here too, and
+ * never handed to the server reader for want of a line in a second table.
+ */
+export const BROWSER_READERS: ReadonlyMap<string, BrowserReader> = new Map(
+  READERS.flatMap(([type, , reader]) => {
+    const browser = BROWSER_OF_READER.get(reader);
+    return browser === undefined ? [] : [[type, browser] as const];
+  }),
+);
 
 /**
  * The browser reader for a repository nothing in a configuration described.
@@ -382,7 +394,7 @@ const repoCacheOf = (options: RepoCacheOptions): BuildCache => {
   cache.repos[repo] = {
     repo: options.service?.repo ?? rootDir,
     extractor,
-    adapters: adapterNames(registry, readResolvedPackageJson(rootDir) ?? {}, config, rootDir),
+    adapters: adapterNames(registry, readResolvedPackageJson(rootDir) ?? {}, config, rootDir, options.service?.type),
     tsconfigHash: tsconfig === undefined ? hashText('') : hashFile(tsconfig),
     packageJsonHash: hashFile(join(rootDir, 'package.json')),
     globalFiles: [...globalFiles(warm), ...deployed],

@@ -8,6 +8,7 @@ import {
   type Unresolved,
 } from '@flowatlas/core';
 import { createRepoProject } from '@flowatlas/extractor-nestjs';
+import { createRegistry } from '../build/extractor.js';
 import { Node, type CallExpression, type Decorator, type Node as TsNode, type Project } from 'ts-morph';
 
 /**
@@ -54,6 +55,8 @@ export class ServiceSources {
         service,
         config: this.loaded.config,
         configDir: this.loaded.rootDir,
+        // The aliases and implicit imports the build reads with (P240).
+        registry: createRegistry(),
       });
       this.#projects.set(service.name, project);
     }

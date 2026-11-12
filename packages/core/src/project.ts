@@ -10,6 +10,7 @@ import {
   type SourceFile,
 } from 'ts-morph';
 import type { GraphBuilder } from './builder.js';
+import { conventionAliases, installConventions, isConventionModule, type ProjectConventions } from './conventions.js';
 import {
   installDeclarationShapes,
   isDeclarationShape,
@@ -27,9 +28,11 @@ import {
   type StandInRequest,
 } from './stand-ins.js';
 import { isTestDirectory, isTestName } from './test-files.js';
+import { findTsconfig } from './tsconfig-file.js';
 import {
   serviceExtent,
   serviceSourceDirs,
+  widenServiceExtent,
   workspaceGlobs,
   workspacePackages,
   workspaceRootsAbove,
@@ -92,6 +95,13 @@ export interface CreateProjectOptions extends SourceRootOptions {
    * of the project's own. See `standInsFor`.
    */
   standIns?: StandInRequest;
+  /**
+   * What the frameworks the repository is written in would have written for
+   * the compiler before it is asked (P240): aliases the tsconfig does not
+   * name, and names files use with no import. Stated by the readers that know
+   * those frameworks (`AdapterRegistry.conventions`); none unless one does.
+   */
+  conventions?: readonly ProjectConventions[];
 }
 
 /** Directories that never hold sources worth reading. */
@@ -113,6 +123,35 @@ const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'build']);
 export const SOURCE_EXTENSIONS = ['.ts', '.tsx'] as const;
 
 /**
+ * The extensions a repository written in JavaScript alone keeps its code in
+ * (P274).
+ *
+ * `allowJs` is off for a TypeScript repository because its JavaScript is what
+ * it compiles to, or a configuration file beside its code. A service with no
+ * TypeScript among its sources at all - a Node server written in CommonJS,
+ * run as it is - has nothing else: its scripts are its source, and reading
+ * none of them read the service as empty. So where the roots hold no
+ * TypeScript, these are read instead, with `allowJs` on, and a repository with
+ * one TypeScript file reads exactly as it did.
+ */
+export const SCRIPT_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs'] as const;
+
+/** A script nobody wrote by hand: a bundle's minified output. */
+const MINIFIED_SUFFIX = '.min.js';
+
+/**
+ * The extensions a service's own roots are read with: TypeScript's, or a
+ * script's where no TypeScript is there (see {@link SCRIPT_EXTENSIONS}).
+ * Asked with the tests policy the reading has, recording nothing, so the
+ * reading and the build's listing answer alike.
+ */
+const ownExtensionsOf = (rootDir: string, tests: TestDirectories, roots: readonly string[]): readonly string[] => {
+  const quiet: TestDirectories = { reads: tests.reads, skipped: () => {} };
+  if (sourceFilesUnder(rootDir, quiet, roots).length > 0) return SOURCE_EXTENSIONS;
+  return sourceFilesUnder(rootDir, quiet, roots, SCRIPT_EXTENSIONS).length > 0 ? SCRIPT_EXTENSIONS : SOURCE_EXTENSIONS;
+};
+
+/**
  * Files that are compiled but say nothing about the shape of the system: a
  * declaration file, and a test ({@link isTestName}, and a directory named like
  * one unless the service names it; the one definition the
@@ -120,13 +159,7 @@ export const SOURCE_EXTENSIONS = ['.ts', '.tsx'] as const;
  */
 const DECLARATION_SUFFIX = '.d.ts';
 
-
-/** Tried in order when the caller does not name one. */
-export const TSCONFIG_CANDIDATES = [
-  'tsconfig.json',
-  'tsconfig.build.json',
-  'tsconfig.app.json',
-] as const;
+export { findTsconfig, TSCONFIG_CANDIDATES } from './tsconfig-file.js';
 
 /**
  * What the compiler is told when the repository tells it nothing.
@@ -366,7 +399,7 @@ const walkSources = (
         continue;
       }
       if (!extensions.some((ext) => entry.name.endsWith(ext))) continue;
-      if (entry.name.endsWith(DECLARATION_SUFFIX) || isTestName(entry.name)) continue;
+      if (entry.name.endsWith(DECLARATION_SUFFIX) || entry.name.endsWith(MINIFIED_SUFFIX) || isTestName(entry.name)) continue;
       out.push(path);
     }
   };
@@ -404,18 +437,6 @@ const SKIPPED_TEST_DIRECTORIES = new WeakMap<Project, ReadonlyMap<string, readon
 export const skippedTestDirectories = (
   project: Project,
 ): ReadonlyMap<string, readonly string[]> => SKIPPED_TEST_DIRECTORIES.get(project) ?? new Map();
-
-export const findTsconfig = (rootDir: string, tsconfig?: string): string | undefined => {
-  if (tsconfig !== undefined) {
-    const path = isAbsolute(tsconfig) ? tsconfig : join(rootDir, tsconfig);
-    return existsSync(path) ? path : undefined;
-  }
-  for (const candidate of TSCONFIG_CANDIDATES) {
-    const path = join(rootDir, candidate);
-    if (existsSync(path)) return path;
-  }
-  return undefined;
-};
 
 /**
  * The path aliases one package of a service's extent declares for its own files.
@@ -803,6 +824,17 @@ const mountedAliases = (mount: Mount): PackageAliases | undefined => {
  * - The file must be inside the package whose manifest named it and under no
  *   `node_modules`. A target written as `../elsewhere` is refused, not followed.
  *
+ * What the manifest names is tried first, and then the source it is built from
+ * ({@link sourceTargets}), for a member exactly as for a package mounted from
+ * outside. A member whose `exports` name only its build - `./dist/types/index.d.ts`,
+ * `./dist/types.mjs` - names files a fresh clone does not have, and reading the
+ * targets alone left every import of it unresolved: a server whose controllers
+ * all take their prefix from an enum of such a member read almost none of its
+ * routes, every other prefix a `route-path-dynamic` row (R180). A
+ * built member still answers with its build, because the written target is a
+ * file and comes first. `source` says only whether the file is read as an
+ * install would be: a member's files are the repository's own.
+ *
  * One answer per specifier, remembered: it depends on the manifest and the file
  * system and on nothing about the file that asked.
  */
@@ -817,7 +849,10 @@ const workspaceMemberResolution = (
     const member = split === undefined ? undefined : members.get(split.name);
     if (split === undefined || member === undefined) return undefined;
     const targets = manifestTargets(member.manifest, split.subpath);
-    for (const target of source ? sourceTargets(targets, split.subpath) : targets) {
+    // A subpath a member's map withholds stays withheld: there is no build of
+    // it to stand in for.
+    const tried = source || targets.length > 0 ? sourceTargets(targets, split.subpath) : [];
+    for (const target of tried) {
       const path = resolve(member.dir, target);
       const inside = relative(member.dir, path);
       const segments = inside.split(sep);
@@ -976,6 +1011,11 @@ export const createProject = (options: CreateProjectOptions): Project => {
     skipped.set(key, [...(skipped.get(key) ?? []), ...files.map(toPosixPath)]);
   });
   const tsConfigFilePath = findTsconfig(rootDir, tsconfig);
+  const conventions = options.conventions ?? [];
+  // What the framework builds in from outside the root is part of the extent
+  // before the extent is asked (P243). `conventionsFor` has said so already
+  // for every reader that asked it, and saying it twice changes nothing.
+  widenServiceExtent(rootDir, conventions.flatMap((convention) => convention.extent ?? []));
   // Every package of the extent, one nested in the service's directory too: a
   // package whose files may be opened is one whose aliases are honoured (R115).
   const packages = extentMembers(rootDir);
@@ -993,10 +1033,35 @@ export const createProject = (options: CreateProjectOptions): Project => {
     mounts.map((mount) => [mount.source.name, { dir: mount.virtual, manifest: mount.source.manifest }]),
   );
 
+  // Aliases the tsconfig does not name and the repository still resolves
+  // (P240): those of the projects a solution tsconfig refers to, and those a
+  // framework's build would have written. Merged under the tsconfig's own,
+  // every target absolute, so the base each was written against does not matter.
+  const own = compilerOptionsAt(tsConfigFilePath);
+  const supplied = conventionAliases(rootDir, tsConfigFilePath, own.paths, conventions);
+  const extraPaths =
+    Object.keys(supplied.paths).length === 0
+      ? {}
+      : {
+          paths: { ...supplied.paths, ...(own.paths ?? {}) },
+          ...(own.pathsBasePath === undefined && own.baseUrl === undefined
+            ? { pathsBasePath: toPosixPath(tsConfigFilePath === undefined ? rootDir : dirname(tsConfigFilePath)) }
+            : {}),
+        };
+
+  // A repository with no TypeScript among its own sources reads its scripts (P274).
+  const roots = sourceRootsOf(rootDir, options);
+  const ownExtensions = ownExtensionsOf(rootDir, tests, roots);
+  const scripts = ownExtensions === SCRIPT_EXTENSIONS;
+
   const project = new Project({
     ...(tsConfigFilePath === undefined ? {} : { tsConfigFilePath }),
     skipAddingFilesFromTsConfig: true,
-    ...(tsConfigFilePath === undefined ? { compilerOptions: FALLBACK_COMPILER_OPTIONS } : {}),
+    compilerOptions: {
+      ...(tsConfigFilePath === undefined ? FALLBACK_COMPILER_OPTIONS : {}),
+      ...extraPaths,
+      ...(scripts ? { allowJs: true, checkJs: false } : {}),
+    },
     ...(mounts.length === 0 ? {} : { fileSystem: mountedFileSystem(mounts) }),
     // Only inside a workspace, or where a package's source stands in. A service
     // with no package of its own to alias, none to import by name and no source
@@ -1028,13 +1093,23 @@ export const createProject = (options: CreateProjectOptions): Project => {
   // "Directory not found". The list comes from the file system and holds only
   // files that are there. It is also the list `listRepoSources` makes from the
   // same roots, so what a build stamps and what this opens are one answer (R170).
-  const roots = sourceRootsOf(rootDir, options);
-  for (const file of sourceFilesUnder(rootDir, tests, roots)) {
-    project.addSourceFileAtPath(join(rootDir, file));
+  const opened: SourceFile[] = [];
+  for (const file of sourceFilesUnder(rootDir, tests, roots, ownExtensions)) {
+    opened.push(project.addSourceFileAtPath(join(rootDir, file)));
   }
+  const builtIn = conventions.flatMap((convention) => convention.extent ?? []).map((dir) => resolve(dir));
   for (const dir of membersBeyond(rootDir, roots)) {
-    for (const file of sourceFilesUnder(dir, tests)) project.addSourceFileAtPath(join(dir, file));
+    // A directory the framework builds in is the application's code, and gets
+    // the imports the framework adds to it (P243); a package it declares does not.
+    const application = builtIn.some((at) => isWithinDir(dir, at));
+    for (const file of sourceFilesUnder(dir, tests)) {
+      const added = project.addSourceFileAtPath(join(dir, file));
+      if (application) opened.push(added);
+    }
   }
+  // Once every file is open, so an import is added for a name only where the
+  // file that gives it is read (P240).
+  installConventions(project, rootDir, conventions, supplied, opened);
   // After the sources are opened, before anything builds the program: a shape
   // is decided by whether the package resolves, and stands in from the first
   // import the checker resolves.
@@ -1152,10 +1227,11 @@ export interface RepoStats extends SourceCounts {
  */
 export const countSources = (project: Project): SourceCounts => {
   const program = project.getProgram();
-  // A shape held in memory stands for a package, and is no file of this one.
+  // A shape held in memory stands for a package, and is no file of this one;
+  // nor is a module of names a framework would have written (P240).
   const files = project
     .getSourceFiles()
-    .filter((file) => !isDeclarationShape(project, file.getFilePath()));
+    .filter((file) => !isDeclarationShape(project, file.getFilePath()) && !isConventionModule(project, file.getFilePath()));
   const unreadable = files.filter((file) => firstSyntaxError(program, file) !== undefined);
   return {
     files: files.length,
@@ -1279,8 +1355,9 @@ export const listRepoSources = (
   // the service that calls it on disk unchanged and out of date.
   const own = sourceRootsOf(rootDir, roots);
   const extensions = [...SOURCE_EXTENSIONS, ...(roots.companions ?? [])];
+  const scripts = ownExtensionsOf(rootDir, tests, own) === SCRIPT_EXTENSIONS;
   const out = [
-    ...sourceFilesUnder(rootDir, tests, own, extensions),
+    ...sourceFilesUnder(rootDir, tests, own, scripts ? [...new Set([...SCRIPT_EXTENSIONS, ...(roots.companions ?? [])])] : extensions),
     ...membersBeyond(rootDir, own).flatMap((dir) => {
       const prefix = relative(rootDir, dir).split(sep).join('/');
       return sourceFilesUnder(dir, tests, sourceRootsOf(dir), extensions).map((file) => `${prefix}/${file}`);

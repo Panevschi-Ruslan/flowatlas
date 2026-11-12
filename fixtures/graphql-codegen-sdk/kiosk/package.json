@@ -1,0 +1,18 @@
+{
+  "name": "graphql-codegen-sdk-kiosk",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "codegen": "graphql-codegen --config codegen.ts",
+    "postinstall": "pnpm run codegen"
+  },
+  "dependencies": {
+    "graphql": "^16.9.0",
+    "graphql-request": "^6.1.0",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typescript-graphql-request": "^6.2.0"
+  }
+}

@@ -1,0 +1,51 @@
+service: shop-gateway
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: eu-west-1
+  stage: prod
+  apiName: shop
+  httpApi:
+    name: shop-http
+  environment:
+    # Published by a billing service this project does not configure.
+    AUDIT_QUEUE_URL: ${cf:billing-prod.AuditQueueUrl}
+
+functions:
+  health:
+    handler: src/health.handler
+    events:
+      - http: GET health
+
+  status:
+    handler: src/health.status
+    events:
+      - httpApi: GET /status
+
+  # Reads the queue the orders stack creates and exports.
+  audit:
+    handler: src/audit.handler
+    events:
+      - sqs:
+          arn: ${cf:shop-orders.PlacedQueueArn}
+
+resources:
+  Outputs:
+    RestApiId:
+      Value: !Ref ApiGatewayRestApi
+      Export:
+        Name: shop-rest-api-id
+    RestApiRootResourceId:
+      Value: !GetAtt ApiGatewayRestApi.RootResourceId
+      Export:
+        Name: shop-rest-api-root
+    ApiUrl:
+      Value: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod
+      Export:
+        Name: shop-api-url
+    HttpApiExportedId:
+      Value: !Ref HttpApi
+      Export:
+        Name: shop-http-api-id

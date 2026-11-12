@@ -81,6 +81,150 @@ describe('a verb exported where a router serves it', () => {
   });
 });
 
+describe('a function a CDK app makes (P57)', () => {
+  it('counts one made with a scope and an id, however the class is imported', () => {
+    const text = [
+      "const a = new NodejsFunction(this, 'PlaceOrder', { entry });",
+      "const b = new lambda.Function(scope, 'Sender', { handler: 'send.handler' });",
+      "const c = new cdk.aws_lambda.DockerImageFunction(this, 'Renderer', {});",
+    ].join('\n');
+    assert.deepEqual(sitesIn('lib/orders-stack.ts', text), { routes: 3 });
+  });
+
+  it("does not count the language's own Function constructor", () => {
+    assert.deepEqual(sitesIn('src/sandbox.ts', "const run = new Function('a', 'return a + 1');\n"), {});
+  });
+});
+
+describe('a route a Nuxt module adds (P251)', () => {
+  it('counts a handler handed a route, written on one line or across several', () => {
+    const text = [
+      "addServerHandler({ route: '/api/catalog', method: 'get', handler: resolver.resolve('./runtime/catalog') });",
+      'addServerHandler({',
+      "  handler: resolver.resolve('./runtime/audit'),",
+      '  route: auditRoute,',
+      '});',
+    ].join('\n');
+    assert.deepEqual(sitesIn('modules/catalog/index.ts', text), { routes: 2 });
+  });
+
+  it('does not count one that stands in front of every route', () => {
+    assert.deepEqual(sitesIn('modules/audit.ts', "addServerHandler({ middleware: true, handler: resolve('./stamp') });\n"), {});
+  });
+});
+
+describe('a route file Nitro serves, by what it default-exports (P270)', () => {
+  it('counts an event handler, an h3 factory of one, and a function written in place that takes the event', () => {
+    assert.deepEqual(sitesIn('server/api/orders.get.ts', 'export default defineEventHandler(async (event) => ({}));\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/api/stock.ts', 'export default defineCachedEventHandler<Stock>(() => load(), { maxAge: 60 });\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/routes/health.ts', 'export default eventHandler(() => "ok");\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/routes/legacy.ts', 'export default fromNodeMiddleware((req, res) => res.end());\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/api/ping.ts', 'export default async (event) => "pong";\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/api/pong.ts', 'export default function (event) { return "ping"; }\n'), { routes: 1 });
+  });
+
+  it('does not count a middleware factory or a router another framework keeps under `server/routes`', () => {
+    const factory = 'export default function paging() {\n  return async function pagingMiddleware(ctx, next) { await next(); };\n}\n';
+    assert.deepEqual(sitesIn('server/routes/api/middleware/paging.ts', factory), {});
+    assert.deepEqual(sitesIn('server/routes/api/index.ts', 'const api = new Koa();\nexport default api;\n'), {});
+  });
+});
+
+describe("koa-router's `register`, a route with its verbs as a list (P270)", () => {
+  it('counts a registration given an address and a list of verbs, on one line or across several', () => {
+    const text = [
+      "router.register('jobs.:interval', ['get', 'post'], [validate(schema), runJobs]);",
+      'router.register(',
+      '  "maintenance.sweep",',
+      '  ["get", "post"],',
+      '  [validate(schema), runJobs]',
+      ');',
+    ].join('\n');
+    assert.deepEqual(sitesIn('server/routes/api/jobs/jobs.ts', text), { routes: 2 });
+  });
+
+  it("does not count a plugin system's `register`, which takes a plugin and its options", () => {
+    assert.deepEqual(sitesIn('src/app.ts', "app.register(ordersPlugin, { prefix: '/orders' });\nrouter.register(routes);\n"), {});
+  });
+});
+
+describe('a gRPC service a server registers (P274)', () => {
+  it('counts `addService(definition, implementation)` and a NestJS controller method answering one', () => {
+    const server = [
+      "server.addService(pkg.shop.CartService.service, { getCart });",
+      'server.addService(CatalogServiceService, new Catalog());',
+      "server.addService(load('x').Billing.service, impl);",
+    ].join('\n');
+    assert.deepEqual(sitesIn('index.js', server), { routes: 3 });
+    const controller = "@GrpcMethod('CartService', 'GetCart')\nfind() {}\n@GrpcStreamMethod('CartService')\nwatch() {}\n";
+    assert.deepEqual(sitesIn('src/cart.controller.ts', controller), { routes: 2 });
+  });
+
+  it("does not count a container's `addService(token)`", () => {
+    assert.deepEqual(sitesIn('src/container.ts', 'container.addService(Logger);\n'), {});
+  });
+});
+
+describe("a task Nitro runs by its name (P258)", () => {
+  it('counts a file of `server/tasks` that defines one, at any depth, and not a helper beside it', () => {
+    assert.deepEqual(sitesIn('server/tasks/db/migrate.ts', 'export default defineTask({ run() { return {}; } });\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('modules/reports/runtime/server/tasks/daily.ts', 'export default defineTask({\n  run: async () => ({}),\n});\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('server/tasks/shared.ts', 'export const olderThan = 7;\n'), {});
+    assert.deepEqual(sitesIn('server/utils/tasks.ts', 'export default defineTask({ run() { return {}; } });\n'), {});
+  });
+});
+
+describe("a SvelteKit page's server load and its layouts (P262)", () => {
+  it('counts a server load of a page or a layout, and not a universal load or one that exports only actions', () => {
+    const load = 'export const load = async () => ({ user: null });\n';
+    assert.deepEqual(sitesIn('src/routes/+layout.server.ts', load), { routes: 1 });
+    assert.deepEqual(sitesIn('src/routes/orders/[id]/+page.server.ts', 'export async function load({ params }) {\n  return { id: params.id };\n}\n'), { routes: 1 });
+    assert.deepEqual(sitesIn('src/routes/(app)/+layout.ts', load), {});
+    assert.deepEqual(sitesIn('src/routes/cart/+page.server.ts', 'export const actions = { default: async () => ({}) };\n'), {});
+  });
+
+  it("counts a layout's component, with or without a reset, as the screen it is", () => {
+    assert.deepEqual(sitesIn('src/routes/+layout.svelte', '<slot />\n'), { screens: 1 });
+    assert.deepEqual(sitesIn('src/routes/(app)/print/+layout@.svelte', '<slot />\n'), { screens: 1 });
+  });
+});
+
+describe('a function a SAM template declares (P246)', () => {
+  it('counts each by its Type, a SAM function and a plain one alike, and not in a comment', () => {
+    const text = [
+      'Resources:',
+      '  PlaceOrder:',
+      '    Type: AWS::Serverless::Function',
+      '  Legacy:',
+      "    Type: 'AWS::Lambda::Function'",
+      '  # Type: AWS::Serverless::Function',
+      '  Queue:',
+      '    Type: AWS::SQS::Queue',
+    ].join('\n');
+    assert.deepEqual(sitesIn('template.yaml', text), { routes: 2 });
+    assert.equal(isSourceFile('services/orders/template.yml'), true);
+  });
+
+  it('reads every YAML file and a JSON one named as a template, and no probe of code looks in one (P248)', () => {
+    assert.equal(isSourceFile('openapi.yaml'), true);
+    assert.equal(isSourceFile('legacy/fleet.template'), true);
+    assert.equal(isSourceFile('stacks/orders.template.json'), true);
+    assert.equal(isSourceFile('package.json'), false);
+    assert.equal(isSourceFile('.github/workflows/template.yaml.bak'), false);
+    assert.deepEqual(sitesIn('docs.yaml', "example: app.get('/orders', handler)\nfetch: fetch('/orders')\n"), {});
+  });
+});
+
+describe('a function a plain CloudFormation template declares (P248)', () => {
+  it('counts each by its Type, in YAML under any name and in JSON named as a template', () => {
+    const yaml = ['Resources:', '  Kiosk:', '    Type: AWS::Lambda::Function', '  Url:', '    Type: AWS::Lambda::Url'].join('\n');
+    assert.deepEqual(sitesIn('stacks/rides.yaml', yaml), { routes: 1 });
+    const json = JSON.stringify({ Resources: { A: { Type: 'AWS::Lambda::Function' }, B: { Type: 'AWS::Serverless::Function' } } }, null, 2);
+    assert.deepEqual(sitesIn('stacks/rides.template.json', json), { routes: 2 });
+    assert.deepEqual(sitesIn('legacy/fleet.template', json), { routes: 2 });
+  });
+});
+
 describe('a test file, by the definition the tool reads by', () => {
   const tests = [
     'packages/features/credentials/handleDeleteCredential.integration-test.ts',
@@ -104,5 +248,129 @@ describe('a test file, by the definition the tool reads by', () => {
       assert.equal(isTestFile(path), false, path);
       assert.equal(isSourceFile(path), true, path);
     }
+  });
+});
+
+describe('a procedure of a tree (R95, P58)', () => {
+  it('counts a chain ending in a function written in place', () => {
+    const text = [
+      'export const list = authed.input(OrderQuery).handler(async ({ input }) => find(input));',
+      'export const read = procedure.query(({ ctx }) => ctx.user);',
+      'export const save = procedure.mutation(async function save() { return 1; });',
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/server/orders.ts', text), { routes: 3 });
+  });
+
+  it('does not count a database call that ends in the same word', () => {
+    const text = "await pool.query('select 1');\nawait pool.query(sql, [id]);\nconst handler = route.handler;\n";
+    assert.deepEqual(sitesIn('src/db.ts', text), {});
+  });
+});
+
+describe('where a request is written, and what stands in front of it (P244)', () => {
+  it('counts the platform client by its own name, a verb with its address written out, and a config call', () => {
+    const text = [
+      "await fetch('/api/orders');",
+      "await $fetch('/api/items', { method: 'POST' });",
+      "this.http.get<Order[]>('/orders');",
+      'api.post(`${base}/orders`, body);',
+      "axios.get('orders');",
+      "api({ url: '/orders', method: 'post' });",
+      "axios.request({\n  url: '/items',\n});",
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/api.ts', text), { requests: 7 });
+  });
+
+  it('does not count a store looked up by a key, a method named fetch, or a call handed a path it was given', () => {
+    const text = [
+      "cache.get('orders');",
+      'documents.get(id);',
+      'store.fetch(id);',
+      'this.http.get(path);',
+      "useFetch('/api/orders');",
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/a.ts', text), {});
+  });
+
+  it('counts an instance made with options of its own and each function run before every request', () => {
+    const text = [
+      "export const api = axios.create({ baseURL: '/api' });",
+      "export const shop = $fetch.create({ onRequest({ options }) { options.baseURL = '/shop'; } });",
+      'export const billing = ky.extend({ hooks: { beforeRequest: [(request) => request] } });',
+      'api.interceptors.request.use((config) => config);',
+      'export class BaseInterceptor implements HttpInterceptor {}',
+      'export const base: HttpInterceptorFn = (req, next) => next(req);',
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/api.ts', text), { bases: 8 });
+  });
+
+  it('counts each server started on a port, and not a listen with nothing to listen on', () => {
+    const text = [
+      'app.listen(3001);',
+      'await app.listen({ port: Number(process.env.PORT) || 3002 });',
+      'http.createServer(app).listen(port, () => {});',
+      'serve({ fetch: app.fetch, port: 3003 });',
+      'Bun.serve({ port: 3004, fetch });',
+      'Deno.serve(handler);',
+      'server.listen();',
+      'observe(source, { serve: true });',
+    ].join('\n');
+    assert.deepEqual(sitesIn('src/main.ts', text), { listens: 6 });
+  });
+
+  it("counts a dev server's port in a bundler's configuration, and a port anywhere else in no such file (P254)", () => {
+    const config = 'export default defineConfig({\n  server: { port: 5174, strictPort: true },\n  preview: { port: 4180 },\n});';
+    assert.deepEqual(sitesIn('vite.config.ts', config), { listens: 2 });
+    assert.deepEqual(sitesIn('astro.config.mjs', 'export default defineConfig({ server: { port: 4330 } });'), { listens: 1 });
+    assert.deepEqual(sitesIn('src/settings.ts', 'export const config = { port: 3003 };'), {});
+  });
+
+  it("counts a server's proxy and rewrites, and a port a cluster manifest routes (P257)", () => {
+    const vite = "export default defineConfig({\n  server: {\n    port: 5180,\n    proxy: { '/api': 'http://localhost:3001' },\n  },\n});";
+    assert.deepEqual(sitesIn('vite.config.ts', vite), { listens: 2 });
+    const next = "module.exports = {\n  async rewrites() {\n    return [{ source: '/api/:path*', destination: 'http://localhost:3001/:path*' }];\n  },\n};";
+    assert.deepEqual(sitesIn('next.config.js', next), { listens: 1 });
+    const nuxt = "export default defineNuxtConfig({\n  routeRules: { '/api/**': { proxy: 'http://localhost:3001/**' } },\n  nitro: { devProxy: { '/x': 'http://localhost:3002' } },\n});";
+    assert.deepEqual(sitesIn('nuxt.config.ts', nuxt), { listens: 2 });
+    const manifest = 'kind: Service\nspec:\n  ports:\n    - port: 80\n      targetPort: 3000\n    - targetPort: http\n      port: 81\n';
+    assert.deepEqual(sitesIn('k8s/orders.yaml', manifest), { listens: 2 });
+    assert.deepEqual(sitesIn('src/api.ts', "const proxy: Proxy = { target: 'x' };"), {});
+  });
+
+  it("counts a way in, a chart's value lookups, a kustomization's patches and a port-forward (P260)", () => {
+    const ingress = 'kind: Ingress\nspec:\n  defaultBackend:\n    service: { name: web }\n  rules:\n    - http:\n        paths:\n          - path: /orders\n            backend:\n              service: { name: orders }\n';
+    assert.deepEqual(sitesIn('deploy/ingress.yaml', ingress), { listens: 2 });
+    assert.deepEqual(sitesIn('deploy/route.yaml', 'kind: HTTPRoute\nspec:\n  rules:\n    - backendRefs:\n        - name: stock\n'), { listens: 1 });
+    const template = 'spec:\n  ports:\n    - port: {{ .Values.service.port }}\n      name: {{ include "x" . }}\n      targetPort: {{ .Values.service.targetPort | default 3000 }}\n';
+    assert.deepEqual(sitesIn('charts/orders/templates/service.yaml', template), { listens: 3 });
+    assert.deepEqual(sitesIn('charts/orders/values.yaml', 'service:\n  port: 80\n'), {});
+    assert.deepEqual(sitesIn('k8s/overlays/prod/kustomization.yaml', 'resources:\n  - ../../base\npatches:\n  - path: port.yaml\npatchesStrategicMerge:\n  - env.yaml\n'), { listens: 2 });
+    assert.deepEqual(sitesIn('Makefile', 'forward:\n\tkubectl port-forward svc/orders 8080:80\n\tkubectl -n shop port-forward deploy/stock 4000\n'), { listens: 2 });
+    assert.deepEqual(sitesIn('src/forward.ts', "run('kubectl port-forward svc/orders 8080:80');"), {});
+  });
+
+  it("counts a helmfile's releases, a kustomization's generators, and install commands and port-forwards in pipelines (P263)", () => {
+    const helmfile = 'environments:\n  production: {}\n---\nreleases:\n  - name: shop\n    chart: ./charts/shop\n  - name: cache\n    chart: bitnami/redis\n';
+    assert.deepEqual(sitesIn('deploy/helmfile.yaml', helmfile), { listens: 2 });
+    assert.deepEqual(sitesIn('deploy/helmfile.d/10-shop.yaml.gotmpl', helmfile), { listens: 2 });
+    assert.deepEqual(sitesIn('deploy/charts/shop/Chart.yaml', 'name: shop\n'), {});
+    assert.deepEqual(sitesIn('k8s/kustomization.yaml', 'resources:\n  - a.yaml\nconfigMapGenerator:\n  - name: x\nhelmCharts:\n  - name: y\nreplacements:\n  - path: r.yaml\n'), { listens: 3 });
+    const workflow = 'jobs:\n  deploy:\n    steps:\n      - run: helmfile -e production apply\n      - run: kubectl apply -k overlays/production\n      - run: kubectl port-forward svc/orders 8080:80\n';
+    assert.deepEqual(sitesIn('.github/workflows/deploy.yml', workflow), { listens: 3 });
+    assert.deepEqual(sitesIn('.gitlab-ci.yml', 'preview:\n  script:\n    - helm upgrade --install x ./chart\n    - kustomize build overlays/x\n'), { listens: 2 });
+    assert.deepEqual(sitesIn('src/deploy.ts', "run('helm upgrade --install x ./chart');"), {});
+  });
+});
+
+describe('what is not a route, though it looks like a call', () => {
+  it('does not count a lookup whose one argument has a trailing comma', () => {
+    const text = 'const recorder = app.get(\n  RecorderService,\n);\napp.get(path, handler);\n';
+    assert.deepEqual(sitesIn('src/main.ts', text), { routes: 1 });
+  });
+
+  it('does not count a committed bundle under any name, and still counts a hand-written script', () => {
+    const bundle = `export default 1;\nfunction r(e){${'app.get("/x",n);'.repeat(200)}}\n`;
+    assert.deepEqual(sitesIn('seed/hello/index.mjs', bundle), {});
+    assert.deepEqual(sitesIn('server/index.mjs', "app.get('/x', (req, res) => res.end());\n"), { routes: 1 });
   });
 });

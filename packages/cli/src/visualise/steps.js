@@ -1322,11 +1322,13 @@ const promptNodeSubject = (model, i, walk, seen) => {
   const fails = type === 'entry' ? promptFailsOf(model, i) : [];
   const access = type === 'entry' ? promptAccessOf(model, i) : undefined;
   const schedule = type === 'entry' ? scheduleOf(model, i) : null;
+  const notes = stepField(model, i, 'nt');
   const hits = type === 'entry' ? seen.entry(i) : 0;
   const failuresSeen = type === 'entry' ? seen.failures(i) : null;
   return {
     ...head,
     ...(schedule === null ? {} : { schedule: { expression: schedule.expression, ...(schedule.zone ? { zone: schedule.zone } : {}) } }),
+    ...(Array.isArray(notes) && notes.length > 0 ? { notes: notes.map(String) } : {}),
     ...(hits > 0 ? { hits, ...promptFiguresOf(seen.entryStats(i)) } : {}),
     ...(access === undefined ? {} : { access }),
     ...(fails.length === 0 ? {} : { fails }),

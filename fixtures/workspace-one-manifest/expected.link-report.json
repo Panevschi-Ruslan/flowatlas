@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T12:56:26.208Z",
+  "configHash": "0a3c704eef94",
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./apps/orders",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 9,
+      "edges": 5,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 982,
+      "packages": {
+        "name": "shop-workspace",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    },
+    {
+      "name": "shop",
+      "repo": "./apps/shop",
+      "type": "nestjs",
+      "extractor": "@flowatlas/extractor-nestjs",
+      "nodes": 11,
+      "edges": 7,
+      "types": 1,
+      "unresolved": 0,
+      "durationMs": 993,
+      "packages": {
+        "name": "shop-workspace",
+        "runtime": [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/microservices",
+          "rxjs"
+        ],
+        "dev": []
+      }
+    }
+  ],
+  "httpOut": {
+    "total": 0,
+    "linked": 0,
+    "byMarker": 0,
+    "unknownEnv": 0,
+    "noRoute": 0,
+    "ambiguous": 0,
+    "external": 0,
+    "dynamic": 0
+  },
+  "ui": {
+    "total": 0,
+    "resolved": 0,
+    "unresolved": 0,
+    "byReason": {}
+  },
+  "channels": {
+    "total": 1,
+    "linked": 1,
+    "noConsumers": [],
+    "noProducers": []
+  },
+  "routes": {
+    "total": 1,
+    "called": 0,
+    "uncalled": [
+      "entry:shop:http:POST:/checkout"
+    ],
+    "duplicated": []
+  },
+  "types": {
+    "total": 1,
+    "sharedPackage": 0
+  },
+  "unresolved": [],
+  "totals": {
+    "nodes": 19,
+    "edges": 12,
+    "types": 1,
+    "missed": 0,
+    "sites": 0,
+    "notes": 0,
+    "findings": 0,
+    "unresolved": 0
+  }
+}

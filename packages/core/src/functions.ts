@@ -84,11 +84,11 @@ export const moduleFunctions = (sourceFile: SourceFile): NamedFunction[] => {
  * read alike are still two functions.
  */
 export const inlineFunction = (
-  fn: ArrowFunction | FunctionExpression,
+  fn: ArrowFunction | FunctionExpression | MethodDeclaration,
   label: string,
 ): NamedFunction => {
   const line = startLineOf(fn);
-  return { name: `${label}@${line}`, declaration: fn, body: fn.getBody(), line };
+  return { name: `${label}@${line}`, declaration: fn, body: fn.getBody() ?? fn, line };
 };
 
 /**
@@ -144,14 +144,150 @@ export const functionAt = (
   sourceFile: SourceFile,
   line: number,
   column: number,
-): ArrowFunction | FunctionExpression | undefined => {
-  let found: ArrowFunction | FunctionExpression | undefined;
+): ArrowFunction | FunctionExpression | MethodDeclaration | undefined => {
+  let found: ArrowFunction | FunctionExpression | MethodDeclaration | undefined;
   sourceFile.forEachDescendant((node) => {
-    if (!Node.isArrowFunction(node) && !Node.isFunctionExpression(node)) return;
+    // A method written in an object literal is a function written in place too:
+    // `resolvers: { Query: { orders() {…} } }` (P232).
+    const objectMethod = Node.isMethodDeclaration(node) && Node.isObjectLiteralExpression(node.getParent());
+    if (!Node.isArrowFunction(node) && !Node.isFunctionExpression(node) && !objectMethod) return;
     const at = lineAndColumnAt(sourceFile, node.getStart());
     if (at.line === line && at.column === column) found = node;
   });
   return found;
+};
+
+/** An expression without the parentheses, casts and `satisfies` written round it. */
+const bareValue = (node: TsNode): TsNode => {
+  let value = node;
+  while (Node.isParenthesizedExpression(value) || Node.isAsExpression(value) || Node.isSatisfiesExpression(value)) {
+    value = value.getExpression();
+  }
+  return value;
+};
+
+type FunctionBody = ArrowFunction | FunctionExpression | FunctionDeclaration | MethodDeclaration;
+
+const isFunctionBody = (node: TsNode): node is FunctionBody =>
+  Node.isArrowFunction(node) || Node.isFunctionExpression(node) || Node.isFunctionDeclaration(node) || Node.isMethodDeclaration(node);
+
+/** The name a function is known by: its own, the `const` it is bound to, or its class's and its own. */
+const functionName = (fn: FunctionBody): string | undefined => {
+  if (Node.isFunctionDeclaration(fn)) return fn.getName();
+  if (Node.isMethodDeclaration(fn)) {
+    const owner = fn.getParent();
+    const ownerName = Node.isClassDeclaration(owner) ? owner.getName() : undefined;
+    return ownerName === undefined ? undefined : `${ownerName}.${fn.getName()}`;
+  }
+  let holder: TsNode | undefined = fn.getParent();
+  while (holder !== undefined && (Node.isParenthesizedExpression(holder) || Node.isAsExpression(holder) || Node.isSatisfiesExpression(holder))) holder = holder.getParent();
+  return holder !== undefined && Node.isVariableDeclaration(holder) && Node.isIdentifier(holder.getNameNode()) ? holder.getName() : undefined;
+};
+
+/** What a function hands back where it ends: its concise body, or what each of its own `return`s says. */
+const returnedValues = (fn: FunctionBody): TsNode[] => {
+  const body = fn.getBody();
+  if (body === undefined) return [];
+  if (!Node.isBlock(body)) return [bareValue(body)];
+  const out: TsNode[] = [];
+  body.forEachDescendant((node, traversal) => {
+    if (isFunctionBody(node) || Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
+      traversal.skip();
+      return;
+    }
+    if (!Node.isReturnStatement(node)) return;
+    const value = node.getExpression();
+    if (value !== undefined) out.push(bareValue(value));
+  });
+  return out;
+};
+
+/**
+ * What an object written down whole is held as, for naming its members: the
+ * `const` it is bound to, the function that hands it back, or the module's
+ * default export.
+ *
+ * `const OrdersGateway = () => ({ listOrders() {…} })` hands back an object whose
+ * members are functions of their own: `export default OrdersGateway()` and then
+ * `OrdersGateway.listOrders(id)` runs the method written in the literal, and the
+ * checker says so - the member's declaration is that method. Named by the
+ * factory and the member, `OrdersGateway.listOrders`, as a member of a `const`
+ * object is named by the object (P276).
+ */
+const holderOfObject = (literal: TsNode): string | undefined => {
+  let at: TsNode | undefined = literal.getParent();
+  while (at !== undefined && (Node.isParenthesizedExpression(at) || Node.isAsExpression(at) || Node.isSatisfiesExpression(at))) at = at.getParent();
+  if (at === undefined) return undefined;
+  if (Node.isVariableDeclaration(at)) {
+    if (at.getVariableStatement()?.getDeclarationKind() !== VariableDeclarationKind.Const) return undefined;
+    return Node.isIdentifier(at.getNameNode()) ? at.getName() : undefined;
+  }
+  if (Node.isExportAssignment(at)) return 'default';
+  // The concise body of a function, or what one of its own `return`s says.
+  const fn = Node.isReturnStatement(at) ? at.getFirstAncestor(isFunctionBody) : isFunctionBody(at) ? at : undefined;
+  if (fn === undefined) return undefined;
+  if (!returnedValues(fn).includes(bareValue(literal))) return undefined;
+  return functionName(fn);
+};
+
+/**
+ * The function a member of an object literal is, when the declaration is one
+ * and the object is held where it can be named (`holderOfObject`): a method
+ * written in the literal, a member given a function written in place, or a
+ * member given a function of this repository by its name (`{ listOrders }`).
+ */
+export const objectMemberFunction = (declaration: TsNode): NamedFunction | undefined => {
+  const literal = declaration.getParent();
+  if (literal === undefined || !Node.isObjectLiteralExpression(literal)) return undefined;
+  const holder = holderOfObject(literal);
+  if (holder === undefined) return undefined;
+  if (Node.isMethodDeclaration(declaration)) {
+    const body = declaration.getBody();
+    return body === undefined ? undefined : { name: `${holder}.${declaration.getName()}`, declaration, body, line: startLineOf(declaration) };
+  }
+  if (Node.isPropertyAssignment(declaration)) {
+    const value = declaration.getInitializer();
+    const bare = value === undefined ? undefined : bareValue(value);
+    if (bare === undefined || (!Node.isArrowFunction(bare) && !Node.isFunctionExpression(bare))) return undefined;
+    return { name: `${holder}.${declaration.getName()}`, declaration, body: bare.getBody(), line: startLineOf(declaration) };
+  }
+  if (Node.isShorthandPropertyAssignment(declaration)) {
+    const named = declaration.getValueSymbol()?.getDeclarations()[0];
+    return named === undefined ? undefined : namedFunction(named);
+  }
+  return undefined;
+};
+
+/**
+ * The functions a function hands back as the members of one object it writes
+ * whole: `const OrdersGateway = () => ({ listOrders() {…}, placeOrder: async () => … })`
+ * (P276). Empty where it hands back anything else, or more than one object.
+ */
+export const factoryMembers = (fn: NamedFunction): NamedFunction[] => {
+  const declared = Node.isVariableDeclaration(fn.declaration) ? fn.declaration.getInitializer() : fn.declaration;
+  const body = declared === undefined ? undefined : bareValue(declared);
+  if (body === undefined || !isFunctionBody(body)) return [];
+  const returned = returnedValues(body);
+  const [literal] = returned;
+  if (returned.length !== 1 || literal === undefined || !Node.isObjectLiteralExpression(literal)) return [];
+  return literal.getProperties().flatMap((property) => {
+    if (Node.isShorthandPropertyAssignment(property)) return [];
+    const member = objectMemberFunction(property);
+    return member === undefined ? [] : [member];
+  });
+};
+
+/**
+ * Whether a function does nothing but hand back the object of functions it
+ * writes - no statement before the `return`, nothing called on the way - so
+ * that its members are the whole of its body (P276).
+ */
+export const onlyHandsBackMembers = (fn: NamedFunction): boolean => {
+  if (factoryMembers(fn).length === 0) return false;
+  const body = fn.body;
+  if (!Node.isBlock(body)) return true;
+  const statements = body.getStatements();
+  return statements.length === 1 && Node.isReturnStatement(statements[0]);
 };
 
 /**

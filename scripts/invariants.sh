@@ -9,6 +9,7 @@
 # I12 no extractor is reachable from a sibling extractor
 # I13 every reason a row carries is a reason doctor knows
 # I14 the coverage harness and the tool agree what a service is
+# I15 no fixture draws an edge to a node it never wrote
 #
 # Usage: invariants.sh [--root DIR] [--only NAME]
 #
@@ -47,7 +48,8 @@ status=0
 # a service is deployed are read by `packages/terraform` and an entry adapter,
 # and the core's half of it - the reader interface, the `invoke` kind, the
 # module-description schema - says "deployment", "function" and "module".
-FORBIDDEN='typeorm|prisma|mongoose|mikro-orm|sequelize|knex|drizzle|kafka|rabbit|amqp|bullmq|ioredis|telegraf|angular|axios|express|fastify|react|svelte|vue|nuxt|remix|terraform|hcl|lambda|middy|apigateway|aws|serverless|cloudformation|cdk'
+# GraphQL is a protocol the core may name, as it names HTTP (P232); its libraries are not.
+FORBIDDEN='typeorm|prisma|mongoose|mikro-orm|sequelize|knex|drizzle|kafka|rabbit|amqp|bullmq|ioredis|telegraf|angular|axios|express|fastify|react|svelte|vue|nuxt|remix|terraform|hcl|lambda|middy|apigateway|aws|serverless|cloudformation|cdk|apollo|urql|yoga|mercurius|type-graphql|graphql-request'
 
 check_I1() {
   echo "I1  core is technology-agnostic"
@@ -226,9 +228,27 @@ check_I14() {
   return 1
 }
 
+# A reader that draws an edge to a node it never wrote used to have its whole
+# service refused, which no fixture could miss. Since R180 the graph leaves the
+# edge out and writes an `edge-end-missing` row instead, so that one bad edge
+# never costs a real repository its service - and a row is easy to miss in a
+# snapshot nobody reads line by line. This puts the old loudness back where it
+# belongs: no fixture's snapshot may carry one.
+check_I15() {
+  echo "I15 no fixture draws an edge to a node it never wrote"
+  local found
+  found="$(grep -rl --include='expected*.json' '"reason": "edge-end-missing"' fixtures 2>/dev/null)"
+  if [ -n "$found" ]; then
+    echo "$found" | sed 's/^/    /'
+    echo "    FAIL: a reader drew an edge to a node it never wrote; the row names the edge."
+    return 1
+  fi
+  echo "    ok"
+}
+
 # The gates, in the order they are reported. A list and a name per function
 # rather than a run of branches, so adding one is adding a name.
-CHECKS='I1 I2 I11 I12 I13 I14'
+CHECKS='I1 I2 I11 I12 I13 I14 I15'
 
 for name in $CHECKS; do
   [ -n "$only" ] && [ "$only" != "$name" ] && continue

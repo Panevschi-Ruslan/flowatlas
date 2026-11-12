@@ -3,6 +3,7 @@ import {
   locatedSlots,
   nameWithin,
   type AwaitedPart,
+  type GrantablePart,
   locatorApplies,
   locatorIsCondition,
   MOST_CHOICES,
@@ -109,6 +110,19 @@ export interface AddressedElement {
   readonly parameter?: ParameterDeclaration;
   /** A one-part address as it is written, for a reader that keys on the writing. */
   readonly written?: string;
+  /**
+   * The parameter of the enclosing function that chose the member of a
+   * record the address is read from - `events[name](data)` - where nothing
+   * else stood in the way (P268): read again at each caller, with the
+   * parameter bound to what that caller hands it.
+   */
+  readonly selector?: ParameterDeclaration;
+  /**
+   * The address with the one part it could not read named by the kind of
+   * deployed thing that part names, where every other part is one name
+   * (P272): what a grant of the function that runs the call bounds.
+   */
+  readonly grantable?: readonly GrantablePart[];
 }
 
 /**
@@ -225,6 +239,31 @@ const awaitingOf = (
   return awaited.some((each) => typeof each !== 'string') ? awaited : undefined;
 };
 
+/**
+ * The address with the one part that could not be read named by what it
+ * names, where the description says (P272). Two parts unread are two
+ * unknowns, which a list of what is granted of one kind does not settle.
+ */
+const grantableOf = (
+  parts: readonly AddressPart[],
+  readings: readonly ChannelResolution[],
+): readonly GrantablePart[] | undefined => {
+  const out: GrantablePart[] = [];
+  let open = 0;
+  for (const [position, reading] of readings.entries()) {
+    const part = parts[position];
+    if (isResolved(reading)) {
+      if (reading.names.length !== 1) return undefined;
+      out.push(reading.name);
+      continue;
+    }
+    if (part === undefined || 'literal' in part || part.names === undefined) return undefined;
+    open += 1;
+    out.push({ granted: part.names });
+  }
+  return open === 1 ? out : undefined;
+};
+
 /** How many links of `const` and `JSON.stringify` are followed to the message. */
 const MOST_LINKS = 8;
 
@@ -300,6 +339,22 @@ const parameterOf = (expression: TsNode): ParameterDeclaration | undefined => {
   return parameterBehind(expression);
 };
 
+/**
+ * The parameter that chose the member an element's address is read from,
+ * where every part that stopped on such a member stopped on one chosen by the
+ * same parameter (P268). Two parameters are two callers' decisions, which one
+ * binding cannot read.
+ */
+const selectorAt = (located: readonly (readonly LocatedSlot[])[], index: number): ParameterDeclaration | undefined => {
+  const chosen = new Set(
+    located.flatMap((slots) => {
+      const slot = slotAt(slots, index);
+      return slot?.selector === undefined ? [] : [slot.selector];
+    }),
+  );
+  return chosen.size === 1 ? [...chosen][0] : undefined;
+};
+
 /** The one place a one-part address is written at an element, when it is written. */
 const writtenAt = (located: readonly (readonly LocatedSlot[])[], index: number): TsNode | undefined =>
   located.map((slots) => slotAt(slots, index)).find((slot) => slot !== undefined)?.expression;
@@ -342,30 +397,40 @@ export const readAddress = (
     const resolution = joined(readings, fallback);
     const written = parts.length === 1 ? writtenAt(located[0] ?? [], index) : undefined;
     const parameter = written === undefined || isResolved(resolution) ? undefined : parameterOf(written);
+    const selector = isResolved(resolution) ? undefined : selectorAt(located.flat(), index);
+    const grantable = isResolved(resolution) ? undefined : grantableOf(parts, readings);
     return {
       resolution,
       ...(message === undefined ? {} : { payload: message }),
       ...(awaiting === undefined ? {} : { awaiting }),
       ...(parameter === undefined ? {} : { parameter }),
       ...(written === undefined ? {} : { written: written.getText() }),
+      ...(selector === undefined ? {} : { selector }),
+      ...(grantable === undefined ? {} : { grantable }),
     };
   });
 };
 
 /**
- * A one-part address read where a caller wrote it: the argument the caller
- * passed for the parameter the address is, read as the address would have been.
+ * An address read where a caller wrote it: the argument the caller passed
+ * for the parameter its one open part is, read as the address would have
+ * been, its literal parts as written (P289: `dynamodb/<table>`, not only a
+ * one-part address).
  */
 export const readWritten = (
   expression: TsNode,
-  part: AddressPart,
+  part: AddressPart | readonly AddressPart[],
   config: Pick<FlowatlasConfig, 'sharedPackages'>,
 ): AddressedElement => {
-  const readings = [readPart(part, [[{ expression, reached: true }]], 0, config, expression.getText().slice(0, 60))];
-  const awaiting = awaitingOf([part], readings);
+  const parts: readonly AddressPart[] = Array.isArray(part) ? part : [part as AddressPart];
+  const text = expression.getText().slice(0, 60);
+  const readings = parts.map((each) => readPart(each, 'literal' in each ? [] : [[{ expression, reached: true }]], 0, config, text));
+  const awaiting = awaitingOf(parts, readings);
+  const grantable = readings.every((reading) => isResolved(reading)) ? undefined : grantableOf(parts, readings);
   return {
-    resolution: joined(readings, expression.getText().slice(0, 60)),
+    resolution: joined(readings, text),
     ...(awaiting === undefined ? {} : { awaiting }),
+    ...(grantable === undefined ? {} : { grantable }),
     written: expression.getText(),
   };
 };

@@ -13,10 +13,17 @@ import { ErrorCode, McpError, type ReadResourceResult } from '@modelcontextproto
 import { nearWords } from './query/names.js';
 import { crossingsBetween } from './tools/contract.js';
 import type { ToolContext } from './tools/common.js';
+import type { DbHandle } from './query/db.js';
 import { findingsOf } from './tools/findings.js';
 import { startSummaryOf } from './tools/start.js';
 
 export const REASONS_URI = 'flowatlas://reasons';
+
+/** The project's overview, as `flowatlas report` writes it (P228). */
+export const OVERVIEW_URI = 'flowatlas://overview';
+
+/** Draws the overview of a graph, from the command line, which owns the model (P228 D1). */
+export type OverviewWriter = (db: GraphDb, handle: DbHandle) => string;
 export const SERVICES_URI = 'flowatlas://services';
 export const SERVICE_TEMPLATE = 'flowatlas://services/{name}';
 
@@ -109,7 +116,30 @@ export const serviceSummaryOf = (db: GraphDb, ctx: ToolContext, name: string) =>
   };
 };
 
-export const registerResources = (server: McpServer, ctx: ToolContext, reasonCatalog?: readonly ReasonHint[]): void => {
+export const registerResources = (
+  server: McpServer,
+  ctx: ToolContext,
+  reasonCatalog?: readonly ReasonHint[],
+  overview?: OverviewWriter,
+): void => {
+  // The whole picture once (P228): the same Markdown `flowatlas report` prints;
+  // start_here stays the compact one. Only where the command line can draw it.
+  if (overview !== undefined) {
+    server.registerResource(
+      'overview',
+      OVERVIEW_URI,
+      {
+        title: 'Overview',
+        description: 'The services, what crosses between them, what most depends on, what is worth a second look, what was not read, and questions to ask, as Markdown.',
+        mimeType: 'text/markdown',
+      },
+      (uri) => {
+        const opened = ctx.handle.open();
+        const text = 'error' in opened ? opened.error : overview(opened.db, ctx.handle);
+        return { contents: [{ uri: uri.href, mimeType: 'text/markdown', text }] };
+      },
+    );
+  }
   server.registerResource(
     'reasons',
     REASONS_URI,

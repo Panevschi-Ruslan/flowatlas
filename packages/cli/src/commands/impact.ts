@@ -4,6 +4,7 @@ import { withQueryOptions, type QueryOptions } from '../options.js';
 import { present, processIo, settingsFor, type QueryIo } from '../query/answer.js';
 import { callersOf, groupEntries, reachableSummary } from '../query/callers.js';
 import { resolveSymbol } from '../query/refs.js';
+import { askedCommand } from '../query/asked.js';
 
 export interface ImpactOptions extends QueryOptions {
   entriesOnly?: boolean;
@@ -16,11 +17,7 @@ export interface ImpactOptions extends QueryOptions {
  * changed and every child is something that reaches it, so the leaves are the
  * ways in that a change is visible from.
  */
-export const runImpact = (
-  symbol: string,
-  options: ImpactOptions,
-  io: QueryIo = processIo,
-): void => {
+const answerImpact = (symbol: string, options: ImpactOptions, io: QueryIo): void => {
   const settings = settingsFor(options, io);
   const db = openDbFromOptions(settings);
   // Closed when the answer is out (P199): on Windows an open database can
@@ -60,6 +57,10 @@ export const runImpact = (
     db.close();
   }
 };
+
+/** impact, logged when the question log is on (P235). */
+export const runImpact = (symbol: string, options: ImpactOptions, io: QueryIo = processIo): void =>
+  askedCommand('impact', { symbol, service: options.service }, options, () => answerImpact(symbol, options, io));
 
 export const registerImpact = (program: Command): void => {
   withQueryOptions(

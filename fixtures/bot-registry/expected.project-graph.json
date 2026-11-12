@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-16T15:10:34.832Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:41:12.250Z",
   "services": [
     {
       "name": "bot-registry",
@@ -283,6 +283,29 @@
             }
           ],
           "returns": "string"
+        }
+      }
+    },
+    {
+      "id": "bot-registry#src/handlers/callback-registry.ts:dispatch",
+      "type": "function",
+      "label": "dispatch",
+      "repo": "bot-registry",
+      "file": "src/handlers/callback-registry.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "data",
+              "type": "string"
+            },
+            {
+              "name": "deps",
+              "type": "type:bot-registry#BotDeps"
+            }
+          ],
+          "returns": "boolean"
         }
       }
     },
@@ -606,6 +629,32 @@
       "line": 32
     },
     {
+      "from": "bot-registry#src/bot.ts:Bot.setup",
+      "to": "bot-registry#src/handlers/callback-registry.ts:dispatch",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:bot-registry#BotDeps"
+      ],
+      "returns": "boolean",
+      "file": "src/bot.ts",
+      "line": 27
+    },
+    {
+      "from": "bot-registry#src/bot.ts:on callback_query@26",
+      "to": "bot-registry#src/handlers/callback-registry.ts:dispatch",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string",
+        "type:bot-registry#BotDeps"
+      ],
+      "returns": "boolean",
+      "file": "src/bot.ts",
+      "line": 27
+    },
+    {
       "from": "bot-registry#src/commands/menu.command.ts:action back_to_main@14",
       "to": "bot-registry#src/orders.service.ts:OrdersService.find",
       "type": "calls",
@@ -764,42 +813,13 @@
     },
     {
       "file": "src/bot.ts",
-      "line": 27,
+      "line": 51,
       "reason": "call-dynamic-receiver",
       "level": "info",
-      "sites": 3,
-      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
-      "symbol": "Bot.setup -> callbackRegistry.dispatch",
+      "hint": "onReady on Bot is a field assigned a function from elsewhere, so there is no one body to follow. Declare it as a method to make the edge visible.",
+      "symbol": "Bot.ready -> this.onReady",
       "meta": {
-        "causes": [
-          {
-            "cause": "object-literal",
-            "sites": 2,
-            "samples": [
-              {
-                "file": "src/bot.ts",
-                "line": 27,
-                "symbol": "Bot.setup -> callbackRegistry.dispatch"
-              },
-              {
-                "file": "src/bot.ts",
-                "line": 27,
-                "symbol": "on callback_query@26 -> callbackRegistry.dispatch"
-              }
-            ]
-          },
-          {
-            "cause": "function-field",
-            "sites": 1,
-            "samples": [
-              {
-                "file": "src/bot.ts",
-                "line": 51,
-                "symbol": "Bot.ready -> this.onReady"
-              }
-            ]
-          }
-        ]
+        "cause": "function-field"
       },
       "service": "bot-registry"
     },

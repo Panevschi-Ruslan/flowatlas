@@ -1,0 +1,35 @@
+@  POST /orders                                                   orders/infra/api.tf:18
+  -> handler                                                      orders/src/orders/place-order.ts:16
+    $  ORDERS_TABLE                                               orders/src/orders/get-order.ts:8
+    ~  write dynamodb/orders-dev-orders                           orders/src/orders/place-order.ts:19
+      ~  dynamodb/orders-dev-orders                               infra/storage.tf:2
+        ~  mapping aws_lambda_event_source_mapping.order_changed  orders/infra/storage.tf:15
+          ~  event dynamodb/orders-dev-orders                     orders/infra/storage.tf:15
+            -> handler                                            orders/src/orders/order-changed.ts:6
+    $  ORDERS_QUEUE_URL                                           orders/src/orders/place-order.ts:20
+    ~  message sqs/orders-dev-placed                              orders/src/orders/place-order.ts:20
+      ~  sqs/orders-dev-placed                                    infra/messaging.tf:16
+        ~  message sqs/orders-dev-placed-dlq                      orders/infra/messaging.tf:7
+          ~  sqs/orders-dev-placed-dlq                            infra/messaging.tf:7
+        ~  mapping aws_lambda_event_source_mapping.ship_order     orders/infra/messaging.tf:16
+          @  orders-dev-ship-order                                orders/infra/functions.tf:81
+            -> handler                                            orders/src/shipping/ship-order.ts:14
+              $  INVOICES_BUCKET                                  orders/src/shipping/ship-order.ts:16
+              ~  s3:ObjectCreated:Put s3/orders-dev-invoices      orders/src/shipping/ship-order.ts:16
+                ~  s3/orders-dev-invoices                         infra/storage.tf:26
+              $  SHIPPED_TOPIC_ARN                                orders/src/shipping/ship-order.ts:17
+              ~  message sns/orders-dev-shipped                   orders/src/shipping/ship-order.ts:17
+                ~  sns/orders-dev-shipped                         infra/messaging.tf:27
+    ~  event eventbridge/orders-dev/orders.service/OrderPlaced    orders/src/orders/place-order.ts:21
+      ~  eventbridge/orders-dev/orders.service/OrderPlaced        infra/messaging.tf:64
+        ~  rule orders-dev-order-placed                           orders/infra/messaging.tf:64
+          @  workflow orders-dev-shipping                         orders/statemachine/shipping.asl.json:1
+            -> ReserveStock [Task lambda:invoke]                  orders/statemachine/shipping.asl.json:5
+              @  orders-dev-reserve-stock                         orders/infra/functions.tf:97
+                -> handler                                        orders/src/shipping/reserve-stock.ts:4
+              -> ChargePayment [Task lambda:invoke]               orders/statemachine/shipping.asl.json:15
+                @  orders-dev-charge-payment                      orders/infra/functions.tf:106
+                -> Done [Succeed]                                 orders/statemachine/shipping.asl.json:25
+    $  ORDERS_BUS_NAME                                            orders/src/orders/cancel-order.ts:12
+... truncated: ≥3 more nodes (raise --depth)
+unresolved on this path: 0

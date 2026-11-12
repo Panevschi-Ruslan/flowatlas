@@ -1,4 +1,4 @@
-import { hasDependency, type PackageJson } from '@flowatlas/core';
+import { hasAnyDependency, hasDependency, type PackageJson } from '@flowatlas/core';
 
 /**
  * Whether a manifest declares the framework this extractor reads.
@@ -14,3 +14,28 @@ import { hasDependency, type PackageJson } from '@flowatlas/core';
  * to what this framework is.
  */
 export const declaresReact = (pkg: PackageJson): boolean => hasDependency(pkg, 'react');
+
+/** Vue, and Nuxt built on it (P233). */
+export const declaresVue = (pkg: PackageJson): boolean => hasAnyDependency(pkg, ['vue', 'nuxt']);
+
+/** Svelte, and SvelteKit built on it (P233). */
+export const declaresSvelte = (pkg: PackageJson): boolean => hasDependency(pkg, 'svelte');
+
+/**
+ * The type a configuration gives plain browser code (P284): pages and the
+ * scripts they load, with no manifest and no framework. Nothing in a manifest
+ * gives it away, so it is never guessed from one; `link` and `init` offer it
+ * for a directory of pages and scripts that has none.
+ */
+export const PLAIN_BROWSER_TYPE = 'browser';
+
+/** The adapter that reads such a directory, which only its type chooses. */
+export const PLAIN_BROWSER_ADAPTER = 'browser';
+
+/**
+ * The adapters a service is read with, by its type: a service of the plain
+ * browser type is read by the plain adapter alone unless the configuration
+ * forces another, because no manifest can say it is one.
+ */
+export const forcedFor = <F extends { readonly frontend?: readonly string[] }>(type: string | undefined, force: F): F =>
+  type === PLAIN_BROWSER_TYPE && force.frontend === undefined ? { ...force, frontend: [PLAIN_BROWSER_ADAPTER] } : force;

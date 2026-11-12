@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "next-nested-apps",
-  "generatedAt": "2026-10-08T07:28:11.598Z",
+  "generatedAt": "2026-11-10T15:12:48.219Z",
   "nodes": [
     {
       "id": "entry:next-nested-apps@.:http:GET:/api/orders",
@@ -71,7 +71,9 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "application": "."
+        "application": ".",
+        "originless": true,
+        "sameCall": "ui_api_call:next-nested-apps#app/orders-client.ts:10:26"
       }
     },
     {
@@ -88,7 +90,9 @@
         "baseUrlEnv": null,
         "responseType": null,
         "bodyType": null,
-        "application": "examples/blog"
+        "application": "examples/blog",
+        "originless": true,
+        "sameCall": "ui_api_call:next-nested-apps#examples/blog/src/orders-client.ts:8:26"
       }
     },
     {
@@ -198,7 +202,8 @@
           "entry": [
             "nextjs-routes"
           ]
-        }
+        },
+        "ownOrigin": true
       }
     },
     {
@@ -219,7 +224,8 @@
         "package": null,
         "client": "fetch",
         "application": ".",
-        "via": "literal"
+        "via": "literal",
+        "sameCall": "http_out:next-nested-apps#app/orders-client.ts:10:26"
       }
     },
     {
@@ -240,7 +246,8 @@
         "package": null,
         "client": "fetch",
         "application": "examples/blog",
-        "via": "literal"
+        "via": "literal",
+        "sameCall": "http_out:next-nested-apps#examples/blog/src/orders-client.ts:8:26"
       }
     }
   ],

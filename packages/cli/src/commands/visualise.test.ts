@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { FakeEvent, installDocument, textOf } from '../visualise/panels/test-dom.js';
 import { runObserve } from './observe.js';
-import { inlined, PAGE_PARTS, runVisualise, template, writeParts } from './visualise.js';
+import { CORE_PARTS, inlined, PAGE_PARTS, runVisualise, template, writeParts } from './visualise.js';
 
 const ROOT = resolve(import.meta.dirname, '../../../..');
 const CONFIG = join(ROOT, 'fixtures', 'multi-repo', 'flowatlas.config.json');
@@ -20,7 +20,7 @@ let out: string;
 const VISUALISE = resolve(import.meta.dirname, '..', 'visualise');
 /** A part as it sits in the source, before the page drops a panel's imports. */
 const sourceOf = (file: string): string =>
-  readFileSync(file === 'prompt-text.js' ? resolve(ROOT, 'packages/core/src/prompt-text.js') : join(VISUALISE, file), 'utf8');
+  readFileSync(CORE_PARTS.has(file) ? resolve(ROOT, `packages/core/src/${file}`) : join(VISUALISE, file), 'utf8');
 
 const dataOf = (html: string): Record<string, any> => {
   const opening = '<script type="application/json" id="graph">';
@@ -57,13 +57,15 @@ describe('the page made of its parts (P103)', () => {
     for (const [, file] of PAGE_PARTS) expect(page, file).toContain(inlined(file, sourceOf(file)).trim());
   });
 
-  it('drops a panel’s imports, since the page already holds every name they bring', () => {
+  it('drops a module’s imports, since the page already holds every name they bring', () => {
     const script = scriptOf(page);
     expect(script).not.toMatch(/^import\b/m);
     expect(inlined('panels/x.js', "import { a,\n  b } from '../graph.js';\nexport function x() {}\n")).toBe('export function x() {}\n');
     expect(() => inlined('panels/x.js', "import { a as b } from '../graph.js';\n")).toThrow(/under another/);
     expect(() => inlined('panels/x.js', "import * as all from '../graph.js';\n")).toThrow(/cannot drop/);
-    expect(inlined('graph.js', "import { a } from 'b';\n")).toBe("import { a } from 'b';\n");
+    // A logic module's imports go too (graph.js asks core's path search, P229); styles keep theirs.
+    expect(inlined('graph.js', "import { a } from 'b';\nexport const c = 1;\n")).toBe('export const c = 1;\n');
+    expect(inlined('page.css', "import { a } from 'b';\n")).toBe("import { a } from 'b';\n");
   });
 
   it('refuses a page with no place for a part, or a place with no part', () => {
@@ -181,8 +183,9 @@ describe('the page made of its parts (P103)', () => {
     expect(orders.querySelectorAll('#g-details .fail-chip.is-seen').map(textOf)).toContain('404 seen ×1');
     const described = await bootAt(html, `#graph/${at('entry:orders:http:POST:/orders')}`, 'page-observed-orders');
     const panel = described.getElementById('g-details')!;
-    expect(panel.querySelectorAll('section h4').map(textOf)).toContain('Described in · 2');
-    expect(panel.querySelectorAll('.doc-list .tag').map(textOf)).toEqual(['up to date', 'stale: the flow changed']);
+    expect(panel.querySelectorAll('section h4').map(textOf)).toContain('Described in · 3');
+    // Two blocks, and the decision record that names it in code (P234).
+    expect(panel.querySelectorAll('.doc-list .tag').map(textOf)).toEqual(['up to date', 'stale: the flow changed', 'mentions it']);
     // The way in picked is drawn on the Ways in list with what traffic answered beside its failures.
     const row = described.querySelector(`#entries button.row[data-entry="${at('entry:orders:http:POST:/orders')}"]`)!;
     expect(row.querySelectorAll('.fail-chip').map(textOf)).toContain('500 ×1 not declared');

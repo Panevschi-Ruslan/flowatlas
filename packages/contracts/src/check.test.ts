@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bySeverity, checkContracts, errorsOf, stripImpact } from './check.js';
-import type { TypeEntry, TypeRegistry } from '@flowatlas/core';
+import { parseProto, protoTypes, type TypeEntry, type TypeRegistry } from '@flowatlas/core';
 import type { ContractReport } from './types.js';
 import { edge, field, graphOf, node, object } from './test-graph.js';
 
@@ -906,56 +906,346 @@ describe('what a nested path is compared against', () => {
   });
 });
 
-describe('a procedure asked for by its path', () => {
+describe('a procedure asked for by its path (P247)', () => {
   /**
-   * Typed on both sides on purpose. The handler's parameter is the envelope a
-   * procedure body is handed — a context and the input — and the caller's type
-   * is the input alone, so comparing the two would report a missing field on
-   * every procedure ever written, and comparing anything the client inferred
-   * from the server's own tree would agree with itself.
+   * The caller's input and answer against the procedure's declared input and
+   * answer, as a request's body and response are compared. Never the
+   * handler's own parameter, which is the envelope a procedure body is handed
+   * - a context and the input - and would be a missing field on every
+   * procedure ever written; it is typed here on purpose to show it is not used.
    */
-  const report = checkContracts(
-    graphOf({
-      nodes: [
-        node('web#Orders', 'ui_component', 'web'),
-        node('ui_api_call:web#src/Orders.tsx:4:5', 'ui_api_call', 'web', {
-          kind: 'rpc',
-          meta: { procedure: 'orders.list', call: 'query' },
-        }),
-        node('entry:api:rpc:orders.list', 'entry', 'api', {
-          kind: 'rpc',
-          meta: { key: 'orders.list', call: 'query', input: 'OrderQuery' },
-        }),
-        node('api#listOrders', 'function', 'api'),
-      ],
-      edges: [
-        edge('web#Orders', 'calls', 'ui_api_call:web#src/Orders.tsx:4:5'),
-        edge('ui_api_call:web#src/Orders.tsx:4:5', 'hits', 'entry:api:rpc:orders.list', {
-          params: ['type:caller#Body'],
-          returns: 'type:api#Answer',
-        }),
-        edge('entry:api:rpc:orders.list', 'handles', 'api#listOrders', {
-          params: ['type:api#Body'],
-          returns: 'type:api#Answer',
-        }),
-      ],
-      types: registry,
-    }),
-    { generatedAt: FIXED },
-  );
+  const asked = (
+    call: Record<string, unknown>,
+    entry: Record<string, unknown>,
+    sent: { params?: string[]; returns?: string } = {},
+  ): ContractReport =>
+    checkContracts(
+      graphOf({
+        nodes: [
+          node('worker#Fulfil', 'method', 'worker'),
+          node('http_out:worker#src/orders.ts:4:5', 'http_out', 'worker', {
+            kind: 'rpc',
+            meta: { procedure: 'orders.place', call: 'handler', ...call },
+          }),
+          node('entry:orders:rpc:orders.place', 'entry', 'orders', {
+            kind: 'rpc',
+            meta: { key: 'orders.place', call: 'handler', ...entry },
+          }),
+          node('orders#place', 'function', 'orders'),
+        ],
+        edges: [
+          edge('worker#Fulfil', 'calls', 'http_out:worker#src/orders.ts:4:5'),
+          edge('http_out:worker#src/orders.ts:4:5', 'hits', 'entry:orders:rpc:orders.place', sent),
+          edge('entry:orders:rpc:orders.place', 'handles', 'orders#place', {
+            params: ['{context:unknown;input:unknown}'],
+            returns: 'void',
+          }),
+        ],
+        types: {},
+      }),
+      { generatedAt: FIXED },
+    );
+  const DECLARED = {
+    input: 'NewOrder',
+    signature: { params: [{ name: 'input', type: '{sku:string;quantity:number}' }], returns: '{id:string}' },
+  };
 
-  it('compares neither direction and says why for each', () => {
-    expect(report.summary).toMatchObject({ edges: 0, unchecked: 2, identical: 0, errors: 0 });
-    expect(report.findings).toEqual([]);
-    expect(report.unchecked.map((row) => [row.direction, row.reason])).toEqual([
-      ['request', 'procedure-input-by-name'],
+  it('compares both directions where both ends are typed, and agrees where they do', () => {
+    const report = asked(
+      { inputKeys: ['quantity', 'sku'], inputType: '{sku:string;quantity:number}', outputType: '{id:string}' },
+      DECLARED,
+      { params: ['{sku:string;quantity:number}'], returns: '{id:string}' },
+    );
+    expect(report.summary).toMatchObject({ edges: 2, identical: 2, unchecked: 0, errors: 0 });
+  });
+
+  it("finds a key the procedure requires that the caller does not send, and one it reads that nothing answers", () => {
+    const report = asked(
+      { inputKeys: ['qty', 'sku'], inputType: '{sku:string;qty:number}', outputType: '{id:string;total:number}' },
+      DECLARED,
+      { params: ['{sku:string;qty:number}'], returns: '{id:string;total:number}' },
+    );
+    expect(report.findings.map((finding) => [finding.direction, finding.kind, finding.field, finding.severity])).toEqual([
+      ['request', 'extra_field', 'qty', 'info'],
+      ['request', 'missing_required', 'quantity', 'error'],
+      ['response', 'missing_required', 'total', 'error'],
+    ]);
+    expect(report.findings[1]?.message).toBe('receiver orders requires `quantity: number`; sender worker does not send it');
+  });
+
+  it('says so where the procedure declares no input, or one whose type does not resolve', () => {
+    const undeclared = asked({ inputType: '{since:string}', outputType: 'number' }, { signature: { params: [], returns: 'number' } }, {
+      params: ['{since:string}'],
+      returns: 'number',
+    });
+    expect(undeclared.unchecked.map((row) => [row.direction, row.reason])).toEqual([['request', 'procedure-input-undeclared']]);
+    const unread = asked({ inputType: '{sku:string}', outputType: '{id:string}' }, { ...DECLARED, signature: { params: [{ name: 'input', type: 'any' }], returns: '{id:string}' } }, {
+      params: ['{sku:string}'],
+      returns: '{id:string}',
+    });
+    const [row] = unread.unchecked;
+    expect(row?.reason).toBe('procedure-input-unread');
+    expect(row?.message).toContain('takes NewOrder, whose type does not resolve here');
+  });
+
+  it('says so where the input is handed later or not written, and where the answer goes to a hook', () => {
+    const later = asked({ inputLater: true }, DECLARED);
+    expect(later.unchecked.map((row) => [row.direction, row.reason])).toEqual([
+      ['request', 'procedure-input-not-at-call'],
       ['response', 'procedure-output-inferred'],
+    ]);
+    expect(later.unchecked[0]?.message).toContain('hands the input to what the call returns');
+    expect(later.unchecked[1]?.message).toContain('through a hook');
+    expect(asked({ inputNone: true }, DECLARED).unchecked[0]?.message).toContain('writes no input at the call');
+  });
+
+  it("says a client typed any states neither end, with the client's own way of stating them", () => {
+    const report = asked({ inputType: 'any', outputType: 'any' }, DECLARED, { params: ['any'], returns: 'any' });
+    expect(report.unchecked.map((row) => [row.direction, row.reason])).toEqual([
+      ['request', 'no-type-on-sender'],
+      ['response', 'no-type-on-receiver'],
+    ]);
+    expect(report.unchecked[0]?.hint).toContain('Type the client from the tree it calls');
+    expect(report.unchecked[1]?.message).toBe('worker#Fulfil reads what the procedure answers with no type');
+  });
+});
+
+describe('the keys a gRPC call writes, under the names each loader gives the fields (P293)', () => {
+  const contract = parseProto(`
+    syntax = "proto3";
+    package shop;
+    message AddItemRequest { string user_id = 1; int32 quantity = 2; }
+    message Ack { bool ok = 1; }
+  `);
+  /** A call writing `keys` as an object of `sent`, its loader keeping the case or not, to a server whose loader does or does not. */
+  const keyed = (keys: string[], sent: string, callerKeeps: boolean, serverKeeps: boolean): ContractReport => {
+    const types = protoTypes([{ path: 'shop.proto', file: contract }], 'orders');
+    const names = serverKeeps ? 'proto' : 'json';
+    const signature = { params: [{ name: 'request', type: types.refOf('AddItemRequest', 'shop', names) }], returns: types.refOf('Ack', 'shop', names) };
+    const call = { inputKeys: keys, ...(callerKeeps ? { protoFieldNames: 'proto' } : {}) };
+    return checkContracts(
+      graphOf({
+        nodes: [
+          node('worker#Fulfil', 'method', 'worker'),
+          node('http_out:worker#src/orders.ts:4:5', 'http_out', 'worker', { kind: 'rpc', meta: { procedure: 'grpc:shop.Orders/AddItem', call: 'unary', client: 'grpc', ...call } }),
+          node('entry:orders:rpc:grpc:shop.Orders/AddItem', 'entry', 'orders', {
+            kind: 'rpc',
+            meta: { key: 'grpc:shop.Orders/AddItem', call: 'unary', signature, ...(serverKeeps ? { protoFieldNames: 'proto' } : {}) },
+          }),
+        ],
+        edges: [
+          edge('worker#Fulfil', 'calls', 'http_out:worker#src/orders.ts:4:5'),
+          edge('http_out:worker#src/orders.ts:4:5', 'hits', 'entry:orders:rpc:grpc:shop.Orders/AddItem', { params: [sent] }),
+        ],
+        types: types.registry(),
+      }),
+      { generatedAt: FIXED },
+    );
+  };
+  const requestFindings = (report: ContractReport) => report.findings.filter((finding) => finding.direction === 'request').map((finding) => [finding.kind, finding.field]);
+  const CAMEL = ['quantity', 'userId'];
+  const SNAKE = ['quantity', 'user_id'];
+
+  it("matches a field whichever way the caller's loader and the server's name it, and compares what it holds", () => {
+    for (const serverKeeps of [false, true]) {
+      expect(requestFindings(keyed(CAMEL, '{userId:string;quantity:number}', false, serverKeeps))).toEqual([]);
+      expect(requestFindings(keyed(SNAKE, '{user_id:string;quantity:number}', true, serverKeeps))).toEqual([]);
+    }
+    // Under the caller's names, said by the server's.
+    expect(requestFindings(keyed(SNAKE, '{user_id:number;quantity:number}', true, false))).toEqual([['type_mismatch', 'userId']]);
+    expect(requestFindings(keyed(CAMEL, '{userId:number;quantity:number}', false, true))).toEqual([['type_mismatch', 'user_id']]);
+  });
+
+  it("still says a key written under a name the caller's loader does not give the field", () => {
+    expect(requestFindings(keyed(SNAKE, '{user_id:string;quantity:number}', false, false))).toEqual([['extra_field', 'user_id']]);
+    expect(requestFindings(keyed(CAMEL, '{userId:string;quantity:number}', true, true))).toEqual([['extra_field', 'userId']]);
+  });
+});
+
+describe("a plain request to a procedure's REST route (P256)", () => {
+  /**
+   * The OpenAPI handler assembles the procedure's input from the request: the
+   * path's parameters with the query of a GET, or with the body otherwise, or
+   * each part under its own key for a `detailed` route. The caller's half is
+   * assembled the same way from what it writes; a path parameter and a query
+   * key are compared by name alone, the body field by field, and the answer
+   * the call reads back with the procedure's output.
+   */
+  const twin = (
+    call: Record<string, unknown>,
+    route: Record<string, unknown>,
+    sent: { params?: string[]; returns?: string } = {},
+  ): ContractReport =>
+    checkContracts(
+      graphOf({
+        nodes: [
+          node('web#Shelf', 'ui_component', 'web'),
+          node('ui_api_call:web#src/Shelf.tsx:9:5', 'ui_api_call', 'web', { kind: 'http', meta: { bodyType: null, ...call } }),
+          node('entry:catalog:http:twin', 'entry', 'catalog', { kind: 'http', meta: { procedure: 'products.get', input: 'ProductInput', ...route } }),
+          node('catalog#handler', 'function', 'catalog'),
+        ],
+        edges: [
+          edge('web#Shelf', 'calls', 'ui_api_call:web#src/Shelf.tsx:9:5'),
+          edge('ui_api_call:web#src/Shelf.tsx:9:5', 'hits', 'entry:catalog:http:twin', sent),
+          // The handler is handed the envelope, never the caller's body; typed here to show it is not used.
+          edge('entry:catalog:http:twin', 'handles', 'catalog#handler', { params: ['{context:unknown;input:unknown}'], returns: 'void' }),
+        ],
+        types: {},
+      }),
+      { generatedAt: FIXED },
+    );
+  const PRODUCT = '{id:string;name:string}';
+  const byId = { method: 'GET', rawPath: '/api/products/{id}', signature: { params: [{ name: 'input', type: '{id:string}' }], returns: PRODUCT } };
+  const list = { method: 'GET', rawPath: '/api/products', signature: { params: [{ name: 'input', type: '{category:string;limit?:number}' }], returns: `${PRODUCT}[]` } };
+  const create = { method: 'POST', rawPath: '/api/products/create', signature: { params: [{ name: 'input', type: '{name:string;price:number;sku:string}' }], returns: '{id:string}' } };
+  const findings = (report: ContractReport) => report.findings.map((finding) => [finding.direction, finding.kind, finding.field, finding.severity]);
+  const rows = (report: ContractReport) => report.unchecked.map((row) => [row.direction, row.reason]);
+
+  it('compares a GET by its path parameter, and its answer, both ways', () => {
+    const report = twin({ method: 'GET', url: '${CATALOG_URL}/api/products/:param' }, byId, { returns: PRODUCT });
+    // The address carries the id as text, compared by its name alone, so the request is no claim of the same type.
+    expect(report.summary).toMatchObject({ edges: 2, identical: 1, hash_differs: 1, unchecked: 0, errors: 0, infos: 0 });
+  });
+
+  it('compares the query a GET writes in its options or its address, key by key', () => {
+    expect(twin({ method: 'GET', queryKeys: ['category', 'limit'], queryType: '{category:string;limit:number}' }, list, { returns: `${PRODUCT}[]` }).summary).toMatchObject({ errors: 0, infos: 0, unchecked: 0 });
+    expect(findings(twin({ method: 'GET', queryKeys: ['limit'], queryType: '{limit:number}' }, list, { returns: `${PRODUCT}[]` }))).toEqual([
+      ['request', 'missing_required', 'category', 'error'],
+    ]);
+    expect(findings(twin({ method: 'GET', url: '${CATALOG_URL}/api/products?category=tea&sort=price' }, list, { returns: `${PRODUCT}[]` }))).toEqual([
+      ['request', 'extra_field', 'sort', 'info'],
+    ]);
+    // A GET that writes no query does not send what the procedure requires.
+    expect(findings(twin({ method: 'GET', url: '${CATALOG_URL}/api/products' }, list, { returns: `${PRODUCT}[]` }))).toEqual([
+      ['request', 'missing_required', 'category', 'error'],
     ]);
   });
 
-  it('names the input the server declared, as the server wrote it', () => {
-    const request = report.unchecked.find((row) => row.direction === 'request');
-    expect(request?.message).toContain('takes OrderQuery');
+  it('says a query written in a way nothing reads, rather than calling the required keys missing', () => {
+    const spliced = twin({ method: 'GET', url: '${CATALOG_URL}/api/products?${…}' }, list, { returns: `${PRODUCT}[]` });
+    expect(rows(spliced)).toEqual([['request', 'procedure-input-by-name']]);
+    expect(spliced.unchecked[0]?.message).toContain('writes its query in a way that is not read');
+    expect(rows(twin({ method: 'GET', queryUnread: true }, list, { returns: `${PRODUCT}[]` }))).toEqual([['request', 'procedure-input-by-name']]);
+  });
+
+  it("compares a POST's body with the input, and says a body with no type", () => {
+    expect(findings(twin({ method: 'POST', bodyType: '{name:string;price:number}', bodyKeys: ['name', 'price'], bodyFrom: 'literal' }, create, { params: ['{name:string;price:number}'], returns: '{id:string}' }))).toEqual([
+      ['request', 'missing_required', 'sku', 'error'],
+    ]);
+    expect(rows(twin({ method: 'POST', bodyType: 'any' }, create, { params: ['any'], returns: '{id:string}' }))).toEqual([['request', 'no-type-on-sender']]);
+  });
+
+  it("compares the caller's own answer type with the procedure's output, and says where it types none", () => {
+    expect(findings(twin({ method: 'GET', url: '${CATALOG_URL}/api/products/:param' }, byId, { returns: '{id:string;title:string}' }))).toEqual([
+      ['response', 'extra_field', 'name', 'info'],
+      ['response', 'missing_required', 'title', 'error'],
+    ]);
+    const untyped = twin({ method: 'GET', url: '${CATALOG_URL}/api/products/:param' }, byId);
+    expect(rows(untyped)).toEqual([['response', 'no-type-on-receiver']]);
+    expect(untyped.unchecked[0]?.message).toBe('web#Shelf declares no type for what it expects');
+  });
+
+  it('assembles a detailed input part by part, and compares the body of a detailed output', () => {
+    const detailed = {
+      method: 'PATCH',
+      rawPath: '/api/products/{id}',
+      inputStructure: 'detailed',
+      outputStructure: 'detailed',
+      signature: { params: [{ name: 'input', type: '{params:{id:string};body:{price:number}}' }], returns: '{status:number;body:{id:string}}' },
+    };
+    expect(twin({ method: 'PATCH', bodyType: '{price:number}', bodyKeys: ['price'], bodyFrom: 'literal' }, detailed, { params: ['{price:number}'], returns: '{id:string}' }).summary).toMatchObject({
+      edges: 2,
+      unchecked: 0,
+      errors: 0,
+      infos: 0,
+    });
+  });
+
+  it('compares the keys of a query built into the address, and the headers a detailed input takes (P258)', () => {
+    // The address shows the built query as `${…}`; the reader recorded its keys beside.
+    expect(twin({ method: 'GET', url: '${CATALOG_URL}/api/products?${…}', queryKeys: ['category', 'limit'], queryInAddress: true }, list, { returns: `${PRODUCT}[]` }).summary).toMatchObject({ errors: 0, unchecked: 0 });
+    const browse = {
+      method: 'GET',
+      rawPath: '/api/browse',
+      inputStructure: 'detailed',
+      signature: { params: [{ name: 'input', type: "{query:{category:string};headers:{'x-tenant':string}}" }], returns: `${PRODUCT}[]` },
+    };
+    expect(twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['x-tenant'] }, browse, { returns: `${PRODUCT}[]` }).summary).toMatchObject({ errors: 0, infos: 0, unchecked: 0 });
+    // A header the procedure does not declare is its middleware's, and not compared (P262).
+    expect(findings(twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['x-trace'] }, browse, { returns: `${PRODUCT}[]` }))).toEqual([
+      ['request', 'missing_required', 'headers.x-tenant', 'error'],
+    ]);
+  });
+
+  it("compares a detailed input's headers from the procedure's end: none sent, some not known, a name never handed on (P262)", () => {
+    const browse = (headers: string) => ({
+      method: 'GET',
+      rawPath: '/api/browse',
+      inputStructure: 'detailed',
+      signature: { params: [{ name: 'input', type: `{query:{category:string};headers:${headers}}` }], returns: `${PRODUCT}[]` },
+    });
+    const tenant = browse("{'x-tenant':string}");
+    // A call that writes no headers, and runs through nothing that adds any, sends none.
+    expect(findings(twin({ method: 'GET', queryKeys: ['category'] }, tenant, { returns: `${PRODUCT}[]` }))).toEqual([
+      ['request', 'missing_required', 'headers.x-tenant', 'error'],
+    ]);
+    // Headers written in a way not read, or added by a hook: not compared, and said.
+    const unread = twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['accept'], headersUnread: true }, tenant, { returns: `${PRODUCT}[]` });
+    expect(findings(unread)).toEqual([]);
+    expect(unread.edges.find((each) => each.direction === 'request')?.rulesApplied).toContain('any-unknown-skip:headers');
+    // A name declared with a capital is never handed to the procedure as spelled, and the finding says why.
+    const capital = twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['x-tenant'] }, browse('{X-Tenant:string}'), { returns: `${PRODUCT}[]` });
+    expect(findings(capital)).toEqual([
+      ['request', 'missing_required', 'headers.X-Tenant', 'error'],
+      ['request', 'extra_field', 'headers.x-tenant', 'info'],
+    ]);
+    expect(capital.findings.find((each) => each.kind === 'missing_required')?.message).toContain('every header lower-cased, so `headers.X-Tenant` it declares is never handed to it as spelled');
+    // A procedure that declares no headers is sent none to compare.
+    expect(twin({ method: 'GET', queryKeys: ['category'], headerKeys: ['authorization'] }, { ...tenant, signature: { params: [{ name: 'input', type: '{query:{category:string}}' }], returns: `${PRODUCT}[]` } }, { returns: `${PRODUCT}[]` }).summary).toMatchObject({ errors: 0, infos: 0 });
+  });
+
+  it("compares the headers a caller reads off a detailed answer with the ones its output declares (P265)", () => {
+    const paged = {
+      method: 'GET',
+      rawPath: '/api/page',
+      outputStructure: 'detailed',
+      signature: { params: [{ name: 'input', type: '{category:string}' }], returns: `{headers:{'x-total':string};body:${PRODUCT}[]}` },
+    };
+    const answer = (meta: Record<string, unknown>) => twin({ method: 'GET', queryKeys: ['category'], ...meta }, paged, { returns: `${PRODUCT}[]` });
+    const response = (report: ContractReport) => report.edges.find((each) => each.direction === 'response');
+    // A name the output declares agrees, looked up in any case (recorded lower-cased).
+    expect(answer({ responseHeaderKeys: ['x-total'] }).summary).toMatchObject({ errors: 0, warnings: 0, infos: 0 });
+    // One the output does not declare: missing, and a middleware may still set it.
+    const more = answer({ responseHeaderKeys: ['x-next', 'x-total'] });
+    expect(findings(more)).toEqual([['response', 'missing_required', 'headers.x-next', 'warning']]);
+    expect(more.findings[0]?.message).toContain('does not declare it');
+    // Alone, too: the output's headers are then an object holding none of the names read.
+    expect(findings(answer({ responseHeaderKeys: ['x-next'] }))).toEqual([['response', 'missing_required', 'headers.x-next', 'warning']]);
+    // Read as a key with a capital: a client hands every name lower-cased, so it is never there.
+    const capital = answer({ responseHeaderKeys: ['X-Total'] });
+    expect(findings(capital)).toEqual([
+      ['response', 'missing_required', 'headers.X-Total', 'error'],
+      ['response', 'extra_field', 'headers.x-total', 'info'],
+    ]);
+    expect(capital.findings.find((each) => each.kind === 'missing_required')?.message).toContain('every response header lower-cased');
+    // One the HTTP layer writes by itself is not compared, and said; a name not known is said too.
+    const layer = answer({ responseHeaderKeys: ['etag', 'x-total'], responseHeadersUnread: true });
+    expect(findings(layer)).toEqual([]);
+    expect(response(layer)?.rulesApplied).toEqual(expect.arrayContaining(['http-layer-header:headers.etag', 'any-unknown-skip:headers']));
+    // A caller that reads none compares the body alone, as before; and a body neither end types is skipped, not blocked.
+    expect(response(answer({}))?.sender.typeId).toBe(`${PRODUCT}[]`);
+    const untyped = twin({ method: 'GET', queryKeys: ['category'], responseHeaderKeys: ['x-total'] }, paged, {});
+    expect(response(untyped)?.status).not.toBe('unchecked');
+    expect(response(untyped)?.rulesApplied).toContain('any-unknown-skip:body');
+  });
+
+  it('says so where the procedure declares no input, or one whose type does not resolve', () => {
+    expect(rows(twin({ method: 'GET' }, { method: 'GET', rawPath: '/api/health', input: undefined, signature: { params: [], returns: 'string' } }, { returns: 'string' }))).toEqual([
+      ['request', 'procedure-input-undeclared'],
+    ]);
+    expect(rows(twin({ method: 'GET' }, { ...list, signature: { params: [{ name: 'input', type: 'any' }], returns: PRODUCT } }, { returns: PRODUCT }))).toEqual([
+      ['request', 'procedure-input-unread'],
+    ]);
   });
 });
 

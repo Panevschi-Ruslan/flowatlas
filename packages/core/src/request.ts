@@ -76,6 +76,12 @@ export const requestCallSchema = z.strictObject({
 const helperFields = {
   name: z.string().min(1),
   package: z.string().min(1).optional(),
+  /**
+   * Also matched by name where nothing in the file binds it: a function a
+   * framework makes global without an import (P233), or one only a
+   * generated declaration file declares.
+   */
+  global: z.boolean().optional(),
 };
 
 /**
@@ -581,7 +587,7 @@ const boundByImport = (name: TsNode): boolean =>
  * A helper of the project's is matched by name and by being declared outside
  * any installed package.
  */
-export const callsHelper = (site: TsNode, helper: { name: string; package?: string | undefined }): boolean =>
+export const callsHelper = (site: TsNode, helper: { name: string; package?: string | undefined; global?: boolean | undefined }): boolean =>
   Node.isCallExpression(site) && namesHelper(site.getExpression(), helper);
 
 /**
@@ -589,9 +595,10 @@ export const callsHelper = (site: TsNode, helper: { name: string; package?: stri
  * the `createClient` of `ReturnType<typeof createClient>`, or a type the same
  * package exports (P44). Matched the way {@link callsHelper} matches a call.
  */
-export const namesHelper = (callee: TsNode, helper: { name: string; package?: string | undefined }): boolean => {
+export const namesHelper = (callee: TsNode, helper: { name: string; package?: string | undefined; global?: boolean | undefined }): boolean => {
   const called = calledBy(callee);
   if (called === undefined) return false;
+  if (helper.global === true && called.root === called.name && called.name === helper.name && Node.isIdentifier(callee) && boundByNothing(callee)) return true;
   if (helper.package === undefined) {
     if (called.name !== helper.name) return false;
     const declarations = calleeDeclarations(callee);
@@ -625,6 +632,10 @@ export const namesHelper = (callee: TsNode, helper: { name: string; package?: st
   }
   return false;
 };
+
+/** A name nothing in the project declares, or only a declaration file does: a global. */
+const boundByNothing = (name: TsNode): boolean =>
+  (name.getSymbol()?.getDeclarations() ?? []).every((declaration) => declaration.getSourceFile().isDeclarationFile());
 
 /** A name as the module that declares it spells it. */
 interface Declared {

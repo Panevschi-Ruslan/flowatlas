@@ -1,0 +1,15 @@
+{
+  "services": [
+    {
+      "name": "orders",
+      "repo": "./apps/orders",
+      "type": "nestjs"
+    },
+    {
+      "name": "shop",
+      "repo": "./apps/shop",
+      "type": "nestjs"
+    }
+  ],
+  "output": ".flowatlas"
+}

@@ -40,6 +40,24 @@ export interface ProcedureMount {
   readonly treeAt: number;
   /** The key of an options argument that carries the tree, when it is one. */
   readonly treeKey?: string;
+  /** Built with `new` rather than called (P58). */
+  readonly constructed: boolean;
+  /** Also answers each way in at its own HTTP route (P58). */
+  readonly routes: boolean;
+  /** Where the address it answers under is written: an option of a method called on what it made (P58). */
+  readonly prefixFrom?: { readonly method: string; readonly key: string; readonly arg: number };
+  /** The key of its own options naming the address it answers under (P247). */
+  readonly prefixKey?: string;
+  /** The address where its options name none under `prefixKey` (P247). */
+  readonly prefixDefault?: string;
+  /** The address is the path argument of the call it is handed to (P247). */
+  readonly handedTo?: { readonly method: string; readonly pathAt: number };
+  /** The address is the file's own route, its last parameter taken off (P247). */
+  readonly fileRoute: boolean;
+  /** A plugin handed uncalled as argument `at` of a `method` call, whose arguments are its own (P256). */
+  readonly plugin?: { readonly method: string; readonly at: number };
+  /** What its protocol is called in `meta.mounted` (P58). */
+  readonly protocol?: string;
 }
 
 export interface ProcedureDialect {
@@ -67,12 +85,35 @@ export interface ProcedureDialect {
   readonly context?: { readonly method: string; readonly key: string };
   /** Every place a tree is hung. */
   readonly mounts: readonly ProcedureMount[];
+  /** Whether an object literal is a tree with no call around it (P58). */
+  readonly plainTrees: boolean;
+  /** Functions handed a contract, whose property accesses name its members (P58). */
+  readonly implementedBy: readonly string[];
+  /** The chain link carrying the shape a way in answers with (P58). */
+  readonly outputMethod?: string;
+  /** The chain link declaring the failures a way in may answer with (P58). */
+  readonly errorsMethod?: string;
+  /** The chain link giving a way in its own HTTP route (P58). */
+  readonly routeMethod?: string;
+  /** The link on a tree's assembling call that prefixes every route under it (P58). */
+  readonly prefixMethod?: string;
+  /** Functions that load a tree from a module when it is first asked for (P58). */
+  readonly lazyBy: readonly string[];
 }
 
 const mountOf = (mount: EntryProcedureConfig['mounts'][number]): ProcedureMount => ({
   call: mount.call,
   treeAt: mount.treeArg,
   ...(mount.treeKey === undefined ? {} : { treeKey: mount.treeKey }),
+  constructed: mount.constructed,
+  routes: mount.routes,
+  ...(mount.prefixFrom === undefined ? {} : { prefixFrom: { ...mount.prefixFrom } }),
+  ...(mount.prefixKey === undefined ? {} : { prefixKey: mount.prefixKey }),
+  ...(mount.prefixDefault === undefined ? {} : { prefixDefault: mount.prefixDefault }),
+  ...(mount.handedTo === undefined ? {} : { handedTo: { ...mount.handedTo } }),
+  fileRoute: mount.fileRoute,
+  ...(mount.plugin === undefined ? {} : { plugin: { ...mount.plugin } }),
+  ...(mount.protocol === undefined ? {} : { protocol: mount.protocol }),
 });
 
 /**
@@ -95,6 +136,13 @@ export const procedureDialectOf = (config: EntryProcedureConfig): ProcedureDiale
   ...(config.guardMethod === undefined ? {} : { guardMethod: config.guardMethod }),
   ...(config.context === undefined ? {} : { context: { ...config.context } }),
   mounts: config.mounts.map(mountOf),
+  plainTrees: config.plainTrees,
+  implementedBy: config.implementedBy,
+  lazyBy: config.lazyBy,
+  ...(config.outputMethod === undefined ? {} : { outputMethod: config.outputMethod }),
+  ...(config.errorsMethod === undefined ? {} : { errorsMethod: config.errorsMethod }),
+  ...(config.routeMethod === undefined ? {} : { routeMethod: config.routeMethod }),
+  ...(config.prefixMethod === undefined ? {} : { prefixMethod: config.prefixMethod }),
 });
 
 /** A dialect shipped with the tool, written as a description and validated as one. */
@@ -165,17 +213,93 @@ export const TRPC: ProcedureDialect = described({
   // checker has no tRPC to carry the type across. A scheduling app's three read-gate
   // files that query through `ctx.prisma` were unread for exactly that (R157).
   context: { method: 'context', key: 'ctx' },
+  //
+  // Each says where it answers (P247), so a client's link can be checked
+  // against it as an oRPC one is: a Next.js handler by the file it is in, the
+  // fetch adapter by its `endpoint` (or its file), the Express middleware by
+  // the `use` call it is handed to, the standalone server by its `basePath`.
   mounts: [
     // The Next.js adapter, and the one a scheduling app wraps under the same name. The
     // library's own spelling hands it an options object; a project's wrapper
     // usually takes the tree alone, so both are accepted on one row.
-    { call: 'createNextApiHandler', treeKey: 'router' },
-    { call: 'fetchRequestHandler', treeKey: 'router' },
-    { call: 'createExpressMiddleware', treeKey: 'router' },
-    { call: 'createHTTPHandler', treeKey: 'router' },
-    { call: 'createNextRouteHandler', treeKey: 'router' },
+    { call: 'createNextApiHandler', treeKey: 'router', protocol: 'trpc', fileRoute: true },
+    { call: 'fetchRequestHandler', treeKey: 'router', protocol: 'trpc', prefixKey: 'endpoint', fileRoute: true },
+    { call: 'createExpressMiddleware', treeKey: 'router', protocol: 'trpc', handedTo: { method: 'use', pathAt: 0 } },
+    { call: 'createHTTPHandler', treeKey: 'router', protocol: 'trpc', prefixKey: 'basePath', prefixDefault: '/' },
+    { call: 'createHTTPServer', treeKey: 'router', protocol: 'trpc', prefixKey: 'basePath', prefixDefault: '/' },
+    { call: 'createNextRouteHandler', treeKey: 'router', protocol: 'trpc', fileRoute: true },
+    // Fastify's adapter is a plugin the repository hands to `register` with
+    // its options, never calls (P256): the tree is under `trpcOptions`, the
+    // address is the plugin's `prefix`, the root without one.
+    {
+      call: 'fastifyTRPCPlugin',
+      plugin: { method: 'register', at: 0 },
+      treeArg: 1,
+      treeKey: 'trpcOptions.router',
+      protocol: 'trpc',
+      prefixKey: 'prefix',
+      prefixDefault: '/',
+    },
+    // Hono's middleware (`@hono/trpc-server`), answering under its `endpoint`,
+    // `/trpc` where it names none (P256).
+    { call: 'trpcServer', treeKey: 'router', protocol: 'trpc', prefixKey: 'endpoint', prefixDefault: '/trpc' },
+  ],
+});
+
+/**
+ * oRPC, the second of the family, and the row that taught the description six
+ * more words (P58).
+ *
+ * The walk is tRPC's; what differs is said here. A procedure ends in `handler`
+ * and nothing else: the server does not declare a query or a mutation, the
+ * client chooses, so the one ending is `rpc`. A router is any object whose
+ * values are procedures - `os.router({...})` only installs middleware or a
+ * prefix on one - so plain literals are trees. A contract-first service writes
+ * its input, output, errors and route on a contract and implements it with
+ * `implement(contract)`, whose property accesses name the contract's members.
+ * `.errors({...})` declares the failures a procedure answers with, and
+ * `.route({ method, path })` its REST route, which an OpenAPI handler serves
+ * beside the RPC one at the prefix its `handle` call is given.
+ */
+export const ORPC: ProcedureDialect = described({
+  name: 'orpc-procedures',
+  packages: ['@orpc/server'],
+  // `os.router(...)`, and `oc.router(...)` for a contract, which is assembled
+  // the same way and is never confirmed a tree: none of its members ends in a
+  // handler.
+  assembledBy: ['router'],
+  terminators: { handler: 'rpc' },
+  inputMethod: 'input',
+  outputMethod: 'output',
+  guardMethod: 'use',
+  errorsMethod: 'errors',
+  routeMethod: 'route',
+  prefixMethod: 'prefix',
+  plainTrees: true,
+  implementedBy: ['implement'],
+  lazyBy: ['lazy'],
+  context: { method: '$context', key: 'context' },
+  mounts: [
+    // A handler object built once from the tree, from any of the adapters'
+    // entry points, answering under the prefix its `handle` call is given.
+    // Only the OpenAPI one answers a procedure at a REST route of its own.
+    {
+      call: 'RPCHandler',
+      treeArg: 0,
+      constructed: true,
+      protocol: 'rpc',
+      prefixFrom: { method: 'handle', key: 'prefix', arg: 1 },
+    },
+    {
+      call: 'OpenAPIHandler',
+      treeArg: 0,
+      constructed: true,
+      routes: true,
+      protocol: 'openapi',
+      prefixFrom: { method: 'handle', key: 'prefix', arg: 1 },
+    },
   ],
 });
 
 /** Every framework whose ways in are the keys of a tree. */
-export const PROCEDURE_DIALECTS: readonly ProcedureDialect[] = [TRPC];
+export const PROCEDURE_DIALECTS: readonly ProcedureDialect[] = [TRPC, ORPC];

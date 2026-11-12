@@ -90,10 +90,18 @@ interface Imported {
  * statement still says the package and the name. A namespace import stands for
  * the module, so `express.Router` is the export `Router` and `express()` written
  * on a namespace is the call a default import would have made.
+ *
+ * `require` states the same (P281): `const express = require('express')`,
+ * the module a CommonJS package exports whole, is what a default import
+ * binds, and `const { Router } = require('express')` the export it names -
+ * the spelling of a server made only where it is needed, the package loaded
+ * lazily inside a method.
  */
 const importOf = (identifier: TsNode): Imported | undefined => {
   if (!Node.isIdentifier(identifier)) return undefined;
   for (const declaration of identifier.getSymbol()?.getDeclarations() ?? []) {
+    const required = requiredBy(declaration);
+    if (required !== undefined) return required;
     const statement = declaration.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
     if (statement === undefined) continue;
     const pkg = packageOfSpecifier(statement.getModuleSpecifierValue());
@@ -103,6 +111,21 @@ const importOf = (identifier: TsNode): Imported | undefined => {
     if (Node.isNamespaceImport(declaration)) return { package: pkg, name: 'namespace' };
   }
   return undefined;
+};
+
+/** What `const x = require('pkg')`, or a name destructured from it, binds. */
+const requiredBy = (declaration: TsNode): Imported | undefined => {
+  const holder = Node.isBindingElement(declaration) ? declaration.getFirstAncestorByKind(SyntaxKind.VariableDeclaration) : declaration;
+  if (holder === undefined || !Node.isVariableDeclaration(holder)) return undefined;
+  const value = holder.getInitializer();
+  const call = value === undefined ? undefined : unwrap(value);
+  if (call === undefined || !Node.isCallExpression(call) || call.getExpression().getText() !== 'require') return undefined;
+  const [specifier] = call.getArguments();
+  if (specifier === undefined || !Node.isStringLiteral(specifier)) return undefined;
+  const pkg = packageOfSpecifier(specifier.getLiteralValue());
+  if (pkg === undefined) return undefined;
+  if (Node.isBindingElement(declaration)) return { package: pkg, name: declaration.getPropertyNameNode()?.getText() ?? declaration.getName() };
+  return Node.isIdentifier(holder.getNameNode()) ? { package: pkg, name: 'default' } : undefined;
 };
 
 /**

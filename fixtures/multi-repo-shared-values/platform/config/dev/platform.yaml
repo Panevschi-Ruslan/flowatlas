@@ -1,0 +1,6 @@
+template_path: platform.yaml
+parameters:
+  Stage: dev
+  Prefix: shop
+  AccountId: '444455556666'
+  AlertsEmail: dev@example.com

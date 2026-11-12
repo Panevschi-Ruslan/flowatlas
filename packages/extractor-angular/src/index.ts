@@ -18,6 +18,7 @@ export type {
   CreateContextOptions,
   ModuleMembership,
   RouteEntry,
+  RouteGuard,
 } from './context.js';
 
 export {

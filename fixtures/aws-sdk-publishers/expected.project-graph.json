@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 6,
-  "builtAt": "2026-10-17T03:49:11.305Z",
+  "schemaVersion": 7,
+  "builtAt": "2026-11-09T21:41:49.005Z",
   "services": [
     {
       "name": "loans",
@@ -903,7 +903,7 @@
               {
                 "environment": "OVERDUE_QUEUE_URL",
                 "forms": [
-                  "^https?://[^/]+/[^/]+/([^/?#]+)/?$",
+                  "^https?://(?![^/]*\\.(?:execute-api|lambda-url)\\.)[^/]+/[^/]+/([^/?#]+)/?$",
                   "^arn:[^:]+:sqs:[^:]*:[^:]*:([^:/]+)$"
                 ]
               }
@@ -1012,7 +1012,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "api/app.ts",
+            "line": 17
+          }
+        ]
       }
     }
   ],
@@ -1528,6 +1535,9 @@
       "to": "channel:sqs/library-returns",
       "type": "emits",
       "confidence": "static",
+      "params": [
+        "type:loans#ReturnedItem"
+      ],
       "file": "api/returns/returns-queue.ts",
       "line": 30
     },
@@ -1832,14 +1842,6 @@
       "meta": {
         "variable": "AUDIT_BUS_NAME"
       },
-      "service": "loans"
-    },
-    {
-      "file": "api/returns/returns-queue.ts",
-      "line": 30,
-      "reason": "payload-type-unknown",
-      "hint": "The message is not written out where the description says it is, so nothing describes what travels on this channel.",
-      "symbol": "sqs/library-returns",
       "service": "loans"
     },
     {

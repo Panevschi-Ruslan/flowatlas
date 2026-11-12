@@ -17,7 +17,7 @@ import type {
   Node as TsNode,
 } from 'ts-morph';
 import { Node, SyntaxKind } from 'ts-morph';
-import type { AngularExtractContext, RouteEntry } from './context.js';
+import type { AngularExtractContext, RouteEntry, RouteGuard } from './context.js';
 
 /**
  * Calls that hand the router the configuration a whole application starts from.
@@ -401,6 +401,57 @@ const declaredRouteArrays = (sourceFile: SourceFile): ArrayLiteralExpression[] =
   return out;
 };
 
+/** The guards and resolvers one route of a nesting lists. */
+interface LevelGuards {
+  readonly canMatch: readonly TsNode[];
+  readonly canActivate: readonly TsNode[];
+  readonly canActivateChild: readonly TsNode[];
+  readonly resolve: readonly TsNode[];
+}
+
+/** The items a route's guard list writes, through a name holding the array; one not an array written here is itself the item. */
+const listed = (value: Expression | undefined): TsNode[] => {
+  if (value === undefined) return [];
+  const array = arrayBehind(value);
+  if (array === undefined) return [value];
+  return array.getElements().flatMap((element) => (Node.isSpreadElement(element) ? listed(element.getExpression()) : [bare(element)]));
+};
+
+/** What one route lists: `canMatch`, `canActivate`, `canActivateChild`, and the values of `resolve`. */
+const levelGuards = (element: ObjectLiteralExpression): LevelGuards => {
+  const resolve = objectBehind(routeProperty(element, 'resolve'));
+  return {
+    canMatch: listed(routeProperty(element, 'canMatch')),
+    canActivate: listed(routeProperty(element, 'canActivate')),
+    canActivateChild: listed(routeProperty(element, 'canActivateChild')),
+    resolve:
+      resolve === undefined
+        ? []
+        : resolve.getProperties().flatMap((property) => {
+            if (Node.isPropertyAssignment(property)) {
+              const value = property.getInitializer();
+              return value === undefined ? [] : [bare(value)];
+            }
+            return Node.isShorthandPropertyAssignment(property) ? [property.getNameNode()] : [];
+          }),
+  };
+};
+
+/**
+ * What the router runs before it shows a route, from the routes it is nested
+ * in (P291): every `canMatch` as it matches, outermost first; then, level by
+ * level, the parent's `canActivateChild` and the level's own `canActivate`;
+ * then every resolver, outermost first.
+ */
+const chainOf = (levels: readonly LevelGuards[]): RouteGuard[] => [
+  ...levels.flatMap((level) => level.canMatch.map((value) => ({ kind: 'canMatch' as const, value }))),
+  ...levels.flatMap((level, index) => [
+    ...(index === 0 ? [] : (levels[index - 1] as LevelGuards).canActivateChild.map((value) => ({ kind: 'canActivateChild' as const, value }))),
+    ...level.canActivate.map((value) => ({ kind: 'canActivate' as const, value })),
+  ]),
+  ...levels.flatMap((level) => level.resolve.map((value) => ({ kind: 'resolve' as const, value }))),
+];
+
 /**
  * Every route the repository configures.
  *
@@ -426,7 +477,7 @@ export const collectRoutes = (ctx: AngularExtractContext): RouteEntry[] => {
   };
 
   /** One route object, and everything it mounts under itself. */
-  const one = (element: ObjectLiteralExpression, prefix: string, depth: number): void => {
+  const one = (element: ObjectLiteralExpression, prefix: string, depth: number, levels: readonly LevelGuards[]): void => {
     const missing = unreadSpread(element);
     if (missing !== undefined) {
       unread(
@@ -472,9 +523,12 @@ export const collectRoutes = (ctx: AngularExtractContext): RouteEntry[] => {
       });
     }
 
+    const own = [...levels, levelGuards(element)];
+    const guards = chainOf(own);
     out.push({
       path,
       ...(ref?.kind === 'local' ? { component: ref.declaration } : {}),
+      ...(guards.length === 0 ? {} : { guards }),
     });
 
     const children = routeProperty(element, 'children');
@@ -483,7 +537,7 @@ export const collectRoutes = (ctx: AngularExtractContext): RouteEntry[] => {
       if (array === undefined) {
         unread(children, path, 'The children of this route are not an array written here.');
       } else {
-        take(array, path, depth + 1);
+        take(array, path, depth + 1, own);
       }
     }
 
@@ -498,15 +552,15 @@ export const collectRoutes = (ctx: AngularExtractContext): RouteEntry[] => {
       );
       return;
     }
-    for (const array of arrays) take(array, path, depth + 1);
+    for (const array of arrays) take(array, path, depth + 1, own);
   };
 
   /** One array of route configurations, mounted under a prefix. */
-  const walk = (array: ArrayLiteralExpression, prefix: string, depth: number): void => {
+  const walk = (array: ArrayLiteralExpression, prefix: string, depth: number, levels: readonly LevelGuards[]): void => {
     for (const element of array.getElements()) {
       const node = bare(element);
       if (Node.isObjectLiteralExpression(node)) {
-        one(node, prefix, depth);
+        one(node, prefix, depth, levels);
         continue;
       }
       // `children: [ …, ...pluginsRoutes ]` is how a configuration assembled
@@ -518,7 +572,7 @@ export const collectRoutes = (ctx: AngularExtractContext): RouteEntry[] => {
           unread(node, prefix, 'This part of the configuration is spread from a name that does not lead to an array written here.');
           continue;
         }
-        take(spread, prefix, depth + 1);
+        take(spread, prefix, depth + 1, levels);
         continue;
       }
       unread(node, prefix, 'This element of the configuration is not a route written here.');
@@ -533,13 +587,13 @@ export const collectRoutes = (ctx: AngularExtractContext): RouteEntry[] => {
    * links. What must not happen twice is the same array under the same prefix,
    * which is a configuration that loads itself.
    */
-  const take = (array: ArrayLiteralExpression | undefined, prefix: string, depth: number): void => {
+  const take = (array: ArrayLiteralExpression | undefined, prefix: string, depth: number, levels: readonly LevelGuards[] = []): void => {
     if (array === undefined || depth > MAX_DEPTH) return;
     const prefixes = walked.get(array) ?? new Set<string>();
     if (prefixes.has(prefix)) return;
     prefixes.add(prefix);
     walked.set(array, prefixes);
-    walk(array, prefix, depth);
+    walk(array, prefix, depth, levels);
   };
 
   // Only the files this reader is entitled to: a route configuration in a

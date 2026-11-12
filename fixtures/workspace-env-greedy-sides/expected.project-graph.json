@@ -1,0 +1,1424 @@
+{
+  "schemaVersion": 7,
+  "builtAt": "2026-11-12T19:18:13.836Z",
+  "services": [
+    {
+      "name": "web",
+      "repo": "./shop/packages/web",
+      "type": "react",
+      "extractor": "@flowatlas/extractor-react"
+    },
+    {
+      "name": "api",
+      "repo": "./shop/packages/api",
+      "type": "express",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "store",
+      "repo": "./store",
+      "type": "remix",
+      "extractor": "@flowatlas/extractor-nestjs"
+    },
+    {
+      "name": "files",
+      "repo": "./files",
+      "type": "lambda",
+      "extractor": "@flowatlas/extractor-nestjs"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "api#src/main.ts:DELETE /v1/tokens/revoke@6",
+      "type": "function",
+      "label": "DELETE /v1/tokens/revoke@6",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "api#src/main.ts:GET /v1/docs/:slug@7",
+      "type": "function",
+      "label": "GET /v1/docs/:slug@7",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "api#src/main.ts:GET /v1/tokens/list@5",
+      "type": "function",
+      "label": "GET /v1/tokens/list@5",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "_req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "config_key:store#FILES_URL",
+      "type": "config_key",
+      "label": "FILES_URL",
+      "repo": "store",
+      "file": "app/session.server.ts",
+      "line": 2,
+      "meta": {
+        "key": "FILES_URL",
+        "source": "process.env"
+      }
+    },
+    {
+      "id": "entry:api:http:DELETE:/v1/tokens/revoke",
+      "type": "entry",
+      "label": "DELETE /v1/tokens/revoke",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 6,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/v1/tokens/revoke",
+        "rawPath": "/v1/tokens/revoke",
+        "adapter": "express-routes",
+        "registration": "app.delete",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/v1/docs/:param",
+      "type": "entry",
+      "label": "GET /v1/docs/:param",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/docs/:param",
+        "rawPath": "/v1/docs/:slug",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:api:http:GET:/v1/tokens/list",
+      "type": "entry",
+      "label": "GET /v1/tokens/list",
+      "repo": "api",
+      "file": "src/main.ts",
+      "line": 5,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/v1/tokens/list",
+        "rawPath": "/v1/tokens/list",
+        "adapter": "express-routes",
+        "registration": "app.get",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:files:http:GET:/files/*",
+      "type": "entry",
+      "label": "GET /files/*",
+      "repo": "files",
+      "file": "serverless.yml",
+      "line": 11,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/files/*",
+        "rawPath": "files/{proxy+}",
+        "deployedBy": "serverless",
+        "api": "dev-files",
+        "function": "files-dev-serve",
+        "declaredAs": "functions.serve.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.us-east-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-files",
+            "chosenDefault": "dev"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:files:http:GET:/files/session/:param",
+      "type": "entry",
+      "label": "GET /files/session/:param",
+      "repo": "files",
+      "file": "serverless.yml",
+      "line": 17,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/files/session/:param",
+        "rawPath": "files/session/{id}",
+        "deployedBy": "serverless",
+        "api": "dev-files",
+        "function": "files-dev-session",
+        "declaredAs": "functions.session.events[0]",
+        "servedAt": [
+          {
+            "host": "*.execute-api.us-east-1.amazonaws.com",
+            "base": [
+              "*"
+            ],
+            "api": "dev-files",
+            "chosenDefault": "dev"
+          }
+        ],
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:files:invoke:files-dev-serve",
+      "type": "entry",
+      "label": "files-dev-serve",
+      "repo": "files",
+      "file": "serverless.yml",
+      "line": 8,
+      "kind": "invoke",
+      "meta": {
+        "key": "files-dev-serve",
+        "deployedBy": "serverless",
+        "name": "files-dev-serve",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.serve",
+        "stageFrom": "default",
+        "handler": "src/serve.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:files:invoke:files-dev-session",
+      "type": "entry",
+      "label": "files-dev-session",
+      "repo": "files",
+      "file": "serverless.yml",
+      "line": 14,
+      "kind": "invoke",
+      "meta": {
+        "key": "files-dev-session",
+        "deployedBy": "serverless",
+        "name": "files-dev-session",
+        "runtime": "nodejs20.x",
+        "declaredAs": "functions.session",
+        "stageFrom": "default",
+        "handler": "src/session.handler",
+        "sourceDirectory": ".",
+        "handlerVia": "function",
+        "environment": {},
+        "reads": {},
+        "adapter": "aws-lambda"
+      }
+    },
+    {
+      "id": "entry:store:http:GET:/reports",
+      "type": "entry",
+      "label": "GET /reports",
+      "repo": "store",
+      "file": "app/routes/reports.tsx",
+      "line": 4,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/reports",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "entry:store:http:POST:/reports",
+      "type": "entry",
+      "label": "POST /reports",
+      "repo": "store",
+      "file": "app/routes/reports.tsx",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/reports",
+        "adapter": "remix-routes",
+        "registration": "routes/loader-action",
+        "handlerVia": "function"
+      }
+    },
+    {
+      "id": "files#src/serve.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "files",
+      "file": "src/serve.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "files#src/session.ts:handler",
+      "type": "function",
+      "label": "handler",
+      "repo": "files",
+      "file": "src/session.ts",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "event",
+              "type": "unknown"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "http_out:store#app/lib/files.ts:3:21",
+      "type": "http_out",
+      "label": "GET /files/reports/:param/summary",
+      "repo": "store",
+      "file": "app/lib/files.ts",
+      "line": 3,
+      "meta": {
+        "method": "GET",
+        "url": "${FILES_URL}/files/reports/${…}/summary",
+        "path": "/files/reports/:param/summary",
+        "baseUrlEnv": "FILES_URL",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrlFrom": "its name",
+        "targetService": "files"
+      }
+    },
+    {
+      "id": "http_out:store#app/lib/files.ts:9:10",
+      "type": "http_out",
+      "label": "GET /files/shared/:param",
+      "repo": "store",
+      "file": "app/lib/files.ts",
+      "line": 9,
+      "meta": {
+        "method": "GET",
+        "url": "${FILES_URL}/files/shared/${…}",
+        "path": "/files/shared/:param",
+        "baseUrlEnv": "FILES_URL",
+        "responseType": null,
+        "bodyType": null,
+        "sameCall": "ui_api_call:store#app/lib/files.ts:9:10",
+        "baseUrlFrom": "its name",
+        "targetService": "files"
+      }
+    },
+    {
+      "id": "http_out:store#app/session.server.ts:2:29",
+      "type": "http_out",
+      "label": "GET /files/session/current",
+      "repo": "store",
+      "file": "app/session.server.ts",
+      "line": 2,
+      "meta": {
+        "method": "GET",
+        "url": "${FILES_URL}/files/session/current",
+        "path": "/files/session/current",
+        "baseUrlEnv": "FILES_URL",
+        "responseType": null,
+        "bodyType": null,
+        "baseUrlFrom": "its name",
+        "targetService": "files"
+      }
+    },
+    {
+      "id": "repo:api",
+      "type": "repo",
+      "label": "api",
+      "repo": "api",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 4100,
+            "file": "src/main.ts",
+            "line": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:files",
+      "type": "repo",
+      "label": "files",
+      "repo": "files",
+      "meta": {
+        "stats": {
+          "files": 2,
+          "filesRead": 2,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "aws-lambda"
+          ]
+        },
+        "exports": [
+          {
+            "keys": [
+              "export:sls-files-dev-ServiceEndpoint",
+              "stack:files-dev#ServiceEndpoint"
+            ],
+            "address": "Outputs.ServiceEndpoint",
+            "file": "serverless.yml",
+            "line": 3,
+            "kind": "api",
+            "value": "dev-files",
+            "deployedBy": "serverless"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repo:store",
+      "type": "repo",
+      "label": "store",
+      "repo": "store",
+      "meta": {
+        "stats": {
+          "files": 3,
+          "filesRead": 3,
+          "filesUnreadable": 0,
+          "classes": 0,
+          "skippedExternalCalls": {},
+          "functions": 7,
+          "components": 1,
+          "hooks": 0
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": [
+            "remix-routes"
+          ]
+        }
+      }
+    },
+    {
+      "id": "repo:web",
+      "type": "repo",
+      "label": "web",
+      "repo": "web",
+      "meta": {
+        "stats": {
+          "files": 1,
+          "filesRead": 1,
+          "filesUnreadable": 0,
+          "functions": 1,
+          "components": 1,
+          "hooks": 0,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "frontend": [
+            "react"
+          ],
+          "entry": []
+        }
+      }
+    },
+    {
+      "id": "store#app/lib/files.ts:preview",
+      "type": "function",
+      "label": "preview",
+      "repo": "store",
+      "file": "app/lib/files.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "store#app/lib/files.ts:readReport",
+      "type": "function",
+      "label": "readReport",
+      "repo": "store",
+      "file": "app/lib/files.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "year",
+              "type": "string"
+            }
+          ],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "store#app/lib/files.ts:readShared",
+      "type": "function",
+      "label": "readShared",
+      "repo": "store",
+      "file": "app/lib/files.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "store#app/routes/reports.tsx:Reports",
+      "type": "ui_component",
+      "label": "Reports",
+      "repo": "store",
+      "file": "app/routes/reports.tsx",
+      "line": 13,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "store#app/routes/reports.tsx:action",
+      "type": "function",
+      "label": "action",
+      "repo": "store",
+      "file": "app/routes/reports.tsx",
+      "line": 9,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "store#app/routes/reports.tsx:loader",
+      "type": "function",
+      "label": "loader",
+      "repo": "store",
+      "file": "app/routes/reports.tsx",
+      "line": 4,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "any"
+        }
+      }
+    },
+    {
+      "id": "store#app/session.server.ts:whoAmI",
+      "type": "function",
+      "label": "whoAmI",
+      "repo": "store",
+      "file": "app/session.server.ts",
+      "line": 2,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "Response"
+        }
+      }
+    },
+    {
+      "id": "ui_action:store#app/routes/reports.tsx:18:15",
+      "type": "ui_action",
+      "label": "onClick={open}",
+      "repo": "store",
+      "file": "app/routes/reports.tsx",
+      "line": 18,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "open",
+        "component": "store#app/routes/reports.tsx:Reports",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:store#app/routes/reports.tsx:19:15",
+      "type": "ui_action",
+      "label": "onClick={look}",
+      "repo": "store",
+      "file": "app/routes/reports.tsx",
+      "line": 19,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "look",
+        "component": "store#app/routes/reports.tsx:Reports",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Tokens.tsx:12:15",
+      "type": "ui_action",
+      "label": "onClick={load}",
+      "repo": "web",
+      "file": "src/Tokens.tsx",
+      "line": 12,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "load",
+        "component": "web#src/Tokens.tsx:Tokens",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Tokens.tsx:13:15",
+      "type": "ui_action",
+      "label": "onClick={() => revoke('1')}",
+      "repo": "web",
+      "file": "src/Tokens.tsx",
+      "line": 13,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => revoke('1')",
+        "component": "web#src/Tokens.tsx:Tokens",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_action:web#src/Tokens.tsx:14:15",
+      "type": "ui_action",
+      "label": "onClick={() => openDoc('intro')}",
+      "repo": "web",
+      "file": "src/Tokens.tsx",
+      "line": 14,
+      "kind": "event",
+      "meta": {
+        "event": "onClick",
+        "handler": "() => openDoc('intro')",
+        "component": "web#src/Tokens.tsx:Tokens",
+        "handlerVia": "enclosing"
+      }
+    },
+    {
+      "id": "ui_api_call:store#app/lib/files.ts:14:10",
+      "type": "ui_api_call",
+      "label": "GET /files/previews/:param",
+      "repo": "store",
+      "file": "app/lib/files.ts",
+      "line": 14,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${FILES_URL}/files/previews/:param",
+        "path": "/files/previews/:param",
+        "baseUrlEnv": "FILES_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "baseUrlFrom": "its name",
+        "targetService": "files"
+      }
+    },
+    {
+      "id": "ui_api_call:store#app/lib/files.ts:9:10",
+      "type": "ui_api_call",
+      "label": "GET /files/shared/:param",
+      "repo": "store",
+      "file": "app/lib/files.ts",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${FILES_URL}/files/shared/:param",
+        "path": "/files/shared/:param",
+        "baseUrlEnv": "FILES_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "sameCall": "http_out:store#app/lib/files.ts:9:10",
+        "baseUrlFrom": "its name",
+        "targetService": "files"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Tokens.tsx:7:22",
+      "type": "ui_api_call",
+      "label": "GET /tokens/list",
+      "repo": "web",
+      "file": "src/Tokens.tsx",
+      "line": 7,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/tokens/list",
+        "path": "/tokens/list",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "template-env",
+        "baseUrl": "http://localhost:4100/v1",
+        "baseUrlFrom": "../../.env.example",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Tokens.tsx:8:34",
+      "type": "ui_api_call",
+      "label": "DELETE /tokens/revoke",
+      "repo": "web",
+      "file": "src/Tokens.tsx",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "url": "${VITE_API_URL}/tokens/revoke?id=${…}",
+        "path": "/tokens/revoke",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": "axios",
+        "client": "axios",
+        "via": "template-env",
+        "baseUrl": "http://localhost:4100/v1",
+        "baseUrlFrom": "../../.env.example",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "ui_api_call:web#src/Tokens.tsx:9:37",
+      "type": "ui_api_call",
+      "label": "GET /docs/:param",
+      "repo": "web",
+      "file": "src/Tokens.tsx",
+      "line": 9,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "url": "${VITE_API_URL}/docs/:param",
+        "path": "/docs/:param",
+        "baseUrlEnv": "VITE_API_URL",
+        "responseType": null,
+        "bodyType": null,
+        "package": null,
+        "client": "fetch",
+        "via": "template-env",
+        "baseUrl": "http://localhost:4100/v1",
+        "baseUrlFrom": "../../.env.example",
+        "targetService": "api"
+      }
+    },
+    {
+      "id": "web#src/Tokens.tsx:Tokens",
+      "type": "ui_component",
+      "label": "Tokens",
+      "repo": "web",
+      "file": "src/Tokens.tsx",
+      "line": 6,
+      "kind": "function",
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry:api:http:DELETE:/v1/tokens/revoke",
+      "to": "api#src/main.ts:DELETE /v1/tokens/revoke@6",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 6,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/v1/docs/:param",
+      "to": "api#src/main.ts:GET /v1/docs/:slug@7",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{slug:any}",
+      "file": "src/main.ts",
+      "line": 7,
+      "meta": {
+        "requestRead": true,
+        "params": "{slug:string}"
+      }
+    },
+    {
+      "from": "entry:api:http:GET:/v1/tokens/list",
+      "to": "api#src/main.ts:GET /v1/tokens/list@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/main.ts",
+      "line": 5,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:files:http:GET:/files/*",
+      "to": "files#src/serve.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{path:unknown}",
+      "file": "src/serve.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{proxy:string}"
+      }
+    },
+    {
+      "from": "entry:files:http:GET:/files/session/:param",
+      "to": "files#src/session.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "{id:unknown}",
+      "file": "src/session.ts",
+      "line": 4,
+      "meta": {
+        "requestRead": true,
+        "params": "{id:string}"
+      }
+    },
+    {
+      "from": "entry:files:invoke:files-dev-serve",
+      "to": "files#src/serve.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/serve.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:files:invoke:files-dev-session",
+      "to": "files#src/session.ts:handler",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/session.ts",
+      "line": 4
+    },
+    {
+      "from": "entry:store:http:GET:/reports",
+      "to": "store#app/routes/reports.tsx:loader",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/reports.tsx",
+      "line": 4,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:store:http:POST:/reports",
+      "to": "store#app/routes/reports.tsx:action",
+      "type": "handles",
+      "confidence": "static",
+      "returns": "Response",
+      "file": "app/routes/reports.tsx",
+      "line": 9,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "http_out:store#app/lib/files.ts:3:21",
+      "to": "entry:files:http:GET:/files/*",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/files.ts",
+      "line": 3,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "files",
+        "baseUrlFrom": "its name"
+      }
+    },
+    {
+      "from": "http_out:store#app/lib/files.ts:9:10",
+      "to": "entry:files:http:GET:/files/*",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/lib/files.ts",
+      "line": 9,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "files",
+        "baseUrlFrom": "its name"
+      }
+    },
+    {
+      "from": "http_out:store#app/session.server.ts:2:29",
+      "to": "entry:files:http:GET:/files/session/:param",
+      "type": "http_calls",
+      "confidence": "heuristic",
+      "file": "app/session.server.ts",
+      "line": 2,
+      "meta": {
+        "via": "baseUrlValue",
+        "targetService": "files",
+        "baseUrlFrom": "its name"
+      }
+    },
+    {
+      "from": "store#app/lib/files.ts:preview",
+      "to": "config_key:store#FILES_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "app/lib/files.ts",
+      "line": 14
+    },
+    {
+      "from": "store#app/lib/files.ts:preview",
+      "to": "ui_api_call:store#app/lib/files.ts:14:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/files.ts",
+      "line": 14
+    },
+    {
+      "from": "store#app/lib/files.ts:readReport",
+      "to": "config_key:store#FILES_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "app/lib/files.ts",
+      "line": 3
+    },
+    {
+      "from": "store#app/lib/files.ts:readReport",
+      "to": "http_out:store#app/lib/files.ts:3:21",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/files.ts",
+      "line": 3
+    },
+    {
+      "from": "store#app/lib/files.ts:readShared",
+      "to": "config_key:store#FILES_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "app/lib/files.ts",
+      "line": 9
+    },
+    {
+      "from": "store#app/lib/files.ts:readShared",
+      "to": "http_out:store#app/lib/files.ts:9:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/files.ts",
+      "line": 9
+    },
+    {
+      "from": "store#app/lib/files.ts:readShared",
+      "to": "ui_api_call:store#app/lib/files.ts:9:10",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/lib/files.ts",
+      "line": 9
+    },
+    {
+      "from": "store#app/routes/reports.tsx:Reports",
+      "to": "store#app/lib/files.ts:preview",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "Response",
+      "file": "app/routes/reports.tsx",
+      "line": 15
+    },
+    {
+      "from": "store#app/routes/reports.tsx:Reports",
+      "to": "store#app/lib/files.ts:readShared",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "Response",
+      "file": "app/routes/reports.tsx",
+      "line": 14
+    },
+    {
+      "from": "store#app/routes/reports.tsx:action",
+      "to": "store#app/lib/files.ts:readShared",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "Response",
+      "file": "app/routes/reports.tsx",
+      "line": 10
+    },
+    {
+      "from": "store#app/routes/reports.tsx:loader",
+      "to": "store#app/lib/files.ts:readReport",
+      "type": "calls",
+      "confidence": "static",
+      "params": [
+        "string"
+      ],
+      "returns": "any",
+      "file": "app/routes/reports.tsx",
+      "line": 6
+    },
+    {
+      "from": "store#app/routes/reports.tsx:loader",
+      "to": "store#app/session.server.ts:whoAmI",
+      "type": "calls",
+      "confidence": "static",
+      "params": [],
+      "returns": "Response",
+      "file": "app/routes/reports.tsx",
+      "line": 5
+    },
+    {
+      "from": "store#app/session.server.ts:whoAmI",
+      "to": "config_key:store#FILES_URL",
+      "type": "reads_config",
+      "confidence": "static",
+      "file": "app/session.server.ts",
+      "line": 2
+    },
+    {
+      "from": "store#app/session.server.ts:whoAmI",
+      "to": "http_out:store#app/session.server.ts:2:29",
+      "type": "calls",
+      "confidence": "static",
+      "file": "app/session.server.ts",
+      "line": 2
+    },
+    {
+      "from": "ui_action:store#app/routes/reports.tsx:18:15",
+      "to": "store#app/routes/reports.tsx:Reports",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/reports.tsx",
+      "line": 18
+    },
+    {
+      "from": "ui_action:store#app/routes/reports.tsx:19:15",
+      "to": "store#app/routes/reports.tsx:Reports",
+      "type": "handles",
+      "confidence": "static",
+      "file": "app/routes/reports.tsx",
+      "line": 19
+    },
+    {
+      "from": "ui_action:web#src/Tokens.tsx:12:15",
+      "to": "web#src/Tokens.tsx:Tokens",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Tokens.tsx",
+      "line": 12
+    },
+    {
+      "from": "ui_action:web#src/Tokens.tsx:13:15",
+      "to": "web#src/Tokens.tsx:Tokens",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Tokens.tsx",
+      "line": 13
+    },
+    {
+      "from": "ui_action:web#src/Tokens.tsx:14:15",
+      "to": "web#src/Tokens.tsx:Tokens",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/Tokens.tsx",
+      "line": 14
+    },
+    {
+      "from": "ui_api_call:store#app/lib/files.ts:14:10",
+      "to": "entry:files:http:GET:/files/*",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "app/lib/files.ts",
+      "line": 14,
+      "meta": {
+        "via": "base-url-value",
+        "targetService": "files",
+        "baseUrlFrom": "its name"
+      }
+    },
+    {
+      "from": "ui_api_call:store#app/lib/files.ts:9:10",
+      "to": "entry:files:http:GET:/files/*",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "app/lib/files.ts",
+      "line": 9,
+      "meta": {
+        "via": "base-url-value",
+        "targetService": "files",
+        "baseUrlFrom": "its name"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Tokens.tsx:7:22",
+      "to": "entry:api:http:GET:/v1/tokens/list",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Tokens.tsx",
+      "line": 7,
+      "meta": {
+        "via": "base-url-value",
+        "targetService": "api",
+        "baseUrl": "http://localhost:4100/v1",
+        "baseUrlFrom": "../../.env.example"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Tokens.tsx:8:34",
+      "to": "entry:api:http:DELETE:/v1/tokens/revoke",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Tokens.tsx",
+      "line": 8,
+      "meta": {
+        "via": "base-url-value",
+        "targetService": "api",
+        "baseUrl": "http://localhost:4100/v1",
+        "baseUrlFrom": "../../.env.example"
+      }
+    },
+    {
+      "from": "ui_api_call:web#src/Tokens.tsx:9:37",
+      "to": "entry:api:http:GET:/v1/docs/:param",
+      "type": "hits",
+      "confidence": "heuristic",
+      "file": "src/Tokens.tsx",
+      "line": 9,
+      "meta": {
+        "via": "base-url-value",
+        "targetService": "api",
+        "baseUrl": "http://localhost:4100/v1",
+        "baseUrlFrom": "../../.env.example"
+      }
+    },
+    {
+      "from": "web#src/Tokens.tsx:Tokens",
+      "to": "ui_api_call:web#src/Tokens.tsx:7:22",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Tokens.tsx",
+      "line": 7
+    },
+    {
+      "from": "web#src/Tokens.tsx:Tokens",
+      "to": "ui_api_call:web#src/Tokens.tsx:8:34",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Tokens.tsx",
+      "line": 8
+    },
+    {
+      "from": "web#src/Tokens.tsx:Tokens",
+      "to": "ui_api_call:web#src/Tokens.tsx:9:37",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/Tokens.tsx",
+      "line": 9
+    }
+  ],
+  "types": {},
+  "unresolved": [
+    {
+      "file": "src/main.ts",
+      "line": 5,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "sites": 4,
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "GET /v1/tokens/list@5 -> res.json",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 4,
+            "samples": [
+              {
+                "file": "src/main.ts",
+                "line": 5,
+                "symbol": "GET /v1/tokens/list@5 -> res.json"
+              },
+              {
+                "file": "src/main.ts",
+                "line": 6,
+                "symbol": "DELETE /v1/tokens/revoke@6 -> res.status(204).end"
+              },
+              {
+                "file": "src/main.ts",
+                "line": 6,
+                "symbol": "DELETE /v1/tokens/revoke@6 -> res.status"
+              }
+            ]
+          }
+        ]
+      },
+      "service": "api"
+    },
+    {
+      "file": "src/serve.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEvent",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "files"
+    },
+    {
+      "file": "src/serve.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "files"
+    },
+    {
+      "file": "src/serve.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "files"
+    },
+    {
+      "file": "src/session.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyEvent",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "files"
+    },
+    {
+      "file": "src/session.ts",
+      "line": 4,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "APIGatewayProxyResult",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "files"
+    },
+    {
+      "file": "src/session.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "aws-lambda"
+      },
+      "service": "files"
+    },
+    {
+      "service": "store",
+      "file": "app/lib/files.ts",
+      "line": 3,
+      "reason": "base-url-from-name",
+      "level": "info",
+      "message": "no service declares FILES_URL and nothing read gives it a value, so it is taken as files, the one service it is named after",
+      "hint": "Only the setting's name chose the service. Add FILES_URL to services[].baseUrlEnv of files to say so outright, or of the service it really is.",
+      "symbol": "http_out:store#app/lib/files.ts:3:21",
+      "meta": {
+        "variable": "FILES_URL",
+        "from": "its name"
+      },
+      "sites": 5
+    },
+    {
+      "service": "store",
+      "file": "app/lib/files.ts",
+      "line": 3,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /files/* in files answers GET /files/reports/:param/summary",
+      "hint": "No route of files spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "http_out:store#app/lib/files.ts:3:21"
+    },
+    {
+      "service": "store",
+      "file": "app/lib/files.ts",
+      "line": 9,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /files/* in files answers GET /files/shared/:param",
+      "hint": "No route of files spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "http_out:store#app/lib/files.ts:9:10"
+    },
+    {
+      "service": "store",
+      "file": "app/lib/files.ts",
+      "line": 9,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /files/* in files answers GET /files/shared/:param",
+      "hint": "No route of files spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "ui_api_call:store#app/lib/files.ts:9:10"
+    },
+    {
+      "service": "store",
+      "file": "app/lib/files.ts",
+      "line": 14,
+      "reason": "route-wildcard-only",
+      "message": "only the catch-all GET /files/* in files answers GET /files/previews/:param",
+      "hint": "No route of files spells this out, so whatever sits behind the catch-all is unlikely to serve it. Check for a renamed or missing route.",
+      "symbol": "ui_api_call:store#app/lib/files.ts:14:10"
+    },
+    {
+      "file": "app/routes/reports.tsx",
+      "line": 13,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "store"
+    },
+    {
+      "file": "src/Tokens.tsx",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any",
+      "service": "web"
+    },
+    {
+      "service": "web",
+      "file": "src/Tokens.tsx",
+      "line": 7,
+      "reason": "base-url-from-files",
+      "level": "info",
+      "message": "VITE_API_URL is http://localhost:4100/v1 in ../../.env.example, which is taken as api",
+      "hint": "The value is one the repository writes down for running it, not necessarily the deployed one. Add VITE_API_URL to services[].baseUrlEnv of api to say so outright.",
+      "symbol": "ui_api_call:web#src/Tokens.tsx:7:22",
+      "meta": {
+        "variable": "VITE_API_URL",
+        "value": "http://localhost:4100/v1",
+        "from": "../../.env.example"
+      },
+      "sites": 3
+    }
+  ]
+}

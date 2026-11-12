@@ -7,6 +7,7 @@ import {
   type GraphNode,
   type Unresolved,
 } from '@flowatlas/core';
+import { describeKey } from './import-link.js';
 import { cmp, edgeKey } from './order.js';
 
 /**
@@ -49,7 +50,7 @@ const describeRoot = (key: string): string => {
     const [state, output] = key.slice('state:'.length).split('#');
     return `the output ${output ?? '?'} of the state ${state ?? '?'}`;
   }
-  return key;
+  return describeKey(key);
 };
 
 /** Points of an API each repository publishes, by key. */

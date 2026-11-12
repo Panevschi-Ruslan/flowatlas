@@ -68,3 +68,5 @@ fixtures/multi-repo/.build-lock/
 # Coverage harness: the repositories measured, and the reports written about them, stay local.
 scripts/coverage/targets.local.json
 scripts/coverage/reports/
+# The hand labels a coverage run checks joins against: they name files of other people's repositories.
+scripts/coverage/labels/

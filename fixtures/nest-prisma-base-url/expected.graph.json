@@ -1,0 +1,1085 @@
+{
+  "schemaVersion": 7,
+  "repo": "nest-prisma-base-url",
+  "generatedAt": "2026-11-09T22:24:36.650Z",
+  "nodes": [
+    {
+      "id": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:36:12",
+      "type": "db_query",
+      "label": "read coupons",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 36,
+      "meta": {
+        "op": "read",
+        "table": "coupons",
+        "tables": [
+          "coupons"
+        ],
+        "package": "@prisma/client",
+        "method": "findMany",
+        "receiver": "this.factory.client().coupon",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:42:12",
+      "type": "db_query",
+      "label": "read coupons",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 42,
+      "meta": {
+        "op": "read",
+        "table": "coupons",
+        "tables": [
+          "coupons"
+        ],
+        "package": "@prisma/client",
+        "method": "count",
+        "receiver": "db.coupon",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-base-url#src/coupons/coupon-codes.ts:17:25",
+      "type": "db_query",
+      "label": "read coupons",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-codes.ts",
+      "line": 17,
+      "meta": {
+        "op": "read",
+        "table": "coupons",
+        "tables": [
+          "coupons"
+        ],
+        "package": "@prisma/client",
+        "method": "findMany",
+        "receiver": "prisma.coupon",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-base-url#src/coupons/coupons.service.ts:14:13",
+      "type": "db_query",
+      "label": "read coupons",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 14,
+      "meta": {
+        "op": "read",
+        "table": "coupons",
+        "tables": [
+          "coupons"
+        ],
+        "package": "@prisma/client",
+        "method": "findMany",
+        "receiver": "this.prisma.coupon",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-base-url#src/coupons/coupons.service.ts:20:12",
+      "type": "db_query",
+      "label": "write coupons",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 20,
+      "meta": {
+        "op": "write",
+        "table": "coupons",
+        "tables": [
+          "coupons"
+        ],
+        "package": "@prisma/client",
+        "method": "create",
+        "receiver": "this.prisma.coupon",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-base-url#src/coupons/coupons.service.ts:24:29",
+      "type": "db_query",
+      "label": "delete coupons",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 24,
+      "meta": {
+        "op": "delete",
+        "table": "coupons",
+        "tables": [
+          "coupons"
+        ],
+        "package": "@prisma/client",
+        "method": "deleteMany",
+        "receiver": "this.prisma.coupon",
+        "source": "receiver-prop",
+        "batch": true
+      }
+    },
+    {
+      "id": "db_query:nest-prisma-base-url#src/guards/api-token.guard.ts:10:25",
+      "type": "db_query",
+      "label": "read ApiToken",
+      "repo": "nest-prisma-base-url",
+      "file": "src/guards/api-token.guard.ts",
+      "line": 10,
+      "meta": {
+        "op": "read",
+        "table": "ApiToken",
+        "tables": [
+          "ApiToken"
+        ],
+        "package": "@prisma/client",
+        "method": "findUnique",
+        "receiver": "this.prisma.apiToken",
+        "source": "receiver-prop"
+      }
+    },
+    {
+      "id": "entry:nest-prisma-base-url:http:DELETE:/coupons/:param",
+      "type": "entry",
+      "label": "DELETE /coupons/:param",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 20,
+      "kind": "http",
+      "meta": {
+        "method": "DELETE",
+        "path": "/coupons/:param",
+        "rawPath": "/coupons/:code",
+        "controller": "CouponsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+              "name": "ApiTokenGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on CouponsController",
+              "file": "src/coupons/coupons.controller.ts",
+              "line": 6
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+            "file": "src/coupons/coupons.controller.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-prisma-base-url:http:GET:/coupons",
+      "type": "entry",
+      "label": "GET /coupons",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 10,
+      "kind": "http",
+      "meta": {
+        "method": "GET",
+        "path": "/coupons",
+        "rawPath": "/coupons",
+        "controller": "CouponsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+              "name": "ApiTokenGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on CouponsController",
+              "file": "src/coupons/coupons.controller.ts",
+              "line": 6
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+            "file": "src/coupons/coupons.controller.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "entry:nest-prisma-base-url:http:POST:/coupons",
+      "type": "entry",
+      "label": "POST /coupons",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 15,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/coupons",
+        "rawPath": "/coupons",
+        "controller": "CouponsController",
+        "adapter": "nestjs-http",
+        "access": {
+          "guards": [
+            {
+              "id": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+              "name": "ApiTokenGuard",
+              "layer": "guard",
+              "where": "controller",
+              "via": "@UseGuards on CouponsController",
+              "file": "src/coupons/coupons.controller.ts",
+              "line": 6
+            }
+          ]
+        },
+        "fails": [
+          {
+            "status": 403,
+            "exception": "ForbiddenException",
+            "at": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+            "file": "src/coupons/coupons.controller.ts",
+            "line": 6,
+            "source": "guard"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/app.module.ts:AppModule",
+      "type": "module",
+      "label": "AppModule",
+      "repo": "nest-prisma-base-url",
+      "file": "src/app.module.ts",
+      "line": 4,
+      "kind": "static",
+      "meta": {
+        "controllers": [],
+        "providers": [],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:ClientFactory",
+      "type": "provider",
+      "label": "ClientFactory",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 9,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:ClientFactory.client",
+      "type": "method",
+      "label": "ClientFactory.client",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-prisma-base-url#PrismaService"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit",
+      "type": "provider",
+      "label": "CouponAudit",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 31,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issued",
+      "type": "method",
+      "label": "CouponAudit.issued",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 40,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issuedTo",
+      "type": "method",
+      "label": "CouponAudit.issuedTo",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 35,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "issuedTo",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry",
+      "type": "provider",
+      "label": "Registry",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 18,
+      "kind": "injectable"
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry.db",
+      "type": "method",
+      "label": "Registry.db",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 26,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-prisma-base-url#PrismaService"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry.get",
+      "type": "method",
+      "label": "Registry.get",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 21,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "type:nest-prisma-base-url#Registry"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupon-codes.ts:codesInUse",
+      "type": "function",
+      "label": "codesInUse",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupon-codes.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "string[]"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController",
+      "type": "provider",
+      "label": "CouponsController",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 5,
+      "kind": "controller",
+      "meta": {
+        "module": "CouponsModule"
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController.issue",
+      "type": "method",
+      "label": "CouponsController.issue",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController.list",
+      "type": "method",
+      "label": "CouponsController.list",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController.revoke",
+      "type": "method",
+      "label": "CouponsController.revoke",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 20,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "code",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupons.module.ts:CouponsModule",
+      "type": "module",
+      "label": "CouponsModule",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.module.ts",
+      "line": 7,
+      "kind": "static",
+      "meta": {
+        "controllers": [
+          "CouponsController"
+        ],
+        "providers": [
+          "CouponsService",
+          "PrismaService",
+          "ApiTokenGuard"
+        ],
+        "exports": []
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService",
+      "type": "provider",
+      "label": "CouponsService",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 7,
+      "kind": "injectable",
+      "meta": {
+        "module": "CouponsModule"
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService.issue",
+      "type": "method",
+      "label": "CouponsService.issue",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 19,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "issuedTo",
+              "type": "string"
+            },
+            {
+              "name": "kind",
+              "type": "unknown",
+              "optional": true
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService.list",
+      "type": "method",
+      "label": "CouponsService.list",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 12,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "issuedTo",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService.revoke",
+      "type": "method",
+      "label": "CouponsService.revoke",
+      "repo": "nest-prisma-base-url",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 23,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "code",
+              "type": "string"
+            }
+          ],
+          "returns": "number"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+      "type": "guard",
+      "label": "ApiTokenGuard",
+      "repo": "nest-prisma-base-url",
+      "file": "src/guards/api-token.guard.ts",
+      "line": 4,
+      "meta": {
+        "module": "CouponsModule"
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard.canActivate",
+      "type": "method",
+      "label": "ApiTokenGuard.canActivate",
+      "repo": "nest-prisma-base-url",
+      "file": "src/guards/api-token.guard.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "context",
+              "type": "type:@nestjs/common#ExecutionContext"
+            }
+          ],
+          "returns": "boolean"
+        }
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/prisma/prisma.service.ts:PrismaService",
+      "type": "provider",
+      "label": "PrismaService",
+      "repo": "nest-prisma-base-url",
+      "file": "src/prisma/prisma.service.ts",
+      "line": 10,
+      "kind": "injectable",
+      "meta": {
+        "module": "CouponsModule"
+      }
+    },
+    {
+      "id": "nest-prisma-base-url#src/prisma/prisma.service.ts:PrismaService.onModuleDestroy",
+      "type": "method",
+      "label": "PrismaService.onModuleDestroy",
+      "repo": "nest-prisma-base-url",
+      "file": "src/prisma/prisma.service.ts",
+      "line": 16,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "repo:nest-prisma-base-url",
+      "type": "repo",
+      "label": "nest-prisma-base-url",
+      "repo": "nest-prisma-base-url",
+      "meta": {
+        "stats": {
+          "files": 9,
+          "filesRead": 9,
+          "filesUnreadable": 0,
+          "classes": 9,
+          "skippedExternalCalls": {
+            "@nestjs/common": 2
+          }
+        },
+        "bootstrap": "src/main.ts",
+        "adapters": {
+          "entry": [
+            "nestjs-http"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/main.ts",
+            "line": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "table:nest-prisma-base-url#ApiToken",
+      "type": "table",
+      "label": "ApiToken",
+      "repo": "nest-prisma-base-url"
+    },
+    {
+      "id": "table:nest-prisma-base-url#coupons",
+      "type": "table",
+      "label": "coupons",
+      "repo": "nest-prisma-base-url"
+    }
+  ],
+  "edges": [
+    {
+      "from": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:36:12",
+      "to": "table:nest-prisma-base-url#coupons",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 36
+    },
+    {
+      "from": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:42:12",
+      "to": "table:nest-prisma-base-url#coupons",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 42
+    },
+    {
+      "from": "db_query:nest-prisma-base-url#src/coupons/coupon-codes.ts:17:25",
+      "to": "table:nest-prisma-base-url#coupons",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupon-codes.ts",
+      "line": 17
+    },
+    {
+      "from": "db_query:nest-prisma-base-url#src/coupons/coupons.service.ts:14:13",
+      "to": "table:nest-prisma-base-url#coupons",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 14
+    },
+    {
+      "from": "db_query:nest-prisma-base-url#src/coupons/coupons.service.ts:20:12",
+      "to": "table:nest-prisma-base-url#coupons",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 20
+    },
+    {
+      "from": "db_query:nest-prisma-base-url#src/coupons/coupons.service.ts:24:29",
+      "to": "table:nest-prisma-base-url#coupons",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 24
+    },
+    {
+      "from": "db_query:nest-prisma-base-url#src/guards/api-token.guard.ts:10:25",
+      "to": "table:nest-prisma-base-url#ApiToken",
+      "type": "queries",
+      "confidence": "heuristic",
+      "file": "src/guards/api-token.guard.ts",
+      "line": 10
+    },
+    {
+      "from": "entry:nest-prisma-base-url:http:DELETE:/coupons/:param",
+      "to": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController.revoke",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 20,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown",
+      "meta": {
+        "params": "{code:string}"
+      }
+    },
+    {
+      "from": "entry:nest-prisma-base-url:http:DELETE:/coupons/:param",
+      "to": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-prisma-base-url:http:GET:/coupons",
+      "to": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController.list",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 10,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "entry:nest-prisma-base-url:http:GET:/coupons",
+      "to": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "entry:nest-prisma-base-url:http:POST:/coupons",
+      "to": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController.issue",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 15,
+      "params": [],
+      "returns": "unknown"
+    },
+    {
+      "from": "entry:nest-prisma-base-url:http:POST:/coupons",
+      "to": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+      "type": "guarded_by",
+      "confidence": "static",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 6,
+      "meta": {
+        "order": 0,
+        "scope": "class",
+        "layer": "guard",
+        "source": "UseGuards"
+      }
+    },
+    {
+      "from": "nest-prisma-base-url#src/app.module.ts:AppModule",
+      "to": "nest-prisma-base-url#src/coupons/coupons.module.ts:CouponsModule",
+      "type": "imports",
+      "confidence": "static",
+      "file": "src/app.module.ts",
+      "line": 4
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issued",
+      "to": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:42:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 42
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issued",
+      "to": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry.db",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 41,
+      "params": [],
+      "returns": "type:nest-prisma-base-url#PrismaService"
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issued",
+      "to": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry.get",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 41,
+      "params": [],
+      "returns": "type:nest-prisma-base-url#Registry"
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issuedTo",
+      "to": "db_query:nest-prisma-base-url#src/coupons/coupon-audit.ts:36:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 36
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:CouponAudit.issuedTo",
+      "to": "nest-prisma-base-url#src/coupons/coupon-audit.ts:ClientFactory.client",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 36,
+      "params": [],
+      "returns": "type:nest-prisma-base-url#PrismaService"
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-audit.ts:Registry.db",
+      "to": "nest-prisma-base-url#src/coupons/coupon-audit.ts:ClientFactory.client",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 27,
+      "params": [],
+      "returns": "type:nest-prisma-base-url#PrismaService"
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupon-codes.ts:codesInUse",
+      "to": "db_query:nest-prisma-base-url#src/coupons/coupon-codes.ts:17:25",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupon-codes.ts",
+      "line": 17
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController",
+      "to": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 8
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController.issue",
+      "to": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService.issue",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 17,
+      "params": [
+        "string",
+        "unknown"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController.list",
+      "to": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService.list",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 12,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupons.controller.ts:CouponsController.revoke",
+      "to": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService.revoke",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/coupons/coupons.controller.ts",
+      "line": 22,
+      "params": [
+        "string"
+      ],
+      "returns": "number"
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService",
+      "to": "nest-prisma-base-url#src/prisma/prisma.service.ts:PrismaService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 9
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService.issue",
+      "to": "db_query:nest-prisma-base-url#src/coupons/coupons.service.ts:20:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 20
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService.list",
+      "to": "db_query:nest-prisma-base-url#src/coupons/coupons.service.ts:14:13",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 14
+    },
+    {
+      "from": "nest-prisma-base-url#src/coupons/coupons.service.ts:CouponsService.revoke",
+      "to": "db_query:nest-prisma-base-url#src/coupons/coupons.service.ts:24:29",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/coupons/coupons.service.ts",
+      "line": 24
+    },
+    {
+      "from": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard",
+      "to": "nest-prisma-base-url#src/prisma/prisma.service.ts:PrismaService",
+      "type": "injects",
+      "confidence": "static",
+      "file": "src/guards/api-token.guard.ts",
+      "line": 6
+    },
+    {
+      "from": "nest-prisma-base-url#src/guards/api-token.guard.ts:ApiTokenGuard.canActivate",
+      "to": "db_query:nest-prisma-base-url#src/guards/api-token.guard.ts:10:25",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/guards/api-token.guard.ts",
+      "line": 10
+    }
+  ],
+  "types": {
+    "type:@nestjs/common#ExecutionContext": {
+      "name": "ExecutionContext",
+      "kind": "external",
+      "declaredIn": "@nestjs/common",
+      "structuralHash": "87dd582cc69bf62e",
+      "meta": {
+        "declKind": "external",
+        "package": "@nestjs/common"
+      }
+    },
+    "type:nest-prisma-base-url#PrismaService": {
+      "name": "PrismaService",
+      "kind": "object",
+      "declaredIn": "nest-prisma-base-url#src/prisma/prisma.service.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "class",
+        "exported": true,
+        "extends": [
+          "unknown"
+        ]
+      }
+    },
+    "type:nest-prisma-base-url#Registry": {
+      "name": "Registry",
+      "kind": "object",
+      "declaredIn": "nest-prisma-base-url#src/coupons/coupon-audit.ts",
+      "structuralHash": "4b1997b5476f1369",
+      "fields": [],
+      "meta": {
+        "declKind": "class",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
+    {
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 35,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
+    {
+      "file": "src/coupons/coupon-audit.ts",
+      "line": 36,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The receiver has no single class type; inject a class to make the edge visible.",
+      "symbol": "CouponAudit.issuedTo -> this.factory.client().coupon.findMany",
+      "meta": {
+        "causes": [
+          {
+            "cause": "untyped-value",
+            "sites": 6,
+            "samples": [
+              {
+                "file": "src/coupons/coupon-audit.ts",
+                "line": 36,
+                "symbol": "CouponAudit.issuedTo -> this.factory.client().coupon.findMany"
+              },
+              {
+                "file": "src/coupons/coupon-audit.ts",
+                "line": 42,
+                "symbol": "CouponAudit.issued -> db.coupon.count"
+              },
+              {
+                "file": "src/coupons/coupons.service.ts",
+                "line": 14,
+                "symbol": "CouponsService.list -> this.prisma.coupon.findMany"
+              }
+            ],
+            "files": [
+              "src/guards/api-token.guard.ts"
+            ]
+          },
+          {
+            "cause": "function-field",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/prisma/prisma.service.ts",
+                "line": 17,
+                "symbol": "PrismaService.onModuleDestroy -> this.$disconnect"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "fp-ts",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/coupons/coupons.service.ts",
+                "line": 13,
+                "symbol": "CouponsService.list -> TE.tryCatch"
+              }
+            ]
+          }
+        ]
+      },
+      "sites": 8
+    },
+    {
+      "file": "src/coupons/coupons.service.ts",
+      "line": 12,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "TE.TaskEither<string, DbCoupon[]>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "fp-ts"
+      }
+    },
+    {
+      "file": "src/coupons/coupons.service.ts",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "CouponKind",
+      "meta": {
+        "cause": "import-unresolved",
+        "package": "@db/enums"
+      }
+    },
+    {
+      "file": "src/coupons/coupons.service.ts",
+      "line": 19,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "DbCoupon",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "src"
+      }
+    }
+  ]
+}

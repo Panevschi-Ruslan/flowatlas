@@ -20,3 +20,9 @@ choice nothing can read, and its request keeps the verb unread, with an
 `StockClient.send` is handed its body too (P128): `fetch(url, { method, body:
 JSON.stringify(body) })`. `Restocker.reserve` hands in `{ id, count }`, and its
 `POST /items/reservations` carries that literal's type and keys.
+
+`src/items/orders.client.ts` reads its verb out of the options its callers hand
+in (R179): `const method = options?.method ?? 'POST'` into `fetch(url, {
+method, ...options })`. `Ordering.place` hands none and is credited with `POST
+/orders`; `Ordering.cancel` hands `{ method: 'DELETE' }` and is credited with
+`DELETE /orders/:param`. Both used to read as `ALL`.

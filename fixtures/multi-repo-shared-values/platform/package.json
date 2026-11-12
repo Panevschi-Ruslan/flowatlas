@@ -1,0 +1,12 @@
+{
+  "name": "shop-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The platform of a shop, a plain stack deployed by sceptre.",
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140"
+  }
+}

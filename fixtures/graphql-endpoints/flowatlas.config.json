@@ -1,0 +1,21 @@
+{
+  "services": [
+    {
+      "name": "api",
+      "repo": "./api",
+      "type": "nestjs"
+    },
+    {
+      "name": "web",
+      "repo": "./web",
+      "type": "react",
+      "apiBaseEnv": [
+        "VITE_SERVER_URL"
+      ],
+      "apiTarget": {
+        "VITE_SERVER_URL": "api"
+      }
+    }
+  ],
+  "output": ".flowatlas"
+}

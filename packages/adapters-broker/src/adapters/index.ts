@@ -23,7 +23,23 @@ const FIRST_ARGUMENT: readonly NameLocator[] = [{ kind: 'argument', index: 0 }];
  */
 const QUEUE_OF_RECEIVER: readonly NameLocator[] = [
   { kind: 'provider-decorator', decorator: 'InjectQueue', index: 0 },
+  // The queue made where the call is: `new Queue('reports')`, in the call or a
+  // `const` before it (P267).
+  { kind: 'receiver-constructed-path', class: 'Queue', path: [], index: 0 },
+  // One client per queue kept in a registry keyed by the queue:
+  // `this.queues[name].add(…)` beside `this.queues[name] = new Queue(name)`.
+  // The key is often a parameter, read where the callers decide it (P267).
+  { kind: 'receiver-registry-key', class: 'Queue', index: 0 },
 ];
+
+/** A key of every job of a flow's tree, the parent first and each child after it (P286). */
+const FLOW_NODES = (key: string, path?: readonly string[]): NameLocator => ({
+  kind: 'argument-tree',
+  index: 0,
+  key,
+  children: 'children',
+  ...(path === undefined ? {} : { path }),
+});
 
 /**
  * The queue a worker class declares, written either way round.
@@ -55,6 +71,11 @@ const JOB_ENVELOPE: readonly string[] = ['data'];
 
 const QUEUE_OF_CLASS: readonly NameLocator[] = [
   { kind: 'argument-property', index: 0, key: 'name' },
+  // The same statement as a repository's own worker decorator spells it, over
+  // the same library: `@Processor({ queueName: 'cron', scope: Scope.REQUEST })`.
+  // Read whole it was the channel `{"queueName":"cron"}`, beside the `cron` the
+  // string form of the same decorator landed on (R181).
+  { kind: 'argument-property', index: 0, key: 'queueName' },
   { kind: 'argument', index: 0 },
 ];
 
@@ -110,6 +131,30 @@ const bullmq: BrokerSpec = {
   name: 'bullmq',
   detect: (pkg) => hasAnyDependency(pkg, ['bullmq', '@nestjs/bullmq', 'bull', '@nestjs/bull']),
   producerPatterns: [
+    // A flow is a tree of jobs, each naming its own queue: `flows.add({ name,
+    // queueName, data, children: [{ name, queueName, data }] })` adds a job to
+    // every queue the tree names, the parent's and each child's (P286). Read
+    // before a queue's own `add`, which the same method name would match.
+    {
+      method: 'add',
+      channelArg: -1,
+      channel: [FLOW_NODES('queueName')],
+      name: [FLOW_NODES('name')],
+      payload: [FLOW_NODES('data')],
+      kind: 'job',
+      receiverType: 'FlowProducer',
+      receiverPackages: ['bullmq'],
+    },
+    {
+      method: 'addBulk',
+      channelArg: -1,
+      channel: [FLOW_NODES('queueName', ['*'])],
+      name: [FLOW_NODES('name', ['*'])],
+      payload: [FLOW_NODES('data', ['*'])],
+      kind: 'job',
+      receiverType: 'FlowProducer',
+      receiverPackages: ['bullmq'],
+    },
     // The queue itself is the channel, and the receiver is bound to one; the
     // first argument names the unit of work, not the channel.
     {
@@ -121,13 +166,28 @@ const bullmq: BrokerSpec = {
       kind: 'job',
       receiverPackages: ['bullmq', 'bull', '@nestjs/bullmq', '@nestjs/bull'],
     },
+    // Each entry names its own job, often in a list the layer maps from its
+    // own: `addBulk(jobs.map(({ data }) => ({ name, data })))` (P271).
     {
       method: 'addBulk',
       channelArg: -1,
       channel: QUEUE_OF_RECEIVER,
+      name: [{ kind: 'argument-path', index: 0, path: ['*', 'name'] }],
       payloadArg: 0,
       kind: 'job',
       receiverPackages: ['bullmq', 'bull', '@nestjs/bullmq', '@nestjs/bull'],
+    },
+    // A job repeated on a schedule is a job of the queue too: the scheduler is
+    // handed a template, `{ name, data, opts }`, that it adds on every tick
+    // (P267).
+    {
+      method: 'upsertJobScheduler',
+      channelArg: -1,
+      channel: QUEUE_OF_RECEIVER,
+      name: [{ kind: 'argument-property', index: 2, key: 'name' }],
+      payload: [{ kind: 'argument-property', index: 2, key: 'data' }],
+      kind: 'job',
+      receiverPackages: ['bullmq'],
     },
   ],
   consumerDecorators: ['Process', 'Processor'],
@@ -145,6 +205,33 @@ const bullmq: BrokerSpec = {
       decorator: 'Processor',
       classDecorator: 'Processor',
       channel: QUEUE_OF_CLASS,
+      payloadPath: JOB_ENVELOPE,
+      kind: 'job',
+    },
+  ],
+  subscriberPatterns: [
+    // A worker made where it is needed: `new Worker('mail', async (job) => …)`,
+    // or one per queue in a loop over a record of handlers (P271). It takes
+    // every job of its queue, so it names none.
+    {
+      method: 'Worker',
+      constructs: 'Worker',
+      channelArg: 0,
+      handlerArg: 1,
+      receiverPackages: ['bullmq'],
+      payloadPath: JOB_ENVELOPE,
+      kind: 'job',
+    },
+    // The older library's worker is a call on the queue itself:
+    // `queue.process('send-email', 5, handler)`, every argument but the handler
+    // optional, the job named where the first is a string (P271).
+    {
+      method: 'process',
+      channelArg: -1,
+      channel: QUEUE_OF_RECEIVER,
+      handlerArg: -1,
+      nameArg: 0,
+      receiverPackages: ['bull'],
       payloadPath: JOB_ENVELOPE,
       kind: 'job',
     },
@@ -279,12 +366,42 @@ const socketio: BrokerSpec = {
   channelKind: 'channel',
 };
 
+/**
+ * Nitro's tasks (P258): `runTask('db:migrate', { payload })` runs the task of
+ * that name - a file of the server's `tasks/` - and nothing else, so it is a
+ * start of the entry the name is the whole address of, as a function invoked
+ * by its deployed name is. Written with no import in Nuxt, imported from
+ * Nitro's runtime outside it; the name is the first argument and what the
+ * task is handed the `payload` of the second.
+ */
+const nitroTasks: BrokerSpec = {
+  name: 'nitro-tasks',
+  detect: (pkg) => hasAnyDependency(pkg, ['nuxt', 'nitropack', 'nitro']),
+  producerPatterns: [
+    {
+      method: 'runTask',
+      calledAs: 'function',
+      channelArg: -1,
+      channel: FIRST_ARGUMENT,
+      payloadArg: 1,
+      payloadPath: ['payload'],
+      kind: 'task',
+      starts: { entry: 'task' },
+    },
+  ],
+  consumerDecorators: [],
+  consumerPatterns: [],
+  // A run names no channel, so this is never read.
+  channelKind: 'channel',
+};
+
 export const brokerAdapters: readonly BrokerSpec[] = [
   kafka,
   rabbitmq,
   bullmq,
   redisPubSub,
   socketio,
+  nitroTasks,
   ...awsBrokerAdapters,
 ];
 

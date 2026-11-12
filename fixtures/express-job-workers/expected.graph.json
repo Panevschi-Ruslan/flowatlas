@@ -1,0 +1,1374 @@
+{
+  "schemaVersion": 7,
+  "repo": "express-job-workers",
+  "generatedAt": "2026-11-09T22:02:41.518Z",
+  "nodes": [
+    {
+      "id": "channel:audit-queue",
+      "type": "channel",
+      "label": "audit-queue",
+      "repo": "express-job-workers",
+      "file": "src/jobs/side-workers.ts",
+      "line": 5,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:mail-high",
+      "type": "channel",
+      "label": "mail-high",
+      "repo": "express-job-workers",
+      "file": "src/jobs/side-workers.ts",
+      "line": 12,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:mail-low",
+      "type": "channel",
+      "label": "mail-low",
+      "repo": "express-job-workers",
+      "file": "src/jobs/side-workers.ts",
+      "line": 12,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:make-thumbnail",
+      "type": "channel",
+      "label": "make-thumbnail",
+      "repo": "express-job-workers",
+      "file": "src/server.ts",
+      "line": 14,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:refresh-catalog",
+      "type": "channel",
+      "label": "refresh-catalog",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:reports-queue",
+      "type": "channel",
+      "label": "reports-queue",
+      "repo": "express-job-workers",
+      "file": "src/reports/reports.queue.ts",
+      "line": 8,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "channel:send-receipt",
+      "type": "channel",
+      "label": "send-receipt",
+      "repo": "express-job-workers",
+      "file": "src/server.ts",
+      "line": 9,
+      "meta": {
+        "channelKind": "queue",
+        "adapters": [
+          "bullmq"
+        ]
+      }
+    },
+    {
+      "id": "consumer:express-job-workers#src/jobs/handlers.ts:makeThumbnail@src/jobs/job-queue.ts:34",
+      "type": "consumer",
+      "label": "makeThumbnail",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:express-job-workers:event:make-thumbnail",
+        "through": [
+          "JobQueue.buildWorker"
+        ]
+      }
+    },
+    {
+      "id": "consumer:express-job-workers#src/jobs/handlers.ts:refreshCatalog@src/jobs/job-queue.ts:34",
+      "type": "consumer",
+      "label": "refreshCatalog",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:express-job-workers:event:refresh-catalog",
+        "through": [
+          "JobQueue.buildWorker"
+        ]
+      }
+    },
+    {
+      "id": "consumer:express-job-workers#src/jobs/handlers.ts:sendReceipt@src/jobs/job-queue.ts:34",
+      "type": "consumer",
+      "label": "sendReceipt",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:express-job-workers:event:send-receipt",
+        "through": [
+          "JobQueue.buildWorker"
+        ]
+      }
+    },
+    {
+      "id": "consumer:express-job-workers#src/jobs/handlers.ts:sendReceipt@src/jobs/side-workers.ts:12",
+      "type": "consumer",
+      "label": "sendReceipt",
+      "repo": "express-job-workers",
+      "file": "src/jobs/side-workers.ts",
+      "line": 12,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:express-job-workers:event:mail-high"
+      }
+    },
+    {
+      "id": "consumer:express-job-workers#src/jobs/handlers.ts:sendReceipt@src/jobs/side-workers.ts:18",
+      "type": "consumer",
+      "label": "sendReceipt",
+      "repo": "express-job-workers",
+      "file": "src/jobs/side-workers.ts",
+      "line": 18,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": null
+      }
+    },
+    {
+      "id": "consumer:express-job-workers#src/jobs/side-workers.ts:auditWorker@5@src/jobs/side-workers.ts:5",
+      "type": "consumer",
+      "label": "auditWorker@5",
+      "repo": "express-job-workers",
+      "file": "src/jobs/side-workers.ts",
+      "line": 5,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "new Worker",
+        "entryId": "entry:express-job-workers:event:audit-queue"
+      }
+    },
+    {
+      "id": "consumer:express-job-workers#src/reports/reports.queue.ts:ReportsQueue.build",
+      "type": "consumer",
+      "label": "ReportsQueue.build",
+      "repo": "express-job-workers",
+      "file": "src/reports/reports.queue.ts",
+      "line": 8,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "decorator": "process",
+        "entryId": "entry:express-job-workers:event:reports-queue",
+        "jobName": "build-report"
+      }
+    },
+    {
+      "id": "entry:express-job-workers:event:audit-queue",
+      "type": "entry",
+      "label": "event audit-queue",
+      "repo": "express-job-workers",
+      "file": "src/jobs/side-workers.ts",
+      "line": 5,
+      "kind": "event",
+      "meta": {
+        "pattern": "audit-queue",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:express-job-workers:event:mail-high",
+      "type": "entry",
+      "label": "event mail-high",
+      "repo": "express-job-workers",
+      "file": "src/jobs/side-workers.ts",
+      "line": 12,
+      "kind": "event",
+      "meta": {
+        "pattern": "mail-high",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:express-job-workers:event:mail-low",
+      "type": "entry",
+      "label": "event mail-low",
+      "repo": "express-job-workers",
+      "file": "src/jobs/side-workers.ts",
+      "line": 12,
+      "kind": "event",
+      "meta": {
+        "pattern": "mail-low",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:express-job-workers:event:make-thumbnail",
+      "type": "entry",
+      "label": "event make-thumbnail",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34,
+      "kind": "event",
+      "meta": {
+        "pattern": "make-thumbnail",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:express-job-workers:event:refresh-catalog",
+      "type": "entry",
+      "label": "event refresh-catalog",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34,
+      "kind": "event",
+      "meta": {
+        "pattern": "refresh-catalog",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:express-job-workers:event:reports-queue",
+      "type": "entry",
+      "label": "event reports-queue",
+      "repo": "express-job-workers",
+      "file": "src/reports/reports.queue.ts",
+      "line": 8,
+      "kind": "event",
+      "meta": {
+        "pattern": "reports-queue",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:express-job-workers:event:send-receipt",
+      "type": "entry",
+      "label": "event send-receipt",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34,
+      "kind": "event",
+      "meta": {
+        "pattern": "send-receipt",
+        "adapter": "bullmq"
+      }
+    },
+    {
+      "id": "entry:express-job-workers:http:POST:/images",
+      "type": "entry",
+      "label": "POST /images",
+      "repo": "express-job-workers",
+      "file": "src/server.ts",
+      "line": 13,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/images",
+        "rawPath": "/images",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:express-job-workers:http:POST:/orders/:param/receipt",
+      "type": "entry",
+      "label": "POST /orders/:param/receipt",
+      "repo": "express-job-workers",
+      "file": "src/server.ts",
+      "line": 8,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/orders/:param/receipt",
+        "rawPath": "/orders/:orderId/receipt",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "entry:express-job-workers:http:POST:/stores/:param/report",
+      "type": "entry",
+      "label": "POST /stores/:param/report",
+      "repo": "express-job-workers",
+      "file": "src/server.ts",
+      "line": 18,
+      "kind": "http",
+      "meta": {
+        "method": "POST",
+        "path": "/stores/:param/report",
+        "rawPath": "/stores/:storeId/report",
+        "adapter": "express-routes",
+        "registration": "app.post",
+        "middlewareRead": true,
+        "handlerVia": "inline",
+        "confidence": "heuristic"
+      }
+    },
+    {
+      "id": "express-job-workers#src/jobs/handlers.ts:makeThumbnail",
+      "type": "function",
+      "label": "makeThumbnail",
+      "repo": "express-job-workers",
+      "file": "src/jobs/handlers.ts",
+      "line": 10,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "thumbnail of",
+            "at": 11
+          }
+        ]
+      }
+    },
+    {
+      "id": "express-job-workers#src/jobs/handlers.ts:refreshCatalog",
+      "type": "function",
+      "label": "refreshCatalog",
+      "repo": "express-job-workers",
+      "file": "src/jobs/handlers.ts",
+      "line": 14,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "catalog of",
+            "at": 15
+          }
+        ]
+      }
+    },
+    {
+      "id": "express-job-workers#src/jobs/handlers.ts:sendReceipt",
+      "type": "function",
+      "label": "sendReceipt",
+      "repo": "express-job-workers",
+      "file": "src/jobs/handlers.ts",
+      "line": 6,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "receipt for",
+            "at": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "express-job-workers#src/jobs/job-queue.ts:JobQueue",
+      "type": "provider",
+      "label": "JobQueue",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 20,
+      "kind": "injectable"
+    },
+    {
+      "id": "express-job-workers#src/jobs/job-queue.ts:JobQueue.buildQueue",
+      "type": "method",
+      "label": "JobQueue.buildQueue",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 39,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "type",
+              "type": "type:express-job-workers#JobType"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "express-job-workers#src/jobs/job-queue.ts:JobQueue.buildWorker",
+      "type": "method",
+      "label": "JobQueue.buildWorker",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 31,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "type",
+              "type": "type:express-job-workers#JobType"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "express-job-workers#src/jobs/job-queue.ts:JobQueue.createJob",
+      "type": "method",
+      "label": "JobQueue.createJob",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 43,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "options",
+              "type": "type:express-job-workers#CreateJob"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "express-job-workers#src/jobs/job-queue.ts:JobQueue.init",
+      "type": "method",
+      "label": "JobQueue.init",
+      "repo": "express-job-workers",
+      "file": "src/jobs/job-queue.ts",
+      "line": 24,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "express-job-workers#src/jobs/side-workers.ts:auditWorker@5",
+      "type": "function",
+      "label": "auditWorker@5",
+      "repo": "express-job-workers",
+      "file": "src/jobs/side-workers.ts",
+      "line": 5,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "unknown"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "audit",
+            "at": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "express-job-workers#src/reports/reports.queue.ts:ReportsQueue",
+      "type": "provider",
+      "label": "ReportsQueue",
+      "repo": "express-job-workers",
+      "file": "src/reports/reports.queue.ts",
+      "line": 6,
+      "kind": "injectable"
+    },
+    {
+      "id": "express-job-workers#src/reports/reports.queue.ts:ReportsQueue.build",
+      "type": "method",
+      "label": "ReportsQueue.build",
+      "repo": "express-job-workers",
+      "file": "src/reports/reports.queue.ts",
+      "line": 15,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "job",
+              "type": "{data:{storeId:string}}"
+            }
+          ],
+          "returns": "void"
+        },
+        "logs": [
+          {
+            "level": "log",
+            "text": "report for",
+            "at": 16
+          }
+        ]
+      }
+    },
+    {
+      "id": "express-job-workers#src/reports/reports.queue.ts:ReportsQueue.request",
+      "type": "method",
+      "label": "ReportsQueue.request",
+      "repo": "express-job-workers",
+      "file": "src/reports/reports.queue.ts",
+      "line": 11,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "storeId",
+              "type": "string"
+            }
+          ],
+          "returns": "unknown"
+        }
+      }
+    },
+    {
+      "id": "express-job-workers#src/reports/reports.queue.ts:ReportsQueue.start",
+      "type": "method",
+      "label": "ReportsQueue.start",
+      "repo": "express-job-workers",
+      "file": "src/reports/reports.queue.ts",
+      "line": 7,
+      "meta": {
+        "signature": {
+          "params": [],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "express-job-workers#src/server.ts:POST /images@13",
+      "type": "function",
+      "label": "POST /images@13",
+      "repo": "express-job-workers",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "express-job-workers#src/server.ts:POST /orders/:orderId/receipt@8",
+      "type": "function",
+      "label": "POST /orders/:orderId/receipt@8",
+      "repo": "express-job-workers",
+      "file": "src/server.ts",
+      "line": 8,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "express-job-workers#src/server.ts:POST /stores/:storeId/report@18",
+      "type": "function",
+      "label": "POST /stores/:storeId/report@18",
+      "repo": "express-job-workers",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "signature": {
+          "params": [
+            {
+              "name": "req",
+              "type": "any"
+            },
+            {
+              "name": "res",
+              "type": "any"
+            }
+          ],
+          "returns": "void"
+        }
+      }
+    },
+    {
+      "id": "producer:express-job-workers#src/reports/reports.queue.ts:12:12",
+      "type": "producer",
+      "label": "job reports-queue",
+      "repo": "express-job-workers",
+      "file": "src/reports/reports.queue.ts",
+      "line": 12,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "build-report"
+      }
+    },
+    {
+      "id": "producer:express-job-workers#src/server.ts:14:9",
+      "type": "producer",
+      "label": "job make-thumbnail",
+      "repo": "express-job-workers",
+      "file": "src/server.ts",
+      "line": 14,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.createJob"
+        ]
+      }
+    },
+    {
+      "id": "producer:express-job-workers#src/server.ts:9:9",
+      "type": "producer",
+      "label": "job send-receipt",
+      "repo": "express-job-workers",
+      "file": "src/server.ts",
+      "line": 9,
+      "kind": "job",
+      "meta": {
+        "kind": "job",
+        "adapter": "bullmq",
+        "channelVia": "literal",
+        "method": "add",
+        "jobName": "job",
+        "through": [
+          "JobQueue.createJob"
+        ]
+      }
+    },
+    {
+      "id": "repo:express-job-workers",
+      "type": "repo",
+      "label": "express-job-workers",
+      "repo": "express-job-workers",
+      "meta": {
+        "stats": {
+          "files": 5,
+          "filesRead": 5,
+          "filesUnreadable": 0,
+          "classes": 2,
+          "skippedExternalCalls": {}
+        },
+        "adapters": {
+          "entry": [
+            "express-routes"
+          ]
+        },
+        "listen": [
+          {
+            "port": 3000,
+            "file": "src/server.ts",
+            "line": 25
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "channel:audit-queue",
+      "to": "consumer:express-job-workers#src/jobs/side-workers.ts:auditWorker@5@src/jobs/side-workers.ts:5",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/side-workers.ts",
+      "line": 5
+    },
+    {
+      "from": "channel:mail-high",
+      "to": "consumer:express-job-workers#src/jobs/handlers.ts:sendReceipt@src/jobs/side-workers.ts:12",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/side-workers.ts",
+      "line": 12
+    },
+    {
+      "from": "channel:mail-low",
+      "to": "consumer:express-job-workers#src/jobs/handlers.ts:sendReceipt@src/jobs/side-workers.ts:12",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/side-workers.ts",
+      "line": 12
+    },
+    {
+      "from": "channel:make-thumbnail",
+      "to": "consumer:express-job-workers#src/jobs/handlers.ts:makeThumbnail@src/jobs/job-queue.ts:34",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34
+    },
+    {
+      "from": "channel:refresh-catalog",
+      "to": "consumer:express-job-workers#src/jobs/handlers.ts:refreshCatalog@src/jobs/job-queue.ts:34",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34
+    },
+    {
+      "from": "channel:reports-queue",
+      "to": "consumer:express-job-workers#src/reports/reports.queue.ts:ReportsQueue.build",
+      "type": "consumes",
+      "confidence": "heuristic",
+      "file": "src/reports/reports.queue.ts",
+      "line": 8
+    },
+    {
+      "from": "channel:send-receipt",
+      "to": "consumer:express-job-workers#src/jobs/handlers.ts:sendReceipt@src/jobs/job-queue.ts:34",
+      "type": "consumes",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34
+    },
+    {
+      "from": "consumer:express-job-workers#src/jobs/handlers.ts:makeThumbnail@src/jobs/job-queue.ts:34",
+      "to": "express-job-workers#src/jobs/handlers.ts:makeThumbnail",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34
+    },
+    {
+      "from": "consumer:express-job-workers#src/jobs/handlers.ts:refreshCatalog@src/jobs/job-queue.ts:34",
+      "to": "express-job-workers#src/jobs/handlers.ts:refreshCatalog",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34
+    },
+    {
+      "from": "consumer:express-job-workers#src/jobs/handlers.ts:sendReceipt@src/jobs/job-queue.ts:34",
+      "to": "express-job-workers#src/jobs/handlers.ts:sendReceipt",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34
+    },
+    {
+      "from": "consumer:express-job-workers#src/jobs/handlers.ts:sendReceipt@src/jobs/side-workers.ts:12",
+      "to": "express-job-workers#src/jobs/handlers.ts:sendReceipt",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/side-workers.ts",
+      "line": 12
+    },
+    {
+      "from": "consumer:express-job-workers#src/jobs/handlers.ts:sendReceipt@src/jobs/side-workers.ts:18",
+      "to": "express-job-workers#src/jobs/handlers.ts:sendReceipt",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/side-workers.ts",
+      "line": 18
+    },
+    {
+      "from": "consumer:express-job-workers#src/jobs/side-workers.ts:auditWorker@5@src/jobs/side-workers.ts:5",
+      "to": "express-job-workers#src/jobs/side-workers.ts:auditWorker@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/side-workers.ts",
+      "line": 5
+    },
+    {
+      "from": "consumer:express-job-workers#src/reports/reports.queue.ts:ReportsQueue.build",
+      "to": "express-job-workers#src/reports/reports.queue.ts:ReportsQueue.build",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reports/reports.queue.ts",
+      "line": 8,
+      "params": [
+        "{data:{storeId:string}}"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "entry:express-job-workers:event:audit-queue",
+      "to": "express-job-workers#src/jobs/side-workers.ts:auditWorker@5",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/side-workers.ts",
+      "line": 5,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:express-job-workers:event:mail-high",
+      "to": "express-job-workers#src/jobs/handlers.ts:sendReceipt",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/side-workers.ts",
+      "line": 12,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:express-job-workers:event:mail-low",
+      "to": "express-job-workers#src/jobs/handlers.ts:sendReceipt",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/side-workers.ts",
+      "line": 12,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:express-job-workers:event:make-thumbnail",
+      "to": "express-job-workers#src/jobs/handlers.ts:makeThumbnail",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:express-job-workers:event:refresh-catalog",
+      "to": "express-job-workers#src/jobs/handlers.ts:refreshCatalog",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:express-job-workers:event:reports-queue",
+      "to": "express-job-workers#src/reports/reports.queue.ts:ReportsQueue.build",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/reports/reports.queue.ts",
+      "line": 8,
+      "params": [
+        "{data:{storeId:string}}"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "{data:{storeId:string}}"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:express-job-workers:event:send-receipt",
+      "to": "express-job-workers#src/jobs/handlers.ts:sendReceipt",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 34,
+      "params": [
+        "unknown"
+      ],
+      "returns": "void",
+      "signature": {
+        "params": [
+          {
+            "name": "job",
+            "type": "unknown"
+          }
+        ],
+        "returns": "void"
+      }
+    },
+    {
+      "from": "entry:express-job-workers:http:POST:/images",
+      "to": "express-job-workers#src/server.ts:POST /images@13",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 13,
+      "meta": {
+        "requestRead": true
+      }
+    },
+    {
+      "from": "entry:express-job-workers:http:POST:/orders/:param/receipt",
+      "to": "express-job-workers#src/server.ts:POST /orders/:orderId/receipt@8",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 8,
+      "meta": {
+        "requestRead": true,
+        "params": "{orderId:string}"
+      }
+    },
+    {
+      "from": "entry:express-job-workers:http:POST:/stores/:param/report",
+      "to": "express-job-workers#src/server.ts:POST /stores/:storeId/report@18",
+      "type": "handles",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 18,
+      "meta": {
+        "requestRead": true,
+        "params": "{storeId:string}"
+      }
+    },
+    {
+      "from": "express-job-workers#src/jobs/job-queue.ts:JobQueue.init",
+      "to": "express-job-workers#src/jobs/job-queue.ts:JobQueue.buildQueue",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 27,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 25,
+          "bounded": "literal"
+        }
+      },
+      "params": [
+        "type:express-job-workers#JobType"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "express-job-workers#src/jobs/job-queue.ts:JobQueue.init",
+      "to": "express-job-workers#src/jobs/job-queue.ts:JobQueue.buildWorker",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/jobs/job-queue.ts",
+      "line": 26,
+      "meta": {
+        "inLoop": {
+          "kind": "for-of",
+          "line": 25,
+          "bounded": "literal"
+        }
+      },
+      "params": [
+        "type:express-job-workers#JobType"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "express-job-workers#src/reports/reports.queue.ts:ReportsQueue.request",
+      "to": "producer:express-job-workers#src/reports/reports.queue.ts:12:12",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/reports/reports.queue.ts",
+      "line": 12
+    },
+    {
+      "from": "express-job-workers#src/reports/reports.queue.ts:ReportsQueue.start",
+      "to": "express-job-workers#src/reports/reports.queue.ts:ReportsQueue.build",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/reports/reports.queue.ts",
+      "line": 8,
+      "params": [
+        "{data:{storeId:string}}"
+      ],
+      "returns": "void"
+    },
+    {
+      "from": "express-job-workers#src/server.ts:POST /images@13",
+      "to": "express-job-workers#src/jobs/job-queue.ts:JobQueue.createJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 14,
+      "params": [
+        "type:express-job-workers#CreateJob"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "express-job-workers#src/server.ts:POST /images@13",
+      "to": "producer:express-job-workers#src/server.ts:14:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 14
+    },
+    {
+      "from": "express-job-workers#src/server.ts:POST /orders/:orderId/receipt@8",
+      "to": "express-job-workers#src/jobs/job-queue.ts:JobQueue.createJob",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 9,
+      "params": [
+        "type:express-job-workers#CreateJob"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "express-job-workers#src/server.ts:POST /orders/:orderId/receipt@8",
+      "to": "producer:express-job-workers#src/server.ts:9:9",
+      "type": "calls",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 9
+    },
+    {
+      "from": "express-job-workers#src/server.ts:POST /stores/:storeId/report@18",
+      "to": "express-job-workers#src/reports/reports.queue.ts:ReportsQueue.request",
+      "type": "calls",
+      "confidence": "static",
+      "file": "src/server.ts",
+      "line": 19,
+      "params": [
+        "string"
+      ],
+      "returns": "unknown"
+    },
+    {
+      "from": "producer:express-job-workers#src/reports/reports.queue.ts:12:12",
+      "to": "channel:reports-queue",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/reports/reports.queue.ts",
+      "line": 12,
+      "params": [
+        "{storeId:string}"
+      ]
+    },
+    {
+      "from": "producer:express-job-workers#src/server.ts:14:9",
+      "to": "channel:make-thumbnail",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 14,
+      "params": [
+        "{imageUrl:string}"
+      ]
+    },
+    {
+      "from": "producer:express-job-workers#src/server.ts:9:9",
+      "to": "channel:send-receipt",
+      "type": "emits",
+      "confidence": "heuristic",
+      "file": "src/server.ts",
+      "line": 9,
+      "params": [
+        "{orderId:any;email:string}"
+      ]
+    }
+  ],
+  "types": {
+    "type:express-job-workers#CreateJob": {
+      "name": "CreateJob",
+      "kind": "union",
+      "declaredIn": "express-job-workers#src/jobs/job-queue.ts",
+      "structuralHash": "b17a0d3ef4cf75d9",
+      "members": [
+        "{type:'send-receipt';payload:{orderId:string;email:string}}",
+        "{type:'make-thumbnail';payload:{imageUrl:string}}",
+        "{type:'refresh-catalog';payload:{storeId:string}}"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    },
+    "type:express-job-workers#JobType": {
+      "name": "JobType",
+      "kind": "union",
+      "declaredIn": "express-job-workers#src/jobs/job-queue.ts",
+      "structuralHash": "239e1cf87fec1418",
+      "members": [
+        "'send-receipt'",
+        "'make-thumbnail'",
+        "'refresh-catalog'"
+      ],
+      "meta": {
+        "declKind": "alias",
+        "exported": true
+      }
+    }
+  },
+  "unresolved": [
+    {
+      "file": "src/jobs/handlers.ts",
+      "line": 6,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<ReceiptPayload>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/jobs/handlers.ts",
+      "line": 10,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<ThumbnailPayload>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/jobs/handlers.ts",
+      "line": 14,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ storeId: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 32,
+      "reason": "call-dynamic-receiver",
+      "level": "info",
+      "hint": "The method is chosen at run time; nothing static to point at.",
+      "symbol": "JobQueue.buildWorker -> handlers[type]",
+      "meta": {
+        "causes": [
+          {
+            "cause": "callback-param",
+            "sites": 6,
+            "samples": [
+              {
+                "file": "src/server.ts",
+                "line": 10,
+                "symbol": "POST /orders/:orderId/receipt@8 -> res.status(202).end"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 10,
+                "symbol": "POST /orders/:orderId/receipt@8 -> res.status"
+              },
+              {
+                "file": "src/server.ts",
+                "line": 15,
+                "symbol": "POST /images@13 -> res.status(202).end"
+              }
+            ]
+          },
+          {
+            "cause": "dynamic-member",
+            "sites": 2,
+            "samples": [
+              {
+                "file": "src/jobs/job-queue.ts",
+                "line": 32,
+                "symbol": "JobQueue.buildWorker -> handlers[type]"
+              },
+              {
+                "file": "src/jobs/job-queue.ts",
+                "line": 35,
+                "symbol": "JobQueue.buildWorker -> failureHandlers[type]"
+              }
+            ]
+          },
+          {
+            "cause": "module-not-installed",
+            "package": "bullmq",
+            "sites": 1,
+            "samples": [
+              {
+                "file": "src/jobs/job-queue.ts",
+                "line": 35,
+                "symbol": "JobQueue.buildWorker -> worker.on"
+              }
+            ]
+          }
+        ]
+      },
+      "sites": 9
+    },
+    {
+      "file": "src/jobs/job-queue.ts",
+      "line": 43,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    },
+    {
+      "file": "src/jobs/side-workers.ts",
+      "line": 5,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "Job<{ action: string; }>",
+      "meta": {
+        "cause": "module-not-installed",
+        "package": "bullmq"
+      }
+    },
+    {
+      "file": "src/jobs/side-workers.ts",
+      "line": 18,
+      "reason": "channel-dynamic",
+      "hint": "name is each element of queuesFromSettings, and queuesFromSettings is not a list written out. Annotate sendReceipt with the channel it uses.",
+      "symbol": "sendReceipt -> name"
+    },
+    {
+      "file": "src/reports/reports.queue.ts",
+      "line": 11,
+      "reason": "type-unresolved",
+      "hint": "The checker could not resolve this type. Install the dependencies or fix the tsconfig paths.",
+      "symbol": "any"
+    }
+  ]
+}

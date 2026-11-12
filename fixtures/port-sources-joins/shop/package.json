@@ -1,0 +1,14 @@
+{
+  "name": "port-sources-joins-shop",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@sveltejs/kit": "^2.8.0",
+    "svelte": "^5.0.0",
+    "vite": "^6.0.0"
+  }
+}

@@ -12,13 +12,18 @@ import {
 import { nestjsHttpAdapter } from './nestjs-http.js';
 import { medusaRoutesAdapter } from './medusa-routes.js';
 import { remixRoutesAdapter, sveltekitRoutesAdapter } from './described-fs-routes.js';
+import { nitroRoutesAdapter } from './nuxt-routes.js';
+import { graphqlResolversAdapter } from './graphql-resolvers.js';
 import { reactRouterRoutesAdapter } from './route-config.js';
 import { nextjsRoutesAdapter } from './nextjs-routes.js';
-import { trpcProceduresAdapter } from './procedure-routers.js';
+import { orpcProceduresAdapter, trpcProceduresAdapter } from './procedure-routers.js';
 import { nestjsMicroserviceAdapter } from './nestjs-microservice.js';
 import { nestjsScheduleAdapter } from './nestjs-schedule.js';
 import { nestjsTelegrafAdapter } from './nestjs-telegraf/index.js';
 import { telegrafCallsAdapter } from './telegraf-calls.js';
+import { tanstackStartAdapter } from './server-functions.js';
+import { mcpServerAdapter } from './mcp-servers.js';
+import { grpcServerAdapter } from './grpc-services.js';
 
 export const PACKAGE_NAME = '@flowatlas/adapters-entry';
 
@@ -34,6 +39,8 @@ export const entryAdapters: readonly EntryAdapter[] = [
   medusaRoutesAdapter,
   sveltekitRoutesAdapter,
   remixRoutesAdapter,
+  nitroRoutesAdapter,
+  graphqlResolversAdapter,
   reactRouterRoutesAdapter,
   honoRoutesAdapter,
   expressRoutesAdapter,
@@ -44,6 +51,10 @@ export const entryAdapters: readonly EntryAdapter[] = [
   nestjsTelegrafAdapter,
   telegrafCallsAdapter,
   trpcProceduresAdapter,
+  orpcProceduresAdapter,
+  tanstackStartAdapter,
+  mcpServerAdapter,
+  grpcServerAdapter,
   entryRegistriesAdapter,
   configuredRoutesAdapter,
   configuredProceduresAdapter,
@@ -67,9 +78,18 @@ export {
   configuredProceduresAdapter,
 } from './configured-procedures.js';
 export type { ProcedureDialect, ProcedureMount } from './procedure-dialects.js';
-export { PROCEDURE_DIALECTS, TRPC, procedureDialectOf } from './procedure-dialects.js';
-export type { ProcedureRoutersOptions } from './procedure-routers.js';
-export { procedureRoutersAdapter, trpcProceduresAdapter } from './procedure-routers.js';
+export { ORPC, PROCEDURE_DIALECTS, TRPC, procedureDialectOf } from './procedure-dialects.js';
+export type { DeclaredError, ProcedureRoute, ProcedureRoutersOptions } from './procedure-routers.js';
+export { orpcProceduresAdapter, procedureRoutersAdapter, trpcProceduresAdapter } from './procedure-routers.js';
+export type {
+  ProcedureCaller,
+  ProcedureClient,
+  ProcedureLink,
+  ProcedureOperation,
+} from './procedure-clients.js';
+export { ORPC_CLIENT, PROCEDURE_CLIENTS, TRPC_CLIENT } from './procedure-clients.js';
+export type { LinkAddress, ProcedureCallHolder, ProcedureCallReading, ReadProcedureCall } from './procedure-calls.js';
+export { readProcedureCalls } from './procedure-calls.js';
 export {
   callRoutesAdapter,
   expressRoutesAdapter,
@@ -87,7 +107,15 @@ export type {
 export { dialectOf, EXPRESS, FASTIFY, HONO, KOA, ROUTE_DIALECTS } from './route-dialects.js';
 export type { ActionBuilder } from './action-builders.js';
 export { ACTION_BUILDERS, NEXT_SAFE_ACTION, ZSA } from './action-builders.js';
-export { APP_PAGES, APP_ROUTER, PAGES_API } from './nextjs-paths.js';
+export { tanstackStartAdapter } from './server-functions.js';
+export { mcpServerAdapter } from './mcp-servers.js';
+export { grpcServerAdapter, grpcTransportOptions } from './grpc-services.js';
+export type { GrpcTransportOptions } from './grpc-services.js';
+export { readGrpcCalls } from './grpc-calls.js';
+export type { GrpcCallReading } from './grpc-calls.js';
+export { contractsOf } from './grpc-contracts.js';
+export type { Contract, Contracts, ContractService } from './grpc-contracts.js';
+export { APP_PAGES, APP_ROUTER, PAGES_API, PAGES_SCREENS } from './nextjs-paths.js';
 export {
   fsAddressSpace,
   fsApplicationMap,
@@ -105,6 +133,53 @@ export type {
   VerbReading,
 } from './fs-routes.js';
 export { MEDUSA_API } from './medusa-routes.js';
+export { GRAPHQL_SERVER_PACKAGES, graphqlResolversAdapter } from './graphql-resolvers.js';
+export { NITRO_API, NITRO_REQUEST, NITRO_ROUTES, nitroAddressOf, nitroRoutesAdapter, nuxtPagesOf, NUXT_PAGES, SVELTEKIT_PAGES, sveltekitPagesOf } from './nuxt-routes.js';
+export {
+  keptByLayer,
+  NUXT_PRODUCTION,
+  nuxtApplicationOf,
+  nuxtConventions,
+  nuxtLayerOf,
+  nuxtLayersOf,
+  nuxtLayoutOf,
+  sveltekitConventions,
+  sveltekitRoutesOf,
+  SVELTEKIT_ROUTES_DIR,
+  withinLayer,
+  type NuxtApplication,
+  type NuxtDirs,
+  type NuxtEnvironment,
+  type NuxtLayer,
+  type NuxtLayers,
+  type NuxtLayout,
+} from './framework-conventions.js';
+export {
+  kebabCase,
+  NUXT_BUILT_IN_COMPONENTS,
+  nuxtComponentNameOf,
+  nuxtNameFromPath,
+  nuxtNamesOf,
+  pascalCase,
+  splitByCase,
+  type NuxtComponent,
+  type NuxtComponentMode,
+  type NuxtNames,
+  type NuxtPlugin,
+  type NuxtRouteMiddleware,
+} from './nuxt-names.js';
+export {
+  NUXT_KNOWN_MODULES,
+  NUXT_MODULE_COMPONENTS,
+  nuxtModulesOf,
+  type InstalledModule,
+  type NuxtModule,
+  type ModulePlugin,
+  type NuxtModuleAdditions,
+  type NuxtModules,
+} from './nuxt-modules.js';
+export type { LayerClaim } from './framework-conventions.js';
+export { VITE_CONFIGS, viteConventions } from './vite-conventions.js';
 export {
   fsRoutesAdapter,
   REMIX_ROUTES,
@@ -164,3 +239,16 @@ export {
   repoSources,
   unwrapValue,
 } from './shared.js';
+export { scriptCommands, scriptPorts } from './listen-ports.js';
+export type { ScriptCommand } from './listen-ports.js';
+export { factoryPorts, settingsReading } from './listen-settings.js';
+export { keyLine, nextProxies, nitroProxies, proxyConfigFile, proxyTableRules, rewriteOfFunction } from './proxy-config.js';
+export {
+  NEXT_SERVER_EXECUTORS,
+  targetPorts,
+  targetProxyConfigs,
+  VITE_SERVER_EXECUTORS,
+  WEBPACK_SERVER_EXECUTORS,
+  workspaceTargets,
+} from './workspace-targets.js';
+export type { WorkspaceTarget } from './workspace-targets.js';

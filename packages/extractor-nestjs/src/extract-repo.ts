@@ -1,15 +1,23 @@
 import { join } from 'node:path';
 import {
   AdapterRegistry,
+  LISTEN_META,
+  listeningOf,
+  OWN_ORIGIN_META,
+  PROXY_META,
+  proxiesOf,
   builtInShapesFor,
   countSources,
+  conventionsFor,
   createProject,
+  reportConventions,
   declarationShapesOf,
   GraphBuilder,
   normalizeFilePath,
   parseConfig,
   readResolvedPackageJson,
   closeStandIns,
+  withoutOtherServicesWaysIn,
   reportSkippedTestDirectories,
   reportPatterns,
   readPatterns,
@@ -24,6 +32,7 @@ import {
   type PackageJson,
   type RepoGraph,
   type ServiceConfig,
+  projectText,
 } from '@flowatlas/core';
 import type { Project } from 'ts-morph';
 import { addressingFindings, findBootstrapFile, readBootstrap } from './bootstrap.js';
@@ -43,6 +52,7 @@ import { typesPass } from './passes/types-pass.js';
 import type { NestExtractorPass } from './passes/types.js';
 import { NEST_SHAPES } from './shapes/index.js';
 import { wrappingCollectPass, wrappingEdgesPass } from './passes/wrapping.js';
+import { oneSidePerRequest } from './request-sides.js';
 
 export interface ExtractRepoOptions {
   /** Absolute path to the repository root. */
@@ -132,8 +142,12 @@ export const createRepoProject = (options: ExtractRepoOptions): Project => {
     configDir: options.configDir,
     ...(options.standInsOfBuild === undefined ? {} : { given: options.standInsOfBuild }),
   });
+  // What the frameworks detected here would have written for the compiler
+  // (P240), asked of the registry before the project is opened.
+  const conventions = conventionsFor(options.registry, options.rootDir, options.config);
   return createProject({
     rootDir: options.rootDir,
+    ...(conventions.length === 0 ? {} : { conventions }),
     // Read only where the package itself does not resolve, and not at all where
     // the configuration says so (`builtInShapes: false`).
     ...(builtInShapesFor(options.config, options.service) ? { shapes: NEST_SHAPES } : {}),
@@ -237,6 +251,11 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   const builder = new GraphBuilder({
     repo,
     ...(options.generatedAt === undefined ? {} : { generatedAt: options.generatedAt }),
+    // The tagged comments above declarations (P234), from the files this reading parsed.
+    notesFrom: {
+      text: projectText(project, rootDir),
+      ...(options.config?.docs?.commentTags === undefined ? {} : { tags: options.config.docs.commentTags }),
+    },
   });
 
   const base: ExtractContext = {
@@ -313,6 +332,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       ...(options.typesDepth === undefined ? {} : { typesDepth: options.typesDepth }),
     });
   }
+  // After the browser half, which makes up its component files and the imports
+  // a framework adds to them (P240), so the rows count those as well.
+  reportConventions(base);
 
   const ctx = createNestContext({
     base,
@@ -346,6 +368,12 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // when no other half ran, and folding those into themselves would count every
   // skipped call twice.
   const priorStats = builder.getNode(repoId)?.meta?.['stats'];
+  // Where the service's server listens, as the adapters that start it say
+  // (P250): what a request to this machine's port is joined by.
+  const listen = listeningOf(base);
+  // What its server forwards to another server, and the rules not read (P257).
+  const proxy = proxiesOf(base);
+  for (const row of proxy.rows) builder.addUnresolved(row);
   const node = builder.addNode({
     id: repoId,
     type: 'repo',
@@ -358,6 +386,9 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
       adapters: {
         entry: adapters.entry.map((adapter) => adapter.name),
       },
+      ...(listen.length === 0 ? {} : { [LISTEN_META]: listen }),
+      ...(proxy.rules.length === 0 ? {} : { [PROXY_META]: proxy.rules }),
+      ...(proxy.ownOrigin === true ? { [OWN_ORIGIN_META]: true } : {}),
     },
   });
   node.meta = {
@@ -372,7 +403,17 @@ export const extractRepo = async (options: ExtractRepoOptions): Promise<RepoGrap
   // Last, once every edge is drawn: one whose receiver a stand-in typed is a guess (P78).
   closeStandIns(base);
 
-  return builder.build();
+  // What is written in another configured service's package is that service's
+  // way in, read there; the rest of the package is still this service's to
+  // read, for its types and for the code it calls (P282).
+  // Where both halves read a request, it is drawn on the side it runs on (P283).
+  const built = adapters.frontend.length === 0 ? builder.build() : oneSidePerRequest(builder.build(), rootDir);
+  return withoutOtherServicesWaysIn(built, {
+    rootDir,
+    ...(options.config === undefined ? {} : { config: options.config }),
+    ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
+    ...(options.service === undefined ? {} : { service: options.service }),
+  });
 };
 
 export const defaultOutputPath = (rootDir: string, output = '.flowatlas'): string =>

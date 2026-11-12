@@ -113,6 +113,27 @@ describe('an application recognised from the source when its type is not install
     expect(labels(entries)).toEqual(['GET /m/x']);
   });
 
+  it('reads an application made from a package required where it is needed, whole or destructured (P281)', () => {
+    const entries = read(
+      expressRoutesAdapter,
+      `export class StatusServer {
+         start(port: number) {
+           const express: typeof import('express') = require('express');
+           const { Router } = require('express');
+           const app = express();
+           const extra = Router();
+           app.get('/status', (_req, res) => res.send('ok'));
+           extra.get('/ready', (_req, res) => res.send('ok'));
+           app.use('/probe', extra);
+           app.listen(port);
+         }
+       }`,
+    );
+    expect(labels(entries)).toEqual(['GET /probe/ready', 'GET /status']);
+    const elsewhere = read(expressRoutesAdapter, `const lib = require('./local');\nconst app = lib();\napp.get('/no', () => undefined);`);
+    expect(elsewhere).toEqual([]);
+  });
+
   it('does not take a value of another uninstalled package for an application', () => {
     const entries = read(
       expressRoutesAdapter,

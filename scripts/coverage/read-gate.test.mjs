@@ -420,3 +420,87 @@ describe('a target that brings its own exemptions and baseline', () => {
     assert.equal(result.known.length, 1);
   });
 });
+
+describe('a row folded over several sites (P251)', () => {
+  // Two routes a lower layer serves, both overridden: the builder keeps one
+  // row at the first and names both in its samples.
+  const graph = {
+    nodes: [],
+    edges: [],
+    unresolved: [
+      {
+        file: 'server/api/a.get.ts',
+        line: 1,
+        reason: 'framework-layer-overridden',
+        level: 'info',
+        sites: 2,
+        service: 'api',
+        meta: {
+          causes: [
+            {
+              cause: 'framework-layer-overridden',
+              sites: 2,
+              samples: [
+                { file: 'server/api/a.get.ts', line: 1 },
+                { file: 'server/api/b.get.ts', line: 1 },
+              ],
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  it('answers for every file its samples name, not only its own', () => {
+    const result = gate(sites('apps/api/server/api/a.get.ts', 'apps/api/server/api/b.get.ts'), graph);
+    assert.deepEqual(unread(result), []);
+  });
+
+  it('answers for no file a sample does not name', () => {
+    const result = gate(sites('apps/api/server/api/c.get.ts'), graph);
+    assert.deepEqual(unread(result), ['apps/api/server/api/c.get.ts']);
+  });
+});
+
+describe('a row folded over more sites than it samples (P255)', () => {
+  // Four overridden routes of one reason in one repository: three samples,
+  // and the fourth's file under `files`, as the builder keeps them.
+  const graph = {
+    nodes: [],
+    edges: [],
+    unresolved: [
+      {
+        file: 'server/api/a.get.ts',
+        line: 1,
+        reason: 'framework-layer-overridden',
+        level: 'info',
+        sites: 4,
+        service: 'api',
+        meta: {
+          causes: [
+            {
+              cause: 'framework-layer-overridden',
+              sites: 4,
+              samples: [
+                { file: 'server/api/a.get.ts', line: 1 },
+                { file: 'server/api/b.get.ts', line: 1 },
+                { file: 'server/api/c.get.ts', line: 1 },
+              ],
+              files: ['server/api/d.get.ts'],
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  it('answers for the fourth file as for the first three', () => {
+    const result = gate(sites('apps/api/server/api/a.get.ts', 'apps/api/server/api/c.get.ts', 'apps/api/server/api/d.get.ts'), graph);
+    assert.deepEqual(unread(result), []);
+  });
+
+  it('answers for no file the row does not name', () => {
+    const result = gate(sites('apps/api/server/api/e.get.ts'), graph);
+    assert.deepEqual(unread(result), ['apps/api/server/api/e.get.ts']);
+  });
+});

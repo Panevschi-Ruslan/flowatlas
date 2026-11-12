@@ -1,0 +1,318 @@
+import {
+  addressSidesOf,
+  asksAbsolute,
+  builtQueryOf,
+  conditionsAround,
+  joinedTests,
+  PLATFORM_HEADERS,
+  prefixSidesOfRewrite,
+  rewriteTestOf,
+  UNREAD_SPAN,
+  writtenHeaderNames,
+  writtenKey,
+  type AddressTest,
+  type QueryBuilder,
+} from '@flowatlas/core';
+import type { CallExpression, Node as TsNode, SourceFile } from 'ts-morph';
+import { Node, SyntaxKind } from 'ts-morph';
+import { analyzeBaseUrl, type ApiUrl } from './url.js';
+
+/**
+ * The base an interceptor puts in front of every request (P239).
+ *
+ * The framework's client has no base of its own, and a repository that does
+ * not write `environment.apiUrl` into every address writes it once, in an
+ * interceptor: `next.handle(req.clone({ url: environment.apiUrl + req.url }))`.
+ * Every request the injector's client makes then goes out under it, and the
+ * address the call site writes is only the tail. The same defect R114 fixed for
+ * a client class holding its base in a field, and the same fix: the base is
+ * read where it is written and put in front of the address the graph records.
+ *
+ * Read only where it is certain. An interceptor runs for every request, so the
+ * one condition that changes nothing is whether the address is already
+ * absolute, which `underBase` honours anyway. A condition about the address's
+ * own form - `if (req.url.startsWith('/api'))`, a path it skips with
+ * `if (req.url.startsWith('/assets')) return next(req)` - is asked of each
+ * request's written address, and the base goes in front of the ones it holds
+ * for (P280). So is a branch on one in what the clone writes, `url:
+ * req.url.includes('admin') ? adminApi + req.url : shopApi + req.url`, or in
+ * the base it puts in front: each side is a rewrite of the requests on that
+ * side, as an installed client's interceptor is read (P293), and a side that
+ * writes back `req.url` rewrites nothing. Any other condition - a header it looks for, a flag - means some
+ * requests go out under the base and some do not, and nothing here can tell
+ * which: that is a row, and every request of the client is then partly read.
+ * So is a second interceptor rewriting the address, since which runs first,
+ * and for which application, is not read.
+ */
+export interface InterceptorBase {
+  /** The rewrites read: each base, and the test of the written address it is applied under where there is one. */
+  readonly rewrites: ReadonlyArray<{ readonly base: ApiUrl; readonly test?: AddressTest }>;
+  /** Where an interceptor rewrites the address and nothing could be taken from it, and why. */
+  readonly unread: ReadonlyArray<{ readonly at: TsNode; readonly why: string }>;
+}
+
+/** The opening of an address an interceptor rewrites in a way not read: a hole (P280). */
+const UNREAD_BASE: ApiUrl = { url: UNREAD_SPAN, path: `/${UNREAD_SPAN}`, baseUrlEnv: null, host: null, via: null, guessed: false };
+
+/**
+ * The base a request of the framework's client goes out under, by what it
+ * writes (P280): the one rewrite that applies to it, none where none does, and
+ * a hole where a rewrite is not read, a test cannot tell from what is read of
+ * the address, or two rewrites put different bases in front.
+ */
+export const interceptedBase = (intercepting: InterceptorBase, written: ApiUrl): ApiUrl | undefined => {
+  if (intercepting.unread.length > 0) return UNREAD_BASE;
+  const text = written.url ?? written.path ?? '';
+  const applied = new Map<string | null, ApiUrl>();
+  for (const { base, test } of intercepting.rewrites) {
+    const holds = test === undefined ? true : test(text);
+    if (holds === undefined) return UNREAD_BASE;
+    if (holds) applied.set(base.url, base);
+  }
+  if (applied.size > 1) return UNREAD_BASE;
+  return [...applied.values()][0];
+};
+
+const unwrap = (node: TsNode): TsNode => {
+  let current = node;
+  while (Node.isParenthesizedExpression(current) || Node.isAsExpression(current) || Node.isNonNullExpression(current)) {
+    current = current.getExpression();
+  }
+  return current;
+};
+
+/** Whether an expression is the request's own address, `req.url`. */
+const isRequestUrl = (node: TsNode, request: TsNode): boolean => {
+  const target = unwrap(node);
+  if (!Node.isPropertyAccessExpression(target) || target.getName() !== 'url') return false;
+  const owner = target.getExpression();
+  return Node.isIdentifier(owner) && owner.getSymbol()?.getDeclarations()[0] === request;
+};
+
+/**
+ * The function an interceptor is, and the request it is handed, when a rewrite
+ * is written in one: a class's `intercept(req, next)`, or a function typed as
+ * an interceptor or handed a request.
+ */
+const interceptorOf = (clone: CallExpression): { fn: TsNode; request: TsNode; name: string } | undefined => {
+  const fn = clone.getFirstAncestor((node) => Node.isFunctionLikeDeclaration(node));
+  if (fn === undefined || !Node.isFunctionLikeDeclaration(fn)) return undefined;
+  const [request] = fn.getParameters();
+  if (request === undefined) return undefined;
+  if (Node.isMethodDeclaration(fn)) {
+    const owner = fn.getParent();
+    const name = Node.isClassDeclaration(owner) ? owner.getName() : undefined;
+    return fn.getName() === 'intercept' && name !== undefined ? { fn, request, name } : undefined;
+  }
+  const holder = fn.getParent();
+  if (holder === undefined || !Node.isVariableDeclaration(holder)) {
+    return Node.isFunctionDeclaration(fn) && fn.getName() !== undefined && /^HttpRequest\b/.test(request.getTypeNode()?.getText() ?? '')
+      ? { fn, request, name: fn.getName() as string }
+      : undefined;
+  }
+  const typed = holder.getTypeNode()?.getText() === 'HttpInterceptorFn' || /^HttpRequest\b/.test(request.getTypeNode()?.getText() ?? '');
+  return typed ? { fn, request, name: holder.getName() } : undefined;
+};
+
+/**
+ * The bases a rewrite of the address puts in front of it, read as this reader
+ * reads every base: one, or one per side of a base chosen by a test of the
+ * address (P293).
+ */
+const baseOfRewrite = (written: TsNode, request: TsNode, sharedPackages: readonly string[]): ReturnType<typeof prefixSidesOfRewrite> =>
+  prefixSidesOfRewrite(written, (node) => isRequestUrl(node, request), (node) => analyzeBaseUrl(node, sharedPackages));
+
+/** How much of a written expression a row quotes. */
+const quoted = (node: TsNode): string => node.getText().replace(/\s+/g, ' ').slice(0, 60);
+
+/** Whether the repository registers an interceptor of this name. */
+const registered = (name: string, texts: readonly string[]): boolean => {
+  const escaped = name.replace(/[$]/g, '\\$');
+  const provided = new RegExp(`useClass\\s*:\\s*${escaped}\\b`);
+  const listed = new RegExp(`withInterceptors\\(\\s*\\[[^\\]]*\\b${escaped}\\b`);
+  return texts.some((text) => provided.test(text) || listed.test(text));
+};
+
+/** The base the repository's interceptors put in front of every request, read once. */
+export const interceptorBaseOf = (files: readonly SourceFile[], sharedPackages: readonly string[]): InterceptorBase => {
+  const texts = files.map((file) => file.getFullText());
+  const rewrites: Array<{ at: CallExpression; name: string; base?: ApiUrl; test?: AddressTest; why?: string }> = [];
+  files.forEach((file, index) => {
+    const text = texts[index] ?? '';
+    if (!text.includes('.clone(') || !text.includes('url')) return;
+    for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const callee = call.getExpression();
+      if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'clone') continue;
+      const [options] = call.getArguments();
+      if (options === undefined || !Node.isObjectLiteralExpression(options)) continue;
+      const property = options.getProperty('url');
+      if (property === undefined) continue;
+      const interceptor = interceptorOf(call);
+      if (interceptor === undefined || !registered(interceptor.name, texts)) continue;
+      const owner = unwrap(callee.getExpression());
+      if (!Node.isIdentifier(owner) || owner.getSymbol()?.getDeclarations()[0] !== interceptor.request) continue;
+      const written = Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+      const isAddress = (node: TsNode): boolean => isRequestUrl(node, interceptor.request);
+      // A condition about the address's own form is a test each request is put to (P280).
+      const test = rewriteTestOf(call, interceptor.fn, isAddress);
+      if (test === undefined) {
+        const conditional = conditionsAround(call, interceptor.fn).filter((condition) => !asksAbsolute(condition, isAddress));
+        rewrites.push({ at: call, name: interceptor.name, why: `${interceptor.name} rewrites the address only when ${conditional[0]?.getText().slice(0, 60)}, so which requests go out under the base is not known` });
+        continue;
+      }
+      const unreadBase = { at: call, name: interceptor.name, why: `${interceptor.name} rewrites the address and the base it puts in front could not be read` };
+      // A branch whose condition is a test of the address is each side for the requests on that side (P293).
+      const sides = written === undefined ? undefined : addressSidesOf(written, isAddress, test);
+      if (sides === undefined) {
+        rewrites.push(unreadBase);
+        continue;
+      }
+      if ('unread' in sides) {
+        rewrites.push({ at: call, name: interceptor.name, why: `${interceptor.name} writes one of two addresses by a branch (${quoted(sides.unread)}), and which one a request goes out under is not read` });
+        continue;
+      }
+      for (const side of sides) {
+        // A side that writes back the request's own address rewrites nothing.
+        if (isAddress(side.value)) continue;
+        const prefixes = baseOfRewrite(side.value, interceptor.request, sharedPackages);
+        if ('unread' in prefixes) {
+          rewrites.push({ at: call, name: interceptor.name, why: `${interceptor.name} puts one of two bases in front of the address by a branch (${quoted(prefixes.unread)}), and which one a request goes out under is not read` });
+          continue;
+        }
+        for (const prefix of prefixes) {
+          if (prefix.base === null) continue;
+          const tested = prefix.test === null ? side.test : side.test === null ? prefix.test : joinedTests([side.test, prefix.test], true);
+          rewrites.push(prefix.base === undefined ? unreadBase : { at: call, name: interceptor.name, base: prefix.base, ...(tested === null ? {} : { test: tested }) });
+        }
+      }
+    }
+  });
+  const names = new Set(rewrites.map((rewrite) => rewrite.name));
+  if (names.size > 1) {
+    const listed = [...names].sort().join(', ');
+    return { rewrites: [], unread: rewrites.map((rewrite) => ({ at: rewrite.at, why: `${names.size} interceptors rewrite the address (${listed}), and which runs first, and for which application, is not read` })) };
+  }
+  const unread = rewrites.flatMap((rewrite) => (rewrite.why === undefined ? [] : [{ at: rewrite.at, why: rewrite.why }]));
+  if (unread.length > 0) return { rewrites: [], unread };
+  // Two rewrites both made unconditionally put two bases in front of every request: which one stands is not read.
+  const sure = [...new Set(rewrites.filter((rewrite) => rewrite.test === undefined).map((rewrite) => rewrite.base?.url))];
+  if (sure.length > 1) {
+    return { rewrites: [], unread: rewrites.map((rewrite) => ({ at: rewrite.at, why: `${rewrite.name} rewrites the address ${sure.length} different ways, and which one a request goes out under is not read` })) };
+  }
+  return {
+    rewrites: rewrites.flatMap((rewrite) => (rewrite.base === undefined ? [] : [{ base: rewrite.base, ...(rewrite.test === undefined ? {} : { test: rewrite.test }) }])),
+    unread,
+  };
+};
+
+/**
+ * The headers the repository's interceptors put on every request of the
+ * framework's client (P262): the names `req.clone({ setHeaders: { ... } })`
+ * writes in place, unconditionally, and the ones `headers:` writes (P265) -
+ * the request's own with `.set` and `.append` after them, or a new set made
+ * in their place, `new HttpHeaders({ ... })`. `unread` where an interceptor
+ * sets its headers any other way - names written as code, one removed, under
+ * a condition - since a request may then carry, or lack, ones nothing here
+ * reads.
+ */
+export interface InterceptorHeaders {
+  readonly keys: readonly string[];
+  readonly unread: boolean;
+  /** An interceptor writes a whole set in place of the request's own (`headers: new HttpHeaders(...)`). */
+  readonly replaces?: true;
+}
+
+/** The framework's headers and the platform's, as a set written in place of a request's own is built. */
+const HEADER_BUILDERS: readonly QueryBuilder[] = [{ class: 'HttpHeaders', object: '', adds: ['set', 'append'], immutable: true }, PLATFORM_HEADERS];
+
+/** How many names a value written for `headers:` is followed through. */
+const HEADERS_DEPTH = 4;
+
+/**
+ * What `headers:` in a clone writes (P265): the request's own headers with
+ * names added - `req.headers.set('X-Tenant', t).append('X-Trace', id)` - or a
+ * set made in their place. `undefined` where it is written in a way not read.
+ */
+const clonedHeaders = (written: TsNode, request: TsNode, depth = 0): { keys: string[]; based: boolean } | undefined => {
+  const value = unwrap(written);
+  // `req.headers`: the request's own, as they are.
+  if (Node.isPropertyAccessExpression(value) && value.getName() === 'headers') {
+    const owner = unwrap(value.getExpression());
+    return Node.isIdentifier(owner) && owner.getSymbol()?.getDeclarations()[0] === request ? { keys: [], based: true } : undefined;
+  }
+  if (Node.isCallExpression(value)) {
+    const callee = value.getExpression();
+    if (!Node.isPropertyAccessExpression(callee)) return undefined;
+    const method = callee.getName();
+    if (method === 'set' || method === 'append') {
+      const before = clonedHeaders(callee.getExpression(), request, depth);
+      const key = writtenKey(value.getArguments()[0]);
+      if (before === undefined || key === undefined) return undefined;
+      return { keys: [...before.keys, key.toLowerCase()], based: before.based };
+    }
+    // `delete` takes a name off: which the request still carries is not read.
+    if (method === 'delete') return undefined;
+  }
+  // A name holding them, a `const` written in the interceptor.
+  if (Node.isIdentifier(value) && depth < HEADERS_DEPTH) {
+    const declaration = value.getSymbol()?.getDeclarations()[0];
+    const held = declaration !== undefined && Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : undefined;
+    if (held !== undefined) return clonedHeaders(held, request, depth + 1);
+  }
+  // `new HttpHeaders({ ... })`, `new HttpHeaders().set(...)`: a set in place of the request's own.
+  const built = builtQueryOf(value, HEADER_BUILDERS);
+  if (built === undefined || 'unread' in built) return undefined;
+  return { keys: built.keys.map((key) => key.toLowerCase()), based: false };
+};
+
+export const interceptorHeadersOf = (files: readonly SourceFile[]): InterceptorHeaders => {
+  const texts = files.map((file) => file.getFullText());
+  const keys = new Set<string>();
+  let unread = false;
+  let replacing = 0;
+  let writing = 0;
+  files.forEach((file, index) => {
+    const text = texts[index] ?? '';
+    if (!text.includes('.clone(') || !/\b(?:setHeaders|headers)\b/.test(text)) return;
+    for (const call of file.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      const callee = call.getExpression();
+      if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== 'clone') continue;
+      const interceptor = interceptorOf(call);
+      if (interceptor === undefined || !registered(interceptor.name, texts)) continue;
+      const owner = unwrap(callee.getExpression());
+      if (!Node.isIdentifier(owner) || owner.getSymbol()?.getDeclarations()[0] !== interceptor.request) continue;
+      const [options] = call.getArguments();
+      if (options === undefined || !Node.isObjectLiteralExpression(options)) {
+        unread = true;
+        continue;
+      }
+      const conditional = conditionsAround(call, interceptor.fn).length > 0;
+      // `headers: req.headers.set('X-Tenant', t)`, `headers: new HttpHeaders({ ... })` (P265).
+      const whole = options.getProperty('headers');
+      if (whole !== undefined) {
+        const value = Node.isPropertyAssignment(whole) ? whole.getInitializer() : Node.isShorthandPropertyAssignment(whole) ? whole.getNameNode() : undefined;
+        const read = value === undefined ? undefined : clonedHeaders(value, interceptor.request);
+        if (read === undefined || conditional) unread = true;
+        else {
+          writing += 1;
+          if (!read.based) replacing += 1;
+          for (const name of read.keys) keys.add(name);
+        }
+      }
+      const property = options.getProperty('setHeaders');
+      if (property === undefined) continue;
+      const written = Node.isPropertyAssignment(property) ? property.getInitializer() : undefined;
+      const names = written === undefined ? undefined : writtenHeaderNames(written, [PLATFORM_HEADERS]);
+      // A header set only for some requests may be missing from the one compared.
+      if (names === undefined || conditional) {
+        unread = true;
+        continue;
+      }
+      writing += 1;
+      for (const name of names) keys.add(name);
+    }
+  });
+  // A set written in place of a request's own, beside another interceptor's: which runs last is not read.
+  if (replacing > 0 && writing > 1) return { keys: [...keys].sort(), unread: true };
+  return { keys: [...keys].sort(), unread, ...(replacing > 0 && !unread ? { replaces: true as const } : {}) };
+};

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "repo": "express-chained-app",
-  "generatedAt": "2026-10-08T07:26:57.667Z",
+  "generatedAt": "2026-11-07T17:36:34.135Z",
   "nodes": [
     {
       "id": "entry:express-chained-app:http:GET:/api/v1/items",
@@ -104,7 +104,14 @@
           "entry": [
             "express-routes"
           ]
-        }
+        },
+        "listen": [
+          {
+            "port": 9000,
+            "file": "src/server.ts",
+            "line": 25
+          }
+        ]
       }
     }
   ],

@@ -12,6 +12,7 @@ import {
   type SettingBehind,
 } from '@flowatlas/core';
 import type { Node as TsNode } from 'ts-morph';
+import { Node } from 'ts-morph';
 
 /**
  * Identifiers that stand for the settings a build swaps out.
@@ -124,12 +125,14 @@ const settingBehind = (node: TsNode): SettingBehind | null => {
  * branch a caller's own argument decides — comes back saying so.
  */
 export const analyzeApiUrl = (node: TsNode, sharedPackages: readonly string[]): ApiUrl => {
-  const resolved = resolveStaticString(node, {
-    sharedPackages,
-    envRoots: ENV_ROOTS,
-    settingBehind,
-    resolveSpan: readSpan,
-  });
+  const reading = { sharedPackages, envRoots: ENV_ROOTS, settingBehind, resolveSpan: readSpan };
+  const written = resolveStaticString(node, reading);
+  // `'/orders?' + params.toString()` (P262): what is added after a `?` is
+  // the query, and the address the text before it.
+  const queried = written === null ? queryAdded(node, sharedPackages) : undefined;
+  if (queried !== undefined) return queried;
+  // `'/sellers/' + name`: the address a template would spell (P280).
+  const resolved = written ?? resolveStaticString(node, { ...reading, concatenation: true });
   if (resolved === null) {
     // Not a string this reader can put together, but perhaps a helper that
     // assembles one: `this.http.delete(this.buildAdminUrl(id))` is an address
@@ -185,6 +188,20 @@ export const analyzeApiUrl = (node: TsNode, sharedPackages: readonly string[]): 
 };
 
 /**
+ * An address with a query added to it by `+` after its `?` (P262): the
+ * address its left side is, with the query the right side adds unread
+ * (`${…}`). Nothing where the left side holds no `?`.
+ */
+const queryAdded = (node: TsNode, sharedPackages: readonly string[]): ApiUrl | undefined => {
+  let value = node;
+  while (Node.isParenthesizedExpression(value) || Node.isAsExpression(value) || Node.isNonNullExpression(value)) value = value.getExpression();
+  if (!Node.isBinaryExpression(value) || value.getOperatorToken().getText() !== '+') return undefined;
+  const left = analyzeApiUrl(value.getLeft(), sharedPackages);
+  if (left.url === null || left.path === null || !left.url.includes('?')) return undefined;
+  return { ...left, url: `${left.url}${UNREAD_SPAN}` };
+};
+
+/**
  * Works out what address a request reaches, read at the call site a wrapper was
  * called from.
  *
@@ -227,4 +244,28 @@ export const analyzeForwardedApiUrl = (
     via: found.key === null ? 'literal' : 'template-env',
     guessed,
   };
+};
+
+/**
+ * The base an interceptor puts in front of every address (P239).
+ *
+ * Read setting first, as a template's opening span is: `environment.apiUrl`
+ * is a value the build swaps out, and the value written in the development
+ * file is not the address the request goes to. Only where nothing about it is
+ * a setting is it read as any other address is.
+ */
+export const analyzeBaseUrl = (node: TsNode, sharedPackages: readonly string[]): ApiUrl => {
+  const behind = settingBehind(node);
+  const prefix = behind?.prefix ?? '';
+  if (behind !== null && !prefix.includes(UNREAD_SPAN)) {
+    return {
+      url: `\${${behind.key}}${prefix}`,
+      path: routePathOf(prefix),
+      baseUrlEnv: behind.key,
+      host: null,
+      via: 'template-env',
+      guessed: behind.guessed === true,
+    };
+  }
+  return analyzeApiUrl(node, sharedPackages);
 };

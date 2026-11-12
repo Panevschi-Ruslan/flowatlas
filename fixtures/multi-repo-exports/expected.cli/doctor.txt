@@ -1,0 +1,37 @@
+unresolved: total=3 (missing) · markers: errors=0 warnings=0 · desync=0 · contracts: errors=0 ignored=0 · rules: errors=0 new=0 · exit=0
+
+unresolved: 3 to act on · missed: 3 · notes: 1 · findings: 2
+  2 findings: 2 likely N+1s
+  environment-value-unread: 1 row
+    The value is an output another deployment publishes: add the repository that declares it to the configuration, and it is joined to what it names.
+      gateway/src/audit.ts:9  the call at src/audit.ts:9 sends to the value of AUDIT_QUEUE_URL, which shop-gateway-prod-audit is deployed with as ${cf:billing-prod.AuditQueueUrl}, and that is not read: the value is the output AuditQueueUrl of the stack billing-prod, which another deployment publishes
+  export-not-found: 1 row
+    Add the repository whose deployment declares that output to the configuration, or check the name on both sides.
+      gateway/serverless.yml:14  import:stack:billing-prod#AuditQueueUrl
+  route-path-unread: 1 row
+    Hang the route from the shared API with AWS::ApiGateway::Resource and AWS::ApiGateway::Method (or an AWS::ApiGatewayV2::Route), whose ParentId or ApiId imports it; those are joined to it.
+      catalog/template.yaml:91  Resources.Legacy.Events.Old
+  query-in-loop (finding): 2 rows
+    Read every item in one call - a list of ids, a batch, a join - before the loop, and look each one up in memory.
+      gateway/src/audit.ts:8  A `for-of` loop runs 1 publish once per item: likely N+1.  (1 way in)
+      catalog/src/reorder.ts:12  A `for-of` loop runs 1 HTTP call and 1 publish once per item: likely N+1.  (1 way in)
+  base-url-from-files (note): 1 row
+    The value is the one the function is deployed with.
+      catalog/src/reorder.ts:14  SHOP_API_URL is the address of the API shop, which gateway publishes and the environment catalog-reorder is deployed with imports, so the request is joined among the routes on it, here one orders declares
+
+markers: none
+  note: no annotation is recorded on any symbol in this graph, so nothing was checked
+
+desync: none
+
+contracts: no errors, 0 excused, 3 boundary directions nothing could be compared on
+
+baseline: missing (0 accepted, 3 now, +3)
+  no baseline at <root>/fixtures/multi-repo-exports/flowatlas.baseline.json; run flowatlas doctor --accept to write one
+  environment-value-unread: 0 → 1 (+1)
+  export-not-found: 0 → 1 (+1)
+  route-path-unread: 0 → 1 (+1)
+  new (3):
+    catalog|template.yaml|Resources.Legacy.Events.Old|route-path-unread
+    gateway|serverless.yml|import:stack:billing-prod#AuditQueueUrl|export-not-found
+    gateway|src/audit.ts|producer:gateway#src/audit.ts:9:11|environment-value-unread

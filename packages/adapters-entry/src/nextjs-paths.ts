@@ -46,3 +46,16 @@ export const PAGES_API: FsRouter = {
   prefix: '/api',
   segments: NEXT_SEGMENTS,
 };
+
+/**
+ * `pages/**`, the older router's screens: every file is a page at the address
+ * its path spells, `index` standing for its directory, as under `pages/api`
+ * (P276). What is under `pages/api` is a way in rather than a screen, and a
+ * file whose name starts with an underscore (`_app`, `_document`) is the
+ * frame every page is drawn in rather than one of them; the screens reader leaves
+ * both out.
+ */
+export const PAGES_SCREENS: FsRouter = {
+  root: 'pages',
+  segments: NEXT_SEGMENTS,
+};

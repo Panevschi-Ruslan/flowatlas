@@ -251,18 +251,21 @@ export const findMethod = (
  * Every call site inside a method body, without descending into a nested class.
  *
  * Calls written inside a callback still belong to the method that contains them;
- * calls inside a class declared in the body belong to that class instead.
+ * calls inside a class declared in the body belong to that class instead, and
+ * calls inside a part of the body `leaveOut` names - a member of the object a
+ * factory hands back, which is a body of its own (P288) - to that part.
  */
 export const forEachCall = (
   body: TsNode,
   visit: (call: TsNode & { getExpression(): TsNode }) => void,
+  leaveOut?: ReadonlySet<TsNode>,
 ): void => {
   // An arrow with no braces — `(deps) => deps.orders.find(id)` — is a body that
   // *is* the call, and a walk of its descendants alone would miss the only call
   // in it. Every other body is a block, where this is never true.
   if (Node.isCallExpression(body)) visit(body);
   body.forEachDescendant((node, traversal) => {
-    if (Node.isClassDeclaration(node) || Node.isClassExpression(node)) {
+    if (Node.isClassDeclaration(node) || Node.isClassExpression(node) || leaveOut?.has(node) === true) {
       traversal.skip();
       return;
     }

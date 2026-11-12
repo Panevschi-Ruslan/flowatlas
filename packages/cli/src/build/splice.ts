@@ -77,9 +77,12 @@ export const spliceRepoGraph = (
   const stands = (node: GraphNode): boolean =>
     node.file !== undefined || node.type === 'repo' || anchored.has(node.id);
 
+  // A splice that leaves an edge pointing at nothing is out of date, not wrong:
+  // the throw is how the build learns to read the repository whole (R180).
   const builder = new GraphBuilder({
     repo: partial.repo,
     generatedAt: partial.generatedAt,
+    dangling: 'throw',
     ...(partial.meta === undefined ? {} : { meta: partial.meta }),
   });
   for (const node of nodes) if (stands(node)) builder.addNode(node);

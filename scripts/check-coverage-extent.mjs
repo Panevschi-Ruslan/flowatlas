@@ -36,8 +36,9 @@
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { extentOf } from './coverage/extent.mjs';
+import { repositoriesOf } from './coverage/targets.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const FIXTURES = join(ROOT, 'fixtures');
@@ -48,7 +49,24 @@ if (!existsSync(join(ROOT, 'packages', 'core', 'dist'))) {
   process.exit(2);
 }
 
-const { serviceSourceDirs } = await import('@flowatlas/core');
+const { AdapterRegistry, conventionsFor, serviceSourceDirs } = await import('@flowatlas/core');
+
+/**
+ * The tool's answer, asked the way its readers ask it (P251): the entry
+ * adapters' conventions first, so a directory a framework builds into the
+ * service from beside it (`ProjectConventions.extent`) is in the answer, as
+ * it is in every build. The harness reads the same fact from the framework's
+ * configuration (`BUILT_FROM`), so the two still disagree where either is
+ * wrong.
+ */
+const { registerEntryAdapters } = await import(
+  pathToFileURL(join(ROOT, 'packages', 'adapters-entry', 'dist', 'index.js')).href
+);
+const registry = registerEntryAdapters(new AdapterRegistry());
+const toolExtentOf = (dir) => {
+  conventionsFor(registry, dir);
+  return serviceSourceDirs(dir);
+};
 
 /**
  * Every directory in the fixture tree that could be pointed at as a service,
@@ -61,6 +79,8 @@ const { serviceSourceDirs } = await import('@flowatlas/core');
  * comparing two questions again, which is the mistake this whole change is
  * about.
  */
+const SERVICE_FILES = ['package.json', 'tsconfig.json', 'tsconfig.build.json', 'tsconfig.app.json'];
+
 const candidates = () => {
   const found = [];
   const visit = (tree, dir, depth) => {
@@ -68,7 +88,9 @@ const candidates = () => {
       if (!entry.isDirectory()) continue;
       if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
       const path = join(dir, entry.name);
-      if (existsSync(join(path, 'package.json'))) found.push({ tree, dir: path });
+      // A manifest, or a tsconfig of its own: an application of a workspace
+      // that keeps one manifest for everything has only the second (R180).
+      if (SERVICE_FILES.some((file) => existsSync(join(path, file)))) found.push({ tree, dir: path });
       // Two levels below a fixture is as deep as any of them declares a member.
       if (depth < 3) visit(tree, path, depth + 1);
     }
@@ -88,18 +110,26 @@ const asPaths = (dirs, from) =>
 /**
  * The service directories of any coverage clone that is on this machine.
  *
- * Read from `targets.json`, which is the same list the harness measures, so
- * nothing here is a second place to keep a list of directories.
+ * Read from `targets.local.json`, which is the same list the harness measures,
+ * so nothing here is a second place to keep a list of directories. The list is
+ * gitignored: with clones in the cache and no list beside them there is nothing
+ * to say which directories were read, so none are checked.
  */
 const clonedTargets = () => {
   const found = [];
   const repos = join(ROOT, '.coverage-cache', 'repos');
-  if (!existsSync(repos)) return found;
-  const list = JSON.parse(readFileSync(join(ROOT, 'scripts', 'coverage', 'targets.json'), 'utf8'));
+  const targets = join(ROOT, 'scripts', 'coverage', 'targets.local.json');
+  if (!existsSync(repos) || !existsSync(targets)) return found;
+  const list = JSON.parse(readFileSync(targets, 'utf8'));
   for (const target of list.targets) {
-    const clone = join(repos, target.name);
-    if (!existsSync(join(clone, '.git'))) continue;
-    for (const readRoot of target.read) found.push({ tree: clone, dir: join(clone, readRoot) });
+    // Each repository of a system is its own tree (P278): a workspace never
+    // reaches from one clone into the one beside it, so each read directory
+    // is asked about inside the clone it belongs to.
+    for (const repo of repositoriesOf(target)) {
+      const clone = join(repos, target.name, repo.dir);
+      if (!existsSync(join(clone, '.git'))) continue;
+      for (const readRoot of repo.read) found.push({ tree: clone, dir: join(clone, readRoot) });
+    }
   }
   return found;
 };
@@ -110,7 +140,7 @@ let checked = 0;
 for (const { tree, dir } of [...candidates(), ...clones]) {
   checked += 1;
   const mine = extentOf(tree, relative(tree, dir) || '.').dirs;
-  const theirs = asPaths(serviceSourceDirs(dir), tree);
+  const theirs = asPaths(toolExtentOf(dir), tree);
   const same = mine.length === theirs.length && mine.every((path, index) => path === theirs[index]);
   if (same) continue;
   disagreements += 1;
