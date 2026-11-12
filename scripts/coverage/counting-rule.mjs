@@ -184,7 +184,8 @@ export const PROBES = [
     // decoration: four of a wiki app's routes are registered at `config.id`, and a
     // rule that demanded a literal would have called them something else.
     // The whitespace is permissive because the address is very often on the
-    // line after the call.
+    // line after the call. A comma with only the closing parenthesis after it
+    // is a trailing comma, `app.get(\n  Token,\n)`, and not a handler.
     //
     // koa-router writes the verbs as a list beside the address as well:
     // `router.register('jobs.:interval', ['get', 'post'], [validate, run])` is
@@ -192,7 +193,7 @@ export const PROBES = [
     // (P270). Counted where the second argument is a list, which is what tells
     // it from a plugin system's `app.register(plugin, { prefix })`.
     pattern:
-      /\b[\w$]*(?:app|router)\s*\.\s*(?:(?:get|post|put|patch|delete|options|head|all)\s*\(\s*(?:['"`/[]|[A-Za-z_$][\w$.]*\s*,)|register\s*\(\s*(?:'[^'\n]*'|"[^"\n]*"|`[^`\n]*`|\[[^\]]*\]|[A-Za-z_$][\w$.]*)\s*,\s*\[)/gi,
+      /\b[\w$]*(?:app|router)\s*\.\s*(?:(?:get|post|put|patch|delete|options|head|all)\s*\(\s*(?:['"`/[]|[A-Za-z_$][\w$.]*\s*,(?!\s*\)))|register\s*\(\s*(?:'[^'\n]*'|"[^"\n]*"|`[^`\n]*`|\[[^\]]*\]|[A-Za-z_$][\w$.]*)\s*,\s*\[)/gi,
   },
   {
     name: 'exported-verb-handler',
@@ -699,6 +700,21 @@ const countLine = (probe, path, text) => {
 const countFile = (probe, path, text) =>
   probe.path.test(path) && (probe.contains === undefined || probe.contains.test(text)) ? 1 : 0;
 
+/** A script line no person writes: a bundler's output keeps a module on one. */
+const BUNDLED_LINE = 2000;
+
+const SCRIPT_FILES = /\.[cm]?jsx?$/;
+
+/**
+ * A script that is a bundle's output under any name: a line longer than any
+ * written by hand. `.min.js` says so by its name; a seed project's
+ * `index.mjs` built by a bundler and committed does not, and its minified
+ * React counted as two routes nobody declared on a CRM server. The tool reads
+ * no such file as source either.
+ */
+export const isBundle = (path, text) =>
+  SCRIPT_FILES.test(path) && text.split('\n', 200).some((line) => line.length > BUNDLED_LINE);
+
 /** Strategy by scope, so adding a third kind of probe adds a row and no branch. */
 const COUNTERS = {
   line: (probe, path, text) => countLine(probe, path, text),
@@ -727,6 +743,7 @@ export const measureSites = (files) => {
   const byProbe = Object.fromEntries(PROBES.map((probe) => [probe.name, 0]));
   const perFile = new Map();
   for (const [path, source] of files) {
+    if (isBundle(path, source)) continue;
     const text = codeOf(path, source);
     let found;
     for (const probe of PROBES) {

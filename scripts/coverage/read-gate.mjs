@@ -112,7 +112,9 @@ const FIXTURES = join(ROOT, 'fixtures');
  * a kind or a reason written under no family speaks for nothing. A reason is an
  * open word, so one this table has never heard of speaks for nothing too, which
  * fails loudly rather than passing a file on a sentence nobody classified.
- * `models` owns no edge and no reason because nothing is asked of it per file.
+ * `models` owns no edge because nothing is asked of it per file; its reasons
+ * answer it anywhere, as a table does: the data reader saying why no table could
+ * be named is that reader's answer, where a guessed table would not be one.
  */
 const GATED = {
   routes: {
@@ -246,7 +248,14 @@ const GATED = {
     ],
     perFile: false,
   },
-  models: { types: ['table'], edges: [], reasons: [], perFile: false },
+  models: {
+    types: ['table'],
+    edges: [],
+    // The data reader was there and said why no table could be named: a store no
+    // descriptor knows, a layer nothing was read through, a table chosen at run time.
+    reasons: ['unknown-db-package', 'db-layer-unread', 'db-package-unread', 'dynamic-table-name'],
+    perFile: false,
+  },
 };
 
 /**
@@ -319,18 +328,6 @@ export const EXEMPT = [
       'here yet. The reading is honest - one informational row naming the two things ' +
       'the reader cannot tell apart - and it is deliberately not a node. Remove this ' +
       'the day the convention gets a reader, and the gate will then insist on it.',
-  },
-  {
-    where: 'nest-unknown-orm',
-    path: '(anywhere)',
-    family: 'models',
-    why:
-      'A model declared against a package nobody has described. R83 removed the ' +
-      'table nodes this used to mint - a name taken from a value the same call site ' +
-      'reported as unreadable - and the fixture exists to keep them removed. Every ' +
-      'call here carries an `unknown-db-package` row instead, which is the honest ' +
-      'output; a table would be a guess wearing a node. One descriptor turns all of ' +
-      'them into tables at once, and then this entry goes.',
   },
   {
     where: 'missing-repo',
@@ -782,6 +779,7 @@ export const readGate = ({
   for (const [family, gated] of FAMILY) {
     if (gated.perFile || (total.get(family) ?? 0) === 0) continue;
     if (gated.types.some((type) => present.has(type))) continue;
+    if ((graph.unresolved ?? []).some((row) => gated.reasons.includes(row.reason))) continue;
     const exemption = exemptionFor(exemptions, where, '(anywhere)', family);
     if (exemption !== undefined) {
       used.add(exemptionKey(exemption));

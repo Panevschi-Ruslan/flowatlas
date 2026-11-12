@@ -361,3 +361,16 @@ describe('where a request is written, and what stands in front of it (P244)', ()
     assert.deepEqual(sitesIn('src/deploy.ts', "run('helm upgrade --install x ./chart');"), {});
   });
 });
+
+describe('what is not a route, though it looks like a call', () => {
+  it('does not count a lookup whose one argument has a trailing comma', () => {
+    const text = 'const recorder = app.get(\n  RecorderService,\n);\napp.get(path, handler);\n';
+    assert.deepEqual(sitesIn('src/main.ts', text), { routes: 1 });
+  });
+
+  it('does not count a committed bundle under any name, and still counts a hand-written script', () => {
+    const bundle = `export default 1;\nfunction r(e){${'app.get("/x",n);'.repeat(200)}}\n`;
+    assert.deepEqual(sitesIn('seed/hello/index.mjs', bundle), {});
+    assert.deepEqual(sitesIn('server/index.mjs', "app.get('/x', (req, res) => res.end());\n"), { routes: 1 });
+  });
+});
